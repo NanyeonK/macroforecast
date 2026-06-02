@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 import warnings
 
 import numpy as np
@@ -38,7 +38,9 @@ def decision_tree(
         ),
         **kwargs,
     }
-    estimator_params = {key: value for key, value in params.items() if key != "implementation_note"}
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
     return fit_estimator(
         DecisionTreeRegressor(**estimator_params),
         X,
@@ -77,7 +79,9 @@ def random_forest(
         ),
         **kwargs,
     }
-    estimator_params = {key: value for key, value in params.items() if key != "implementation_note"}
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
     return fit_estimator(
         RandomForestRegressor(**estimator_params),
         X,
@@ -116,7 +120,9 @@ def extra_trees(
         ),
         **kwargs,
     }
-    estimator_params = {key: value for key, value in params.items() if key != "implementation_note"}
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
     return fit_estimator(
         ExtraTreesRegressor(**estimator_params),
         X,
@@ -153,7 +159,9 @@ def gradient_boosting(
         ),
         **kwargs,
     }
-    estimator_params = {key: value for key, value in params.items() if key != "implementation_note"}
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
     return fit_estimator(
         GradientBoostingRegressor(**estimator_params),
         X,
@@ -192,7 +200,9 @@ def xgboost(
         ),
         **kwargs,
     }
-    estimator_params = {key: value for key, value in params.items() if key != "implementation_note"}
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
     estimator = xgb.XGBRegressor(
         **estimator_params,
     )
@@ -227,7 +237,9 @@ def lightgbm(
         ),
         **kwargs,
     }
-    estimator_params = {key: value for key, value in params.items() if key != "implementation_note"}
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
     estimator = lgb.LGBMRegressor(
         **estimator_params,
     )
@@ -271,11 +283,932 @@ def catboost(
         "implementation_note": params["implementation_note"],
         **kwargs,
     }
-    estimator_params = {key: value for key, value in params.items() if key != "implementation_note"}
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
     estimator = cb.CatBoostRegressor(
         **estimator_params,
     )
     return fit_estimator(estimator, X, y, model="catboost", metadata=metadata)
+
+
+def _coerce_lgbplus_matrix(
+    X: Any,
+    feature_names: Sequence[str] | None = None,
+) -> tuple[np.ndarray, tuple[str, ...]]:
+    if isinstance(X, pd.DataFrame):
+        frame = X.copy()
+        if feature_names is not None:
+            frame = frame.reindex(
+                columns=[str(name) for name in feature_names], fill_value=0.0
+            )
+        names = tuple(str(column) for column in frame.columns)
+        arr = frame.to_numpy(dtype=np.float64)
+    else:
+        arr = np.asarray(X, dtype=np.float64)
+        if arr.ndim == 1:
+            arr = arr.reshape(-1, 1)
+        if arr.ndim != 2:
+            raise ValueError(f"X must be 1-D or 2-D, got shape {arr.shape!r}")
+        names = (
+            tuple(str(name) for name in feature_names)
+            if feature_names is not None
+            else tuple(f"x{i}" for i in range(arr.shape[1]))
+        )
+    if arr.ndim != 2 or arr.shape[1] == 0:
+        raise ValueError("X must contain at least one feature column")
+    if len(names) != arr.shape[1]:
+        raise ValueError("feature_names length must match X column count")
+    return arr, names
+
+
+def _standardize_for_lgbplus_correlation(X: np.ndarray) -> np.ndarray:
+    centered = X - X.mean(axis=0, keepdims=True)
+    scale = X.std(axis=0, keepdims=True)
+    scale[scale < 1e-10] = 1.0
+    return centered / scale
+
+
+def _lgbplus_channel_frame(
+    *,
+    feature_names: Sequence[str],
+    tree_gain: np.ndarray,
+    linear_counts: np.ndarray,
+    linear_abs_contribution: np.ndarray,
+) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "tree_gain_importance": np.asarray(tree_gain, dtype=float),
+            "linear_selection_count": np.asarray(linear_counts, dtype=int),
+            "linear_abs_update": np.asarray(linear_abs_contribution, dtype=float),
+        },
+        index=pd.Index([str(name) for name in feature_names], name="feature"),
+    ).sort_values(
+        ["linear_selection_count", "tree_gain_importance", "linear_abs_update"],
+        ascending=False,
+    )
+
+
+class LGBPlusRegressor:
+    """Competition-based LGB+ estimator.
+
+    Source alignment:
+    - Reference repository: https://github.com/philgoucou/lgbplus
+    - Python file: `python/lgb_plus.py`; R file: `R/lgb_plus.R`.
+    - Both versions fit one LightGBM residual tree and one greedy univariate
+      linear residual update at every boosting step, then accept the lower-loss
+      candidate under `oob`, `validation`, or `training` selection.
+    - The R implementation adds `linear_candidate_fraction`, randomly sampling
+      feature candidates before choosing the best residual correlation. The
+      Python implementation omits that public argument. macroforecast keeps the
+      R candidate-subsampling logic and the Python in-class ensemble structure.
+    - The competition linear update intentionally has no intercept:
+      `coef = sum(x_j * residual) / sum(x_j^2)`, matching both reference files.
+    """
+
+    def __init__(
+        self,
+        *,
+        n_ensemble: int = 10,
+        n_steps: int = 200,
+        learning_rate: float = 0.05,
+        subsample: float = 0.7,
+        num_leaves: int = 5,
+        min_data_in_leaf: int = 20,
+        lambda_l2: float = 0.1,
+        linear_candidate_fraction: float = 0.5,
+        selection_method: Literal["oob", "validation", "training"] = "oob",
+        val_fraction: float = 0.2,
+        early_stop_patience: int | None = 50,
+        aggregation: Literal["mean", "median"] = "mean",
+        random_state: int | None = None,
+        verbose: bool = False,
+        **lgb_params: Any,
+    ) -> None:
+        self.n_ensemble = int(n_ensemble)
+        self.n_steps = int(n_steps)
+        self.learning_rate = float(learning_rate)
+        self.subsample = float(subsample)
+        self.num_leaves = int(num_leaves)
+        self.min_data_in_leaf = int(min_data_in_leaf)
+        self.lambda_l2 = float(lambda_l2)
+        self.linear_candidate_fraction = float(linear_candidate_fraction)
+        self.selection_method = selection_method
+        self.val_fraction = float(val_fraction)
+        self.early_stop_patience = (
+            None if early_stop_patience is None else int(early_stop_patience)
+        )
+        self.aggregation = aggregation
+        self.random_state = None if random_state is None else int(random_state)
+        self.verbose = bool(verbose)
+        self.lgb_params_extra = dict(lgb_params)
+
+    def fit(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        feature_names: Sequence[str] | None = None,
+    ) -> "LGBPlusRegressor":
+        lgb = optional_import("lightgbm", extra="lightgbm")
+        X_arr, names = _coerce_lgbplus_matrix(X, feature_names)
+        y_arr = np.asarray(y, dtype=np.float64).reshape(-1)
+        if len(y_arr) != X_arr.shape[0]:
+            raise ValueError("X and y must have the same number of rows")
+        self._validate_fit_options(X_arr.shape[0], X_arr.shape[1])
+        self.feature_names_ = names
+        self.n_features_ = int(X_arr.shape[1])
+
+        X_standardized = _standardize_for_lgbplus_correlation(X_arr)
+        train_pool_idx, X_val, y_val = self._validation_split(X_arr, y_arr)
+        lgb_params = {
+            "objective": "regression",
+            "num_leaves": self.num_leaves,
+            "min_data_in_leaf": self.min_data_in_leaf,
+            "lambda_l2": self.lambda_l2,
+            "learning_rate": 1.0,
+            "verbosity": -1,
+            "force_col_wise": True,
+            "num_threads": 1,
+            **self.lgb_params_extra,
+        }
+
+        self.ensemble_: list[dict[str, Any]] = []
+        self.step_type_counts_ = np.zeros((self.n_ensemble, 2), dtype=int)
+        self.linear_feature_counts_ = np.zeros(self.n_features_, dtype=int)
+        self.feature_importances_ = np.zeros(self.n_features_, dtype=float)
+        self.linear_abs_contribution_ = np.zeros(self.n_features_, dtype=float)
+        self.training_history_: dict[str, Any] = {
+            "source_reference": "philgoucou/lgbplus python/lgb_plus.py and R/lgb_plus.R",
+            "selection_method": self.selection_method,
+            "member_loss_history": [],
+        }
+
+        for member_idx in range(self.n_ensemble):
+            member = self._fit_one_member(
+                lgb=lgb,
+                X=X_arr,
+                y=y_arr,
+                X_standardized=X_standardized,
+                X_val=X_val,
+                y_val=y_val,
+                train_pool_idx=train_pool_idx,
+                lgb_params=lgb_params,
+                member_idx=member_idx,
+            )
+            self.ensemble_.append(member)
+            self.step_type_counts_[member_idx] = member["step_type_counts"]
+            self.linear_feature_counts_ += member["linear_feature_counts"]
+            self.feature_importances_ += member["feature_importances"]
+            self.linear_abs_contribution_ += member["linear_abs_contribution"]
+            self.training_history_["member_loss_history"].append(member["loss_history"])
+
+        self.channel_summary_ = self.get_step_type_summary()
+        self.channel_importance_ = self.channel_importance()
+        return self
+
+    def _validate_fit_options(self, n_samples: int, n_features: int) -> None:
+        if self.n_ensemble < 1:
+            raise ValueError("n_ensemble must be at least 1")
+        if self.n_steps < 1:
+            raise ValueError("n_steps must be at least 1")
+        if self.selection_method not in {"oob", "validation", "training"}:
+            raise ValueError(
+                "selection_method must be 'oob', 'validation', or 'training'"
+            )
+        if self.aggregation not in {"mean", "median"}:
+            raise ValueError("aggregation must be 'mean' or 'median'")
+        if not (0.0 < self.subsample <= 1.0):
+            raise ValueError("subsample must be in (0, 1]")
+        if self.selection_method == "oob" and self.subsample >= 1.0:
+            raise ValueError("selection_method='oob' requires subsample < 1")
+        if not (0.0 < self.linear_candidate_fraction <= 1.0):
+            raise ValueError("linear_candidate_fraction must be in (0, 1]")
+        if n_samples < 2:
+            raise ValueError("LGB+ requires at least two observations")
+        if n_features < 1:
+            raise ValueError("LGB+ requires at least one feature")
+
+    def _validation_split(
+        self,
+        X: np.ndarray,
+        y: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray | None, np.ndarray | None]:
+        n_samples = X.shape[0]
+        if self.selection_method == "validation" and self.val_fraction > 0:
+            rng_val = np.random.default_rng(self.random_state)
+            n_val = int(np.floor(n_samples * self.val_fraction))
+            if n_val <= 0 or n_val >= n_samples:
+                raise ValueError(
+                    "val_fraction must leave non-empty train and validation sets"
+                )
+            val_idx = rng_val.choice(n_samples, size=n_val, replace=False)
+            train_pool_idx = np.setdiff1d(np.arange(n_samples), val_idx)
+            return train_pool_idx, X[val_idx], y[val_idx]
+        return np.arange(n_samples), None, None
+
+    def _fit_one_member(
+        self,
+        *,
+        lgb: Any,
+        X: np.ndarray,
+        y: np.ndarray,
+        X_standardized: np.ndarray,
+        X_val: np.ndarray | None,
+        y_val: np.ndarray | None,
+        train_pool_idx: np.ndarray,
+        lgb_params: dict[str, Any],
+        member_idx: int,
+    ) -> dict[str, Any]:
+        n_samples, n_features = X.shape
+        n_train_pool = int(len(train_pool_idx))
+        subsample_size = max(1, int(np.floor(n_train_pool * self.subsample)))
+        if self.selection_method == "oob" and subsample_size >= n_train_pool:
+            raise ValueError("OOB LGB+ needs at least one out-of-bag row per step")
+        seed = None if self.random_state is None else self.random_state + member_idx
+        rng = np.random.default_rng(seed)
+        params = dict(lgb_params)
+        if seed is not None:
+            params.setdefault("seed", seed)
+
+        init_pred = float(np.mean(y))
+        pred = np.full(n_samples, init_pred, dtype=float)
+        pred_val = (
+            None if X_val is None else np.full(len(y_val), init_pred, dtype=float)
+        )
+        steps: list[dict[str, Any]] = []
+        step_type_counts = np.zeros(2, dtype=int)
+        linear_feature_counts = np.zeros(n_features, dtype=int)
+        linear_abs_contribution = np.zeros(n_features, dtype=float)
+        feature_importances = np.zeros(n_features, dtype=float)
+        loss_history: list[dict[str, Any]] = []
+        best_loss = np.inf
+        steps_without_improvement = 0
+        n_candidates = max(
+            1, int(np.floor(n_features * self.linear_candidate_fraction))
+        )
+
+        for step_idx in range(self.n_steps):
+            sample_idx = rng.choice(train_pool_idx, size=subsample_size, replace=False)
+            X_sample = X[sample_idx]
+            y_sample = y[sample_idx]
+            resid_sample = y_sample - pred[sample_idx]
+
+            dtrain = lgb.Dataset(X_sample, label=resid_sample, free_raw_data=False)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                booster = lgb.train(params, dtrain, num_boost_round=1)
+            tree_update_all = np.asarray(booster.predict(X), dtype=float)
+            tree_candidate = pred + self.learning_rate * tree_update_all
+
+            candidate_idx = rng.choice(n_features, size=n_candidates, replace=False)
+            resid_std = resid_sample - np.mean(resid_sample)
+            resid_scale = float(np.std(resid_sample))
+            if resid_scale < 1e-10:
+                resid_scale = 1.0
+            resid_standardized = resid_std / resid_scale
+            correlations = (
+                X_standardized[sample_idx][:, candidate_idx].T @ resid_standardized
+            ) / len(sample_idx)
+            correlations = np.nan_to_num(correlations, nan=0.0)
+            feature_idx = int(candidate_idx[int(np.argmax(np.abs(correlations)))])
+            x_feature = X_sample[:, feature_idx]
+            coef = float((x_feature @ resid_sample) / ((x_feature**2).sum() + 1e-10))
+            linear_candidate = pred + self.learning_rate * coef * X[:, feature_idx]
+
+            tree_loss, linear_loss, tree_val, linear_val = self._candidate_losses(
+                booster=booster,
+                X=X,
+                y=y,
+                X_val=X_val,
+                y_val=y_val,
+                pred=pred,
+                pred_val=pred_val,
+                sample_idx=sample_idx,
+                train_pool_idx=train_pool_idx,
+                y_sample=y_sample,
+                tree_candidate=tree_candidate,
+                linear_candidate=linear_candidate,
+                feature_idx=feature_idx,
+                coef=coef,
+            )
+            if tree_loss <= linear_loss:
+                pred = tree_candidate
+                if pred_val is not None:
+                    pred_val = tree_val
+                steps.append({"type": "tree", "booster": booster})
+                step_type_counts[0] += 1
+                try:
+                    importance = np.asarray(
+                        booster.feature_importance(importance_type="gain"), dtype=float
+                    )
+                    if len(importance) == n_features:
+                        feature_importances += importance
+                except Exception:  # noqa: BLE001 - diagnostics must not break fitting.
+                    pass
+                chosen = "tree"
+                current_loss = float(tree_loss)
+            else:
+                pred = linear_candidate
+                if pred_val is not None:
+                    pred_val = linear_val
+                steps.append(
+                    {"type": "linear", "feature_idx": feature_idx, "coef": coef}
+                )
+                step_type_counts[1] += 1
+                linear_feature_counts[feature_idx] += 1
+                linear_abs_contribution[feature_idx] += abs(self.learning_rate * coef)
+                chosen = "linear"
+                current_loss = float(linear_loss)
+
+            if (
+                self.selection_method == "validation"
+                and y_val is not None
+                and pred_val is not None
+            ):
+                current_loss = float(np.mean((y_val - pred_val) ** 2))
+            train_loss = float(np.mean((y - pred) ** 2))
+            loss_history.append(
+                {
+                    "step": int(step_idx + 1),
+                    "chosen": chosen,
+                    "tree_loss": float(tree_loss),
+                    "linear_loss": float(linear_loss),
+                    "selection_loss": current_loss,
+                    "train_loss": train_loss,
+                    "linear_feature": self.feature_names_[feature_idx],
+                }
+            )
+
+            if self.early_stop_patience is not None:
+                if current_loss < best_loss - 1e-10:
+                    best_loss = current_loss
+                    steps_without_improvement = 0
+                else:
+                    steps_without_improvement += 1
+                if steps_without_improvement >= self.early_stop_patience:
+                    break
+
+        return {
+            "init": init_pred,
+            "steps": steps,
+            "step_type_counts": step_type_counts,
+            "linear_feature_counts": linear_feature_counts,
+            "linear_abs_contribution": linear_abs_contribution,
+            "feature_importances": feature_importances,
+            "loss_history": loss_history,
+        }
+
+    def _candidate_losses(
+        self,
+        *,
+        booster: Any,
+        X: np.ndarray,
+        y: np.ndarray,
+        X_val: np.ndarray | None,
+        y_val: np.ndarray | None,
+        pred: np.ndarray,
+        pred_val: np.ndarray | None,
+        sample_idx: np.ndarray,
+        train_pool_idx: np.ndarray,
+        y_sample: np.ndarray,
+        tree_candidate: np.ndarray,
+        linear_candidate: np.ndarray,
+        feature_idx: int,
+        coef: float,
+    ) -> tuple[float, float, np.ndarray | None, np.ndarray | None]:
+        if self.selection_method == "oob":
+            oob_idx = np.setdiff1d(train_pool_idx, sample_idx)
+            tree_oob = pred[oob_idx] + self.learning_rate * np.asarray(
+                booster.predict(X[oob_idx]), dtype=float
+            )
+            linear_oob = (
+                pred[oob_idx] + self.learning_rate * coef * X[oob_idx, feature_idx]
+            )
+            return (
+                float(np.mean((y[oob_idx] - tree_oob) ** 2)),
+                float(np.mean((y[oob_idx] - linear_oob) ** 2)),
+                None,
+                None,
+            )
+        if (
+            self.selection_method == "validation"
+            and X_val is not None
+            and y_val is not None
+        ):
+            base_val = (
+                np.zeros(len(y_val), dtype=float) if pred_val is None else pred_val
+            )
+            tree_val = base_val + self.learning_rate * np.asarray(
+                booster.predict(X_val), dtype=float
+            )
+            linear_val = base_val + self.learning_rate * coef * X_val[:, feature_idx]
+            return (
+                float(np.mean((y_val - tree_val) ** 2)),
+                float(np.mean((y_val - linear_val) ** 2)),
+                tree_val,
+                linear_val,
+            )
+        return (
+            float(np.mean((y_sample - tree_candidate[sample_idx]) ** 2)),
+            float(np.mean((y_sample - linear_candidate[sample_idx]) ** 2)),
+            None,
+            None,
+        )
+
+    def predict(self, X: Any) -> np.ndarray:
+        return self.predict_components(X)["prediction_total"].to_numpy(dtype=float)
+
+    def predict_individual(self, X: Any) -> np.ndarray:
+        X_arr, _ = _coerce_lgbplus_matrix(X, self.feature_names_)
+        totals = []
+        for member in self.ensemble_:
+            components = self._member_components(member, X_arr)
+            totals.append(
+                components["init"] + components["tree"] + components["linear"]
+            )
+        return np.vstack(totals)
+
+    def predict_components(self, X: Any) -> pd.DataFrame:
+        X_arr, _ = _coerce_lgbplus_matrix(X, self.feature_names_)
+        init_parts = []
+        tree_parts = []
+        linear_parts = []
+        total_parts = []
+        for member in self.ensemble_:
+            components = self._member_components(member, X_arr)
+            init_parts.append(components["init"])
+            tree_parts.append(components["tree"])
+            linear_parts.append(components["linear"])
+            total_parts.append(
+                components["init"] + components["tree"] + components["linear"]
+            )
+        aggregate = np.median if self.aggregation == "median" else np.mean
+        frame = pd.DataFrame(
+            {
+                "prediction_total": aggregate(np.vstack(total_parts), axis=0),
+                "prediction_init": aggregate(np.vstack(init_parts), axis=0),
+                "prediction_tree": aggregate(np.vstack(tree_parts), axis=0),
+                "prediction_linear": aggregate(np.vstack(linear_parts), axis=0),
+            },
+            index=X.index
+            if isinstance(X, pd.DataFrame)
+            else pd.RangeIndex(X_arr.shape[0]),
+        )
+        return frame
+
+    def _member_components(
+        self, member: dict[str, Any], X: np.ndarray
+    ) -> dict[str, np.ndarray]:
+        init = np.full(X.shape[0], float(member["init"]), dtype=float)
+        tree = np.zeros(X.shape[0], dtype=float)
+        linear = np.zeros(X.shape[0], dtype=float)
+        for step in member["steps"]:
+            if step["type"] == "tree":
+                tree += self.learning_rate * np.asarray(
+                    step["booster"].predict(X), dtype=float
+                )
+            else:
+                feature_idx = int(step["feature_idx"])
+                linear += self.learning_rate * float(step["coef"]) * X[:, feature_idx]
+        return {"init": init, "tree": tree, "linear": linear}
+
+    def get_step_type_summary(self) -> dict[str, Any]:
+        total_tree = int(self.step_type_counts_[:, 0].sum())
+        total_linear = int(self.step_type_counts_[:, 1].sum())
+        total = total_tree + total_linear
+        return {
+            "total_tree": total_tree,
+            "total_linear": total_linear,
+            "tree_fraction": float(total_tree / total) if total else 0.0,
+            "per_member_tree": self.step_type_counts_[:, 0].copy(),
+            "per_member_linear": self.step_type_counts_[:, 1].copy(),
+        }
+
+    def get_linear_feature_summary(self) -> dict[str, int]:
+        order = np.argsort(self.linear_feature_counts_)[::-1]
+        return {
+            self.feature_names_[idx]: int(self.linear_feature_counts_[idx])
+            for idx in order
+            if self.linear_feature_counts_[idx] > 0
+        }
+
+    def channel_importance(
+        self,
+        X: Any | None = None,
+        y: Any | None = None,
+    ) -> pd.DataFrame:
+        return _lgbplus_channel_frame(
+            feature_names=self.feature_names_,
+            tree_gain=self.feature_importances_,
+            linear_counts=self.linear_feature_counts_,
+            linear_abs_contribution=self.linear_abs_contribution_,
+        )
+
+    def summary(self) -> str:
+        if not hasattr(self, "ensemble_"):
+            return "Model not fitted yet."
+        step_summary = self.get_step_type_summary()
+        return "\n".join(
+            [
+                "LGB+ Competition Summary",
+                f"Ensemble members: {self.n_ensemble}",
+                f"Steps per member: {self.n_steps}",
+                f"Selection method: {self.selection_method}",
+                f"Tree steps: {step_summary['total_tree']}",
+                f"Linear steps: {step_summary['total_linear']}",
+            ]
+        )
+
+
+class LGBAPlusRegressor:
+    """Alternating LGB^A+ estimator.
+
+    Source alignment:
+    - Reference repository: https://github.com/philgoucou/lgbplus
+    - Python file: `python/lgb_plus_A.py`; R file: `R/lgb_plus_A.R`.
+    - Each cycle fits a LightGBM residual tree block, applies `lr_tree`, then
+      selects the feature with the largest absolute residual correlation and
+      applies one univariate OLS linear update with intercept and `lr_linear`.
+    - R also provides `lgb_plus_A_ensemble`; macroforecast exposes the same idea
+      as `n_runs` on this estimator rather than creating a separate public
+      helper, keeping model selection and forecasting runner integration simple.
+    - The linear slope is computed by centered dot products, exactly equivalent
+      to R's `cov(x, resid) / var(x)` and mathematically cleaner than the Python
+      file's mixed `np.cov(..., ddof=1) / x.var(ddof=0)` expression.
+    """
+
+    def __init__(
+        self,
+        *,
+        n_runs: int = 1,
+        n_cycles: int = 25,
+        trees_per_cycle: int = 10,
+        lr_tree: float = 0.02,
+        lr_linear: float = 0.1,
+        num_leaves: int = 15,
+        min_data_in_leaf: int = 20,
+        subsample: float = 1.0,
+        random_state: int | None = None,
+        verbose: bool = False,
+        **lgb_params: Any,
+    ) -> None:
+        self.n_runs = int(n_runs)
+        self.n_cycles = int(n_cycles)
+        self.trees_per_cycle = int(trees_per_cycle)
+        self.lr_tree = float(lr_tree)
+        self.lr_linear = float(lr_linear)
+        self.num_leaves = int(num_leaves)
+        self.min_data_in_leaf = int(min_data_in_leaf)
+        self.subsample = float(subsample)
+        self.random_state = None if random_state is None else int(random_state)
+        self.verbose = bool(verbose)
+        self.lgb_params_extra = dict(lgb_params)
+
+    def fit(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        feature_names: Sequence[str] | None = None,
+    ) -> "LGBAPlusRegressor":
+        lgb = optional_import("lightgbm", extra="lightgbm")
+        X_arr, names = _coerce_lgbplus_matrix(X, feature_names)
+        y_arr = np.asarray(y, dtype=np.float64).reshape(-1)
+        if len(y_arr) != X_arr.shape[0]:
+            raise ValueError("X and y must have the same number of rows")
+        self._validate_fit_options(X_arr.shape[1])
+        self.feature_names_ = names
+        self.n_features_ = int(X_arr.shape[1])
+        self.runs_: list[dict[str, Any]] = []
+        self.feature_importances_ = np.zeros(self.n_features_, dtype=float)
+        self.linear_feature_counts_ = np.zeros(self.n_features_, dtype=int)
+        self.linear_abs_contribution_ = np.zeros(self.n_features_, dtype=float)
+        self.training_history_: dict[str, Any] = {
+            "source_reference": "philgoucou/lgbplus python/lgb_plus_A.py and R/lgb_plus_A.R",
+            "n_runs": self.n_runs,
+            "run_loss_history": [],
+        }
+
+        for run_idx in range(self.n_runs):
+            run = self._fit_one_run(lgb, X_arr, y_arr, run_idx)
+            self.runs_.append(run)
+            self.feature_importances_ += run["feature_importances"]
+            self.linear_feature_counts_ += run["linear_feature_counts"]
+            self.linear_abs_contribution_ += run["linear_abs_contribution"]
+            self.training_history_["run_loss_history"].append(run["loss_history"])
+
+        first = self.runs_[0]
+        self.init_ = first["init"]
+        self.trees_ = first["trees"]
+        self.linear_steps_ = first["linear_steps"]
+        self.channel_summary_ = {
+            "total_tree_blocks": int(self.n_runs * self.n_cycles),
+            "total_linear_steps": int(self.n_runs * self.n_cycles),
+            "n_runs": int(self.n_runs),
+            "n_cycles": int(self.n_cycles),
+            "trees_per_cycle": int(self.trees_per_cycle),
+        }
+        self.channel_importance_ = self.channel_importance()
+        return self
+
+    def _validate_fit_options(self, n_features: int) -> None:
+        if self.n_runs < 1:
+            raise ValueError("n_runs must be at least 1")
+        if self.n_cycles < 1:
+            raise ValueError("n_cycles must be at least 1")
+        if self.trees_per_cycle < 1:
+            raise ValueError("trees_per_cycle must be at least 1")
+        if not (0.0 < self.subsample <= 1.0):
+            raise ValueError("subsample must be in (0, 1]")
+        if n_features < 1:
+            raise ValueError("LGB^A+ requires at least one feature")
+
+    def _fit_one_run(
+        self,
+        lgb: Any,
+        X: np.ndarray,
+        y: np.ndarray,
+        run_idx: int,
+    ) -> dict[str, Any]:
+        n_features = X.shape[1]
+        run_seed = None if self.random_state is None else self.random_state + run_idx
+        params = {
+            "objective": "regression",
+            "num_leaves": self.num_leaves,
+            "min_data_in_leaf": self.min_data_in_leaf,
+            "learning_rate": 1.0,
+            "verbosity": -1,
+            "force_col_wise": True,
+            "num_threads": 1,
+            **self.lgb_params_extra,
+        }
+        if self.subsample < 1.0:
+            params["bagging_fraction"] = self.subsample
+            params["bagging_freq"] = 1
+        if run_seed is not None:
+            params.setdefault("seed", run_seed)
+            params.setdefault("bagging_seed", run_seed)
+
+        init = float(np.mean(y))
+        pred = np.full(len(y), init, dtype=float)
+        trees: list[Any] = []
+        linear_steps: list[dict[str, Any]] = []
+        feature_importances = np.zeros(n_features, dtype=float)
+        linear_feature_counts = np.zeros(n_features, dtype=int)
+        linear_abs_contribution = np.zeros(n_features, dtype=float)
+        loss_history: list[dict[str, Any]] = []
+
+        for cycle in range(self.n_cycles):
+            resid = y - pred
+            dtrain = lgb.Dataset(X, label=resid, free_raw_data=False)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                booster = lgb.train(
+                    params, dtrain, num_boost_round=self.trees_per_cycle
+                )
+            tree_update = np.asarray(booster.predict(X), dtype=float)
+            pred = pred + self.lr_tree * tree_update
+            trees.append(booster)
+            try:
+                importance = np.asarray(
+                    booster.feature_importance(importance_type="gain"), dtype=float
+                )
+                if len(importance) == n_features:
+                    feature_importances += importance
+            except Exception:  # noqa: BLE001 - diagnostics must not break fitting.
+                pass
+
+            resid = y - pred
+            correlations = np.zeros(n_features, dtype=float)
+            for feature_idx in range(n_features):
+                x = X[:, feature_idx]
+                if np.std(x) < 1e-10 or np.std(resid) < 1e-10:
+                    correlations[feature_idx] = 0.0
+                else:
+                    correlations[feature_idx] = float(np.corrcoef(x, resid)[0, 1])
+            correlations = np.nan_to_num(correlations, nan=0.0)
+            best_idx = int(np.argmax(np.abs(correlations)))
+            x_best = X[:, best_idx]
+            x_centered = x_best - np.mean(x_best)
+            resid_centered = resid - np.mean(resid)
+            denom = float(np.sum(x_centered**2))
+            if denom > 1e-10:
+                coef = float((x_centered @ resid_centered) / denom)
+                intercept = float(np.mean(resid) - coef * np.mean(x_best))
+            else:
+                coef = 0.0
+                intercept = float(np.mean(resid))
+            linear_update = coef * x_best + intercept
+            pred = pred + self.lr_linear * linear_update
+            linear_steps.append(
+                {
+                    "feature_idx": best_idx,
+                    "coef": coef,
+                    "intercept": intercept,
+                    "feature": self.feature_names_[best_idx],
+                }
+            )
+            linear_feature_counts[best_idx] += 1
+            linear_abs_contribution[best_idx] += abs(self.lr_linear * coef)
+            loss_history.append(
+                {
+                    "cycle": int(cycle + 1),
+                    "linear_feature": self.feature_names_[best_idx],
+                    "train_loss": float(np.mean((y - pred) ** 2)),
+                }
+            )
+
+        return {
+            "init": init,
+            "trees": trees,
+            "linear_steps": linear_steps,
+            "feature_importances": feature_importances,
+            "linear_feature_counts": linear_feature_counts,
+            "linear_abs_contribution": linear_abs_contribution,
+            "loss_history": loss_history,
+        }
+
+    def predict(self, X: Any) -> np.ndarray:
+        return self.predict_components(X)["prediction_total"].to_numpy(dtype=float)
+
+    def predict_components(self, X: Any) -> pd.DataFrame:
+        X_arr, _ = _coerce_lgbplus_matrix(X, self.feature_names_)
+        init_parts = []
+        tree_parts = []
+        linear_parts = []
+        for run in self.runs_:
+            components = self._run_components(run, X_arr)
+            init_parts.append(components["init"])
+            tree_parts.append(components["tree"])
+            linear_parts.append(components["linear"])
+        init = np.mean(np.vstack(init_parts), axis=0)
+        tree = np.mean(np.vstack(tree_parts), axis=0)
+        linear = np.mean(np.vstack(linear_parts), axis=0)
+        return pd.DataFrame(
+            {
+                "prediction_total": init + tree + linear,
+                "prediction_init": init,
+                "prediction_tree": tree,
+                "prediction_linear": linear,
+            },
+            index=X.index
+            if isinstance(X, pd.DataFrame)
+            else pd.RangeIndex(X_arr.shape[0]),
+        )
+
+    def _run_components(
+        self, run: dict[str, Any], X: np.ndarray
+    ) -> dict[str, np.ndarray]:
+        init = np.full(X.shape[0], float(run["init"]), dtype=float)
+        tree = np.zeros(X.shape[0], dtype=float)
+        linear = np.zeros(X.shape[0], dtype=float)
+        for booster, step in zip(run["trees"], run["linear_steps"], strict=True):
+            tree += self.lr_tree * np.asarray(booster.predict(X), dtype=float)
+            feature_idx = int(step["feature_idx"])
+            linear += self.lr_linear * (
+                float(step["coef"]) * X[:, feature_idx] + float(step["intercept"])
+            )
+        return {"init": init, "tree": tree, "linear": linear}
+
+    def get_total_trees(self) -> int:
+        return int(self.n_runs * self.n_cycles * self.trees_per_cycle)
+
+    def get_linear_feature_summary(self) -> dict[str, int]:
+        order = np.argsort(self.linear_feature_counts_)[::-1]
+        return {
+            self.feature_names_[idx]: int(self.linear_feature_counts_[idx])
+            for idx in order
+            if self.linear_feature_counts_[idx] > 0
+        }
+
+    def channel_importance(
+        self,
+        X: Any | None = None,
+        y: Any | None = None,
+    ) -> pd.DataFrame:
+        return _lgbplus_channel_frame(
+            feature_names=self.feature_names_,
+            tree_gain=self.feature_importances_,
+            linear_counts=self.linear_feature_counts_,
+            linear_abs_contribution=self.linear_abs_contribution_,
+        )
+
+    def summary(self) -> str:
+        if not hasattr(self, "runs_"):
+            return "Model not fitted yet."
+        return "\n".join(
+            [
+                "LGB^A+ Alternating Summary",
+                f"Runs: {self.n_runs}",
+                f"Cycles: {self.n_cycles}",
+                f"Trees per cycle: {self.trees_per_cycle}",
+                f"Total trees: {self.get_total_trees()}",
+            ]
+        )
+
+
+def lgb_plus(
+    X: Any,
+    y: Any | None = None,
+    *,
+    n_ensemble: int = 10,
+    n_steps: int = 200,
+    learning_rate: float = 0.05,
+    subsample: float = 0.7,
+    num_leaves: int = 5,
+    min_data_in_leaf: int = 20,
+    lambda_l2: float = 0.1,
+    linear_candidate_fraction: float = 0.5,
+    selection_method: Literal["oob", "validation", "training"] = "oob",
+    val_fraction: float = 0.2,
+    early_stop_patience: int | None = 50,
+    aggregation: Literal["mean", "median"] = "mean",
+    random_state: int | None = 0,
+    verbose: bool = False,
+    **kwargs: Any,
+) -> ModelFit:
+    """Fit competition-based LGB+ hybrid tree/linear boosting."""
+
+    params = {
+        "n_ensemble": int(n_ensemble),
+        "n_steps": int(n_steps),
+        "learning_rate": float(learning_rate),
+        "subsample": float(subsample),
+        "num_leaves": int(num_leaves),
+        "min_data_in_leaf": int(min_data_in_leaf),
+        "lambda_l2": float(lambda_l2),
+        "linear_candidate_fraction": float(linear_candidate_fraction),
+        "selection_method": selection_method,
+        "val_fraction": float(val_fraction),
+        "early_stop_patience": early_stop_patience,
+        "aggregation": aggregation,
+        "random_state": random_state,
+        "verbose": bool(verbose),
+        "implementation_note": (
+            "Package-native implementation aligned to philgoucou/lgbplus "
+            "python/lgb_plus.py and R/lgb_plus.R; LightGBM supplies residual "
+            "tree boosters, macroforecast owns pandas IO, metadata, and "
+            "component diagnostics."
+        ),
+        **kwargs,
+    }
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
+    return fit_estimator(
+        LGBPlusRegressor(**estimator_params),
+        X,
+        y,
+        model="lgb_plus",
+        metadata=params,
+    )
+
+
+def lgba_plus(
+    X: Any,
+    y: Any | None = None,
+    *,
+    n_runs: int = 1,
+    n_cycles: int = 25,
+    trees_per_cycle: int = 10,
+    lr_tree: float = 0.02,
+    lr_linear: float = 0.1,
+    num_leaves: int = 15,
+    min_data_in_leaf: int = 20,
+    subsample: float = 1.0,
+    random_state: int | None = 0,
+    verbose: bool = False,
+    **kwargs: Any,
+) -> ModelFit:
+    """Fit alternating LGB^A+ hybrid tree/linear boosting."""
+
+    params = {
+        "n_runs": int(n_runs),
+        "n_cycles": int(n_cycles),
+        "trees_per_cycle": int(trees_per_cycle),
+        "lr_tree": float(lr_tree),
+        "lr_linear": float(lr_linear),
+        "num_leaves": int(num_leaves),
+        "min_data_in_leaf": int(min_data_in_leaf),
+        "subsample": float(subsample),
+        "random_state": random_state,
+        "verbose": bool(verbose),
+        "implementation_note": (
+            "Package-native implementation aligned to philgoucou/lgbplus "
+            "python/lgb_plus_A.py and R/lgb_plus_A.R; n_runs absorbs the R "
+            "ensemble helper into the estimator API."
+        ),
+        **kwargs,
+    }
+    estimator_params = {
+        key: value for key, value in params.items() if key != "implementation_note"
+    }
+    return fit_estimator(
+        LGBAPlusRegressor(**estimator_params),
+        X,
+        y,
+        model="lgba_plus",
+        metadata=params,
+    )
 
 
 def _validate_quantile_levels(levels: Sequence[float]) -> tuple[float, ...]:
@@ -358,9 +1291,12 @@ class QuantileRegressionForestRegressor:
         self._leaf_targets = []
         for tree_idx in range(leaves.shape[1]):
             tree_leaves = leaves[:, tree_idx]
-            self._leaf_targets.append({
-                int(leaf): target[tree_leaves == leaf] for leaf in np.unique(tree_leaves)
-            })
+            self._leaf_targets.append(
+                {
+                    int(leaf): target[tree_leaves == leaf]
+                    for leaf in np.unique(tree_leaves)
+                }
+            )
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -379,16 +1315,24 @@ class QuantileRegressionForestRegressor:
         X: pd.DataFrame,
         levels: tuple[float, ...] | None = None,
     ) -> dict[float, np.ndarray]:
-        levels = self.quantile_levels if levels is None else _validate_quantile_levels(levels)
+        levels = (
+            self.quantile_levels
+            if levels is None
+            else _validate_quantile_levels(levels)
+        )
         if self._forest is None or not self._leaf_targets:
             return {q: np.full(len(X), self._fallback, dtype=float) for q in levels}
         leaves = self._forest.apply(X.fillna(0.0))
-        out: dict[float, np.ndarray] = {q: np.empty(len(X), dtype=float) for q in levels}
+        out: dict[float, np.ndarray] = {
+            q: np.empty(len(X), dtype=float) for q in levels
+        }
         for i in range(len(X)):
             samples: list[float] = []
             weights: list[float] = []
             for tree_idx in range(leaves.shape[1]):
-                values = self._leaf_targets[tree_idx].get(int(leaves[i, tree_idx]), np.array([]))
+                values = self._leaf_targets[tree_idx].get(
+                    int(leaves[i, tree_idx]), np.array([])
+                )
                 leaf_values = np.asarray(values, dtype=float)
                 if leaf_values.size == 0:
                     continue
@@ -523,8 +1467,12 @@ class MacroRandomForestRegressor:
             raise ValueError("Use either x_columns or x_pos, not both.")
         if S_columns is not None and S_pos is not None:
             raise ValueError("Use either S_columns or S_pos, not both.")
-        self.x_columns = None if x_columns is None else tuple(str(column) for column in x_columns)
-        self.S_columns = None if S_columns is None else tuple(str(column) for column in S_columns)
+        self.x_columns = (
+            None if x_columns is None else tuple(str(column) for column in x_columns)
+        )
+        self.S_columns = (
+            None if S_columns is None else tuple(str(column) for column in S_columns)
+        )
         self.x_pos = None if x_pos is None else tuple(int(pos) for pos in x_pos)
         self.S_pos = None if S_pos is None else tuple(int(pos) for pos in S_pos)
         self.y_pos = int(y_pos)
@@ -706,7 +1654,12 @@ class MacroRandomForestRegressor:
             value_hash = int(np.bitwise_xor.reduce(hashed)) if len(hashed) else 0
         except Exception:  # noqa: BLE001 - cache keys must never block prediction.
             value_hash = id(X)
-        return (tuple(X.index), tuple(str(column) for column in X.columns), X.shape, value_hash)
+        return (
+            tuple(X.index),
+            tuple(str(column) for column in X.columns),
+            X.shape,
+            value_hash,
+        )
 
 
 def macro_random_forest(
@@ -802,12 +1755,16 @@ def macro_random_forest(
 
 
 __all__ = [
+    "LGBAPlusRegressor",
+    "LGBPlusRegressor",
     "MacroRandomForestRegressor",
     "QuantileRegressionForestRegressor",
     "catboost",
     "decision_tree",
     "extra_trees",
     "gradient_boosting",
+    "lgba_plus",
+    "lgb_plus",
     "lightgbm",
     "macro_random_forest",
     "quantile_regression_forest",

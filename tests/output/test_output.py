@@ -204,6 +204,107 @@ def test_output_generation_tables_and_summary() -> None:
     assert summary["evaluation"]["ranking_rows"] == 1
 
 
+def test_output_writes_forecast_result_anatomy_sidecar(tmp_path) -> None:
+    anatomy = mf.interpretation.AnatomyPipelineResult(
+        anatomy=None,
+        explanations={
+            "forecast": pd.DataFrame(
+                {
+                    "model_set": ["ridge"],
+                    "index": [pd.Timestamp("2020-01-31")],
+                    "feature": ["x1"],
+                    "contribution": [0.25],
+                    "is_base": [False],
+                }
+            )
+        },
+        variable_importance=pd.DataFrame(
+            {"model_set": ["ridge"], "feature": ["x1"], "importance": [0.25]}
+        ),
+        performance_values={
+            "rmse": pd.DataFrame(
+                {
+                    "model_set": ["ridge"],
+                    "index": ["global"],
+                    "feature": ["x1"],
+                    "contribution": [-0.1],
+                    "is_base": [False],
+                }
+            )
+        },
+        metadata={"kind": "anatomy_pipeline", "models": ["ridge"]},
+    )
+    result = _forecast_result().with_sidecar("anatomy", anatomy)
+
+    tables = mf.output.forecast_shapley_tables(anatomy, prefix="demo")
+    backend_tables = mf.output.anatomy_tables(anatomy, prefix="backend")
+    bundle = mf.output.bundle_outputs(forecasts=result, include_summary=True)
+    manifest = mf.output.write_artifacts(
+        result,
+        tmp_path,
+        formats=("json",),
+        include_provenance=False,
+    )
+
+    assert result.sidecar_names() == ("anatomy",)
+    assert result.get_sidecar("anatomy") is anatomy
+    assert "sidecars" in result.to_dict()
+    assert "demo_variable_importance" in tables
+    assert "backend_variable_importance" in backend_tables
+    assert "anatomy_anatomy_variable_importance" in bundle.artifacts
+    assert bundle.artifacts["summary"]["sidecars"]["names"] == ["anatomy"]
+    assert (tmp_path / "forecast_result_anatomy_summary.json").exists()
+    assert (tmp_path / "forecast_result_anatomy_variable_importance.json").exists()
+    assert any(
+        record.source == "forecast_result.sidecars.anatomy"
+        for record in manifest.records
+    )
+
+
+def test_output_writes_forecast_result_dual_sidecar(tmp_path) -> None:
+    X_train = pd.DataFrame({"x": [0.0, 1.0, 2.0]})
+    y_train = pd.Series([0.0, 1.0, 2.0])
+    X_test = pd.DataFrame({"x": [1.5]})
+    result = _forecast_result().with_dual(
+        None,
+        X_train,
+        y_train,
+        X_test,
+        method="ridge",
+        lambda_=0.1,
+        ridge_penalty_scale="none",
+        top_n=1,
+    )
+
+    bundle = mf.output.bundle_outputs(forecasts=result, include_summary=True)
+    manifest = mf.output.write_artifacts(
+        result,
+        tmp_path,
+        formats=("json",),
+        include_provenance=False,
+        layout="grouped",
+    )
+
+    assert result.sidecar_names() == ("dual",)
+    assert "dual_dual_observation_weights" in bundle.artifacts
+    assert (tmp_path / "interpretation" / "dual" / "forecast_result_dual_summary.json").exists()
+    assert (
+        tmp_path
+        / "interpretation"
+        / "dual"
+        / "forecast_result_dual_observation_weights.json"
+    ).exists()
+    assert (
+        "interpretation/dual/forecast_result_dual_observation_weights.json"
+        in manifest.artifacts
+    )
+    assert any(
+        record.source == "forecast_result.sidecars.dual"
+        and record.metadata["group"] == "interpretation/dual"
+        for record in manifest.records
+    )
+
+
 def test_output_generation_supports_tests_models_selection_and_metadata() -> None:
     test_result = mf.tests.dm_test([1.0, 1.2, 0.9], [1.1, 1.1, 1.0])
     fit = mf.models.ModelFit(
@@ -263,3 +364,83 @@ def test_bundle_select_name_index_and_write_artifacts(tmp_path) -> None:
     assert (tmp_path / "demo_forecasts.json").exists()
     assert (tmp_path / "demo_summary.json").exists()
     assert len(manifest.records) == 2
+
+
+def test_interpretation_outputs_and_grouped_artifact_layout(tmp_path) -> None:
+    result = _forecast_result()
+    report = mf.evaluation.EvaluationReport(
+        scores=pd.DataFrame({"model": ["ridge"], "metric": ["rmse"], "value": [0.1]}),
+        ranking=pd.DataFrame({"model": ["ridge"], "rank": [1]}),
+    )
+    shap = pd.DataFrame({"feature": ["x1"], "importance": [0.3]})
+    shap.attrs["macroforecast_metadata_schema"] = {
+        "kind": "shap_importance",
+        "version": 1,
+    }
+    X_train = pd.DataFrame({"x": [0.0, 1.0, 2.0]})
+    y_train = pd.Series([0.0, 1.0, 2.0])
+    X_test = pd.DataFrame({"x": [1.5]})
+    dual = mf.interpretation.dual.dual_interpretation(
+        None,
+        X_train,
+        y_train,
+        X_test,
+        method="ridge",
+        lambda_=0.1,
+        ridge_penalty_scale="none",
+        top_n=1,
+    )
+
+    interp_bundle = mf.output.interpretation_outputs(
+        {"shap": shap, "dual": dual},
+        prefix="interp",
+    )
+    bundle = mf.output.bundle_outputs(
+        forecasts=result,
+        evaluation=report,
+        interpretation=interp_bundle.artifacts,
+        metadata={"run": "demo"},
+    )
+    manifest = mf.output.write_artifacts(
+        bundle,
+        tmp_path,
+        formats=("json",),
+        include_provenance=False,
+        layout="grouped",
+    )
+
+    assert "interp_shap" in interp_bundle.artifacts
+    assert "interp_dual_observation_weights" in interp_bundle.artifacts
+    assert "interp_dual_forecast_diagnostics" in interp_bundle.artifacts
+    assert (tmp_path / "forecasts" / "forecasts.json").exists()
+    assert (tmp_path / "evaluation" / "metrics.json").exists()
+    assert (tmp_path / "evaluation" / "ranking.json").exists()
+    assert (tmp_path / "interpretation" / "interpretation_interp_shap.json").exists()
+    assert (
+        tmp_path
+        / "interpretation"
+        / "dual"
+        / "interpretation_interp_dual_observation_weights.json"
+    ).exists()
+    assert (
+        tmp_path
+        / "interpretation"
+        / "dual"
+        / "interpretation_interp_dual_forecast_diagnostics.json"
+    ).exists()
+    assert (tmp_path / "metadata" / "metadata.json").exists()
+    assert (tmp_path / "metadata" / "summary.json").exists()
+    groups = {record.source: record.metadata["group"] for record in manifest.records}
+    assert groups["forecasts"] == "forecasts"
+    assert groups["metrics"] == "evaluation"
+    assert groups["interpretation_interp_shap"] == "interpretation"
+    assert (
+        groups["interpretation_interp_dual_observation_weights"]
+        == "interpretation/dual"
+    )
+    assert groups["metadata"] == "metadata"
+    assert "interpretation/interpretation_interp_shap.json" in manifest.artifacts
+    assert (
+        "interpretation/dual/interpretation_interp_dual_observation_weights.json"
+        in manifest.artifacts
+    )

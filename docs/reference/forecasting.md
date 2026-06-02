@@ -66,6 +66,36 @@ macroforecast.forecasting.run(
 
 Output: `ForecastResult`.
 
+`ForecastResult` methods:
+
+| Method | Input | Output | Meaning |
+| --- | --- | --- | --- |
+| `to_frame()` | none | `DataFrame` | Copy of forecast table. |
+| `evaluate(**kwargs)` | arguments forwarded to `mf.metrics.evaluate_forecasts` | `DataFrame` | Forecast-score table. |
+| `with_sidecar(name, value)` | sidecar name and runtime object | `ForecastResult` | Copy with a named sidecar recorded in metadata. |
+| `get_sidecar(name, default=None)` | sidecar name | object | Return an attached sidecar. |
+| `sidecar_names()` | none | tuple | Names of attached sidecars. |
+| `with_oshapley(X, y, models, window=..., ...)` | explicit aligned oShapley/PBSV inputs | `ForecastResult` | Build and attach an oShapley/PBSV sidecar through `mf.interpretation.oshapley_from_forecast_result(...)`. |
+| `with_anatomy(X, y, models, window=..., ...)` | explicit aligned backend inputs | `ForecastResult` | Backend alias for `with_oshapley(...)`. |
+| `with_dual(model, X_train, y_train, X_test=None, ...)` | fitted model and explicit train/test design | `ForecastResult` | Build and attach a DualML observation-weight sidecar through `mf.interpretation.dual_from_forecast_result(...)`. |
+| `anatomy_explain(anatomy, **kwargs)` | precomputed `anatomy.Anatomy` object or saved path | `DataFrame` | Convenience call to `mf.interpretation.anatomy_explain(...)`, with forecast-result metadata attached. |
+| `pbsv(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Convenience call to `mf.interpretation.pbsv(...)`. |
+| `oshapley_vi(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Convenience call to `mf.interpretation.oshapley_vi(...)`. |
+| `anatomy_pbsv(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Backend alias for `pbsv(...)`. |
+| `anatomy_oshapley_vi(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Backend alias for `oshapley_vi(...)`. |
+
+`pbsv(...)` and `oshapley_vi(...)` do not create the backend object. Use
+`with_oshapley(...)` or
+`mf.interpretation.oshapley_from_forecast_result(...)` when the sidecar should
+be built from explicit `X/y`, model specs, and `WindowSpec`.
+
+Dual interpretation is also attached after the runner. `forecasting.run()`
+does not infer observation weights automatically because the forecast table
+does not contain the exact fitted estimator, training feature matrix, training
+target, and forecast-row feature matrix. Use `with_dual(...)` or
+`mf.interpretation.dual_from_forecast_result(...)` with those objects
+explicitly.
+
 ```python
 pre = mf.preprocessing.preprocess_spec(
     transform="none",
@@ -795,6 +825,7 @@ macroforecast.forecasting.ForecastResult(forecasts, metadata={})
 | --- | --- | --- |
 | `forecasts` | pandas DataFrame | One row per emitted forecast. |
 | `metadata` | dict | Window, preprocessing, feature, model, and model-selection metadata. |
+| `sidecars` | dict | Runtime objects attached after forecasting, such as a `ForecastShapleyResult`. |
 
 The forecast table always includes `prediction`. If the fitted model exposes
 `predict_variance(X_test)` or `predict_variance(horizon=...)`, the runner also
@@ -810,6 +841,12 @@ Methods:
 | --- | --- |
 | `to_frame()` | Forecast table copy. |
 | `evaluate(**kwargs)` | Calls `macroforecast.metrics.evaluate_forecasts()` on this result. |
+| `with_sidecar(name, value)` | Returns a copy with a named runtime sidecar. |
+| `with_oshapley(X, y, models, window=..., **kwargs)` | Builds and attaches an oShapley/PBSV sidecar. |
+| `with_anatomy(X, y, models, window=..., **kwargs)` | Backend alias for `with_oshapley(...)`. |
+| `with_dual(model, X_train, y_train, X_test=None, **kwargs)` | Builds and attaches a dual interpretation sidecar. |
+| `get_sidecar(name, default=None)` | Retrieves one sidecar. |
+| `sidecar_names()` | Lists attached sidecars. |
 | `to_dict()` | JSON-ready dictionary. |
 | `to_json(path=None)` | JSON text and optional file write. |
 

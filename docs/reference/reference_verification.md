@@ -31,6 +31,7 @@ uv run pytest tests/reference -q
 | Direct and path targets | `tests/reference/test_reference_verification.py` | Direct, average, and path target columns use the intended future-step formulas. |
 | MARX moving-average loop | `tests/reference/test_reference_verification.py` | `feature_matrix(..., specification="MARX")` matches the author-style cumulative lag-average loop. |
 | MAF variable-specific PCA | `tests/reference/test_reference_verification.py` | `maf_features()` equals PCA applied separately to each variable's own lag panel. |
+| AlbaMA terminal-node weights | `tests/feature_engineering/test_albama.py` | `filters.albama()` matches the local R script's terminal-node co-membership logic in root-leaf fixtures and `feature_analysis.recent_weight_share()` enforces one-sided no-future weights. |
 | MIDAS weights | `tests/reference/test_reference_verification.py` | Almon, beta, and step MIDAS metadata weights match the pinned shape formulas. |
 | Runner stage policies | `tests/reference/test_reference_verification.py` | Fit-window preprocessing/features stop at each origin fit window, while explicit full-panel policies fit once on the full sample. |
 

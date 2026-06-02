@@ -18,6 +18,285 @@ Top-level shortcuts such as `mf.rmse(...)` are intentionally not exported.
 `MetricLike` is the public input type used by metric resolvers: a metric can
 be a registered metric name or a callable with the expected scoring signature.
 
+## Risk-Return Forecast Evaluation
+
+### Paper Citation And Scope
+
+This section implements the evaluation framework from:
+
+> Goulet Coulombe, Philippe. 2026. "Quantifying the Risk-Return Tradeoff in
+> Forecasting." arXiv:2605.09712v1, submitted May 10, 2026.
+> arXiv page: <https://arxiv.org/abs/2605.09712>.
+
+This is not a portfolio-construction module. `macroforecast` does not treat
+macroeconomic forecasts as traded assets here. The word "return" means a
+date-level **loss differential**:
+
+```text
+forecast_return_t(model | benchmark)
+    = loss_t(benchmark) - loss_t(model)
+```
+
+Positive values mean the candidate model reduced forecast loss relative to the
+benchmark on that date. Negative values mean it underperformed. The financial
+language is useful because it gives precise names for stability of gains:
+volatility, downside risk, upside/downside balance, and drawdown. The object
+being evaluated remains a macro forecast panel.
+
+These functions live in `macroforecast.metrics` because they score forecasts.
+They do not explain fitted models, so they do not belong in
+`macroforecast.interpretation`. They also do not run hypothesis tests, so they
+do not belong in `macroforecast.tests`. Higher-level report integration can
+later call these functions from `macroforecast.evaluation`.
+
+### Paper Motivation
+
+Standard forecast evaluation usually asks whether a model has lower average
+loss than a benchmark. The risk-return view asks whether those gains are stable
+enough to trust. A model can have lower RMSE on average while generating large
+negative episodes in recessions, inflation spikes, post-COVID periods, or other
+macroeconomic regimes where forecast failures are costly.
+
+The paper's primitive object is therefore not an aggregated RMSE table. It is a
+date-level sequence of benchmark-relative loss improvements. This is why the
+functions below operate on forecast panels and return paths rather than only on
+already-aggregated metric tables.
+
+### compute_point_loss
+
+```python
+macroforecast.metrics.compute_point_loss(
+    y_true,
+    y_pred,
+    *,
+    loss="squared_error",
+    variance=None,
+    quantile=None,
+    eps=1e-12,
+) -> pandas.Series
+```
+
+Input: aligned realized values and forecasts.
+
+Output: one observation-level loss per aligned row, where lower is better.
+
+Supported losses:
+
+| `loss` | Required inputs | Formula or meaning |
+| --- | --- | --- |
+| `"squared_error"`, `"mse"`, `"msfe"` | `y_true`, `y_pred` | `(y_true - y_pred)^2` at each date. |
+| `"absolute_error"`, `"mae"` | `y_true`, `y_pred` | `abs(y_true - y_pred)` at each date. |
+| `"pinball_loss"` | `y_true`, `y_pred`, `quantile` | Quantile loss for one requested quantile. |
+| `"negative_log_score"`, `"gaussian_nll"`, `"log_score"` | `y_true`, `y_pred`, `variance` | Gaussian negative log score. |
+| `"qlike"` | realized variance in `y_true`, forecast variance in `y_pred` | QLIKE volatility loss. |
+
+### forecast_returns
+
+```python
+macroforecast.metrics.forecast_returns(
+    forecasts,
+    *,
+    benchmark,
+    group_cols=("target", "horizon"),
+    loss="squared_error",
+    model_col="model",
+    actual="actual",
+    prediction="prediction",
+    variance_prediction="variance_prediction",
+    support_cols=None,
+    include_benchmark=False,
+    quantile=None,
+) -> pandas.DataFrame
+```
+
+Input: a `ForecastResult`, forecast table, or pandas-like table with candidate
+and benchmark rows. The benchmark must already exist in the same forecast
+panel. The function does not create a benchmark forecast.
+
+Required columns:
+
+| Column | Meaning |
+| --- | --- |
+| `model_col` | Candidate and benchmark model identifiers. Default: `model`. |
+| `actual` | Realized value. Default: `actual`. |
+| `prediction` | Point forecast. Default: `prediction`. |
+| `date`, `origin`, or `origin_pos` | Support identity. At least one is required unless supplied through `support_cols`. |
+| `group_cols` | Alignment groups such as `target` and `horizon`; all requested columns must exist. |
+
+Output columns:
+
+| Column | Meaning |
+| --- | --- |
+| `model_loss` | Candidate date-level loss. |
+| `benchmark_loss` | Benchmark date-level loss on the same support row. |
+| `forecast_return` | `benchmark_loss - model_loss`; positive favors candidate. |
+| `return_sign` | `"positive"`, `"negative"`, or `"zero"`. |
+| `cumulative_return` | Cumulative sum of `forecast_return` within model/benchmark/group/loss path. |
+| `drawdown` | Cumulative return minus running peak. |
+| `loss_name` | Canonical loss label. |
+| `model_id`, `benchmark_id` | Stable model labels for downstream grouping. |
+
+Validation is intentionally strict. Candidate and benchmark support must match
+exactly within every group, and realized values must match after alignment.
+This prevents a benchmark with a different window, horizon, target, or missing
+date pattern from being treated as a fair comparator.
+
+```python
+returns = mf.metrics.forecast_returns(
+    forecast_result,
+    benchmark="ar",
+    group_cols=("target", "horizon"),
+    loss="squared_error",
+)
+```
+
+### sharpe_ratio
+
+```python
+macroforecast.metrics.sharpe_ratio(returns, *, hac_lags=None) -> float
+```
+
+Computes mean forecast return divided by return volatility. With
+`hac_lags=None`, the denominator is the ordinary sample standard deviation of
+the return sequence. With `hac_lags="auto"` or a nonnegative integer, the
+denominator is a Newey-West/Bartlett long-run standard deviation. This is a
+path-stability score, not a trading Sharpe ratio.
+
+### sortino_ratio
+
+```python
+macroforecast.metrics.sortino_ratio(
+    returns,
+    *,
+    target_return=0.0,
+) -> float
+```
+
+Computes mean excess forecast return divided by downside semideviation:
+
+```text
+downside_t = min(return_t - target_return, 0)
+```
+
+If all nonzero returns are above the target, the denominator is zero and the
+ratio is `inf`. If numerator and denominator are both zero, the ratio is `nan`.
+
+### omega_ratio
+
+```python
+macroforecast.metrics.omega_ratio(
+    returns,
+    *,
+    threshold=0.0,
+) -> float
+```
+
+Computes total upside divided by total downside around a threshold:
+
+```text
+omega = sum(max(return_t - threshold, 0))
+        / sum(max(threshold - return_t, 0))
+```
+
+`inf` means there is upside and no downside; `nan` means there is neither
+upside nor downside.
+
+### drawdown_series and max_drawdown
+
+```python
+macroforecast.metrics.drawdown_series(returns) -> pandas.Series
+macroforecast.metrics.max_drawdown(returns) -> float
+```
+
+Drawdown is computed from cumulative forecast returns:
+
+```text
+cumulative_t = sum_{s <= t} return_s
+drawdown_t = cumulative_t - max_{s <= t}(cumulative_s)
+```
+
+For example, returns `[1, 1, -3, 1]` have cumulative returns
+`[1, 2, -1, 0]`, drawdowns `[0, 0, -3, -2]`, and maximum drawdown `-3`.
+
+### risk_adjusted_forecast_metrics
+
+```python
+macroforecast.metrics.risk_adjusted_forecast_metrics(
+    returns,
+    *,
+    group_cols=None,
+    return_col="forecast_return",
+    hac_lags="auto",
+    target_return=0.0,
+    omega_threshold=0.0,
+) -> pandas.DataFrame
+```
+
+Input: the date-level output of `forecast_returns(...)`, or any DataFrame with
+a return column.
+
+Output: one row per group with:
+
+| Column | Meaning |
+| --- | --- |
+| `n_obs` | Number of finite return observations. |
+| `mean_return` | Average benchmark-relative loss reduction. |
+| `return_sd` | Sample standard deviation of returns. |
+| `hac_return_sd` | HAC long-run standard deviation when requested. |
+| `sharpe`, `hac_sharpe` | Mean return divided by ordinary or HAC volatility. |
+| `sortino` | Downside-risk-adjusted return. |
+| `omega` | Upside/downside ratio. |
+| `max_drawdown` | Worst cumulative-return drawdown. |
+| `final_cumulative_return` | Sum of returns over the evaluated path. |
+| `win_rate` | Share of dates with positive forecast return. |
+
+Default grouping uses available columns such as `model_id`, `benchmark_id`,
+`target`, `horizon`, `sample`, `regime`, and `loss_name`.
+
+### edge_ratio
+
+```python
+macroforecast.metrics.edge_ratio(
+    forecasts,
+    *,
+    group_cols=("target", "horizon"),
+    loss="squared_error",
+    model_col="model",
+    actual="actual",
+    prediction="prediction",
+    variance_prediction="variance_prediction",
+    support_cols=None,
+    quantile=None,
+) -> pandas.DataFrame
+```
+
+Edge Ratio asks whether a model delivers unique gains relative to the model
+pool, not only relative to one benchmark. For each date and model:
+
+```text
+edge_t(model) = min_loss_t(all other models) - loss_t(model)
+```
+
+Therefore:
+
+| Edge sign | Meaning |
+| --- | --- |
+| `edge > 0` | The model is strictly better than every alternative on that date. |
+| `edge = 0` | The model ties the best alternative. |
+| `edge < 0` | At least one alternative is better. |
+
+Aggregated Edge Ratio is:
+
+```text
+edge_ratio
+    = (sum(max(edge_t, 0)) / sum(max(-edge_t, 0)))
+      * (number_of_models - 1)
+```
+
+If a model has positive edge wins and no edge regrets, the ratio is `inf`. If a
+model never has edge wins, the ratio is `0`. The result also carries the
+date-level edge path in `attrs["macroforecast_edge_path"]` for inspection.
+
 ## Forecast Table Helpers
 
 ### evaluate_forecasts

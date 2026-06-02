@@ -126,7 +126,7 @@ result = macroforecast.forecasting.run(
 | `random_subspace` | [`regRSM::regRSM`](https://search.r-project.org/CRAN/refmans/regRSM/html/regRSM.html) and random-forest `mtry` logic | Repeated random predictor-subspace fits. | General member-level feature bagging, not tree split-level `mtry` and not regRSM's variable-importance final-model selection. |
 | `stacking` | [`caretEnsemble::caretStack`](https://search.r-project.org/CRAN/refmans/caretEnsemble/html/caretStack.html) | Fits a meta model on out-of-fold base predictions. | Adds `splitter="forward"` for macro time ordering; R caret examples often use generic CV. |
 | `super_learner` | [`SuperLearner::SuperLearner`](https://search.r-project.org/CRAN/refmans/SuperLearner/html/SuperLearner.html) | Uses OOF library predictions and nonnegative weights that sum to one. | Regression-only callable; supports `nnls`, `best`, and `equal` weights, not every R family/loss/plugin. |
-| `booging` | [Goulet Coulombe, *To Bag is to Prune*](https://arxiv.org/abs/2008.07063) | Fits many intentionally overfit stochastic boosting paths with perturbation and averages them. | Package-native approximation using sklearn `GradientBoostingRegressor` members. |
+| `booging` | [Goulet Coulombe, *To Bag is to Prune*](https://arxiv.org/abs/2008.07063) and the `bagofprunes` R source `Booging(y, X, X.new, ...)` | Samples rows with `sampling_rate`, samples features with `mtry`, optionally appends two perturbed fake feature copies, fits intentionally overfit stochastic boosting members, and averages member predictions. | Uses sklearn `GradientBoostingRegressor` as the boosting backend. Continuous scaling is train-only for leakage-safe estimator semantics, while the R script scales train and `X.new` jointly inside one prediction call. |
 
 The added functions beyond the old `bagging`/`booging` pair are `subagging`,
 `random_subspace`, `stacking`, and `super_learner`. They cover the main
@@ -140,6 +140,62 @@ trees; in macroforecast, cross-model forecast combinations belong in
 `macroforecast.forecasting.combination`. `regRSM` variable-importance final
 model selection belongs closer to feature selection and is not bundled into this
 fit-time ensemble callable.
+
+## Paper Citation And Scope
+
+The Booging implementation is based on:
+
+> Philippe Goulet Coulombe. 2024. *To Bag is to Prune*. arXiv:2008.07063v5.
+
+The method code is cross-checked against the author's public `bagofprunes` R
+source, especially `Booging(y, X, X.new, ...)` in
+`PGC_Bag_of_Prunes_v200829.R`. The package treats the paper as a method port,
+not as a full empirical replication. The goal is to make the randomized
+greedy-ensemble mechanism callable inside the macroforecast workflow.
+
+The review-mapped mechanism is:
+
+| Paper idea | Meaning for macroforecast |
+| --- | --- |
+| Random Forest has a large in-sample versus out-of-sample R-squared wedge | The model can overfit member trees without necessarily damaging the ensemble forecast. |
+| Bagging plus perturbation performs implicit pruning | Averaging many randomized greedy paths cancels unstable noise-fitting steps while preserving stable signal-fitting steps. |
+| Greedy separability | Early greedy steps are not re-optimized after later overfit steps, so useful structure can survive overfitting. |
+| Perfectly random forest null argument | Under pure noise, averaging many random predictions tends toward a sample-mean-like forecast, matching the optimal pruning intuition. |
+| LASSO contrast | Global re-optimization along a regularization path weakens the same mechanism; setting the penalty to zero collapses to OLS rather than randomized implicit pruning. |
+| Booging | Applies bagging and perturbation to boosted trees, so the stopping point is regularized by averaging randomized overfit boosting paths. |
+| MARSquake | Applies the same outer idea to MARS through randomized predictor admission in the forward pass. |
+
+This package currently implements Booging. MARSquake is documented as a related
+paper method but is not exposed as a first-class callable yet, because exact
+alignment requires either a stable Python analogue of R `earth::earth` with the
+custom `allowed` callback or a package-native MARS forward-pass implementation.
+The plain MARS model remains available under `macroforecast.models`; that is not
+the same as MARSquake.
+
+The paper's empirical evidence spans simulated DGPs, many non-macro benchmark
+datasets, and six US macro forecasting tasks covering GDP, unemployment, and
+inflation horizons. For macroforecast, the relevant takeaway is operational:
+Booging is useful when small noisy macro samples make the exact boosting stopping
+point unstable, and the user wants randomized overfitting plus averaging as an
+alternative regularization route.
+
+## Bagging, Random Forest, And Booging
+
+These functions expose a common decomposition:
+
+| Method | Row sampling | Feature perturbation | Base learner | macroforecast location |
+| --- | --- | --- | --- | --- |
+| Bagging | bootstrap or block bootstrap | optional member-level `max_features` | any registered inner base learner | `macroforecast.model_ensemble.bagging` |
+| Random-subspace bagging | bootstrap/subsampling | member-level `max_features` | any registered inner base learner | `bagging(..., max_features=...)` or `random_subspace(...)` |
+| Random forest | bootstrap plus split-level feature search | split-level tree `mtry` | CART trees | `macroforecast.models.random_forest` |
+| Booging | row subsampling | member-level `mtry`, optional fake feature copies | overfit boosted trees | `macroforecast.model_ensemble.booging` |
+
+The distinction matters. `bagging(base="decision_tree", max_features="sqrt")`
+is a random-subspace tree ensemble, not an exact random forest, because the
+feature subset is drawn once per member rather than at each tree split. Use
+`macroforecast.models.random_forest` when the exact random-forest backend is the
+target. Use `booging` when the target is Goulet Coulombe's randomized
+greedy-boosting ensemble.
 
 ## Registered Specs
 
@@ -157,7 +213,7 @@ macroforecast.model_ensemble.list_model_ensemble_specs()
 | `random_subspace` | `random` | `small`, `standard`, `wide` | internal random subspace + sklearn-compatible base estimators |
 | `stacking` | `random` | `small`, `standard`, `wide` | internal OOF stacking + sklearn-compatible base/meta estimators |
 | `super_learner` | `random` | `small`, `standard`, `wide` | internal SuperLearner-style OOF NNLS/equal/best weighting |
-| `booging` | `random` | `small`, `standard`, `wide` | internal augmentation/bagging + sklearn gradient boosting members |
+| `booging` | `random` | `small`, `standard`, `wide` | internal augmentation/bagging + sklearn.ensemble.GradientBoostingRegressor |
 
 The forecasting runner and `macroforecast.model_selection.search_spec()` both
 resolve these names, so `model="bagging"` now means the fit-time ensemble spec,
@@ -203,6 +259,7 @@ macroforecast.model_ensemble.bagging(
     strategy="standard",
     block_length=4,
     replace=True,
+    max_features=None,
 )
 ```
 
@@ -213,7 +270,10 @@ empirical quantiles across members.
 
 The fitted object stores out-of-bag diagnostics when any observation is left out
 by at least one member: `fit.diagnostics["model_ensemble"]["oob_predictions"]`,
-`oob_residuals`, `oob_metrics`, and `n_members`.
+`oob_residuals`, `oob_metrics`, and `n_members`. It also stores
+`member_features`, even when `max_features=None`; this makes generic bagging,
+random-subspace bagging, and CART-like tree bagging inspectable with the same
+metadata contract.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
@@ -225,6 +285,7 @@ by at least one member: `fit.diagnostics["model_ensemble"]["oob_predictions"]`,
 | `strategy` | `"standard"` | `standard` row draws or moving `block` draws. |
 | `block_length` | `4` | Moving-block length when `strategy="block"`. |
 | `replace` | `True` | Whether rows are sampled with replacement. |
+| `max_features` | `None` | Optional member-level feature-subspace size. Accepts `None`/`"all"`, a fraction, an integer count, `"sqrt"`, or `"log2"`. |
 
 ## subagging
 
@@ -238,6 +299,7 @@ macroforecast.model_ensemble.subagging(
     max_samples=0.632,
     random_state=0,
     base_params=None,
+    max_features=None,
 )
 ```
 
@@ -259,6 +321,7 @@ Diagnostics store `member_samples`, OOB diagnostics when available, and
 | `max_samples` | `0.632` | Row sample fraction per member. |
 | `random_state` | `0` | Resampling seed. |
 | `base_params` | `None` | Parameters passed to the base estimator. |
+| `max_features` | `None` | Optional member-level feature-subspace size, with the same accepted values as `bagging`. |
 
 ## random_subspace
 
@@ -277,9 +340,9 @@ macroforecast.model_ensemble.random_subspace(
 ```
 
 Each member model sees a random subset of columns. `max_features` can be a
-fraction of columns or an integer count. This is useful when `p` is large and
-the package user wants a fit-time model ensemble distinct from random-forest
-split-level `mtry`.
+fraction of columns, an integer count, `"sqrt"`, or `"log2"`. This is useful
+when `p` is large and the package user wants a fit-time model ensemble distinct
+from random-forest split-level `mtry`.
 
 `predict_quantiles(X_new, levels=...)` returns empirical quantiles across random
 subspace members. The fitted diagnostics include `member_features`, which records
@@ -289,7 +352,7 @@ which columns each member saw.
 | --- | --- | --- |
 | `base` | `"ridge"` | Base estimator name. |
 | `n_estimators` | `100` | Number of random feature-subspace fits. |
-| `max_features` | `0.5` | Fraction or integer count of columns per member. |
+| `max_features` | `0.5` | Fraction, integer count, `"sqrt"`, or `"log2"` column count per member. |
 | `max_samples` | `1.0` | Row subsample fraction per member. |
 | `random_state` | `0` | Feature and row sampling seed. |
 | `base_params` | `None` | Parameters passed to the base estimator. |
@@ -382,42 +445,111 @@ macroforecast.model_ensemble.booging(
     y,
     *,
     B=100,
-    sample_frac=0.75,
-    inner_n_estimators=1500,
-    inner_learning_rate=0.1,
-    inner_max_depth=3,
-    inner_subsample=0.5,
-    da_noise_frac=1/3,
-    da_drop_rate=0.2,
+    sampling_rate=0.75,
+    mtry=0.8,
+    data_aug=False,
+    noise_level=0.3,
+    shuffle_rate=0.2,
+    n_trees=1000,
+    tree_depth=3,
+    nu=0.3,
+    bf=0.5,
+    n_augmented_copies=2,
+    scale_continuous=True,
+    fix_seeds=True,
     random_state=0,
 )
 ```
 
 `booging` fits many intentionally overfit stochastic gradient-boosting members.
-During training, each member sees row subsampling, augmented original/noisy
-features, and column dropout on the augmented matrix. During prediction, the
-augmented copy is deterministic, so forecasts do not depend on a new noise draw.
+It is the boosted-tree analogue of the randomized greedy ensemble logic behind
+random forests: draw rows, draw features, fit an overfit boosted-tree path, and
+average over many perturbed paths.
+
+The callable accepts the paper/R-code names directly:
+
+| R code name | macroforecast name | Meaning |
+| --- | --- | --- |
+| `B` | `B` | Number of overfit boosting members. |
+| `sampling.rate` | `sampling_rate` | Row fraction sampled without replacement per member. |
+| `mtry` | `mtry` | Feature-subspace size per member. Accepts fractions, integer counts, `"sqrt"`, or `"log2"`. |
+| `data.aug` | `data_aug` | Whether to append fake perturbed feature copies. |
+| `noise.level` | `noise_level` | Gaussian noise scale for continuous fake copies after standardization. |
+| `shuffle.rate` | `shuffle_rate` | Share of rows shuffled inside binary fake copies. |
+| `bf` | `bf` | Stochastic boosting subsample share inside each boosted member. |
+| `n.trees` | `n_trees` | Boosting stages inside each member. |
+| `tree.depth` | `tree_depth` | Inner boosting tree depth. |
+| `nu` | `nu` | Inner boosting learning rate. |
+
+Backward-compatible names are still accepted: `sample_frac`,
+`inner_n_estimators`, `inner_learning_rate`, `inner_max_depth`,
+`inner_subsample`, `max_features`, `da_noise_frac`, and `da_drop_rate`.
+
+Backend parameter mapping:
+
+| R `gbm` / Booging parameter | sklearn / macroforecast target |
+| --- | --- |
+| `gbm::gbm(n.trees=...)` | `GradientBoostingRegressor(n_estimators=...)` through `n_trees` |
+| `gbm::gbm(shrinkage=...)` | `GradientBoostingRegressor(learning_rate=...)` through `nu` |
+| `gbm::gbm(interaction.depth=...)` | `GradientBoostingRegressor(max_depth=...)` through `tree_depth` |
+| `gbm::gbm(bag.fraction=...)` | `GradientBoostingRegressor(subsample=...)` through `bf` |
+| `Booging(..., sampling.rate=...)` | outer row subsampling before each boosted member |
+| `Booging(..., mtry=...)` | outer member-level feature subsampling before each boosted member |
+
+When `data_aug=True`, macroforecast follows the R algorithm's fake-column
+structure. Continuous variables are standardized and then copied with Gaussian
+noise. Binary variables are copied after shuffling a `shuffle_rate` share of
+rows. Two fake copies are used by default, matching the R source's `fake1_` and
+`fake2_` construction. Prediction uses deterministic fake copies of `X_new`, so
+calling `predict()` does not draw new perturbations.
+
+Algorithm:
+
+1. Align `X` and `y` under the standard `ModelFit` contract.
+2. Detect binary predictors as columns with exactly two finite unique values.
+3. Standardize continuous predictors using the training sample.
+4. If `data_aug=True`, append `n_augmented_copies` fake copies:
+   continuous fake columns receive Gaussian perturbations, and binary fake
+   columns receive row-shuffle perturbations.
+5. For each member `b = 1, ..., B`, draw rows at `sampling_rate`, draw columns at
+   `mtry`, fit an overfit stochastic gradient-boosting member, and store the row
+   and feature ledgers.
+6. Predict by averaging member predictions. Quantile forecasts use empirical
+   quantiles across member predictions.
 
 **Input:** `X`, `y` as above.
 **Output:** `ModelFit` wrapping `BoogingRegressor`. `predict(X_new)` averages
 overfit boosting members, and `predict_quantiles(X_new, levels=...)` returns
 member-forecast empirical quantiles.
 
-Diagnostics include `member_samples`, `member_features`, and `n_members`.
-`member_features` names both original columns and the deterministic
-`__noise_augmented` copies used in the training-time perturbation design.
+Diagnostics include `member_samples`, `member_features`, `augmentation_summary`,
+and `n_members`. `member_features` names original and fake columns; the
+augmentation summary reports the number of binary and continuous features, the
+number of fake copies, and the leakage boundary for continuous scaling.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | `B` | `100` | Number of overfit boosting members. |
-| `sample_frac` | `0.75` | Row sample fraction per member. |
-| `inner_n_estimators` | `1500` | Boosting stages inside each member. |
-| `inner_learning_rate` | `0.1` | Inner boosting learning rate. |
-| `inner_max_depth` | `3` | Inner boosting tree depth. |
-| `inner_subsample` | `0.5` | Stochastic gradient boosting subsample share. |
-| `da_noise_frac` | `1/3` | Gaussian feature-noise scale as a share of each feature standard deviation. |
-| `da_drop_rate` | `0.2` | Share of augmented columns dropped per member. |
+| `sampling_rate` | `0.75` | Row sample fraction per member. |
+| `mtry` | `0.8` | Feature-subspace size per member. |
+| `data_aug` | `False` | Whether to append perturbed fake feature copies. |
+| `noise_level` | `0.3` | Gaussian noise scale for continuous fake copies. |
+| `shuffle_rate` | `0.2` | Binary-feature row-shuffle share for fake copies. |
+| `n_trees` | `1000` | Boosting stages inside each member. |
+| `tree_depth` | `3` | Inner boosting tree depth. |
+| `nu` | `0.3` | Inner boosting learning rate. |
+| `bf` | `0.5` | Stochastic gradient boosting subsample share. For samples below 100 rows, this is floored at `0.4`, matching the R code. |
+| `n_augmented_copies` | `2` | Number of fake feature copies when `data_aug=True`. |
+| `scale_continuous` | `True` | Standardize continuous variables before fake-copy perturbation. |
+| `fix_seeds` | `True` | Use deterministic member seeds analogous to the R source's `set.seed(2020+b)`. |
 | `random_state` | `0` | Member, row, column, and augmentation seed. |
+
+Important implementation note: the R script scales continuous `X` and `X.new`
+jointly because it receives the training and new matrices in the same function
+call. The macroforecast estimator uses train-only scaling, because a standard
+fit/predict object must not use future `X_new` information during `fit()`. This
+is the deliberate leakage-safe difference; the member sampling, fake-copy
+perturbation, boosting backend role, and averaging logic follow the R algorithm.
 
 ## Custom Extensions
 

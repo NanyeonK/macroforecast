@@ -7,7 +7,11 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.models.types import ModelFit
-from macroforecast.models.utils import fit_estimator
+from macroforecast.models.utils import (
+    binary_feature_mask,
+    fit_estimator,
+    resolve_feature_count,
+)
 
 MODEL_ENSEMBLE_BASE_ESTIMATORS: dict[str, str] = {
     "ols": "sklearn.linear_model.LinearRegression",
@@ -84,7 +88,25 @@ def _base_predictions(models: Sequence[Any], X: pd.DataFrame) -> np.ndarray:
     if not models:
         return np.zeros((len(X), 0), dtype=float)
     return np.column_stack(
-        [np.asarray(model.predict(X.fillna(0.0)), dtype=float).reshape(-1) for model in models]
+        [
+            np.asarray(model.predict(X.fillna(0.0)), dtype=float).reshape(-1)
+            for model in models
+        ]
+    )
+
+
+def _member_predictions(
+    models: Sequence[tuple[Any, tuple[str, ...]]], X: pd.DataFrame
+) -> np.ndarray:
+    if not models:
+        return np.zeros((len(X), 0), dtype=float)
+    return np.column_stack(
+        [
+            np.asarray(
+                model.predict(X.loc[:, list(columns)].fillna(0.0)), dtype=float
+            ).reshape(-1)
+            for model, columns in models
+        ]
     )
 
 
@@ -95,7 +117,9 @@ def _folds(n: int, n_splits: int, splitter: str) -> list[tuple[np.ndarray, np.nd
     index = np.arange(n)
     key = str(splitter)
     if key == "forward":
-        chunks = [chunk for chunk in np.array_split(index, n_splits + 1)[1:] if len(chunk)]
+        chunks = [
+            chunk for chunk in np.array_split(index, n_splits + 1)[1:] if len(chunk)
+        ]
         folds = []
         for val_idx in chunks:
             train_idx = index[index < int(val_idx[0])]
@@ -167,6 +191,7 @@ class BaggingRegressor:
         strategy: str = "standard",
         block_length: int = 4,
         replace: bool = True,
+        max_features: float | int | str | None = None,
     ) -> None:
         if str(strategy) not in {"standard", "block"}:
             raise ValueError("strategy must be 'standard' or 'block'")
@@ -178,9 +203,12 @@ class BaggingRegressor:
         self.strategy = str(strategy)
         self.block_length = max(1, int(block_length))
         self.replace = bool(replace)
-        self._models: list[Any] = []
+        self.max_features = max_features
+        self.feature_names_in_: tuple[str, ...] = ()
+        self._models: list[tuple[Any, tuple[str, ...]]] = []
         self.member_indices_: list[np.ndarray] = []
         self.member_samples_: pd.DataFrame | None = None
+        self.member_features_: pd.DataFrame | None = None
         self.oob_predictions_: pd.Series | None = None
         self.oob_residuals_: pd.Series | None = None
         self.oob_metrics_: dict[str, float | int] | None = None
@@ -189,13 +217,19 @@ class BaggingRegressor:
         if self.strategy == "block":
             n_blocks = (size + self.block_length - 1) // self.block_length
             starts = rng.integers(0, n, size=n_blocks)
-            idx = ((starts[:, None] + np.arange(self.block_length)[None, :]) % n).reshape(-1)
+            idx = (
+                (starts[:, None] + np.arange(self.block_length)[None, :]) % n
+            ).reshape(-1)
             return idx[:size]
         return rng.choice(n, size=size, replace=self.replace)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "BaggingRegressor":
         rng = np.random.default_rng(self.random_state)
         n = len(X)
+        self.feature_names_in_ = tuple(str(column) for column in X.columns)
+        n_features = resolve_feature_count(
+            self.max_features, len(self.feature_names_in_)
+        )
         size = max(2, int(round(self.max_samples * n)))
         if not self.replace:
             size = min(size, n)
@@ -203,11 +237,17 @@ class BaggingRegressor:
         self.member_indices_ = []
         member_pred = np.full((n, self.n_estimators), np.nan, dtype=float)
         member_rows = []
+        feature_rows = []
         for i in range(self.n_estimators):
             idx = self._draw_indices(rng, n, size)
-            model = _base_estimator(self.base, dict(self.base_params), self.random_state + i)
-            model.fit(X.iloc[idx].fillna(0.0), y.iloc[idx])
-            self._models.append(model)
+            columns = tuple(
+                rng.choice(self.feature_names_in_, size=n_features, replace=False)
+            )
+            model = _base_estimator(
+                self.base, dict(self.base_params), self.random_state + i
+            )
+            model.fit(X.loc[:, list(columns)].iloc[idx].fillna(0.0), y.iloc[idx])
+            self._models.append((model, columns))
             self.member_indices_.append(idx.copy())
             used = np.zeros(n, dtype=bool)
             used[np.unique(idx)] = True
@@ -223,11 +263,23 @@ class BaggingRegressor:
                     "block_length": self.block_length,
                 }
             )
+            feature_rows.append(
+                {
+                    "member": i,
+                    "n_features": int(len(columns)),
+                    "features": columns,
+                    "max_features": self.max_features
+                    if self.max_features is not None
+                    else "all",
+                }
+            )
             if len(oob_idx):
                 member_pred[oob_idx, i] = np.asarray(
-                    model.predict(X.iloc[oob_idx].fillna(0.0)), dtype=float
+                    model.predict(X.loc[:, list(columns)].iloc[oob_idx].fillna(0.0)),
+                    dtype=float,
                 ).reshape(-1)
         self.member_samples_ = pd.DataFrame(member_rows)
+        self.member_features_ = pd.DataFrame(feature_rows)
         self._set_oob_diagnostics(member_pred, y)
         return self
 
@@ -251,13 +303,15 @@ class BaggingRegressor:
             "coverage": float(has_oob.mean()),
             "mae": float(np.mean(np.abs(valid_resid))) if len(valid_resid) else np.nan,
             "mse": float(np.mean(valid_resid**2)) if len(valid_resid) else np.nan,
-            "rmse": float(np.sqrt(np.mean(valid_resid**2))) if len(valid_resid) else np.nan,
+            "rmse": float(np.sqrt(np.mean(valid_resid**2)))
+            if len(valid_resid)
+            else np.nan,
         }
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if not self._models:
             return np.zeros(len(X), dtype=float)
-        return _base_predictions(self._models, X).mean(axis=1)
+        return _member_predictions(self._models, X).mean(axis=1)
 
     def predict_quantiles(
         self,
@@ -267,7 +321,7 @@ class BaggingRegressor:
         levels = _validate_quantile_levels(levels)
         if not self._models:
             return {q: np.zeros(len(X), dtype=float) for q in levels}
-        preds = _base_predictions(self._models, X)
+        preds = _member_predictions(self._models, X)
         return {float(q): np.quantile(preds, float(q), axis=1) for q in levels}
 
 
@@ -283,6 +337,7 @@ def bagging(
     strategy: str = "standard",
     block_length: int = 4,
     replace: bool = True,
+    max_features: float | int | str | None = None,
 ) -> ModelFit:
     """Fit a bootstrap-aggregated fit-time model ensemble."""
 
@@ -295,9 +350,11 @@ def bagging(
         "strategy": str(strategy),
         "block_length": int(block_length),
         "replace": bool(replace),
+        "max_features": max_features if max_features is not None else "all",
         "implementation_note": (
             "ipred::bagging/ipredbagg-style member resampling generalized to "
-            "sklearn-compatible base estimators."
+            "sklearn-compatible base estimators with optional member-level "
+            "feature-subspace perturbation."
         ),
     }
     return fit_estimator(
@@ -310,6 +367,7 @@ def bagging(
             strategy=str(strategy),
             block_length=int(block_length),
             replace=bool(replace),
+            max_features=max_features,
         ),
         X,
         y,
@@ -327,6 +385,7 @@ def subagging(
     max_samples: float = 0.632,
     random_state: int = 0,
     base_params: dict[str, Any] | None = None,
+    max_features: float | int | str | None = None,
 ) -> ModelFit:
     """Fit subagging: sampling without replacement before member fits."""
 
@@ -338,9 +397,11 @@ def subagging(
         "base_params": dict(base_params or {}),
         "strategy": "standard",
         "replace": False,
+        "max_features": max_features if max_features is not None else "all",
         "implementation_note": (
             "ipredbagg(ns < n)-style sampling without replacement generalized to "
-            "sklearn-compatible base estimators."
+            "sklearn-compatible base estimators with optional member-level "
+            "feature-subspace perturbation."
         ),
     }
     return fit_estimator(
@@ -352,6 +413,7 @@ def subagging(
             base_params=dict(base_params or {}),
             strategy="standard",
             replace=False,
+            max_features=max_features,
         ),
         X,
         y,
@@ -376,7 +438,7 @@ class RandomSubspaceRegressor:
         *,
         base: str = "ridge",
         n_estimators: int = 100,
-        max_features: float | int = 0.5,
+        max_features: float | int | str = 0.5,
         max_samples: float = 1.0,
         random_state: int = 0,
         base_params: dict[str, Any] | None = None,
@@ -391,24 +453,23 @@ class RandomSubspaceRegressor:
         self._models: list[tuple[Any, tuple[str, ...]]] = []
         self.member_features_: pd.DataFrame | None = None
 
-    def _n_features(self, p: int) -> int:
-        if isinstance(self.max_features, float):
-            return max(1, min(p, int(round(float(self.max_features) * p))))
-        return max(1, min(p, int(self.max_features)))
-
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "RandomSubspaceRegressor":
         rng = np.random.default_rng(self.random_state)
         self.feature_names_in_ = tuple(str(column) for column in X.columns)
         p = len(self.feature_names_in_)
-        n_features = self._n_features(p)
+        n_features = resolve_feature_count(self.max_features, p)
         n = len(X)
         n_rows = max(2, min(n, int(round(self.max_samples * n))))
         self._models = []
         member_rows = []
         for i in range(self.n_estimators):
-            columns = tuple(rng.choice(self.feature_names_in_, size=n_features, replace=False))
+            columns = tuple(
+                rng.choice(self.feature_names_in_, size=n_features, replace=False)
+            )
             rows = rng.choice(n, size=n_rows, replace=False)
-            model = _base_estimator(self.base, dict(self.base_params), self.random_state + i)
+            model = _base_estimator(
+                self.base, dict(self.base_params), self.random_state + i
+            )
             model.fit(X.loc[:, list(columns)].iloc[rows].fillna(0.0), y.iloc[rows])
             self._models.append((model, columns))
             member_rows.append(
@@ -427,7 +488,9 @@ class RandomSubspaceRegressor:
             return np.zeros(len(X), dtype=float)
         frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
         preds = [
-            np.asarray(model.predict(frame.loc[:, list(columns)].fillna(0.0)), dtype=float)
+            np.asarray(
+                model.predict(frame.loc[:, list(columns)].fillna(0.0)), dtype=float
+            )
             for model, columns in self._models
         ]
         return np.column_stack(preds).mean(axis=1)
@@ -442,7 +505,9 @@ class RandomSubspaceRegressor:
             return {q: np.zeros(len(X), dtype=float) for q in levels}
         frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
         preds = [
-            np.asarray(model.predict(frame.loc[:, list(columns)].fillna(0.0)), dtype=float)
+            np.asarray(
+                model.predict(frame.loc[:, list(columns)].fillna(0.0)), dtype=float
+            )
             for model, columns in self._models
         ]
         matrix = np.column_stack(preds)
@@ -455,7 +520,7 @@ def random_subspace(
     *,
     base: str = "ridge",
     n_estimators: int = 100,
-    max_features: float | int = 0.5,
+    max_features: float | int | str = 0.5,
     max_samples: float = 1.0,
     random_state: int = 0,
     base_params: dict[str, Any] | None = None,
@@ -544,16 +609,22 @@ class StackingRegressor:
                 params = dict(self.model_params.get(name, {}))
                 model = _base_estimator(name, params, self.random_state + 1000 * j)
                 model.fit(frame.iloc[train_idx], y.iloc[train_idx])
-                oof[val_idx, j] = np.asarray(model.predict(frame.iloc[val_idx]), dtype=float)
+                oof[val_idx, j] = np.asarray(
+                    model.predict(frame.iloc[val_idx]), dtype=float
+                )
         valid = ~np.isnan(oof).any(axis=1)
         if not valid.any():
             raise ValueError("stacking could not produce any out-of-fold predictions")
         meta_X = pd.DataFrame(oof[valid], index=frame.index[valid], columns=self.models)
         if self.passthrough:
             meta_X = pd.concat([meta_X, frame.loc[meta_X.index]], axis=1)
-        self._meta = _base_estimator(self.meta_model, dict(self.meta_params), self.random_state)
+        self._meta = _base_estimator(
+            self.meta_model, dict(self.meta_params), self.random_state
+        )
         self._meta.fit(meta_X, y.loc[meta_X.index])
-        self.oof_predictions_ = pd.DataFrame(oof, index=frame.index, columns=self.models)
+        self.oof_predictions_ = pd.DataFrame(
+            oof, index=frame.index, columns=self.models
+        )
         self.meta_training_index_ = tuple(meta_X.index)
         self._models = []
         for j, name in enumerate(self.models):
@@ -566,8 +637,14 @@ class StackingRegressor:
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self._meta is None or not self._models:
             return np.zeros(len(X), dtype=float)
-        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).fillna(0.0)
-        meta_X = pd.DataFrame(_base_predictions(self._models, frame), index=frame.index, columns=self.models)
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).fillna(
+            0.0
+        )
+        meta_X = pd.DataFrame(
+            _base_predictions(self._models, frame),
+            index=frame.index,
+            columns=self.models,
+        )
         if self.passthrough:
             meta_X = pd.concat([meta_X, frame], axis=1)
         return np.asarray(self._meta.predict(meta_X), dtype=float).reshape(-1)
@@ -674,10 +751,14 @@ class SuperLearnerRegressor:
                 params = dict(self.model_params.get(name, {}))
                 model = _base_estimator(name, params, self.random_state + 1000 * j)
                 model.fit(frame.iloc[train_idx], y.iloc[train_idx])
-                oof[val_idx, j] = np.asarray(model.predict(frame.iloc[val_idx]), dtype=float)
+                oof[val_idx, j] = np.asarray(
+                    model.predict(frame.iloc[val_idx]), dtype=float
+                )
         valid = ~np.isnan(oof).any(axis=1)
         if not valid.any():
-            raise ValueError("super_learner could not produce any out-of-fold predictions")
+            raise ValueError(
+                "super_learner could not produce any out-of-fold predictions"
+            )
         library = oof[valid]
         target = y.iloc[np.flatnonzero(valid)].to_numpy(dtype=float)
         losses = np.mean((library - target[:, None]) ** 2, axis=0)
@@ -695,7 +776,9 @@ class SuperLearnerRegressor:
                 weights = weights / total
         self.weights_ = pd.Series(weights, index=self.models, name="weight")
         self.oof_risk_ = pd.Series(losses, index=self.models, name="oof_mse")
-        self.oof_predictions_ = pd.DataFrame(oof, index=frame.index, columns=self.models)
+        self.oof_predictions_ = pd.DataFrame(
+            oof, index=frame.index, columns=self.models
+        )
         self._models = []
         for j, name in enumerate(self.models):
             params = dict(self.model_params.get(name, {}))
@@ -707,7 +790,9 @@ class SuperLearnerRegressor:
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self.weights_ is None or not self._models:
             return np.zeros(len(X), dtype=float)
-        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).fillna(0.0)
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).fillna(
+            0.0
+        )
         preds = _base_predictions(self._models, frame)
         return preds @ self.weights_.to_numpy(dtype=float)
 
@@ -758,13 +843,24 @@ class BoogingRegressor:
 
     # Source comparison, checked against Goulet Coulombe, To Bag is to Prune:
     # https://arxiv.org/abs/2008.07063
-    # - Goulet Coulombe's "Bagging is Pruning" line introduces Booging as a
-    #   bagged-and-perturbed version of boosted trees: deliberately overfit
-    #   stochastic boosting paths, perturb the data, then average the paths.
-    # - The local paper notes record the data-augmentation perturbation as
-    #   Gaussian feature noise with standard deviation equal to one third of
-    #   each variable's scale. The default da_noise_frac=1/3 implements that
-    #   perturbation before model-specific column subsampling.
+    # Local R source:
+    # bagofprunes/R/PGC_Bag_of_Prunes_v200829.R, Booging(y, X, X.new, ...)
+    # - The R function samples rows with sampling.rate, samples columns with
+    #   mtry, fits an intentionally overfit gbm::gbm member, then averages B
+    #   member predictions. The macroforecast class keeps that randomized
+    #   greedy-ensemble structure while using sklearn GradientBoostingRegressor
+    #   as the boosting backend.
+    # - R defaults are B=100, mtry=0.8, sampling.rate=.75, data.aug=FALSE,
+    #   noise.level=0.3, shuffle.rate=0.2, bf=.5, n.trees=1000, tree.depth=3,
+    #   nu=.3. The public booging() aliases expose those names.
+    # - When data_aug=True, the R code appends two fake feature copies. Continuous
+    #   variables get Gaussian perturbations; binary variables are perturbed by
+    #   shuffling a subset of rows. Prediction uses deterministic copies of X.new,
+    #   so forecast calls do not draw new noise.
+    # - R scales continuous X and X.new jointly before fitting. A normal Python
+    #   estimator cannot see X.new at fit time, so macroforecast uses train-only
+    #   scaling for leakage-safe fit/predict semantics. The perturbation logic and
+    #   member aggregation remain aligned with the R algorithm.
     # - This belongs in model_ensemble rather than models because the public
     #   operation is fit-time composition of many inner boosting models.
 
@@ -773,83 +869,189 @@ class BoogingRegressor:
         *,
         B: int = 100,
         sample_frac: float = 0.75,
-        inner_n_estimators: int = 1500,
-        inner_learning_rate: float = 0.1,
+        inner_n_estimators: int = 1000,
+        inner_learning_rate: float = 0.3,
         inner_max_depth: int = 3,
         inner_subsample: float = 0.5,
-        da_noise_frac: float = 1.0 / 3.0,
-        da_drop_rate: float = 0.2,
+        mtry: float | int | str | None = None,
+        data_aug: bool = False,
+        noise_level: float = 0.3,
+        shuffle_rate: float = 0.2,
+        n_augmented_copies: int = 2,
+        scale_continuous: bool = True,
+        fix_seeds: bool = True,
         random_state: int = 0,
+        sampling_rate: float | None = None,
+        n_trees: int | None = None,
+        nu: float | None = None,
+        tree_depth: int | None = None,
+        bf: float | None = None,
+        max_features: float | int | str | None = None,
+        da_noise_frac: float | None = None,
+        da_drop_rate: float | None = 0.2,
     ) -> None:
+        if sampling_rate is not None:
+            sample_frac = float(sampling_rate)
+        if n_trees is not None:
+            inner_n_estimators = int(n_trees)
+        if nu is not None:
+            inner_learning_rate = float(nu)
+        if tree_depth is not None:
+            inner_max_depth = int(tree_depth)
+        if bf is not None:
+            inner_subsample = float(bf)
+        if da_noise_frac is not None:
+            noise_level = float(da_noise_frac)
+        if max_features is not None:
+            mtry = max_features
+        if mtry is None:
+            mtry = 1.0 - float(da_drop_rate) if da_drop_rate is not None else 0.8
+
         if int(inner_n_estimators) <= 0:
             raise ValueError("inner_n_estimators must be positive")
         if float(inner_learning_rate) <= 0.0:
             raise ValueError("inner_learning_rate must be positive")
         if int(inner_max_depth) <= 0:
             raise ValueError("inner_max_depth must be positive")
-        if float(da_noise_frac) < 0.0:
-            raise ValueError("da_noise_frac must be non-negative")
+        if float(noise_level) < 0.0:
+            raise ValueError("noise_level must be non-negative")
+        if float(shuffle_rate) < 0.0:
+            raise ValueError("shuffle_rate must be non-negative")
         self.B = max(1, int(B))
         self.sample_frac = float(np.clip(sample_frac, 0.1, 1.0))
         self.inner_n_estimators = int(inner_n_estimators)
         self.inner_learning_rate = float(inner_learning_rate)
         self.inner_max_depth = int(inner_max_depth)
         self.inner_subsample = float(np.clip(inner_subsample, 0.1, 1.0))
-        self.da_noise_frac = float(da_noise_frac)
-        self.da_drop_rate = float(np.clip(da_drop_rate, 0.0, 0.95))
+        self.mtry = mtry
+        self.data_aug = bool(data_aug)
+        self.noise_level = float(noise_level)
+        self.shuffle_rate = float(np.clip(shuffle_rate, 0.0, 1.0))
+        self.n_augmented_copies = max(0, int(n_augmented_copies))
+        self.scale_continuous = bool(scale_continuous)
+        self.fix_seeds = bool(fix_seeds)
         self.random_state = int(random_state)
         self.feature_names_in_: tuple[str, ...] = ()
-        self._sigma: np.ndarray | None = None
+        self.augmented_feature_names_: tuple[str, ...] = ()
+        self._mean: np.ndarray | None = None
+        self._scale: np.ndarray | None = None
+        self._binary: np.ndarray | None = None
+        self._continuous: np.ndarray | None = None
         self._models: list[tuple[Any, np.ndarray]] = []
         self.member_features_: pd.DataFrame | None = None
         self.member_samples_: pd.DataFrame | None = None
+        self.augmentation_summary_: dict[str, Any] | None = None
 
-    def _augment(
-        self,
-        values: np.ndarray,
-        rng: np.random.Generator | None,
-        *,
-        add_noise: bool,
+    def _prepare_fit_values(self, X: pd.DataFrame) -> np.ndarray:
+        raw = X.fillna(0.0).to_numpy(dtype=float)
+        self._binary = binary_feature_mask(raw)
+        self._continuous = ~self._binary
+        self._mean = np.zeros(raw.shape[1], dtype=float)
+        self._scale = np.ones(raw.shape[1], dtype=float)
+        if self.scale_continuous and bool(self._continuous.any()):
+            cont = self._continuous
+            self._mean[cont] = raw[:, cont].mean(axis=0)
+            self._scale[cont] = raw[:, cont].std(axis=0, ddof=0).clip(min=1e-12)
+            raw = raw.copy()
+            raw[:, cont] = (raw[:, cont] - self._mean[cont]) / self._scale[cont]
+        return raw
+
+    def _prepare_predict_values(self, X: pd.DataFrame) -> np.ndarray:
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
+        raw = frame.fillna(0.0).to_numpy(dtype=float)
+        if (
+            self.scale_continuous
+            and self._continuous is not None
+            and self._mean is not None
+            and self._scale is not None
+            and bool(self._continuous.any())
+        ):
+            cont = self._continuous
+            raw = raw.copy()
+            raw[:, cont] = (raw[:, cont] - self._mean[cont]) / self._scale[cont]
+        return raw
+
+    def _augment_fit_values(
+        self, values: np.ndarray, rng: np.random.Generator
     ) -> np.ndarray:
-        if self._sigma is None:
+        names = list(self.feature_names_in_)
+        if not self.data_aug or self.n_augmented_copies == 0:
+            self.augmented_feature_names_ = tuple(names)
             return values
-        if add_noise:
-            if rng is None:
-                raise ValueError("rng is required when add_noise=True")
-            noise = rng.standard_normal(values.shape) * (self._sigma * self.da_noise_frac)
-        else:
-            noise = np.zeros_like(values, dtype=float)
-        return np.hstack([values, values + noise])
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> "BoogingRegressor":
+        if self._continuous is None or self._binary is None:
+            raise RuntimeError(
+                "BoogingRegressor must prepare values before augmentation"
+            )
+        parts = [values]
+        binary_idx = np.flatnonzero(self._binary)
+        continuous_idx = np.flatnonzero(self._continuous)
+        for copy_id in range(1, self.n_augmented_copies + 1):
+            fake = values.copy()
+            if len(continuous_idx):
+                fake[:, continuous_idx] = values[:, continuous_idx] + rng.normal(
+                    scale=self.noise_level,
+                    size=(values.shape[0], len(continuous_idx)),
+                )
+            if len(binary_idx) and self.shuffle_rate > 0.0 and values.shape[0] > 1:
+                n_shuffle = max(1, int(round(self.shuffle_rate * values.shape[0])))
+                n_shuffle = min(values.shape[0], n_shuffle)
+                pack = rng.choice(values.shape[0], size=n_shuffle, replace=False)
+                order = rng.permutation(pack)
+                for col in binary_idx:
+                    fake[pack, col] = values[order, col]
+            parts.append(fake)
+            names.extend(f"fake{copy_id}_{name}" for name in self.feature_names_in_)
+        self.augmented_feature_names_ = tuple(names)
+        return np.hstack(parts)
+
+    def _augment_predict_values(self, values: np.ndarray) -> np.ndarray:
+        if not self.data_aug or self.n_augmented_copies == 0:
+            return values
+        return np.hstack(
+            [values] + [values.copy() for _ in range(self.n_augmented_copies)]
+        )
+
+    def _member_seed(self, i: int, rng: np.random.Generator) -> int:
+        if self.fix_seeds:
+            return self.random_state + 2020 + i + 1
+        return int(rng.integers(0, np.iinfo(np.int32).max))
+
+    def fit(
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+    ) -> "BoogingRegressor":
         from sklearn.ensemble import GradientBoostingRegressor
 
         self.feature_names_in_ = tuple(str(c) for c in X.columns)
-        values = X.fillna(0.0).to_numpy(dtype=float)
+        values = self._prepare_fit_values(X)
         target = np.asarray(y, dtype=float)
         n, k = values.shape
         if n == 0 or k == 0:
             return self
-        self._sigma = np.std(values, axis=0, ddof=0).clip(min=1e-12)
         rng = np.random.default_rng(self.random_state)
-        augmented = self._augment(values, rng, add_noise=True)
-        sample_size = min(n, max(k + 1, int(round(self.sample_frac * n))))
-        keep_cols = max(1, int(round((1.0 - self.da_drop_rate) * augmented.shape[1])))
-        augmented_names = list(self.feature_names_in_) + [
-            f"{name}__noise_augmented" for name in self.feature_names_in_
-        ]
+        aug_rng = np.random.default_rng(self.random_state + 1)
+        augmented = self._augment_fit_values(values, aug_rng)
+        sample_size = min(n, max(2, int(round(self.sample_frac * n))))
+        keep_cols = resolve_feature_count(self.mtry, augmented.shape[1])
+        inner_subsample = self.inner_subsample
+        if n < 100:
+            inner_subsample = max(0.4, inner_subsample)
         self._models = []
         feature_rows = []
         sample_rows = []
         for i in range(self.B):
-            row_idx = rng.choice(n, sample_size, replace=False)
-            col_idx = rng.choice(augmented.shape[1], keep_cols, replace=False)
+            seed = self._member_seed(i, rng)
+            member_rng = np.random.default_rng(seed)
+            row_idx = member_rng.choice(n, sample_size, replace=False)
+            col_idx = member_rng.choice(augmented.shape[1], keep_cols, replace=False)
             model = GradientBoostingRegressor(
                 n_estimators=self.inner_n_estimators,
                 learning_rate=self.inner_learning_rate,
                 max_depth=self.inner_max_depth,
-                subsample=self.inner_subsample,
-                random_state=self.random_state + i,
+                subsample=inner_subsample,
+                random_state=seed,
             )
             model.fit(augmented[np.ix_(row_idx, col_idx)], target[row_idx])
             self._models.append((model, col_idx))
@@ -857,7 +1059,10 @@ class BoogingRegressor:
                 {
                     "member": i,
                     "n_features": int(len(col_idx)),
-                    "features": tuple(str(augmented_names[int(j)]) for j in col_idx),
+                    "features": tuple(
+                        str(self.augmented_feature_names_[int(j)]) for j in col_idx
+                    ),
+                    "mtry": self.mtry,
                 }
             )
             sample_rows.append(
@@ -866,11 +1071,29 @@ class BoogingRegressor:
                     "n_rows": int(len(row_idx)),
                     "n_unique_rows": int(len(np.unique(row_idx))),
                     "sample_frac": self.sample_frac,
-                    "inner_subsample": self.inner_subsample,
+                    "sampling_rate": self.sample_frac,
+                    "inner_subsample": inner_subsample,
+                    "bf": inner_subsample,
                 }
             )
         self.member_features_ = pd.DataFrame(feature_rows)
         self.member_samples_ = pd.DataFrame(sample_rows)
+        self.augmentation_summary_ = {
+            "data_aug": self.data_aug,
+            "n_original_features": int(k),
+            "n_augmented_features": int(augmented.shape[1]),
+            "n_augmented_copies": int(self.n_augmented_copies if self.data_aug else 0),
+            "n_binary_features": int(self._binary.sum())
+            if self._binary is not None
+            else 0,
+            "n_continuous_features": (
+                int(self._continuous.sum()) if self._continuous is not None else 0
+            ),
+            "noise_level": float(self.noise_level),
+            "shuffle_rate": float(self.shuffle_rate),
+            "scale_continuous": bool(self.scale_continuous),
+            "scaling_note": "train-only continuous scaling; R code scales train and X.new jointly",
+        }
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -891,12 +1114,7 @@ class BoogingRegressor:
         return {float(q): np.quantile(preds, float(q), axis=1) for q in levels}
 
     def _prediction_matrix(self, X: pd.DataFrame) -> np.ndarray:
-        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
-        augmented = self._augment(
-            frame.fillna(0.0).to_numpy(dtype=float),
-            None,
-            add_noise=False,
-        )
+        augmented = self._augment_predict_values(self._prepare_predict_values(X))
         preds = []
         for model, col_idx in self._models:
             preds.append(np.asarray(model.predict(augmented[:, col_idx]), dtype=float))
@@ -909,41 +1127,97 @@ def booging(
     *,
     B: int = 100,
     sample_frac: float = 0.75,
-    inner_n_estimators: int = 1500,
-    inner_learning_rate: float = 0.1,
+    inner_n_estimators: int = 1000,
+    inner_learning_rate: float = 0.3,
     inner_max_depth: int = 3,
     inner_subsample: float = 0.5,
-    da_noise_frac: float = 1.0 / 3.0,
-    da_drop_rate: float = 0.2,
+    mtry: float | int | str | None = None,
+    data_aug: bool = False,
+    noise_level: float = 0.3,
+    shuffle_rate: float = 0.2,
+    n_augmented_copies: int = 2,
+    scale_continuous: bool = True,
+    fix_seeds: bool = True,
     random_state: int = 0,
+    sampling_rate: float | None = None,
+    n_trees: int | None = None,
+    nu: float | None = None,
+    tree_depth: int | None = None,
+    bf: float | None = None,
+    max_features: float | int | str | None = None,
+    da_noise_frac: float | None = None,
+    da_drop_rate: float | None = 0.2,
 ) -> ModelFit:
     """Fit Booging: bagged overfit stochastic gradient boosting with augmentation."""
 
+    resolved_sample_frac = (
+        float(sampling_rate) if sampling_rate is not None else float(sample_frac)
+    )
+    resolved_n_estimators = (
+        int(n_trees) if n_trees is not None else int(inner_n_estimators)
+    )
+    resolved_learning_rate = float(nu) if nu is not None else float(inner_learning_rate)
+    resolved_max_depth = (
+        int(tree_depth) if tree_depth is not None else int(inner_max_depth)
+    )
+    resolved_subsample = float(bf) if bf is not None else float(inner_subsample)
+    resolved_noise = (
+        float(da_noise_frac) if da_noise_frac is not None else float(noise_level)
+    )
+    if max_features is not None:
+        resolved_mtry = max_features
+    elif mtry is not None:
+        resolved_mtry = mtry
+    elif da_drop_rate is not None:
+        resolved_mtry = 1.0 - float(da_drop_rate)
+    else:
+        resolved_mtry = 0.8
+
     params = {
         "B": int(B),
-        "sample_frac": float(sample_frac),
-        "inner_n_estimators": int(inner_n_estimators),
-        "inner_learning_rate": float(inner_learning_rate),
-        "inner_max_depth": int(inner_max_depth),
-        "inner_subsample": float(inner_subsample),
-        "da_noise_frac": float(da_noise_frac),
-        "da_drop_rate": float(da_drop_rate),
+        "sample_frac": resolved_sample_frac,
+        "sampling_rate": resolved_sample_frac,
+        "inner_n_estimators": resolved_n_estimators,
+        "n_trees": resolved_n_estimators,
+        "inner_learning_rate": resolved_learning_rate,
+        "nu": resolved_learning_rate,
+        "inner_max_depth": resolved_max_depth,
+        "tree_depth": resolved_max_depth,
+        "inner_subsample": resolved_subsample,
+        "bf": resolved_subsample,
+        "mtry": resolved_mtry,
+        "max_features": resolved_mtry,
+        "data_aug": bool(data_aug),
+        "noise_level": resolved_noise,
+        "shuffle_rate": float(shuffle_rate),
+        "n_augmented_copies": int(n_augmented_copies),
+        "scale_continuous": bool(scale_continuous),
+        "fix_seeds": bool(fix_seeds),
+        "legacy_da_noise_frac": da_noise_frac,
+        "legacy_da_drop_rate": da_drop_rate,
         "random_state": int(random_state),
         "implementation_note": (
             "Goulet Coulombe Booging-style bagged/perturbed overfit stochastic "
-            "gradient boosting with sklearn GradientBoostingRegressor members."
+            "gradient boosting with sklearn GradientBoostingRegressor members. "
+            "R-style aliases are accepted: sampling_rate, mtry, data_aug, "
+            "noise_level, shuffle_rate, bf, n_trees, tree_depth, and nu."
         ),
     }
     return fit_estimator(
         BoogingRegressor(
             B=int(B),
-            sample_frac=float(sample_frac),
-            inner_n_estimators=int(inner_n_estimators),
-            inner_learning_rate=float(inner_learning_rate),
-            inner_max_depth=int(inner_max_depth),
-            inner_subsample=float(inner_subsample),
-            da_noise_frac=float(da_noise_frac),
-            da_drop_rate=float(da_drop_rate),
+            sample_frac=resolved_sample_frac,
+            inner_n_estimators=resolved_n_estimators,
+            inner_learning_rate=resolved_learning_rate,
+            inner_max_depth=resolved_max_depth,
+            inner_subsample=resolved_subsample,
+            mtry=resolved_mtry,
+            data_aug=bool(data_aug),
+            noise_level=resolved_noise,
+            shuffle_rate=float(shuffle_rate),
+            n_augmented_copies=int(n_augmented_copies),
+            scale_continuous=bool(scale_continuous),
+            fix_seeds=bool(fix_seeds),
             random_state=int(random_state),
         ),
         X,

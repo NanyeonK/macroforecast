@@ -15,8 +15,8 @@ The output API is split into two parts:
 
 | Part | Functions | Role |
 | --- | --- | --- |
-| Output generation | `forecast_table`, `metric_table`, `ranking_table`, `test_table`, `model_table`, `model_selection_table`, `interpretation_table`, `metadata_table`, `run_summary`, `bundle_outputs`, `select_outputs`, `name_outputs`, `artifact_index` | Convert package objects into named pandas/JSON outputs. No files are written. |
-| Artifact writing | `write_artifacts`, `collect_provenance`, `ArtifactManifest`, `ArtifactRecord` | Write selected outputs to disk and record file metadata. |
+| Output generation | `forecast_table`, `metric_table`, `ranking_table`, `test_table`, `model_table`, `model_selection_table`, `interpretation_table`, `interpretation_outputs`, `forecast_shapley_tables`, `anatomy_tables`, `metadata_table`, `run_summary`, `bundle_outputs`, `select_outputs`, `name_outputs`, `artifact_index` | Convert package objects into named pandas/JSON outputs. No files are written. |
+| Artifact writing | `write_artifacts`, `collect_provenance`, `ArtifactManifest`, `ArtifactRecord`, `ArtifactLayout` | Write selected outputs to disk and record file metadata. |
 
 This means a workflow can first build all candidate outputs, inspect or rename
 them, then write only the objects needed for a paper, replication package, or
@@ -123,6 +123,66 @@ macroforecast.output.interpretation_table(value) -> pandas.DataFrame
 | `value` | `DataFrame` or mapping | Interpretation output such as importances, SHAP summaries, attribution tables, or custom mappings. |
 
 Returns a schema-tagged interpretation table.
+
+### interpretation_outputs
+
+```python
+macroforecast.output.interpretation_outputs(
+    interpretation,
+    *,
+    prefix="interpretation",
+) -> OutputBundle
+```
+
+Use this when several interpretation results belong to the same run. It keeps
+prediction output separate from interpretation output while preserving a single
+manifest later.
+
+| Input | Type | Meaning |
+| --- | --- | --- |
+| `interpretation` | `DataFrame`, mapping, `DualInterpretationResult`, or `ForecastShapleyResult` | One interpretation table, named interpretation tables, a dual interpretation result, or an oShapley/PBSV sidecar. |
+| `prefix` | str | Prefix applied to generated artifact names. |
+
+Examples:
+
+```python
+interpretation = mf.output.interpretation_outputs(
+    {
+        "shap": shap_importance,
+        "dual": dual_result,
+    },
+    prefix="postpandemic",
+)
+
+manifest = mf.output.write_artifacts(
+    interpretation,
+    "results/interpretation_only",
+    layout="grouped",
+)
+```
+
+If a value is a `DualInterpretationResult`, the helper expands it into
+observation-weight, observation-contribution, forecast-diagnostic,
+top-observation, group-observation-weight, and metadata tables. If a value is
+an oShapley/PBSV result, the helper expands it into forecast Shapley
+explanation, variable-importance, PBSV/loss, and metadata tables. For ordinary
+`DataFrame` objects it attaches the standard `interpretation_table` schema.
+
+### forecast_shapley_tables / anatomy_tables
+
+```python
+macroforecast.output.forecast_shapley_tables(value, *, prefix="oshapley") -> dict[str, pandas.DataFrame]
+macroforecast.output.anatomy_tables(value, *, prefix="anatomy") -> dict[str, pandas.DataFrame]
+```
+
+| Input | Type | Meaning |
+| --- | --- | --- |
+| `value` | `ForecastShapleyResult` | oShapley/PBSV sidecar from `macroforecast.interpretation`. |
+| `prefix` | str | Prefix for generated output names. |
+
+Returns named tables for raw forecast Shapley explanations, oShapley-VI,
+PBSV/loss tables, and metadata. `anatomy_tables(...)` is the backend alias;
+prefer `forecast_shapley_tables(...)` in user code.
 
 ### metadata_table
 
@@ -264,6 +324,7 @@ macroforecast.output.write_artifacts(
     include_provenance=True,
     provenance_fields=None,
     compression="none",
+    layout="flat",
 ) -> ArtifactManifest
 ```
 
@@ -278,6 +339,7 @@ macroforecast.output.write_artifacts(
 | `include_provenance` | bool | `True` | Include package, Python, platform, and git provenance. |
 | `provenance_fields` | tuple or `None` | `None` | Optional top-level provenance keys to keep, e.g. `("macroforecast_version", "git")`. |
 | `compression` | str | `"none"` | Artifact compression: `"none"`, `"gzip"`, or `"zip"`. |
+| `layout` | str | `"flat"` | Artifact layout: `"flat"` writes all artifacts in `output_dir`; `"grouped"` writes files under logical subdirectories. |
 
 ### Output
 
@@ -305,6 +367,64 @@ Each `ArtifactRecord` has:
 | `source` | Input mapping key that produced the file. |
 | `metadata` | Shape, columns, object type, metadata schema, file size, SHA-256 hash, path existence, and compression. |
 
+`ArtifactLayout` is the public type alias for `"flat"` and `"grouped"`.
+
+### Grouped layout
+
+Use `layout="grouped"` when one run has many outputs: prediction tables,
+metric tables, forecast tests, stored models, oShapley/PBSV outputs, dual
+data-portfolio interpretation, and metadata. The manifest remains at the root,
+but artifacts are written into logical folders:
+
+| Folder | Typical artifacts |
+| --- | --- |
+| `forecasts/` | ForecastResult JSON and forecast table. |
+| `evaluation/` | Metric, ranking, benchmark, regime, and decomposition tables. |
+| `tests/` | Forecast-comparison test tables. |
+| `models/` | Model table, model-selection table, and stored-model records. |
+| `interpretation/` | SHAP, PDP/ICE/ALE, and general interpretation outputs. |
+| `interpretation/dual/` | `DualInterpretationResult` tables: observation weights, observation contributions, forecast diagnostics, top observations, group observation weights, and metadata. |
+| `interpretation/oshapley/` | oShapley/PBSV/anatomy sidecar tables. |
+| `metadata/` | Run summary and metadata tables. |
+| `other/` | Custom objects that do not match a known group. |
+
+Example:
+
+```python
+result = mf.forecasting.run(panel, "ridge", features=features)
+report = mf.evaluation.evaluate_report(result)
+
+interpretation = mf.output.interpretation_outputs(
+    {
+        "shap": shap_importance,
+        "dual": dual_result,
+    },
+    prefix="inflation",
+)
+
+bundle = mf.output.bundle_outputs(
+    forecasts=result,
+    evaluation=report,
+    interpretation=interpretation.artifacts,
+    metadata={"study": "inflation_dual_interpretation"},
+)
+
+manifest = mf.output.write_artifacts(
+    bundle,
+    "results/inflation_run",
+    layout="grouped",
+)
+```
+
+If `dual_result` is a `macroforecast.interpretation.dual.DualInterpretationResult`,
+`interpretation_outputs(...)` expands it through `dual_result.to_tables(...)`.
+With grouped output, these files are written below `interpretation/dual/`.
+
+The manifest records both the physical path and the logical group. Each record
+metadata includes `layout`, `group`, and `relative_path`, so a notebook,
+replication package, or paper-output script can select all interpretation
+files without guessing file names.
+
 `ForecastResult` writes:
 
 | File | Meaning |
@@ -312,6 +432,30 @@ Each `ArtifactRecord` has:
 | `forecast_result.json` | Forecast rows and runner metadata. |
 | `forecast_result_forecasts.csv` | Forecast table. |
 | `manifest.json` | Artifact paths and provenance. |
+
+If a `ForecastResult` has runtime sidecars, `write_artifacts()` writes those
+sidecars as additional artifacts. For a dual interpretation sidecar, grouped
+layout writes files under `interpretation/dual/`:
+
+| Sidecar artifact | Meaning |
+| --- | --- |
+| `<result>_dual_summary.json` | JSON-ready dual sidecar metadata and table summaries. |
+| `<result>_dual_observation_weights.*` | Observation/data-portfolio weight table. |
+| `<result>_dual_observation_contributions.*` | Observation contribution table when requested. |
+| `<result>_dual_forecast_diagnostics.*` | Concentration, short-position, leverage, gross-leverage, and turnover table. |
+| `<result>_dual_top_observations.*` | Top historical observations per forecast row. |
+| `<result>_dual_group_observation_weights.*` | Grouped observation weights/contributions when groups are supplied. |
+| `<result>_dual_metadata.*` | Flattened dual metadata table. |
+
+For an anatomy sidecar, the writer emits:
+
+| Sidecar artifact | Meaning |
+| --- | --- |
+| `<result>_anatomy_<name>_summary.json` | JSON-ready anatomy sidecar metadata and table records. |
+| `<result>_anatomy_<name>_explanation_forecast.*` | Raw forecast anatomy explanations. |
+| `<result>_anatomy_<name>_variable_importance.*` | oShapley-VI table. |
+| `<result>_anatomy_<name>_performance_<loss>.*` | PBSV/loss decomposition table. |
+| `<result>_anatomy_<name>_metadata.*` | Flattened anatomy metadata table. |
 
 If the forecast table contains runner-created `stored_model` dictionaries,
 `write_artifacts()` also records those model artifacts in the manifest. It does

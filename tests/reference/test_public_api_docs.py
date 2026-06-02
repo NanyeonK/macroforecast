@@ -12,6 +12,7 @@ REFERENCE_MODULES = (
     "data",
     "preprocessing",
     "feature_engineering",
+    "filters",
     "data_analysis",
     "feature_analysis",
     "forecast_analysis",
@@ -125,7 +126,9 @@ def test_reference_pages_mention_module_public_symbols() -> None:
     for module_name in REFERENCE_MODULES:
         module = importlib.import_module(f"macroforecast.{module_name}")
         documented = Path(f"docs/reference/{module_name}.md").read_text()
-        missing = sorted(symbol for symbol in module.__all__ if symbol not in documented)
+        missing = sorted(
+            symbol for symbol in module.__all__ if symbol not in documented
+        )
 
         assert missing == [], f"{module_name} reference page is missing: {missing}"
 
@@ -141,6 +144,8 @@ def test_models_reference_has_one_heading_per_registered_model() -> None:
 
 def test_module_reference_page_titles_use_qualified_module_names() -> None:
     for module_name in REFERENCE_MODULES:
-        first_line = Path(f"docs/reference/{module_name}.md").read_text().splitlines()[0]
+        first_line = (
+            Path(f"docs/reference/{module_name}.md").read_text().splitlines()[0]
+        )
 
         assert first_line == f"# macroforecast.{module_name}"

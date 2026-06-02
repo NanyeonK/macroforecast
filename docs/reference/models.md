@@ -88,6 +88,8 @@ type checks; the normal user entry point remains the lowercase fit function.
 | Estimator class | Fit function | Meaning |
 | --- | --- | --- |
 | `MARSRegressor` | `mars(...)` | Internal MARS-style spline regressor. |
+| `LGBPlusRegressor` | `lgb_plus(...)` | Competition-based LGB+ hybrid tree/linear boosting backend. |
+| `LGBAPlusRegressor` | `lgba_plus(...)` | Alternating LGB^A+ hybrid tree/linear boosting backend. |
 | `QuantileRegressionForestRegressor` | `quantile_regression_forest(...)` | Quantile forest backend. |
 | `MacroRandomForestRegressor` | `macro_random_forest(...)` | Macro Random Forest backend. |
 | `SupervisedPCARegressor` | `supervised_pca(...)` | Supervised PCA backend. |
@@ -491,6 +493,8 @@ head is a density-forecast object. Their metadata records
 | `mars` | spline | supervised | `random` | `small`, `standard`, `wide` |
 | `xgboost` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `lightgbm` | tree | supervised | `random` | `small`, `standard`, `wide` |
+| `lgb_plus` | tree | supervised | `random` | `small`, `standard`, `wide` |
+| `lgba_plus` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `catboost` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `quantile_regression_forest` | tree | supervised | `random` | `small`, `standard`, `wide` |
 | `macro_random_forest` | tree | supervised | `random` | `small`, `standard`, `wide` |
@@ -2752,6 +2756,8 @@ and Booging live in [Model Ensemble](model_ensemble.md).
 | `gradient_boosting` | backend wrapper | `sklearn.ensemble.GradientBoostingRegressor` |
 | `xgboost` | optional backend wrapper | `xgboost.XGBRegressor` |
 | `lightgbm` | optional backend wrapper | `lightgbm.LGBMRegressor` |
+| `lgb_plus` | package-native hybrid | LGB+ competition algorithm aligned to `philgoucou/lgbplus`, using `lightgbm.train` for residual tree candidates |
+| `lgba_plus` | package-native hybrid | LGB^A+ alternating algorithm aligned to `philgoucou/lgbplus`, using `lightgbm.train` for residual tree blocks |
 | `catboost` | optional backend wrapper | `catboost.CatBoostRegressor` |
 | `quantile_regression_forest` | hybrid | sklearn forest plus macroforecast leaf-target quantile store |
 | `macro_random_forest` | hybrid adapter | vendored `macroforecast.models._mrf_reference.MacroRandomForest` |
@@ -2977,6 +2983,328 @@ Fits `lightgbm.LGBMRegressor`. Requires `macroforecast[lightgbm]`.
 | `small` | `(50, 100)` | `(0.05, 0.1)` | `(-1, 3, 5)` | `(15, 31)` |
 | `standard` | `(100, 200, 500)` | `(0.03, 0.05, 0.1)` | `(-1, 3, 5, 10)` | `(15, 31, 63)` |
 | `wide` | `(100, 200, 500, 1000)` | `(0.01, 0.03, 0.05, 0.1)` | `(-1, 3, 5, 10, 20)` | `(15, 31, 63, 127)` |
+
+Default model-selection method: `random`.
+
+### lgb_plus
+
+#### Paper Citation And Source
+
+Primary paper:
+
+> Goulet Coulombe, Philippe. 2026. "LGB+: A Macroeconomic Forecasting Road
+> Test." Draft dated March 18, 2026. SSRN abstract 6439178.
+> DOI: [`10.2139/ssrn.6439178`](https://doi.org/10.2139/ssrn.6439178).
+> Paper page: <https://ssrn.com/abstract=6439178>.
+
+Reference implementation:
+
+| Source | Role in `macroforecast` |
+| --- | --- |
+| [`philgoucou/lgbplus`](https://github.com/philgoucou/lgbplus) | Original R/Python implementation repository. |
+| `R/lgb_plus.R` | Competition algorithm, `linear_candidate_fraction`, component prediction helpers, and ensemble helper. |
+| `python/lgb_plus.py` | Competition estimator class with in-class ensemble storage and step histories. |
+| `R/lgb_plus_A.R` | Alternating algorithm and `lgb_plus_A_ensemble` helper. |
+| `python/lgb_plus_A.py` | Alternating estimator class. |
+
+#### Paper Motivation
+
+The paper targets a macro forecasting problem that appears repeatedly in small
+and medium macro samples. Tree boosting is strong for nonlinearities and
+interactions, but a large share of macro predictive content can be simple:
+autoregressive persistence, slowly moving accounting-like relationships, or
+near-mechanical links such as claims before unemployment and permits before
+housing starts. A standard tree booster can approximate those linear slopes,
+but it spends splits and boosting capacity to do work that a one-variable
+linear update could do cheaply.
+
+LGB+ expands the boosting basis from "trees only" to "trees plus greedy linear
+updates." The forecast remains additive:
+
+```text
+yhat(x) = intercept + tree_component(x) + linear_component(x)
+```
+
+That additive form is not a cosmetic detail. It lets the user inspect the
+forecast through two channels:
+
+| Channel | Intended role | Caveat |
+| --- | --- | --- |
+| Linear | Persistence, autoregressive slopes, near-accounting links, and other simple one-variable residual corrections. | The split is operational, not metaphysical; a tree can still learn linear-looking structure. |
+| Tree | Nonlinear states, interactions, thresholds, and regime-dependent effects. | Tree gains can include simple structures if the linear candidate loses the competition. |
+
+The paper emphasizes that the linear/nonlinear split should be read as an
+algorithmic decomposition generated by the boosting path, not as proof that the
+data-generating process is literally separated into pure linear and pure
+nonlinear blocks.
+
+#### Paper Empirical Design
+
+The empirical road test uses transformed quarterly U.S. macro data from
+FRED-QD. The review file summarized the design as six targets: headline CPI
+inflation, GDP growth, unemployment, housing starts growth, industrial
+production, and the term spread. Predictors include FRED-QD transformations,
+four lags, MARX moving-average features, and principal components from the
+transformed panel. The out-of-sample design is expanding-window forecasting,
+with a pre-COVID evaluation period and a post-COVID stress period.
+
+This matters for using `macroforecast`:
+
+| Paper object | `macroforecast` stage |
+| --- | --- |
+| FRED-QD transformed panel | `macroforecast.data.load_fred_qd(...)` then `macroforecast.preprocessing.reprocess(...)`. |
+| Four lags | `macroforecast.feature_engineering.lag(...)` or runner `feature_spec(...)`. |
+| MARX moving-average features | `macroforecast.feature_engineering.moving_average_ladder(...)` or `marx_step(...)`. |
+| Principal components | `macroforecast.feature_engineering.pca_features(...)` or preprocessing/factor features when fit-window-safe execution is needed. |
+| Expanding OOS design | `macroforecast.window.estimation_expanding(...)` plus `test_origins(...)`. |
+| Re-estimation schedule | `macroforecast.window.estimation_expanding(..., retrain_every=...)`. |
+| LGB+ model | `macroforecast.models.lgb_plus(...)`. |
+| LGB^A+ model | `macroforecast.models.lgba_plus(...)`. |
+| Linear/tree forecast decomposition | `fit.estimator.predict_components(...)` and diagnostics in `ModelFit`. |
+
+#### Method In The Paper
+
+The paper has two closely related estimators.
+
+`LGB+` is the competition version. At each boosting step:
+
+| Step | Operation |
+| --- | --- |
+| 1 | Start from the current fitted value. |
+| 2 | Compute residuals on the training sample. |
+| 3 | Draw a row subsample. |
+| 4 | Fit one small LightGBM residual tree on the subsample. |
+| 5 | Fit one greedy univariate linear residual update on the same subsample. |
+| 6 | Evaluate both candidate updates using `oob`, fixed `validation`, or `training` loss. |
+| 7 | Accept only the lower-loss candidate. |
+| 8 | Record which channel won, the selected linear feature when relevant, and the candidate losses. |
+
+`LGB^A+` is the alternating version. It does not run a per-step competition.
+Instead, each cycle applies a block of residual trees and then a greedy
+univariate linear correction. This is computationally simpler and can be more
+stable when the OOB judge is noisy in macro-sized samples.
+
+#### Main Paper Findings To Keep In Mind
+
+The paper's simulations and empirical road test support the following working
+interpretation:
+
+| Finding | Practical implication |
+| --- | --- |
+| In mostly linear designs, the linear channel can absorb much of the signal and avoid forcing trees to approximate simple slopes. | Include autoregressive and near-accounting predictors explicitly; then inspect the linear channel. |
+| In nonlinear designs, the tree channel remains active and the hybrid does not have to behave like a linear model. | LGB+ is a flexible hybrid, not a linear model with tree residuals fixed in advance. |
+| The linear channel is often useful for short-horizon unemployment and industrial production before COVID. | Channel diagnostics can reveal whether gains come from persistence-like relations or nonlinear state recognition. |
+| In post-COVID stress periods, the linear channel can become harmful for some real-activity targets. | Report channel-specific diagnostics; do not rely only on total RMSE. |
+| Forecasts can be decomposed natively into tree and linear pieces. | Use `predict_components()` and store `ModelFit.diagnostics` when writing replication outputs. |
+
+#### What `macroforecast` Implements
+
+`macroforecast.models.lgb_plus` implements the competition estimator as a
+package-native hybrid model. LightGBM supplies the residual tree candidate, but
+the step loop, linear candidate, OOB/validation/training selection, ensemble
+aggregation, channel accounting, and pandas metadata are implemented inside
+`macroforecast`.
+
+The implementation is deliberately not just a thin `LGBMRegressor` wrapper:
+
+| Feature | Implemented? | Notes |
+| --- | --- | --- |
+| Tree candidate per step | yes | Uses `lightgbm.train(..., num_boost_round=1)`. |
+| Greedy univariate linear candidate | yes | Uses the same no-intercept residual slope as the competition reference code. |
+| `linear_candidate_fraction` | yes | Kept from the R implementation. |
+| `selection_method="oob"` | yes | Default; requires `subsample < 1`. |
+| `selection_method="validation"` | yes | Uses a fixed random validation split inside the current fit window. |
+| `selection_method="training"` | yes | Available for reference parity, but not recommended for macro evaluation. |
+| Ensemble members | yes | Controlled by `n_ensemble`; predictions aggregate by mean or median. |
+| Linear component prediction | yes | `predict_components(...).prediction_linear`. |
+| Tree component prediction | yes | `predict_components(...).prediction_tree`. |
+| Channel diagnostics | yes | `channel_summary`, `channel_importance`, and `training_history`. |
+| AXIL historical weights | no | This belongs in interpretation/forecast analysis later, not inside the estimator. |
+| Full paper table replication | no | The callable model is implemented; full empirical replication should be a separate replication package. |
+
+```python
+macroforecast.models.lgb_plus(
+    X,
+    y,
+    *,
+    n_ensemble=10,
+    n_steps=200,
+    learning_rate=0.05,
+    subsample=0.7,
+    num_leaves=5,
+    min_data_in_leaf=20,
+    lambda_l2=0.1,
+    linear_candidate_fraction=0.5,
+    selection_method="oob",
+    val_fraction=0.2,
+    early_stop_patience=50,
+    aggregation="mean",
+    random_state=0,
+    verbose=False,
+    **kwargs,
+)
+```
+
+Fits LGB+ competition boosting from Goulet Coulombe's
+[`philgoucou/lgbplus`](https://github.com/philgoucou/lgbplus) reference code.
+This is not ordinary `lightgbm` with extra linear features. At every boosting
+step the estimator builds two residual updates:
+
+| Candidate | Reference-code operation | Accepted when |
+| --- | --- | --- |
+| Tree | Fit one small `lightgbm.train(...)` residual tree with manual shrinkage. | Candidate loss is no larger than the linear candidate. |
+| Linear | Sample `linear_candidate_fraction` of features, choose the largest absolute residual correlation, and fit one no-intercept residual slope. | Candidate loss is lower than the tree candidate. |
+
+The R reference file `R/lgb_plus.R` includes `linear_candidate_fraction`; the
+Python reference file `python/lgb_plus.py` embeds the ensemble in the estimator
+but does not expose that candidate-fraction argument. `macroforecast` combines
+those two reference surfaces: `n_ensemble` controls independent runs and
+`linear_candidate_fraction` controls greedy linear candidate subsampling.
+
+Input is the standard supervised model contract:
+
+| Input | Required shape | Meaning |
+| --- | --- | --- |
+| `X` | `pandas.DataFrame`, `FeatureSet`, or array-like with shape `(n_obs, n_features)` | Predictor matrix. DataFrame column names are preserved in diagnostics. |
+| `y` | `pandas.Series` or array-like with length `n_obs` | Forecast target for the current fit window. |
+
+Output is a `ModelFit` with `model="lgb_plus"`. Use
+`fit.predict(X_new)` for the total prediction. The estimator also exposes:
+
+| Method or diagnostic | Output | Meaning |
+| --- | --- | --- |
+| `fit.estimator.predict_components(X_new)` | DataFrame | `prediction_total`, `prediction_init`, `prediction_tree`, `prediction_linear`. |
+| `fit.estimator.predict_individual(X_new)` | ndarray | One total prediction path per ensemble member. |
+| `fit.estimator.channel_importance()` | DataFrame | Tree gain, linear selection count, and absolute linear update by feature. |
+| `fit.diagnostics["channel_summary"]` | dict | Total tree and linear steps plus per-member counts. |
+| `fit.diagnostics["training_history"]` | dict | Per-step candidate losses and selected channel metadata. |
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `n_ensemble` | `10` | yes | Independent boosting runs. Predictions are aggregated across runs. |
+| `n_steps` | `200` | yes | Maximum tree/linear competition steps per run. |
+| `learning_rate` | `0.05` | yes | Shared shrinkage for accepted tree or linear updates. |
+| `subsample` | `0.7` | yes | Row subsample share per step. `selection_method="oob"` requires `< 1`. |
+| `num_leaves` | `5` | yes | Maximum leaves for the one-step LightGBM tree candidate. |
+| `min_data_in_leaf` | `20` | yes | Minimum rows per LightGBM leaf. |
+| `lambda_l2` | `0.1` | fixed by preset | L2 penalty for LightGBM tree candidates. |
+| `linear_candidate_fraction` | `0.5` | yes | Fraction of predictors sampled before greedy linear selection. |
+| `selection_method` | `"oob"` | fixed by preset | Candidate judge: `"oob"`, `"validation"`, or `"training"`. |
+| `val_fraction` | `0.2` | fixed by preset | Fixed validation share when `selection_method="validation"`. |
+| `early_stop_patience` | `50` | fixed by preset | Stop after this many non-improving selected losses; `None` disables. |
+| `aggregation` | `"mean"` | fixed by preset | Ensemble aggregation: `"mean"` or `"median"`. |
+| `random_state` | `0` | fixed by preset | Base random seed. Each ensemble member increments it. |
+| `**kwargs` | none | fixed by caller | Additional `lightgbm.train` parameters for residual tree candidates. |
+
+| Preset | Main search dimensions |
+| --- | --- |
+| `small` | `n_ensemble`, `n_steps`, `learning_rate`, `subsample`, `num_leaves`, `min_data_in_leaf`, `linear_candidate_fraction` over narrow ranges. |
+| `standard` | Same dimensions with 5-10 members, 100-400 steps, and candidate fractions `(0.33, 0.5, 1.0)`. |
+| `wide` | Same dimensions with up to 20 members, 600 steps, lower learning rates, and broader subsampling. |
+
+Default model-selection method: `random`.
+
+### lgba_plus
+
+#### Paper Link
+
+`lgba_plus` is the `macroforecast` callable for the paper's alternating
+variant, LGB^A+. It uses the same paper and source references as `lgb_plus`:
+Goulet Coulombe (2026), "LGB+: A Macroeconomic Forecasting Road Test,"
+SSRN 6439178, DOI
+[`10.2139/ssrn.6439178`](https://doi.org/10.2139/ssrn.6439178), and the
+[`philgoucou/lgbplus`](https://github.com/philgoucou/lgbplus) source
+repository.
+
+#### What Changes Relative To `lgb_plus`
+
+The alternating version is easier to read and usually cheaper to fit:
+
+| Dimension | `lgb_plus` | `lgba_plus` |
+| --- | --- | --- |
+| Update schedule | Tree and linear candidates compete; one winner advances. | Every cycle applies both a tree block and one linear correction. |
+| Main count parameter | `n_steps` per ensemble member. | `n_cycles` and `trees_per_cycle`. |
+| Tree learning rate | Shared `learning_rate`. | `lr_tree`. |
+| Linear learning rate | Shared `learning_rate`. | `lr_linear`. |
+| Linear update | No-intercept residual slope in the competition reference code. | Intercept plus slope, matching the alternating reference code. |
+| Ensemble control | `n_ensemble`. | `n_runs`. |
+| Main diagnostic | Winner path and candidate losses. | Cycle path and selected linear feature after each tree block. |
+
+Use `lgba_plus` when the goal is a stable hybrid path rather than estimating the
+best tree/linear mix at every individual step. Use `lgb_plus` when the winner
+sequence itself is part of the analysis.
+
+#### What `macroforecast` Implements
+
+| Feature | Implemented? | Notes |
+| --- | --- | --- |
+| Residual tree blocks | yes | Uses `lightgbm.train(..., num_boost_round=trees_per_cycle)`. |
+| Greedy linear correction after every tree block | yes | Selects the largest absolute residual correlation. |
+| Separate tree and linear learning rates | yes | `lr_tree`, `lr_linear`. |
+| `n_runs` alternating ensemble | yes | Folds the R `lgb_plus_A_ensemble` helper into the estimator API. |
+| Component prediction | yes | Same `predict_components()` output columns as `lgb_plus`. |
+| Channel importance | yes | Tree gain, linear selection count, and absolute linear update. |
+| Full AXIL dual interpretation | no | Planned for interpretation/forecast analysis rather than model fitting. |
+
+```python
+macroforecast.models.lgba_plus(
+    X,
+    y,
+    *,
+    n_runs=1,
+    n_cycles=25,
+    trees_per_cycle=10,
+    lr_tree=0.02,
+    lr_linear=0.1,
+    num_leaves=15,
+    min_data_in_leaf=20,
+    subsample=1.0,
+    random_state=0,
+    verbose=False,
+    **kwargs,
+)
+```
+
+Fits LGB^A+, the alternating variant from
+[`philgoucou/lgbplus`](https://github.com/philgoucou/lgbplus). Each cycle first
+fits a block of LightGBM residual trees, then fits one greedy univariate linear
+residual update with an intercept. Unlike `lgb_plus`, there is no per-step
+winner selection: both channels are updated every cycle.
+
+The R reference file `R/lgb_plus_A.R` also provides an ensemble helper
+`lgb_plus_A_ensemble`. `macroforecast` folds that helper into this estimator via
+`n_runs`, so the same callable can represent both a single alternating model and
+an averaged alternating ensemble.
+
+Input and output follow the same supervised contract as `lgb_plus`.
+`fit.estimator.predict_components(X_new)` returns the total, intercept, tree,
+and linear channels; `fit.estimator.channel_importance()` reports tree gain and
+linear update frequency by feature.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `n_runs` | `1` | yes | Independent alternating runs. |
+| `n_cycles` | `25` | yes | Tree-block plus linear-update cycles per run. |
+| `trees_per_cycle` | `10` | yes | Residual LightGBM trees per cycle. |
+| `lr_tree` | `0.02` | yes | Shrinkage for tree-block predictions. |
+| `lr_linear` | `0.1` | yes | Shrinkage for linear residual updates. |
+| `num_leaves` | `15` | yes | Maximum leaves for each residual tree. |
+| `min_data_in_leaf` | `20` | yes | Minimum rows per LightGBM leaf. |
+| `subsample` | `1.0` | yes | LightGBM bagging fraction for tree blocks. |
+| `random_state` | `0` | fixed by preset | Base random seed. Each run increments it. |
+| `**kwargs` | none | fixed by caller | Additional `lightgbm.train` parameters. |
+
+The linear slope is computed by the centered OLS identity
+`sum((x - mean(x)) * (r - mean(r))) / sum((x - mean(x))^2)`. This is
+statistically equivalent to the R code's `cov(x, residual) / var(x)` and avoids
+the denominator mismatch in the reference Python expression that combines
+`np.cov(...)` with `x.var()`.
+
+| Preset | Main search dimensions |
+| --- | --- |
+| `small` | Short alternating runs for smoke or narrow-window use. |
+| `standard` | 1 or 5 runs, 10 or 25 cycles, and tree/linear learning-rate grids. |
+| `wide` | Up to 10 runs, 50 cycles, broader tree-block size and learning-rate ranges. |
 
 Default model-selection method: `random`.
 

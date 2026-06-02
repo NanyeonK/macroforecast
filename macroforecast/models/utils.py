@@ -76,6 +76,55 @@ def optional_import(
         ) from exc
 
 
+def resolve_feature_count(
+    max_features: float | int | str | None, n_features: int
+) -> int:
+    """Resolve a member-level feature-subspace size.
+
+    Supports the same compact choices used by tree ensembles and randomized
+    model ensembles: all features, fractions, integer counts, ``sqrt``, and
+    ``log2``.
+    """
+
+    if n_features <= 0:
+        return 0
+    if max_features is None:
+        return n_features
+    if isinstance(max_features, str):
+        key = max_features.lower()
+        if key == "all":
+            return n_features
+        if key == "sqrt":
+            return max(1, min(n_features, int(round(np.sqrt(n_features)))))
+        if key == "log2":
+            return max(1, min(n_features, int(round(np.log2(n_features)))))
+        raise ValueError(
+            "max_features must be an int, float, None, 'all', 'sqrt', or 'log2'"
+        )
+    if isinstance(max_features, float):
+        if max_features <= 0:
+            raise ValueError("max_features must be positive")
+        if max_features <= 1:
+            return max(1, min(n_features, int(round(max_features * n_features))))
+    return max(1, min(n_features, int(max_features)))
+
+
+def binary_feature_mask(values: Any) -> np.ndarray:
+    """Return columns with exactly two unique finite values."""
+
+    arr = np.asarray(values, dtype=float)
+    if arr.ndim == 1:
+        arr = arr.reshape(-1, 1)
+    if arr.ndim != 2:
+        raise ValueError(f"values must be 1-D or 2-D, got shape {arr.shape!r}")
+    mask = np.zeros(arr.shape[1], dtype=bool)
+    for j in range(arr.shape[1]):
+        finite = arr[np.isfinite(arr[:, j]), j]
+        if len(np.unique(finite)) == 2:
+            mask[j] = True
+    return mask
+
+
 def fit_estimator(
     estimator: Any,
     X: Any,
@@ -125,6 +174,14 @@ def _fit_diagnostics(estimator: Any, X: pd.DataFrame, y: pd.Series) -> dict[str,
     importance = _feature_importance_diagnostics(estimator, X.columns)
     if importance is not None:
         diagnostics["feature_importance"] = importance
+
+    channel_importance = getattr(estimator, "channel_importance_", None)
+    if channel_importance is not None:
+        diagnostics["channel_importance"] = channel_importance
+
+    channel_summary = getattr(estimator, "channel_summary_", None)
+    if channel_summary is not None:
+        diagnostics["channel_summary"] = channel_summary
 
     for attr in ("selected_features_", "factor_features_"):
         values = getattr(estimator, attr, None)
@@ -290,6 +347,7 @@ def _ensemble_diagnostics(estimator: Any) -> dict[str, Any]:
         "folds": "folds_",
         "member_features": "member_features_",
         "member_samples": "member_samples_",
+        "augmentation_summary": "augmentation_summary_",
     }
     for key, attr in attr_map.items():
         value = getattr(estimator, attr, None)
@@ -305,7 +363,9 @@ __all__ = [
     "align_xy",
     "as_frame",
     "as_series",
+    "binary_feature_mask",
     "fit_estimator",
     "optional_import",
+    "resolve_feature_count",
     "resolve_xy",
 ]

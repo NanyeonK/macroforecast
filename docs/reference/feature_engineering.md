@@ -64,8 +64,8 @@ X_lag = mf.feature_engineering.lag(processed, columns=["PAYEMS", "INDPRO"], lags
 | Target construction | `direct_target`, `average_target`, `path_targets` | Build direct, average, or step-path forecast targets. |
 | Basic predictor transforms | `lag`, `rolling_mean`, `moving_average_ladder`, `mixed_frequency_lags`, `seasonal_lag`, `season_dummy`, `time_features`, `fourier_features` | Add lags, rolling blocks, mixed-frequency lag blocks, and deterministic date features. |
 | ML-side value transforms | `transform_features`, `log_features`, `diff_features`, `log_diff_features`, `pct_change_features`, `cumsum_features`, `scale_features` | Add post-preprocessing transformations and scaling used as model features. |
-| Nonlinear expansions | `polynomial_features`, `interaction_features`, `wavelet_features`, `savitzky_golay_features`, `adaptive_ma_rf_features`, `asymmetric_trim_features` | Add nonlinear, smooth, rank, or multi-resolution feature blocks. |
-| Trend/cycle filters | `hamilton_filter_features`, `hp_filter_features` | Add Hamilton or HP trend/cycle columns with leakage warnings where needed. |
+| Nonlinear expansions | `polynomial_features`, `interaction_features`, `wavelet_features`, `savitzky_golay_features`, `adaptive_ma_rf_features`, `asymmetric_trim_features` | Add nonlinear, smooth, rank, or multi-resolution feature blocks. `adaptive_ma_rf_features` wraps `macroforecast.filters.albama`. |
+| Trend/cycle filter wrappers | `hamilton_filter_features`, `hp_filter_features` | Turn `macroforecast.filters` one-series filter outputs into panel feature columns with leakage warnings where needed. |
 | Factor features | `pca_features`, `dfm_features`, `group_pca`, `varimax_features`, `sparse_pca_chen_rohe_features`, `partial_least_squares_features`, `sliced_inverse_regression_features`, `random_projection_features`, `nystroem_features` | Build fitted factor, supervised-factor, sparse-factor, rotation, random projection, and kernel approximation features. |
 | Paper-style combinations | `feature_matrix`, `maf_features`, `moving_average_pca_lags`, `pca_then_lags`, `lags_then_pca` | Materialize named macro-ML blocks such as `X`, `F`, `MARX`, `MAF`, and compositions. |
 | Composition | `compose_features`, `custom_features`, `custom_step` | Run sequential feature steps or user-supplied transforms. |
@@ -90,7 +90,7 @@ implementation is split by responsibility:
 | File | Responsibility |
 | --- | --- |
 | `targets.py` | `direct_target()`, `average_target()`, and `path_targets()`. |
-| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, Hamilton filtering, AlbaMA, wavelet-style decomposition, custom feature callables, and time features. |
+| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, filter-to-feature wrappers, custom feature callables, and time features. |
 | `feature_selection.py` | Shared fitted feature-selection algorithms used by direct selection callables and runner-safe `feature_spec()` method names. |
 | `compose.py` | Reusable step builders and sequential feature composition. |
 | `matrix.py` | Paper-style `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. |
@@ -187,7 +187,7 @@ the same functions later.
 | `rolling_mean()` | Rolling-window means. | Fit-based filters or learned smoothers. |
 | `moving_average_ladder()` | Multi-scale trailing moving-average block used before optional factor/PCA steps. | PCA/factor extraction itself. |
 | `maf_features()` | Moving Average Factors from variable-specific lag panels. | Model fitting or choosing final feature combinations. |
-| `hamilton_filter_features()` | Hamilton-filter trend/cycle columns with explicit expanding or full-sample policy. | Model fitting, test windows, or choosing filter horizons. |
+| `hamilton_filter_features()` | Panel wrapper around `filters.hamilton_filter()` with explicit expanding or full-sample policy. | Model fitting, test windows, or choosing filter horizons. |
 | `feature_matrix()` | Named `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. | Loading or preprocessing the raw/level panel. |
 | `scale_features()` | Fit-policy-aware z-score, min-max, or robust scaling. | Model fitting. |
 | `pca_features()` | Fit-policy-aware PCA factors. | Forecast model fitting. |
@@ -198,8 +198,8 @@ the same functions later.
 | `dfm_features()` | Static DFM approximation by standardized PCA. | State-space DFM estimation; use model callables for that. |
 | `variance_selection()`, `correlation_selection()`, `lasso_selection()`, `lasso_path_selection()`, `rfe_selection()`, `boruta_selection()`, `stability_selection()`, `genetic_selection()` | Direct column selection by one explicit algorithm. | Model fitting; runner-safe fitting uses the same method names inside `feature_spec(..., steps=[...])`. |
 | `asymmetric_trim_features()` | Per-period rank-space columns for asymmetric trimming weights. | Estimating the nonnegative rank weights. |
-| `wavelet_features()` | Causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
-| `adaptive_ma_rf_features()` | Random-forest adaptive moving-average smoothing over time. | Forecast model fitting. |
+| `wavelet_features()` | Panel wrapper around `filters.wavelet_filter()` returning causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
+| `adaptive_ma_rf_features()` | Feature-wrapper form of `filters.albama()` that returns `{column}_albama` columns and stores full `AlbaMAResult` objects in attrs. | Forecast model fitting. |
 | `group_pca()` | PCA factors within named column groups. | FAVAR-specific slow/fast construction, model estimation, or structural identification. |
 | `custom_features()` | One direct user-supplied pandas feature transform. | Window-safe fitted state. Use `custom_step()` inside `feature_spec()` for runner use. |
 | `compose_features()` | Sequential combinations such as `pca -> lag`, `lag -> pca`, `maf`, or `moving_average_ladder -> pca -> lag`. | Model fitting or evaluation. |
@@ -1341,7 +1341,7 @@ canonical panel has already been cleaned.
 | `hamilton_filter_features(data, h=8, p=4)` | Hamilton horizon `h`, regressor count `p`, `component`, `fit_policy`: `"expanding"` or `"full_sample"`, and missing policy. | `{column}_hamilton_cycle` and/or `{column}_hamilton_trend`. |
 | `savitzky_golay_features(data, window_length=5, polyorder=2)` | Centered filter window, polynomial order, derivative; `warn_full_sample=True`. | Smoothed columns. |
 | `wavelet_features(data, n_levels=3)` | Causal rolling approximation/detail levels; `wavelet` name is recorded for compatibility. | `{column}_wA{level}`, `{column}_wD{level}`. |
-| `adaptive_ma_rf_features(data, sided="two")` | Random forest smoother over time; `sided="two"` warns, `sided="one"` uses expanding one-sided fits. | `{column}_albama`. |
+| `adaptive_ma_rf_features(data, sided="two", sample_fraction=0.6)` | Feature wrapper around `filters.albama`; `sided="two"` warns, `sided="one"` uses expanding one-sided fits. Full `AlbaMAResult` objects are stored in `attrs["macroforecast_feature_weight_results"]`. | `{column}_albama`. |
 | `asymmetric_trim_features(data)` | Sorts each row's selected columns in ascending order. | `rank_1`, `rank_2`, ... |
 | `partial_least_squares_features(data, target=..., n_components=...)` | Target-aware PLSRegression scores; warns by default. | `pls1`, `pls2`, ... |
 | `dfm_features(data, n_factors=...)` | Static DFM approximation by standardized PCA; warns by default. | `dfm1`, `dfm2`, ... |
@@ -1355,6 +1355,36 @@ canonical panel has already been cleaned.
 | `genetic_selection(data, target=..., population_size=..., n_generations=...)` | Select by genetic subset search. | Subset of original columns. |
 | `random_projection_features(data, n_components=...)` | Gaussian random projection; `warn_full_sample=True` by default. | `rp1`, `rp2`, ... |
 | `nystroem_features(data, kernel="rbf", n_components=...)` | Kernel approximation settings; `warn_full_sample=True` by default. | `nys1`, `nys2`, ... |
+
+### Filter-Backed Features
+
+`macroforecast.filters` owns one-series filter and smoother callables.
+`macroforecast.feature_engineering` owns panel wrappers that turn those outputs
+into feature columns:
+
+| Feature wrapper | Direct filter |
+| --- | --- |
+| `hp_filter_features()` | `filters.hp_filter()` |
+| `hamilton_filter_features()` | `filters.hamilton_filter()` |
+| `savitzky_golay_features()` | `filters.savitzky_golay()` |
+| `wavelet_features()` | `filters.wavelet_filter()` |
+| `adaptive_ma_rf_features()` | `filters.albama()` |
+
+For AlbaMA method details, R-code alignment, and weight extraction, see
+[Filters](filters.md). `adaptive_ma_rf_features()` stores full `AlbaMAResult`
+objects in `attrs["macroforecast_feature_weight_results"]` so
+`feature_analysis.effective_window()` and
+`feature_analysis.recent_weight_share()` can inspect learned weights.
+
+```python
+features = mf.feature_engineering.adaptive_ma_rf_features(
+    processed.panel,
+    columns=["CPIAUCSL", "INDPRO"],
+    sided="one",
+)
+
+albama_results = features.attrs["macroforecast_feature_weight_results"]
+```
 
 `random_projection_features()` and `nystroem_features()` fit on complete rows
 of the provided input and warn by default because the direct helpers are

@@ -4,11 +4,13 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import combinations
 from importlib import import_module
 from math import comb
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
+from macroforecast.interpretation._anatomy_utils import anatomy_output_transform
 from macroforecast.models import ModelFit
 
 _INTERPRETATION_SCHEMA_VERSION = 1
@@ -74,6 +76,41 @@ _REFERENCE_CATALOG: dict[str, dict[str, Any]] = {
         "reference": "SHAP Python package",
         "alignment": "mean absolute SHAP value summary from macroforecast shap_values output",
     },
+    "anatomy_explain": {
+        "class": "backend_wrapper",
+        "reference": "anatomy Python package for Borup, Goulet Coulombe, Rapach, Montes Schutte, and Schwenk-Nebbe (2022)",
+        "alignment": "wraps precomputed anatomy.Anatomy.explain output and reshapes it to long pandas output",
+    },
+    "performance_shapley_value": {
+        "class": "paper_formula_adapter",
+        "reference": "performance-based Shapley value in The Anatomy of Out-of-Sample Forecasting Accuracy",
+        "alignment": "exact or sampled Shapley decomposition of point loss over additive forecast contributions",
+    },
+    "shapley_variable_importance": {
+        "class": "table_aggregation",
+        "reference": "oShapley-VI aggregation in the anatomy package README; also usable for user-supplied iShapley-VI tables",
+        "alignment": "mean absolute Shapley contribution by feature, optionally by model set",
+    },
+    "ishapley_vi": {
+        "class": "table_aggregation",
+        "reference": "iShapley-VI_p from in-sample Shapley contribution tables in Borup et al. (2022)",
+        "alignment": "same mean-absolute Shapley-VI aggregation as oShapley, applied to in-sample fitted-prediction contributions",
+    },
+    "oshapley_vi": {
+        "class": "backend_wrapper",
+        "reference": "anatomy package oShapley-VI from raw forecast explanations",
+        "alignment": "calls anatomy.Anatomy.explain on raw forecasts, then averages absolute local contributions",
+    },
+    "pbsv": {
+        "class": "backend_wrapper",
+        "reference": "anatomy package PBSV_p loss decomposition",
+        "alignment": "calls anatomy.Anatomy.explain with a loss transformer and reshapes backend output",
+    },
+    "model_accordance_score": {
+        "class": "backend_wrapper",
+        "reference": "anatomy.MAS model accordance score and hypothesis test",
+        "alignment": "direct anatomy.MAS call after converting macroforecast tables to feature-indexed Series",
+    },
     "forecast_decomposition": {
         "class": "exact_linear_else_marked_fallback",
         "reference": "linear additive contribution x_j beta_j",
@@ -108,6 +145,31 @@ _REFERENCE_CATALOG: dict[str, dict[str, Any]] = {
         "class": "closed_form_linear_algebra",
         "reference": "OLS/ridge hat-matrix prediction decomposition",
         "alignment": "uses attention_weights to express prediction as weighted training outcomes",
+    },
+    "observation_weights": {
+        "class": "paper_formula_adapter",
+        "reference": "Dual Interpretation of Machine Learning Forecasts, Goulet Coulombe, Goebel, and Klieber (2024)",
+        "alignment": "ridge, kernel-ridge, and random-forest observation-weight formulas aligned with local DualML Python/R reference code",
+    },
+    "outcome_contributions": {
+        "class": "paper_formula_adapter",
+        "reference": "Dual Interpretation of Machine Learning Forecasts, Goulet Coulombe, Goebel, and Klieber (2024)",
+        "alignment": "multiplies observation weights by centered or raw in-sample outcomes to form data-portfolio episode contributions",
+    },
+    "data_portfolio_diagnostics": {
+        "class": "paper_formula_adapter",
+        "reference": "Dual Interpretation of Machine Learning Forecasts, Goulet Coulombe, Goebel, and Klieber (2024)",
+        "alignment": "forecast concentration, short position, leverage, and turnover definitions aligned with DualML metrics",
+    },
+    "top_episodes": {
+        "class": "paper_formula_adapter",
+        "reference": "Dual Interpretation of Machine Learning Forecasts, Goulet Coulombe, Goebel, and Klieber (2024)",
+        "alignment": "ranks historical observations by signed or absolute data-portfolio weight",
+    },
+    "episode_group_weights": {
+        "class": "paper_formula_adapter",
+        "reference": "Dual Interpretation of Machine Learning Forecasts, Goulet Coulombe, Goebel, and Klieber (2024)",
+        "alignment": "aggregates data-portfolio weights and outcome contributions over user-defined regimes or historical episode groups",
     },
     "generalized_irf": {
         "class": "econometric_formula",
@@ -249,7 +311,9 @@ def model_native_tree_importance(model: Any, *, sort: bool = True) -> pd.DataFra
     """Alias for legacy L7 naming: native tree feature importance."""
 
     table = tree_importance(model, sort=sort)
-    table.attrs["macroforecast_metadata_schema"]["method"] = "model_native_tree_importance"
+    table.attrs["macroforecast_metadata_schema"]["method"] = (
+        "model_native_tree_importance"
+    )
     return table
 
 
@@ -611,7 +675,9 @@ def accumulated_local_effect(
     if bins <= 1:
         raise ValueError("bins must be greater than 1")
     values = frame[feature].astype(float)
-    edges = np.unique(np.quantile(values.dropna(), np.linspace(0.0, 1.0, int(bins) + 1)))
+    edges = np.unique(
+        np.quantile(values.dropna(), np.linspace(0.0, 1.0, int(bins) + 1))
+    )
     if len(edges) < 3:
         raise ValueError("feature needs at least two non-empty ALE bins")
     effects = []
@@ -619,7 +685,9 @@ def accumulated_local_effect(
     for low, high in zip(edges[:-1], edges[1:], strict=False):
         # Reference alignment: first-order ALEPlot/Apley-Zhu finite difference
         # within feature intervals, followed by cumulative centering.
-        mask = (values >= low) & (values <= high if high == edges[-1] else values < high)
+        mask = (values >= low) & (
+            values <= high if high == edges[-1] else values < high
+        )
         if not mask.any():
             effects.append(0.0)
             centers.append(float((low + high) / 2.0))
@@ -672,7 +740,11 @@ def friedman_h_interaction(
     """
 
     frame = _as_feature_frame(X)
-    selected = tuple(features) if features is not None else tuple(str(c) for c in frame.columns)
+    selected = (
+        tuple(features)
+        if features is not None
+        else tuple(str(c) for c in frame.columns)
+    )
     _resolve_features(frame, selected)
     if grid_size <= 1:
         raise ValueError("grid_size must be greater than 1")
@@ -694,7 +766,11 @@ def friedman_h_interaction(
         right_pd = joint.mean(axis=0, keepdims=True)
         centered = joint - left_pd - right_pd + joint.mean()
         denom = float(np.var(joint))
-        h_value = 0.0 if denom <= 1e-15 else float(np.sqrt(max(np.var(centered) / denom, 0.0)))
+        h_value = (
+            0.0
+            if denom <= 1e-15
+            else float(np.sqrt(max(np.var(centered) / denom, 0.0)))
+        )
         rows.append(
             {
                 "feature_1": str(left),
@@ -706,7 +782,9 @@ def friedman_h_interaction(
             }
         )
     return _attach_schema(
-        pd.DataFrame(rows).sort_values("h_statistic", ascending=False, kind="stable").reset_index(drop=True),
+        pd.DataFrame(rows)
+        .sort_values("h_statistic", ascending=False, kind="stable")
+        .reset_index(drop=True),
         kind="friedman_h_interaction",
         model=model,
         method="manual_partial_dependence_h",
@@ -741,7 +819,9 @@ def shap_values(
         # only reshapes SHAP's output into a long pandas table.
         target_model = model.estimator if isinstance(model, ModelFit) else model
         explainer_obj = shap.TreeExplainer(target_model, data=background_frame)
-        explanation = explainer_obj.shap_values(frame, check_additivity=check_additivity)
+        explanation = explainer_obj.shap_values(
+            frame, check_additivity=check_additivity
+        )
         values = _coerce_shap_array(explanation, frame)
         base_values = _tree_base_values(explainer_obj, len(frame))
     else:
@@ -815,14 +895,18 @@ def shap_importance(
         std_shap=("shap_value", "std"),
     )
     grouped["std_shap"] = grouped["std_shap"].fillna(0.0)
-    grouped = grouped.sort_values("importance", ascending=False, kind="stable").reset_index(drop=True)
+    grouped = grouped.sort_values(
+        "importance", ascending=False, kind="stable"
+    ).reset_index(drop=True)
     return _attach_schema(
         grouped,
         kind="shap_importance",
         model=model,
         method=f"shap_{_normalize_explainer(explainer)}_global_importance",
         n_features=_as_feature_frame(X).shape[1],
-        metadata=values.attrs.get("macroforecast_metadata_schema", {}).get("metadata", {}),
+        metadata=values.attrs.get("macroforecast_metadata_schema", {}).get(
+            "metadata", {}
+        ),
     )
 
 
@@ -853,6 +937,470 @@ def shap_deep(model: Any, X: pd.DataFrame, **kwargs: Any) -> pd.DataFrame:
     """
 
     return shap_importance(model, X, explainer="auto", **kwargs)
+
+
+def anatomy_explain(
+    anatomy: Any,
+    *,
+    model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None,
+    transformer: Callable[..., Any] | Any | None = None,
+    metric: str = "forecast",
+    explanation_subset: pd.Index | Sequence[Any] | None = None,
+    output: str = "long",
+) -> pd.DataFrame:
+    """Explain a precomputed ``anatomy.Anatomy`` object.
+
+    This is a thin backend wrapper around the Python ``anatomy`` package from
+    Borup et al., *The Anatomy of Out-of-Sample Forecasting Accuracy*.
+    """
+
+    anatomy_mod = _optional_anatomy()
+    anatomy_obj = (
+        anatomy_mod.Anatomy.load(str(anatomy))
+        if isinstance(anatomy, (str, Path))
+        else anatomy
+    )
+    if not hasattr(anatomy_obj, "explain"):
+        raise TypeError("anatomy must be a precomputed anatomy.Anatomy object or path")
+
+    groups_obj = (
+        None
+        if model_groups is None
+        else anatomy_mod.AnatomyModelCombination(groups=dict(model_groups))
+    )
+    transformer_obj = _resolve_anatomy_transformer(
+        anatomy_mod,
+        transformer=transformer,
+        metric=metric,
+    )
+    subset = None if explanation_subset is None else pd.Index(explanation_subset)
+    wide = anatomy_obj.explain(
+        model_sets=groups_obj,
+        transformer=transformer_obj,
+        explanation_subset=subset,
+    )
+    if str(output).lower() == "wide":
+        table = wide.copy()
+    elif str(output).lower() == "long":
+        table = _anatomy_wide_to_long(wide)
+    else:
+        raise ValueError("output must be 'long' or 'wide'")
+    return _attach_schema(
+        table,
+        kind="anatomy_explain",
+        model=None,
+        method=f"anatomy_{str(metric).lower()}",
+        n_features=max(0, len(wide.columns) - int("base_contribution" in wide.columns)),
+        metadata={
+            "metric": str(metric),
+            "backend": "anatomy",
+            "model_groups": None if model_groups is None else dict(model_groups),
+            "output": str(output).lower(),
+            "paper": "Borup et al. (2022), The Anatomy of Out-of-Sample Forecasting Accuracy",
+        },
+    )
+
+
+def shapley_variable_importance(
+    contributions: pd.DataFrame | pd.Series,
+    *,
+    contribution_col: str | None = None,
+    feature_col: str = "feature",
+    group_col: str | None = None,
+    exclude_base: bool = True,
+    source: str = "contribution_table",
+) -> pd.DataFrame:
+    """Aggregate local Shapley contributions into variable importance.
+
+    This matches the anatomy README's oShapley-VI summary rule: average the
+    absolute raw-forecast Shapley contribution by predictor. The same table
+    adapter can standardize user-supplied in-sample Shapley VI before MAS.
+    """
+
+    frame = _coerce_contribution_frame(
+        contributions,
+        value_name=contribution_col or "contribution",
+        feature_col=feature_col,
+    )
+    value_col = contribution_col or _resolve_contribution_column(frame)
+    if feature_col not in frame.columns:
+        raise ValueError(f"contributions must contain feature column {feature_col!r}")
+    frame = frame.copy()
+    frame[feature_col] = frame[feature_col].astype(str)
+    if exclude_base:
+        frame = frame[~frame[feature_col].isin({"base_contribution", "__base__"})]
+    resolved_group = group_col or _first_present(
+        frame, ("model_set", "model", "pipeline")
+    )
+    group_keys = (
+        [resolved_group, feature_col] if resolved_group is not None else [feature_col]
+    )
+    table = (
+        frame.groupby(group_keys, dropna=False, as_index=False)
+        .agg(
+            importance=(value_col, lambda item: float(np.mean(np.abs(item)))),
+            mean_contribution=(value_col, "mean"),
+            std_contribution=(value_col, "std"),
+            n_rows=(value_col, "count"),
+        )
+        .fillna({"std_contribution": 0.0})
+        .sort_values(
+            (
+                [resolved_group, "importance"]
+                if resolved_group is not None
+                else ["importance"]
+            ),
+            ascending=([True, False] if resolved_group is not None else [False]),
+            kind="stable",
+        )
+        .reset_index(drop=True)
+    )
+    if resolved_group is not None:
+        table["rank"] = table.groupby(resolved_group)["importance"].rank(
+            ascending=False,
+            method="first",
+        )
+    else:
+        table["rank"] = np.arange(1, len(table) + 1)
+    return _attach_schema(
+        table,
+        kind="shapley_variable_importance",
+        model=None,
+        method="mean_absolute_shapley_contribution",
+        n_features=int(table[feature_col].nunique())
+        if feature_col in table.columns
+        else 0,
+        metadata={
+            "source": str(source),
+            "contribution_column": value_col,
+            "feature_column": feature_col,
+            "group_column": resolved_group,
+            "exclude_base": bool(exclude_base),
+        },
+    )
+
+
+def ishapley_vi(
+    contributions: pd.DataFrame | pd.Series,
+    *,
+    contribution_col: str | None = None,
+    feature_col: str = "feature",
+    group_col: str | None = None,
+    exclude_base: bool = True,
+) -> pd.DataFrame:
+    """Aggregate in-sample Shapley contributions into iShapley-VI_p."""
+
+    table = shapley_variable_importance(
+        contributions,
+        contribution_col=contribution_col,
+        feature_col=feature_col,
+        group_col=group_col,
+        exclude_base=exclude_base,
+        source="in_sample_contribution_table",
+    )
+    schema = table.attrs["macroforecast_metadata_schema"]
+    schema["kind"] = "ishapley_vi"
+    schema["method"] = "in_sample_mean_absolute_shapley_contribution"
+    schema["reference"] = dict(_REFERENCE_CATALOG["ishapley_vi"])
+    schema["metadata"]["vi_scope"] = "in_sample"
+    return table
+
+
+def oshapley_vi(
+    anatomy: Any,
+    *,
+    model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None,
+    explanation_subset: pd.Index | Sequence[Any] | None = None,
+    exclude_base: bool = True,
+) -> pd.DataFrame:
+    """Compute anatomy backend oShapley-VI from raw forecast explanations."""
+
+    explained = anatomy_explain(
+        anatomy,
+        model_groups=model_groups,
+        metric="forecast",
+        explanation_subset=explanation_subset,
+        output="long",
+    )
+    table = shapley_variable_importance(
+        explained,
+        contribution_col="contribution",
+        feature_col="feature",
+        group_col="model_set",
+        exclude_base=exclude_base,
+        source="anatomy_raw_forecast",
+    )
+    table.attrs["macroforecast_metadata_schema"]["kind"] = "oshapley_vi"
+    table.attrs["macroforecast_metadata_schema"]["method"] = (
+        "anatomy_raw_forecast_mean_abs"
+    )
+    table.attrs["macroforecast_metadata_schema"]["reference"] = dict(
+        _REFERENCE_CATALOG["oshapley_vi"]
+    )
+    return table
+
+
+def pbsv(
+    anatomy: Any,
+    *,
+    model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None,
+    loss: str = "rmse",
+    transformer: Callable[..., Any] | Any | None = None,
+    explanation_subset: pd.Index | Sequence[Any] | None = None,
+    output: str = "long",
+) -> pd.DataFrame:
+    """Compute backend PBSV_p loss decomposition through ``anatomy``."""
+
+    table = anatomy_explain(
+        anatomy,
+        model_groups=model_groups,
+        transformer=transformer,
+        metric=loss,
+        explanation_subset=explanation_subset,
+        output=output,
+    )
+    table.attrs["macroforecast_metadata_schema"]["kind"] = "pbsv"
+    table.attrs["macroforecast_metadata_schema"]["method"] = (
+        f"anatomy_pbsv_{str(loss).lower()}"
+    )
+    table.attrs["macroforecast_metadata_schema"]["reference"] = dict(
+        _REFERENCE_CATALOG["pbsv"]
+    )
+    table.attrs["macroforecast_metadata_schema"]["metadata"]["loss"] = str(loss)
+    table.attrs["macroforecast_metadata_schema"]["metadata"]["backend"] = "anatomy"
+    return table
+
+
+def performance_based_shapley_value(*args: Any, **kwargs: Any) -> pd.DataFrame:
+    """Alias for :func:`pbsv` when using the anatomy backend."""
+
+    return pbsv(*args, **kwargs)
+
+
+def model_accordance_score(
+    is_vi: pd.DataFrame | pd.Series | Mapping[str, float],
+    oos_pbsv: pd.DataFrame | pd.Series | Mapping[str, float],
+    *,
+    loss_type: str = "lower_is_better",
+    mas_type: str = "importance_weighted",
+    hypothesis_test: bool = True,
+    h0_alpha: float = 0.5,
+    n_samples: int = 1_000_000,
+    vi_value_col: str | None = None,
+    pbsv_value_col: str | None = None,
+    feature_col: str = "feature",
+    random_state: int | None = None,
+) -> pd.DataFrame:
+    """Compute the anatomy backend Model Accordance Score."""
+
+    anatomy_mod = _optional_anatomy()
+    vi_series = _feature_series(
+        is_vi,
+        value_col=vi_value_col,
+        feature_col=feature_col,
+        preferred_columns=("importance", "vi", "contribution", "shap_value"),
+    )
+    pbsv_series = _feature_series(
+        oos_pbsv,
+        value_col=pbsv_value_col,
+        feature_col=feature_col,
+        preferred_columns=("pbsv", "contribution", "importance"),
+    )
+    vi_series, pbsv_series = _align_vi_pbsv_series(vi_series, pbsv_series)
+    loss_enum = _anatomy_loss_type(anatomy_mod, loss_type)
+    mas_enum = _anatomy_mas_type(anatomy_mod, mas_type)
+    state = np.random.get_state() if random_state is not None else None
+    if random_state is not None:
+        np.random.seed(int(random_state))
+    try:
+        result = anatomy_mod.MAS(vi_series, pbsv_series, loss_enum).compute(
+            mas_type=mas_enum,
+            hypothesis_test=bool(hypothesis_test),
+            h0_alpha=float(h0_alpha),
+            n_samples=int(n_samples),
+        )
+    finally:
+        if state is not None:
+            np.random.set_state(state)
+    table = pd.DataFrame(
+        [
+            {
+                "mas": float(result["mas"]),
+                "mas_p_value": (
+                    float(result["mas_p_value"])
+                    if "mas_p_value" in result and result["mas_p_value"] is not None
+                    else np.nan
+                ),
+                "mas_type": str(mas_type),
+                "loss_type": str(loss_type),
+                "hypothesis_test": bool(hypothesis_test),
+                "h0_alpha": float(h0_alpha),
+                "n_samples": int(n_samples) if hypothesis_test else 0,
+                "n_features": int(len(vi_series)),
+            }
+        ]
+    )
+    return _attach_schema(
+        table,
+        kind="model_accordance_score",
+        model=None,
+        method="anatomy_mas",
+        n_features=int(len(vi_series)),
+        metadata={
+            "backend": "anatomy",
+            "mas_type": str(mas_type),
+            "loss_type": str(loss_type),
+            "hypothesis_test": bool(hypothesis_test),
+            "random_state": random_state,
+        },
+    )
+
+
+def performance_shapley_value(
+    contributions: pd.DataFrame,
+    y: pd.Series | Sequence[float],
+    *,
+    loss: str = "squared_error",
+    row_col: str | None = None,
+    feature_col: str = "feature",
+    contribution_col: str | None = None,
+    base_col: str = "base_value",
+    base_value: float = 0.0,
+    n_permutations: int | None = None,
+    max_exact_features: int = 8,
+    random_state: int | None = 0,
+    return_local: bool = False,
+) -> pd.DataFrame:
+    """Compute PBSV-style loss attribution from additive forecast contributions.
+
+    Negative feature contributions reduce the selected point loss; positive
+    contributions increase it. Full Borup et al. rolling/expanding refit anatomy
+    should use ``anatomy_explain`` with a precomputed ``anatomy`` object.
+    """
+
+    frame = contributions.copy()
+    if feature_col not in frame.columns:
+        raise ValueError(f"contributions must contain feature column {feature_col!r}")
+    value_col = contribution_col or _resolve_contribution_column(frame)
+    if row_col is None and "row" not in frame.columns and "index" not in frame.columns:
+        frame = frame.copy()
+        frame["row"] = 0
+    resolved_row = row_col or _resolve_contribution_row_column(frame, y)
+    targets = _target_by_row(frame, y, row_col=resolved_row)
+    rows: list[dict[str, Any]] = []
+    rng = np.random.default_rng(random_state)
+    for row_key, group in frame.groupby(resolved_row, sort=False):
+        group = group.copy()
+        actual = float(targets[row_key])
+        base = _row_base_value(
+            group,
+            base_col=base_col,
+            default=base_value,
+        )
+        feature_group = (
+            group[group[feature_col].astype(str) != "__base__"]
+            .groupby(feature_col, sort=False, as_index=False)[value_col]
+            .sum()
+        )
+        feature_names = tuple(str(item) for item in feature_group[feature_col])
+        values = feature_group[value_col].to_numpy(dtype=float)
+        shapley, meta = _point_loss_shapley(
+            actual=actual,
+            base_prediction=base,
+            contributions=values,
+            loss=loss,
+            n_permutations=n_permutations,
+            max_exact_features=max_exact_features,
+            rng=rng,
+        )
+        full_prediction = float(base + values.sum())
+        baseline_loss = _point_loss(actual, base, loss=loss)
+        full_loss = _point_loss(actual, full_prediction, loss=loss)
+        index_value = group["index"].iloc[0] if "index" in group.columns else row_key
+        rows.append(
+            {
+                "row": row_key,
+                "index": index_value,
+                "feature": "__base__",
+                "pbsv": baseline_loss,
+                "actual": actual,
+                "base_prediction": base,
+                "full_prediction": full_prediction,
+                "baseline_loss": baseline_loss,
+                "full_loss": full_loss,
+                "loss": str(loss),
+                "is_base": True,
+                **meta,
+            }
+        )
+        for feature, value, contribution in zip(
+            feature_names, values, shapley, strict=True
+        ):
+            rows.append(
+                {
+                    "row": row_key,
+                    "index": index_value,
+                    "feature": feature,
+                    "forecast_contribution": float(value),
+                    "pbsv": float(contribution),
+                    "actual": actual,
+                    "base_prediction": base,
+                    "full_prediction": full_prediction,
+                    "baseline_loss": baseline_loss,
+                    "full_loss": full_loss,
+                    "loss": str(loss),
+                    "is_base": False,
+                    **meta,
+                }
+            )
+    local = pd.DataFrame(rows)
+    error = (
+        local.groupby("row", sort=False)["pbsv"].sum()
+        - local.groupby("row", sort=False)["full_loss"].first()
+    ).abs()
+    if return_local:
+        table = local.reset_index(drop=True)
+        kind = "performance_shapley_value"
+        method = "local_point_loss_shapley"
+    else:
+        table = (
+            local.groupby(["feature", "is_base"], as_index=False)
+            .agg(
+                pbsv=("pbsv", "mean"),
+                abs_pbsv=("pbsv", lambda item: float(np.mean(np.abs(item)))),
+                n_rows=("row", "nunique"),
+                baseline_loss=("baseline_loss", "mean"),
+                full_loss=("full_loss", "mean"),
+            )
+            .sort_values(
+                ["is_base", "abs_pbsv"], ascending=[False, False], kind="stable"
+            )
+            .reset_index(drop=True)
+        )
+        table["rank"] = np.arange(1, len(table) + 1)
+        kind = "performance_shapley_value"
+        method = "global_mean_point_loss_shapley"
+    return _attach_schema(
+        table,
+        kind=kind,
+        model=None,
+        method=method,
+        n_features=int(local.loc[~local["is_base"], "feature"].nunique()),
+        metadata={
+            "loss": str(loss),
+            "contribution_column": value_col,
+            "row_column": resolved_row,
+            "n_rows": int(local["row"].nunique()),
+            "n_permutations": n_permutations,
+            "max_exact_features": int(max_exact_features),
+            "max_efficiency_error": float(error.max()) if len(error) else 0.0,
+            "paper": "Borup et al. (2022), The Anatomy of Out-of-Sample Forecasting Accuracy",
+            "interpretation": (
+                "negative pbsv reduces point loss; positive pbsv increases point loss"
+            ),
+            "backend": "macroforecast_additive_contribution_adapter",
+        },
+    )
 
 
 def forecast_decomposition(
@@ -918,7 +1466,9 @@ def forecast_decomposition(
                             "feature_value": 1.0,
                             "coefficient": float(np.asarray(intercept).reshape(-1)[0]),
                             "contribution": float(np.asarray(intercept).reshape(-1)[0]),
-                            "abs_contribution": abs(float(np.asarray(intercept).reshape(-1)[0])),
+                            "abs_contribution": abs(
+                                float(np.asarray(intercept).reshape(-1)[0])
+                            ),
                         }
                     ]
                 ),
@@ -954,7 +1504,9 @@ def cumulative_r2_contribution(
         try:
             order = list(linear_coefficients(model)["feature"])
         except Exception:
-            order = list(permutation_importance(model, frame, target, n_repeats=1)["feature"])
+            order = list(
+                permutation_importance(model, frame, target, n_repeats=1)["feature"]
+            )
     else:
         order = list(_resolve_features(frame, feature_order))
     active = pd.DataFrame(0.0, index=frame.index, columns=frame.columns)
@@ -1007,8 +1559,12 @@ def group_aggregate(
         frame["group"] = frame[group_column].astype(str)
     else:
         mapping = _normalize_group_mapping(groups)
-        frame["group"] = frame["feature"].map(lambda item: mapping.get(str(item), str(item).split("_")[0]))
-    grouped = _aggregate_importance(frame, group_by="group", value_column=value, aggregation=aggregation)
+        frame["group"] = frame["feature"].map(
+            lambda item: mapping.get(str(item), str(item).split("_")[0])
+        )
+    grouped = _aggregate_importance(
+        frame, group_by="group", value_column=value, aggregation=aggregation
+    )
     return _attach_schema(
         grouped,
         kind="group_aggregate",
@@ -1037,11 +1593,15 @@ def lineage_attribution(
     def resolve(feature: Any) -> str:
         meta = lineage.get(str(feature), {})
         if isinstance(meta, Mapping):
-            return str(meta.get(level, meta.get("pipeline", meta.get("source", "unknown"))))
+            return str(
+                meta.get(level, meta.get("pipeline", meta.get("source", "unknown")))
+            )
         return str(meta or "unknown")
 
     frame["lineage"] = frame["feature"].map(resolve)
-    grouped = _aggregate_importance(frame, group_by="lineage", value_column=value, aggregation=aggregation)
+    grouped = _aggregate_importance(
+        frame, group_by="lineage", value_column=value, aggregation=aggregation
+    )
     grouped = grouped.rename(columns={"lineage": level})
     return _attach_schema(
         grouped,
@@ -1072,36 +1632,56 @@ def transformation_attribution(
     """
 
     frame = evaluation.copy()
-    pipeline_col = pipeline_column or _first_present(frame, ("pipeline", "pipeline_id", "model", "model_id"))
+    pipeline_col = pipeline_column or _first_present(
+        frame, ("pipeline", "pipeline_id", "model", "model_id")
+    )
     if pipeline_col is None:
         raise ValueError("evaluation must contain a pipeline/model column")
-    metric_col = metric or _first_present(frame, ("mse", "rmse", "mae", "loss", "score"))
+    metric_col = metric or _first_present(
+        frame, ("mse", "rmse", "mae", "loss", "score")
+    )
     if metric_col is None:
         raise ValueError("evaluation must contain a metric column")
-    if method not in {"shapley_over_pipelines", "marginal_addition", "leave_one_out_pipeline"}:
-        raise ValueError("method must be 'shapley_over_pipelines', 'marginal_addition', or 'leave_one_out_pipeline'")
+    if method not in {
+        "shapley_over_pipelines",
+        "marginal_addition",
+        "leave_one_out_pipeline",
+    }:
+        raise ValueError(
+            "method must be 'shapley_over_pipelines', 'marginal_addition', or 'leave_one_out_pipeline'"
+        )
     group_cols = [column for column in target_columns if column in frame.columns]
-    grouped_iter = frame.groupby(group_cols, dropna=False) if group_cols else [((), frame)]
+    grouped_iter = (
+        frame.groupby(group_cols, dropna=False) if group_cols else [((), frame)]
+    )
     rows: list[dict[str, Any]] = []
     for key, group in grouped_iter:
-        losses = group.groupby(pipeline_col, as_index=True)[metric_col].mean().astype(float)
+        losses = (
+            group.groupby(pipeline_col, as_index=True)[metric_col].mean().astype(float)
+        )
         pipelines = list(losses.index.astype(str))
         values = losses.to_numpy(dtype=float)
         if len(pipelines) == 0:
             continue
-        resolved_baseline = _resolve_pipeline_baseline(values, lower_is_better=lower_is_better, baseline=baseline)
+        resolved_baseline = _resolve_pipeline_baseline(
+            values, lower_is_better=lower_is_better, baseline=baseline
+        )
         contribution = _pipeline_value_contribution(
             values,
             method=method,
             lower_is_better=lower_is_better,
             baseline=resolved_baseline,
         )
-        utility = _pipeline_utility(values, lower_is_better=lower_is_better, baseline=resolved_baseline)
+        utility = _pipeline_utility(
+            values, lower_is_better=lower_is_better, baseline=resolved_baseline
+        )
         base: dict[str, Any] = {}
         if group_cols:
             key_tuple = key if isinstance(key, tuple) else (key,)
             base = dict(zip(group_cols, key_tuple, strict=False))
-        for pipeline, loss_value, utility_value, contrib in zip(pipelines, values, utility, contribution, strict=False):
+        for pipeline, loss_value, utility_value, contrib in zip(
+            pipelines, values, utility, contribution, strict=False
+        ):
             rows.append(
                 {
                     **base,
@@ -1143,7 +1723,13 @@ def attention_weights(
     """OLS attention weights ``Omega = X_test (X_train'X_train)^-1 X_train'``."""
 
     train = _as_feature_frame(X_train).astype(float)
-    test = train if X_test is None else _as_feature_frame(X_test).reindex(columns=train.columns, fill_value=0.0).astype(float)
+    test = (
+        train
+        if X_test is None
+        else _as_feature_frame(X_test)
+        .reindex(columns=train.columns, fill_value=0.0)
+        .astype(float)
+    )
     train_matrix = _design_matrix(train, add_intercept=add_intercept)
     test_matrix = _design_matrix(test, add_intercept=add_intercept)
     gram = train_matrix.T @ train_matrix
@@ -1204,9 +1790,9 @@ def dual_decomposition(
     table = weights.copy()
     table["train_y"] = table["train_row"].map(lambda row: float(target[int(row)]))
     table["contribution"] = table["weight"] * table["train_y"]
-    summary = (
-        table.groupby(["test_row", "test_index"], as_index=False)
-        .agg(prediction=("contribution", "sum"), gross_weight=("weight", lambda item: float(np.abs(item).sum())))
+    summary = table.groupby(["test_row", "test_index"], as_index=False).agg(
+        prediction=("contribution", "sum"),
+        gross_weight=("weight", lambda item: float(np.abs(item).sum())),
     )
     table.attrs["prediction_summary"] = summary
     return _attach_schema(
@@ -1219,19 +1805,303 @@ def dual_decomposition(
     )
 
 
-def generalized_irf(model: Any, *, n_periods: int = 12, target: str | int | None = None) -> pd.DataFrame:
+def observation_weights(
+    model: Any | None,
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame | None = None,
+    *,
+    method: str = "auto",
+    lambda_: float = 1e-8,
+    kernel: str = "linear",
+    sigma: float = 1.0,
+    add_intercept: bool = False,
+    ridge_penalty_scale: str = "n_train",
+    normalize: bool = False,
+) -> pd.DataFrame:
+    """Compute DualML-style historical-observation weights for forecasts.
+
+    This is the episode-based interpretation from Goulet Coulombe, Goebel, and
+    Klieber (2024). It explains a forecast through training observations rather
+    than through predictor variables. The implemented paper-aligned routes are:
+    ridge/OLS, kernel ridge, and sklearn-style random forests.
+    """
+
+    train = _as_feature_frame(X_train).astype(float)
+    test = (
+        train
+        if X_test is None
+        else _as_feature_frame(X_test)
+        .reindex(columns=train.columns, fill_value=0.0)
+        .astype(float)
+    )
+    resolved = _resolve_dual_method(model, method=method, kernel=kernel)
+    if resolved == "ridge":
+        matrix = _ridge_observation_weight_matrix(
+            train,
+            test,
+            lambda_=lambda_,
+            add_intercept=add_intercept,
+            penalty_scale=ridge_penalty_scale,
+        )
+    elif resolved == "krr":
+        k_train = _dual_kernel_matrix(train, train, kernel=kernel, sigma=sigma)
+        k_test = _dual_kernel_matrix(test, train, kernel=kernel, sigma=sigma)
+        inv = np.linalg.pinv(k_train + float(lambda_) * np.eye(len(train)))
+        matrix = k_test @ inv
+    elif resolved == "random_forest":
+        estimator = _estimator(model)
+        if estimator is None:
+            raise ValueError("random_forest observation weights require a fitted model")
+        matrix = _random_forest_observation_weight_matrix(estimator, train, test)
+    else:
+        raise ValueError("method must be 'auto', 'ridge', 'ols', 'krr', or 'random_forest'")
+    if normalize:
+        row_sums = matrix.sum(axis=1, keepdims=True)
+        matrix = np.divide(matrix, row_sums, out=np.zeros_like(matrix), where=row_sums != 0)
+    rows = _long_weight_rows(matrix, train.index, test.index, method=resolved)
+    table = pd.DataFrame(rows)
+    table.attrs["weight_matrix"] = matrix
+    return _attach_schema(
+        table,
+        kind="observation_weights",
+        model=model,
+        method=resolved,
+        n_features=train.shape[1],
+        metadata={
+            "n_train": int(len(train)),
+            "n_test": int(len(test)),
+            "lambda": float(lambda_),
+            "kernel": str(kernel),
+            "sigma": float(sigma),
+            "add_intercept": bool(add_intercept),
+            "ridge_penalty_scale": str(ridge_penalty_scale),
+            "normalize": bool(normalize),
+            "paper": "Dual Interpretation of Machine Learning Forecasts",
+            "implemented_routes": ["ridge", "krr", "random_forest"],
+            "unsupported_routes": ["boosted_tree_axil", "nn_embedding_ridge", "classification_log_odds"],
+        },
+    )
+
+
+def outcome_contributions(
+    weights: pd.DataFrame,
+    y_train: pd.Series | np.ndarray,
+    *,
+    center: bool = False,
+    include_base: bool = False,
+) -> pd.DataFrame:
+    """Convert observation weights into historical-outcome contributions."""
+
+    matrix, train_labels, test_labels = _weight_matrix_from_table(weights)
+    target = _align_dual_target(y_train, train_labels)
+    base = float(np.nanmean(target)) if center else 0.0
+    values = target - base if center else target
+    contrib = matrix * values.reshape(1, -1)
+    rows: list[dict[str, Any]] = []
+    for test_pos, test_index in enumerate(test_labels):
+        prediction = float(np.nansum(contrib[test_pos]) + (base * matrix[test_pos].sum() if center else 0.0))
+        if include_base and center:
+            rows.append(
+                {
+                    "test_row": int(test_pos),
+                    "test_index": test_index,
+                    "train_row": -1,
+                    "train_index": "__base__",
+                    "weight": float(matrix[test_pos].sum()),
+                    "train_y": float(base),
+                    "centered_train_y": 0.0,
+                    "contribution": float(base * matrix[test_pos].sum()),
+                    "prediction": prediction,
+                    "channel": "base",
+                }
+            )
+        for train_pos, train_index in enumerate(train_labels):
+            rows.append(
+                {
+                    "test_row": int(test_pos),
+                    "test_index": test_index,
+                    "train_row": int(train_pos),
+                    "train_index": train_index,
+                    "weight": float(matrix[test_pos, train_pos]),
+                    "train_y": float(target[train_pos]),
+                    "centered_train_y": float(values[train_pos]),
+                    "contribution": float(contrib[test_pos, train_pos]),
+                    "prediction": prediction,
+                    "channel": "episode",
+                }
+            )
+    table = pd.DataFrame(rows)
+    return _attach_schema(
+        table,
+        kind="outcome_contributions",
+        model=None,
+        method="dual_data_portfolio_contribution",
+        n_features=0,
+        metadata={
+            "n_train": int(len(train_labels)),
+            "n_test": int(len(test_labels)),
+            "center": bool(center),
+            "include_base": bool(include_base),
+            "base_value": float(base),
+        },
+    )
+
+
+def data_portfolio_diagnostics(
+    weights: pd.DataFrame,
+    *,
+    top_q: float = 0.05,
+) -> pd.DataFrame:
+    """Summarize DualML data-portfolio concentration, shorts, leverage, turnover."""
+
+    matrix, train_labels, test_labels = _weight_matrix_from_table(weights)
+    q_share = _top_q_share(top_q)
+    k = max(1, int(np.ceil(matrix.shape[1] * q_share)))
+    rows: list[dict[str, Any]] = []
+    previous: np.ndarray | None = None
+    for test_pos, test_index in enumerate(test_labels):
+        row = matrix[test_pos]
+        abs_sum = float(np.abs(row).sum())
+        top_abs = float(np.sort(np.abs(row))[-k:].sum()) if len(row) else 0.0
+        turnover = np.nan if previous is None else float(np.abs(row - previous).sum())
+        rows.append(
+            {
+                "test_row": int(test_pos),
+                "test_index": test_index,
+                "concentration": np.nan if abs_sum == 0 else top_abs / abs_sum,
+                "short_position": float(row[row < 0].sum()),
+                "short_position_abs": float(np.abs(row[row < 0]).sum()),
+                "leverage": float(row.sum()),
+                "gross_leverage": abs_sum,
+                "turnover": turnover,
+                "top_q": float(q_share),
+                "top_k": int(k),
+                "n_train": int(len(train_labels)),
+            }
+        )
+        previous = row
+    return _attach_schema(
+        pd.DataFrame(rows),
+        kind="data_portfolio_diagnostics",
+        model=None,
+        method="dual_data_portfolio_metrics",
+        n_features=0,
+        metadata={
+            "top_q": float(q_share),
+            "top_k": int(k),
+            "turnover": "sum_abs_weight_change_from_previous_forecast",
+            "short_position": "signed_sum_of_negative_weights",
+            "reference_code": "DualML FC_CR/FSP/FT metrics",
+        },
+    )
+
+
+def top_episodes(
+    weights: pd.DataFrame,
+    *,
+    y_train: pd.Series | np.ndarray | None = None,
+    n: int = 10,
+    sort_by: str = "abs_weight",
+) -> pd.DataFrame:
+    """Return the largest historical-episode weights for each forecast row."""
+
+    if sort_by not in {"abs_weight", "weight", "contribution", "abs_contribution"}:
+        raise ValueError(
+            "sort_by must be 'abs_weight', 'weight', 'contribution', or 'abs_contribution'"
+        )
+    enriched = weights.copy()
+    if "abs_weight" not in enriched.columns:
+        enriched["abs_weight"] = enriched["weight"].abs()
+    if y_train is not None and "contribution" not in enriched.columns:
+        enriched = outcome_contributions(enriched, y_train)
+        enriched["abs_weight"] = enriched["weight"].abs()
+        enriched["abs_contribution"] = enriched["contribution"].abs()
+    elif "contribution" in enriched.columns and "abs_contribution" not in enriched.columns:
+        enriched["abs_contribution"] = enriched["contribution"].abs()
+    rows: list[pd.DataFrame] = []
+    for _, group in enriched.groupby(["test_row", "test_index"], dropna=False, sort=False):
+        selected = group.sort_values(sort_by, ascending=False).head(int(n)).copy()
+        selected["rank"] = np.arange(1, len(selected) + 1)
+        rows.append(selected)
+    table = pd.concat(rows, ignore_index=True) if rows else enriched.iloc[0:0].copy()
+    return _attach_schema(
+        table,
+        kind="top_episodes",
+        model=None,
+        method="dual_top_episode_weights",
+        n_features=0,
+        metadata={"n": int(n), "sort_by": sort_by},
+    )
+
+
+def episode_group_weights(
+    weights: pd.DataFrame,
+    groups: Mapping[str, Sequence[Any]],
+    *,
+    y_train: pd.Series | np.ndarray | None = None,
+) -> pd.DataFrame:
+    """Aggregate historical-observation weights over named episode groups."""
+
+    enriched = (
+        outcome_contributions(weights, y_train)
+        if y_train is not None and "contribution" not in weights.columns
+        else weights.copy()
+    )
+    group_map: dict[Any, str] = {}
+    for group, members in groups.items():
+        for member in members:
+            group_map[member] = str(group)
+    enriched["episode_group"] = enriched["train_index"].map(group_map).fillna("other")
+    agg_spec: dict[str, Any] = {
+        "weight": ("weight", "sum"),
+        "abs_weight": ("weight", lambda item: float(np.abs(item).sum())),
+        "n_episodes": ("train_index", "nunique"),
+    }
+    if "contribution" in enriched.columns:
+        agg_spec["contribution"] = ("contribution", "sum")
+        agg_spec["abs_contribution"] = (
+            "contribution",
+            lambda item: float(np.abs(item).sum()),
+        )
+    table = (
+        enriched.groupby(["test_row", "test_index", "episode_group"], as_index=False)
+        .agg(**agg_spec)
+        .sort_values(["test_row", "episode_group"])
+        .reset_index(drop=True)
+    )
+    return _attach_schema(
+        table,
+        kind="episode_group_weights",
+        model=None,
+        method="dual_episode_group_aggregation",
+        n_features=0,
+        metadata={"groups": {str(key): list(value) for key, value in groups.items()}},
+    )
+
+
+def generalized_irf(
+    model: Any, *, n_periods: int = 12, target: str | int | None = None
+) -> pd.DataFrame:
     """Pesaran-Shin generalized impulse response importance for VAR models."""
 
-    return _var_irf_table(model, n_periods=n_periods, target=target, method="generalized_irf")
+    return _var_irf_table(
+        model, n_periods=n_periods, target=target, method="generalized_irf"
+    )
 
 
-def orthogonalised_irf(model: Any, *, n_periods: int = 12, target: str | int | None = None) -> pd.DataFrame:
+def orthogonalised_irf(
+    model: Any, *, n_periods: int = 12, target: str | int | None = None
+) -> pd.DataFrame:
     """Cholesky orthogonalised impulse response importance for VAR models."""
 
-    return _var_irf_table(model, n_periods=n_periods, target=target, method="orthogonalised_irf")
+    return _var_irf_table(
+        model, n_periods=n_periods, target=target, method="orthogonalised_irf"
+    )
 
 
-def fevd(model: Any, *, n_periods: int = 12, target: str | int | None = None) -> pd.DataFrame:
+def fevd(
+    model: Any, *, n_periods: int = 12, target: str | int | None = None
+) -> pd.DataFrame:
     """Forecast error variance decomposition importance for VAR models."""
 
     results = _var_results(model)
@@ -1262,7 +2132,9 @@ def fevd(model: Any, *, n_periods: int = 12, target: str | int | None = None) ->
         }
     )
     return _attach_schema(
-        table.sort_values("importance", ascending=False, kind="stable").reset_index(drop=True),
+        table.sort_values("importance", ascending=False, kind="stable").reset_index(
+            drop=True
+        ),
         kind="fevd",
         model=model,
         method=method,
@@ -1290,18 +2162,24 @@ def historical_decomposition(
         for t in range(resid.shape[0]):
             total = 0.0
             for lag in range(min(int(max_lag), t) + 1):
-                total += float(ma[lag, target_pos, shock_pos] * resid[t - lag, shock_pos])
+                total += float(
+                    ma[lag, target_pos, shock_pos] * resid[t - lag, shock_pos]
+                )
             path[t] = total
         rows.append(
             {
                 "feature": str(name),
                 "importance": float(np.mean(np.abs(path))),
                 "mean_contribution": float(np.mean(path)),
-                "max_abs_contribution": float(np.max(np.abs(path))) if len(path) else 0.0,
+                "max_abs_contribution": float(np.max(np.abs(path)))
+                if len(path)
+                else 0.0,
             }
         )
     return _attach_schema(
-        pd.DataFrame(rows).sort_values("importance", ascending=False, kind="stable").reset_index(drop=True),
+        pd.DataFrame(rows)
+        .sort_values("importance", ascending=False, kind="stable")
+        .reset_index(drop=True),
         kind="historical_decomposition",
         model=model,
         method="reduced_form_ma_residual_contribution",
@@ -1325,9 +2203,13 @@ def lasso_inclusion_frequency(
         coef = linear_coefficients(model, sort=False)
         coef["inclusion_frequency"] = (coef["coefficient"].abs() > 1e-9).astype(float)
         coef["importance"] = coef["inclusion_frequency"]
-        coef.attrs["macroforecast_metadata_schema"]["kind"] = "lasso_inclusion_frequency"
+        coef.attrs["macroforecast_metadata_schema"]["kind"] = (
+            "lasso_inclusion_frequency"
+        )
         coef.attrs["macroforecast_metadata_schema"]["method"] = "single_fit_nonzero"
-        return coef.sort_values("importance", ascending=False, kind="stable").reset_index(drop=True)
+        return coef.sort_values(
+            "importance", ascending=False, kind="stable"
+        ).reset_index(drop=True)
     frame = _as_feature_frame(X)
     target = pd.Series(np.asarray(y, dtype=float).reshape(-1), index=frame.index)
     if len(frame) != len(target):
@@ -1351,7 +2233,9 @@ def lasso_inclusion_frequency(
     )
     table["importance"] = table["inclusion_frequency"]
     return _attach_schema(
-        table.sort_values("importance", ascending=False, kind="stable").reset_index(drop=True),
+        table.sort_values("importance", ascending=False, kind="stable").reset_index(
+            drop=True
+        ),
         kind="lasso_inclusion_frequency",
         model=model,
         method="bootstrap_nonzero_frequency",
@@ -1440,7 +2324,9 @@ def rolling_recompute(
     if len(frame) != len(target):
         raise ValueError("X and y must have the same number of rows")
     if method not in {"permutation_importance", "permutation_importance_strobl"}:
-        raise ValueError("method must be 'permutation_importance' or 'permutation_importance_strobl'")
+        raise ValueError(
+            "method must be 'permutation_importance' or 'permutation_importance_strobl'"
+        )
     width = int(window or max(8, len(frame) // 4))
     if width <= 1:
         raise ValueError("window must be greater than 1")
@@ -1542,7 +2428,9 @@ def bootstrap_jackknife(
             }
         )
     return _attach_schema(
-        pd.DataFrame(rows).sort_values("importance", ascending=False, kind="stable").reset_index(drop=True),
+        pd.DataFrame(rows)
+        .sort_values("importance", ascending=False, kind="stable")
+        .reset_index(drop=True),
         kind="bootstrap_jackknife",
         model=model,
         method=mode,
@@ -1570,8 +2458,15 @@ def gradient_attribution(
     """Gradient attribution for torch-backed models."""
 
     key = str(method).lower().replace("-", "_")
-    if key not in {"saliency_map", "integrated_gradients", "deep_lift", "gradient_shap"}:
-        raise ValueError("method must be 'saliency_map', 'integrated_gradients', 'deep_lift', or 'gradient_shap'")
+    if key not in {
+        "saliency_map",
+        "integrated_gradients",
+        "deep_lift",
+        "gradient_shap",
+    }:
+        raise ValueError(
+            "method must be 'saliency_map', 'integrated_gradients', 'deep_lift', or 'gradient_shap'"
+        )
     torch, torch_model, tensor, feature_names = _torch_attribution_context(model, X)
     baseline_tensor, baseline_space = _baseline_tensor(
         torch,
@@ -1584,7 +2479,9 @@ def gradient_attribution(
         try:
             captum = import_module("captum.attr")
         except ImportError as exc:
-            raise ImportError("deep_lift requires captum; install macroforecast[deep]") from exc
+            raise ImportError(
+                "deep_lift requires captum; install macroforecast[deep]"
+            ) from exc
         # Backend wrapper: DeepLift is delegated to Captum.
         attr_obj = captum.DeepLift(torch_model)
         attribution = attr_obj.attribute(tensor, baselines=baseline_tensor)
@@ -1629,12 +2526,16 @@ def gradient_attribution(
                 "feature": str(feature),
                 "importance": float(np.mean(np.abs(column))),
                 "mean_attribution": float(np.mean(column)),
-                "std_attribution": float(np.std(column, ddof=1)) if len(column) > 1 else 0.0,
+                "std_attribution": float(np.std(column, ddof=1))
+                if len(column) > 1
+                else 0.0,
                 "method": key,
             }
         )
     return _attach_schema(
-        pd.DataFrame(rows).sort_values("importance", ascending=False, kind="stable").reset_index(drop=True),
+        pd.DataFrame(rows)
+        .sort_values("importance", ascending=False, kind="stable")
+        .reset_index(drop=True),
         kind=key,
         model=model,
         method=key,
@@ -1711,17 +2612,25 @@ def lstm_hidden_state(model: Any, X: pd.DataFrame) -> pd.DataFrame:
 
     estimator = _estimator(model)
     if getattr(estimator, "kind", None) == "transformer":
-        raise NotImplementedError("lstm_hidden_state is only defined for LSTM/GRU models")
+        raise NotImplementedError(
+            "lstm_hidden_state is only defined for LSTM/GRU models"
+        )
     try:
         torch = import_module("torch")
     except ImportError as exc:
-        raise ImportError("lstm_hidden_state requires torch; install macroforecast[deep]") from exc
-    torch_model = getattr(estimator, "model_", None) or getattr(estimator, "_model", None)
+        raise ImportError(
+            "lstm_hidden_state requires torch; install macroforecast[deep]"
+        ) from exc
+    torch_model = getattr(estimator, "model_", None) or getattr(
+        estimator, "_model", None
+    )
     if torch_model is None:
         raise NotImplementedError("lstm_hidden_state requires a fitted torch model")
     rnn = getattr(torch_model, "rnn", None) or getattr(torch_model, "cell", None)
     if rnn is None:
-        raise NotImplementedError("lstm_hidden_state requires a model with an LSTM/GRU recurrent cell")
+        raise NotImplementedError(
+            "lstm_hidden_state requires a model with an LSTM/GRU recurrent cell"
+        )
     frame = _as_feature_frame(X)
     if getattr(estimator, "feature_names_in_", None):
         frame = frame.reindex(columns=list(estimator.feature_names_in_), fill_value=0.0)
@@ -1729,10 +2638,16 @@ def lstm_hidden_state(model: Any, X: pd.DataFrame) -> pd.DataFrame:
     x_mean = getattr(estimator, "x_mean_", None)
     x_scale = getattr(estimator, "x_scale_", None)
     if x_mean is not None and x_scale is not None:
-        values = (values - np.asarray(x_mean, dtype=float)) / np.asarray(x_scale, dtype=float)
+        values = (values - np.asarray(x_mean, dtype=float)) / np.asarray(
+            x_scale, dtype=float
+        )
     sequence_length = int(getattr(estimator, "sequence_length", 1))
     prefix = getattr(estimator, "train_tail_", None)
-    prefix = np.empty((0, values.shape[1])) if prefix is None else np.asarray(prefix, dtype=float)
+    prefix = (
+        np.empty((0, values.shape[1]))
+        if prefix is None
+        else np.asarray(prefix, dtype=float)
+    )
     combined = np.vstack([prefix, values])
     seq = np.stack([combined[i : i + sequence_length] for i in range(len(values))])
     captured: list[Any] = []
@@ -1812,6 +2727,210 @@ def _estimator(model: Any) -> Any:
     return model.estimator if isinstance(model, ModelFit) else model
 
 
+def _resolve_dual_method(model: Any, *, method: str, kernel: str) -> str:
+    key = str(method).lower().replace("-", "_")
+    if key == "auto":
+        estimator = _estimator(model)
+        if estimator is not None and hasattr(estimator, "estimators_"):
+            return "random_forest"
+        return "krr" if str(kernel).lower().replace("-", "_") != "linear" else "ridge"
+    aliases = {
+        "ols": "ridge",
+        "rr": "ridge",
+        "linear_ridge": "ridge",
+        "kernel_ridge": "krr",
+        "kernel": "krr",
+        "rf": "random_forest",
+        "forest": "random_forest",
+        "randomforest": "random_forest",
+    }
+    return aliases.get(key, key)
+
+
+def _ridge_observation_weight_matrix(
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    *,
+    lambda_: float,
+    add_intercept: bool,
+    penalty_scale: str,
+) -> np.ndarray:
+    train_matrix = _design_matrix(train, add_intercept=add_intercept)
+    test_matrix = _design_matrix(test, add_intercept=add_intercept)
+    gram = train_matrix.T @ train_matrix
+    scale_key = str(penalty_scale).lower().replace("-", "_")
+    if scale_key in {"n", "n_train", "sample", "samples"}:
+        scale = float(len(train_matrix))
+    elif scale_key in {"none", "one", "1"}:
+        scale = 1.0
+    else:
+        raise ValueError("ridge_penalty_scale must be 'n_train' or 'none'")
+    penalty = float(lambda_) * scale * np.eye(gram.shape[0])
+    if add_intercept and penalty.shape[0] > 0:
+        # DualML_R/DualML.py use the paper's no-intercept standardized design
+        # by default. When macroforecast users add an intercept, keep that
+        # intercept unpenalized to match standard ridge regression convention.
+        penalty[0, 0] = 0.0
+    return test_matrix @ np.linalg.pinv(gram + penalty) @ train_matrix.T
+
+
+def _dual_kernel_matrix(
+    A: pd.DataFrame,
+    B: pd.DataFrame,
+    *,
+    kernel: str,
+    sigma: float,
+) -> np.ndarray:
+    left = np.asarray(A, dtype=float)
+    right = np.asarray(B, dtype=float)
+    key = str(kernel).lower().replace("-", "_")
+    if key in {"linear", "dot"}:
+        return left @ right.T
+    diff = left[:, None, :] - right[None, :, :]
+    if key in {"gaussian", "rbf"}:
+        # Matches the local DualML Python/R code: exp(-sigma * squared distance).
+        return np.exp(-float(sigma) * np.sum(diff**2, axis=2))
+    if key in {"laplace", "laplacian"}:
+        # Matches kernlab::laplacedot / local DualML code: exp(-sigma * L1 distance).
+        return np.exp(-float(sigma) * np.sum(np.abs(diff), axis=2))
+    raise ValueError("kernel must be 'linear', 'gaussian'/'rbf', or 'laplace'/'laplacian'")
+
+
+def _random_forest_observation_weight_matrix(
+    estimator: Any,
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+) -> np.ndarray:
+    if not hasattr(estimator, "estimators_"):
+        raise TypeError("random_forest observation weights require estimators_")
+    x_train = train.to_numpy(dtype=float)
+    x_test = test.to_numpy(dtype=float)
+    n_train = x_train.shape[0]
+    n_test = x_test.shape[0]
+    matrix = np.zeros((n_test, n_train), dtype=float)
+    bootstrap_samples = _forest_bootstrap_samples(estimator, n_train)
+    for tree_pos, tree in enumerate(estimator.estimators_):
+        train_leaf = np.asarray(tree.apply(x_train)).reshape(-1)
+        test_leaf = np.asarray(tree.apply(x_test)).reshape(-1)
+        if bootstrap_samples is None:
+            sample_count = np.ones(n_train, dtype=float)
+        else:
+            sample_count = np.bincount(bootstrap_samples[tree_pos], minlength=n_train).astype(float)
+        for test_pos, leaf in enumerate(test_leaf):
+            mask = train_leaf == leaf
+            counts = sample_count * mask
+            total = float(counts.sum())
+            if total > 0:
+                matrix[test_pos] += counts / total
+    matrix /= max(1, len(estimator.estimators_))
+    return matrix
+
+
+def _forest_bootstrap_samples(estimator: Any, n_train: int) -> list[np.ndarray] | None:
+    samples = getattr(estimator, "estimators_samples_", None)
+    if samples is not None:
+        return [np.asarray(sample, dtype=int) for sample in samples]
+    if getattr(estimator, "bootstrap", True) is False:
+        return None
+    try:
+        from sklearn.ensemble._forest import (  # type: ignore
+            _generate_sample_indices,
+            _get_n_samples_bootstrap,
+        )
+    except Exception:
+        return None
+    n_bootstrap = _get_n_samples_bootstrap(n_train, getattr(estimator, "max_samples", None))
+    return [
+        _generate_sample_indices(getattr(tree, "random_state", None), n_train, n_bootstrap)
+        for tree in estimator.estimators_
+    ]
+
+
+def _long_weight_rows(
+    matrix: np.ndarray,
+    train_index: pd.Index,
+    test_index: pd.Index,
+    *,
+    method: str,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for test_pos, test_label in enumerate(test_index):
+        for train_pos, train_label in enumerate(train_index):
+            weight = float(matrix[test_pos, train_pos])
+            rows.append(
+                {
+                    "test_row": int(test_pos),
+                    "test_index": test_label,
+                    "train_row": int(train_pos),
+                    "train_index": train_label,
+                    "weight": weight,
+                    "abs_weight": abs(weight),
+                    "channel": method,
+                }
+            )
+    return rows
+
+
+def _weight_matrix_from_table(
+    weights: pd.DataFrame,
+) -> tuple[np.ndarray, list[Any], list[Any]]:
+    if not isinstance(weights, pd.DataFrame):
+        raise TypeError("weights must be a pandas DataFrame")
+    if {"test_row", "train_row", "weight"}.issubset(weights.columns):
+        frame = weights.copy()
+        frame = frame[frame["train_row"].astype(int) >= 0]
+        train = (
+            frame[["train_row", "train_index"]]
+            .drop_duplicates("train_row")
+            .sort_values("train_row")
+        )
+        test = (
+            frame[["test_row", "test_index"]]
+            .drop_duplicates("test_row")
+            .sort_values("test_row")
+        )
+        pivot = frame.pivot_table(
+            index="test_row",
+            columns="train_row",
+            values="weight",
+            aggfunc="sum",
+            fill_value=0.0,
+        ).reindex(index=test["test_row"], columns=train["train_row"], fill_value=0.0)
+        return (
+            pivot.to_numpy(dtype=float),
+            train["train_index"].tolist(),
+            test["test_index"].tolist(),
+        )
+    matrix = np.asarray(weights, dtype=float)
+    if matrix.ndim != 2:
+        raise ValueError("weights must be long-form or a 2D weight matrix")
+    train_labels = list(weights.columns)
+    test_labels = list(weights.index)
+    return matrix, train_labels, test_labels
+
+
+def _align_dual_target(y_train: pd.Series | np.ndarray, train_labels: Sequence[Any]) -> np.ndarray:
+    if isinstance(y_train, pd.Series):
+        if set(train_labels).issubset(set(y_train.index)):
+            values = y_train.reindex(train_labels).to_numpy(dtype=float)
+        else:
+            values = y_train.to_numpy(dtype=float)
+    else:
+        values = np.asarray(y_train, dtype=float).reshape(-1)
+    if len(values) != len(train_labels):
+        raise ValueError("y_train length must match the number of training observations")
+    return values.astype(float, copy=False)
+
+
+def _top_q_share(top_q: float) -> float:
+    q = float(top_q)
+    if q <= 0:
+        raise ValueError("top_q must be positive")
+    if q > 1:
+        q = q / 100.0
+    return min(q, 1.0)
+
+
 def _coerce_fit(model: Any) -> Any:
     return model
 
@@ -1831,7 +2950,9 @@ def _as_feature_frame(X: pd.DataFrame) -> pd.DataFrame:
     return X.copy()
 
 
-def _resolve_features(frame: pd.DataFrame, features: Iterable[str] | str) -> tuple[str, ...]:
+def _resolve_features(
+    frame: pd.DataFrame, features: Iterable[str] | str
+) -> tuple[str, ...]:
     selected: tuple[str, ...]
     if isinstance(features, str):
         selected = (features,)
@@ -1897,13 +3018,21 @@ def _r2_score(y: np.ndarray, pred: np.ndarray) -> float:
 
 
 def _infer_importance_column(frame: pd.DataFrame) -> str:
-    for column in ("importance", "abs_contribution", "abs_coefficient", "contribution", "coefficient"):
+    for column in (
+        "importance",
+        "abs_contribution",
+        "abs_coefficient",
+        "contribution",
+        "coefficient",
+    ):
         if column in frame.columns:
             return column
     raise ValueError("table must contain an importance-like column")
 
 
-def _normalize_group_mapping(groups: Mapping[str, str | Sequence[str]] | None) -> dict[str, str]:
+def _normalize_group_mapping(
+    groups: Mapping[str, str | Sequence[str]] | None,
+) -> dict[str, str]:
     if groups is None:
         return {}
     mapping: dict[str, str] = {}
@@ -1937,9 +3066,13 @@ def _aggregate_importance(
     elif aggregation == "signed_sum":
         grouped = frame.groupby(group_by, as_index=False)[value_column].sum()
     else:
-        raise ValueError("aggregation must be 'sum', 'mean', 'max_abs', or 'signed_sum'")
+        raise ValueError(
+            "aggregation must be 'sum', 'mean', 'max_abs', or 'signed_sum'"
+        )
     grouped = grouped.rename(columns={value_column: "importance"})
-    return grouped.sort_values("importance", ascending=False, kind="stable").reset_index(drop=True)
+    return grouped.sort_values(
+        "importance", ascending=False, kind="stable"
+    ).reset_index(drop=True)
 
 
 def _first_present(frame: pd.DataFrame, columns: Sequence[str]) -> str | None:
@@ -1968,7 +3101,9 @@ def _resolve_pipeline_baseline(
     raise ValueError("baseline must be 'worst', 'best', 'mean', or a numeric value")
 
 
-def _pipeline_utility(values: np.ndarray, *, lower_is_better: bool, baseline: float) -> np.ndarray:
+def _pipeline_utility(
+    values: np.ndarray, *, lower_is_better: bool, baseline: float
+) -> np.ndarray:
     arr = np.asarray(values, dtype=float)
     return baseline - arr if lower_is_better else arr - baseline
 
@@ -1981,7 +3116,9 @@ def _pipeline_value_contribution(
     baseline: float,
 ) -> np.ndarray:
     n_items = len(values)
-    utility = _pipeline_utility(values, lower_is_better=lower_is_better, baseline=baseline)
+    utility = _pipeline_utility(
+        values, lower_is_better=lower_is_better, baseline=baseline
+    )
     if method == "marginal_addition":
         return utility
     if method == "leave_one_out_pipeline":
@@ -2089,7 +3226,9 @@ class _InternalVARResults:
         return ma
 
     def fevd(self, periods: int) -> _InternalVARFEVD:
-        return _InternalVARFEVD(self.ma_rep(maxn=int(periods) - 1), self.sigma_u, int(periods))
+        return _InternalVARFEVD(
+            self.ma_rep(maxn=int(periods) - 1), self.sigma_u, int(periods)
+        )
 
     def _residuals(self) -> np.ndarray:
         datamat = getattr(self._estimator, "datamat_", None)
@@ -2171,12 +3310,19 @@ def _var_irf_table(
             e_j = np.zeros(k, dtype=float)
             e_j[shock_pos] = 1.0
             sigma_jj = float(sigma[shock_pos, shock_pos])
-            scale = 1.0 if sigma_jj <= 0 else sigma_jj ** -0.5
+            scale = 1.0 if sigma_jj <= 0 else sigma_jj**-0.5
             response = 0.0
             for horizon in range(irfs.shape[0]):
                 girf = scale * irfs[horizon] @ sigma @ e_j
                 response += abs(float(girf[target_pos]))
-            rows.append({"feature": str(name), "importance": response, "coefficient": None, "status": "operational"})
+            rows.append(
+                {
+                    "feature": str(name),
+                    "importance": response,
+                    "coefficient": None,
+                    "status": "operational",
+                }
+            )
     else:
         irf_obj = results.irf(int(n_periods))
         values = np.asarray(getattr(irf_obj, "orth_irfs", irf_obj.irfs), dtype=float)
@@ -2190,7 +3336,9 @@ def _var_irf_table(
             for shock_pos, name in enumerate(names)
         ]
     return _attach_schema(
-        pd.DataFrame(rows).sort_values("importance", ascending=False, kind="stable").reset_index(drop=True),
+        pd.DataFrame(rows)
+        .sort_values("importance", ascending=False, kind="stable")
+        .reset_index(drop=True),
         kind=method,
         model=model,
         method=method,
@@ -2199,7 +3347,9 @@ def _var_irf_table(
     )
 
 
-def _mrf_beta_names(estimator: Any, output: Mapping[str, Any], n_columns: int) -> list[str]:
+def _mrf_beta_names(
+    estimator: Any, output: Mapping[str, Any], n_columns: int
+) -> list[str]:
     raw_names: list[str] = []
     yandx = output.get("YandX")
     if isinstance(yandx, pd.DataFrame) and yandx.shape[1] >= 2:
@@ -2214,34 +3364,52 @@ def _mrf_beta_names(estimator: Any, output: Mapping[str, Any], n_columns: int) -
     return names[:n_columns]
 
 
-def _torch_attribution_context(model: Any, X: pd.DataFrame) -> tuple[Any, Any, Any, list[str]]:
+def _torch_attribution_context(
+    model: Any, X: pd.DataFrame
+) -> tuple[Any, Any, Any, list[str]]:
     try:
         torch = import_module("torch")
     except ImportError as exc:
-        raise ImportError("gradient attribution requires torch; install macroforecast[deep]") from exc
+        raise ImportError(
+            "gradient attribution requires torch; install macroforecast[deep]"
+        ) from exc
     estimator = _estimator(model)
     torch_model = getattr(estimator, "model_", None)
     if torch_model is None:
-        raise NotImplementedError("gradient attribution requires a fitted torch-backed model")
+        raise NotImplementedError(
+            "gradient attribution requires a fitted torch-backed model"
+        )
     frame = _as_feature_frame(X)
-    feature_names = list(getattr(estimator, "feature_names_in_", ())) or [str(column) for column in frame.columns]
+    feature_names = list(getattr(estimator, "feature_names_in_", ())) or [
+        str(column) for column in frame.columns
+    ]
     frame = frame.reindex(columns=feature_names, fill_value=0.0).astype(float)
     values = frame.to_numpy(dtype=float)
     x_mean = getattr(estimator, "x_mean_", None)
     x_scale = getattr(estimator, "x_scale_", None)
     if x_mean is not None and x_scale is not None:
-        values = (values - np.asarray(x_mean, dtype=float)) / np.asarray(x_scale, dtype=float)
+        values = (values - np.asarray(x_mean, dtype=float)) / np.asarray(
+            x_scale, dtype=float
+        )
     device = torch.device(getattr(estimator, "device_", "cpu") or "cpu")
     kind = getattr(estimator, "kind", None)
     if kind in {"lstm", "gru", "transformer"}:
         sequence_length = int(getattr(estimator, "sequence_length", 1))
         prefix = getattr(estimator, "train_tail_", None)
-        prefix = np.empty((0, values.shape[1])) if prefix is None else np.asarray(prefix, dtype=float)
+        prefix = (
+            np.empty((0, values.shape[1]))
+            if prefix is None
+            else np.asarray(prefix, dtype=float)
+        )
         combined = np.vstack([prefix, values])
-        tensor_values = np.stack([combined[i : i + sequence_length] for i in range(len(values))])
+        tensor_values = np.stack(
+            [combined[i : i + sequence_length] for i in range(len(values))]
+        )
     else:
         tensor_values = values
-    tensor = torch.tensor(tensor_values, dtype=torch.float32, device=device, requires_grad=True)
+    tensor = torch.tensor(
+        tensor_values, dtype=torch.float32, device=device, requires_grad=True
+    )
     torch_model.eval()
     return torch, torch_model, tensor, feature_names
 
@@ -2263,9 +3431,13 @@ def _baseline_tensor(
         frame = baseline.reindex(columns=names, fill_value=0.0).astype(float)
         arr = frame.to_numpy(dtype=float)
         x_mean = getattr(estimator, "x_mean_", None) if estimator is not None else None
-        x_scale = getattr(estimator, "x_scale_", None) if estimator is not None else None
+        x_scale = (
+            getattr(estimator, "x_scale_", None) if estimator is not None else None
+        )
         if x_mean is not None and x_scale is not None:
-            arr = (arr - np.asarray(x_mean, dtype=float)) / np.asarray(x_scale, dtype=float)
+            arr = (arr - np.asarray(x_mean, dtype=float)) / np.asarray(
+                x_scale, dtype=float
+            )
             space = "raw_dataframe_scaled_to_model_input_space"
         else:
             space = "dataframe_model_input_space"
@@ -2273,7 +3445,11 @@ def _baseline_tensor(
         arr = np.asarray(baseline, dtype=float)
         space = "array_model_input_space"
     if arr.shape != tuple(tensor.shape):
-        if arr.ndim == 2 and tensor.ndim == 3 and arr.shape == (tensor.shape[0], tensor.shape[2]):
+        if (
+            arr.ndim == 2
+            and tensor.ndim == 3
+            and arr.shape == (tensor.shape[0], tensor.shape[2])
+        ):
             arr = np.repeat(arr[:, None, :], tensor.shape[1], axis=1)
         else:
             arr = np.broadcast_to(arr, tuple(tensor.shape))
@@ -2339,7 +3515,301 @@ def _shap_prediction_frame(values: Any, template: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(arr, columns=template.columns, index=index)
 
 
-def _loss_func(metric: Callable[[np.ndarray, np.ndarray], float] | str) -> Callable[[np.ndarray, np.ndarray], float]:
+def _optional_anatomy() -> Any:
+    try:
+        return import_module("anatomy")
+    except ImportError as exc:
+        raise ImportError(
+            "forecast-accuracy anatomy interpretation requires the optional "
+            "anatomy backend. Install with `pip install anatomy` or "
+            "`pip install 'macroforecast[interpretation]'`."
+        ) from exc
+
+
+def _resolve_anatomy_transformer(
+    anatomy_mod: Any,
+    *,
+    transformer: Callable[..., Any] | Any | None,
+    metric: str,
+) -> Any | None:
+    if transformer is not None:
+        if callable(transformer):
+            return anatomy_mod.AnatomyModelOutputTransformer(transform=transformer)
+        return transformer
+    key = str(metric).lower().replace("-", "_")
+    if key in {"forecast", "raw", "prediction"}:
+        return None
+    transform = anatomy_output_transform(metric)
+    return anatomy_mod.AnatomyModelOutputTransformer(transform=transform)
+
+
+def _anatomy_wide_to_long(wide: pd.DataFrame) -> pd.DataFrame:
+    frame = wide.copy()
+    rows: list[dict[str, Any]] = []
+    for idx, series in frame.iterrows():
+        if isinstance(frame.index, pd.MultiIndex):
+            idx_tuple = idx if isinstance(idx, tuple) else (idx,)
+            model_set = idx_tuple[0] if idx_tuple else None
+            index_value = idx_tuple[1] if len(idx_tuple) > 1 else idx
+        else:
+            model_set = None
+            index_value = idx
+        for column, value in series.items():
+            feature = str(column)
+            rows.append(
+                {
+                    "model_set": model_set,
+                    "index": index_value,
+                    "feature": feature,
+                    "contribution": float(value),
+                    "is_base": feature == "base_contribution",
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def _coerce_contribution_frame(
+    value: pd.DataFrame | pd.Series,
+    *,
+    value_name: str,
+    feature_col: str,
+) -> pd.DataFrame:
+    if isinstance(value, pd.DataFrame):
+        return value.copy()
+    if isinstance(value, pd.Series):
+        series = value.copy()
+        if not isinstance(series.index, pd.MultiIndex):
+            return pd.DataFrame(
+                {
+                    feature_col: series.index.astype(str),
+                    value_name: series.to_numpy(dtype=float),
+                }
+            )
+        return series.rename(value_name).reset_index()
+    raise TypeError("contributions must be a pandas DataFrame or Series")
+
+
+def _resolve_contribution_column(frame: pd.DataFrame) -> str:
+    for column in ("shap_value", "forecast_contribution", "contribution", "value"):
+        if column in frame.columns:
+            return column
+    raise ValueError(
+        "contributions must contain a contribution column such as "
+        "'shap_value', 'forecast_contribution', 'contribution', or 'value'"
+    )
+
+
+def _feature_series(
+    value: pd.DataFrame | pd.Series | Mapping[str, float],
+    *,
+    value_col: str | None,
+    feature_col: str,
+    preferred_columns: Sequence[str],
+) -> pd.Series:
+    if isinstance(value, Mapping):
+        series = pd.Series(dict(value), dtype=float)
+    elif isinstance(value, pd.Series):
+        series = value.astype(float)
+    elif isinstance(value, pd.DataFrame):
+        frame = value.copy()
+        if feature_col not in frame.columns:
+            raise ValueError(f"table must contain feature column {feature_col!r}")
+        resolved_value = value_col or _first_present(frame, preferred_columns)
+        if resolved_value is None:
+            resolved_value = _resolve_contribution_column(frame)
+        series = (
+            frame.groupby(feature_col, sort=False)[resolved_value].mean().astype(float)
+        )
+    else:
+        raise TypeError("value must be a Series, mapping, or feature table")
+    series.index = series.index.astype(str)
+    return series.drop(
+        labels=[
+            name for name in ("base_contribution", "__base__") if name in series.index
+        ]
+    )
+
+
+def _align_vi_pbsv_series(
+    vi: pd.Series, pbsv_values: pd.Series
+) -> tuple[pd.Series, pd.Series]:
+    common = vi.index.intersection(pbsv_values.index)
+    if common.empty:
+        raise ValueError("is_vi and oos_pbsv have no common features")
+    return vi.reindex(common).astype(float), pbsv_values.reindex(common).astype(float)
+
+
+def _anatomy_loss_type(anatomy_mod: Any, loss_type: str) -> Any:
+    key = str(loss_type).lower().replace("-", "_")
+    if key in {"lower_is_better", "loss", "minimize", "minimise"}:
+        return anatomy_mod.MAS.LossType.LOWER_IS_BETTER
+    if key in {
+        "larger_is_better",
+        "higher_is_better",
+        "gain",
+        "score",
+        "maximize",
+        "maximise",
+    }:
+        return anatomy_mod.MAS.LossType.LARGER_IS_BETTER
+    raise ValueError("loss_type must be 'lower_is_better' or 'larger_is_better'")
+
+
+def _anatomy_mas_type(anatomy_mod: Any, mas_type: str) -> Any:
+    key = str(mas_type).lower().replace("-", "_")
+    if key in {"importance_weighted", "weighted"}:
+        return anatomy_mod.MAS.MASType.IMPORTANCE_WEIGHTED
+    if key in {"equal_weighted", "equal"}:
+        return anatomy_mod.MAS.MASType.EQUAL_WEIGHTED
+    raise ValueError("mas_type must be 'importance_weighted' or 'equal_weighted'")
+
+
+def _resolve_contribution_row_column(
+    frame: pd.DataFrame, y: pd.Series | Sequence[float]
+) -> str:
+    if isinstance(y, pd.Series) and "index" in frame.columns:
+        keys = pd.Index(frame["index"].drop_duplicates())
+        if keys.isin(y.index).all():
+            return "index"
+    if "row" in frame.columns:
+        return "row"
+    if "index" in frame.columns:
+        return "index"
+    raise ValueError("contributions must contain a row or index column")
+
+
+def _target_by_row(
+    frame: pd.DataFrame,
+    y: pd.Series | Sequence[float],
+    *,
+    row_col: str,
+) -> dict[Any, float]:
+    if row_col not in frame.columns:
+        raise ValueError(f"row column {row_col!r} is not in contributions")
+    keys = list(pd.Index(frame[row_col]).drop_duplicates())
+    if isinstance(y, pd.Series):
+        if pd.Index(keys).isin(y.index).all():
+            return {key: float(y.loc[key]) for key in keys}
+        if _keys_are_valid_positions(keys, len(y)):
+            return {key: float(y.iloc[int(key)]) for key in keys}
+        if len(keys) == len(y):
+            return {
+                key: float(value)
+                for key, value in zip(keys, y.to_numpy(dtype=float), strict=False)
+            }
+    arr = np.asarray(y, dtype=float).reshape(-1)
+    if _keys_are_valid_positions(keys, len(arr)):
+        return {key: float(arr[int(key)]) for key in keys}
+    if len(keys) == len(arr):
+        return {key: float(value) for key, value in zip(keys, arr, strict=False)}
+    raise ValueError(
+        "y cannot be aligned to contributions; pass row_col explicitly or "
+        "provide a Series indexed by the contribution index values"
+    )
+
+
+def _keys_are_valid_positions(keys: Sequence[Any], n_obs: int) -> bool:
+    try:
+        positions = [int(key) for key in keys]
+    except (TypeError, ValueError):
+        return False
+    return all(
+        0 <= pos < n_obs and float(pos) == float(key)
+        for pos, key in zip(positions, keys, strict=False)
+    )
+
+
+def _row_base_value(group: pd.DataFrame, *, base_col: str, default: float) -> float:
+    if base_col in group.columns:
+        values = pd.to_numeric(group[base_col], errors="coerce").dropna()
+        if not values.empty:
+            return float(values.iloc[0])
+    return float(default)
+
+
+def _point_loss(actual: float, prediction: float, *, loss: str) -> float:
+    key = str(loss).lower().replace("-", "_")
+    error = float(actual) - float(prediction)
+    if key in {"squared_error", "mse", "mean_squared_error", "se"}:
+        return float(error * error)
+    if key in {"absolute_error", "mae", "mean_absolute_error", "ae"}:
+        return float(abs(error))
+    raise ValueError("loss must be 'squared_error'/'mse' or 'absolute_error'/'mae'")
+
+
+def _point_loss_shapley(
+    *,
+    actual: float,
+    base_prediction: float,
+    contributions: np.ndarray,
+    loss: str,
+    n_permutations: int | None,
+    max_exact_features: int,
+    rng: np.random.Generator,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    values = np.asarray(contributions, dtype=float).reshape(-1)
+    n_features = int(len(values))
+    if n_features == 0:
+        return np.empty(0, dtype=float), {
+            "shapley_mode": "empty",
+            "effective_permutations": 0,
+        }
+    if max_exact_features < 0:
+        raise ValueError("max_exact_features must be non-negative")
+    if n_permutations is not None and n_permutations <= 0:
+        raise ValueError("n_permutations must be positive when supplied")
+    if n_permutations is None and n_features <= int(max_exact_features):
+        return _exact_point_loss_shapley(
+            actual=actual,
+            base_prediction=base_prediction,
+            contributions=values,
+            loss=loss,
+        ), {"shapley_mode": "exact", "effective_permutations": None}
+    effective = int(n_permutations or max(128, min(4096, 16 * n_features)))
+    out = np.zeros(n_features, dtype=float)
+    for _ in range(effective):
+        current_prediction = float(base_prediction)
+        current_loss = _point_loss(actual, current_prediction, loss=loss)
+        for feature_pos in rng.permutation(n_features):
+            next_prediction = current_prediction + float(values[feature_pos])
+            next_loss = _point_loss(actual, next_prediction, loss=loss)
+            out[feature_pos] += next_loss - current_loss
+            current_prediction = next_prediction
+            current_loss = next_loss
+    return out / float(effective), {
+        "shapley_mode": "sampled",
+        "effective_permutations": effective,
+    }
+
+
+def _exact_point_loss_shapley(
+    *,
+    actual: float,
+    base_prediction: float,
+    contributions: np.ndarray,
+    loss: str,
+) -> np.ndarray:
+    values = np.asarray(contributions, dtype=float).reshape(-1)
+    n_features = int(len(values))
+    out = np.zeros(n_features, dtype=float)
+    feature_positions = tuple(range(n_features))
+    for feature_pos in feature_positions:
+        others = tuple(pos for pos in feature_positions if pos != feature_pos)
+        for size in range(n_features):
+            weight = 1.0 / (n_features * comb(n_features - 1, size))
+            for subset in combinations(others, size):
+                subset_prediction = float(base_prediction + values[list(subset)].sum())
+                next_prediction = subset_prediction + float(values[feature_pos])
+                out[feature_pos] += weight * (
+                    _point_loss(actual, next_prediction, loss=loss)
+                    - _point_loss(actual, subset_prediction, loss=loss)
+                )
+    return out
+
+
+def _loss_func(
+    metric: Callable[[np.ndarray, np.ndarray], float] | str,
+) -> Callable[[np.ndarray, np.ndarray], float]:
     if callable(metric):
         return metric
     key = str(metric).lower()
@@ -2393,6 +3863,8 @@ def _callable_name(func: Any) -> str:
 
 
 def _model_label(model: Any) -> str:
+    if model is None:
+        return "none"
     if isinstance(model, ModelFit):
         return str(model.model)
     return f"{model.__class__.__module__}.{model.__class__.__qualname__}"

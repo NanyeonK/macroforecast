@@ -210,7 +210,9 @@ def test_nonneg_ridge_matches_augmented_nnls_objective() -> None:
     y_aug = np.concatenate([y_centered, np.zeros(X.shape[1])])
     expected_coef, _ = nnls(x_aug, y_aug)
 
-    np.testing.assert_allclose(fit.estimator.coef_, expected_coef, rtol=1e-10, atol=1e-10)
+    np.testing.assert_allclose(
+        fit.estimator.coef_, expected_coef, rtol=1e-10, atol=1e-10
+    )
     assert fit.estimator.intercept_ == pytest.approx(
         float(y_values.mean() - x_values.mean(axis=0) @ expected_coef)
     )
@@ -237,7 +239,9 @@ def test_shrink_to_target_ridge_matches_unconstrained_target_ridge_solution() ->
     )
 
 
-def test_fused_difference_ridge_matches_unconstrained_difference_penalty_solution() -> None:
+def test_fused_difference_ridge_matches_unconstrained_difference_penalty_solution() -> (
+    None
+):
     X, y = _xy()
     alpha = 0.4
 
@@ -293,7 +297,9 @@ def test_random_walk_ridge_matches_augmented_path_least_squares() -> None:
         cursor += n_features
     expected_vector = np.linalg.lstsq(
         np.vstack([design, initial_penalty, walk_penalty]),
-        np.concatenate([y_centered, np.zeros(n_features), np.zeros((n_obs - 1) * n_features)]),
+        np.concatenate(
+            [y_centered, np.zeros(n_features), np.zeros((n_obs - 1) * n_features)]
+        ),
         rcond=None,
     )[0]
     expected_path = expected_vector.reshape(n_obs, n_features)
@@ -398,8 +404,14 @@ def test_model_spec_defaults_match_callable_signatures() -> None:
                 assert parameters[key].default == default, (name, key)
 
         for parameter in spec.parameters:
-            assert parameter.name in parameters or accepts_kwargs, (name, parameter.name)
-            if parameter.name in parameters and parameters[parameter.name].default is not inspect._empty:
+            assert parameter.name in parameters or accepts_kwargs, (
+                name,
+                parameter.name,
+            )
+            if (
+                parameter.name in parameters
+                and parameters[parameter.name].default is not inspect._empty
+            ):
                 assert parameters[parameter.name].default == parameter.default, (
                     name,
                     parameter.name,
@@ -458,10 +470,18 @@ def test_knn_resolves_neighbors_for_small_training_windows() -> None:
 def test_bvar_and_target_timeseries_models_fit_and_predict() -> None:
     X, y = _xy(80)
     panel = pd.concat([y.rename("y"), X], axis=1)
-    future = pd.DataFrame(index=pd.date_range(panel.index[-1] + pd.offsets.MonthEnd(), periods=3, freq="ME"))
+    future = pd.DataFrame(
+        index=pd.date_range(
+            panel.index[-1] + pd.offsets.MonthEnd(), periods=3, freq="ME"
+        )
+    )
 
-    bvar = mf.models.bvar_minnesota(panel, target="y", n_lag=2, iter=30, burnin=10, random_state=1)
-    niw = mf.models.bvar_normal_inverse_wishart(panel, target="y", n_lag=2, iter=30, burnin=10, random_state=2)
+    bvar = mf.models.bvar_minnesota(
+        panel, target="y", n_lag=2, iter=30, burnin=10, random_state=1
+    )
+    niw = mf.models.bvar_normal_inverse_wishart(
+        panel, target="y", n_lag=2, iter=30, burnin=10, random_state=2
+    )
     ets = mf.models.ets(y, trend="add")
     hw = mf.models.holt_winters(y, trend="add")
     theta = mf.models.theta_method(y, deseasonalize=False)
@@ -472,7 +492,13 @@ def test_bvar_and_target_timeseries_models_fit_and_predict() -> None:
         assert np.isfinite(pred).all()
     assert "posterior draw sampler" in bvar.metadata["implementation_note"]
     assert "posterior draw sampler" in niw.metadata["implementation_note"]
-    assert set(bvar.diagnostics) == {"coef_mean", "coef_se", "coef_q025", "coef_q975", "sigma_mean"}
+    assert set(bvar.diagnostics) == {
+        "coef_mean",
+        "coef_se",
+        "coef_q025",
+        "coef_q975",
+        "sigma_mean",
+    }
     assert "sigma_mean" in niw.diagnostics
 
 
@@ -529,7 +555,9 @@ def test_midas_weights_match_midasr_shape_formulas() -> None:
     )
     target = pd.Series(np.arange(10, dtype=float), index=idx, name="y")
 
-    almon = mf.models.midas_almon(lagged, target, polynomial_order=2, theta=(0.1, -0.02))
+    almon = mf.models.midas_almon(
+        lagged, target, polynomial_order=2, theta=(0.1, -0.02)
+    )
     positions = np.arange(1, 5, dtype=float)
     raw = 0.1 * positions + -0.02 * positions**2
     expected_almon = np.exp(raw - raw.max())
@@ -542,7 +570,9 @@ def test_midas_weights_match_midasr_shape_formulas() -> None:
     expected_beta = z**0.5 * (1.0 - z)
     expected_beta = expected_beta / expected_beta.sum()
 
-    step = mf.models.midas_step(lagged, target, step_bounds=(2,), step_weights=(1.0, 3.0))
+    step = mf.models.midas_step(
+        lagged, target, step_bounds=(2,), step_weights=(1.0, 3.0)
+    )
     expected_step = np.asarray([1.0, 1.0, 3.0, 3.0], dtype=float)
     expected_step = expected_step / expected_step.sum()
 
@@ -581,7 +611,9 @@ def test_midas_weighted_design_requires_complete_lag_blocks() -> None:
 )
 def test_midas_variants_validate_parameters(factory, kwargs, message) -> None:
     X, y = _xy(20)
-    lagged = pd.DataFrame({"x_lag0": X["x1"], "x_lag1": X["x1"].shift(1)}, index=X.index)
+    lagged = pd.DataFrame(
+        {"x_lag0": X["x1"], "x_lag1": X["x1"].shift(1)}, index=X.index
+    )
 
     with pytest.raises(ValueError, match=message):
         factory(lagged, y, **kwargs)
@@ -610,7 +642,9 @@ def test_mixed_frequency_dfm_uses_native_frequency_metadata() -> None:
             pd.DataFrame(
                 {
                     "date": quarterly_idx,
-                    "q_target": [factor[max(0, i - 2) : i + 1].mean() for i in range(2, 48, 3)],
+                    "q_target": [
+                        factor[max(0, i - 2) : i + 1].mean() for i in range(2, 48, 3)
+                    ],
                 }
             ),
             date="date",
@@ -628,7 +662,9 @@ def test_mixed_frequency_dfm_uses_native_frequency_metadata() -> None:
         maxiter=20,
         tolerance=1e-3,
     )
-    future = pd.DataFrame(index=pd.date_range(idx[-1] + pd.offsets.MonthBegin(), periods=3, freq="MS"))
+    future = pd.DataFrame(
+        index=pd.date_range(idx[-1] + pd.offsets.MonthBegin(), periods=3, freq="MS")
+    )
 
     pred = fit.predict(future)
 
@@ -663,7 +699,9 @@ def test_dfm_unrestricted_midas_builds_composite_design() -> None:
             pd.DataFrame(
                 {
                     "date": quarterly_idx,
-                    "q_target": [factor[max(0, i - 2) : i + 1].mean() for i in range(2, 60, 3)],
+                    "q_target": [
+                        factor[max(0, i - 2) : i + 1].mean() for i in range(2, 60, 3)
+                    ],
                 }
             ),
             date="date",
@@ -823,6 +861,8 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     hnn_spec = mf.models.get_model("hemisphere_nn")
     xgb_spec = mf.models.get_model("xgboost")
     lightgbm_spec = mf.models.get_model("lightgbm")
+    lgb_plus_spec = mf.models.get_model("lgb_plus")
+    lgba_plus_spec = mf.models.get_model("lgba_plus")
     catboost_spec = mf.models.get_model("catboost")
     qrf_spec = mf.models.get_model("quantile_regression_forest")
     mrf_spec = mf.models.get_model("macro_random_forest")
@@ -854,8 +894,7 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert random_forest_spec.backend == "sklearn.ensemble.RandomForestRegressor"
     assert extra_trees_spec.backend == "sklearn.ensemble.ExtraTreesRegressor"
     assert (
-        gradient_boosting_spec.backend
-        == "sklearn.ensemble.GradientBoostingRegressor"
+        gradient_boosting_spec.backend == "sklearn.ensemble.GradientBoostingRegressor"
     )
 
     assert svr_spec.backend == "sklearn.svm.SVR"
@@ -890,16 +929,23 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert xgb_spec.requires_extra == "xgboost"
     assert lightgbm_spec.backend == "lightgbm.LGBMRegressor"
     assert lightgbm_spec.requires_extra == "lightgbm"
+    assert (
+        lgb_plus_spec.backend == "internal philgoucou/lgbplus-aligned + lightgbm.train"
+    )
+    assert lgb_plus_spec.requires_extra == "lightgbm"
+    assert lgb_plus_spec.default_params["selection_method"] == "oob"
+    assert (
+        lgba_plus_spec.backend == "internal philgoucou/lgbplus-aligned + lightgbm.train"
+    )
+    assert lgba_plus_spec.requires_extra == "lightgbm"
+    assert lgba_plus_spec.default_params["n_cycles"] == 25
     assert catboost_spec.backend == "catboost.CatBoostRegressor"
     assert catboost_spec.requires_extra == "catboost"
     assert (
         qrf_spec.backend
         == "sklearn.ensemble.RandomForestRegressor + internal leaf quantiles"
     )
-    assert (
-        mrf_spec.backend
-        == "macroforecast.models._mrf_reference.MacroRandomForest"
-    )
+    assert mrf_spec.backend == "macroforecast.models._mrf_reference.MacroRandomForest"
     assert mrf_spec.requires_extra == "macro_random_forest"
     assert garch_spec.backend == "arch.arch_model"
     assert garch_spec.requires_extra == "arch"
@@ -936,7 +982,12 @@ def test_favar_model_fits_and_predicts() -> None:
     assert fit.metadata["fctmethod"] == "BGM"
     assert fit.metadata["backend"] == "internal FAVAR::FAVAR-aligned Bayesian sampler"
     assert "predict.favar" in fit.metadata["implementation_note"]
-    assert set(fit.diagnostics) >= {"factorx", "loading_mean", "var_coef_mean", "var_sigma_mean"}
+    assert set(fit.diagnostics) >= {
+        "factorx",
+        "loading_mean",
+        "var_coef_mean",
+        "var_sigma_mean",
+    }
     assert fit.feature_names == tuple(X.columns)
 
 
@@ -971,9 +1022,7 @@ def test_adaptive_and_group_penalized_models_fit() -> None:
     X, y = _xy()
     groups = ("trend", "cycle")
 
-    adaptive = mf.models.adaptive_lasso(
-        X, y, alpha=0.001, gamma=1.0, random_state=0
-    )
+    adaptive = mf.models.adaptive_lasso(X, y, alpha=0.001, gamma=1.0, random_state=0)
     adaptive_enet = mf.models.adaptive_elastic_net(
         X, y, alpha=0.001, l1_ratio=0.5, gamma=1.0, random_state=0
     )
@@ -1113,6 +1162,29 @@ def test_save_fit_roundtrip_for_core_model_families(tmp_path) -> None:
             "lightgbm",
             lambda X, y: mf.models.lightgbm(
                 X, y, n_estimators=3, num_leaves=7, random_state=0, verbose=-1
+            ),
+        ),
+        (
+            "lightgbm",
+            lambda X, y: mf.models.lgb_plus(
+                X,
+                y,
+                n_ensemble=2,
+                n_steps=3,
+                min_data_in_leaf=3,
+                early_stop_patience=None,
+                random_state=0,
+            ),
+        ),
+        (
+            "lightgbm",
+            lambda X, y: mf.models.lgba_plus(
+                X,
+                y,
+                n_cycles=2,
+                trees_per_cycle=2,
+                min_data_in_leaf=3,
+                random_state=0,
             ),
         ),
         (
@@ -1638,6 +1710,8 @@ def test_macro_random_forest_position_validation() -> None:
     [
         ("xgboost", "xgboost", lambda X, y: mf.models.xgboost(X, y)),
         ("lightgbm", "lightgbm", lambda X, y: mf.models.lightgbm(X, y)),
+        ("lightgbm", "lightgbm", lambda X, y: mf.models.lgb_plus(X, y)),
+        ("lightgbm", "lightgbm", lambda X, y: mf.models.lgba_plus(X, y)),
         ("catboost", "catboost", lambda X, y: mf.models.catboost(X, y)),
         ("arch", "arch", lambda X, y: mf.models.garch11(y)),
         (
@@ -1756,6 +1830,66 @@ def test_macro_random_forest_vendored_backend_smoke() -> None:
     assert "pred" in fit.estimator.output_
 
 
+def test_lgb_plus_competition_records_reference_channels() -> None:
+    pytest.importorskip("lightgbm")
+    X, y = _xy(64)
+
+    fit = mf.models.lgb_plus(
+        X,
+        y,
+        n_ensemble=2,
+        n_steps=6,
+        min_data_in_leaf=4,
+        num_leaves=5,
+        linear_candidate_fraction=0.5,
+        early_stop_patience=None,
+        random_state=0,
+    )
+    components = fit.estimator.predict_components(X.iloc[:5])
+    summary = fit.diagnostics["channel_summary"]
+
+    np.testing.assert_allclose(
+        components["prediction_total"],
+        components["prediction_init"]
+        + components["prediction_tree"]
+        + components["prediction_linear"],
+    )
+    assert summary["total_tree"] + summary["total_linear"] == 12
+    assert "channel_importance" in fit.diagnostics
+    assert fit.diagnostics["channel_importance"].shape[0] == X.shape[1]
+    assert fit.metadata["linear_candidate_fraction"] == 0.5
+    assert "lgb_plus.R" in fit.diagnostics["training_history"]["source_reference"]
+
+
+def test_lgba_plus_alternating_records_reference_channels() -> None:
+    pytest.importorskip("lightgbm")
+    X, y = _xy(64)
+
+    fit = mf.models.lgba_plus(
+        X,
+        y,
+        n_runs=2,
+        n_cycles=3,
+        trees_per_cycle=2,
+        min_data_in_leaf=4,
+        random_state=0,
+    )
+    components = fit.estimator.predict_components(X.iloc[:5])
+    summary = fit.diagnostics["channel_summary"]
+
+    np.testing.assert_allclose(
+        components["prediction_total"],
+        components["prediction_init"]
+        + components["prediction_tree"]
+        + components["prediction_linear"],
+    )
+    assert summary["total_tree_blocks"] == 6
+    assert summary["total_linear_steps"] == 6
+    assert fit.estimator.get_total_trees() == 12
+    assert "channel_importance" in fit.diagnostics
+    assert "lgb_plus_A.R" in fit.diagnostics["training_history"]["source_reference"]
+
+
 def test_model_metadata_records_all_fit_params() -> None:
     X, y = _xy()
 
@@ -1780,6 +1914,8 @@ def test_model_metadata_records_all_fit_params() -> None:
 
 def test_tree_ensemble_public_signatures_match_specs() -> None:
     for name in (
+        "lgb_plus",
+        "lgba_plus",
         "quantile_regression_forest",
         "macro_random_forest",
     ):
@@ -1806,7 +1942,9 @@ def test_quantile_regression_forest_records_feature_importance_diagnostics() -> 
     )
 
     assert "feature_importance" in fit.diagnostics
-    assert np.isfinite(fit.diagnostics["feature_importance"].to_numpy(dtype=float)).all()
+    assert np.isfinite(
+        fit.diagnostics["feature_importance"].to_numpy(dtype=float)
+    ).all()
 
 
 def test_macro_random_forest_rejects_duplicate_selector_styles() -> None:

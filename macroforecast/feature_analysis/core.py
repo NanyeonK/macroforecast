@@ -72,7 +72,9 @@ class FeatureDiagnosticReport:
         if self.correlation_matrix is not None:
             out["correlation_matrix"] = self.correlation_matrix.to_dict(orient="index")
         if self.target_correlation is not None:
-            out["target_correlation"] = self.target_correlation.to_dict(orient="records")
+            out["target_correlation"] = self.target_correlation.to_dict(
+                orient="records"
+            )
         if self.factors is not None:
             out["factors"] = self.factors.to_dict(orient="records")
         if self.factor_variance is not None:
@@ -84,22 +86,100 @@ class FeatureDiagnosticReport:
         if self.lags is not None:
             out["lags"] = self.lags.to_dict(orient="records")
         if self.lag_autocorrelation is not None:
-            out["lag_autocorrelation"] = self.lag_autocorrelation.to_dict(orient="records")
+            out["lag_autocorrelation"] = self.lag_autocorrelation.to_dict(
+                orient="records"
+            )
         if self.lag_correlation_decay is not None:
-            out["lag_correlation_decay"] = self.lag_correlation_decay.to_dict(orient="records")
+            out["lag_correlation_decay"] = self.lag_correlation_decay.to_dict(
+                orient="records"
+            )
         if self.marx is not None:
             out["marx"] = self.marx.to_dict(orient="records")
         if self.marx_weight_decay is not None:
             out["marx_weight_decay"] = self.marx_weight_decay.to_dict(orient="records")
         if self.selection_stability is not None:
-            out["selection_stability"] = self.selection_stability.to_dict(orient="index")
+            out["selection_stability"] = self.selection_stability.to_dict(
+                orient="index"
+            )
         if self.selection_similarity is not None:
-            out["selection_similarity"] = self.selection_similarity.to_dict(orient="records")
+            out["selection_similarity"] = self.selection_similarity.to_dict(
+                orient="records"
+            )
         if self.stage_comparison is not None:
             out["stage_comparison"] = self.stage_comparison.to_dict(orient="index")
         if self.stage_distribution_shift is not None:
-            out["stage_distribution_shift"] = self.stage_distribution_shift.to_dict(orient="records")
+            out["stage_distribution_shift"] = self.stage_distribution_shift.to_dict(
+                orient="records"
+            )
         return out
+
+
+def effective_window(weights: Any, *, threshold: float = 1e-12) -> pd.Series:
+    """Return the nonzero source-observation count for each weighted feature date."""
+
+    matrix = _coerce_weight_matrix(weights)
+    threshold_value = float(threshold)
+    if threshold_value < 0:
+        raise ValueError("threshold must be nonnegative")
+    return (matrix.abs() > threshold_value).sum(axis=0).rename("effective_window")
+
+
+def recent_weight_share(weights: Any, *, mode: str = "one_sided") -> pd.DataFrame:
+    """Summarize adaptive feature weights into recent lag/lead buckets."""
+
+    matrix = _coerce_weight_matrix(weights)
+    mode_value = str(mode).lower().replace("-", "_")
+    aliases = {
+        "one": "one_sided",
+        "right": "one_sided",
+        "two": "two_sided",
+        "center": "two_sided",
+    }
+    mode_value = aliases.get(mode_value, mode_value)
+    if mode_value not in {"one_sided", "two_sided"}:
+        raise ValueError("mode must be 'one_sided' or 'two_sided'")
+    rows: list[dict[str, float]] = []
+    positions = np.arange(len(matrix.index))
+    for col_idx, column in enumerate(matrix.columns):
+        values = matrix.iloc[:, col_idx].to_numpy(dtype=float)
+        relative = positions - col_idx
+        if mode_value == "one_sided":
+            rows.append(
+                {
+                    "date": column,
+                    "y_t": float(values[relative == 0].sum()),
+                    "y_t_minus_1_2": float(
+                        values[(relative >= -2) & (relative <= -1)].sum()
+                    ),
+                    "y_t_minus_3_5": float(
+                        values[(relative >= -5) & (relative <= -3)].sum()
+                    ),
+                    "y_t_minus_6_plus": float(values[relative <= -6].sum()),
+                    "future_weight": float(values[relative > 0].sum()),
+                }
+            )
+        else:
+            rows.append(
+                {
+                    "date": column,
+                    "y_t": float(values[relative == 0].sum()),
+                    "y_t_minus_1_2": float(
+                        values[(relative >= -2) & (relative <= -1)].sum()
+                    ),
+                    "y_t_plus_1_2": float(
+                        values[(relative >= 1) & (relative <= 2)].sum()
+                    ),
+                    "y_t_minus_3_plus": float(values[relative <= -3].sum()),
+                    "y_t_plus_3_plus": float(values[relative >= 3].sum()),
+                }
+            )
+    out = pd.DataFrame(rows).set_index("date")
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "recent_weight_share",
+        "version": 1,
+        "mode": mode_value,
+    }
+    return out
 
 
 def feature_overview(
@@ -137,8 +217,14 @@ def feature_overview(
         "missing_total": int(X.isna().sum().sum()),
         "missing_rate": _safe_ratio(int(X.isna().sum().sum()), int(X.size)),
         "high_missing_threshold": float(high_missing_threshold),
-        "high_missing_features": missing_rate[missing_rate > float(high_missing_threshold)].index.astype(str).tolist(),
-        "zero_variance_features": variance[(variance.fillna(0.0) == 0.0)].index.astype(str).tolist(),
+        "high_missing_features": missing_rate[
+            missing_rate > float(high_missing_threshold)
+        ]
+        .index.astype(str)
+        .tolist(),
+        "zero_variance_features": variance[(variance.fillna(0.0) == 0.0)]
+        .index.astype(str)
+        .tolist(),
         "feature_metadata_available": bool(not metadata.empty),
         "feature_metadata_rows": int(metadata.shape[0]),
         "operation_counts": operation_counts,
@@ -176,7 +262,9 @@ def compare_feature_stages(
             "end": X.index[-1].strftime("%Y-%m-%d") if len(X.index) else None,
             "missing_total": int(X.isna().sum().sum()),
             "missing_rate": _safe_ratio(int(X.isna().sum().sum()), int(X.size)),
-            "zero_variance_count": int((numeric.var(axis=0, skipna=True).fillna(0.0) == 0.0).sum()),
+            "zero_variance_count": int(
+                (numeric.var(axis=0, skipna=True).fillna(0.0) == 0.0).sum()
+            ),
         }
         if previous_columns is None:
             row["common_with_previous"] = None
@@ -216,10 +304,19 @@ def stage_distribution_shift(
     if len(stage_map) < 2:
         raise ValueError("at least two feature stages are required")
     selected_columns = None if columns is None else {str(column) for column in columns}
-    bundles = [(str(name), _coerce_feature_input(value).X.select_dtypes("number")) for name, value in stage_map.items()]
+    bundles = [
+        (str(name), _coerce_feature_input(value).X.select_dtypes("number"))
+        for name, value in stage_map.items()
+    ]
     rows: list[dict[str, Any]] = []
-    for (left_name, left), (right_name, right) in zip(bundles[:-1], bundles[1:], strict=False):
-        common = [str(column) for column in left.columns if str(column) in set(map(str, right.columns))]
+    for (left_name, left), (right_name, right) in zip(
+        bundles[:-1], bundles[1:], strict=False
+    ):
+        common = [
+            str(column)
+            for column in left.columns
+            if str(column) in set(map(str, right.columns))
+        ]
         if selected_columns is not None:
             common = [column for column in common if column in selected_columns]
         for column in common:
@@ -235,18 +332,40 @@ def stage_distribution_shift(
                     "feature": column,
                     "n_a": int(len(left_obs)),
                     "n_b": int(len(right_obs)),
-                    "mean_a": _float_or_none(left_obs.mean()) if len(left_obs) else None,
-                    "mean_b": _float_or_none(right_obs.mean()) if len(right_obs) else None,
-                    "mean_shift": _float_or_none(right_obs.mean() - left_obs.mean()) if enough else None,
-                    "sd_a": _float_or_none(left_obs.std(ddof=1)) if len(left_obs) > 1 else None,
-                    "sd_b": _float_or_none(right_obs.std(ddof=1)) if len(right_obs) > 1 else None,
-                    "sd_ratio": _safe_divide(right_obs.std(ddof=1), left_obs.std(ddof=1)) if enough else None,
-                    "median_a": _float_or_none(left_obs.median()) if len(left_obs) else None,
-                    "median_b": _float_or_none(right_obs.median()) if len(right_obs) else None,
+                    "mean_a": _float_or_none(left_obs.mean())
+                    if len(left_obs)
+                    else None,
+                    "mean_b": _float_or_none(right_obs.mean())
+                    if len(right_obs)
+                    else None,
+                    "mean_shift": _float_or_none(right_obs.mean() - left_obs.mean())
+                    if enough
+                    else None,
+                    "sd_a": _float_or_none(left_obs.std(ddof=1))
+                    if len(left_obs) > 1
+                    else None,
+                    "sd_b": _float_or_none(right_obs.std(ddof=1))
+                    if len(right_obs) > 1
+                    else None,
+                    "sd_ratio": _safe_divide(
+                        right_obs.std(ddof=1), left_obs.std(ddof=1)
+                    )
+                    if enough
+                    else None,
+                    "median_a": _float_or_none(left_obs.median())
+                    if len(left_obs)
+                    else None,
+                    "median_b": _float_or_none(right_obs.median())
+                    if len(right_obs)
+                    else None,
                     "missing_rate_a": float(left_values.isna().mean()),
                     "missing_rate_b": float(right_values.isna().mean()),
-                    "missing_rate_shift": float(right_values.isna().mean() - left_values.isna().mean()),
-                    "ks_statistic": _ks_statistic(left_obs, right_obs) if enough else None,
+                    "missing_rate_shift": float(
+                        right_values.isna().mean() - left_values.isna().mean()
+                    ),
+                    "ks_statistic": _ks_statistic(left_obs, right_obs)
+                    if enough
+                    else None,
                 }
             )
     out = pd.DataFrame(rows)
@@ -273,8 +392,14 @@ def stage_distribution_shift(
             ]
         )
     else:
-        out = out.sort_values(["stage_a", "stage_b", "ks_statistic", "feature"], ascending=[True, True, False, True]).reset_index(drop=True)
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "stage_distribution_shift", "version": 1}
+        out = out.sort_values(
+            ["stage_a", "stage_b", "ks_statistic", "feature"],
+            ascending=[True, True, False, True],
+        ).reset_index(drop=True)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "stage_distribution_shift",
+        "version": 1,
+    }
     return out
 
 
@@ -314,11 +439,19 @@ def feature_correlation(
             value = corr.loc[left, right]
             if pd.isna(value):
                 continue
-            block_left = _feature_block(metadata.get(str(left), {}), block_column=block_column)
-            block_right = _feature_block(metadata.get(str(right), {}), block_column=block_column)
-            if scope == "within_block" and (block_left is None or block_left != block_right):
+            block_left = _feature_block(
+                metadata.get(str(left), {}), block_column=block_column
+            )
+            block_right = _feature_block(
+                metadata.get(str(right), {}), block_column=block_column
+            )
+            if scope == "within_block" and (
+                block_left is None or block_left != block_right
+            ):
                 continue
-            if scope == "cross_block" and (block_left is None or block_right is None or block_left == block_right):
+            if scope == "cross_block" and (
+                block_left is None or block_right is None or block_left == block_right
+            ):
                 continue
             score = abs(float(value)) if absolute else float(value)
             if threshold is not None and score < float(threshold):
@@ -391,7 +524,11 @@ def feature_target_correlation(
         if str(feature) == str(y.name):
             continue
         aligned = pd.concat([X[feature], y], axis=1, join="inner").dropna()
-        value = aligned.iloc[:, 0].corr(aligned.iloc[:, 1], method=method) if len(aligned) >= int(min_periods) else np.nan
+        value = (
+            aligned.iloc[:, 0].corr(aligned.iloc[:, 1], method=method)
+            if len(aligned) >= int(min_periods)
+            else np.nan
+        )
         meta = metadata.get(str(feature), {})
         rows.append(
             {
@@ -407,10 +544,23 @@ def feature_target_correlation(
         )
     out = pd.DataFrame(rows)
     if out.empty:
-        out = pd.DataFrame(columns=["feature", "target", "correlation", "abs_correlation", "operation", "source", "block", "n_obs"])
+        out = pd.DataFrame(
+            columns=[
+                "feature",
+                "target",
+                "correlation",
+                "abs_correlation",
+                "operation",
+                "source",
+                "block",
+                "n_obs",
+            ]
+        )
     else:
         sort_column = "abs_correlation" if absolute else "correlation"
-        out = out.sort_values(sort_column, ascending=False, na_position="last").reset_index(drop=True)
+        out = out.sort_values(
+            sort_column, ascending=False, na_position="last"
+        ).reset_index(drop=True)
         if max_features is not None:
             out = out.head(int(max_features)).reset_index(drop=True)
     out.attrs["macroforecast_metadata_schema"] = {
@@ -467,13 +617,17 @@ def factor_diagnostics(
     bundle = _coerce_feature_input(data, feature_metadata=feature_metadata)
     X = bundle.X
     metadata = _coerce_feature_metadata(bundle.feature_metadata)
-    candidates = _factor_candidates(X, metadata, operations=operations, prefixes=prefixes)
+    candidates = _factor_candidates(
+        X, metadata, operations=operations, prefixes=prefixes
+    )
     rows: list[dict[str, Any]] = []
     for feature, meta in candidates.items():
         if feature not in X:
             continue
         series = X[feature]
-        operation = _str_or_none(meta.get("operation")) or _inferred_factor_operation(feature, prefixes)
+        operation = _str_or_none(meta.get("operation")) or _inferred_factor_operation(
+            feature, prefixes
+        )
         block = _str_or_none(meta.get("block"))
         source = _str_or_none(meta.get("source"))
         group = block or source or operation or "factor"
@@ -485,7 +639,8 @@ def factor_diagnostics(
                 "operation": operation,
                 "block": block,
                 "source": source,
-                "component": _int_or_none(meta.get("component")) or _parse_component(feature),
+                "component": _int_or_none(meta.get("component"))
+                or _parse_component(feature),
                 "n_obs": int(series.notna().sum()),
                 "missing_rate": float(series.isna().mean()),
                 "mean": _float_or_none(series.mean(skipna=True)),
@@ -513,8 +668,13 @@ def factor_diagnostics(
         )
     else:
         out["variance_share"] = _variance_share(out)
-        out = out.sort_values(["group", "component", "feature"], na_position="last").reset_index(drop=True)
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "factor_diagnostics", "version": 1}
+        out = out.sort_values(
+            ["group", "component", "feature"], na_position="last"
+        ).reset_index(drop=True)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "factor_diagnostics",
+        "version": 1,
+    }
     return out
 
 
@@ -547,9 +707,9 @@ def factor_variance(
     else:
         work = diagnostics.copy()
         work = work.sort_values(["group", "component", "feature"], na_position="last")
-        work["cumulative_variance_share"] = (
-            work.groupby("group", dropna=False)["variance_share"].cumsum()
-        )
+        work["cumulative_variance_share"] = work.groupby("group", dropna=False)[
+            "variance_share"
+        ].cumsum()
         out = work.loc[
             :,
             [
@@ -561,7 +721,10 @@ def factor_variance(
                 "cumulative_variance_share",
             ],
         ].reset_index(drop=True)
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "factor_variance", "version": 1}
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "factor_variance",
+        "version": 1,
+    }
     return out
 
 
@@ -595,9 +758,15 @@ def factor_loadings(
         operations=operations,
         prefixes=prefixes,
     )
-    factor_names = [name for name in factor_rows.get("feature", pd.Series(dtype=object)).astype(str) if name in X]
+    factor_names = [
+        name
+        for name in factor_rows.get("feature", pd.Series(dtype=object)).astype(str)
+        if name in X
+    ]
     if source_data is None:
-        sources = X.loc[:, [column for column in X.columns if str(column) not in set(factor_names)]]
+        sources = X.loc[
+            :, [column for column in X.columns if str(column) not in set(factor_names)]
+        ]
     else:
         sources = _coerce_feature_input(source_data).X.select_dtypes("number")
     rows: list[dict[str, Any]] = []
@@ -605,8 +774,14 @@ def factor_loadings(
         factor_series = X[factor]
         loadings: list[dict[str, Any]] = []
         for source in sources.columns:
-            aligned = pd.concat([sources[source], factor_series], axis=1, join="inner").dropna()
-            value = aligned.iloc[:, 0].corr(aligned.iloc[:, 1], method=method) if len(aligned) >= 3 else np.nan
+            aligned = pd.concat(
+                [sources[source], factor_series], axis=1, join="inner"
+            ).dropna()
+            value = (
+                aligned.iloc[:, 0].corr(aligned.iloc[:, 1], method=method)
+                if len(aligned) >= 3
+                else np.nan
+            )
             loadings.append(
                 {
                     "factor": str(factor),
@@ -617,9 +792,11 @@ def factor_loadings(
             )
         loadings = sorted(
             loadings,
-            key=lambda item: float("inf")
-            if item["abs_loading"] is None
-            else -float(item["abs_loading"]),
+            key=lambda item: (
+                float("inf")
+                if item["abs_loading"] is None
+                else -float(item["abs_loading"])
+            ),
         )
         if max_sources is not None:
             loadings = loadings[: int(max_sources)]
@@ -656,7 +833,11 @@ def factor_timeseries(
         operations=operations,
         prefixes=prefixes,
     )
-    factor_names = [str(name) for name in factor_rows.get("feature", pd.Series(dtype=object)) if str(name) in X]
+    factor_names = [
+        str(name)
+        for name in factor_rows.get("feature", pd.Series(dtype=object))
+        if str(name) in X
+    ]
     if max_factors is not None:
         factor_names = factor_names[: int(max_factors)]
     lookup = {
@@ -681,7 +862,17 @@ def factor_timeseries(
             )
     out = pd.DataFrame(rows)
     if out.empty:
-        out = pd.DataFrame(columns=["date", "factor", "value", "group", "operation", "component", "source"])
+        out = pd.DataFrame(
+            columns=[
+                "date",
+                "factor",
+                "value",
+                "group",
+                "operation",
+                "component",
+                "source",
+            ]
+        )
     out.attrs["macroforecast_metadata_schema"] = {
         "kind": "factor_timeseries",
         "version": 1,
@@ -702,7 +893,11 @@ def lag_diagnostics(
     X = bundle.X
     metadata = _coerce_feature_metadata(bundle.feature_metadata)
     candidates = _lag_candidates(X, metadata, operations=operations)
-    rows = [_lag_row(X, feature, meta) for feature, meta in candidates.items() if feature in X]
+    rows = [
+        _lag_row(X, feature, meta)
+        for feature, meta in candidates.items()
+        if feature in X
+    ]
     out = pd.DataFrame(rows)
     if out.empty:
         out = pd.DataFrame(
@@ -719,8 +914,13 @@ def lag_diagnostics(
             ]
         )
     else:
-        out = out.sort_values(["source", "operation", "lag", "window", "feature"], na_position="last").reset_index(drop=True)
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "lag_diagnostics", "version": 1}
+        out = out.sort_values(
+            ["source", "operation", "lag", "window", "feature"], na_position="last"
+        ).reset_index(drop=True)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "lag_diagnostics",
+        "version": 1,
+    }
     return out
 
 
@@ -743,8 +943,14 @@ def lag_autocorrelation(
     bundle = _coerce_feature_input(data, feature_metadata=feature_metadata)
     X = bundle.X.select_dtypes("number")
     if columns is None:
-        lag_rows = lag_diagnostics(X, feature_metadata=bundle.feature_metadata, operations=operations)
-        selected = [str(feature) for feature in lag_rows.get("feature", pd.Series(dtype=object)) if str(feature) in X]
+        lag_rows = lag_diagnostics(
+            X, feature_metadata=bundle.feature_metadata, operations=operations
+        )
+        selected = [
+            str(feature)
+            for feature in lag_rows.get("feature", pd.Series(dtype=object))
+            if str(feature) in X
+        ]
     else:
         selected = [str(column) for column in columns]
     missing = [column for column in selected if column not in X]
@@ -754,7 +960,11 @@ def lag_autocorrelation(
     for feature in selected:
         series = X[feature].dropna().astype(float)
         for lag_value in range(max_lag_value + 1):
-            value = _acf_value(series, lag_value) if kind == "acf" else _pacf_value(series, lag_value)
+            value = (
+                _acf_value(series, lag_value)
+                if kind == "acf"
+                else _pacf_value(series, lag_value)
+            )
             rows.append(
                 {
                     "feature": feature,
@@ -794,16 +1004,26 @@ def lag_correlation_decay(
         raise ValueError("method must be one of 'pearson', 'spearman', or 'kendall'")
     bundle = _coerce_feature_input(data, feature_metadata=feature_metadata)
     X = bundle.X.select_dtypes("number")
-    lags = lag_diagnostics(X, feature_metadata=bundle.feature_metadata, operations=operations)
+    lags = lag_diagnostics(
+        X, feature_metadata=bundle.feature_metadata, operations=operations
+    )
     if target is None:
         target_map = _source_target_map(X, lags)
     elif isinstance(target, pd.Series):
-        target_map = {str(source): target for source in lags["source"].dropna().astype(str).unique()}
+        target_map = {
+            str(source): target
+            for source in lags["source"].dropna().astype(str).unique()
+        }
     else:
         target_name = str(target)
         if target_name not in X:
-            raise ValueError(f"target column {target_name!r} is not in the feature matrix")
-        target_map = {str(source): X[target_name] for source in lags["source"].dropna().astype(str).unique()}
+            raise ValueError(
+                f"target column {target_name!r} is not in the feature matrix"
+            )
+        target_map = {
+            str(source): X[target_name]
+            for source in lags["source"].dropna().astype(str).unique()
+        }
     rows: list[dict[str, Any]] = []
     for _, row in lags.iterrows():
         feature = str(row["feature"])
@@ -812,7 +1032,11 @@ def lag_correlation_decay(
         if feature not in X or comparator is None:
             continue
         aligned = pd.concat([X[feature], comparator], axis=1, join="inner").dropna()
-        value = aligned.iloc[:, 0].corr(aligned.iloc[:, 1], method=method) if len(aligned) >= 3 else np.nan
+        value = (
+            aligned.iloc[:, 0].corr(aligned.iloc[:, 1], method=method)
+            if len(aligned) >= 3
+            else np.nan
+        )
         rows.append(
             {
                 "feature": feature,
@@ -826,10 +1050,25 @@ def lag_correlation_decay(
         )
     out = pd.DataFrame(rows)
     if out.empty:
-        out = pd.DataFrame(columns=["feature", "source", "lag", "window", "correlation", "abs_correlation", "method"])
+        out = pd.DataFrame(
+            columns=[
+                "feature",
+                "source",
+                "lag",
+                "window",
+                "correlation",
+                "abs_correlation",
+                "method",
+            ]
+        )
     else:
-        out = out.sort_values(["source", "lag", "window", "feature"], na_position="last").reset_index(drop=True)
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "lag_correlation_decay", "version": 1}
+        out = out.sort_values(
+            ["source", "lag", "window", "feature"], na_position="last"
+        ).reset_index(drop=True)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "lag_correlation_decay",
+        "version": 1,
+    }
     return out
 
 
@@ -849,8 +1088,12 @@ def marx_diagnostics(
             continue
         parsed = _parse_marx_name(feature)
         source = _str_or_none(meta.get("source")) or (parsed[0] if parsed else None)
-        window = _int_or_none(meta.get("window")) or (parsed[1] if parsed else _parse_window(feature))
-        lag_value = _int_or_none(meta.get("lag")) or (parsed[2] if parsed else _parse_lag(feature))
+        window = _int_or_none(meta.get("window")) or (
+            parsed[1] if parsed else _parse_window(feature)
+        )
+        lag_value = _int_or_none(meta.get("lag")) or (
+            parsed[2] if parsed else _parse_lag(feature)
+        )
         row = _lag_row(X, feature, meta)
         row.update(
             {
@@ -878,8 +1121,13 @@ def marx_diagnostics(
             ]
         )
     else:
-        out = out.sort_values(["source", "window", "lag", "feature"], na_position="last").reset_index(drop=True)
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "marx_diagnostics", "version": 1}
+        out = out.sort_values(
+            ["source", "window", "lag", "feature"], na_position="last"
+        ).reset_index(drop=True)
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "marx_diagnostics",
+        "version": 1,
+    }
     return out
 
 
@@ -911,8 +1159,20 @@ def marx_weight_decay(
                 )
     out = pd.DataFrame(rows)
     if out.empty:
-        out = pd.DataFrame(columns=["feature", "source", "window", "lag", "weight", "cumulative_weight"])
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "marx_weight_decay", "version": 1}
+        out = pd.DataFrame(
+            columns=[
+                "feature",
+                "source",
+                "window",
+                "lag",
+                "weight",
+                "cumulative_weight",
+            ]
+        )
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "marx_weight_decay",
+        "version": 1,
+    }
     return out
 
 
@@ -923,8 +1183,12 @@ def selection_stability(
 ) -> pd.DataFrame:
     """Return selection frequency by feature across folds, windows, or origins."""
 
-    explicit_features = set(str(name) for name in all_features) if all_features is not None else set()
-    if isinstance(selections, pd.DataFrame) and not {"feature", "selected"}.issubset(selections.columns):
+    explicit_features = (
+        set(str(name) for name in all_features) if all_features is not None else set()
+    )
+    if isinstance(selections, pd.DataFrame) and not {"feature", "selected"}.issubset(
+        selections.columns
+    ):
         explicit_features.update(str(column) for column in selections.columns)
     origin_map = _coerce_selections(selections)
     if not origin_map:
@@ -935,20 +1199,29 @@ def selection_stability(
     rows: list[dict[str, Any]] = []
     n_origins = len(origin_map)
     for feature in sorted(all_names):
-        selected_origins = [origin for origin, values in origin_map.items() if feature in values]
+        selected_origins = [
+            origin for origin, values in origin_map.items() if feature in values
+        ]
         rows.append(
             {
                 "feature": feature,
                 "selected_count": int(len(selected_origins)),
                 "selection_rate": _safe_ratio(len(selected_origins), n_origins),
                 "n_origins": int(n_origins),
-                "first_selected_origin": selected_origins[0] if selected_origins else None,
-                "last_selected_origin": selected_origins[-1] if selected_origins else None,
+                "first_selected_origin": selected_origins[0]
+                if selected_origins
+                else None,
+                "last_selected_origin": selected_origins[-1]
+                if selected_origins
+                else None,
             }
         )
     out = pd.DataFrame(rows).set_index("feature")
     out = out.sort_values(["selected_count", "selection_rate"], ascending=False)
-    out.attrs["macroforecast_metadata_schema"] = {"kind": "feature_selection_stability", "version": 1}
+    out.attrs["macroforecast_metadata_schema"] = {
+        "kind": "feature_selection_stability",
+        "version": 1,
+    }
     return out
 
 
@@ -972,7 +1245,9 @@ def selection_similarity(
     if n_features is not None:
         n_total = int(n_features)
         if n_total < len(universe):
-            raise ValueError("n_features must be at least the number of observed unique features")
+            raise ValueError(
+                "n_features must be at least the number of observed unique features"
+            )
     else:
         n_total = len(universe)
     origins = list(origin_map)
@@ -986,7 +1261,9 @@ def selection_similarity(
             score = (
                 _safe_ratio(overlap, union)
                 if metric == "jaccard"
-                else _kuncheva_similarity(overlap, len(left_set), len(right_set), n_total)
+                else _kuncheva_similarity(
+                    overlap, len(left_set), len(right_set), n_total
+                )
             )
             rows.append(
                 {
@@ -1003,7 +1280,19 @@ def selection_similarity(
             )
     out = pd.DataFrame(rows)
     if out.empty:
-        out = pd.DataFrame(columns=["origin_a", "origin_b", "metric", "score", "overlap", "selected_a", "selected_b", "union", "n_features"])
+        out = pd.DataFrame(
+            columns=[
+                "origin_a",
+                "origin_b",
+                "metric",
+                "score",
+                "overlap",
+                "selected_a",
+                "selected_b",
+                "union",
+                "n_features",
+            ]
+        )
     out.attrs["macroforecast_metadata_schema"] = {
         "kind": "feature_selection_similarity",
         "version": 1,
@@ -1038,7 +1327,10 @@ def diagnose_features(
     include_marx: bool = True,
     include_marx_weight_decay: bool = True,
     include_stage_distribution_shift: bool = True,
-    selections: Mapping[Any, Iterable[str]] | Sequence[Iterable[str]] | pd.DataFrame | None = None,
+    selections: Mapping[Any, Iterable[str]]
+    | Sequence[Iterable[str]]
+    | pd.DataFrame
+    | None = None,
     selection_similarity_metric: SelectionSimilarityMetric | None = None,
 ) -> FeatureDiagnosticReport:
     """Run the standard feature-diagnostic suite on a feature matrix."""
@@ -1082,8 +1374,16 @@ def diagnose_features(
         if include_target_correlation and target is not None
         else None
     )
-    factors = factor_diagnostics(bundle.X, feature_metadata=bundle.feature_metadata) if include_factors else None
-    factor_var = factor_variance(bundle.X, feature_metadata=bundle.feature_metadata) if include_factor_variance else None
+    factors = (
+        factor_diagnostics(bundle.X, feature_metadata=bundle.feature_metadata)
+        if include_factors
+        else None
+    )
+    factor_var = (
+        factor_variance(bundle.X, feature_metadata=bundle.feature_metadata)
+        if include_factor_variance
+        else None
+    )
     factor_load = (
         factor_loadings(
             bundle.X,
@@ -1099,24 +1399,40 @@ def diagnose_features(
         if include_factor_timeseries
         else None
     )
-    lags = lag_diagnostics(bundle.X, feature_metadata=bundle.feature_metadata) if include_lags else None
+    lags = (
+        lag_diagnostics(bundle.X, feature_metadata=bundle.feature_metadata)
+        if include_lags
+        else None
+    )
     lag_acf = (
         lag_autocorrelation(bundle.X, feature_metadata=bundle.feature_metadata)
         if include_lag_autocorrelation
         else None
     )
     lag_decay = (
-        lag_correlation_decay(bundle.X, feature_metadata=bundle.feature_metadata, method=correlation_method)
+        lag_correlation_decay(
+            bundle.X,
+            feature_metadata=bundle.feature_metadata,
+            method=correlation_method,
+        )
         if include_lag_correlation_decay
         else None
     )
-    marx = marx_diagnostics(bundle.X, feature_metadata=bundle.feature_metadata) if include_marx else None
+    marx = (
+        marx_diagnostics(bundle.X, feature_metadata=bundle.feature_metadata)
+        if include_marx
+        else None
+    )
     marx_decay = (
         marx_weight_decay(bundle.X, feature_metadata=bundle.feature_metadata)
         if include_marx and include_marx_weight_decay
         else None
     )
-    stability = selection_stability(selections, all_features=bundle.X.columns) if selections is not None else None
+    stability = (
+        selection_stability(selections, all_features=bundle.X.columns)
+        if selections is not None
+        else None
+    )
     similarity = (
         selection_similarity(
             selections,
@@ -1165,22 +1481,46 @@ def diagnose_features(
             "include_stage_distribution_shift": bool(include_stage_distribution_shift),
         },
         "tables": {
-            "correlation_pairs": None if correlation is None else int(correlation.shape[0]),
-            "correlation_matrix_shape": None if corr_matrix is None else list(corr_matrix.shape),
-            "target_correlation_rows": None if target_corr is None else int(target_corr.shape[0]),
+            "correlation_pairs": None
+            if correlation is None
+            else int(correlation.shape[0]),
+            "correlation_matrix_shape": None
+            if corr_matrix is None
+            else list(corr_matrix.shape),
+            "target_correlation_rows": None
+            if target_corr is None
+            else int(target_corr.shape[0]),
             "factor_rows": None if factors is None else int(factors.shape[0]),
-            "factor_variance_rows": None if factor_var is None else int(factor_var.shape[0]),
-            "factor_loading_rows": None if factor_load is None else int(factor_load.shape[0]),
-            "factor_timeseries_rows": None if factor_ts is None else int(factor_ts.shape[0]),
+            "factor_variance_rows": None
+            if factor_var is None
+            else int(factor_var.shape[0]),
+            "factor_loading_rows": None
+            if factor_load is None
+            else int(factor_load.shape[0]),
+            "factor_timeseries_rows": None
+            if factor_ts is None
+            else int(factor_ts.shape[0]),
             "lag_rows": None if lags is None else int(lags.shape[0]),
-            "lag_autocorrelation_rows": None if lag_acf is None else int(lag_acf.shape[0]),
-            "lag_correlation_decay_rows": None if lag_decay is None else int(lag_decay.shape[0]),
+            "lag_autocorrelation_rows": None
+            if lag_acf is None
+            else int(lag_acf.shape[0]),
+            "lag_correlation_decay_rows": None
+            if lag_decay is None
+            else int(lag_decay.shape[0]),
             "marx_rows": None if marx is None else int(marx.shape[0]),
-            "marx_weight_decay_rows": None if marx_decay is None else int(marx_decay.shape[0]),
+            "marx_weight_decay_rows": None
+            if marx_decay is None
+            else int(marx_decay.shape[0]),
             "selection_rows": None if stability is None else int(stability.shape[0]),
-            "selection_similarity_rows": None if similarity is None else int(similarity.shape[0]),
-            "stage_rows": None if stage_comparison is None else int(stage_comparison.shape[0]),
-            "stage_distribution_shift_rows": None if stage_shift is None else int(stage_shift.shape[0]),
+            "selection_similarity_rows": None
+            if similarity is None
+            else int(similarity.shape[0]),
+            "stage_rows": None
+            if stage_comparison is None
+            else int(stage_comparison.shape[0]),
+            "stage_distribution_shift_rows": None
+            if stage_shift is None
+            else int(stage_shift.shape[0]),
         },
     }
     updated_metadata = attach_metadata(bundle.metadata, "feature_analysis", stage)
@@ -1258,7 +1598,9 @@ def custom_feature_diagnostic(
         },
         "user_metadata": dict(metadata or {}),
     }
-    updated_metadata = attach_metadata(bundle.metadata, "custom_feature_diagnostic", stage)
+    updated_metadata = attach_metadata(
+        bundle.metadata, "custom_feature_diagnostic", stage
+    )
     table.attrs["macroforecast_metadata_schema"] = {
         "kind": "custom_feature_diagnostic",
         "version": 1,
@@ -1294,18 +1636,28 @@ def _coerce_feature_input(
         X = data.panel.copy()
         metadata = dict(data.metadata)
         meta = feature_metadata
-    elif isinstance(data, tuple) and len(data) == 2 and isinstance(data[0], pd.DataFrame):
+    elif (
+        isinstance(data, tuple) and len(data) == 2 and isinstance(data[0], pd.DataFrame)
+    ):
         X = data[0].copy()
         metadata = dict(data[1])
         meta = feature_metadata
     elif isinstance(data, pd.DataFrame):
         X = data.copy()
         metadata = dict(data.attrs.get("macroforecast_metadata", {}) or {})
-        meta = feature_metadata if feature_metadata is not None else data.attrs.get("macroforecast_feature_metadata")
+        meta = (
+            feature_metadata
+            if feature_metadata is not None
+            else data.attrs.get("macroforecast_feature_metadata")
+        )
     else:
-        raise TypeError("data must be a FeatureSet, DataFrame, DataBundle, DataSpec, or (DataFrame, metadata) tuple")
+        raise TypeError(
+            "data must be a FeatureSet, DataFrame, DataBundle, DataSpec, or (DataFrame, metadata) tuple"
+        )
     validate_panel(X)
-    return _FeatureBundle(X=X, metadata=metadata, feature_metadata=_coerce_feature_metadata(meta))
+    return _FeatureBundle(
+        X=X, metadata=metadata, feature_metadata=_coerce_feature_metadata(meta)
+    )
 
 
 def _coerce_feature_metadata(value: Any) -> pd.DataFrame:
@@ -1326,7 +1678,9 @@ def _metadata_lookup(metadata: pd.DataFrame | None) -> dict[str, dict[str, Any]]
     }
 
 
-def _pair_metadata(metadata: Mapping[str, Mapping[str, Any]], left: str, right: str) -> dict[str, Any]:
+def _pair_metadata(
+    metadata: Mapping[str, Mapping[str, Any]], left: str, right: str
+) -> dict[str, Any]:
     left_meta = metadata.get(left, {})
     right_meta = metadata.get(right, {})
     return {
@@ -1353,7 +1707,9 @@ def _coerce_target_series(target: Any, X: pd.DataFrame) -> pd.Series:
             raise ValueError(f"target column {target!r} is not in the feature matrix")
         return X[target].rename(target)
     if isinstance(target, pd.Series):
-        return pd.to_numeric(target.copy(), errors="coerce").rename(target.name or "target")
+        return pd.to_numeric(target.copy(), errors="coerce").rename(
+            target.name or "target"
+        )
     if isinstance(target, pd.DataFrame):
         numeric = target.select_dtypes("number")
         if numeric.shape[1] != 1:
@@ -1362,7 +1718,9 @@ def _coerce_target_series(target: Any, X: pd.DataFrame) -> pd.Series:
         return numeric[column].rename(str(column))
     values = np.asarray(target, dtype=float).reshape(-1)
     if len(values) != len(X.index):
-        raise ValueError("array-like target must have the same length as the feature matrix")
+        raise ValueError(
+            "array-like target must have the same length as the feature matrix"
+        )
     return pd.Series(values, index=X.index, name="target")
 
 
@@ -1401,16 +1759,24 @@ def _lag_candidates(
         operation = _str_or_none(meta.get("operation"))
         lag_value = _int_or_none(meta.get("lag"))
         window_value = _int_or_none(meta.get("window"))
-        if operation in operation_set or lag_value is not None or window_value is not None:
+        if (
+            operation in operation_set
+            or lag_value is not None
+            or window_value is not None
+        ):
             selected[feature] = dict(meta)
     for feature in X.columns:
         name = str(feature)
-        if name not in selected and (_parse_lag(name) is not None or _parse_window(name) is not None):
+        if name not in selected and (
+            _parse_lag(name) is not None or _parse_window(name) is not None
+        ):
             selected[name] = {"feature": name}
     return selected
 
 
-def _marx_candidates(X: pd.DataFrame, metadata: pd.DataFrame) -> dict[str, dict[str, Any]]:
+def _marx_candidates(
+    X: pd.DataFrame, metadata: pd.DataFrame
+) -> dict[str, dict[str, Any]]:
     lookup = _metadata_lookup(metadata)
     selected: dict[str, dict[str, Any]] = {}
     for feature, meta in lookup.items():
@@ -1429,7 +1795,8 @@ def _lag_row(X: pd.DataFrame, feature: str, meta: Mapping[str, Any]) -> dict[str
     observed = series.dropna()
     return {
         "feature": feature,
-        "operation": _str_or_none(meta.get("operation")) or _inferred_lag_operation(feature),
+        "operation": _str_or_none(meta.get("operation"))
+        or _inferred_lag_operation(feature),
         "source": _str_or_none(meta.get("source")) or _parse_source(feature),
         "lag": _int_or_none(meta.get("lag")) or _parse_lag(feature),
         "window": _int_or_none(meta.get("window")) or _parse_window(feature),
@@ -1455,7 +1822,9 @@ def _coerce_selections(
             str(position): {str(feature) for feature in values}
             for position, values in enumerate(selections)
         }
-    raise TypeError("selections must be a mapping, sequence of feature iterables, or DataFrame")
+    raise TypeError(
+        "selections must be a mapping, sequence of feature iterables, or DataFrame"
+    )
 
 
 def _coerce_selection_frame(frame: pd.DataFrame) -> dict[str, set[str]]:
@@ -1466,15 +1835,21 @@ def _coerce_selection_frame(frame: pd.DataFrame) -> dict[str, set[str]]:
             return {"0": set(selected)}
         out: dict[str, set[str]] = {}
         for origin, group in frame.groupby(origin_column, sort=False):
-            out[str(origin)] = set(group.loc[group["selected"].map(bool), "feature"].astype(str))
+            out[str(origin)] = set(
+                group.loc[group["selected"].map(bool), "feature"].astype(str)
+            )
         return out
     out = {}
     for idx, row in frame.iterrows():
-        out[str(idx)] = {str(column) for column, value in row.items() if _truthy_selection(value)}
+        out[str(idx)] = {
+            str(column) for column, value in row.items() if _truthy_selection(value)
+        }
     return out
 
 
-def _cluster_correlation_order(corr: pd.DataFrame, *, absolute_distance: bool) -> list[Any]:
+def _cluster_correlation_order(
+    corr: pd.DataFrame, *, absolute_distance: bool
+) -> list[Any]:
     remaining = list(corr.columns)
     if not remaining:
         return remaining
@@ -1540,7 +1915,9 @@ def _pacf_value(series: pd.Series, lag: int) -> float | None:
     return float(beta[-1])
 
 
-def _kuncheva_similarity(overlap: int, left_size: int, right_size: int, n_features: int) -> float | None:
+def _kuncheva_similarity(
+    overlap: int, left_size: int, right_size: int, n_features: int
+) -> float | None:
     # Kuncheva stability is defined for fixed-size selected subsets. When
     # windows select different numbers of features, returning a scalar score
     # would hide a change in selection budget; use Jaccard for variable-size
@@ -1573,7 +1950,9 @@ def _coerce_custom_table(value: Any) -> pd.DataFrame:
         return pd.DataFrame([dict(value)])
     if isinstance(value, (list, tuple)):
         return pd.DataFrame(value)
-    raise TypeError("custom feature diagnostic must return a DataFrame, Series, mapping, or sequence")
+    raise TypeError(
+        "custom feature diagnostic must return a DataFrame, Series, mapping, or sequence"
+    )
 
 
 def _callable_name(func: Any) -> str:
@@ -1582,7 +1961,10 @@ def _callable_name(func: Any) -> str:
 
 def _value_counts(series: pd.Series) -> dict[str, int]:
     values = series.dropna().map(str)
-    return {str(key): int(value) for key, value in values.value_counts().sort_index().items()}
+    return {
+        str(key): int(value)
+        for key, value in values.value_counts().sort_index().items()
+    }
 
 
 def _variance_share(frame: pd.DataFrame) -> pd.Series:
@@ -1596,7 +1978,9 @@ def _variance_share(frame: pd.DataFrame) -> pd.Series:
     return shares
 
 
-def _marx_formula(source: str | None, start_lag: int | None, window: int | None) -> str | None:
+def _marx_formula(
+    source: str | None, start_lag: int | None, window: int | None
+) -> str | None:
     if source is None or window is None or window < 1:
         return None
     first_lag = 1 if start_lag is None or start_lag < 1 else int(start_lag)
@@ -1753,11 +2137,27 @@ def _index_value(value: Any) -> Any:
     return value
 
 
+def _coerce_weight_matrix(weights: Any) -> pd.DataFrame:
+    if isinstance(weights, pd.DataFrame):
+        matrix = weights.copy()
+    else:
+        array = np.asarray(weights, dtype=float)
+        if array.ndim != 2:
+            raise ValueError("weights must be a two-dimensional matrix")
+        matrix = pd.DataFrame(array)
+    if matrix.empty:
+        raise ValueError("weights must not be empty")
+    if matrix.shape[0] != matrix.shape[1]:
+        raise ValueError("weights must be square with source rows and target columns")
+    return matrix.astype(float)
+
+
 __all__ = [
     "FeatureDiagnosticReport",
     "compare_feature_stages",
     "custom_feature_diagnostic",
     "diagnose_features",
+    "effective_window",
     "factor_diagnostics",
     "factor_loadings",
     "factor_timeseries",
@@ -1771,6 +2171,7 @@ __all__ = [
     "lag_diagnostics",
     "marx_diagnostics",
     "marx_weight_decay",
+    "recent_weight_share",
     "selection_similarity",
     "selection_stability",
     "stage_distribution_shift",

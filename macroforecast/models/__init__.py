@@ -58,12 +58,16 @@ from .timeseries import (
     var,
 )
 from .tree import (
+    LGBAPlusRegressor,
+    LGBPlusRegressor,
     MacroRandomForestRegressor,
     QuantileRegressionForestRegressor,
     catboost,
     decision_tree,
     extra_trees,
     gradient_boosting,
+    lgba_plus,
+    lgb_plus,
     lightgbm,
     macro_random_forest,
     quantile_regression_forest,
@@ -81,6 +85,8 @@ from .volatility import (
 
 __all__ = [
     "GARCHEstimator",
+    "LGBAPlusRegressor",
+    "LGBPlusRegressor",
     "MODEL_SPECS",
     "MacroRandomForestRegressor",
     "MARSRegressor",
@@ -127,6 +133,8 @@ __all__ = [
     "lasso",
     "lightgbm",
     "linear_svr",
+    "lgba_plus",
+    "lgb_plus",
     "list_model_specs",
     "load_fit",
     "lstm",

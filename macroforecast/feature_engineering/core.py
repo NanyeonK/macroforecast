@@ -31,7 +31,11 @@ from macroforecast.feature_engineering.compose import (
     varimax_step,
 )
 from macroforecast.feature_engineering.matrix import feature_matrix
-from macroforecast.feature_engineering.targets import average_target, direct_target, path_targets
+from macroforecast.feature_engineering.targets import (
+    average_target,
+    direct_target,
+    path_targets,
+)
 from macroforecast.feature_engineering.feature_selection import (
     boruta_selection,
     correlation_selection,

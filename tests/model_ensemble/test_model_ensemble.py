@@ -92,7 +92,12 @@ def test_model_ensemble_callables_fit_and_predict() -> None:
 
     assert fits[1].model == "subagging"
     assert fits[1].metadata["replace"] is False
-    assert fits[1].diagnostics["model_ensemble"]["member_samples"]["replace"].eq(False).all()
+    assert (
+        fits[1]
+        .diagnostics["model_ensemble"]["member_samples"]["replace"]
+        .eq(False)
+        .all()
+    )
 
     weights = fits[-1].estimator.weights_
     assert weights is not None
@@ -162,6 +167,61 @@ def test_bagging_and_booging_are_callable_with_small_budgets() -> None:
         0.25,
         0.75,
     }
+
+
+def test_bagging_supports_member_level_feature_perturbation() -> None:
+    X, y = _xy()
+
+    fit = mf.model_ensemble.bagging(
+        X,
+        y,
+        base="decision_tree",
+        n_estimators=4,
+        max_samples=0.8,
+        max_features="sqrt",
+        random_state=0,
+    )
+
+    member_features = fit.diagnostics["model_ensemble"]["member_features"]
+    assert member_features["n_features"].eq(2).all()
+    assert fit.metadata["max_features"] == "sqrt"
+    assert np.isfinite(fit.predict(X.iloc[:3])).all()
+
+
+def test_booging_accepts_r_style_aliases_and_records_augmentation() -> None:
+    X, y = _xy()
+    X = X.copy()
+    X["binary_signal"] = (X["x0"] > 0).astype(float)
+
+    fit = mf.model_ensemble.booging(
+        X,
+        y,
+        B=3,
+        sampling_rate=0.6,
+        mtry=0.5,
+        data_aug=True,
+        noise_level=0.3,
+        shuffle_rate=0.25,
+        n_trees=5,
+        tree_depth=2,
+        nu=0.2,
+        bf=0.5,
+        random_state=11,
+    )
+
+    diag = fit.diagnostics["model_ensemble"]
+    augmentation = diag["augmentation_summary"]
+    assert fit.metadata["sampling_rate"] == pytest.approx(0.6)
+    assert fit.metadata["n_trees"] == 5
+    assert fit.metadata["nu"] == pytest.approx(0.2)
+    assert augmentation["data_aug"] is True
+    assert augmentation["n_augmented_features"] == X.shape[1] * 3
+    assert augmentation["n_binary_features"] == 1
+    assert any(
+        name.startswith("fake1_") for name in fit.estimator.augmented_feature_names_
+    )
+    assert diag["member_features"]["mtry"].eq(0.5).all()
+    assert np.isfinite(fit.predict(X.iloc[:4])).all()
 
 
 def test_bagging_validates_strategy_base_params_and_quantile_levels() -> None:
@@ -248,10 +308,12 @@ def test_forecasting_runner_combines_model_ensemble_aliases() -> None:
     assert not combined.empty
     assert combined["model_spec"].eq("forecast_combination").all()
     assert combined["combined"].all()
-    assert {
-        tuple(item["models"]) for item in combined["combination"].dropna()
-    } == {("linear", "bagged")}
-    bagged_selection = base.loc[base["model"] == "bagged", "model_selection"].dropna().iloc[0]
+    assert {tuple(item["models"]) for item in combined["combination"].dropna()} == {
+        ("linear", "bagged")
+    }
+    bagged_selection = (
+        base.loc[base["model"] == "bagged", "model_selection"].dropna().iloc[0]
+    )
     assert bagged_selection["metadata"]["model_family"] == "model_ensemble"
     assert bagged_selection["best_params"]["n_estimators"] == 2
     for key, group in base.groupby(["date", "origin_pos", "horizon"], sort=False):

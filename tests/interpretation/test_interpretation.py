@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import importlib.util
+import importlib
 import sys
 import types
 
@@ -19,6 +21,10 @@ def _xy() -> tuple[pd.DataFrame, pd.Series]:
     return X, y
 
 
+def _has_anatomy() -> bool:
+    return importlib.util.find_spec("anatomy") is not None
+
+
 def test_linear_coefficients_and_tree_importance() -> None:
     X, y = _xy()
     linear = mf.models.ridge(X, y, alpha=0.1)
@@ -30,10 +36,15 @@ def test_linear_coefficients_and_tree_importance() -> None:
     assert set(coef["feature"]) == {"x1", "x2"}
     assert "coefficient" in coef.columns
     assert coef.attrs["macroforecast_metadata_schema"]["kind"] == "linear_coefficients"
-    assert coef.attrs["macroforecast_metadata_schema"]["reference"]["alignment"] == "direct_attribute_read"
+    assert (
+        coef.attrs["macroforecast_metadata_schema"]["reference"]["alignment"]
+        == "direct_attribute_read"
+    )
     assert set(importance["feature"]) == {"x1", "x2"}
     assert importance["importance"].sum() > 0.0
-    assert importance.attrs["macroforecast_metadata_schema"]["kind"] == "tree_importance"
+    assert (
+        importance.attrs["macroforecast_metadata_schema"]["kind"] == "tree_importance"
+    )
 
 
 def test_model_agnostic_interpretation_helpers() -> None:
@@ -55,11 +66,15 @@ def test_model_agnostic_interpretation_helpers() -> None:
         grid_size=5,
         center=True,
     )
-    ice_alias = mf.interpretation.ice_curves(fit, X.iloc[:4], features="x1", grid_size=5)
+    ice_alias = mf.interpretation.ice_curves(
+        fit, X.iloc[:4], features="x1", grid_size=5
+    )
     ale = mf.interpretation.accumulated_local_effect(fit, X, feature="x1", bins=5)
 
     assert set(perm["feature"]) == {"x1", "x2"}
-    assert perm.attrs["macroforecast_metadata_schema"]["kind"] == "permutation_importance"
+    assert (
+        perm.attrs["macroforecast_metadata_schema"]["kind"] == "permutation_importance"
+    )
     assert len(pdp) == 5
     assert set(pdp.columns) == {"feature", "value", "prediction"}
     assert pdp.attrs["macroforecast_metadata_schema"]["kind"] == "partial_dependence"
@@ -72,13 +87,25 @@ def test_model_agnostic_interpretation_helpers() -> None:
         "prediction",
         "centered_prediction",
     }
-    assert ice.attrs["macroforecast_metadata_schema"]["kind"] == "individual_conditional_expectation"
-    assert ice.attrs["macroforecast_metadata_schema"]["reference"]["reference"].endswith("ice=TRUE")
-    assert ice.loc[ice["value"] == ice["value"].min(), "centered_prediction"].abs().max() == 0.0
-    assert ice_alias.attrs["macroforecast_metadata_schema"]["method"] == "ice_curves_alias"
+    assert (
+        ice.attrs["macroforecast_metadata_schema"]["kind"]
+        == "individual_conditional_expectation"
+    )
+    assert ice.attrs["macroforecast_metadata_schema"]["reference"][
+        "reference"
+    ].endswith("ice=TRUE")
+    assert (
+        ice.loc[ice["value"] == ice["value"].min(), "centered_prediction"].abs().max()
+        == 0.0
+    )
+    assert (
+        ice_alias.attrs["macroforecast_metadata_schema"]["method"] == "ice_curves_alias"
+    )
     assert len(ale) == 5
     assert set(ale.columns) == {"feature", "bin", "center", "ale", "local_effect"}
-    assert ale.attrs["macroforecast_metadata_schema"]["kind"] == "accumulated_local_effect"
+    assert (
+        ale.attrs["macroforecast_metadata_schema"]["kind"] == "accumulated_local_effect"
+    )
 
 
 def test_interpretation_helpers_are_namespace_scoped() -> None:
@@ -106,15 +133,30 @@ def test_legacy_importance_gap_callables() -> None:
     cumulative = mf.interpretation.cumulative_r2_contribution(fit, X, y)
     inclusion = mf.interpretation.lasso_inclusion_frequency(fit)
 
-    assert conditional.attrs["macroforecast_metadata_schema"]["kind"] == "permutation_importance_strobl"
-    assert conditional.attrs["macroforecast_metadata_schema"]["reference"]["class"] == "approximation"
+    assert (
+        conditional.attrs["macroforecast_metadata_schema"]["kind"]
+        == "permutation_importance_strobl"
+    )
+    assert (
+        conditional.attrs["macroforecast_metadata_schema"]["reference"]["class"]
+        == "approximation"
+    )
     assert set(conditional["feature"]) == {"x1", "x2"}
     assert lofo.attrs["macroforecast_metadata_schema"]["kind"] == "lofo_importance"
     assert set(hstat.columns) >= {"feature_1", "feature_2", "h_statistic"}
-    assert decomposition.attrs["macroforecast_metadata_schema"]["kind"] == "forecast_decomposition"
+    assert (
+        decomposition.attrs["macroforecast_metadata_schema"]["kind"]
+        == "forecast_decomposition"
+    )
     assert "__intercept__" in set(decomposition["feature"])
-    assert cumulative.attrs["macroforecast_metadata_schema"]["kind"] == "cumulative_r2_contribution"
-    assert inclusion.attrs["macroforecast_metadata_schema"]["kind"] == "lasso_inclusion_frequency"
+    assert (
+        cumulative.attrs["macroforecast_metadata_schema"]["kind"]
+        == "cumulative_r2_contribution"
+    )
+    assert (
+        inclusion.attrs["macroforecast_metadata_schema"]["kind"]
+        == "lasso_inclusion_frequency"
+    )
 
 
 def test_attribution_aggregation_and_attention_helpers() -> None:
@@ -151,9 +193,14 @@ def test_attribution_aggregation_and_attention_helpers() -> None:
 
     assert grouped.attrs["macroforecast_metadata_schema"]["kind"] == "group_aggregate"
     assert grouped.loc[grouped["group"] == "real_activity", "importance"].iloc[0] == 1.5
-    assert lineage.attrs["macroforecast_metadata_schema"]["kind"] == "lineage_attribution"
+    assert (
+        lineage.attrs["macroforecast_metadata_schema"]["kind"] == "lineage_attribution"
+    )
     assert "pipeline_name" in lineage.columns
-    assert transform.attrs["macroforecast_metadata_schema"]["kind"] == "transformation_attribution"
+    assert (
+        transform.attrs["macroforecast_metadata_schema"]["kind"]
+        == "transformation_attribution"
+    )
     assert set(transform["pipeline"]) == {"raw", "processed"}
     assert weights.attrs["macroforecast_metadata_schema"]["kind"] == "attention_weights"
     assert len(weights) == 16
@@ -209,6 +256,221 @@ def test_attention_weights_do_not_penalize_intercept() -> None:
     assert np.isclose(weights["weight"].sum(), 1.0)
 
 
+def test_dual_observation_weights_reconstruct_ridge_and_krr_predictions() -> None:
+    X_train = pd.DataFrame(
+        {"x1": [1.0, 0.0, 1.0, 2.0], "x2": [0.0, 1.0, 1.0, 1.0]},
+        index=pd.date_range("2020-01-31", periods=4, freq="ME"),
+    )
+    X_test = pd.DataFrame(
+        {"x1": [0.5, 1.5], "x2": [1.0, 0.25]},
+        index=pd.date_range("2020-05-31", periods=2, freq="ME"),
+    )
+    y = pd.Series([1.0, -0.5, 0.5, 1.5], index=X_train.index)
+
+    ridge_weights = mf.interpretation.observation_weights(
+        None,
+        X_train,
+        X_test,
+        method="ridge",
+        lambda_=0.2,
+        ridge_penalty_scale="none",
+    )
+    krr_weights = mf.interpretation.observation_weights(
+        None,
+        X_train,
+        X_test,
+        method="krr",
+        kernel="linear",
+        lambda_=0.2,
+    )
+    ridge_matrix = ridge_weights.attrs["weight_matrix"]
+    krr_matrix = krr_weights.attrs["weight_matrix"]
+    beta = np.linalg.pinv(X_train.to_numpy().T @ X_train.to_numpy() + 0.2 * np.eye(2))
+    beta = beta @ X_train.to_numpy().T @ y.to_numpy()
+
+    assert np.allclose(ridge_matrix, krr_matrix)
+    assert np.allclose(ridge_matrix @ y.to_numpy(), X_test.to_numpy() @ beta)
+    assert (
+        ridge_weights.attrs["macroforecast_metadata_schema"]["kind"]
+        == "observation_weights"
+    )
+    assert (
+        ridge_weights.attrs["macroforecast_metadata_schema"]["reference"]["reference"]
+        == "Dual Interpretation of Machine Learning Forecasts, Goulet Coulombe, Goebel, and Klieber (2024)"
+    )
+
+
+def test_dual_random_forest_weights_reconstruct_prediction() -> None:
+    from sklearn.ensemble import RandomForestRegressor
+
+    X_train = pd.DataFrame({"x": [0.0, 0.1, 1.0, 1.1]})
+    y = pd.Series([0.0, 0.0, 1.0, 1.0])
+    X_test = pd.DataFrame({"x": [0.05, 1.05]})
+    forest = RandomForestRegressor(
+        n_estimators=1,
+        max_depth=1,
+        bootstrap=False,
+        random_state=0,
+    ).fit(X_train, y)
+
+    weights = mf.interpretation.observation_weights(
+        forest,
+        X_train,
+        X_test,
+        method="random_forest",
+    )
+    matrix = weights.attrs["weight_matrix"]
+
+    assert np.allclose(matrix.sum(axis=1), 1.0)
+    assert np.allclose(matrix @ y.to_numpy(), forest.predict(X_test))
+    assert set(weights["channel"]) == {"random_forest"}
+
+
+def test_dual_data_portfolio_contributions_and_diagnostics() -> None:
+    weights = pd.DataFrame(
+        {
+            "test_row": [0, 0, 0, 1, 1, 1],
+            "test_index": ["f1", "f1", "f1", "f2", "f2", "f2"],
+            "train_row": [0, 1, 2, 0, 1, 2],
+            "train_index": ["t1", "t2", "t3", "t1", "t2", "t3"],
+            "weight": [0.5, -0.25, 0.75, 0.25, 0.0, 0.75],
+        }
+    )
+    y = pd.Series([1.0, 2.0, 4.0], index=["t1", "t2", "t3"])
+
+    contrib = mf.interpretation.outcome_contributions(weights, y)
+    diag = mf.interpretation.data_portfolio_diagnostics(weights, top_q=1 / 3)
+    top = mf.interpretation.top_episodes(contrib, n=1, sort_by="abs_weight")
+    grouped = mf.interpretation.episode_group_weights(
+        contrib,
+        {"early": ["t1", "t2"], "late": ["t3"]},
+    )
+
+    assert contrib.loc[contrib["test_index"] == "f1", "prediction"].iloc[0] == 3.0
+    first = diag.loc[diag["test_index"] == "f1"].iloc[0]
+    second = diag.loc[diag["test_index"] == "f2"].iloc[0]
+    assert np.isclose(first["concentration"], 0.5)
+    assert np.isclose(first["short_position"], -0.25)
+    assert np.isclose(first["leverage"], 1.0)
+    assert np.isclose(first["gross_leverage"], 1.5)
+    assert np.isnan(first["turnover"])
+    assert np.isclose(second["turnover"], 0.5)
+    assert set(top["train_index"]) == {"t3"}
+    late = grouped[
+        (grouped["test_index"] == "f1") & (grouped["episode_group"] == "late")
+    ].iloc[0]
+    assert np.isclose(late["weight"], 0.75)
+    assert np.isclose(late["contribution"], 3.0)
+
+
+def test_dual_namespace_builds_result_tables() -> None:
+    X_train = pd.DataFrame(
+        {"x1": [1.0, 0.0, 1.0, 2.0], "x2": [0.0, 1.0, 1.0, 1.0]},
+        index=pd.date_range("2020-01-31", periods=4, freq="ME"),
+    )
+    X_test = pd.DataFrame(
+        {"x1": [0.5], "x2": [1.0]},
+        index=pd.date_range("2020-05-31", periods=1, freq="ME"),
+    )
+    y = pd.Series([1.0, -0.5, 0.5, 1.5], index=X_train.index)
+
+    result = mf.interpretation.dual.dual_interpretation(
+        None,
+        X_train,
+        y,
+        X_test,
+        method="ridge",
+        lambda_=0.2,
+        ridge_penalty_scale="none",
+        groups={"early": [X_train.index[0], X_train.index[1]]},
+        top_n=2,
+    )
+    tables = result.to_tables(prefix="demo")
+
+    assert isinstance(result, mf.interpretation.DualInterpretationResult)
+    assert result.metadata_schema["kind"] == "dual_interpretation_result"
+    assert {
+        "demo_observation_weights",
+        "demo_observation_contributions",
+        "demo_forecast_diagnostics",
+        "demo_top_observations",
+        "demo_group_observation_weights",
+        "demo_metadata",
+    } <= set(tables)
+    assert (
+        tables["demo_forecast_diagnostics"].attrs["macroforecast_metadata_schema"]["kind"]
+        == "dual_forecast_diagnostics_table"
+    )
+    assert mf.interpretation.forecast_diagnostics(result.weights).equals(
+        mf.interpretation.dual.forecast_diagnostics(result.weights)
+    )
+
+
+def test_dual_from_forecast_result_attaches_sidecar() -> None:
+    X_train = pd.DataFrame(
+        {"x1": [1.0, 0.0, 1.0, 2.0], "x2": [0.0, 1.0, 1.0, 1.0]},
+        index=pd.date_range("2020-01-31", periods=4, freq="ME"),
+    )
+    X_test = pd.DataFrame(
+        {"x1": [0.5], "x2": [1.0]},
+        index=pd.date_range("2020-05-31", periods=1, freq="ME"),
+    )
+    y = pd.Series([1.0, -0.5, 0.5, 1.5], index=X_train.index)
+    forecast_result = mf.forecasting.ForecastResult(
+        pd.DataFrame(
+            {
+                "date": [X_test.index[0]],
+                "origin": [X_train.index[-1]],
+                "model": ["ridge"],
+                "prediction": [0.0],
+                "actual": [0.0],
+            }
+        ),
+        metadata={"metadata_schema": {"kind": "forecast_result", "version": 1}},
+    )
+
+    attached = mf.interpretation.dual_from_forecast_result(
+        forecast_result,
+        None,
+        X_train,
+        y,
+        X_test,
+        method="ridge",
+        lambda_=0.2,
+        ridge_penalty_scale="none",
+        sidecar_name="dual_view",
+    )
+    detached = mf.interpretation.dual_from_forecast_result(
+        forecast_result,
+        None,
+        X_train,
+        y,
+        X_test,
+        method="ridge",
+        lambda_=0.2,
+        ridge_penalty_scale="none",
+        attach=False,
+    )
+    method_attached = forecast_result.with_dual(
+        None,
+        X_train,
+        y,
+        X_test,
+        method="ridge",
+        lambda_=0.2,
+        ridge_penalty_scale="none",
+    )
+
+    assert attached is not forecast_result
+    assert isinstance(detached, mf.interpretation.DualInterpretationResult)
+    assert attached.get_sidecar("dual_view").metadata["forecast_result"]["forecast_rows"] == 1
+    assert attached.metadata["sidecars"]["dual_view"]["metadata_schema"]["kind"] == (
+        "dual_interpretation_result"
+    )
+    assert method_attached.sidecar_names() == ("dual",)
+    assert isinstance(method_attached.get_sidecar("dual"), mf.interpretation.DualInterpretationResult)
+
+
 def test_temporal_and_mrf_interpretation_helpers() -> None:
     X, y = _xy()
     fit = mf.models.ridge(X, y, alpha=0.1)
@@ -261,7 +523,9 @@ def test_gradient_helpers_report_missing_torch(monkeypatch: pytest.MonkeyPatch) 
             raise ImportError("missing torch")
         return __import__(name)
 
-    monkeypatch.setattr("macroforecast.interpretation.core.import_module", missing_import)
+    monkeypatch.setattr(
+        "macroforecast.interpretation.core.import_module", missing_import
+    )
 
     with pytest.raises(ImportError, match="macroforecast\\[deep\\]"):
         mf.interpretation.saliency_map(fit, X.iloc[:3])
@@ -288,8 +552,14 @@ def test_var_interpretation_callables() -> None:
     assert girf.attrs["macroforecast_metadata_schema"]["kind"] == "generalized_irf"
     assert orth.attrs["macroforecast_metadata_schema"]["kind"] == "orthogonalised_irf"
     assert variance.attrs["macroforecast_metadata_schema"]["kind"] == "fevd"
-    assert variance.attrs["macroforecast_metadata_schema"]["reference"]["reference"] == "statsmodels VARResults.fevd"
-    assert history.attrs["macroforecast_metadata_schema"]["kind"] == "historical_decomposition"
+    assert (
+        variance.attrs["macroforecast_metadata_schema"]["reference"]["reference"]
+        == "statsmodels VARResults.fevd"
+    )
+    assert (
+        history.attrs["macroforecast_metadata_schema"]["kind"]
+        == "historical_decomposition"
+    )
     assert set(girf["feature"]) == {"y", "x", "z"}
     assert np.isfinite(girf["importance"]).all()
 
@@ -341,7 +611,9 @@ def test_shap_values_uses_optional_backend(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setitem(sys.modules, "shap", fake_shap)
 
     out = mf.interpretation.shap_values(fit, X.iloc[:3], background=X.iloc[:5])
-    importance = mf.interpretation.shap_importance(fit, X.iloc[:3], background=X.iloc[:5])
+    importance = mf.interpretation.shap_importance(
+        fit, X.iloc[:3], background=X.iloc[:5]
+    )
 
     assert len(out) == 3 * X.shape[1]
     assert set(out.columns) == {
@@ -354,12 +626,18 @@ def test_shap_values_uses_optional_backend(monkeypatch: pytest.MonkeyPatch) -> N
     }
     assert set(out["shap_value"]) == {0.25}
     assert out.attrs["macroforecast_metadata_schema"]["kind"] == "shap_values"
-    assert out.attrs["macroforecast_metadata_schema"]["metadata"]["background_n_obs"] == 5
-    assert importance.attrs["macroforecast_metadata_schema"]["kind"] == "shap_importance"
+    assert (
+        out.attrs["macroforecast_metadata_schema"]["metadata"]["background_n_obs"] == 5
+    )
+    assert (
+        importance.attrs["macroforecast_metadata_schema"]["kind"] == "shap_importance"
+    )
     assert set(importance["importance"]) == {0.25}
 
 
-def test_shap_values_reports_optional_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_shap_values_reports_optional_dependency(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     X, y = _xy()
     fit = mf.models.ridge(X, y, alpha=0.1)
 
@@ -368,7 +646,428 @@ def test_shap_values_reports_optional_dependency(monkeypatch: pytest.MonkeyPatch
             raise ImportError("missing shap")
         return __import__(name)
 
-    monkeypatch.setattr("macroforecast.interpretation.core.import_module", missing_import)
+    monkeypatch.setattr(
+        "macroforecast.interpretation.core.import_module", missing_import
+    )
 
     with pytest.raises(ImportError, match="macroforecast\\[interpretation\\]"):
         mf.interpretation.shap_values(fit, X.iloc[:3])
+
+
+def test_performance_shapley_value_decomposes_point_loss() -> None:
+    contributions = pd.DataFrame(
+        {
+            "row": [0, 0, 1],
+            "feature": ["x1", "x2", "x1"],
+            "forecast_contribution": [2.0, 1.0, 1.0],
+            "base_value": [0.0, 0.0, 0.0],
+        }
+    )
+    y = pd.Series([2.5, 0.0])
+
+    local = mf.interpretation.performance_shapley_value(
+        contributions,
+        y,
+        contribution_col="forecast_contribution",
+        return_local=True,
+    )
+    global_table = mf.interpretation.performance_shapley_value(
+        contributions,
+        y,
+        contribution_col="forecast_contribution",
+    )
+
+    schema = local.attrs["macroforecast_metadata_schema"]
+    assert schema["kind"] == "performance_shapley_value"
+    assert schema["reference"]["class"] == "paper_formula_adapter"
+    assert schema["metadata"]["max_efficiency_error"] < 1e-12
+    assert (
+        local.groupby("row")["pbsv"]
+        .sum()
+        .equals(local.groupby("row")["full_loss"].first())
+    )
+    assert (
+        local.loc[(local["row"] == 0) & (local["feature"] == "x1"), "pbsv"].iloc[0]
+        < 0.0
+    )
+    assert (
+        local.loc[(local["row"] == 1) & (local["feature"] == "x1"), "pbsv"].iloc[0]
+        > 0.0
+    )
+    assert "__base__" in set(global_table["feature"])
+
+    single_row = mf.interpretation.performance_shapley_value(
+        pd.DataFrame(
+            {
+                "feature": ["__intercept__", "x1"],
+                "contribution": [1.0, 2.0],
+            }
+        ),
+        [4.0],
+    )
+    assert (
+        single_row.attrs["macroforecast_metadata_schema"]["metadata"]["row_column"]
+        == "row"
+    )
+    assert single_row["n_rows"].iloc[0] == 1
+
+
+def test_anatomy_explain_wraps_optional_backend(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: dict[str, object] = {}
+
+    class FakeModelCombination:
+        def __init__(self, groups):
+            self.groups = groups
+
+    class FakeOutputTransformer:
+        def __init__(self, transform):
+            self.transform = transform
+
+    class FakeAnatomyObject:
+        def explain(
+            self, *, model_sets=None, transformer=None, explanation_subset=None
+        ):
+            calls["model_sets"] = model_sets
+            calls["transformer"] = transformer
+            calls["explanation_subset"] = explanation_subset
+            index = pd.MultiIndex.from_tuples(
+                [("combo", pd.Timestamp("2020-01-31"))],
+                names=["model_set", "date"],
+            )
+            return pd.DataFrame(
+                {"base_contribution": [1.0], "x1": [0.25], "x2": [-0.1]},
+                index=index,
+            )
+
+    class FakeAnatomy:
+        @staticmethod
+        def load(path):
+            calls["path"] = path
+            return FakeAnatomyObject()
+
+    class FakeMAS:
+        class LossType:
+            LOWER_IS_BETTER = "lower"
+            LARGER_IS_BETTER = "larger"
+
+        class MASType:
+            IMPORTANCE_WEIGHTED = "importance_weighted"
+            EQUAL_WEIGHTED = "equal_weighted"
+
+        def __init__(self, is_vi, oos_pbsv, pbsv_loss_type):
+            calls["mas_is_vi"] = is_vi
+            calls["mas_oos_pbsv"] = oos_pbsv
+            calls["mas_loss_type"] = pbsv_loss_type
+
+        def compute(
+            self,
+            *,
+            mas_type=None,
+            hypothesis_test=True,
+            h0_alpha=0.5,
+            n_samples=1000000,
+        ):
+            calls["mas_type"] = mas_type
+            calls["hypothesis_test"] = hypothesis_test
+            calls["h0_alpha"] = h0_alpha
+            calls["n_samples"] = n_samples
+            return {"mas": 0.75, "mas_p_value": 0.125}
+
+    fake_module = types.SimpleNamespace(
+        Anatomy=FakeAnatomy,
+        AnatomyModelCombination=FakeModelCombination,
+        AnatomyModelOutputTransformer=FakeOutputTransformer,
+        MAS=FakeMAS,
+    )
+    monkeypatch.setitem(sys.modules, "anatomy", fake_module)
+
+    out = mf.interpretation.anatomy_explain(
+        "precomputed-anatomy.pkl",
+        model_groups={"combo": ["model_a", "model_b"]},
+        metric="squared_error",
+        explanation_subset=[pd.Timestamp("2020-01-31")],
+    )
+
+    schema = out.attrs["macroforecast_metadata_schema"]
+    assert calls["path"] == "precomputed-anatomy.pkl"
+    assert calls["model_sets"].groups == {"combo": ["model_a", "model_b"]}
+    assert isinstance(calls["transformer"], FakeOutputTransformer)
+    assert schema["kind"] == "anatomy_explain"
+    assert schema["metadata"]["backend"] == "anatomy"
+    assert set(out["feature"]) == {"base_contribution", "x1", "x2"}
+    assert (
+        bool(out.loc[out["feature"] == "base_contribution", "is_base"].iloc[0]) is True
+    )
+
+    vi = mf.interpretation.oshapley_vi("precomputed-anatomy.pkl")
+    loss = mf.interpretation.pbsv("precomputed-anatomy.pkl", loss="rmse")
+    generic_vi = mf.interpretation.shapley_variable_importance(out)
+    i_vi = mf.interpretation.ishapley_vi(out)
+    mas = mf.interpretation.model_accordance_score(
+        vi,
+        loss,
+        hypothesis_test=True,
+        n_samples=25,
+        random_state=123,
+    )
+
+    assert vi.attrs["macroforecast_metadata_schema"]["kind"] == "oshapley_vi"
+    assert set(vi["feature"]) == {"x1", "x2"}
+    assert loss.attrs["macroforecast_metadata_schema"]["kind"] == "pbsv"
+    assert loss.attrs["macroforecast_metadata_schema"]["metadata"]["loss"] == "rmse"
+    assert (
+        generic_vi.attrs["macroforecast_metadata_schema"]["kind"]
+        == "shapley_variable_importance"
+    )
+    assert i_vi.attrs["macroforecast_metadata_schema"]["kind"] == "ishapley_vi"
+    assert (
+        i_vi.attrs["macroforecast_metadata_schema"]["metadata"]["vi_scope"]
+        == "in_sample"
+    )
+    assert set(i_vi["feature"]) == {"x1", "x2"}
+    assert (
+        mas.attrs["macroforecast_metadata_schema"]["kind"] == "model_accordance_score"
+    )
+    assert mas.loc[0, "mas"] == 0.75
+    assert calls["mas_loss_type"] == "lower"
+    assert calls["mas_type"] == "importance_weighted"
+    assert calls["n_samples"] == 25
+
+
+def test_anatomy_from_forecast_result_attaches_pipeline_sidecar(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    anatomy_module = importlib.import_module("macroforecast.interpretation.anatomy")
+    X, y = _xy()
+    window = mf.window.from_cutoffs(
+        test_start=X.index[20],
+        test_end=X.index[22],
+        estimation_min_size=12,
+        horizon=1,
+        step=1,
+    )
+    forecast_result = mf.forecasting.ForecastResult(
+        pd.DataFrame(
+            {
+                "date": [X.index[20]],
+                "origin": [X.index[19]],
+                "model": ["ols"],
+                "prediction": [0.0],
+                "actual": [0.0],
+            }
+        ),
+        metadata={"metadata_schema": {"kind": "forecast_result", "version": 1}},
+    )
+    fake_pipeline = mf.interpretation.AnatomyPipelineResult(
+        anatomy=None,
+        explanations={"forecast": pd.DataFrame({"feature": ["x1"], "contribution": [1.0]})},
+        variable_importance=pd.DataFrame({"feature": ["x1"], "importance": [1.0]}),
+        performance_values={"rmse": pd.DataFrame({"feature": ["x1"], "contribution": [-0.1]})},
+        metadata={"kind": "anatomy_pipeline"},
+    )
+    calls: dict[str, object] = {}
+
+    def fake_anatomy_pipeline(*args, **kwargs):
+        calls["args"] = args
+        calls["kwargs"] = kwargs
+        return fake_pipeline
+
+    monkeypatch.setattr(anatomy_module, "anatomy_pipeline", fake_anatomy_pipeline)
+
+    attached = mf.interpretation.oshapley_from_forecast_result(
+        forecast_result,
+        X,
+        y,
+        {"ols": "ols"},
+        window=window,
+        sidecar_name="accuracy_anatomy",
+        losses=("rmse",),
+    )
+    detached = mf.interpretation.oshapley_from_forecast_result(
+        forecast_result,
+        X,
+        y,
+        {"ols": "ols"},
+        window=window,
+        attach=False,
+    )
+
+    assert attached is not forecast_result
+    assert attached.get_sidecar("accuracy_anatomy") is fake_pipeline
+    assert attached.metadata["sidecars"]["accuracy_anatomy"]["metadata_schema"]["kind"] == (
+        "anatomy_pipeline_result"
+    )
+    assert detached is fake_pipeline
+    assert calls["kwargs"]["window"] is window
+    assert fake_pipeline.metadata["forecast_result"]["forecast_rows"] == 1
+    assert mf.interpretation.oshapley_pipeline(X, y, {"ols": "ols"}, window=window) is fake_pipeline
+    assert (
+        mf.interpretation.oshapley_from_forecast_result(
+            forecast_result,
+            X,
+            y,
+            {"ols": "ols"},
+            window=window,
+            attach=False,
+        )
+        is fake_pipeline
+    )
+
+    with pytest.raises(ValueError, match="window is required"):
+        mf.interpretation.oshapley_from_forecast_result(
+            forecast_result,
+            X,
+            y,
+            {"ols": "ols"},
+            window=None,
+        )
+
+
+def test_forecast_shapley_output_selects_result_sidecar_tables() -> None:
+    forecast_result = mf.forecasting.ForecastResult(
+        pd.DataFrame({"model": ["ridge"], "prediction": [1.0], "actual": [1.5]}),
+        metadata={"run_id": "demo"},
+    )
+    forecast = pd.DataFrame({"feature": ["x1"], "contribution": [0.4]})
+    vi = pd.DataFrame({"feature": ["x1"], "importance": [0.4]})
+    pbsv = pd.DataFrame({"feature": ["x1"], "contribution": [-0.2]})
+    result = mf.interpretation.ForecastShapleyResult(
+        anatomy=None,
+        explanations={"forecast": forecast},
+        variable_importance=vi,
+        performance_values={"rmse": pbsv},
+        metadata={"window": {"method": "expanding"}, "models": ["ridge"]},
+    )
+    attached = forecast_result.with_sidecar("oshapley", result)
+
+    pd.testing.assert_frame_equal(
+        mf.interpretation.forecast_shapley_output(attached, output="forecast"),
+        forecast,
+    )
+    pd.testing.assert_frame_equal(
+        mf.interpretation.oshapley_output(attached, output="oshapley"),
+        vi,
+    )
+    pd.testing.assert_frame_equal(
+        mf.interpretation.oshapley_output(attached, output="vi"),
+        vi,
+    )
+    pd.testing.assert_frame_equal(
+        mf.interpretation.oshapley_output(attached, output="pbsv", loss="rmse"),
+        pbsv,
+    )
+    pd.testing.assert_frame_equal(
+        mf.interpretation.forecast_shapley_output(result, output="loss"),
+        pbsv,
+    )
+
+    metadata = mf.interpretation.oshapley_output(attached, output="metadata")
+    assert metadata.attrs["macroforecast_metadata_schema"]["kind"] == (
+        "forecast_shapley_metadata_table"
+    )
+    assert {"window.method", "models[0]"} <= set(metadata["path"])
+
+    summary = mf.interpretation.oshapley_output(attached, output="summary")
+    assert summary["metadata_schema"]["kind"] == "anatomy_pipeline_result"
+
+    tables = mf.interpretation.oshapley_output(attached, output="tables")
+    assert set(tables) == {
+        "oshapley_explanation_forecast",
+        "oshapley_metadata",
+        "oshapley_performance_rmse",
+        "oshapley_variable_importance",
+    }
+    selected = mf.interpretation.oshapley_output(
+        attached,
+        output="tables",
+        table="oshapley_variable_importance",
+    )
+    assert selected.equals(vi)
+
+    with pytest.raises(KeyError, match="PBSV loss"):
+        mf.interpretation.oshapley_output(attached, output="pbsv", loss="mae")
+    with pytest.raises(KeyError, match="table"):
+        mf.interpretation.oshapley_output(attached, output="tables", table="missing")
+    with pytest.raises(ValueError, match="no forecast-Shapley sidecar"):
+        mf.interpretation.oshapley_output(forecast_result)
+
+
+def test_forecast_shapley_output_requires_sidecar_name_when_ambiguous() -> None:
+    forecast_result = mf.forecasting.ForecastResult(
+        pd.DataFrame({"model": ["ridge"], "prediction": [1.0], "actual": [1.5]})
+    )
+    one = mf.interpretation.ForecastShapleyResult(
+        anatomy=None,
+        variable_importance=pd.DataFrame({"feature": ["x1"], "importance": [1.0]}),
+    )
+    two = mf.interpretation.ForecastShapleyResult(
+        anatomy=None,
+        variable_importance=pd.DataFrame({"feature": ["x2"], "importance": [2.0]}),
+    )
+    attached = forecast_result.with_sidecar("first", one).with_sidecar("second", two)
+
+    with pytest.raises(ValueError, match="multiple ForecastResult sidecars"):
+        mf.interpretation.oshapley_output(attached)
+
+    out = mf.interpretation.oshapley_output(attached, sidecar_name="second")
+
+    pd.testing.assert_frame_equal(out, two.variable_importance)
+    with pytest.raises(KeyError, match="was not found"):
+        mf.interpretation.oshapley_output(attached, sidecar_name="missing")
+
+
+@pytest.mark.skipif(not _has_anatomy(), reason="requires optional anatomy backend")
+def test_anatomy_pipeline_builds_provider_from_macroforecast_window() -> None:
+    X, y = _xy()
+    window = mf.window.from_cutoffs(
+        test_start=X.index[20],
+        test_end=X.index[22],
+        estimation_min_size=12,
+        val_method="last_block",
+        val_size=3,
+        horizon=1,
+        step=1,
+    )
+
+    subsets = mf.interpretation.window_to_anatomy_subsets(window, X.index)
+    provider = mf.interpretation.anatomy_provider(
+        X,
+        y,
+        {"ols": "ols"},
+        window=window,
+    )
+    result = mf.interpretation.anatomy_pipeline(
+        X,
+        y,
+        {"ols": "ols"},
+        window=window,
+        losses=("squared_error", "rmse"),
+        n_iterations=4,
+        n_jobs=1,
+    )
+    forecast_result = mf.forecasting.ForecastResult(
+        pd.DataFrame({"model": ["ols"], "prediction": [0.0], "actual": [0.0]}),
+        metadata={"run_id": "demo"},
+    )
+    loss = forecast_result.anatomy_pbsv(result.anatomy, loss="squared_error")
+    loss_alias = forecast_result.pbsv(result.anatomy, loss="squared_error")
+    vi_alias = forecast_result.oshapley_vi(result.anatomy)
+
+    assert subsets.n_periods == 3
+    assert provider.n_periods == 3
+    assert provider.model_names == ["ols"]
+    assert result.variable_importance is not None
+    assert (
+        result.variable_importance.attrs["macroforecast_metadata_schema"]["kind"]
+        == "oshapley_vi"
+    )
+    assert set(result.performance_values) == {"squared_error", "rmse"}
+    assert (
+        result.explanations["forecast"].attrs["macroforecast_metadata_schema"]["kind"]
+        == "anatomy_explain"
+    )
+    assert loss.attrs["macroforecast_forecast_result"]["run_id"] == "demo"
+    assert loss_alias.attrs["macroforecast_forecast_result"]["run_id"] == "demo"
+    assert vi_alias.attrs["macroforecast_forecast_result"]["run_id"] == "demo"

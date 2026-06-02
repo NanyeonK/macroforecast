@@ -23,6 +23,7 @@ from macroforecast.forecasting import ForecastResult
 ExportFormat = Literal["json", "csv", "parquet", "markdown"]
 ManifestFormat = Literal["json", "csv", "parquet"]
 CompressionFormat = Literal["none", "gzip", "zip"]
+ArtifactLayout = Literal["flat", "grouped"]
 
 
 @dataclass(frozen=True)
@@ -254,6 +255,9 @@ def interpretation_table(value: Any) -> pd.DataFrame:
     if isinstance(value, pd.DataFrame):
         table = value.copy()
         metadata = {"source": "DataFrame"}
+    elif _looks_like_anatomy_pipeline_result(value):
+        table = anatomy_tables(value)["anatomy_metadata"]
+        metadata = {"source": type(value).__name__, "field": "metadata"}
     elif isinstance(value, Mapping):
         table = pd.DataFrame([dict(value)])
         metadata = {"source": "mapping"}
@@ -311,6 +315,11 @@ def run_summary(
             if "horizon" in forecasts
             else [],
         }
+        if isinstance(result, ForecastResult) and result.sidecars:
+            out["sidecars"] = {
+                "count": int(len(result.sidecars)),
+                "names": list(result.sidecars),
+            }
     if evaluation is not None:
         metrics = metric_table(evaluation)
         out["evaluation"] = {"metric_rows": int(len(metrics))}
@@ -356,6 +365,79 @@ def artifact_index(value: Any) -> pd.DataFrame:
     return _attach_output_schema(table, kind="artifact_index")
 
 
+def anatomy_tables(value: Any, *, prefix: str = "anatomy") -> dict[str, pd.DataFrame]:
+    """Return anatomy sidecar tables for output bundling or artifact writing."""
+
+    if not _looks_like_anatomy_pipeline_result(value):
+        raise TypeError("anatomy_tables expects an AnatomyPipelineResult-like object")
+    tables = value.to_tables(prefix=prefix)
+    return {
+        str(name): _attach_output_schema(
+            table.copy(),
+            kind=str(
+                table.attrs.get("macroforecast_metadata_schema", {}).get(
+                    "kind", "anatomy_table"
+                )
+            ),
+            metadata={
+                **dict(table.attrs.get("macroforecast_metadata", {})),
+                "source": type(value).__name__,
+            },
+        )
+        for name, table in tables.items()
+    }
+
+
+def _dual_tables(value: Any, *, prefix: str = "dual") -> dict[str, pd.DataFrame]:
+    if not _looks_like_dual_interpretation_result(value):
+        raise TypeError(
+            "dual interpretation tables require a DualInterpretationResult-like object"
+        )
+    tables = value.to_tables(prefix=prefix)
+    return {
+        str(name): _attach_output_schema(
+            table.copy(),
+            kind=str(
+                table.attrs.get("macroforecast_metadata_schema", {}).get(
+                    "kind", "dual_interpretation_table"
+                )
+            ),
+            metadata={
+                **dict(table.attrs.get("macroforecast_metadata", {})),
+                "source": type(value).__name__,
+            },
+        )
+        for name, table in tables.items()
+    }
+
+
+def forecast_shapley_tables(
+    value: Any, *, prefix: str = "oshapley"
+) -> dict[str, pd.DataFrame]:
+    """Return oShapley/PBSV sidecar tables for output writing."""
+
+    return anatomy_tables(value, prefix=prefix)
+
+
+def interpretation_outputs(
+    interpretation: Mapping[str, Any] | pd.DataFrame | Any,
+    *,
+    prefix: str = "interpretation",
+) -> OutputBundle:
+    """Build output-ready artifacts from one or more interpretation results."""
+
+    artifacts = _interpretation_artifacts(interpretation, prefix=prefix)
+    return OutputBundle(
+        artifacts=artifacts,
+        metadata={
+            "n_artifacts": int(len(artifacts)),
+            "artifact_names": list(artifacts),
+            "source": "interpretation_outputs",
+            "prefix": str(prefix),
+        },
+    )
+
+
 def bundle_outputs(
     *,
     forecasts: ForecastResult | pd.DataFrame | None = None,
@@ -373,6 +455,22 @@ def bundle_outputs(
     artifacts: dict[str, Any] = {}
     if forecasts is not None:
         artifacts["forecasts"] = forecast_table(forecasts)
+        if isinstance(forecasts, ForecastResult):
+            for sidecar_name, sidecar in forecasts.sidecars.items():
+                if _looks_like_dual_interpretation_result(sidecar):
+                    artifacts.update(
+                        _dual_tables(
+                            sidecar,
+                            prefix=f"dual_{_safe_name(sidecar_name)}",
+                        )
+                    )
+                elif _looks_like_anatomy_pipeline_result(sidecar):
+                    artifacts.update(
+                        anatomy_tables(
+                            sidecar,
+                            prefix=f"anatomy_{_safe_name(sidecar_name)}",
+                        )
+                    )
     if evaluation is not None:
         artifacts["metrics"] = metric_table(evaluation)
         if hasattr(evaluation, "ranking"):
@@ -400,11 +498,7 @@ def bundle_outputs(
     if model_selection is not None:
         artifacts["model_selection"] = model_selection_table(model_selection)
     if interpretation is not None:
-        if isinstance(interpretation, Mapping):
-            for name, table in interpretation.items():
-                artifacts[f"interpretation_{_safe_name(name)}"] = interpretation_table(table)
-        else:
-            artifacts["interpretation"] = interpretation_table(interpretation)
+        artifacts.update(interpretation_outputs(interpretation).artifacts)
     if metadata is not None:
         artifacts["metadata"] = metadata_table(metadata)
     if include_summary:
@@ -481,6 +575,7 @@ def write_artifacts(
     include_provenance: bool = True,
     provenance_fields: tuple[str, ...] | None = None,
     compression: CompressionFormat = "none",
+    layout: ArtifactLayout = "flat",
 ) -> ArtifactManifest:
     """Write forecast/package artifacts and a reproducibility manifest."""
 
@@ -488,9 +583,19 @@ def write_artifacts(
     out.mkdir(parents=True, exist_ok=True)
     if compression not in {"none", "gzip", "zip"}:
         raise ValueError("compression must be 'none', 'gzip', or 'zip'")
+    if layout not in {"flat", "grouped"}:
+        raise ValueError("layout must be 'flat' or 'grouped'")
     artifact_map = _normalize_artifacts(artifacts)
     paths: dict[str, str] = {}
     records: list[ArtifactRecord] = []
+
+    def artifact_path(file_name: str, *, source: str, kind: str) -> Path:
+        if layout == "flat":
+            return out / file_name
+        group = _artifact_group(source=source, kind=kind, file_name=file_name)
+        directory = out / group
+        directory.mkdir(parents=True, exist_ok=True)
+        return directory / file_name
 
     def add_record(
         *,
@@ -505,7 +610,9 @@ def write_artifacts(
         record_compression = compression if compress_artifact else "none"
         final_path = _compress_file(Path(path), compression=record_compression)
         final_name = Path(final_path).name
-        paths[final_name] = final_path
+        relative_path = str(Path(final_path).relative_to(out)) if _is_relative_to(final_path, out) else str(final_path)
+        paths[relative_path] = final_path
+        group = _artifact_group(source=source, kind=kind, file_name=final_name)
         records.append(
             ArtifactRecord(
                 name=final_name,
@@ -517,6 +624,9 @@ def write_artifacts(
                     **dict(metadata or {}),
                     **_file_metadata(final_path),
                     "compression": record_compression if record_compression == "gzip" else "none",
+                    "layout": layout,
+                    "group": group if layout == "grouped" else "root",
+                    "relative_path": relative_path,
                 },
             )
         )
@@ -527,7 +637,7 @@ def write_artifacts(
             file_name = f"{safe}.json"
             add_record(
                 file_name=file_name,
-                path=_write_json(out / file_name, value.to_dict()),
+                path=_write_json(artifact_path(file_name, source=name, kind="forecast_result"), value.to_dict()),
                 kind="forecast_result",
                 fmt="json",
                 source=name,
@@ -537,7 +647,7 @@ def write_artifacts(
             file_name = f"{safe}_forecasts.csv"
             add_record(
                 file_name=file_name,
-                path=_write_frame(out / file_name, forecasts),
+                path=_write_frame(artifact_path(file_name, source=name, kind="forecast_table"), forecasts),
                 kind="forecast_table",
                 fmt="csv",
                 source=name,
@@ -553,13 +663,49 @@ def write_artifacts(
                     metadata=model_record.metadata,
                     compress_artifact=False,
                 )
+            for sidecar_name, sidecar in value.sidecars.items():
+                for artifact_name, artifact in _sidecar_artifacts(
+                    sidecar,
+                    prefix=f"{safe}_{_safe_name(sidecar_name)}",
+                ).items():
+                    _write_named_artifact(
+                        artifact_name,
+                        artifact,
+                        source=f"{name}.sidecars.{sidecar_name}",
+                        out=out,
+                        formats=formats,
+                        add_record=add_record,
+                        path_for=artifact_path,
+                    )
+        elif _looks_like_dual_interpretation_result(value):
+            for artifact_name, artifact in _sidecar_artifacts(value, prefix=safe).items():
+                _write_named_artifact(
+                    artifact_name,
+                    artifact,
+                    source=name,
+                    out=out,
+                    formats=formats,
+                    add_record=add_record,
+                    path_for=artifact_path,
+                )
+        elif _looks_like_anatomy_pipeline_result(value):
+            for artifact_name, artifact in _sidecar_artifacts(value, prefix=safe).items():
+                _write_named_artifact(
+                    artifact_name,
+                    artifact,
+                    source=name,
+                    out=out,
+                    formats=formats,
+                    add_record=add_record,
+                    path_for=artifact_path,
+                )
         elif isinstance(value, pd.DataFrame):
             for fmt in formats:
                 suffix = "md" if fmt == "markdown" else fmt
                 file_name = f"{safe}.{suffix}"
                 add_record(
                     file_name=file_name,
-                    path=_write_value(out / file_name, value, fmt),
+                    path=_write_value(artifact_path(file_name, source=name, kind="dataframe"), value, fmt),
                     kind="dataframe",
                     fmt=fmt,
                     source=name,
@@ -569,7 +715,7 @@ def write_artifacts(
             file_name = f"{safe}.json"
             add_record(
                 file_name=file_name,
-                path=_write_json(out / file_name, value),
+                path=_write_json(artifact_path(file_name, source=name, kind="json"), value),
                 kind="json",
                 fmt="json",
                 source=name,
@@ -819,6 +965,73 @@ def _normalize_artifacts(
     return {str(key): value for key, value in artifacts.items()}
 
 
+def _interpretation_artifacts(
+    interpretation: Mapping[str, Any] | pd.DataFrame | Any,
+    *,
+    prefix: str,
+) -> dict[str, Any]:
+    safe_prefix = _safe_name(prefix)
+    if isinstance(interpretation, Mapping):
+        artifacts: dict[str, Any] = {}
+        for name, value in interpretation.items():
+            safe_name = _safe_name(name)
+            if _looks_like_dual_interpretation_result(value):
+                artifacts.update(
+                    _dual_tables(value, prefix=f"{safe_prefix}_{safe_name}")
+                )
+            elif _looks_like_anatomy_pipeline_result(value):
+                artifacts.update(
+                    anatomy_tables(value, prefix=f"{safe_prefix}_{safe_name}")
+                )
+            else:
+                artifacts[f"{safe_prefix}_{safe_name}"] = interpretation_table(value)
+        return artifacts
+    if _looks_like_dual_interpretation_result(interpretation):
+        return _dual_tables(interpretation, prefix=safe_prefix)
+    if _looks_like_anatomy_pipeline_result(interpretation):
+        return anatomy_tables(interpretation, prefix=safe_prefix)
+    return {safe_prefix: interpretation_table(interpretation)}
+
+
+def _artifact_group(*, source: str, kind: str, file_name: str) -> str:
+    text = f"{source} {kind} {file_name}".lower()
+    if any(
+        token in text
+        for token in (
+            "dual",
+            "observation_weight",
+            "observation_contribution",
+            "forecast_diagnostic",
+            "top_observation",
+            "group_observation",
+        )
+    ):
+        return "interpretation/dual"
+    if "sidecars" in text or "anatomy" in text or "oshapley" in text:
+        return "interpretation/oshapley"
+    if "interpretation" in text or "shap" in text or "dual" in text:
+        return "interpretation"
+    if "forecast" in text and "stored_model" not in text:
+        return "forecasts"
+    if any(token in text for token in ("metric", "ranking", "evaluation", "benchmark", "regime", "decomposition")):
+        return "evaluation"
+    if "test" in text:
+        return "tests"
+    if "model_selection" in text or "stored_model" in text or "model" in text:
+        return "models"
+    if "metadata" in text or "summary" in text or "manifest" in text:
+        return "metadata"
+    return "other"
+
+
+def _is_relative_to(path: str | Path, root: str | Path) -> bool:
+    try:
+        Path(path).resolve().relative_to(Path(root).resolve())
+        return True
+    except ValueError:
+        return False
+
+
 def _write_value(path: Path, value: pd.DataFrame, fmt: ExportFormat) -> str:
     if fmt == "json":
         return _write_json(path, _dataframe_payload(value))
@@ -880,7 +1093,10 @@ def _write_zip_bundle(out: Path, records: list[ArtifactRecord]) -> ArtifactRecor
         for record in records:
             path = Path(record.path)
             if path.exists() and path.is_file():
-                archive.write(path, arcname=path.name)
+                arcname = str(
+                    Path(record.metadata.get("relative_path", path.name))
+                )
+                archive.write(path, arcname=arcname)
     return ArtifactRecord(
         name=zip_path.name,
         path=str(zip_path),
@@ -1040,6 +1256,89 @@ def _stored_model_records(forecasts: pd.DataFrame, *, source: str) -> list[Artif
     return records
 
 
+def _sidecar_artifacts(value: Any, *, prefix: str) -> dict[str, Any]:
+    safe = _safe_name(prefix)
+    if _looks_like_dual_interpretation_result(value):
+        return {
+            f"{safe}_summary": value.to_dict(),
+            **_dual_tables(value, prefix=safe),
+        }
+    if _looks_like_anatomy_pipeline_result(value):
+        return {
+            f"{safe}_summary": value.to_dict(),
+            **anatomy_tables(value, prefix=safe),
+        }
+    if hasattr(value, "to_dict"):
+        return {f"{safe}_summary": value.to_dict()}
+    return {f"{safe}_summary": _object_metadata(value)}
+
+
+def _write_named_artifact(
+    name: str,
+    value: Any,
+    *,
+    source: str,
+    out: Path,
+    formats: tuple[ExportFormat, ...],
+    add_record: Any,
+    path_for: Any | None = None,
+) -> None:
+    safe = _safe_name(name)
+    def target(file_name: str, kind: str) -> Path:
+        if path_for is None:
+            return out / file_name
+        return path_for(file_name, source=source, kind=kind)
+
+    if isinstance(value, pd.DataFrame):
+        for fmt in formats:
+            suffix = "md" if fmt == "markdown" else fmt
+            file_name = f"{safe}.{suffix}"
+            add_record(
+                file_name=file_name,
+                path=_write_value(target(file_name, "dataframe"), value, fmt),
+                kind="dataframe",
+                fmt=fmt,
+                source=source,
+                metadata=_dataframe_metadata(value),
+            )
+        return
+    file_name = f"{safe}.json"
+    add_record(
+        file_name=file_name,
+        path=_write_json(target(file_name, "json"), value),
+        kind="json",
+        fmt="json",
+        source=source,
+        metadata=_object_metadata(value),
+    )
+
+
+def _looks_like_anatomy_pipeline_result(value: Any) -> bool:
+    return all(
+        hasattr(value, attr)
+        for attr in (
+            "explanations",
+            "variable_importance",
+            "performance_values",
+            "to_tables",
+        )
+    )
+
+
+def _looks_like_dual_interpretation_result(value: Any) -> bool:
+    schema = getattr(value, "metadata_schema", None)
+    if isinstance(schema, Mapping) and schema.get("kind") == "dual_interpretation_result":
+        return hasattr(value, "to_tables") and hasattr(value, "weights")
+    return all(
+        hasattr(value, attr)
+        for attr in (
+            "weights",
+            "to_tables",
+            "to_dict",
+        )
+    )
+
+
 def _json_ready(value: Any) -> Any:
     if value is None or value is pd.NaT or value is pd.NA:
         return None
@@ -1067,20 +1366,29 @@ def _json_ready(value: Any) -> Any:
         return [_json_ready(item) for item in value]
     if isinstance(value, list):
         return [_json_ready(item) for item in value]
+    if hasattr(value, "to_dict") and not isinstance(value, type):
+        try:
+            return _json_ready(value.to_dict())
+        except TypeError:
+            pass
     return value
 
 
 __all__ = [
     "ArtifactManifest",
     "ArtifactRecord",
+    "ArtifactLayout",
     "CompressionFormat",
     "ExportFormat",
     "ManifestFormat",
     "OutputBundle",
     "artifact_index",
+    "anatomy_tables",
     "bundle_outputs",
     "collect_provenance",
+    "forecast_shapley_tables",
     "forecast_table",
+    "interpretation_outputs",
     "interpretation_table",
     "metadata_table",
     "metric_table",
