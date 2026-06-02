@@ -13,7 +13,10 @@ def _aligned_frame(*series: Any, names: Sequence[str] | None = None) -> pd.DataF
     labels = list(names or [f"value_{idx}" for idx in range(len(series))])
     if len(labels) != len(series):
         raise ValueError("names length must match series length")
-    frames = [pd.Series(value).astype(float).rename(name) for value, name in zip(series, labels)]
+    frames = [
+        pd.Series(value).astype(float).rename(name)
+        for value, name in zip(series, labels)
+    ]
     joined = pd.concat(frames, axis=1).dropna()
     if joined.empty:
         raise ValueError("metric inputs have no aligned non-missing observations")
@@ -25,17 +28,23 @@ def _aligned_values(y_true: Any, y_pred: Any) -> tuple[np.ndarray, np.ndarray]:
     return joined["truth"].to_numpy(dtype=float), joined["pred"].to_numpy(dtype=float)
 
 
-def _aligned_relative_frame(y_true: Any, y_model: Any, y_benchmark: Any) -> pd.DataFrame:
+def _aligned_relative_frame(
+    y_true: Any, y_model: Any, y_benchmark: Any
+) -> pd.DataFrame:
     truth = pd.Series(y_true).astype(float).rename("truth")
     model = pd.Series(y_model).astype(float).rename("model")
     benchmark = pd.Series(y_benchmark).astype(float).rename("benchmark")
     candidate = pd.concat([truth, model], axis=1).dropna()
     if candidate.empty:
-        raise ValueError("relative metric inputs have no candidate non-missing observations")
+        raise ValueError(
+            "relative metric inputs have no candidate non-missing observations"
+        )
     _validate_relative_metric_support(candidate["truth"], benchmark.dropna())
     joined = pd.concat([candidate, benchmark], axis=1).dropna()
     if joined.empty:
-        raise ValueError("relative metric inputs have no aligned non-missing observations")
+        raise ValueError(
+            "relative metric inputs have no aligned non-missing observations"
+        )
     return joined
 
 
@@ -172,9 +181,13 @@ def pinball_loss(y_true: Any, y_quantile: Any, *, quantile: float) -> float:
 def gaussian_nll(y_true: Any, y_pred: Any, variance: Any) -> float:
     """Gaussian negative log likelihood using supplied predictive variances."""
 
-    joined = _aligned_frame(y_true, y_pred, variance, names=("truth", "pred", "variance"))
+    joined = _aligned_frame(
+        y_true, y_pred, variance, names=("truth", "pred", "variance")
+    )
     values = _positive_values(joined["variance"], label="variance")
-    errors = joined["truth"].to_numpy(dtype=float) - joined["pred"].to_numpy(dtype=float)
+    errors = joined["truth"].to_numpy(dtype=float) - joined["pred"].to_numpy(
+        dtype=float
+    )
     return float(np.mean(0.5 * (np.log(2.0 * np.pi * values) + errors**2 / values)))
 
 
@@ -195,10 +208,18 @@ def crps(y_true: Any, y_pred: Any, variance: Any) -> float:
 
     from scipy import stats as _stats
 
-    joined = _aligned_frame(y_true, y_pred, variance, names=("truth", "pred", "variance"))
+    joined = _aligned_frame(
+        y_true, y_pred, variance, names=("truth", "pred", "variance")
+    )
     sigma = np.sqrt(_positive_values(joined["variance"], label="variance"))
-    z = (joined["truth"].to_numpy(dtype=float) - joined["pred"].to_numpy(dtype=float)) / sigma
-    score = sigma * (z * (2.0 * _stats.norm.cdf(z) - 1.0) + 2.0 * _stats.norm.pdf(z) - 1.0 / np.sqrt(np.pi))
+    z = (
+        joined["truth"].to_numpy(dtype=float) - joined["pred"].to_numpy(dtype=float)
+    ) / sigma
+    score = sigma * (
+        z * (2.0 * _stats.norm.cdf(z) - 1.0)
+        + 2.0 * _stats.norm.pdf(z)
+        - 1.0 / np.sqrt(np.pi)
+    )
     return float(np.mean(score))
 
 
@@ -219,7 +240,9 @@ def coverage_rate(y_true: Any, lower: Any, upper: Any) -> float:
 
     joined = _aligned_frame(y_true, lower, upper, names=("truth", "lower", "upper"))
     _validate_interval_bounds(joined["lower"], joined["upper"])
-    covered = (joined["truth"] >= joined["lower"]) & (joined["truth"] <= joined["upper"])
+    covered = (joined["truth"] >= joined["lower"]) & (
+        joined["truth"] <= joined["upper"]
+    )
     return float(covered.mean())
 
 
@@ -231,7 +254,9 @@ def interval_width(lower: Any, upper: Any) -> float:
     return float((joined["upper"] - joined["lower"]).mean())
 
 
-def interval_score(y_true: Any, lower: Any, upper: Any, *, alpha: float = 0.05) -> float:
+def interval_score(
+    y_true: Any, lower: Any, upper: Any, *, alpha: float = 0.05
+) -> float:
     """Winkler interval score for a nominal ``1 - alpha`` interval."""
 
     if not 0.0 < alpha < 1.0:
@@ -259,7 +284,9 @@ def success_ratio(y_true: Any, y_pred: Any, y_prev: Any) -> float:
     return float(np.mean(np.sign(pred - prev) == np.sign(truth - prev)))
 
 
-def pesaran_timmermann_metric(y_true: Any, y_pred: Any, *, threshold: float = 0.0) -> float:
+def pesaran_timmermann_metric(
+    y_true: Any, y_pred: Any, *, threshold: float = 0.0
+) -> float:
     """Pesaran-Timmermann directional accuracy statistic."""
 
     truth, pred = _aligned_values(y_true, y_pred)
@@ -284,6 +311,438 @@ def pesaran_timmermann_metric(y_true: Any, y_pred: Any, *, threshold: float = 0.
     return float((success - p_star) / np.sqrt(denominator))
 
 
+def compute_point_loss(
+    y_true: Any,
+    y_pred: Any,
+    *,
+    loss: str = "squared_error",
+    variance: Any | None = None,
+    quantile: float | None = None,
+    eps: float = 1e-12,
+) -> pd.Series:
+    """Return observation-level forecast loss where lower is better."""
+
+    loss_name = _canonical_point_loss_name(loss, quantile=quantile)
+    if loss_name == "squared_error":
+        joined = _aligned_frame(y_true, y_pred, names=("truth", "pred"))
+        values = (joined["truth"] - joined["pred"]) ** 2
+    elif loss_name == "absolute_error":
+        joined = _aligned_frame(y_true, y_pred, names=("truth", "pred"))
+        values = (joined["truth"] - joined["pred"]).abs()
+    elif loss_name.startswith("pinball_loss"):
+        if quantile is None:
+            raise ValueError("quantile is required when loss='pinball_loss'")
+        q = float(quantile)
+        if not 0.0 < q < 1.0:
+            raise ValueError("quantile must be strictly between 0 and 1")
+        joined = _aligned_frame(y_true, y_pred, names=("truth", "pred"))
+        error = joined["truth"] - joined["pred"]
+        values = np.maximum(q * error, (q - 1.0) * error)
+    elif loss_name == "negative_log_score":
+        if variance is None:
+            raise ValueError("variance is required for negative_log_score")
+        joined = _aligned_frame(
+            y_true, y_pred, variance, names=("truth", "pred", "variance")
+        )
+        var = pd.Series(
+            _positive_values(joined["variance"], label="variance"), index=joined.index
+        )
+        errors = joined["truth"] - joined["pred"]
+        values = 0.5 * (np.log(2.0 * np.pi * var) + errors**2 / var)
+    elif loss_name == "qlike":
+        if eps <= 0:
+            raise ValueError("eps must be positive")
+        joined = _aligned_frame(y_true, y_pred, names=("truth", "variance"))
+        realized = pd.Series(
+            np.maximum(
+                _nonnegative_values(joined["truth"], label="realized variance"), eps
+            ),
+            index=joined.index,
+        )
+        forecast = pd.Series(
+            _positive_values(joined["variance"], label="forecast variance"),
+            index=joined.index,
+        )
+        values = np.log(forecast) + realized / forecast
+    else:  # pragma: no cover - guarded by _canonical_point_loss_name.
+        raise ValueError(f"unsupported point loss {loss!r}")
+    return pd.Series(values, index=joined.index, name=loss_name).astype(float)
+
+
+def forecast_returns(
+    forecasts: Any,
+    *,
+    benchmark: str,
+    group_cols: Sequence[str] = ("target", "horizon"),
+    loss: str = "squared_error",
+    model_col: str = "model",
+    actual: str = "actual",
+    prediction: str = "prediction",
+    variance_prediction: str = "variance_prediction",
+    support_cols: Sequence[str] | None = None,
+    include_benchmark: bool = False,
+    quantile: float | None = None,
+) -> pd.DataFrame:
+    """Construct date-level forecast-return rows relative to a benchmark model."""
+
+    frame = _forecast_frame(forecasts)
+    _validate_table_columns(
+        frame, (model_col, actual, prediction), label="forecast table"
+    )
+    groups = [
+        column
+        for column in (str(value) for value in group_cols)
+        if column in frame.columns
+    ]
+    requested_missing = [
+        str(value) for value in group_cols if str(value) not in frame.columns
+    ]
+    if requested_missing:
+        raise ValueError(
+            f"group_cols are not present in the forecast table: {requested_missing}"
+        )
+    supports = _risk_return_support_columns(frame, groups, support_cols=support_cols)
+    loss_name = _canonical_point_loss_name(loss, quantile=quantile)
+    work = frame.copy()
+    work["_macroforecast_loss"] = _point_loss_from_frame(
+        work,
+        loss=loss,
+        actual=actual,
+        prediction=prediction,
+        variance_prediction=variance_prediction,
+        quantile=quantile,
+    )
+    work = work.dropna(subset=[model_col, "_macroforecast_loss"]).copy()
+    benchmark_rows = work.loc[work[model_col].astype(str) == str(benchmark)].copy()
+    if benchmark_rows.empty:
+        raise ValueError(f"benchmark {benchmark!r} is not present in forecast rows")
+    candidate_rows = (
+        work.copy()
+        if include_benchmark
+        else work.loc[work[model_col].astype(str) != str(benchmark)].copy()
+    )
+    if candidate_rows.empty:
+        return _risk_return_frame(
+            [], kind="forecast_returns", metadata={"benchmark": benchmark}
+        )
+
+    _validate_unique_support(
+        benchmark_rows, supports, model_col=None, label="benchmark"
+    )
+    _validate_unique_support(
+        candidate_rows, [*supports, model_col], model_col=None, label="candidate"
+    )
+    benchmark_indexed = benchmark_rows.set_index(supports)
+    rows: list[pd.DataFrame] = []
+    candidate_group_keys = [*groups, model_col]
+    iterator = (
+        candidate_rows.groupby(candidate_group_keys, dropna=False, sort=True)
+        if candidate_group_keys
+        else [((), candidate_rows)]
+    )
+    for key, group in iterator:
+        candidate = group.set_index(supports)
+        group_benchmark = _matching_benchmark_rows(
+            benchmark_indexed,
+            group,
+            supports=supports,
+            groups=groups,
+        )
+        _validate_relative_metric_support(
+            candidate["_macroforecast_loss"], group_benchmark["_macroforecast_loss"]
+        )
+        candidate = candidate.loc[group_benchmark.index].copy()
+        if not np.allclose(
+            candidate[actual].to_numpy(dtype=float),
+            group_benchmark[actual].to_numpy(dtype=float),
+            rtol=1e-12,
+            atol=1e-12,
+        ):
+            raise ValueError(
+                "benchmark actual values must match candidate actual values"
+            )
+        out = candidate.reset_index()
+        out["model_loss"] = candidate["_macroforecast_loss"].to_numpy(dtype=float)
+        out["benchmark_loss"] = group_benchmark["_macroforecast_loss"].to_numpy(
+            dtype=float
+        )
+        out["forecast_return"] = out["benchmark_loss"] - out["model_loss"]
+        out["return_sign"] = np.select(
+            [out["forecast_return"] > 0.0, out["forecast_return"] < 0.0],
+            ["positive", "negative"],
+            default="zero",
+        )
+        out["benchmark_id"] = str(benchmark)
+        out["model_id"] = out[model_col].astype(str)
+        out["loss_name"] = loss_name
+        rows.append(out)
+    result = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
+    result = _attach_return_path_columns(
+        result,
+        by=[*groups, model_col, "benchmark_id", "loss_name"],
+    )
+    columns = [
+        *[column for column in supports if column in result.columns],
+        model_col,
+        "model_id",
+        "benchmark_id",
+        "loss_name",
+        "model_loss",
+        "benchmark_loss",
+        "forecast_return",
+        "return_sign",
+        "cumulative_return",
+        "drawdown",
+    ]
+    columns.extend(
+        column
+        for column in (actual, prediction)
+        if column in result.columns and column not in columns
+    )
+    result = result.loc[:, [column for column in columns if column in result.columns]]
+    result.attrs["macroforecast_metadata_schema"] = {
+        "kind": "forecast_returns",
+        "version": 1,
+        "benchmark": str(benchmark),
+        "group_cols": groups,
+        "support_cols": supports,
+        "loss_name": loss_name,
+        "model_col": str(model_col),
+        "include_benchmark": bool(include_benchmark),
+    }
+    return result.reset_index(drop=True)
+
+
+def sharpe_ratio(returns: Any, *, hac_lags: int | str | None = None) -> float:
+    """Return mean forecast return divided by naive or HAC return volatility."""
+
+    values = _return_values(returns)
+    if values.size == 0:
+        return float("nan")
+    mean = float(np.mean(values))
+    denominator = (
+        _hac_long_run_sd(values, hac_lags=hac_lags)
+        if hac_lags is not None
+        else _sample_sd(values)
+    )
+    return _safe_ratio(mean, denominator)
+
+
+def sortino_ratio(returns: Any, *, target_return: float = 0.0) -> float:
+    """Return mean excess forecast return divided by downside semideviation."""
+
+    values = _return_values(returns) - float(target_return)
+    if values.size == 0:
+        return float("nan")
+    mean = float(np.mean(values))
+    downside = np.minimum(values, 0.0)
+    denominator = float(np.sqrt(np.mean(downside**2)))
+    return _safe_ratio(mean, denominator)
+
+
+def omega_ratio(returns: Any, *, threshold: float = 0.0) -> float:
+    """Return total upside divided by total downside around a threshold."""
+
+    values = _return_values(returns) - float(threshold)
+    if values.size == 0:
+        return float("nan")
+    upside = float(np.sum(np.maximum(values, 0.0)))
+    downside = float(np.sum(np.maximum(-values, 0.0)))
+    return _safe_ratio(upside, downside)
+
+
+def drawdown_series(returns: Any) -> pd.Series:
+    """Return cumulative forecast return minus its running peak."""
+
+    series = pd.Series(returns, dtype=float).dropna()
+    if series.empty:
+        return pd.Series(dtype=float, name="drawdown")
+    cumulative = series.cumsum()
+    drawdown = cumulative - cumulative.cummax()
+    return drawdown.rename("drawdown")
+
+
+def max_drawdown(returns: Any) -> float:
+    """Return the most negative drawdown of a forecast-return path."""
+
+    drawdown = drawdown_series(returns)
+    return float(drawdown.min()) if not drawdown.empty else float("nan")
+
+
+def risk_adjusted_forecast_metrics(
+    returns: Any,
+    *,
+    group_cols: Sequence[str] | None = None,
+    return_col: str = "forecast_return",
+    hac_lags: int | str | None = "auto",
+    target_return: float = 0.0,
+    omega_threshold: float = 0.0,
+) -> pd.DataFrame:
+    """Aggregate forecast-return paths into risk-adjusted performance metrics."""
+
+    frame = pd.DataFrame(returns).copy()
+    if return_col not in frame.columns:
+        raise ValueError(f"return_col {return_col!r} is not present")
+    groups = (
+        _default_risk_return_groups(frame)
+        if group_cols is None
+        else _validate_group_columns(frame, group_cols, label="group_cols")
+    )
+    sorted_frame = _sort_return_frame(frame)
+    iterator = (
+        sorted_frame.groupby(groups, dropna=False, sort=True)
+        if groups
+        else [((), sorted_frame)]
+    )
+    rows: list[dict[str, Any]] = []
+    for key, group in iterator:
+        row = _group_row(key, groups)
+        values = (
+            pd.to_numeric(group[return_col], errors="coerce")
+            .dropna()
+            .to_numpy(dtype=float)
+        )
+        row.update(
+            _risk_adjusted_row(
+                values,
+                hac_lags=hac_lags,
+                target_return=target_return,
+                omega_threshold=omega_threshold,
+            )
+        )
+        rows.append(row)
+    out = _risk_return_frame(
+        rows,
+        kind="risk_adjusted_forecast_metrics",
+        metadata={
+            "group_cols": groups,
+            "return_col": str(return_col),
+            "hac_lags": hac_lags,
+            "target_return": float(target_return),
+            "omega_threshold": float(omega_threshold),
+        },
+    )
+    return out
+
+
+def edge_ratio(
+    forecasts: Any,
+    *,
+    group_cols: Sequence[str] = ("target", "horizon"),
+    loss: str = "squared_error",
+    model_col: str = "model",
+    actual: str = "actual",
+    prediction: str = "prediction",
+    variance_prediction: str = "variance_prediction",
+    support_cols: Sequence[str] | None = None,
+    quantile: float | None = None,
+) -> pd.DataFrame:
+    """Return frontier-based Edge Ratio by model and group."""
+
+    frame = _forecast_frame(forecasts)
+    _validate_table_columns(
+        frame, (model_col, actual, prediction), label="forecast table"
+    )
+    groups = [
+        column
+        for column in (str(value) for value in group_cols)
+        if column in frame.columns
+    ]
+    requested_missing = [
+        str(value) for value in group_cols if str(value) not in frame.columns
+    ]
+    if requested_missing:
+        raise ValueError(
+            f"group_cols are not present in the forecast table: {requested_missing}"
+        )
+    supports = _risk_return_support_columns(frame, groups, support_cols=support_cols)
+    work = frame.copy()
+    work["_macroforecast_loss"] = _point_loss_from_frame(
+        work,
+        loss=loss,
+        actual=actual,
+        prediction=prediction,
+        variance_prediction=variance_prediction,
+        quantile=quantile,
+    )
+    work = work.dropna(subset=[model_col, "_macroforecast_loss"]).copy()
+    if work.empty:
+        return _risk_return_frame([], kind="edge_ratio", metadata={"loss_name": loss})
+    _validate_unique_support(
+        work, [*supports, model_col], model_col=None, label="edge-ratio"
+    )
+    rows: list[dict[str, Any]] = []
+    support_iterator = work.groupby(supports, dropna=False, sort=True)
+    for _support_key, group in support_iterator:
+        models = group[model_col].astype(str).to_numpy()
+        losses = group["_macroforecast_loss"].to_numpy(dtype=float)
+        if len(models) < 2:
+            continue
+        for idx, row in group.reset_index(drop=True).iterrows():
+            other_losses = np.delete(losses, idx)
+            other_min = float(np.min(other_losses))
+            edge = other_min - float(row["_macroforecast_loss"])
+            out_row = {
+                column: row[column]
+                for column in [*supports, model_col]
+                if column in row.index
+            }
+            out_row.update(
+                {
+                    "model_id": str(row[model_col]),
+                    "loss_name": _canonical_point_loss_name(loss, quantile=quantile),
+                    "model_loss": float(row["_macroforecast_loss"]),
+                    "alternative_frontier_loss": other_min,
+                    "edge": edge,
+                    "edge_sign": (
+                        "positive" if edge > 0 else "negative" if edge < 0 else "zero"
+                    ),
+                    "n_models_at_date": int(len(models)),
+                }
+            )
+            rows.append(out_row)
+    edge_path = pd.DataFrame(rows)
+    if edge_path.empty:
+        return _risk_return_frame([], kind="edge_ratio", metadata={"loss_name": loss})
+    agg_groups = [*groups, model_col, "model_id", "loss_name"]
+    out_rows: list[dict[str, Any]] = []
+    for key, group in edge_path.groupby(agg_groups, dropna=False, sort=True):
+        row = _group_row(key, agg_groups)
+        values = group["edge"].to_numpy(dtype=float)
+        wins = float(np.sum(np.maximum(values, 0.0)))
+        regrets = float(np.sum(np.maximum(-values, 0.0)))
+        n_models = int(group["n_models_at_date"].max())
+        row.update(
+            {
+                "n_obs": int(len(values)),
+                "n_models": n_models,
+                "edge_wins": wins,
+                "edge_regrets": regrets,
+                "edge_ratio": _safe_ratio(
+                    wins, regrets, multiplier=max(n_models - 1, 1)
+                ),
+                "mean_edge": float(np.mean(values)) if len(values) else float("nan"),
+                "frontier_win_share": (
+                    float(np.mean(values > 0.0)) if len(values) else float("nan")
+                ),
+            }
+        )
+        out_rows.append(row)
+    result = _risk_return_frame(
+        out_rows,
+        kind="edge_ratio",
+        metadata={
+            "group_cols": groups,
+            "support_cols": supports,
+            "loss_name": _canonical_point_loss_name(loss, quantile=quantile),
+            "model_col": str(model_col),
+            "sign_convention": "alternative_frontier_loss_minus_model_loss",
+        },
+    )
+    result.attrs["macroforecast_edge_path"] = edge_path
+    return result
+
+
 def evaluate_forecasts(
     forecasts: Any,
     *,
@@ -306,12 +765,16 @@ def evaluate_forecasts(
     _validate_table_columns(frame, (actual, prediction), label="forecast table")
     group_keys = _validate_group_columns(frame, by, label="by")
     resolved_metrics = _resolve_metrics(metrics)
-    requested_metric_names = [metric_name for _metric_fn, metric_name in resolved_metrics]
+    requested_metric_names = [
+        metric_name for _metric_fn, metric_name in resolved_metrics
+    ]
     relative_metrics_requested = any(
         metric_name in _RELATIVE_METRIC_NAMES for metric_name in requested_metric_names
     )
     if relative_metrics_requested and benchmark_model is None:
-        raise ValueError("benchmark_model is required when relative metrics are requested")
+        raise ValueError(
+            "benchmark_model is required when relative metrics are requested"
+        )
     if relative_metrics_requested and model_column not in group_keys:
         raise ValueError(
             f"by must include model_column {model_column!r} when relative metrics are requested"
@@ -370,11 +833,15 @@ def evaluate_forecasts(
                         benchmark[actual],
                         actual=actual,
                     )
-                    row[metric_name] = float(metric_fn(truth, pred, benchmark[prediction]))
+                    row[metric_name] = float(
+                        metric_fn(truth, pred, benchmark[prediction])
+                    )
                     continue
                 if metric_name in _VARIANCE_METRIC_NAMES:
                     if variance_prediction in group.columns:
-                        variance_valid = group[[actual, prediction, variance_prediction]].dropna()
+                        variance_valid = group[
+                            [actual, prediction, variance_prediction]
+                        ].dropna()
                         if len(variance_valid) > 0:
                             row[metric_name] = float(
                                 metric_fn(
@@ -386,7 +853,9 @@ def evaluate_forecasts(
                     continue
                 if metric_name in _VOLATILITY_METRIC_NAMES:
                     if variance_prediction in group.columns:
-                        variance_valid = group[[qlike_actual, variance_prediction]].dropna()
+                        variance_valid = group[
+                            [qlike_actual, variance_prediction]
+                        ].dropna()
                         if len(variance_valid) > 0:
                             row[metric_name] = float(
                                 metric_fn(
@@ -485,7 +954,9 @@ def rank_forecasts(
     order = _metric_ascending(metric) if ascending is None else bool(ascending)
     group_keys = _validate_group_columns(frame, by, label="by")
     if group_keys:
-        frame[rank_column] = frame.groupby(group_keys)[metric].rank(method="min", ascending=order)
+        frame[rank_column] = frame.groupby(group_keys)[metric].rank(
+            method="min", ascending=order
+        )
         ranked = frame.sort_values([*group_keys, rank_column]).reset_index(drop=True)
         ranked.attrs["macroforecast_metadata_schema"] = _rank_metadata_schema(
             metric=metric,
@@ -563,7 +1034,9 @@ def get_metric(metric: MetricLike) -> Callable[..., float]:
     return _METRICS[key]
 
 
-def _resolve_metrics(metrics: Sequence[str | MetricLike]) -> list[tuple[Callable[..., float], str]]:
+def _resolve_metrics(
+    metrics: Sequence[str | MetricLike],
+) -> list[tuple[Callable[..., float], str]]:
     resolved = []
     for metric in metrics:
         metric_fn = get_metric(metric)
@@ -613,7 +1086,9 @@ def _rank_metadata_schema(
     return out
 
 
-def _validate_table_columns(frame: pd.DataFrame, columns: Sequence[str], *, label: str) -> tuple[str, ...]:
+def _validate_table_columns(
+    frame: pd.DataFrame, columns: Sequence[str], *, label: str
+) -> tuple[str, ...]:
     values = tuple(str(column) for column in columns)
     missing = [column for column in values if column not in frame.columns]
     if missing:
@@ -621,7 +1096,9 @@ def _validate_table_columns(frame: pd.DataFrame, columns: Sequence[str], *, labe
     return values
 
 
-def _validate_group_columns(frame: pd.DataFrame, by: Sequence[str], *, label: str) -> list[str]:
+def _validate_group_columns(
+    frame: pd.DataFrame, by: Sequence[str], *, label: str
+) -> list[str]:
     values = [str(column) for column in by]
     missing = [column for column in values if column not in frame.columns]
     if missing:
@@ -655,7 +1132,9 @@ def _benchmark_lookup(
         raise ValueError(f"model_column {model_column!r} is not present")
     bench = frame.loc[frame[model_column] == benchmark_model]
     if bench.empty:
-        raise ValueError(f"benchmark_model {benchmark_model!r} is not present in forecast rows")
+        raise ValueError(
+            f"benchmark_model {benchmark_model!r} is not present in forecast rows"
+        )
     _validate_table_columns(bench, (actual, prediction), label="benchmark rows")
     keys = [key for key in by if key != model_column]
     if not keys:
@@ -699,7 +1178,9 @@ def _series_for_relative_metric(
     if support_columns:
         indexed = valid.set_index(list(support_columns))
         return indexed[actual], indexed[prediction]
-    return valid[actual].reset_index(drop=True), valid[prediction].reset_index(drop=True)
+    return valid[actual].reset_index(drop=True), valid[prediction].reset_index(
+        drop=True
+    )
 
 
 def _support_indexed_frame(
@@ -712,12 +1193,18 @@ def _support_indexed_frame(
     columns = [actual, prediction]
     if support_columns:
         columns = [*support_columns, actual, prediction]
-        return frame[columns].dropna().set_index(list(support_columns))[[actual, prediction]]
+        return (
+            frame[columns]
+            .dropna()
+            .set_index(list(support_columns))[[actual, prediction]]
+        )
     return frame[columns].dropna().reset_index(drop=True)
 
 
 def _relative_support_columns(frame: pd.DataFrame) -> list[str]:
-    identity = [column for column in ("date", "origin", "origin_pos") if column in frame.columns]
+    identity = [
+        column for column in ("date", "origin", "origin_pos") if column in frame.columns
+    ]
     if not identity:
         return []
     return [
@@ -735,11 +1222,17 @@ def _validate_relative_table_identity(frame: pd.DataFrame) -> None:
         )
 
 
-def _validate_relative_metric_support(candidate: pd.Series, benchmark: pd.Series) -> None:
+def _validate_relative_metric_support(
+    candidate: pd.Series, benchmark: pd.Series
+) -> None:
     if not candidate.index.is_unique:
-        raise ValueError("candidate forecast support is not unique for relative metric evaluation")
+        raise ValueError(
+            "candidate forecast support is not unique for relative metric evaluation"
+        )
     if not benchmark.index.is_unique:
-        raise ValueError("benchmark forecast support is not unique for relative metric evaluation")
+        raise ValueError(
+            "benchmark forecast support is not unique for relative metric evaluation"
+        )
     missing = candidate.index.difference(benchmark.index)
     extra = benchmark.index.difference(candidate.index)
     if len(missing) > 0 or len(extra) > 0:
@@ -749,7 +1242,9 @@ def _validate_relative_metric_support(candidate: pd.Series, benchmark: pd.Series
         )
 
 
-def _validate_benchmark_actuals(candidate: pd.Series, benchmark: pd.Series, *, actual: str) -> None:
+def _validate_benchmark_actuals(
+    candidate: pd.Series, benchmark: pd.Series, *, actual: str
+) -> None:
     benchmark_aligned = benchmark.loc[candidate.index]
     candidate_values = pd.Series(candidate).to_numpy(dtype=float)
     benchmark_values = pd.Series(benchmark_aligned).to_numpy(dtype=float)
@@ -775,7 +1270,10 @@ def _validate_requested_metric_columns(
             f"variance_prediction column {variance_prediction!r} is required for requested "
             f"variance/density metric(s): {missing}"
         )
-    if requested & _VOLATILITY_METRIC_NAMES and variance_prediction not in frame.columns:
+    if (
+        requested & _VOLATILITY_METRIC_NAMES
+        and variance_prediction not in frame.columns
+    ):
         missing = sorted(requested & _VOLATILITY_METRIC_NAMES)
         raise ValueError(
             f"variance_prediction column {variance_prediction!r} is required for requested "
@@ -836,7 +1334,9 @@ def _validate_interval_bounds(lower: Any, upper: Any) -> None:
     if not np.all(np.isfinite(lo)) or not np.all(np.isfinite(hi)):
         raise ValueError("interval bounds must contain only finite values")
     if np.any(hi < lo):
-        raise ValueError("interval upper bound must be greater than or equal to lower bound")
+        raise ValueError(
+            "interval upper bound must be greater than or equal to lower bound"
+        )
 
 
 def _metric_ascending(metric: str) -> bool:
@@ -846,6 +1346,17 @@ def _metric_ascending(metric: str) -> bool:
         "mse_reduction",
         "success_ratio",
         "pesaran_timmermann_metric",
+        "mean_return",
+        "sharpe",
+        "hac_sharpe",
+        "sortino",
+        "omega",
+        "max_drawdown",
+        "final_cumulative_return",
+        "win_rate",
+        "edge_ratio",
+        "mean_edge",
+        "frontier_win_share",
     }
     lower_is_better = {
         "mse",
@@ -921,7 +1432,9 @@ def _quantile_evaluation(
                     "levels and finite numeric predictions"
                 ) from None
             if not 0.0 < q < 1.0:
-                raise ValueError("quantile prediction levels must be strictly between 0 and 1")
+                raise ValueError(
+                    "quantile prediction levels must be strictly between 0 and 1"
+                )
             if not np.isfinite(pred):
                 raise ValueError("quantile prediction values must be finite")
             rows.append(
@@ -948,7 +1461,10 @@ def _quantile_evaluation(
 def _interval_metrics(table: pd.DataFrame) -> dict[str, Any]:
     out: dict[str, Any] = {}
     pivot = table.pivot_table(
-        index="row_id", columns="level", values=["actual", "prediction"], aggfunc="first"
+        index="row_id",
+        columns="level",
+        values=["actual", "prediction"],
+        aggfunc="first",
     )
     levels = sorted(float(level) for level in table["level"].unique())
     for lower in levels:
@@ -962,7 +1478,9 @@ def _interval_metrics(table: pd.DataFrame) -> dict[str, Any]:
         except KeyError:
             continue
         label = f"{_level_label(lower)}_{_level_label(upper)}"
-        out[f"coverage_{label}"] = coverage_rate(actual_values, lower_values, upper_values)
+        out[f"coverage_{label}"] = coverage_rate(
+            actual_values, lower_values, upper_values
+        )
         out[f"interval_width_{label}"] = interval_width(lower_values, upper_values)
         out[f"interval_score_{label}"] = interval_score(
             actual_values,
@@ -977,12 +1495,310 @@ def _level_label(level: float) -> str:
     return f"q{level:g}".replace(".", "_")
 
 
+def _canonical_point_loss_name(loss: str, *, quantile: float | None = None) -> str:
+    key = str(loss).lower()
+    aliases = {
+        "se": "squared_error",
+        "squared": "squared_error",
+        "squared_error": "squared_error",
+        "mse": "squared_error",
+        "msfe": "squared_error",
+        "ae": "absolute_error",
+        "absolute": "absolute_error",
+        "absolute_error": "absolute_error",
+        "mae": "absolute_error",
+        "pinball": "pinball_loss",
+        "pinball_loss": "pinball_loss",
+        "negative_log_score": "negative_log_score",
+        "log_score": "negative_log_score",
+        "gaussian_nll": "negative_log_score",
+        "nll": "negative_log_score",
+        "qlike": "qlike",
+    }
+    if key not in aliases:
+        allowed = ", ".join(sorted(aliases))
+        raise ValueError(f"Unknown point loss {loss!r}. Available losses: {allowed}.")
+    canonical = aliases[key]
+    if canonical == "pinball_loss" and quantile is not None:
+        return f"pinball_loss_{_level_label(float(quantile))}"
+    return canonical
+
+
+def _point_loss_from_frame(
+    frame: pd.DataFrame,
+    *,
+    loss: str,
+    actual: str,
+    prediction: str,
+    variance_prediction: str,
+    quantile: float | None,
+) -> pd.Series:
+    canonical = _canonical_point_loss_name(loss, quantile=quantile)
+    if canonical == "negative_log_score":
+        _validate_table_columns(frame, (variance_prediction,), label="forecast table")
+        values = compute_point_loss(
+            frame[actual],
+            frame[prediction],
+            loss=loss,
+            variance=frame[variance_prediction],
+            quantile=quantile,
+        )
+    elif canonical == "qlike":
+        _validate_table_columns(frame, (variance_prediction,), label="forecast table")
+        values = compute_point_loss(
+            frame[actual],
+            frame[variance_prediction],
+            loss=loss,
+            quantile=quantile,
+        )
+    else:
+        values = compute_point_loss(
+            frame[actual],
+            frame[prediction],
+            loss=loss,
+            quantile=quantile,
+        )
+    return values.reindex(frame.index)
+
+
+def _risk_return_support_columns(
+    frame: pd.DataFrame,
+    groups: Sequence[str],
+    *,
+    support_cols: Sequence[str] | None,
+) -> list[str]:
+    if support_cols is not None:
+        supports = [str(column) for column in support_cols]
+        missing = [column for column in supports if column not in frame.columns]
+        if missing:
+            raise ValueError(
+                f"support_cols are not present in the forecast table: {missing}"
+            )
+        return list(dict.fromkeys([*groups, *supports]))
+    identity = [
+        column for column in ("date", "origin", "origin_pos") if column in frame.columns
+    ]
+    if not identity:
+        raise ValueError(
+            "forecast returns require at least one support column: "
+            "'date', 'origin', or 'origin_pos'"
+        )
+    return list(dict.fromkeys([*groups, *identity]))
+
+
+def _validate_unique_support(
+    frame: pd.DataFrame,
+    columns: Sequence[str],
+    *,
+    model_col: str | None,
+    label: str,
+) -> None:
+    keys = list(columns)
+    if model_col is not None and model_col not in keys:
+        keys.append(model_col)
+    duplicates = frame.duplicated(keys, keep=False)
+    if duplicates.any():
+        example = frame.loc[duplicates, keys].head().to_dict(orient="records")
+        raise ValueError(f"{label} rows are not unique on support columns: {example}")
+
+
+def _matching_benchmark_rows(
+    benchmark_indexed: pd.DataFrame,
+    group: pd.DataFrame,
+    *,
+    supports: Sequence[str],
+    groups: Sequence[str],
+) -> pd.DataFrame:
+    benchmark = benchmark_indexed.reset_index()
+    if groups:
+        first = group.iloc[0]
+        mask = pd.Series(True, index=benchmark.index)
+        for column in groups:
+            mask &= benchmark[column] == first[column]
+        benchmark = benchmark.loc[mask].copy()
+    if benchmark.empty:
+        key = {column: group.iloc[0][column] for column in groups}
+        raise ValueError(f"benchmark has no matching support for group {key}")
+    return benchmark.set_index(list(supports))
+
+
+def _attach_return_path_columns(
+    frame: pd.DataFrame,
+    *,
+    by: Sequence[str],
+) -> pd.DataFrame:
+    if frame.empty:
+        return frame
+    out = _sort_return_frame(frame)
+    group_keys = [column for column in by if column in out.columns]
+    iterator = (
+        out.groupby(group_keys, dropna=False, sort=False) if group_keys else [((), out)]
+    )
+    parts: list[pd.DataFrame] = []
+    for _key, group in iterator:
+        part = group.copy()
+        part["cumulative_return"] = part["forecast_return"].astype(float).cumsum()
+        part["drawdown"] = (
+            part["cumulative_return"] - part["cumulative_return"].cummax()
+        )
+        parts.append(part)
+    return pd.concat(parts, ignore_index=True)
+
+
+def _sort_return_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    sort_cols = [
+        column
+        for column in ("date", "origin", "origin_pos", "horizon", "target", "model")
+        if column in frame.columns
+    ]
+    if not sort_cols:
+        return frame.reset_index(drop=True)
+    out = frame.copy()
+    if "date" in out.columns:
+        out["_macroforecast_sort_date"] = pd.to_datetime(out["date"], errors="coerce")
+        sort_cols = [
+            "_macroforecast_sort_date" if column == "date" else column
+            for column in sort_cols
+        ]
+    out = out.sort_values(sort_cols, kind="stable").drop(
+        columns=["_macroforecast_sort_date"], errors="ignore"
+    )
+    return out.reset_index(drop=True)
+
+
+def _return_values(returns: Any) -> np.ndarray:
+    values = pd.Series(returns, dtype=float).dropna().to_numpy(dtype=float)
+    return values[np.isfinite(values)]
+
+
+def _sample_sd(values: np.ndarray) -> float:
+    return float(np.std(values, ddof=1)) if values.size > 1 else float("nan")
+
+
+def _hac_long_run_sd(values: np.ndarray, *, hac_lags: int | str | None) -> float:
+    if values.size <= 1:
+        return float("nan")
+    lags = _resolve_hac_lags(values.size, hac_lags)
+    demeaned = values - float(np.mean(values))
+    gamma0 = float(np.mean(demeaned**2))
+    long_run_var = gamma0
+    for lag in range(1, min(lags, values.size - 1) + 1):
+        weight = 1.0 - lag / (lags + 1.0)
+        gamma = float(np.mean(demeaned[lag:] * demeaned[:-lag]))
+        long_run_var += 2.0 * weight * gamma
+    return float(np.sqrt(max(long_run_var, 0.0)))
+
+
+def _resolve_hac_lags(n_obs: int, hac_lags: int | str | None) -> int:
+    if hac_lags is None:
+        return 0
+    if hac_lags == "auto":
+        return max(1, int(np.floor(4.0 * (n_obs / 100.0) ** (2.0 / 9.0))))
+    value = int(hac_lags)
+    if value < 0:
+        raise ValueError("hac_lags must be nonnegative, 'auto', or None")
+    return value
+
+
+def _safe_ratio(
+    numerator: float, denominator: float, *, multiplier: float = 1.0
+) -> float:
+    if np.isnan(denominator):
+        return float("nan")
+    if abs(denominator) <= 1e-15:
+        if abs(numerator) <= 1e-15:
+            return float("nan")
+        return float(np.inf if numerator > 0 else -np.inf)
+    return float((numerator / denominator) * multiplier)
+
+
+def _risk_adjusted_row(
+    values: np.ndarray,
+    *,
+    hac_lags: int | str | None,
+    target_return: float,
+    omega_threshold: float,
+) -> dict[str, Any]:
+    n_obs = int(values.size)
+    if n_obs == 0:
+        return {
+            "n_obs": 0,
+            "mean_return": float("nan"),
+            "return_sd": float("nan"),
+            "hac_return_sd": float("nan"),
+            "sharpe": float("nan"),
+            "hac_sharpe": float("nan"),
+            "sortino": float("nan"),
+            "omega": float("nan"),
+            "max_drawdown": float("nan"),
+            "final_cumulative_return": float("nan"),
+            "win_rate": float("nan"),
+        }
+    mean = float(np.mean(values))
+    sd = _sample_sd(values)
+    hac_sd = (
+        _hac_long_run_sd(values, hac_lags=hac_lags)
+        if hac_lags is not None
+        else float("nan")
+    )
+    cumulative = np.cumsum(values)
+    return {
+        "n_obs": n_obs,
+        "mean_return": mean,
+        "return_sd": sd,
+        "hac_return_sd": hac_sd,
+        "sharpe": _safe_ratio(mean, sd),
+        "hac_sharpe": _safe_ratio(mean, hac_sd),
+        "sortino": sortino_ratio(values, target_return=target_return),
+        "omega": omega_ratio(values, threshold=omega_threshold),
+        "max_drawdown": max_drawdown(values),
+        "final_cumulative_return": float(cumulative[-1]),
+        "win_rate": float(np.mean(values > 0.0)),
+    }
+
+
+def _default_risk_return_groups(frame: pd.DataFrame) -> list[str]:
+    candidates = (
+        "model_id",
+        "benchmark_id",
+        "target",
+        "horizon",
+        "sample",
+        "sample_id",
+        "regime",
+        "loss_name",
+    )
+    groups = [column for column in candidates if column in frame.columns]
+    if not groups and "model" in frame.columns:
+        groups.append("model")
+    return groups
+
+
+def _risk_return_frame(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    kind: str,
+    metadata: Mapping[str, Any] | None = None,
+) -> pd.DataFrame:
+    frame = pd.DataFrame(rows)
+    frame.attrs["macroforecast_metadata_schema"] = {
+        "kind": str(kind),
+        "version": 1,
+        **dict(metadata or {}),
+    }
+    return frame
+
+
 __all__ = [
     "MetricLike",
     "bias",
+    "compute_point_loss",
     "coverage_rate",
     "crps",
+    "drawdown_series",
+    "edge_ratio",
     "evaluate_forecasts",
+    "forecast_returns",
     "gaussian_nll",
     "get_metric",
     "interval_score",
@@ -990,10 +1806,12 @@ __all__ = [
     "log_score",
     "mae",
     "mape",
+    "max_drawdown",
     "medae",
     "mse",
     "mse_reduction",
     "negative_log_score",
+    "omega_ratio",
     "pesaran_timmermann_metric",
     "pinball_loss",
     "qlike",
@@ -1001,8 +1819,11 @@ __all__ = [
     "rank_forecasts",
     "relative_mae",
     "relative_mse",
+    "risk_adjusted_forecast_metrics",
     "rmse",
+    "sharpe_ratio",
     "smape",
+    "sortino_ratio",
     "success_ratio",
     "theil_u1",
     "theil_u2",

@@ -212,7 +212,9 @@ def test_forecasting_runner_supports_recursive_policy_with_target_lags() -> None
     assert row["date"] == panel.index[origin_pos + 3]
     assert np.isclose(row["actual"], panel["y"].iloc[origin_pos + 3])
     assert result.metadata["run"]["future_feature_policy"] == "target_lags"
-    assert result.metadata["forecast_policy"]["uses_observed_future_predictors"] is False
+    assert (
+        result.metadata["forecast_policy"]["uses_observed_future_predictors"] is False
+    )
     assert "step_predictions" in row["params"]["recursive"]
 
 
@@ -276,7 +278,9 @@ def test_forecasting_runner_supports_recursive_multiple_horizons() -> None:
         assert row["date"] == panel.index[origin_pos + horizon]
 
 
-def test_forecasting_runner_recursive_works_with_preprocessing_and_feature_policy() -> None:
+def test_forecasting_runner_recursive_works_with_preprocessing_and_feature_policy() -> (
+    None
+):
     panel = _panel(72)
     pre = mf.preprocessing.preprocess_spec(
         transform="none",
@@ -312,8 +316,14 @@ def test_forecasting_runner_recursive_works_with_preprocessing_and_feature_polic
     assert not table.empty
     assert table["preprocessed"].all()
     assert set(table["forecast_policy"]) == {"recursive"}
-    assert result.metadata["stage_policies"]["preprocessing"]["scope"] == "origin_available"
-    assert result.metadata["stage_policies"]["feature_engineering"]["scope"] == "fit_window"
+    assert (
+        result.metadata["stage_policies"]["preprocessing"]["scope"]
+        == "origin_available"
+    )
+    assert (
+        result.metadata["stage_policies"]["feature_engineering"]["scope"]
+        == "fit_window"
+    )
     assert result.metadata["features"]["target_lags"] == [0, 1]
 
 
@@ -471,7 +481,11 @@ def test_forecasting_runner_supports_fit_aware_feature_steps() -> None:
         save_models=False,
     )
     table = result.to_frame()
-    stage = next(item for item in result.metadata["stages"] if item["stage"] == "feature_engineering")
+    stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
 
     assert not table.empty
     assert table["prediction"].notna().all()
@@ -508,11 +522,18 @@ def test_forecasting_runner_supports_target_aware_feature_steps() -> None:
         save_models=False,
     )
     table = result.to_frame()
-    stage = next(item for item in result.metadata["stages"] if item["stage"] == "feature_engineering")
+    stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
 
     assert not table.empty
     assert table["prediction"].notna().all()
-    assert result.metadata["features"]["feature_steps"][1]["method"] == "partial_least_squares"
+    assert (
+        result.metadata["features"]["feature_steps"][1]["method"]
+        == "partial_least_squares"
+    )
     assert stage["metadata"]["feature_steps"][1]["fit_state"]["target"] == "y_level_h1"
 
 
@@ -542,7 +563,11 @@ def test_forecasting_runner_supports_fit_aware_marx_step() -> None:
         save_models=False,
     )
     table = result.to_frame()
-    stage = next(item for item in result.metadata["stages"] if item["stage"] == "feature_engineering")
+    stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
 
     assert not table.empty
     assert table["prediction"].notna().all()
@@ -577,13 +602,25 @@ def test_forecasting_runner_supports_fit_aware_hamilton_step() -> None:
         save_models=False,
     )
     table = result.to_frame()
-    stage = next(item for item in result.metadata["stages"] if item["stage"] == "feature_engineering")
+    stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
 
     assert not table.empty
     assert table["prediction"].notna().all()
-    assert result.metadata["features"]["feature_steps"][0]["method"] == "hamilton_filter"
-    assert stage["metadata"]["feature_steps"][0]["fit_state"]["fit_policy"] == "fixed_fit_panel"
-    assert stage["metadata"]["feature_steps"][0]["fit_state"]["fit_rows_by_column"]["x1"] >= 12
+    assert (
+        result.metadata["features"]["feature_steps"][0]["method"] == "hamilton_filter"
+    )
+    assert (
+        stage["metadata"]["feature_steps"][0]["fit_state"]["fit_policy"]
+        == "fixed_fit_panel"
+    )
+    assert (
+        stage["metadata"]["feature_steps"][0]["fit_state"]["fit_rows_by_column"]["x1"]
+        >= 12
+    )
 
 
 def test_forecasting_runner_supports_fit_aware_projection_steps() -> None:
@@ -621,12 +658,21 @@ def test_forecasting_runner_supports_fit_aware_projection_steps() -> None:
         save_models=False,
     )
     table = result.to_frame()
-    stage = next(item for item in result.metadata["stages"] if item["stage"] == "feature_engineering")
+    stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
 
     assert not table.empty
     assert table["prediction"].notna().all()
-    assert result.metadata["features"]["feature_steps"][0]["method"] == "random_projection"
-    assert stage["metadata"]["feature_steps"][0]["fit_state"]["fit_policy"] == "fixed_fit_panel"
+    assert (
+        result.metadata["features"]["feature_steps"][0]["method"] == "random_projection"
+    )
+    assert (
+        stage["metadata"]["feature_steps"][0]["fit_state"]["fit_policy"]
+        == "fixed_fit_panel"
+    )
     assert stage["metadata"]["feature_steps"][1]["fit_state"]["kernel"] == "rbf"
 
 
@@ -659,13 +705,21 @@ def test_forecasting_runner_supports_deterministic_feature_steps() -> None:
         save_models=False,
     )
     table = result.to_frame()
-    stage = next(item for item in result.metadata["stages"] if item["stage"] == "feature_engineering")
+    stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
 
     assert not table.empty
     assert table["prediction"].notna().all()
     assert result.metadata["features"]["feature_steps"][0]["method"] == "transform"
     assert stage["metadata"]["feature_steps"][0]["fit_state"] is None
-    assert [item["method"] for item in stage["metadata"]["feature_steps"]] == ["transform", "lag", "interaction"]
+    assert [item["method"] for item in stage["metadata"]["feature_steps"]] == [
+        "transform",
+        "lag",
+        "interaction",
+    ]
 
 
 def test_forecasting_runner_smoke_preprocess_feature_chain_and_selection() -> None:
@@ -687,7 +741,9 @@ def test_forecasting_runner_smoke_preprocess_feature_chain_and_selection() -> No
                 columns=["x2"],
                 include=False,
             ),
-            mf.feature_engineering.scale_step(name="scaled", input="dx2", include=False),
+            mf.feature_engineering.scale_step(
+                name="scaled", input="dx2", include=False
+            ),
             mf.feature_engineering.pca_step(
                 name="pc",
                 input="scaled",
@@ -712,14 +768,20 @@ def test_forecasting_runner_smoke_preprocess_feature_chain_and_selection() -> No
         save_models=False,
     )
     table = result.to_frame()
-    feature_stage = next(item for item in result.metadata["stages"] if item["stage"] == "feature_engineering")
+    feature_stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
 
     assert not table.empty
     assert table["prediction"].notna().all()
     assert result.metadata["features"]["feature_steps"][0]["method"] == "transform"
     assert result.metadata["model_selection"]["method"] == "grid"
     assert result.metadata["model_selection"]["param_grid"] == {"alpha": [0.01, 0.1]}
-    assert feature_stage["metadata"]["feature_steps"][2]["fit_state"]["n_components"] == 1
+    assert (
+        feature_stage["metadata"]["feature_steps"][2]["fit_state"]["n_components"] == 1
+    )
     assert {selection["retuned"] for selection in table["model_selection"]} == {True}
 
 
@@ -935,7 +997,9 @@ def test_forecasting_runner_supports_composite_dfm_midas_panel_model() -> None:
     assert table["model_selection"].map(lambda value: value["retuned"]).eq(False).all()
 
 
-def test_forecasting_runner_accepts_explicit_mixed_frequency_midas_feature_set() -> None:
+def test_forecasting_runner_accepts_explicit_mixed_frequency_midas_feature_set() -> (
+    None
+):
     idx = pd.date_range("2000-01-01", periods=96, freq="MS", name="date")
     t = np.arange(len(idx), dtype=float)
     q_mask = idx.month.isin([3, 6, 9, 12])
@@ -1021,7 +1085,9 @@ def test_forecasting_runner_supports_multiple_models_and_stage_policies() -> Non
         == "fit_window"
     )
     assert len(result.metadata["models"]) == 2
-    ridge_selection = table.loc[table["model"] == "ridge", "model_selection"].dropna().iloc[0]
+    ridge_selection = (
+        table.loc[table["model"] == "ridge", "model_selection"].dropna().iloc[0]
+    )
     assert ridge_selection["window"] == "explicit_splits"
     assert ridge_selection["metadata"]["split_source"] == "explicit"
 
@@ -1517,6 +1583,28 @@ def test_forecasting_runner_supports_timeseries_and_ensemble_models() -> None:
             {"n_estimators": 3, "num_leaves": 7, "random_state": 0, "verbose": -1},
         ),
         (
+            "lightgbm",
+            "lgb_plus",
+            {
+                "n_ensemble": 1,
+                "n_steps": 2,
+                "min_data_in_leaf": 4,
+                "early_stop_patience": None,
+                "random_state": 0,
+            },
+        ),
+        (
+            "lightgbm",
+            "lgba_plus",
+            {
+                "n_runs": 1,
+                "n_cycles": 2,
+                "trees_per_cycle": 1,
+                "min_data_in_leaf": 4,
+                "random_state": 0,
+            },
+        ),
+        (
             "catboost",
             "catboost",
             {"n_estimators": 3, "max_depth": 2, "random_state": 0, "verbose": False},
@@ -1723,7 +1811,10 @@ def test_forecasting_runner_records_calendar_step_and_retune_reuse() -> None:
     assert {row["test_step"] for row in table["window"]} == {"2ME"}
     assert {bool(row["retrain"]) for row in table["window"]} == {False, True}
     assert {bool(row["retune"]) for row in table["window"]} == {False, True}
-    assert {selection["retuned"] for selection in table["model_selection"]} == {False, True}
+    assert {selection["retuned"] for selection in table["model_selection"]} == {
+        False,
+        True,
+    }
 
 
 def test_forecasting_runner_applies_feature_update_never() -> None:

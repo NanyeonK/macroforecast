@@ -126,6 +126,14 @@ def _fit_diagnostics(estimator: Any, X: pd.DataFrame, y: pd.Series) -> dict[str,
     if importance is not None:
         diagnostics["feature_importance"] = importance
 
+    channel_importance = getattr(estimator, "channel_importance_", None)
+    if channel_importance is not None:
+        diagnostics["channel_importance"] = channel_importance
+
+    channel_summary = getattr(estimator, "channel_summary_", None)
+    if channel_summary is not None:
+        diagnostics["channel_summary"] = channel_summary
+
     for attr in ("selected_features_", "factor_features_"):
         values = getattr(estimator, attr, None)
         if values is not None:

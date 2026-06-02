@@ -28,7 +28,9 @@ def test_point_relative_and_direction_metrics() -> None:
     assert mf.metrics.mae(actual, model) == np.mean([0.0, 0.5, 0.5])
     assert mf.metrics.bias(actual, model) == np.mean([0.0, -0.5, 0.5])
     assert mf.metrics.medae(actual, model) == 0.5
-    assert np.isclose(mf.metrics.mape(actual, model), np.mean([0.0, 0.25, 0.125]) * 100.0)
+    assert np.isclose(
+        mf.metrics.mape(actual, model), np.mean([0.0, 0.25, 0.125]) * 100.0
+    )
     assert np.isfinite(mf.metrics.theil_u1(actual, model))
     assert np.isfinite(mf.metrics.theil_u2(actual, model, previous))
     assert np.isclose(mf.metrics.relative_mse(actual, model, bench), 0.5 / 1.5)
@@ -36,10 +38,125 @@ def test_point_relative_and_direction_metrics() -> None:
     assert np.isclose(mf.metrics.relative_mae(actual, model, bench), 1.0 / 2.0)
     assert np.isclose(mf.metrics.mse_reduction(actual, model, bench), (1.5 - 0.5) / 3.0)
     assert mf.metrics.success_ratio(actual, model, previous) == 1.0
-    assert np.isfinite(mf.metrics.pesaran_timmermann_metric([1, -1, 2, -2], [0.8, -0.5, -0.1, -1.0]))
+    assert np.isfinite(
+        mf.metrics.pesaran_timmermann_metric([1, -1, 2, -2], [0.8, -0.5, -0.1, -1.0])
+    )
 
     with pytest.raises(ValueError, match="support must match"):
         mf.metrics.relative_mse(actual.iloc[:2], model.iloc[:2], bench)
+
+
+def test_forecast_return_sign_and_risk_adjusted_metrics() -> None:
+    dates = pd.date_range("2020-01-01", periods=3)
+    panel = pd.DataFrame(
+        {
+            "date": [*dates, *dates],
+            "target": ["y"] * 6,
+            "horizon": [1] * 6,
+            "model": ["candidate"] * 3 + ["bench"] * 3,
+            "actual": [0.0] * 6,
+            "prediction": [1.0, 0.0, 0.0, 2.0, -1.0, 1.0],
+        }
+    )
+
+    returns = mf.metrics.forecast_returns(
+        panel,
+        benchmark="bench",
+        group_cols=("target", "horizon"),
+        loss="squared_error",
+    )
+
+    assert returns.attrs["macroforecast_metadata_schema"]["kind"] == "forecast_returns"
+    assert returns["forecast_return"].tolist() == [3.0, 1.0, 1.0]
+    assert returns["return_sign"].tolist() == ["positive", "positive", "positive"]
+    assert returns["cumulative_return"].tolist() == [3.0, 4.0, 5.0]
+    assert returns["drawdown"].tolist() == [0.0, 0.0, 0.0]
+
+    reversed_returns = mf.metrics.forecast_returns(
+        panel,
+        benchmark="candidate",
+        group_cols=("target", "horizon"),
+        loss="squared_error",
+    )
+    assert reversed_returns["forecast_return"].tolist() == [-3.0, -1.0, -1.0]
+    assert reversed_returns["return_sign"].tolist() == [
+        "negative",
+        "negative",
+        "negative",
+    ]
+
+    metrics = mf.metrics.risk_adjusted_forecast_metrics(returns, hac_lags=1)
+    row = metrics.iloc[0]
+    assert (
+        metrics.attrs["macroforecast_metadata_schema"]["kind"]
+        == "risk_adjusted_forecast_metrics"
+    )
+    assert row["model_id"] == "candidate"
+    assert row["benchmark_id"] == "bench"
+    assert row["n_obs"] == 3
+    assert np.isclose(row["mean_return"], 5.0 / 3.0)
+    assert np.isfinite(row["sharpe"])
+    assert np.isfinite(row["hac_sharpe"])
+    assert row["sortino"] == np.inf
+    assert row["omega"] == np.inf
+    assert row["max_drawdown"] == 0.0
+
+
+def test_forecast_return_drawdown_and_hac_fixtures() -> None:
+    returns = pd.Series([1.0, 1.0, -3.0, 1.0])
+
+    drawdown = mf.metrics.drawdown_series(returns)
+
+    assert returns.cumsum().tolist() == [1.0, 2.0, -1.0, 0.0]
+    assert drawdown.tolist() == [0.0, 0.0, -3.0, -2.0]
+    assert mf.metrics.max_drawdown(returns) == -3.0
+
+    ar_like = pd.Series([1.0, 0.8, 0.6, 0.4, -0.2, -0.4, -0.6, -0.8])
+    naive = mf.metrics.sharpe_ratio(ar_like)
+    hac = mf.metrics.sharpe_ratio(ar_like, hac_lags=2)
+    table = mf.metrics.risk_adjusted_forecast_metrics(
+        pd.DataFrame({"model_id": ["m"] * len(ar_like), "forecast_return": ar_like}),
+        group_cols=("model_id",),
+        hac_lags=2,
+    )
+
+    assert np.isfinite(naive)
+    assert np.isfinite(hac)
+    assert hac != naive
+    assert table.loc[0, "hac_return_sd"] > 0.0
+
+
+def test_edge_ratio_frontier_sign_convention() -> None:
+    dates = pd.date_range("2020-01-01", periods=3)
+    panel = pd.DataFrame(
+        {
+            "date": [date for date in dates for _ in range(3)],
+            "target": ["y"] * 9,
+            "horizon": [1] * 9,
+            "model": ["A", "B", "C"] * 3,
+            "actual": [0.0] * 9,
+            "prediction": [1.0, np.sqrt(2.0), np.sqrt(3.0)] * 3,
+        }
+    )
+
+    edge = mf.metrics.edge_ratio(panel, group_cols=("target", "horizon"))
+    by_model = edge.set_index("model_id")
+
+    assert edge.attrs["macroforecast_metadata_schema"]["kind"] == "edge_ratio"
+    assert (
+        edge.attrs["macroforecast_metadata_schema"]["sign_convention"]
+        == "alternative_frontier_loss_minus_model_loss"
+    )
+    assert by_model.loc["A", "edge_wins"] == pytest.approx(3.0)
+    assert by_model.loc["A", "edge_regrets"] == 0.0
+    assert by_model.loc["A", "edge_ratio"] == np.inf
+    assert by_model.loc["C", "edge_wins"] == 0.0
+    assert by_model.loc["C", "edge_regrets"] == pytest.approx(6.0)
+    assert by_model.loc["C", "edge_ratio"] == 0.0
+
+    edge_path = edge.attrs["macroforecast_edge_path"]
+    assert edge_path.loc[edge_path["model_id"] == "A", "edge"].gt(0.0).all()
+    assert edge_path.loc[edge_path["model_id"] == "C", "edge"].lt(0.0).all()
 
 
 def test_distribution_metric_helpers_validate_inputs() -> None:
@@ -117,7 +234,10 @@ def test_forecast_table_evaluation_scores_variance_quantiles_and_benchmark() -> 
         "negative_log_score",
     ]
     assert out.attrs["macroforecast_metadata_schema"]["benchmark_model"] == "bench"
-    assert out.attrs["macroforecast_metadata_schema"]["relative_support_columns"] == ["date", "horizon"]
+    assert out.attrs["macroforecast_metadata_schema"]["relative_support_columns"] == [
+        "date",
+        "horizon",
+    ]
     assert set(out.attrs["macroforecast_metadata_schema"]["auto_metric_groups"]) == {
         "density",
         "direction",
@@ -209,9 +329,14 @@ def test_forecast_result_evaluate_method_and_ranking() -> None:
     assert out.loc[out["model"] == "a", "mae"].iloc[0] == 0.5
     assert ranked.loc[0, "model"] == "a"
     assert ranked.loc[0, "rank"] == 1.0
-    assert ranked.attrs["macroforecast_metadata_schema"]["kind"] == "forecast_metric_ranking"
+    assert (
+        ranked.attrs["macroforecast_metadata_schema"]["kind"]
+        == "forecast_metric_ranking"
+    )
     assert ranked.attrs["macroforecast_metadata_schema"]["ascending"] is True
-    assert ranked.attrs["macroforecast_metadata_schema"]["direction"] == "lower_is_better"
+    assert (
+        ranked.attrs["macroforecast_metadata_schema"]["direction"] == "lower_is_better"
+    )
 
 
 def test_forecast_table_helpers_reject_missing_group_columns() -> None:
@@ -329,7 +454,9 @@ def test_rank_forecasts_requires_known_or_explicit_metric_direction() -> None:
 
     coverage_scores = scores.assign(coverage_q0_1_q0_9=[0.9, 0.7])
     with pytest.raises(ValueError, match="coverage metrics is ambiguous"):
-        mf.metrics.rank_forecasts(coverage_scores, metric="coverage_q0_1_q0_9", by=("horizon",))
+        mf.metrics.rank_forecasts(
+            coverage_scores, metric="coverage_q0_1_q0_9", by=("horizon",)
+        )
 
     explicit = mf.metrics.rank_forecasts(
         scores,
@@ -338,7 +465,10 @@ def test_rank_forecasts_requires_known_or_explicit_metric_direction() -> None:
         ascending=False,
     )
     assert explicit.loc[0, "model"] == "a"
-    assert explicit.attrs["macroforecast_metadata_schema"]["direction"] == "higher_is_better"
+    assert (
+        explicit.attrs["macroforecast_metadata_schema"]["direction"]
+        == "higher_is_better"
+    )
 
 
 def test_get_metric_exposes_legacy_metric_names() -> None:
