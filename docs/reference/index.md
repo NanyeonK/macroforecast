@@ -28,9 +28,9 @@ want to read.
 | Data Pipeline | [Data](data.md), [Preprocessing](preprocessing.md), [Data Analysis](data_analysis.md) | Data loading, metadata, cleaning, summaries, and before/after checks. See [FRED Datasets](../datasets/index.md) for dataset pages. |
 | Feature Pipeline | [Feature Engineering](feature_engineering.md), [Feature Analysis](feature_analysis.md) | Targets, predictors, transforms, factors, feature selection, and feature diagnostics. |
 | Forecast Pipeline | [Window](window.md), [Models](models.md), [Model Ensemble](model_ensemble.md), [Model Selection](model_selection.md), [Forecasting](forecasting.md), [Forecast Analysis](forecast_analysis.md) | Timing, model fits, fit-time model composition, parameter search, runner execution, and forecast diagnostics. |
-| Evaluation And Testing | [Metrics](metrics.md), [Tests](tests.md), [Evaluation](evaluation.md) | Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports. |
-| Explanation And Delivery | [Interpretation](interpretation.md), [Output](output.md), [Reporting](reporting.md) | Attribution, output generation, artifact writing, and report/table rendering. |
-| Extension Surface | [Custom Extensions](custom/index.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
+| Evaluation and Testing | [Metrics](metrics.md), [Tests](tests.md), [Evaluation](evaluation.md) | Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports. |
+| Explanation and Delivery | [Interpretation](interpretation.md), [Output](output.md), [Reporting](reporting.md) | Attribution, output generation, artifact writing, paper-table presets, and report/table rendering. |
+| Custom Hooks | [Custom Extensions](custom/index.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
 
 ## Orientation
 
@@ -45,11 +45,11 @@ reference_verification
 public_api
 ```
 
-## Custom Extension Surface
+## Custom Hooks
 
 ```{toctree}
 :maxdepth: 1
-:caption: Custom Extension Surface
+:caption: Custom Hooks
 
 custom/index
 ```
@@ -98,22 +98,22 @@ forecasting
 forecast_analysis
 ```
 
-## Evaluation And Testing
+## Evaluation and Testing
 
 ```{toctree}
 :maxdepth: 1
-:caption: Evaluation And Testing
+:caption: Evaluation and Testing
 
 metrics
 tests
 evaluation
 ```
 
-## Explanation And Delivery
+## Explanation and Delivery
 
 ```{toctree}
 :maxdepth: 1
-:caption: Explanation And Delivery
+:caption: Explanation and Delivery
 
 interpretation
 output

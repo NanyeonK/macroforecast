@@ -72,5 +72,5 @@ convenience exports are documented on their module reference pages.
 | `macroforecast.evaluation` | Evaluation reports, OOS filtering, error decomposition, benchmark comparisons, regime scoring, and namespace links to `metrics` and `tests`. |
 | `macroforecast.interpretation` | Model-native importance, model-agnostic effects, attribution, VAR interpretation, and SHAP/deep optional helpers. |
 | `macroforecast.output` | Output generation, artifact writing, provenance collection, hashing, and compression. |
-| `macroforecast.reporting` | Presentation/report formatting and rendering without artifact writing. |
+| `macroforecast.reporting` | Presentation/report formatting, paper-table presets, and rendering without artifact writing. |
 | `macroforecast.data_analysis` | Single-panel diagnostics, summaries, and raw-versus-processed comparison. |

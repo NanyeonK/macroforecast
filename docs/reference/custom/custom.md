@@ -72,7 +72,7 @@ result = mf.forecasting.run(
 )
 ```
 
-## Stage Input And Output
+## Stage Input and Output
 
 | Stage | Input from previous stage | Custom hook output | Next consumer |
 | --- | --- | --- | --- |

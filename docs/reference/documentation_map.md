@@ -24,7 +24,7 @@ Use this page as the inspection order for the current callable-first
 | How do I score and test forecasts? | [Evaluation](evaluation.md) | Evaluation reports, metrics/tests split, benchmark/regime/decomposition tables. |
 | How do I inspect model behavior? | [Interpretation](interpretation.md) | Importance, SHAP, attribution, VAR interpretation, neural attribution. |
 | How do I save outputs? | [Output](output.md) | Output bundles, artifact writing, manifests, hashes, compression. |
-| How do I format paper/report tables? | [Reporting](reporting.md) | Table formatting, LaTeX/HTML/Markdown rendering, figure-ready data. |
+| How do I format paper/report tables? | [Reporting](reporting.md) | Accuracy/model-comparison/test presets, table formatting, LaTeX/HTML/Markdown rendering, figure-ready data. |
 | How do I plug in my own loader, transform, model, test, diagnostic, or artifact? | [Custom Extensions](custom/index.md) | Stage-local custom callable hooks and input/output contracts. |
 | How do I know the formulas are not drifting? | [Reference Verification](reference_verification.md) | Reference anchors and expansion policy. |
 

@@ -291,9 +291,9 @@ runs model selection, model fitting, prediction, and optional model storage.
 
 If every selected model has `input_kind="panel"` and `features=None`, the runner
 uses the window plan to slice the panel directly into fit and test panels. This
-is the path used by mixed-frequency DFM models. Runner-level preprocessing is
-not applied on this path yet; preprocess first when a panel model needs a
-processed input panel.
+is the path used by mixed-frequency DFM models. Runner-level preprocessing can
+run on this path with `preprocess_spec(...)` and `preprocessing_policy`; feature
+engineering is skipped because panel-input models consume native panel columns.
 
 The result metadata records which execution path was used:
 
@@ -301,7 +301,7 @@ The result metadata records which execution path was used:
 | --- | --- | --- |
 | `panel_to_features` | Raw canonical panel, `DataBundle`, `DataSpec`, or `(panel, metadata)` with feature-matrix models | Optional preprocessing, feature engineering, model selection, model fitting, optional combination. |
 | `feature_set` | Prebuilt `FeatureSet` | Model selection, model fitting, optional combination. Preprocessing and feature construction are assumed to have already happened. |
-| `panel_model` | Canonical panel with panel-input models such as mixed-frequency DFM | Panel slicing, panel-model fitting, optional combination. Runner-level preprocessing and feature engineering are skipped. |
+| `panel_model` | Canonical panel with panel-input models such as mixed-frequency DFM | Optional preprocessing, panel slicing, panel-model fitting, optional combination. Feature engineering is skipped. |
 
 ## Forecast Table
 

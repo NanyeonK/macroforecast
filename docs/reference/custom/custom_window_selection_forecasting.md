@@ -1,4 +1,4 @@
-# Custom Window, Selection, And Forecasting
+# Custom Window, Selection, and Forecasting
 
 [Back to custom extensions](index.md)
 

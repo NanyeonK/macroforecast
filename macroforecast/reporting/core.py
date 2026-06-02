@@ -398,6 +398,123 @@ def evaluation_report_tables(
     )
 
 
+def accuracy_table(
+    results: Any,
+    *,
+    columns: Sequence[str] | None = None,
+    sort_by: str | Sequence[str] | None = ("horizon", "rmse"),
+    ascending: bool | Sequence[bool] = True,
+    precision: int = 3,
+    percent_columns: Sequence[str] = (
+        "r2_oos",
+        "mse_reduction",
+        "success_ratio",
+    ),
+    missing: str = "",
+    caption: str | None = "Forecast accuracy",
+    label: str | None = None,
+    notes: Sequence[str] = ("Lower error metrics and higher R2 OOS are better.",),
+    metadata: Mapping[str, Any] | None = None,
+) -> ReportTable:
+    """Return the default paper-facing forecast accuracy table."""
+
+    selected = (
+        list(columns)
+        if columns is not None
+        else _available_columns(
+            _coerce_evaluation_table(results, table="scores"),
+            ("model", "horizon", "rmse", "mae", "r2_oos", "relative_mse"),
+        )
+    )
+    return metric_report_table(
+        results,
+        table="scores",
+        columns=selected,
+        sort_by=_available_sort(sort_by, selected),
+        ascending=ascending,
+        precision=precision,
+        percent_columns=percent_columns,
+        missing=missing,
+        caption=caption,
+        label=label,
+        notes=notes,
+        metadata={"source_kind": "accuracy_table", **dict(metadata or {})},
+    )
+
+
+def model_comparison_table(
+    results: Any,
+    *,
+    columns: Sequence[str] | None = None,
+    sort_by: str | Sequence[str] | None = ("horizon", "rank"),
+    ascending: bool | Sequence[bool] = True,
+    precision: int = 3,
+    percent_columns: Sequence[str] = ("r2_oos",),
+    missing: str = "",
+    caption: str | None = "Model comparison",
+    label: str | None = None,
+    notes: Sequence[str] = ("Ranks are computed by the evaluation report rank metric.",),
+    metadata: Mapping[str, Any] | None = None,
+) -> ReportTable:
+    """Return the default paper-facing model ranking/comparison table."""
+
+    selected = (
+        list(columns)
+        if columns is not None
+        else _available_columns(
+            _coerce_evaluation_table(results, table="ranking"),
+            ("rank", "model", "horizon", "rmse", "mae", "r2_oos", "relative_mse"),
+        )
+    )
+    return metric_report_table(
+        results,
+        table="ranking",
+        columns=selected,
+        sort_by=_available_sort(sort_by, selected),
+        ascending=ascending,
+        precision=precision,
+        percent_columns=percent_columns,
+        missing=missing,
+        caption=caption,
+        label=label,
+        notes=notes,
+        metadata={"source_kind": "model_comparison_table", **dict(metadata or {})},
+    )
+
+
+def forecast_test_table(
+    results: Any,
+    *,
+    columns: Sequence[str] | None = None,
+    include_reference: bool = False,
+    stars: bool = True,
+    star_levels: PValueStarLevels = ((0.01, "***"), (0.05, "**"), (0.1, "*")),
+    precision: int = 3,
+    p_value_precision: int = 3,
+    missing: str = "",
+    caption: str | None = "Forecast comparison tests",
+    label: str | None = None,
+    notes: Sequence[str] = (),
+    metadata: Mapping[str, Any] | None = None,
+) -> ReportTable:
+    """Return the default paper-facing forecast-comparison test table."""
+
+    return test_report_table(
+        results,
+        columns=columns,
+        include_reference=include_reference,
+        stars=stars,
+        star_levels=star_levels,
+        precision=precision,
+        p_value_precision=p_value_precision,
+        missing=missing,
+        caption=caption,
+        label=label,
+        notes=notes,
+        metadata={"source_kind": "forecast_test_table", **dict(metadata or {})},
+    )
+
+
 def latex_table(value: ReportTable | Any, *, booktabs: bool = True, **kwargs: Any) -> str:
     """Render a report table as LaTeX text."""
 
@@ -554,6 +671,23 @@ def render_tables(
         else:
             rendered[str(name)] = markdown_table(table)
     return rendered
+
+
+def _available_columns(frame: pd.DataFrame, preferred: Sequence[str]) -> list[str]:
+    selected = [column for column in preferred if column in frame.columns]
+    return selected or _default_metric_columns(frame)
+
+
+def _available_sort(
+    sort_by: str | Sequence[str] | None,
+    columns: Sequence[str],
+) -> str | list[str] | None:
+    if sort_by is None:
+        return None
+    if isinstance(sort_by, str):
+        return sort_by if sort_by in columns else None
+    selected = [column for column in sort_by if column in columns]
+    return selected or None
 
 
 def _figure_columns(
@@ -810,11 +944,14 @@ def _json_ready(value: Any) -> Any:
 __all__ = [
     "ReportBundle",
     "ReportTable",
+    "accuracy_table",
     "evaluation_report_tables",
     "figure_data",
+    "forecast_test_table",
     "html_table",
     "latex_table",
     "markdown_table",
+    "model_comparison_table",
     "render_tables",
     "report_bundle",
     "report_table",

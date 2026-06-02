@@ -813,6 +813,72 @@ def test_forecasting_runner_rejects_panel_model_with_feature_spec() -> None:
         )
 
 
+def test_forecasting_runner_applies_panel_input_preprocessing_policy() -> None:
+    panel = _panel(60)
+    captured: dict[str, list[pd.DataFrame]] = {"fit": [], "test": []}
+
+    class EchoPanelFit:
+        def predict(self, test_panel):
+            captured["test"].append(test_panel.copy())
+            return test_panel["x1"].rename("prediction")
+
+    def echo_panel_model(bundle, *, target="y"):
+        captured["fit"].append(bundle.panel.copy())
+        return EchoPanelFit()
+
+    spec = mf.models.ModelSpec(
+        name="echo_panel",
+        family="test",
+        fit_func=echo_panel_model,
+        input_kind="panel",
+        default_params={"target": "y"},
+    )
+    window = _window()
+    pre = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="zscore",
+        standardize_columns=("x1",),
+        standardize_ddof=0,
+        frame="keep",
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        spec,
+        window=window,
+        target="y",
+        preprocessing=pre,
+        preprocessing_policy=mf.window.stage_policy("fit_window"),
+        save_models=False,
+    )
+    table = result.to_frame()
+    first_item = next(window.iter_origins(panel.index))
+    first_fit_raw = panel.iloc[first_item["fit_idx"]]
+    first_test_raw = panel.iloc[first_item["test_idx"]]
+    expected = (
+        first_test_raw["x1"].iloc[0] - first_fit_raw["x1"].mean()
+    ) / first_fit_raw["x1"].std(ddof=0)
+    first_stage = next(
+        record
+        for record in result.metadata["stages"]
+        if record["stage"] == "preprocessing"
+    )
+
+    assert not table.empty
+    assert table["preprocessed"].all()
+    assert table.iloc[0]["prediction"] == pytest.approx(expected)
+    assert captured["fit"][0]["x1"].mean() == pytest.approx(0.0)
+    assert captured["test"][0]["x1"].iloc[0] == pytest.approx(expected)
+    assert result.metadata["preprocessing"]["options"]["standardize"] == "zscore"
+    assert result.metadata["stage_policies"]["preprocessing"]["scope"] == "fit_window"
+    assert first_stage["metadata"]["preprocessing_scope"] == "fit_window"
+    assert first_stage["metadata"]["fit_panel"]["end"] == pd.Timestamp(
+        first_item["row"]["fit_end"]
+    ).strftime("%Y-%m-%d")
+
+
 def test_forecasting_runner_rejects_conflicting_panel_model_target() -> None:
     bundle = _mixed_panel()
 

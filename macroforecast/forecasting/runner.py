@@ -244,18 +244,14 @@ def run(
             raise ValueError(
                 "panel-input models consume the panel directly; pass features=None"
             )
-        if preprocessing is not None:
-            raise ValueError(
-                "forecasting.run does not yet apply preprocessing policies to "
-                "panel-input models. Preprocess the panel first, then pass the "
-                "processed DataBundle or DataFrame."
-            )
         panel_target = _panel_runner_target(target, model_runs)
         return _run_panel_models(
             panel,
             target=panel_target,
             model_runs=model_runs,
             window_spec=_panel_window_for_horizon(window_spec, horizon_values[0]),
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_stage_policy,
             selection=selection,
             selection_policy=selection_stage_policy,
             combination_specs=combination_specs,
@@ -894,6 +890,8 @@ def _run_panel_models(
     target: str,
     model_runs: list[_ModelRun],
     window_spec: WindowSpec,
+    preprocessing: PreprocessSpec | None,
+    preprocessing_policy: StagePolicy | None,
     selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
     selection_policy: StagePolicy,
     combination_specs: Sequence[CombinationSpec],
@@ -909,21 +907,84 @@ def _run_panel_models(
     _validate_runner_window(window_spec, panel.index)
     metadata = dict(panel.attrs.get("macroforecast_metadata", {}))
     records: list[dict[str, Any]] = []
-    for item in window_spec.iter_origins(panel.index):
-        fit_panel = panel.iloc[item["fit_idx"]].copy()
-        test_panel = panel.iloc[item["test_idx"]].copy()
-        fit_panel.attrs["macroforecast_metadata"] = metadata
-        test_panel.attrs["macroforecast_metadata"] = metadata
+    stage_records: list[dict[str, Any]] = []
+    full_stage: _PreparedStage | None = None
+    if (
+        preprocessing is not None
+        and preprocessing_policy is not None
+        and preprocessing_policy.scope == "full_panel"
+    ):
+        fitted = preprocessing.fit(
+            _preprocessor_fit_input(panel, None),
+            policy="origin_available",
+        )
+        full_stage = _PreparedStage(
+            panel=fitted.processed_train.panel,
+            fitted_preprocessing=fitted,
+            metadata=fitted.to_metadata(),
+        )
+    elif preprocessing is None:
+        full_stage = _PreparedStage(
+            panel=panel,
+            fitted_preprocessing=None,
+            metadata=None,
+        )
+
+    preprocessing_state = _StageUpdateState()
+    fitted_preprocessing_cache: FittedPreprocessor | None = None
+    for origin_count, item in enumerate(window_spec.iter_origins(panel.index)):
+        preprocessing_updated = False
+        if full_stage is None:
+            preprocessing_updated = _stage_update_due(
+                preprocessing_policy,
+                item,
+                origin_count=origin_count,
+                state=preprocessing_state,
+            )
+            prepared = _prepare_origin_panel(
+                panel,
+                features=None,
+                preprocessing=preprocessing,
+                preprocessing_policy=preprocessing_policy,
+                item=item,
+                include_target_pos=False,
+                fitted_preprocessing=None
+                if preprocessing_updated
+                else fitted_preprocessing_cache,
+            )
+            if preprocessing_updated:
+                fitted_preprocessing_cache = prepared.fitted_preprocessing
+                _mark_stage_updated(preprocessing_state, item)
+        else:
+            prepared = full_stage
+            preprocessing_updated = preprocessing is not None and origin_count == 0
+        if prepared.metadata is not None:
+            stage_records.append(
+                _origin_stage_record(
+                    "preprocessing",
+                    item,
+                    prepared.metadata,
+                    updated=preprocessing_updated,
+                )
+            )
+        prepared_metadata = dict(
+            prepared.panel.attrs.get("macroforecast_metadata", metadata)
+        )
+        fit_panel = prepared.panel.reindex(panel.index[item["fit_idx"]]).copy()
+        test_panel = prepared.panel.reindex(panel.index[item["test_idx"]]).copy()
+        fit_panel.attrs["macroforecast_metadata"] = prepared_metadata
+        test_panel.attrs["macroforecast_metadata"] = prepared_metadata
         records.extend(
             _fit_predict_panel_origin(
                 item,
                 fit_panel=fit_panel,
                 test_panel=test_panel,
                 target=target,
-                metadata=metadata,
+                metadata=prepared_metadata,
                 model_runs=model_runs,
                 selection=selection,
                 selection_policy=selection_policy,
+                preprocessed=preprocessing is not None,
                 save_models=save_models,
                 model_store=model_store,
                 forecast_policy=forecast_policy,
@@ -942,14 +1003,14 @@ def _run_panel_models(
         window_spec=window_spec,
         model_runs=model_runs,
         features=None,
-        preprocessing=None,
-        preprocessing_policy=None,
+        preprocessing=preprocessing.to_dict() if preprocessing is not None else None,
+        preprocessing_policy=preprocessing_policy,
         feature_policy=None,
         selection=selection,
         selection_policy=selection_policy,
         combination_specs=combination_specs,
         n_combination_forecasts=len(combination_records),
-        stage_records=[],
+        stage_records=stage_records,
         n_forecasts=len(records),
         config=config,
         save_models=save_models,
@@ -971,6 +1032,7 @@ def _fit_predict_panel_origin(
     model_runs: list[_ModelRun],
     selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
     selection_policy: StagePolicy,
+    preprocessed: bool,
     save_models: bool,
     model_store: str | Path,
     forecast_policy: ForecastPolicy,
@@ -1051,7 +1113,7 @@ def _fit_predict_panel_origin(
                     },
                     "stored_model": stored_model,
                     "window": row,
-                    "preprocessed": False,
+                    "preprocessed": bool(preprocessed),
                     "combined": False,
                     "combination": None,
                 }
@@ -1560,10 +1622,11 @@ def _fit_predict_path_average_origin(
 def _prepare_origin_panel(
     panel: pd.DataFrame,
     *,
-    features: FeatureSpec,
+    features: FeatureSpec | None,
     preprocessing: PreprocessSpec | None,
     preprocessing_policy: StagePolicy | None,
     item: dict[str, Any],
+    include_target_pos: bool = True,
     fitted_preprocessing: FittedPreprocessor | None = None,
 ) -> _PreparedStage:
     if preprocessing is None or preprocessing_policy is None:
@@ -1581,7 +1644,11 @@ def _prepare_origin_panel(
         )
     else:
         fitted = fitted_preprocessing
-    apply_labels = _origin_apply_labels(panel.index, item)
+    apply_labels = _origin_apply_labels(
+        panel.index,
+        item,
+        include_target_pos=include_target_pos,
+    )
     apply_panel = panel.reindex(apply_labels).loc[:, fitted.fit_panel.columns]
     if fitted.preprocessing_scope == "fit_window":
         transformed = fitted.transform(
@@ -1600,10 +1667,17 @@ def _prepare_origin_panel(
     )
 
 
-def _origin_apply_labels(index: pd.Index, item: dict[str, Any]) -> pd.Index:
+def _origin_apply_labels(
+    index: pd.Index,
+    item: dict[str, Any],
+    *,
+    include_target_pos: bool = True,
+) -> pd.Index:
     positions = np.unique(
         np.concatenate([item["estimation_idx"], item["fit_idx"], item["test_idx"]])
     )
+    if not include_target_pos:
+        return index[positions]
     row = item.get("row", {})
     try:
         target_pos = int(row.get("test_start_pos", item["test_idx"][0])) + int(
@@ -1675,7 +1749,10 @@ def _relative_splits_for_index(
     return out
 
 
-def _preprocessor_fit_input(fit_panel: pd.DataFrame, features: FeatureSpec) -> Any:
+def _preprocessor_fit_input(fit_panel: pd.DataFrame, features: FeatureSpec | None) -> Any:
+    if features is None:
+        metadata = dict(fit_panel.attrs.get("macroforecast_metadata", {}))
+        return DataBundle(fit_panel, metadata)
     target = features.target
     targets = features.targets or None
     if target is None and not targets:

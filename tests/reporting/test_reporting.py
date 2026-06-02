@@ -150,14 +150,59 @@ def test_metric_report_tables_format_evaluation_reports_for_papers() -> None:
     assert bundle.metadata["source_kind"] == "evaluation_report_tables"
 
 
+def test_reporting_presets_wrap_metric_and_test_tables() -> None:
+    rows: list[dict[str, object]] = []
+    for horizon in (1, 2):
+        for date_pos, date in enumerate(pd.date_range("2021-01-31", periods=4, freq="ME")):
+            actual = 2.0 + date_pos
+            for model, offset in {"model_a": 0.1, "model_b": 0.3, "bench": 0.6}.items():
+                rows.append(
+                    {
+                        "date": date,
+                        "model": model,
+                        "horizon": horizon,
+                        "actual": actual,
+                        "prediction": actual + offset,
+                    }
+                )
+    report = mf.evaluation.evaluate_report(
+        pd.DataFrame(rows),
+        metrics=("rmse", "mae", "r2_oos"),
+        benchmark_model="bench",
+    )
+    tests = mf.tests.equal_predictive_tests(
+        pd.Series([0.1, 0.2, 0.1, 0.2]),
+        pd.Series([0.4, 0.5, 0.3, 0.4]),
+        tests=("dm",),
+    )
+
+    accuracy = mf.reporting.accuracy_table(report)
+    comparison = mf.reporting.model_comparison_table(report)
+    test_table = mf.reporting.forecast_test_table(tests)
+
+    assert list(accuracy.data.columns) == ["Model", "H", "RMSE", "MAE", "R2 OOS"]
+    assert accuracy.caption == "Forecast accuracy"
+    assert accuracy.metadata["source_kind"] == "accuracy_table"
+    assert "Rank" in comparison.data.columns
+    assert comparison.metadata["source_kind"] == "model_comparison_table"
+    assert test_table.caption == "Forecast comparison tests"
+    assert test_table.metadata["source_kind"] == "forecast_test_table"
+
+
 def test_reporting_helpers_are_namespace_only() -> None:
     assert "reporting" in mf.__all__
     assert mf.reporting.report_table is not None
     assert mf.reporting.metric_report_table is not None
     assert mf.reporting.test_report_table is not None
+    assert mf.reporting.accuracy_table is not None
+    assert mf.reporting.model_comparison_table is not None
+    assert mf.reporting.forecast_test_table is not None
     assert not hasattr(mf, "report_table")
     assert not hasattr(mf, "latex_table")
     assert not hasattr(mf, "metric_report_table")
     assert not hasattr(mf, "evaluation_report_tables")
     assert not hasattr(mf, "test_report_table")
     assert not hasattr(mf, "test_provenance_table")
+    assert not hasattr(mf, "accuracy_table")
+    assert not hasattr(mf, "model_comparison_table")
+    assert not hasattr(mf, "forecast_test_table")

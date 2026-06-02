@@ -1,4 +1,4 @@
-# Custom Evaluation And Tests
+# Custom Evaluation and Tests
 
 [Back to custom extensions](index.md)
 

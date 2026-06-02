@@ -1,4 +1,4 @@
-# Custom Interpretation And Analysis
+# Custom Interpretation and Analysis
 
 [Back to custom extensions](index.md)
 

@@ -117,6 +117,80 @@ tables are skipped. Set `include_aggregations=True` or include `"aggregations"`
 in `include` to add all `report.aggregations` under names like
 `aggregation_model_horizon_target`.
 
+## accuracy_table
+
+```python
+macroforecast.reporting.accuracy_table(
+    results,
+    *,
+    columns=None,
+    sort_by=("horizon", "rmse"),
+    ascending=True,
+    precision=3,
+    percent_columns=("r2_oos", "mse_reduction", "success_ratio"),
+    missing="",
+    caption="Forecast accuracy",
+    label=None,
+    notes=("Lower error metrics and higher R2 OOS are better.",),
+    metadata=None,
+) -> ReportTable
+```
+
+Paper-table preset for forecast accuracy. Input is an `EvaluationReport` or a
+raw score `DataFrame`. Output is a `ReportTable`. If `columns=None`, the preset
+uses available columns from `model`, `horizon`, `rmse`, `mae`, `r2_oos`, and
+`relative_mse`; missing optional columns are skipped rather than raising.
+
+## model_comparison_table
+
+```python
+macroforecast.reporting.model_comparison_table(
+    results,
+    *,
+    columns=None,
+    sort_by=("horizon", "rank"),
+    ascending=True,
+    precision=3,
+    percent_columns=("r2_oos",),
+    missing="",
+    caption="Model comparison",
+    label=None,
+    notes=("Ranks are computed by the evaluation report rank metric.",),
+    metadata=None,
+) -> ReportTable
+```
+
+Paper-table preset for model ranking/comparison. Input is an
+`EvaluationReport` or ranking-like `DataFrame`. Output is a `ReportTable`. If
+`columns=None`, the preset uses available columns from `rank`, `model`,
+`horizon`, `rmse`, `mae`, `r2_oos`, and `relative_mse`.
+
+## forecast_test_table
+
+```python
+macroforecast.reporting.forecast_test_table(
+    results,
+    *,
+    columns=None,
+    include_reference=False,
+    stars=True,
+    star_levels=((0.01, "***"), (0.05, "**"), (0.1, "*")),
+    precision=3,
+    p_value_precision=3,
+    missing="",
+    caption="Forecast comparison tests",
+    label=None,
+    notes=(),
+    metadata=None,
+) -> ReportTable
+```
+
+Paper-table preset for forecast-comparison tests. Input is a `TestResult`, a
+mapping of named `TestResult` objects, or any object accepted by
+`test_report_table(...)`. Output is a `ReportTable`. Use this preset when the
+paper needs the standard test statistic, p-value, rejection, and sample-size
+columns; use `test_provenance_table(...)` for source-alignment details.
+
 ## test_report_table
 
 ```python
@@ -283,12 +357,8 @@ report = mf.evaluation.evaluate_report(
     include_decomposition=True,
 )
 
-accuracy_table = mf.reporting.metric_report_table(
-    report,
-    columns=("model", "horizon", "rmse", "r2_oos"),
-    percent_columns=("r2_oos",),
-    caption="Forecast accuracy",
-)
+accuracy_table = mf.reporting.accuracy_table(report)
+model_table = mf.reporting.model_comparison_table(report)
 
 paper_tables = mf.reporting.evaluation_report_tables(
     report,
@@ -308,9 +378,8 @@ tests = mf.tests.equal_predictive_tests(
     error_b=error_b,
 )
 
-main_table = mf.reporting.test_report_table(
+main_table = mf.reporting.forecast_test_table(
     tests,
-    caption="Equal predictive ability tests",
     label="tab:equal_predictive_tests",
 )
 appendix_table = mf.reporting.test_provenance_table(tests)

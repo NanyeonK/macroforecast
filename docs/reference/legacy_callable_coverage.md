@@ -17,9 +17,9 @@ These old surfaces are not gaps.
 
 | Old surface | Current decision | Reason |
 | --- | --- | --- |
-| YAML layer schemas, validators, parse helpers | Removed for now | Recipe/YAML support will be rebuilt as a thin wrapper over callables. |
-| DAG nodes, node refs, runtime materializers, registry ops | Removed for now | Runner and direct callables now own execution. |
-| `core/layers/*` shims and compatibility registries | Removed | Restoring shims would preserve the structure we are replacing. |
+| Old recipe schemas, validators, and parse helpers | Removed for now | Recipe/YAML support will be rebuilt as a thin wrapper over callables. |
+| Old runtime dispatch nodes and materializers | Removed for now | Runner and direct callables now own execution. |
+| Old compatibility shims and registries | Removed | Restoring compatibility shims would preserve the structure we are replacing. |
 | `api/functions/*`, `functions/*` compatibility namespaces | Removed | Public API is now module-based: `data`, `preprocessing`, `feature_engineering`, etc. |
 | `option_docs.py` generated option tables | Removed | Function-level docs now document input, output, defaults, and choices directly. |
 | Recipe/gallery contract pages | Removed | Recipe docs will be rewritten after the callable API stabilizes. |
@@ -47,17 +47,16 @@ These old surfaces are not gaps.
 | Forecast analysis | `macroforecast.forecast_analysis` | Forecast overview, fitted-vs-actual, residual views, rolling loss, scale view, tuning traces, coefficient/parameter stability, DFM diagnostics, ensemble diagnostics, stage update trace. |
 | Interpretation | `macroforecast.interpretation` | Native coefficients/importances, permutation/Strobl/LOFO, PDP/ALE/Friedman-H, SHAP variants, forecast decomposition, cumulative contribution, group/lineage/transformation attribution, OLS attention, MRF GTVP, VAR IRF/FEVD/historical decomposition, neural attribution, LSTM hidden states, custom interpretation. |
 | Output | `macroforecast.output` | Output table generation, selection/naming/bundling, artifact writing, manifest, hashes, provenance, gzip/zip compression. |
-| Reporting | `macroforecast.reporting` | Report-table formatting, LaTeX/HTML/Markdown rendering, figure-ready data, report bundles. |
-| Custom extensions | `macroforecast.custom` and per-module custom functions | Custom datasets, preprocessing, feature steps, models, model ensembles, stage policies, combinations, diagnostics, interpretation, and artifacts. |
+| Reporting | `macroforecast.reporting` | Report-table formatting, accuracy/model-comparison/forecast-test presets, LaTeX/HTML/Markdown rendering, figure-ready data, report bundles. |
+| Custom extensions | Per-module custom hooks | Custom datasets, preprocessing, feature steps, models, model ensembles, stage policies, combinations, diagnostics, interpretation, and artifacts. See `reference/custom/`; there is no separate `macroforecast.custom` module. |
 
 ## Remaining Real Gaps
 
-These are not YAML/schema cleanup items. They are possible future
-implementation work.
+These are not old runtime cleanup items. They are possible future
+implementation work on top of the current callable API.
 
 | Priority | Gap | Current status | Proposed handling |
 | --- | --- | --- | --- |
-| Medium | Reporting presets | `reporting` has generic table/figure renderers, but no domain presets yet. | Add later only after agreeing on table styles: accuracy table, coefficient table, MCS/reality-check table, model-comparison table. |
 | Medium | Replication/report package builder | `output` writes artifacts and `reporting` renders tables, but there is no one-call replication package assembler. | Add as future callable after output/reporting settle; likely `reporting` or a small package module, not `output`. |
 | Low | External reference-verification expansions | `tests/reference/` now contains core anchors, but not every paper formula against external source code or known-DGP simulations. | Expand the reference suite incrementally as source-code fixtures or accepted known-DGP designs are added. |
 | Low | Future YAML/recipe wrapper | Intentionally absent. | Rebuild later on top of the callable API, with no old runtime registry dependency. |
@@ -75,4 +74,5 @@ intentionally excluded:
 | Legacy Chow-Lin op | Covered by `data.chow_lin_disaggregate()` and `data.align_frequency(..., quarterly_to_monthly="chow_lin")`. |
 | Legacy blocked OOB reality check | Covered by `tests.blocked_oob_reality_check()`. |
 | Full iterative MCS | Covered by exact `tests.model_confidence_set()`; `tests.iterative_model_confidence_set()` remains a descriptive alias. |
+| Reporting presets | Covered by `reporting.accuracy_table()`, `reporting.model_comparison_table()`, and `reporting.forecast_test_table()`. |
 | Holiday features | Intentionally excluded for monthly/quarterly macro workflows. |

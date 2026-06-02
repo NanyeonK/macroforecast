@@ -1,4 +1,4 @@
-# Custom Extension Surface
+# Custom Extensions
 
 [Back to reference](../index.md)
 
