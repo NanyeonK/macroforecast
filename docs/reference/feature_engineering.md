@@ -61,10 +61,11 @@ X_lag = mf.feature_engineering.lag(processed, columns=["PAYEMS", "INDPRO"], lags
 
 | Group | Functions | Purpose |
 | --- | --- | --- |
-| Target construction | `direct_target`, `average_target`, `path_targets` | Build direct, average, or step-path forecast targets. |
+| Target construction | `direct_target`, `average_target`, `path_targets`, `forward_average_target` | Build direct, average, or step-path forecast targets. `forward_average_target` is the Albacore/assemblage-named reusable helper. |
 | Basic predictor transforms | `lag`, `rolling_mean`, `moving_average_ladder`, `mixed_frequency_lags`, `seasonal_lag`, `season_dummy`, `time_features`, `fourier_features` | Add lags, rolling blocks, mixed-frequency lag blocks, and deterministic date features. |
 | ML-side value transforms | `transform_features`, `log_features`, `diff_features`, `log_diff_features`, `pct_change_features`, `cumsum_features`, `scale_features` | Add post-preprocessing transformations and scaling used as model features. |
-| Nonlinear expansions | `polynomial_features`, `interaction_features`, `wavelet_features`, `savitzky_golay_features`, `adaptive_ma_rf_features`, `asymmetric_trim_features` | Add nonlinear, smooth, rank, or multi-resolution feature blocks. `adaptive_ma_rf_features` wraps `macroforecast.filters.albama`. |
+| Nonlinear expansions | `polynomial_features`, `interaction_features`, `wavelet_features`, `savitzky_golay_features`, `adaptive_ma_rf_features`, `asymmetric_trim_features`, `rank_space_features` | Add nonlinear, smooth, rank, or multi-resolution feature blocks. `rank_space_features` is the generic order-statistic primitive used by Albacoreranks. |
+| Supervised aggregation helpers | `moving_average_changes`, `align_reference_weights`, `weighted_aggregate` | Reusable component-to-aggregate helpers derived from the Albacore/assemblage R package. They are generic and can be used outside inflation. |
 | Trend/cycle filter wrappers | `hamilton_filter_features`, `hp_filter_features` | Turn `macroforecast.filters` one-series filter outputs into panel feature columns with leakage warnings where needed. |
 | Factor features | `pca_features`, `dfm_features`, `group_pca`, `varimax_features`, `sparse_pca_chen_rohe_features`, `partial_least_squares_features`, `sliced_inverse_regression_features`, `random_projection_features`, `nystroem_features` | Build fitted factor, supervised-factor, sparse-factor, rotation, random projection, and kernel approximation features. |
 | Paper-style combinations | `feature_matrix`, `maf_features`, `moving_average_pca_lags`, `pca_then_lags`, `lags_then_pca` | Materialize named macro-ML blocks such as `X`, `F`, `MARX`, `MAF`, and compositions. |
@@ -181,6 +182,7 @@ the same functions later.
 | --- | --- | --- |
 | `direct_target()` | Direct-forecast target columns, including direct average targets. | Train/test split, recursive forecasting, inverse transforms. |
 | `average_target()` | Explicit wrapper for direct average change/growth targets. | Model fitting. |
+| `forward_average_target()` | Albacore/assemblage-named wrapper for future average aggregate targets. | Inflation-only semantics; works for any aggregate target. |
 | `path_targets()` | Step-level targets for path-average forecasting. | Model-stage step fit/forecast and evaluation-stage forecast averaging. |
 | `lag()` | Current and lagged predictor columns. | Model-specific lag search. |
 | `mixed_frequency_lags()` | Exact-date lag blocks for native mixed-frequency panels. | Frequency conversion or model estimation. |
@@ -198,6 +200,10 @@ the same functions later.
 | `dfm_features()` | Static DFM approximation by standardized PCA. | State-space DFM estimation; use model callables for that. |
 | `variance_selection()`, `correlation_selection()`, `lasso_selection()`, `lasso_path_selection()`, `rfe_selection()`, `boruta_selection()`, `stability_selection()`, `genetic_selection()` | Direct column selection by one explicit algorithm. | Model fitting; runner-safe fitting uses the same method names inside `feature_spec(..., steps=[...])`. |
 | `asymmetric_trim_features()` | Per-period rank-space columns for asymmetric trimming weights. | Estimating the nonnegative rank weights. |
+| `rank_space_features()` | Named generic rank-space/order-statistic primitive from the Albacore R `x.transformation` path. | Model fitting or learned rank weights. |
+| `moving_average_changes()` | Convert one-period component changes to a trailing moving-average unit. | Choosing forecast windows or fitting weights. |
+| `align_reference_weights()` | Align official/reference weights to a component column order. | Estimating those weights. |
+| `weighted_aggregate()` | Apply fixed component weights to produce one aggregate. | Learning the weights; use `models.component_aggregation()` for that. |
 | `wavelet_features()` | Panel wrapper around `filters.wavelet_filter()` returning causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
 | `adaptive_ma_rf_features()` | Feature-wrapper form of `filters.albama()` that returns `{column}_albama` columns and stores full `AlbaMAResult` objects in attrs. | Forecast model fitting. |
 | `group_pca()` | PCA factors within named column groups. | FAVAR-specific slow/fast construction, model estimation, or structural identification. |
@@ -294,6 +300,51 @@ requested horizon, and a later model can fit that column directly.
 | `"change"` | Average one-period differences over the future path. |
 | `"growth"` | Average one-period simple growth rates over the future path. |
 | `"log_growth"` | Average one-period log growth rates over the future path. |
+
+## forward_average_target
+
+```python
+macroforecast.feature_engineering.forward_average_target(
+    data,
+    *,
+    target=None,
+    targets=None,
+    horizon=None,
+    horizons=None,
+    transform="change",
+)
+```
+
+`forward_average_target()` is the named target helper for
+Albacore/assemblage-style supervised aggregation. It calls the same target
+logic as `average_target()`, but records source metadata pointing to Goulet
+Coulombe, Klieber, Barrette, and Goebel, *Maximally Forward-Looking Core
+Inflation*, and the R package `assemblage`. The helper is generic: the target
+can be any future aggregate, not only headline inflation.
+
+Output: a `DataFrame` with columns such as
+`headline_average_change_h12`. The output stores
+`attrs["macroforecast_target_metadata"]` and marks
+`source_method="assemblage_forward_target"`.
+
+## Assemblage Helper Primitives
+
+These helpers come from the Albacore/assemblage workflow but are intentionally
+split into generic callables. They can be attached to inflation components,
+state panels, sector panels, industry components, or any setting where current
+components are aggregated to forecast a future aggregate target.
+
+| Function | Input | Output | Albacore source cue |
+| --- | --- | --- | --- |
+| `rank_space_features(data, columns=None, prefix="rank_")` | Component panel. | `rank_1`, `rank_2`, ... sorted low-to-high each date. | R `x.transformation`, rank path for Albacoreranks. |
+| `moving_average_changes(data, window=3, method="compound_percent")` | One-period component changes. | `{column}_ma{window}` trailing change unit. | R `x.transformation`; month-over-month percent to 3m/12m compounded units. |
+| `align_reference_weights(weights, columns, normalize=True)` | Mapping, `Series`, `DataFrame`, or sequence. | `Series` indexed by model columns. | R `weight.transformation`; official basket weights for Albacorecomps. |
+| `weighted_aggregate(data, weights, columns=None)` | Component panel plus fixed weights. | One aggregate column. | Learned core measure after assemblage weights are estimated. |
+
+`rank_space_features()` and `weighted_aggregate()` do not estimate weights.
+Use `macroforecast.models.rank_aggregation()`,
+`macroforecast.models.component_aggregation()`, or the Albacore wrappers for
+supervised weight estimation.
 
 ## path_targets
 

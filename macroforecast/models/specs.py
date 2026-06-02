@@ -5,7 +5,16 @@ from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
 import pandas as pd
+import numpy as np
 
+from macroforecast.models.assemblage import (
+    albacore_components,
+    albacore_ranks,
+    assemblage_regression,
+    component_aggregation,
+    rank_aggregation,
+    supervised_aggregation,
+)
 from macroforecast.models.linear import (
     adaptive_elastic_net,
     adaptive_lasso,
@@ -27,7 +36,7 @@ from macroforecast.models.linear import (
     supervised_pca,
     supervised_scaled_pca,
 )
-from macroforecast.models.neural import gru, hemisphere_nn, lstm, nn, transformer
+from macroforecast.models.neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
 from macroforecast.models.nonparametric import kernel_ridge, knn
 from macroforecast.models.spline import mars
 from macroforecast.models.svm import linear_svr, nu_svr, svr
@@ -62,6 +71,7 @@ from macroforecast.models.tree import (
     random_forest,
     xgboost,
 )
+from macroforecast.models.tvp import tvp_ridge
 from macroforecast.models.volatility import egarch, garch11, realized_garch
 
 InputKind = Literal["supervised", "target", "panel", "volatility"]
@@ -534,6 +544,27 @@ _HNN_SPACES: SearchSpaces = {
     },
 }
 
+_DENSITY_HNN_SPACES: SearchSpaces = {
+    "small": {
+        "neurons": (16, 32),
+        "n_estimators": (3, 5),
+        "prior_estimators": (2, 3),
+        "learning_rate": (0.001,),
+    },
+    "standard": {
+        "neurons": (32, 64),
+        "n_estimators": (5, 10),
+        "prior_estimators": (3, 5),
+        "learning_rate": (0.0005, 0.001),
+    },
+    "wide": {
+        "neurons": (32, 64, 128),
+        "n_estimators": (5, 10, 25),
+        "prior_estimators": (3, 5, 10),
+        "learning_rate": (0.0001, 0.0005, 0.001),
+    },
+}
+
 MODEL_SPECS: dict[str, ModelSpec] = {
     "ols": _spec(
         "ols",
@@ -676,6 +707,168 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         backend="internal + scipy.optimize.minimize(SLSQP)",
         description="Ridge regression with a fused-difference coefficient prior.",
     ),
+    "supervised_aggregation": _spec(
+        "supervised_aggregation",
+        "assemblage",
+        supervised_aggregation,
+        default_params={
+            "space": "component",
+            "penalty": "ridge",
+            "alpha": 1.0,
+            "reference_weights": None,
+            "nonneg": True,
+            "simplex": False,
+            "mean_match": False,
+            "difference_order": 1,
+            "fit_intercept": False,
+            "penalty_scale": "feature_std",
+            "max_iter": 1000,
+            "tol": 1e-9,
+        },
+        parameters=(
+            _p("space", "component", "component | rank", "Aggregation space.", False),
+            _p("penalty", "ridge", "ridge | target_shrinkage | fused_difference", "Coefficient penalty family.", False),
+            _p("alpha", 1.0, "float", "Penalty strength."),
+            _p("reference_weights", None, "mapping | sequence | None", "Reference basket weights for target shrinkage.", False),
+            _p("nonneg", True, "bool", "Constrain weights to be non-negative.", False),
+            _p("simplex", False, "bool", "Constrain weights to sum to one.", False),
+            _p("mean_match", False, "bool", "Constrain fitted aggregate mean to match target mean.", False),
+            _p("difference_order", 1, "int", "Finite-difference order for fused rank weights.", False),
+            _p("fit_intercept", False, "bool", "Fit an intercept outside the aggregation weights.", False),
+            _p("penalty_scale", "feature_std", "none | feature_std", "Scale penalties by component standard deviations.", False),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        spaces=_ALPHA_SPACES,
+        method="cv_path",
+        backend="internal + scipy.optimize.minimize(SLSQP)",
+        description="Generic constrained supervised aggregation derived from Albacore/assemblage primitives.",
+    ),
+    "component_aggregation": _spec(
+        "component_aggregation",
+        "assemblage",
+        component_aggregation,
+        default_params={
+            "alpha": 1.0,
+            "reference_weights": None,
+            "penalty": None,
+            "simplex": True,
+            "nonneg": True,
+            "penalty_scale": "feature_std",
+            "max_iter": 1000,
+            "tol": 1e-9,
+        },
+        parameters=(
+            _p("alpha", 1.0, "float", "Penalty strength."),
+            _p("reference_weights", None, "mapping | sequence | None", "Optional reference component weights.", False),
+            _p("penalty", None, "ridge | target_shrinkage | None", "Penalty; None selects target_shrinkage when weights are supplied.", False),
+            _p("simplex", True, "bool", "Constrain weights to sum to one.", False),
+            _p("nonneg", True, "bool", "Constrain weights to be non-negative.", False),
+            _p("penalty_scale", "feature_std", "none | feature_std", "Scale penalties by component standard deviations.", False),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        spaces=_ALPHA_SPACES,
+        method="cv_path",
+        backend="internal + scipy.optimize.minimize(SLSQP)",
+        description="Component-space supervised aggregation; generic Albacorecomps primitive.",
+    ),
+    "rank_aggregation": _spec(
+        "rank_aggregation",
+        "assemblage",
+        rank_aggregation,
+        default_params={
+            "alpha": 1.0,
+            "penalty": "fused_difference",
+            "mean_match": True,
+            "nonneg": True,
+            "difference_order": 1,
+            "penalty_scale": "feature_std",
+            "max_iter": 1000,
+            "tol": 1e-9,
+        },
+        parameters=(
+            _p("alpha", 1.0, "float", "Penalty strength."),
+            _p("penalty", "fused_difference", "ridge | fused_difference", "Rank-weight penalty family.", False),
+            _p("mean_match", True, "bool", "Constrain fitted aggregate mean to match target mean.", False),
+            _p("nonneg", True, "bool", "Constrain rank weights to be non-negative.", False),
+            _p("difference_order", 1, "int", "Finite-difference order for rank weights.", False),
+            _p("penalty_scale", "feature_std", "none | feature_std", "Scale penalties by rank standard deviations.", False),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        spaces=_ALPHA_SPACES,
+        method="cv_path",
+        backend="internal + scipy.optimize.minimize(SLSQP)",
+        description="Rank-space supervised aggregation; generic Albacoreranks primitive.",
+    ),
+    "assemblage_regression": _spec(
+        "assemblage_regression",
+        "assemblage",
+        assemblage_regression,
+        default_params={
+            "space": "component",
+            "alpha": 1.0,
+            "reference_weights": None,
+            "penalty": None,
+            "max_iter": 1000,
+            "tol": 1e-9,
+        },
+        parameters=(
+            _p("space", "component", "component | rank", "Use component-space or rank-space aggregation.", False),
+            _p("alpha", 1.0, "float", "Penalty strength."),
+            _p("reference_weights", None, "mapping | sequence | None", "Optional reference weights for component space.", False),
+            _p("penalty", None, "str | None", "Optional penalty override.", False),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        spaces=_ALPHA_SPACES,
+        method="cv_path",
+        backend="internal + scipy.optimize.minimize(SLSQP)",
+        description="Generic assemblage regression wrapper with component and rank variants.",
+    ),
+    "albacore_components": _spec(
+        "albacore_components",
+        "assemblage",
+        albacore_components,
+        default_params={
+            "reference_weights": None,
+            "alpha": 1.0,
+            "max_iter": 1000,
+            "tol": 1e-9,
+        },
+        parameters=(
+            _p("reference_weights", None, "mapping | sequence | None", "Official or reference basket weights.", False),
+            _p("alpha", 1.0, "float", "Target-shrinkage penalty strength."),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        spaces=_ALPHA_SPACES,
+        method="cv_path",
+        backend="internal + scipy.optimize.minimize(SLSQP)",
+        description="Inflation-specific component-space Albacore wrapper.",
+    ),
+    "albacore_ranks": _spec(
+        "albacore_ranks",
+        "assemblage",
+        albacore_ranks,
+        default_params={
+            "alpha": 1.0,
+            "difference_order": 1,
+            "max_iter": 1000,
+            "tol": 1e-9,
+        },
+        parameters=(
+            _p("alpha", 1.0, "float", "Fused-difference penalty strength."),
+            _p("difference_order", 1, "int", "Finite-difference order for rank weights.", False),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        spaces=_ALPHA_SPACES,
+        method="cv_path",
+        backend="internal + scipy.optimize.minimize(SLSQP)",
+        description="Inflation-specific rank-space Albacore wrapper.",
+    ),
     "random_walk_ridge": _spec(
         "random_walk_ridge",
         "linear",
@@ -707,6 +900,95 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         method="cv_path",
         backend="internal numpy.linalg.lstsq",
         description="Time-varying random-walk ridge fit, predicting with the final coefficient vector.",
+    ),
+    "tvp_ridge": _spec(
+        "tvp_ridge",
+        "linear",
+        tvp_ridge,
+        default_params={
+            "lambda_candidates": None,
+            "lambda2": 0.1,
+            "kfold": 5,
+            "cv_2srr": True,
+            "sig_u_param": 0.75,
+            "sig_eps_param": 0.75,
+            "ols_prior": False,
+            "random_state": 1071,
+            "use_garch": True,
+        },
+        parameters=(
+            _p(
+                "lambda_candidates",
+                None,
+                "sequence[float] | None",
+                "Candidate lambda values for the time-variation ridge penalty.",
+            ),
+            _p(
+                "lambda2",
+                0.1,
+                "float",
+                "Penalty on starting coefficient values beta_0.",
+                False,
+            ),
+            _p("kfold", 5, "int", "Random k-fold count for lambda CV.", False),
+            _p(
+                "cv_2srr",
+                True,
+                "bool",
+                "Run the second lambda CV after 2SRR variance reweighting.",
+                False,
+            ),
+            _p(
+                "sig_u_param",
+                0.75,
+                "float",
+                "Shrinkage exponent for coefficient-innovation variance weights.",
+                False,
+            ),
+            _p(
+                "sig_eps_param",
+                0.75,
+                "float",
+                "Shrinkage exponent for residual-volatility weights.",
+                False,
+            ),
+            _p(
+                "ols_prior",
+                False,
+                "bool",
+                "Shrink starting coefficients toward OLS instead of zero.",
+                False,
+            ),
+            _p("random_state", 1071, "int", "Random fold seed.", False),
+            _p(
+                "use_garch",
+                True,
+                "bool",
+                "Use optional arch GARCH(1,1) residual volatility if installed.",
+                False,
+            ),
+        ),
+        spaces={
+            "small": {
+                "lambda_candidates": (
+                    (0.01, 0.1, 1.0, 10.0),
+                    (0.1, 1.0, 10.0, 100.0),
+                )
+            },
+            "standard": {
+                "lambda_candidates": (
+                    tuple(float(v) for v in np.exp(np.linspace(-6.0, 20.0, num=15))),
+                )
+            },
+            "wide": {
+                "lambda_candidates": (
+                    tuple(float(v) for v in np.exp(np.linspace(-8.0, 24.0, num=21))),
+                )
+            },
+        },
+        method="cv_path",
+        backend="internal TVPRidge R/MV2SRR_v210407.R port + optional arch GARCH",
+        description="Goulet Coulombe TVP ridge / 2SRR estimator.",
     ),
     "lasso": _spec(
         "lasso",
@@ -1536,6 +1818,96 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "handled internally: X is standardized inside each fit",
         ),
         description="Bagged Hemisphere neural network with mean and variance heads.",
+    ),
+    "density_hnn": _spec(
+        "density_hnn",
+        "neural",
+        density_hnn,
+        default_params={
+            "common_layers": 2,
+            "mean_layers": 2,
+            "volatility_layers": 2,
+            "prior_layers": 3,
+            "neurons": 400,
+            "dropout": 0.2,
+            "learning_rate": 0.001,
+            "max_epochs": 100,
+            "n_estimators": 100,
+            "prior_estimators": 50,
+            "subsample": 0.8,
+            "block_size": 8,
+            "volatility_emphasis": None,
+            "rescale_volatility": True,
+            "patience": 15,
+            "random_state": 0,
+            "device": "auto",
+            "quantile_levels": (0.05, 0.5, 0.95),
+            "volatility_clip": 0.05,
+        },
+        parameters=(
+            _p("common_layers", 2, "int", "Shared common-core depth.", False),
+            _p("mean_layers", 2, "int", "Conditional-mean hemisphere depth.", False),
+            _p(
+                "volatility_layers",
+                2,
+                "int",
+                "Conditional-volatility hemisphere depth.",
+                False,
+            ),
+            _p("prior_layers", 3, "int", "Plain prior-DNN depth.", False),
+            _p("neurons", 400, "int", "Hidden width used by all dense blocks."),
+            _p("dropout", 0.2, "float", "Dropout rate.", False),
+            _p("learning_rate", 0.001, "float", "Adam learning rate."),
+            _p("max_epochs", 100, "int", "Training epoch cap.", False),
+            _p("n_estimators", 100, "int", "Density-HNN bootstrap ensemble size."),
+            _p(
+                "prior_estimators",
+                50,
+                "int",
+                "Prior-DNN bootstrap ensemble size used to estimate volatility emphasis.",
+            ),
+            _p("subsample", 0.8, "float", "Blocked bootstrap sampling rate.", False),
+            _p("block_size", 8, "int", "Time-series bootstrap block size.", False),
+            _p(
+                "volatility_emphasis",
+                None,
+                "float | None",
+                "Override for Aionx volatility-emphasis parameter; None estimates it from prior-DNN OOB MSE.",
+                False,
+            ),
+            _p(
+                "rescale_volatility",
+                True,
+                "bool",
+                "Apply Aionx blocked-OOB log residual-square volatility recalibration.",
+                False,
+            ),
+            _p("patience", 15, "int", "Early-stopping patience.", False),
+            _p("random_state", 0, "int", "Random seed.", False),
+            _p("device", "auto", "str", "Torch device: auto, cpu, or cuda.", False),
+            _p(
+                "quantile_levels",
+                (0.05, 0.5, 0.95),
+                "tuple[float, ...]",
+                "Default normal-approximation density quantiles.",
+                False,
+            ),
+            _p(
+                "volatility_clip",
+                0.05,
+                "float",
+                "Minimum volatility in Gaussian negative log likelihood.",
+                False,
+            ),
+        ),
+        spaces=_DENSITY_HNN_SPACES,
+        method="random",
+        backend="torch-native Aionx DensityHNN port",
+        requires_extra="deep",
+        recommended_preprocessing=(
+            "feature lags/trends are built before fitting; X and y are standardized inside each fit",
+        ),
+        description="Paper-faithful Density Hemisphere neural network with prior-DNN OOB volatility emphasis and OOB volatility rescaling.",
     ),
     "pls": _spec(
         "pls",

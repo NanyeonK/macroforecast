@@ -313,6 +313,93 @@ def test_random_walk_ridge_matches_augmented_path_least_squares() -> None:
     np.testing.assert_allclose(fit.estimator.coef_, expected_path[-1])
 
 
+def test_tvp_z_basis_matches_r_zfun_layout() -> None:
+    from macroforecast.models.tvp import _tvp_z_basis
+
+    data = np.asarray(
+        [
+            [2.0, 10.0],
+            [3.0, 11.0],
+            [4.0, 12.0],
+        ]
+    )
+    got = _tvp_z_basis(data)
+    expected = np.asarray(
+        [
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 10.0],
+            [1.0, 0.0, 3.0, 0.0, 11.0, 0.0, 1.0, 3.0, 11.0],
+            [1.0, 1.0, 4.0, 4.0, 12.0, 12.0, 1.0, 4.0, 12.0],
+        ]
+    )
+
+    np.testing.assert_allclose(got, expected)
+
+
+def test_tvp_ridge_fits_and_records_reference_outputs() -> None:
+    X, y = _xy(40)
+
+    fit = mf.models.tvp_ridge(
+        X,
+        y,
+        lambda_candidates=(0.1, 1.0),
+        kfold=3,
+        cv_2srr=False,
+        use_garch=False,
+    )
+
+    assert isinstance(fit, mf.models.ModelFit)
+    assert fit.metadata["lambda2"] == 0.1
+    assert fit.estimator.betas_rr_.shape == (1, X.shape[1] + 1, len(X))
+    assert fit.estimator.betas_2srr_.shape == (1, X.shape[1] + 1, len(X))
+    assert fit.estimator.yhat_rr_.shape == (len(X), 1)
+    assert fit.estimator.yhat_2srr_.shape == (len(X), 1)
+    assert fit.estimator.sig_eps_.shape == (len(X), 1)
+    assert fit.estimator.coef_path_.shape == X.shape
+    assert np.isfinite(fit.predict(X.iloc[-5:]).to_numpy(dtype=float)).all()
+    assert fit.diagnostics["fitted_values"].shape == (len(X),)
+    assert fit.diagnostics["coefficients"].shape == (X.shape[1],)
+
+
+def test_tvp_ridge_fixed_lambda_matches_dual_grr_helper() -> None:
+    from macroforecast.models.tvp import _dual_generalized_ridge, _tvp_z_basis
+
+    X, y = _xy(18)
+    fit = mf.models.tvp_ridge(
+        X,
+        y,
+        lambda_candidates=(0.5,),
+        cv_2srr=False,
+        sig_u_param=0.0,
+        sig_eps_param=0.0,
+        use_garch=False,
+    )
+    x_values = X.to_numpy(dtype=float)
+    y_values = y.to_numpy(dtype=float).reshape(-1, 1)
+    x_sd = np.std(x_values, axis=0, ddof=1)
+    y_sd = float(np.std(y_values[:, 0], ddof=1))
+    z_basis = _tvp_z_basis(x_values / x_sd.reshape(1, -1))
+    expected = _dual_generalized_ridge(
+        z_basis,
+        y_values / y_sd,
+        dim_x=X.shape[1] + 1,
+        lambda1=0.5,
+        lambda2=0.1,
+    )
+
+    np.testing.assert_allclose(
+        fit.estimator.yhat_rr_.iloc[:, 0].to_numpy(dtype=float),
+        expected.yhat[:, 0] * y_sd,
+        rtol=1e-8,
+        atol=1e-8,
+    )
+    np.testing.assert_allclose(
+        fit.estimator.betas_rr_[0, 0, :],
+        expected.betas_grr[0, 0, :] * y_sd,
+        rtol=1e-8,
+        atol=1e-8,
+    )
+
+
 def test_lasso_path_is_not_public_model_family() -> None:
     assert not hasattr(mf.models, "lasso_path")
     assert "lasso_path" not in mf.models.__all__
@@ -325,6 +412,7 @@ def test_top_level_model_exports_include_new_model_families() -> None:
     assert mf.shrink_to_target_ridge is mf.models.shrink_to_target_ridge
     assert mf.fused_difference_ridge is mf.models.fused_difference_ridge
     assert mf.random_walk_ridge is mf.models.random_walk_ridge
+    assert mf.tvp_ridge is mf.models.tvp_ridge
     assert mf.group_lasso is mf.models.group_lasso
     assert mf.sparse_group_lasso is mf.models.sparse_group_lasso
     assert mf.svr is mf.models.svr
@@ -335,6 +423,7 @@ def test_top_level_model_exports_include_new_model_families() -> None:
     assert mf.gru is mf.models.gru
     assert mf.transformer is mf.models.transformer
     assert mf.hemisphere_nn is mf.models.hemisphere_nn
+    assert mf.density_hnn is mf.models.density_hnn
     assert mf.kernel_ridge is mf.models.kernel_ridge
     assert mf.knn is mf.models.knn
     assert mf.mars is mf.models.mars
@@ -842,6 +931,7 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     ols_spec = mf.models.get_model("ols")
     ridge_spec = mf.models.get_model("ridge")
     lasso_spec = mf.models.get_model("lasso")
+    tvp_spec = mf.models.get_model("tvp_ridge")
     adaptive_lasso_spec = mf.models.get_model("adaptive_lasso")
     group_lasso_spec = mf.models.get_model("group_lasso")
     glmboost_spec = mf.models.get_model("glmboost")
@@ -859,6 +949,7 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     lstm_spec = mf.models.get_model("lstm")
     transformer_spec = mf.models.get_model("transformer")
     hnn_spec = mf.models.get_model("hemisphere_nn")
+    density_hnn_spec = mf.models.get_model("density_hnn")
     xgb_spec = mf.models.get_model("xgboost")
     lightgbm_spec = mf.models.get_model("lightgbm")
     lgb_plus_spec = mf.models.get_model("lgb_plus")
@@ -873,6 +964,9 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert ols_spec.backend == "sklearn.linear_model.LinearRegression"
     assert ridge_spec.backend == "sklearn.linear_model.Ridge"
     assert lasso_spec.backend == "sklearn.linear_model.Lasso"
+    assert "TVPRidge" in tvp_spec.backend
+    assert tvp_spec.default_params["random_state"] == 1071
+    assert tvp_spec.default_params["cv_2srr"] is True
     assert (
         adaptive_lasso_spec.backend
         == "internal adaptive weights + sklearn.linear_model.Lasso"
@@ -919,6 +1013,10 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert transformer_spec.requires_extra == "deep"
     assert hnn_spec.requires_extra == "deep"
     assert hnn_spec.default_params["B"] is None
+    assert density_hnn_spec.backend == "torch-native Aionx DensityHNN port"
+    assert density_hnn_spec.requires_extra == "deep"
+    assert density_hnn_spec.default_params["prior_estimators"] == 50
+    assert density_hnn_spec.default_params["rescale_volatility"] is True
 
     table = mf.models.list_model_specs(family="neural")
     row = table.loc[table["name"] == "lstm"].iloc[0]
@@ -1448,6 +1546,50 @@ def test_hemisphere_nn_fit_when_torch_is_available() -> None:
     assert fit.metadata["n_estimators"] == 2
     assert fit.metadata["quantile_levels"] == (0.1, 0.5, 0.9)
     assert fit.estimator.device_ == "cpu"
+
+
+def test_density_hnn_matches_aionx_density_contract_when_torch_is_available() -> None:
+    pytest.importorskip("torch")
+    X, y = _xy(28)
+    y = y + 0.15 * np.sin(np.arange(len(y)))
+
+    fit = mf.models.density_hnn(
+        X,
+        y,
+        neurons=4,
+        max_epochs=1,
+        n_estimators=2,
+        prior_estimators=2,
+        block_size=4,
+        patience=1,
+        device="cpu",
+        quantile_levels=(0.1, 0.5, 0.9),
+    )
+
+    pred = fit.predict(X.iloc[-4:])
+    variance = fit.predict_variance(X.iloc[-4:])
+    volatility = fit.predict_volatility(X.iloc[-4:])
+    quantiles = fit.predict_quantiles(X.iloc[-4:])
+
+    assert len(pred) == 4
+    assert variance.shape == (4,)
+    assert volatility.shape == (4,)
+    assert np.isfinite(variance).all()
+    assert np.isfinite(volatility).all()
+    assert (variance > 0).all()
+    assert (volatility > 0).all()
+    assert set(quantiles) == {0.1, 0.5, 0.9}
+    assert all(values.shape == (4,) for values in quantiles.values())
+    assert fit.metadata["prior_estimators"] == 2
+    assert fit.metadata["rescale_volatility"] is True
+    assert fit.diagnostics["density"]["backend_alignment"][
+        "volatility_rescaling_algorithm"
+    ] == "log residual-square calibration"
+    assert fit.diagnostics["density"]["volatility_emphasis"] > 0
+    assert fit.estimator.oob_prediction_ is not None
+    assert {"conditional_mean", "conditional_volatility", "conditional_variance"} <= set(
+        fit.estimator.oob_prediction_.columns
+    )
 
 
 def test_supervised_pca_fit_records_selected_features() -> None:

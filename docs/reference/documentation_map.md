@@ -24,7 +24,7 @@ Use this page as the inspection order for the current callable-first
 | How do I fit several member models as one model? | [Model Ensemble](model_ensemble.md) | Bagging, subagging, random subspace, stacking, Super Learner, and Booging. |
 | How does the runner combine everything? | [Forecasting](forecasting.md) | Runner inputs, direct/recursive/path-average forecasts, forecast-output combinations. |
 | How do I score and test forecasts? | [Evaluation](evaluation.md) | Evaluation reports, metrics/tests split, benchmark/regime/decomposition tables. |
-| How do I inspect model behavior? | [Interpretation](interpretation.md) | Importance, SHAP, attribution, VAR interpretation, neural attribution. |
+| How do I inspect model behavior? | [Interpretation](interpretation.md) | Importance, SHAP, attribution, OLS-as-attention, VAR interpretation, neural attribution. |
 | Which historical observations drove a forecast? | [Dual Interpretation](interpretation_dual.md) | Observation weights, observation contributions, concentration, short position, leverage, turnover, and historical episode groups. |
 | How do I save outputs? | [Output](output.md) | Output bundles, artifact writing, manifests, hashes, compression. |
 | How do I format paper/report tables? | [Reporting](reporting.md) | Accuracy/model-comparison/test presets, table formatting, LaTeX/HTML/Markdown rendering, figure-ready data. |

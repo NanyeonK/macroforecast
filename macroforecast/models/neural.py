@@ -901,6 +901,540 @@ class _TorchHemisphereNet:
         return mean, variance
 
 
+class _TorchDensityHNNRegressor:
+    """Aionx DensityHNN-style dual-head density forecaster.
+
+    This estimator follows the public Python source linked from Goulet
+    Coulombe, Frenette, and Klieber (2025). The source-of-truth code is
+    Aionx ``aionx/models.py::DensityHNN``:
+
+    - ``prior_dnn_architecture``: fit a plain DNN ensemble first.
+    - ``TimeSeriesBlockBootstrap`` and ``OutOfBagPredictor``: compute blocked
+      OOB forecasts.
+    - ``base_architecture``: shared core, conditional-mean head, and positive
+      volatility head, with mean volatility scaled to the emphasis parameter.
+    - ``volatility_rescaling_algorithm``: regress log OOB squared residuals on
+      log predicted volatility squared, then rescale all volatility forecasts.
+
+    The implementation is torch-native to avoid adding TensorFlow to the public
+    dependency surface. It keeps Aionx's statistical logic but consumes the
+    macroforecast callable ``X, y`` feature-matrix contract.
+    """
+
+    def __init__(
+        self,
+        *,
+        common_layers: int = 2,
+        mean_layers: int = 2,
+        volatility_layers: int = 2,
+        prior_layers: int = 3,
+        neurons: int = 400,
+        dropout: float = 0.2,
+        learning_rate: float = 0.001,
+        max_epochs: int = 100,
+        n_estimators: int = 100,
+        prior_estimators: int = 50,
+        subsample: float = 0.8,
+        block_size: int = 8,
+        volatility_emphasis: float | None = None,
+        rescale_volatility: bool = True,
+        patience: int = 15,
+        random_state: int = 0,
+        device: TorchDevice = "auto",
+        quantile_levels: tuple[float, ...] = (0.05, 0.5, 0.95),
+        volatility_clip: float = 0.05,
+    ) -> None:
+        if device not in {"auto", "cpu", "cuda"}:
+            raise ValueError("device must be 'auto', 'cpu', or 'cuda'")
+        if float(learning_rate) <= 0.0:
+            raise ValueError("learning_rate must be positive")
+        self.common_layers = max(1, int(common_layers))
+        self.mean_layers = max(1, int(mean_layers))
+        self.volatility_layers = max(1, int(volatility_layers))
+        self.prior_layers = max(1, int(prior_layers))
+        self.neurons = max(2, int(neurons))
+        self.dropout = float(np.clip(dropout, 0.0, 0.9))
+        self.learning_rate = float(learning_rate)
+        self.max_epochs = max(1, int(max_epochs))
+        self.n_estimators = max(1, int(n_estimators))
+        self.prior_estimators = max(0, int(prior_estimators))
+        self.subsample = float(np.clip(subsample, 0.05, 0.99))
+        self.block_size = max(1, int(block_size))
+        self.volatility_emphasis = (
+            None if volatility_emphasis is None else float(volatility_emphasis)
+        )
+        self.rescale_volatility = bool(rescale_volatility)
+        self.patience = max(1, int(patience))
+        self.random_state = int(random_state)
+        self.device = device
+        self.quantile_levels = tuple(float(level) for level in quantile_levels)
+        if not self.quantile_levels or any(
+            level <= 0.0 or level >= 1.0 for level in self.quantile_levels
+        ):
+            raise ValueError("quantile_levels must contain values in (0, 1)")
+        self.volatility_clip = max(1e-6, float(volatility_clip))
+        self.device_: str | None = None
+        self.feature_names_in_: tuple[str, ...] = ()
+        self.x_mean_: np.ndarray | None = None
+        self.x_scale_: np.ndarray | None = None
+        self.y_mean_: float = 0.0
+        self.y_scale_: float = 1.0
+        self.fallback_: float = 0.0
+        self.target_variance_: float = 1.0
+        self.models_: list[Any] = []
+        self.oob_indices_: list[np.ndarray] = []
+        self.training_history_: dict[str, list[float]] = {
+            "prior_loss": [],
+            "density_loss": [],
+        }
+        self.volatility_emphasis_: float = 1.0
+        self.prior_oob_mse_: float | None = None
+        self.oob_rescaling_: dict[str, float | int | bool] = {
+            "enabled": False,
+            "intercept": 0.0,
+            "slope": 1.0,
+            "scaler": 1.0,
+            "n_obs": 0,
+        }
+        self.oob_prediction_: pd.DataFrame | None = None
+        self.density_diagnostics_: dict[str, Any] = {}
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_TorchDensityHNNRegressor":
+        torch = optional_import("torch", extra="deep")
+        device = _resolve_torch_device(torch, self.device)
+        self.device_ = str(device)
+        torch.manual_seed(self.random_state)
+        if hasattr(torch, "cuda") and torch.cuda.is_available():
+            torch.cuda.manual_seed_all(self.random_state)
+        rng = np.random.default_rng(self.random_state)
+
+        frame = X.astype(float).copy()
+        target = pd.Series(y, index=frame.index).astype(float)
+        self.feature_names_in_ = tuple(str(column) for column in frame.columns)
+        values = frame.to_numpy(dtype=float)
+        self.x_mean_, self.x_scale_, x_scaled = _standardize_matrix(values)
+        y_values = target.to_numpy(dtype=float)
+        self.y_mean_, self.y_scale_, y_scaled = _standardize_vector(y_values)
+        self.fallback_ = self.y_mean_
+        self.target_variance_ = float(self.y_scale_**2)
+
+        n_obs, n_features = x_scaled.shape
+        if n_obs < 4 or n_features == 0:
+            self.volatility_emphasis_ = 1.0
+            self.density_diagnostics_ = self._density_diagnostics()
+            return self
+
+        x_all = torch.tensor(x_scaled, dtype=torch.float32, device=device)
+        y_all = torch.tensor(y_scaled, dtype=torch.float32, device=device)
+
+        if self.volatility_emphasis is None and self.prior_estimators > 0:
+            prior = self._fit_prior_ensemble(torch, x_all, y_all, rng)
+            self.prior_oob_mse_ = prior["oob_mse"]
+            raw_emphasis = self.prior_oob_mse_
+        else:
+            raw_emphasis = self.volatility_emphasis
+        self.volatility_emphasis_ = _aionx_volatility_emphasis(raw_emphasis)
+
+        self.models_ = []
+        self.oob_indices_ = []
+        density_losses: list[float] = []
+        for _ in range(self.n_estimators):
+            train_idx, oob_idx = _time_series_block_bootstrap_indices(
+                n_obs,
+                self.subsample,
+                self.block_size,
+                rng,
+            )
+            if len(train_idx) < 2:
+                continue
+            model = _TorchDensityHNNNet(
+                torch=torch,
+                n_features=n_features,
+                common_layers=self.common_layers,
+                mean_layers=self.mean_layers,
+                volatility_layers=self.volatility_layers,
+                neurons=self.neurons,
+                dropout=self.dropout,
+                volatility_emphasis=self.volatility_emphasis_,
+            ).to(device)
+            best_loss = self._fit_density_member(
+                torch,
+                model,
+                x_all,
+                y_all,
+                train_idx,
+                oob_idx,
+            )
+            self.models_.append(model)
+            self.oob_indices_.append(oob_idx)
+            density_losses.append(best_loss)
+        if not self.models_:
+            model = _TorchDensityHNNNet(
+                torch=torch,
+                n_features=n_features,
+                common_layers=self.common_layers,
+                mean_layers=self.mean_layers,
+                volatility_layers=self.volatility_layers,
+                neurons=self.neurons,
+                dropout=self.dropout,
+                volatility_emphasis=self.volatility_emphasis_,
+            ).to(device)
+            self.models_.append(model)
+            self.oob_indices_.append(np.arange(n_obs, dtype=int))
+        self.training_history_["density_loss"] = [float(value) for value in density_losses]
+
+        mean_matrix, sigma_matrix = self._predict_scaled_matrices(torch, x_all)
+        mean_oob = _aionx_oob_average(mean_matrix, self.oob_indices_, self.subsample)
+        sigma_oob = _aionx_oob_average(sigma_matrix, self.oob_indices_, self.subsample)
+        if self.rescale_volatility:
+            self.oob_rescaling_ = _fit_aionx_volatility_rescaling(
+                y_scaled,
+                mean_oob,
+                sigma_oob,
+                volatility_clip=self.volatility_clip,
+            )
+        else:
+            self.oob_rescaling_ = {
+                "enabled": False,
+                "intercept": 0.0,
+                "slope": 1.0,
+                "scaler": 1.0,
+                "n_obs": 0,
+            }
+        scaled_sigma_oob = _apply_aionx_volatility_rescaling(
+            sigma_oob,
+            self.oob_rescaling_,
+            volatility_clip=self.volatility_clip,
+        )
+        self.oob_prediction_ = pd.DataFrame(
+            {
+                "conditional_mean": mean_oob * self.y_scale_ + self.y_mean_,
+                "conditional_volatility": scaled_sigma_oob * self.y_scale_,
+                "conditional_variance": (scaled_sigma_oob * self.y_scale_) ** 2,
+            },
+            index=frame.index,
+        )
+        self.density_diagnostics_ = self._density_diagnostics()
+        return self
+
+    def _fit_prior_ensemble(
+        self,
+        torch: Any,
+        x_all: Any,
+        y_all: Any,
+        rng: np.random.Generator,
+    ) -> dict[str, Any]:
+        predictions = []
+        oob_indices = []
+        losses = []
+        for _ in range(self.prior_estimators):
+            train_idx, oob_idx = _time_series_block_bootstrap_indices(
+                len(y_all),
+                self.subsample,
+                self.block_size,
+                rng,
+            )
+            model = _torch_nn_net(
+                torch=torch,
+                n_features=x_all.shape[1],
+                hidden_layer_sizes=tuple([self.neurons] * self.prior_layers),
+                activation="relu",
+                dropout=self.dropout,
+            ).to(x_all.device)
+            loss = self._fit_prior_member(torch, model, x_all, y_all, train_idx, oob_idx)
+            model.eval()
+            with torch.no_grad():
+                pred = (
+                    model(x_all)
+                    .detach()
+                    .cpu()
+                    .numpy()
+                    .reshape(-1)
+                )
+            predictions.append(pred)
+            oob_indices.append(oob_idx)
+            losses.append(loss)
+        self.training_history_["prior_loss"] = [float(value) for value in losses]
+        matrix = np.column_stack(predictions) if predictions else np.empty((len(y_all), 0))
+        oob = _aionx_oob_average(matrix, oob_indices, self.subsample)
+        y_np = y_all.detach().cpu().numpy().reshape(-1)
+        valid = np.isfinite(oob) & np.isfinite(y_np)
+        mse = float(np.mean((oob[valid] - y_np[valid]) ** 2)) if valid.any() else 1.0
+        if not np.isfinite(mse) or mse <= 1e-12:
+            mse = 1.0
+        return {"prediction_matrix": matrix, "oob_prediction": oob, "oob_mse": mse}
+
+    def _fit_prior_member(
+        self,
+        torch: Any,
+        model: Any,
+        x_all: Any,
+        y_all: Any,
+        train_idx: np.ndarray,
+        oob_idx: np.ndarray,
+    ) -> float:
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        x_train = x_all[train_idx]
+        y_train = y_all[train_idx]
+        x_val = x_all[oob_idx] if len(oob_idx) else x_train
+        y_val = y_all[oob_idx] if len(oob_idx) else y_train
+        best_loss = float("inf")
+        stale = 0
+        best_state = _torch_clone_state(model.state_dict())
+        for _ in range(self.max_epochs):
+            model.train()
+            optimizer.zero_grad()
+            pred = model(x_train).squeeze(-1)
+            loss = ((y_train - pred) ** 2).mean()
+            loss.backward()
+            optimizer.step()
+            model.eval()
+            with torch.no_grad():
+                val_pred = model(x_val).squeeze(-1)
+                val_loss = float(((y_val - val_pred) ** 2).mean().detach().cpu().item())
+            if val_loss < best_loss:
+                best_loss = val_loss
+                stale = 0
+                best_state = _torch_clone_state(model.state_dict())
+            else:
+                stale += 1
+            if stale >= self.patience:
+                break
+        model.load_state_dict(best_state)
+        return best_loss
+
+    def _fit_density_member(
+        self,
+        torch: Any,
+        model: "_TorchDensityHNNNet",
+        x_all: Any,
+        y_all: Any,
+        train_idx: np.ndarray,
+        oob_idx: np.ndarray,
+    ) -> float:
+        optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        x_train = x_all[train_idx]
+        y_train = y_all[train_idx]
+        x_val = x_all[oob_idx] if len(oob_idx) else x_train
+        y_val = y_all[oob_idx] if len(oob_idx) else y_train
+        best_loss = float("inf")
+        stale = 0
+        best_state = _torch_clone_state(model.state_dict())
+        for _ in range(self.max_epochs):
+            model.train()
+            optimizer.zero_grad()
+            mean, sigma = model(x_train)
+            loss = _torch_gaussian_sigma_nll(torch, y_train, mean, sigma, self.volatility_clip)
+            loss.backward()
+            optimizer.step()
+            model.eval()
+            with torch.no_grad():
+                val_mean, val_sigma = model(x_val)
+                val_loss = float(
+                    _torch_gaussian_sigma_nll(
+                        torch,
+                        y_val,
+                        val_mean,
+                        val_sigma,
+                        self.volatility_clip,
+                    )
+                    .detach()
+                    .cpu()
+                    .item()
+                )
+            if val_loss < best_loss:
+                best_loss = val_loss
+                stale = 0
+                best_state = _torch_clone_state(model.state_dict())
+            else:
+                stale += 1
+            if stale >= self.patience:
+                break
+        model.load_state_dict(best_state)
+        return best_loss
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        mean, _ = self.predict_distribution(X)
+        return mean
+
+    def predict_variance(self, X: pd.DataFrame) -> np.ndarray:
+        _, variance = self.predict_distribution(X)
+        return variance
+
+    def predict_volatility(self, X: pd.DataFrame) -> np.ndarray:
+        variance = self.predict_variance(X)
+        return np.sqrt(np.maximum(variance, 1e-12))
+
+    def predict_quantiles(
+        self,
+        X: pd.DataFrame,
+        levels: tuple[float, ...] | None = None,
+    ) -> dict[float, np.ndarray]:
+        mean, variance = self.predict_distribution(X)
+        sigma = np.sqrt(np.maximum(variance, 1e-12))
+        normal = NormalDist()
+        quantile_levels = (
+            self.quantile_levels if levels is None else tuple(float(level) for level in levels)
+        )
+        if not quantile_levels or any(
+            level <= 0.0 or level >= 1.0 for level in quantile_levels
+        ):
+            raise ValueError("quantile levels must be in (0, 1)")
+        return {
+            float(level): mean + sigma * normal.inv_cdf(float(level))
+            for level in quantile_levels
+        }
+
+    def predict_distribution(self, X: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        torch = optional_import("torch", extra="deep")
+        if not self.models_ or self.x_mean_ is None or self.x_scale_ is None:
+            n = len(X)
+            return (
+                np.full(n, self.fallback_, dtype=float),
+                np.full(n, self.target_variance_, dtype=float),
+            )
+        frame = X.reindex(columns=list(self.feature_names_in_), fill_value=0.0).astype(float)
+        values = _standardize_prediction_matrix(
+            frame.to_numpy(dtype=float),
+            self.x_mean_,
+            self.x_scale_,
+        )
+        if len(values) == 0:
+            return np.array([], dtype=float), np.array([], dtype=float)
+        device = torch.device(self.device_ or "cpu")
+        tensor_x = torch.tensor(values, dtype=torch.float32, device=device)
+        mean_matrix, sigma_matrix = self._predict_scaled_matrices(torch, tensor_x)
+        mean_scaled = np.mean(mean_matrix, axis=1)
+        sigma_scaled = np.mean(sigma_matrix, axis=1)
+        sigma_scaled = _apply_aionx_volatility_rescaling(
+            sigma_scaled,
+            self.oob_rescaling_,
+            volatility_clip=self.volatility_clip,
+        )
+        mean = mean_scaled * self.y_scale_ + self.y_mean_
+        volatility = np.maximum(sigma_scaled * self.y_scale_, 1e-12)
+        return mean, volatility**2
+
+    def _predict_scaled_matrices(self, torch: Any, tensor_x: Any) -> tuple[np.ndarray, np.ndarray]:
+        means = []
+        sigmas = []
+        with torch.no_grad():
+            for model in self.models_:
+                model.eval()
+                mean, sigma = model(tensor_x)
+                means.append(mean.detach().cpu().numpy().reshape(-1))
+                sigmas.append(sigma.detach().cpu().numpy().reshape(-1))
+        return np.column_stack(means), np.column_stack(sigmas)
+
+    def _density_diagnostics(self) -> dict[str, Any]:
+        return {
+            "source_reference": (
+                "Goulet Coulombe, Frenette, and Klieber (2025) and "
+                "Aionx aionx.models.DensityHNN"
+            ),
+            "backend_alignment": {
+                "prior_dnn_architecture": "torch feed-forward prior ensemble",
+                "base_architecture": "torch shared core plus mean/volatility heads",
+                "TimeSeriesBlockBootstrap": "time-series block bootstrap indices",
+                "OutOfBagPredictor": "Aionx denominator OOB averaging",
+                "volatility_rescaling_algorithm": "log residual-square calibration",
+            },
+            "volatility_emphasis": float(self.volatility_emphasis_),
+            "prior_oob_mse": None
+            if self.prior_oob_mse_ is None
+            else float(self.prior_oob_mse_),
+            "oob_rescaling": dict(self.oob_rescaling_),
+            "n_estimators": int(len(self.models_)),
+            "prior_estimators": int(self.prior_estimators),
+            "subsample": float(self.subsample),
+            "block_size": int(self.block_size),
+            "output_scale": "mean in target units; variance in target units squared",
+        }
+
+
+class _TorchDensityHNNNet:
+    """Shared-core HNN with an Aionx-style positive volatility hemisphere."""
+
+    def __init__(
+        self,
+        *,
+        torch: Any,
+        n_features: int,
+        common_layers: int,
+        mean_layers: int,
+        volatility_layers: int,
+        neurons: int,
+        dropout: float,
+        volatility_emphasis: float,
+    ) -> None:
+        self.torch = torch
+        self.softplus = torch.nn.Softplus()
+        self.volatility_emphasis = float(volatility_emphasis)
+        self.core = _torch_dense_stack(
+            torch, n_features, neurons, depth=common_layers, dropout=dropout
+        )
+        self.mean_head = torch.nn.Sequential(
+            _torch_dense_stack(torch, neurons, neurons, depth=mean_layers, dropout=dropout),
+            torch.nn.Linear(neurons, 1),
+        )
+        self.volatility_head = torch.nn.Sequential(
+            _torch_dense_stack(
+                torch,
+                neurons,
+                neurons,
+                depth=volatility_layers,
+                dropout=dropout,
+            ),
+            torch.nn.Linear(neurons, 1),
+        )
+
+    def to(self, device: Any) -> "_TorchDensityHNNNet":
+        self.core.to(device)
+        self.mean_head.to(device)
+        self.volatility_head.to(device)
+        return self
+
+    def train(self) -> "_TorchDensityHNNNet":
+        self.core.train()
+        self.mean_head.train()
+        self.volatility_head.train()
+        return self
+
+    def eval(self) -> "_TorchDensityHNNNet":
+        self.core.eval()
+        self.mean_head.eval()
+        self.volatility_head.eval()
+        return self
+
+    def parameters(self) -> Any:
+        yield from self.core.parameters()
+        yield from self.mean_head.parameters()
+        yield from self.volatility_head.parameters()
+
+    def state_dict(self) -> dict[str, Any]:
+        return {
+            "core": self.core.state_dict(),
+            "mean_head": self.mean_head.state_dict(),
+            "volatility_head": self.volatility_head.state_dict(),
+        }
+
+    def load_state_dict(self, state: dict[str, Any]) -> None:
+        self.core.load_state_dict(state["core"])
+        self.mean_head.load_state_dict(state["mean_head"])
+        self.volatility_head.load_state_dict(state["volatility_head"])
+
+    def __call__(self, x: Any) -> tuple[Any, Any]:
+        latent = self.core(x)
+        mean = self.mean_head(latent).squeeze(-1)
+        raw_sigma = self.softplus(self.volatility_head(latent)).squeeze(-1) + 1e-6
+        # Aionx DensityHNN.base_architecture uses
+        #   vol_emphasis * vol_output / reduce_mean(vol_output).
+        # This fixes the average predicted volatility to the OOB-derived
+        # emphasis parameter and is central to the paper's variance allocation.
+        sigma = self.volatility_emphasis * raw_sigma / raw_sigma.mean().clamp_min(1e-6)
+        return mean, sigma
+
+
 def _torch_dense_stack(
     torch: Any,
     in_features: int,
@@ -921,10 +1455,155 @@ def _torch_dense_stack(
 
 
 def _torch_clone_state(state: dict[str, Any]) -> dict[str, Any]:
+    cloned: dict[str, Any] = {}
+    for key, value in state.items():
+        if isinstance(value, dict):
+            cloned[key] = {
+                inner_key: tensor.detach().clone()
+                for inner_key, tensor in value.items()
+            }
+        else:
+            cloned[key] = value.detach().clone()
+    return cloned
+
+
+def _torch_gaussian_sigma_nll(
+    torch: Any,
+    y_true: Any,
+    mean: Any,
+    sigma: Any,
+    volatility_clip: float,
+) -> Any:
+    # Aionx kerasnn.losses.GaussianLogLikelihood computes
+    # mean((y - mu)^2 / sigma^2 + log(sigma^2)) after clipping sigma.
+    clipped = torch.clamp(sigma, min=float(volatility_clip))
+    return (((y_true - mean) ** 2) / (clipped**2) + torch.log(clipped**2)).mean()
+
+
+def _aionx_volatility_emphasis(value: float | None) -> float:
+    # Aionx DensityHNN.base_architecture warns outside [0.01, 1.0] and sets
+    # the emphasis to 0.99. Keep that behavior for paper/source alignment.
+    if value is None or not np.isfinite(float(value)):
+        return 0.99
+    resolved = float(value)
+    if not 0.01 <= resolved <= 1.0:
+        return 0.99
+    return resolved
+
+
+def _time_series_block_bootstrap_indices(
+    n_obs: int,
+    sampling_rate: float,
+    block_size: int,
+    rng: np.random.Generator,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return blocked bootstrap and OOB indices for time-series samples."""
+
+    if n_obs <= 0:
+        return np.array([], dtype=int), np.array([], dtype=int)
+    block_size = max(1, int(block_size))
+    blocks = [
+        np.arange(start, min(start + block_size, n_obs), dtype=int)
+        for start in range(0, n_obs, block_size)
+    ]
+    n_train = max(1, int(round(float(sampling_rate) * n_obs)))
+    n_blocks = max(1, int(np.ceil(n_train / block_size)))
+    chosen = rng.choice(len(blocks), size=n_blocks, replace=True)
+    train_idx = np.concatenate([blocks[int(index)] for index in chosen])
+    if len(train_idx) > n_train:
+        train_idx = train_idx[:n_train]
+    train_idx = np.asarray(train_idx, dtype=int)
+    in_bag_unique = np.unique(train_idx)
+    oob_idx = np.setdiff1d(np.arange(n_obs, dtype=int), in_bag_unique, assume_unique=True)
+    if len(oob_idx) == 0:
+        fallback = max(1, min(n_obs - 1, block_size))
+        oob_idx = np.arange(n_obs - fallback, n_obs, dtype=int)
+    return np.sort(train_idx), np.asarray(oob_idx, dtype=int)
+
+
+def _aionx_oob_average(
+    forecasts: np.ndarray,
+    oob_indices: list[np.ndarray],
+    sampling_rate: float,
+) -> np.ndarray:
+    """Aionx OutOfBagPredictor average for rows exposed as OOB by estimators."""
+
+    if forecasts.size == 0 or forecasts.shape[1] == 0:
+        return np.full(forecasts.shape[0], np.nan, dtype=float)
+    work = np.asarray(forecasts, dtype=float).copy()
+    all_rows = np.arange(work.shape[0])
+    for col, oob_idx in enumerate(oob_indices[: work.shape[1]]):
+        rows_to_nan = np.where(~np.isin(all_rows, np.asarray(oob_idx, dtype=int)))[0]
+        work[rows_to_nan, col] = np.nan
+    row_sums = np.nansum(work, axis=1)
+    denominator = max((1.0 - float(sampling_rate)) * work.shape[1], 1e-12)
+    averaged = row_sums / denominator
+    averaged[averaged == 0.0] = np.nan
+    return averaged
+
+
+def _fit_aionx_volatility_rescaling(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    sigma_pred: np.ndarray,
+    *,
+    volatility_clip: float,
+) -> dict[str, float | int | bool]:
+    """Fit Aionx's log squared-residual volatility recalibration."""
+
+    residual_sq = (np.asarray(y_true, dtype=float) - np.asarray(y_pred, dtype=float)) ** 2
+    sigma_sq = np.asarray(sigma_pred, dtype=float) ** 2
+    valid = (
+        np.isfinite(residual_sq)
+        & np.isfinite(sigma_sq)
+        & (residual_sq > 1e-12)
+        & (sigma_sq > volatility_clip**2)
+    )
+    if int(valid.sum()) < 3:
+        return {
+            "enabled": False,
+            "intercept": 0.0,
+            "slope": 1.0,
+            "scaler": 1.0,
+            "n_obs": int(valid.sum()),
+        }
+    x = np.log(sigma_sq[valid])
+    y = np.log(residual_sq[valid])
+    design = np.column_stack([np.ones_like(x), x])
+    intercept, slope = np.linalg.lstsq(design, y, rcond=None)[0]
+    projection = intercept + slope * x
+    scaler = float(np.sqrt(np.mean(np.exp(y - projection))))
+    if not np.isfinite(scaler) or scaler <= 0:
+        scaler = 1.0
     return {
-        key: {inner_key: tensor.detach().clone() for inner_key, tensor in value.items()}
-        for key, value in state.items()
+        "enabled": True,
+        "intercept": float(intercept),
+        "slope": float(slope),
+        "scaler": scaler,
+        "n_obs": int(valid.sum()),
     }
+
+
+def _apply_aionx_volatility_rescaling(
+    sigma_pred: np.ndarray,
+    rescaling: dict[str, float | int | bool],
+    *,
+    volatility_clip: float,
+) -> np.ndarray:
+    sigma = np.asarray(sigma_pred, dtype=float)
+    sigma = np.where(
+        np.isfinite(sigma) & (sigma > volatility_clip),
+        sigma,
+        float(volatility_clip),
+    )
+    if not rescaling.get("enabled", False):
+        return sigma
+    intercept = float(rescaling.get("intercept", 0.0))
+    slope = float(rescaling.get("slope", 1.0))
+    scaler = float(rescaling.get("scaler", 1.0))
+    projection = intercept + slope * np.log(np.maximum(sigma**2, volatility_clip**2))
+    adjusted = np.sqrt(np.exp(projection)) * scaler
+    return np.where(np.isfinite(adjusted) & (adjusted > 0), adjusted, sigma)
 
 
 def _blocked_subsample_indices(
@@ -1174,4 +1853,87 @@ def hemisphere_nn(
     )
 
 
-__all__ = ["gru", "hemisphere_nn", "lstm", "nn", "transformer"]
+def density_hnn(
+    X: Any,
+    y: Any | None = None,
+    *,
+    common_layers: int = 2,
+    mean_layers: int = 2,
+    volatility_layers: int = 2,
+    prior_layers: int = 3,
+    neurons: int = 400,
+    dropout: float = 0.2,
+    learning_rate: float = 0.001,
+    max_epochs: int = 100,
+    n_estimators: int = 100,
+    prior_estimators: int = 50,
+    subsample: float = 0.8,
+    block_size: int = 8,
+    volatility_emphasis: float | None = None,
+    rescale_volatility: bool = True,
+    patience: int = 15,
+    random_state: int = 0,
+    device: TorchDevice = "auto",
+    quantile_levels: tuple[float, ...] = (0.05, 0.5, 0.95),
+    volatility_clip: float = 0.05,
+) -> ModelFit:
+    """Fit the paper-faithful Density Hemisphere neural-network forecaster."""
+
+    params = {
+        "common_layers": int(common_layers),
+        "mean_layers": int(mean_layers),
+        "volatility_layers": int(volatility_layers),
+        "prior_layers": int(prior_layers),
+        "neurons": int(neurons),
+        "dropout": float(dropout),
+        "learning_rate": float(learning_rate),
+        "max_epochs": int(max_epochs),
+        "n_estimators": int(n_estimators),
+        "prior_estimators": int(prior_estimators),
+        "subsample": float(subsample),
+        "block_size": int(block_size),
+        "volatility_emphasis": None
+        if volatility_emphasis is None
+        else float(volatility_emphasis),
+        "rescale_volatility": bool(rescale_volatility),
+        "patience": int(patience),
+        "random_state": int(random_state),
+        "device": device,
+        "quantile_levels": tuple(float(level) for level in quantile_levels),
+        "volatility_clip": float(volatility_clip),
+        "source_reference": (
+            "Goulet Coulombe, Frenette, and Klieber (2025), "
+            "From Reactive to Proactive Volatility Modeling with Hemisphere "
+            "Neural Networks; Aionx DensityHNN"
+        ),
+    }
+    return fit_estimator(
+        _TorchDensityHNNRegressor(
+            common_layers=int(common_layers),
+            mean_layers=int(mean_layers),
+            volatility_layers=int(volatility_layers),
+            prior_layers=int(prior_layers),
+            neurons=int(neurons),
+            dropout=float(dropout),
+            learning_rate=float(learning_rate),
+            max_epochs=int(max_epochs),
+            n_estimators=int(n_estimators),
+            prior_estimators=int(prior_estimators),
+            subsample=float(subsample),
+            block_size=int(block_size),
+            volatility_emphasis=volatility_emphasis,
+            rescale_volatility=bool(rescale_volatility),
+            patience=int(patience),
+            random_state=int(random_state),
+            device=device,
+            quantile_levels=tuple(float(level) for level in quantile_levels),
+            volatility_clip=float(volatility_clip),
+        ),
+        X,
+        y,
+        model="density_hnn",
+        metadata=params,
+    )
+
+
+__all__ = ["density_hnn", "gru", "hemisphere_nn", "lstm", "nn", "transformer"]

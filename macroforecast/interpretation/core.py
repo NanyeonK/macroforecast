@@ -138,12 +138,32 @@ _REFERENCE_CATALOG: dict[str, dict[str, Any]] = {
     },
     "attention_weights": {
         "class": "closed_form_linear_algebra",
-        "reference": "OLS/ridge hat-matrix dual weights",
+        "reference": "Ordinary Least Squares as an Attention Mechanism, Goulet Coulombe (2026)",
         "alignment": "closed-form X_test (X_train'X_train + lambda I)^-1 X_train' with unpenalized intercept",
+    },
+    "ols_attention_weights": {
+        "class": "closed_form_linear_algebra",
+        "reference": "Ordinary Least Squares as an Attention Mechanism, Goulet Coulombe (2026)",
+        "alignment": "exact OLS attention weights X_test (X_train'X_train)^-1 X_train' using a pseudoinverse when needed",
+    },
+    "ridge_attention_weights": {
+        "class": "closed_form_linear_algebra",
+        "reference": "Ordinary Least Squares as an Attention Mechanism, Goulet Coulombe (2026), ridge extension",
+        "alignment": "ridge-stabilized attention weights X_test (X_train'X_train + alpha I)^-1 X_train' with unpenalized intercept",
+    },
+    "ols_attention_embedding": {
+        "class": "closed_form_linear_algebra",
+        "reference": "Ordinary Least Squares as an Attention Mechanism, Goulet Coulombe (2026)",
+        "alignment": "whitened train/test embeddings whose inner products reconstruct the OLS/ridge attention matrix",
+    },
+    "ols_attention_equivalence": {
+        "class": "closed_form_linear_algebra",
+        "reference": "Ordinary Least Squares as an Attention Mechanism, Goulet Coulombe (2026)",
+        "alignment": "audits yhat = attention_weights @ y_train against closed-form or user-supplied reference predictions",
     },
     "dual_decomposition": {
         "class": "closed_form_linear_algebra",
-        "reference": "OLS/ridge hat-matrix prediction decomposition",
+        "reference": "Ordinary Least Squares as an Attention Mechanism, Goulet Coulombe (2026)",
         "alignment": "uses attention_weights to express prediction as weighted training outcomes",
     },
     "observation_weights": {
@@ -1722,6 +1742,79 @@ def attention_weights(
 ) -> pd.DataFrame:
     """OLS attention weights ``Omega = X_test (X_train'X_train)^-1 X_train'``."""
 
+    return _attention_weight_table(
+        X_train,
+        X_test,
+        add_intercept=add_intercept,
+        ridge=ridge,
+        kind="attention_weights",
+        method="ols_closed_form",
+        metadata_extra={},
+    )
+
+
+def ols_attention_weights(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame | None = None,
+    *,
+    add_intercept: bool = True,
+) -> pd.DataFrame:
+    """Exact OLS-as-attention weights from Goulet Coulombe (2026)."""
+
+    return _attention_weight_table(
+        X_train,
+        X_test,
+        add_intercept=add_intercept,
+        ridge=0.0,
+        kind="ols_attention_weights",
+        method="ols_attention_exact",
+        metadata_extra={
+            "paper": "Ordinary Least Squares as an Attention Mechanism",
+            "author": "Philippe Goulet Coulombe",
+            "year": 2026,
+            "ridge_extension": False,
+        },
+    )
+
+
+def ridge_attention_weights(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame | None = None,
+    *,
+    alpha: float = 1.0,
+    add_intercept: bool = True,
+) -> pd.DataFrame:
+    """Ridge-stabilized OLS attention weights."""
+
+    if float(alpha) < 0.0:
+        raise ValueError("alpha must be non-negative")
+    return _attention_weight_table(
+        X_train,
+        X_test,
+        add_intercept=add_intercept,
+        ridge=float(alpha),
+        kind="ridge_attention_weights",
+        method="ridge_attention_closed_form",
+        metadata_extra={
+            "paper": "Ordinary Least Squares as an Attention Mechanism",
+            "author": "Philippe Goulet Coulombe",
+            "year": 2026,
+            "ridge_extension": True,
+            "alpha": float(alpha),
+        },
+    )
+
+
+def ols_attention_embedding(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame | None = None,
+    *,
+    add_intercept: bool = True,
+    ridge: float = 0.0,
+    tol: float = 1e-12,
+) -> pd.DataFrame:
+    """Return whitened train/test embeddings behind OLS-as-attention."""
+
     train = _as_feature_frame(X_train).astype(float)
     test = (
         train
@@ -1732,15 +1825,180 @@ def attention_weights(
     )
     train_matrix = _design_matrix(train, add_intercept=add_intercept)
     test_matrix = _design_matrix(test, add_intercept=add_intercept)
-    gram = train_matrix.T @ train_matrix
-    if ridge > 0:
-        penalty = float(ridge) * np.eye(gram.shape[0])
-        if add_intercept and penalty.shape[0] > 0:
-            # OLS/ridge dual weights keep the intercept unpenalized, matching
-            # standard regression convention and preserving the affine weight
-            # identity when an intercept is included.
-            penalty[0, 0] = 0.0
-        gram = gram + penalty
+    gram = _attention_penalized_gram(
+        train_matrix,
+        add_intercept=add_intercept,
+        ridge=ridge,
+    )
+    precision = np.linalg.pinv(gram)
+    precision = (precision + precision.T) / 2.0
+    values, vectors = np.linalg.eigh(precision)
+    order = np.argsort(values)[::-1]
+    values = values[order]
+    vectors = vectors[:, order]
+    keep = values > float(tol)
+    if not np.any(keep):
+        raise ValueError("attention embedding has no positive precision components")
+    values = values[keep]
+    vectors = vectors[:, keep]
+    transform = vectors * np.sqrt(values).reshape(1, -1)
+    train_embedding = train_matrix @ transform
+    test_embedding = test_matrix @ transform
+    attention = test_embedding @ train_embedding.T
+    rows: list[dict[str, Any]] = []
+    for sample_name, labels, matrix in (
+        ("train", train.index, train_embedding),
+        ("test", test.index, test_embedding),
+    ):
+        for row_pos, row_index in enumerate(labels):
+            for component_pos, value in enumerate(matrix[row_pos]):
+                rows.append(
+                    {
+                        "sample": sample_name,
+                        "row": int(row_pos),
+                        "index": row_index,
+                        "component": int(component_pos),
+                        "value": float(value),
+                        "precision_eigenvalue": float(values[component_pos]),
+                    }
+                )
+    table = pd.DataFrame(rows)
+    table.attrs["train_embedding"] = train_embedding
+    table.attrs["test_embedding"] = test_embedding
+    table.attrs["attention_matrix"] = attention
+    table.attrs["precision_matrix"] = precision
+    table.attrs["precision_eigenvalues"] = values
+    return _attach_schema(
+        table,
+        kind="ols_attention_embedding",
+        model=None,
+        method="ols_attention_whitened_embedding",
+        n_features=train.shape[1],
+        metadata={
+            "n_train": int(len(train)),
+            "n_test": int(len(test)),
+            "add_intercept": bool(add_intercept),
+            "ridge": float(ridge),
+            "intercept_penalized": False if add_intercept else None,
+            "n_components": int(len(values)),
+            "tol": float(tol),
+            "identity": "attention_matrix = test_embedding @ train_embedding.T",
+            "paper": "Ordinary Least Squares as an Attention Mechanism",
+            "author": "Philippe Goulet Coulombe",
+            "year": 2026,
+        },
+    )
+
+
+def ols_attention_equivalence(
+    X_train: pd.DataFrame,
+    y_train: pd.Series | np.ndarray,
+    X_test: pd.DataFrame | None = None,
+    *,
+    reference_predictions: pd.Series | Sequence[float] | np.ndarray | None = None,
+    add_intercept: bool = True,
+    ridge: float = 0.0,
+) -> pd.DataFrame:
+    """Audit that closed-form predictions equal attention-weight predictions."""
+
+    train = _as_feature_frame(X_train).astype(float)
+    test = (
+        train
+        if X_test is None
+        else _as_feature_frame(X_test)
+        .reindex(columns=train.columns, fill_value=0.0)
+        .astype(float)
+    )
+    target = _align_attention_target(y_train, train.index)
+    weights = _attention_weight_table(
+        train,
+        test,
+        add_intercept=add_intercept,
+        ridge=ridge,
+        kind="ols_attention_weights",
+        method="ols_attention_exact" if float(ridge) == 0.0 else "ridge_attention_closed_form",
+        metadata_extra={},
+    )
+    attention_matrix = weights.attrs["attention_matrix"]
+    attention_prediction = attention_matrix @ target
+    if reference_predictions is None:
+        train_matrix = _design_matrix(train, add_intercept=add_intercept)
+        test_matrix = _design_matrix(test, add_intercept=add_intercept)
+        gram = _attention_penalized_gram(
+            train_matrix,
+            add_intercept=add_intercept,
+            ridge=ridge,
+        )
+        coef = np.linalg.pinv(gram) @ train_matrix.T @ target
+        reference = test_matrix @ coef
+        reference_source = "closed_form_normal_equation"
+    else:
+        reference = np.asarray(reference_predictions, dtype=float).reshape(-1)
+        if len(reference) != len(test):
+            raise ValueError("reference_predictions must have the same length as X_test")
+        reference_source = "user_supplied"
+    rows = []
+    for test_pos, test_index in enumerate(test.index):
+        error = float(attention_prediction[test_pos] - reference[test_pos])
+        rows.append(
+            {
+                "test_row": int(test_pos),
+                "test_index": test_index,
+                "attention_prediction": float(attention_prediction[test_pos]),
+                "reference_prediction": float(reference[test_pos]),
+                "equivalence_error": error,
+                "abs_equivalence_error": abs(error),
+            }
+        )
+    table = pd.DataFrame(rows)
+    table.attrs["attention_matrix"] = attention_matrix
+    return _attach_schema(
+        table,
+        kind="ols_attention_equivalence",
+        model=None,
+        method="ols_attention_prediction_equivalence",
+        n_features=train.shape[1],
+        metadata={
+            "n_train": int(len(train)),
+            "n_test": int(len(test)),
+            "add_intercept": bool(add_intercept),
+            "ridge": float(ridge),
+            "reference_source": reference_source,
+            "max_abs_equivalence_error": float(table["abs_equivalence_error"].max())
+            if len(table)
+            else 0.0,
+            "paper": "Ordinary Least Squares as an Attention Mechanism",
+            "author": "Philippe Goulet Coulombe",
+            "year": 2026,
+        },
+    )
+
+
+def _attention_weight_table(
+    X_train: pd.DataFrame,
+    X_test: pd.DataFrame | None,
+    *,
+    add_intercept: bool,
+    ridge: float,
+    kind: str,
+    method: str,
+    metadata_extra: dict[str, Any],
+) -> pd.DataFrame:
+    train = _as_feature_frame(X_train).astype(float)
+    test = (
+        train
+        if X_test is None
+        else _as_feature_frame(X_test)
+        .reindex(columns=train.columns, fill_value=0.0)
+        .astype(float)
+    )
+    train_matrix = _design_matrix(train, add_intercept=add_intercept)
+    test_matrix = _design_matrix(test, add_intercept=add_intercept)
+    gram = _attention_penalized_gram(
+        train_matrix,
+        add_intercept=add_intercept,
+        ridge=ridge,
+    )
     omega = test_matrix @ np.linalg.pinv(gram) @ train_matrix.T
     rows: list[dict[str, Any]] = []
     for test_pos, test_index in enumerate(test.index):
@@ -1756,19 +2014,21 @@ def attention_weights(
             )
     table = pd.DataFrame(rows)
     table.attrs["attention_matrix"] = omega
+    metadata = {
+        "n_train": int(len(train)),
+        "n_test": int(len(test)),
+        "add_intercept": bool(add_intercept),
+        "ridge": float(ridge),
+        "intercept_penalized": False if add_intercept else None,
+    }
+    metadata.update(metadata_extra)
     return _attach_schema(
         table,
-        kind="attention_weights",
+        kind=kind,
         model=None,
-        method="ols_closed_form",
+        method=method,
         n_features=train.shape[1],
-        metadata={
-            "n_train": int(len(train)),
-            "n_test": int(len(test)),
-            "add_intercept": bool(add_intercept),
-            "ridge": float(ridge),
-            "intercept_penalized": False if add_intercept else None,
-        },
+        metadata=metadata,
     )
 
 
@@ -3149,6 +3409,44 @@ def _design_matrix(frame: pd.DataFrame, *, add_intercept: bool) -> np.ndarray:
     if add_intercept:
         matrix = np.column_stack([np.ones(len(frame), dtype=float), matrix])
     return matrix
+
+
+def _attention_penalized_gram(
+    train_matrix: np.ndarray,
+    *,
+    add_intercept: bool,
+    ridge: float,
+) -> np.ndarray:
+    if float(ridge) < 0.0:
+        raise ValueError("ridge must be non-negative")
+    gram = train_matrix.T @ train_matrix
+    if float(ridge) > 0.0:
+        penalty = float(ridge) * np.eye(gram.shape[0], dtype=float)
+        if add_intercept and penalty.shape[0] > 0:
+            # Goulet Coulombe's OLS-attention algebra is no-intercept in its
+            # clean matrix form. Macroforecast exposes the common regression
+            # intercept convention: include the constant column in the design,
+            # but do not shrink that constant when ridge-stabilizing the
+            # attention matrix. This matches sklearn/R ridge practice and keeps
+            # affine weights summing to one for intercept models.
+            penalty[0, 0] = 0.0
+        gram = gram + penalty
+    return gram
+
+
+def _align_attention_target(
+    y_train: pd.Series | np.ndarray,
+    train_index: pd.Index,
+) -> np.ndarray:
+    if isinstance(y_train, pd.Series):
+        target = y_train.reindex(train_index).to_numpy(dtype=float)
+    else:
+        target = np.asarray(y_train, dtype=float).reshape(-1)
+    if len(target) != len(train_index):
+        raise ValueError("X_train and y_train must have the same number of rows")
+    if not np.all(np.isfinite(target)):
+        raise ValueError("y_train must be finite after alignment to X_train")
+    return target
 
 
 def _var_results(model: Any) -> Any:

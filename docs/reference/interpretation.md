@@ -34,6 +34,7 @@ classification before treating a number as a paper table or structural claim.
 | Approximate or fixed-model diagnostics | `permutation_importance_strobl`, `lofo_importance(fit_func=None)`, `cumulative_r2_contribution`, `rolling_recompute`, `bootstrap_jackknife`, non-linear `forecast_decomposition` fallback | Strobl conditional-permutation idea, LOFO refit idea, macroforecast fixed-model diagnostics | Metadata records approximation/fixed-model mode. Do not describe these as exact refit or additive decompositions. |
 | VAR/macroeconomic interpretation | `generalized_irf`, `orthogonalised_irf`, `fevd`, `historical_decomposition` | statsmodels VAR result API when available; Pesaran-Shin GIRF formula; internal statsmodels-like adapter for macroforecast VAR | `fevd` now falls back to manual orthogonalized FEVD rather than IRF. `historical_decomposition` is reduced-form, not structural identification. |
 | Neural manual attribution | `saliency_map`, `integrated_gradients`, `gradient_shap`, `lstm_hidden_state` | Captum-style torch-gradient methods | Manual torch autograd implementation, except `deep_lift`. Integrated gradients uses a straight-line Riemann approximation, not Captum's default Gauss-Legendre backend. |
+| OLS as attention | `ols_attention_weights`, `ridge_attention_weights`, `ols_attention_embedding`, `ols_attention_equivalence`, `attention_weights`, `dual_decomposition` | Goulet Coulombe (2026), "Ordinary Least Squares as an Attention Mechanism" | Closed-form linear algebra. `ols_attention_weights` uses exact OLS by default; ridge variants are stabilizing extensions, not new forecasting models. |
 | Dual interpretation | `dual`, `DualInterpretationResult`, `dual_interpretation`, `dual_from_forecast_result`, `observation_weights`, `observation_contributions`, `forecast_diagnostics`, `top_observations`, `group_observation_weights`, plus backward-compatible aliases `outcome_contributions`, `data_portfolio_diagnostics`, `top_episodes`, `episode_group_weights` | Goulet Coulombe, Goebel, and Klieber (2024), plus local `dual_python` / `DualML_R` reference code | Episode-based explanation: which historical observations the model uses. Use [Dual Interpretation](interpretation_dual.md) for the full contract. Ridge/KRR/RF routes are implemented directly; boosted-tree AXIL, NN embedding, and classification log-odds routes are documented as future extensions. |
 | Aggregation/report plumbing | `group_aggregate`, `lineage_attribution`, `transformation_attribution`, `custom_interpretation` | No external fitting backend; table aggregation and user callables | Aggregates existing evidence. `transformation_attribution` is not component-level causality unless the input table was designed as a component-removal experiment. |
 
@@ -89,6 +90,10 @@ Every returned table includes this review classification in
 | `lineage_attribution(table, lineage, level="pipeline_name")` | feature-importance table and lineage mapping | `DataFrame` | Aggregate importance by feature-engineering lineage metadata. |
 | `transformation_attribution(evaluation, ..., lower_is_better=True, baseline="worst")` | evaluation score table | `DataFrame` | Attribute score improvements to mutually exclusive preprocessing/feature pipelines. |
 | `attention_weights(X_train, X_test=None, ...)` | training and test feature frames | long `DataFrame` | OLS attention matrix weights. |
+| `ols_attention_weights(X_train, X_test=None, ...)` | training and test feature frames | long `DataFrame` | Exact OLS-as-attention weights from Goulet Coulombe (2026). |
+| `ridge_attention_weights(X_train, X_test=None, alpha=...)` | training and test feature frames | long `DataFrame` | Ridge-stabilized attention weights using the standard unpenalized-intercept ridge convention. |
+| `ols_attention_embedding(X_train, X_test=None, ...)` | training and test feature frames | long `DataFrame` | Whitened train/test embeddings whose inner products reconstruct attention weights. |
+| `ols_attention_equivalence(X_train, y_train, X_test=None, ...)` | train features/outcomes, optional test features, optional reference predictions | `DataFrame` | Audit that standard OLS/ridge predictions equal attention-weight predictions. |
 | `dual_decomposition(X_train, y_train, X_test=None, ...)` | train features/outcomes and optional test features | long `DataFrame` | OLS prediction as weighted training-outcome contributions. |
 | `dual.DualInterpretationResult` / `DualInterpretationResult` | output from `dual_interpretation(...)` | result object | Bundles observation weights, observation contributions, forecast diagnostics, top observations, group weights, and metadata. |
 | `dual.dual_interpretation(...)` / `dual_interpretation(...)` | model, train/test feature frames, train target | `DualInterpretationResult` | Run the dedicated dual interpretation path. Full contract: [Dual Interpretation](interpretation_dual.md). |
@@ -1416,6 +1421,200 @@ Output columns: `test_row`, `test_index`, `episode_group`, `weight`,
 Use this when a paper table needs weights assigned to recessions, inflation
 surges, tightening cycles, COVID episodes, or user-defined regimes.
 
+## OLS As Attention
+
+This block implements the algebra in Philippe Goulet Coulombe (2026),
+"Ordinary Least Squares as an Attention Mechanism." It is not a separate
+forecasting model. Standard OLS already produces the forecast. These functions
+make the same forecast inspectable as a query-key-value style weighted average
+of historical outcomes.
+
+The paper identity is:
+
+```text
+beta_hat = (X_train' X_train)^-1 X_train' y_train
+y_hat_test = X_test beta_hat
+           = X_test (X_train' X_train)^-1 X_train' y_train
+           = A y_train
+```
+
+where:
+
+| Object | Meaning |
+| --- | --- |
+| `X_train` | training feature matrix, already preprocessed and feature-engineered |
+| `X_test` | forecast-row feature matrix with the same columns |
+| `y_train` | realized training outcomes |
+| `A` | test-by-train attention matrix |
+| `A[j, i]` | signed weight placed on training observation `i` when predicting test row `j` |
+
+Positive weights borrow from a historical outcome. Negative weights use that
+historical outcome by contrast. The row weights do not need to be non-negative,
+so this is not softmax transformer attention. It is the linear OLS/ridge
+attention operator implied by the regression geometry.
+
+Recommended use:
+
+```python
+fit = mf.models.ols(X_train, y_train)
+
+weights = mf.interpretation.ols_attention_weights(X_train, X_test)
+audit = mf.interpretation.ols_attention_equivalence(
+    X_train,
+    y_train,
+    X_test,
+    reference_predictions=fit.predict(X_test),
+)
+
+embedding = mf.interpretation.ols_attention_embedding(X_train, X_test)
+```
+
+For high-dimensional macro panels, use the ridge version:
+
+```python
+fit = mf.models.ridge(X_train, y_train, alpha=0.1)
+weights = mf.interpretation.ridge_attention_weights(X_train, X_test, alpha=0.1)
+```
+
+With `add_intercept=True`, the intercept column is included in the design but
+is not penalized. This matches standard ridge practice in sklearn/R-style
+linear regression and keeps the affine identity for intercept models.
+
+### ols_attention_weights
+
+```python
+macroforecast.interpretation.ols_attention_weights(
+    X_train,
+    X_test=None,
+    *,
+    add_intercept=True,
+)
+```
+
+Input:
+
+| Argument | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `X_train` | pandas `DataFrame` | required | Training feature matrix. Index labels become `train_index`. |
+| `X_test` | pandas `DataFrame` or `None` | `None` | Forecast-row feature matrix. If omitted, training rows are explained against themselves. Missing columns are filled with zero after reindexing to `X_train.columns`. |
+| `add_intercept` | bool | `True` | Add an intercept column before forming the attention matrix. |
+
+Output: long pandas `DataFrame`.
+
+| Column | Meaning |
+| --- | --- |
+| `test_row`, `test_index` | forecast-row position and label |
+| `train_row`, `train_index` | training-row position and label |
+| `weight` | attention weight `A[j, i]` |
+
+The dense matrix `A` is attached at `attrs["attention_matrix"]`.
+
+### ridge_attention_weights
+
+```python
+macroforecast.interpretation.ridge_attention_weights(
+    X_train,
+    X_test=None,
+    *,
+    alpha=1.0,
+    add_intercept=True,
+)
+```
+
+Input is the same as `ols_attention_weights`, plus:
+
+| Argument | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `alpha` | float | `1.0` | Ridge penalty in `X_train'X_train + alpha I`. Must be non-negative. |
+
+Output: same long attention-weight table. This function is useful when the
+feature matrix is nearly singular or when the fitted forecasting model is
+`mf.models.ridge(..., alpha=alpha)`.
+
+### ols_attention_embedding
+
+```python
+macroforecast.interpretation.ols_attention_embedding(
+    X_train,
+    X_test=None,
+    *,
+    add_intercept=True,
+    ridge=0.0,
+    tol=1e-12,
+)
+```
+
+This returns the whitened embedding view emphasized in the paper. In the
+full-rank OLS case:
+
+```text
+(X_train'X_train)^-1 = U Lambda^-1 U'
+F_train = X_train U Lambda^-1/2
+F_test  = X_test  U Lambda^-1/2
+A = F_test F_train'
+```
+
+For ridge or rank-deficient cases, macroforecast uses the symmetric
+pseudoinverse precision matrix and keeps positive precision components above
+`tol`.
+
+Output: long pandas `DataFrame`.
+
+| Column | Meaning |
+| --- | --- |
+| `sample` | `train` or `test` |
+| `row`, `index` | row position and label |
+| `component` | whitened embedding component |
+| `value` | embedded coordinate |
+| `precision_eigenvalue` | eigenvalue of the precision matrix used for that component |
+
+Attached arrays:
+
+| Attr key | Meaning |
+| --- | --- |
+| `train_embedding` | dense `F_train` matrix |
+| `test_embedding` | dense `F_test` matrix |
+| `attention_matrix` | reconstructed `F_test F_train'` matrix |
+| `precision_matrix` | symmetric inverse or ridge inverse of the design Gram matrix |
+| `precision_eigenvalues` | retained positive precision eigenvalues |
+
+### ols_attention_equivalence
+
+```python
+macroforecast.interpretation.ols_attention_equivalence(
+    X_train,
+    y_train,
+    X_test=None,
+    *,
+    reference_predictions=None,
+    add_intercept=True,
+    ridge=0.0,
+)
+```
+
+Input:
+
+| Argument | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `X_train` | pandas `DataFrame` | required | Training feature matrix. |
+| `y_train` | pandas `Series` or array | required | Training outcomes. If a `Series`, it is aligned to `X_train.index`. |
+| `X_test` | pandas `DataFrame` or `None` | `None` | Forecast rows. |
+| `reference_predictions` | sequence or `None` | `None` | Optional predictions from an already fitted model. If omitted, macroforecast computes the closed-form normal-equation prediction. |
+| `add_intercept` | bool | `True` | Same convention as the weight functions. |
+| `ridge` | float | `0.0` | Set to the ridge model's `alpha` when auditing a ridge forecast. |
+
+Output: one row per test observation.
+
+| Column | Meaning |
+| --- | --- |
+| `attention_prediction` | `A @ y_train` |
+| `reference_prediction` | closed-form or user-supplied prediction |
+| `equivalence_error` | signed difference |
+| `abs_equivalence_error` | absolute difference |
+
+Use this as the auditable paper check: if OLS/Ridge and attention are aligned,
+`abs_equivalence_error` should be near machine precision.
+
 ### attention_weights
 
 ```python
@@ -1443,6 +1642,11 @@ Omega = X_test (X_train' X_train)^-1 X_train'
 with a small ridge term for numerical stability. When `add_intercept=True`,
 the ridge term is not applied to the intercept column, matching the standard
 regression convention.
+
+Prefer `ols_attention_weights()` for exact paper-style OLS and
+`ridge_attention_weights()` for the ridge-stabilized variant. The older
+`attention_weights()` helper remains available as the generic numerically
+stabilized route.
 
 ### dual_decomposition
 

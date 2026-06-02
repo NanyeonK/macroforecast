@@ -1,5 +1,19 @@
 from __future__ import annotations
 
+from .assemblage import (
+    SupervisedAggregationRegressor,
+    albacore_components,
+    albacore_ranks,
+    assemblage_regression,
+    component_aggregation,
+    rank_aggregation,
+    solve_fused_difference_ridge,
+    solve_mean_aligned_ridge,
+    solve_nonnegative_ridge,
+    solve_simplex_ridge,
+    solve_target_shrinkage_ridge,
+    supervised_aggregation,
+)
 from .linear import (
     ScaledPCARegressor,
     SupervisedPCARegressor,
@@ -24,7 +38,7 @@ from .linear import (
     supervised_pca,
     supervised_scaled_pca,
 )
-from .neural import gru, hemisphere_nn, lstm, nn, transformer
+from .neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
 from .nonparametric import kernel_ridge, knn
 from .persistence import SavedModel, load_fit, save_fit
 from .spline import MARSRegressor, mars
@@ -75,6 +89,7 @@ from .tree import (
     xgboost,
 )
 from .types import ModelFit, VolatilityFit
+from .tvp import TVPRidgeRegressor, tvp_ridge
 from .volatility import (
     GARCHEstimator,
     RealizedGARCHEstimator,
@@ -97,21 +112,28 @@ __all__ = [
     "RealizedGARCHEstimator",
     "SavedModel",
     "ScaledPCARegressor",
+    "SupervisedAggregationRegressor",
     "SupervisedPCARegressor",
     "SupervisedScaledPCARegressor",
+    "TVPRidgeRegressor",
     "VolatilityFit",
     "adaptive_elastic_net",
     "adaptive_lasso",
+    "albacore_components",
+    "albacore_ranks",
     "ar",
+    "assemblage_regression",
     "bayesian_ridge",
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
     "catboost",
     "custom_model",
+    "component_aggregation",
     "dfm_mixed_mariano_murasawa",
     "dfm_unrestricted_midas",
     "decision_tree",
     "describe_model",
+    "density_hnn",
     "egarch",
     "elastic_net",
     "ets",
@@ -151,6 +173,7 @@ __all__ = [
     "ols",
     "pls",
     "quantile_regression_forest",
+    "rank_aggregation",
     "random_walk_ridge",
     "random_forest",
     "realized_garch",
@@ -158,12 +181,19 @@ __all__ = [
     "save_fit",
     "scaled_pca",
     "shrink_to_target_ridge",
+    "solve_fused_difference_ridge",
+    "solve_mean_aligned_ridge",
+    "solve_nonnegative_ridge",
+    "solve_simplex_ridge",
+    "solve_target_shrinkage_ridge",
     "sparse_group_lasso",
+    "supervised_aggregation",
     "supervised_pca",
     "supervised_scaled_pca",
     "svr",
     "theta_method",
     "transformer",
+    "tvp_ridge",
     "unrestricted_midas",
     "var",
     "xgboost",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .core import (
+    align_reference_weights,
     average_target,
     adaptive_ma_rf_features,
     asymmetric_trim_features,
@@ -13,6 +14,7 @@ from .core import (
     diff_features,
     direct_target,
     feature_matrix,
+    forward_average_target,
     fourier_step,
     fourier_features,
     group_pca,
@@ -31,6 +33,7 @@ from .core import (
     maf_features,
     maf_step,
     mixed_frequency_lags,
+    moving_average_changes,
     moving_average_ladder,
     moving_average_pca_lags,
     moving_average_step,
@@ -47,6 +50,7 @@ from .core import (
     polynomial_step,
     random_projection_features,
     random_projection_step,
+    rank_space_features,
     rolling_mean,
     rolling_step,
     savitzky_golay_features,
@@ -67,6 +71,7 @@ from .core import (
     varimax_features,
     varimax_step,
     wavelet_features,
+    weighted_aggregate,
 )
 from .feature_selection import (
     FeatureSelectionResult,
@@ -92,6 +97,7 @@ __all__ = [
     "FeatureSelectionResult",
     "FittedFeatureBuilder",
     "adaptive_ma_rf_features",
+    "align_reference_weights",
     "asymmetric_trim_features",
     "average_target",
     "boruta_selection",
@@ -107,6 +113,7 @@ __all__ = [
     "feature_matrix",
     "feature_spec",
     "feature_selection_requires_target",
+    "forward_average_target",
     "fourier_step",
     "fourier_features",
     "genetic_selection",
@@ -128,6 +135,7 @@ __all__ = [
     "maf_features",
     "maf_step",
     "mixed_frequency_lags",
+    "moving_average_changes",
     "moving_average_ladder",
     "moving_average_pca_lags",
     "moving_average_step",
@@ -145,6 +153,7 @@ __all__ = [
     "polynomial_step",
     "random_projection_features",
     "random_projection_step",
+    "rank_space_features",
     "rfe_selection",
     "rolling_mean",
     "rolling_step",
@@ -169,4 +178,5 @@ __all__ = [
     "varimax_step",
     "variance_selection",
     "wavelet_features",
+    "weighted_aggregate",
 ]

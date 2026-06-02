@@ -96,6 +96,7 @@ type checks; the normal user entry point remains the lowercase fit function.
 | `SupervisedScaledPCARegressor` | `supervised_scaled_pca(...)` | Supervised scaled-PCA backend. |
 | `GARCHEstimator` | `garch11(...)` and `egarch(...)` | ARCH/GARCH volatility backend. |
 | `RealizedGARCHEstimator` | `realized_garch(...)` | Realized-GARCH backend. |
+| `SupervisedAggregationRegressor` | `supervised_aggregation(...)` and wrappers | Generic assemblage/Albacore-style constrained aggregation backend. |
 
 ### Fit Persistence
 
@@ -430,11 +431,12 @@ Current scale-sensitive callable models:
 | `nn` | `torch.nn.Sequential` | Standardizes `X` and `y` inside each fit window and maps predictions back to target units. |
 | `transformer` | `torch.nn.TransformerEncoder` | Standardizes `X` and `y` inside each fit window and maps predictions back to target units. |
 | `hemisphere_nn` | torch dual-head dense network | Standardizes `X` inside each fit window, fits mean and variance heads, and returns point, variance, and normal-approximation quantile forecasts. |
+| `density_hnn` | torch-native Aionx DensityHNN port | Standardizes `X` and `y`, estimates prior-DNN OOB volatility emphasis, fits a density HNN ensemble, and returns point, variance, volatility, and quantile forecasts. |
 
-`nn`, `lstm`, `gru`, and `transformer` standardize `X` and `y` inside each fit
-window and map predictions back to the target scale. `hemisphere_nn`
-standardizes `X` and keeps the target in original units because its variance
-head is a density-forecast object. Their metadata records
+`nn`, `lstm`, `gru`, `transformer`, and `density_hnn` standardize `X` and `y`
+inside each fit window and map predictions back to the target scale.
+`hemisphere_nn` standardizes `X` and keeps the target in original units because
+its variance head is a compact density-forecast object. Their metadata records
 `requires_extra="deep"` and `requires_scaling=False`.
 
 ## Registered Model Catalog
@@ -446,7 +448,14 @@ head is a density-forecast object. Their metadata records
 | `nonneg_ridge` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
 | `shrink_to_target_ridge` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
 | `fused_difference_ridge` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
+| `supervised_aggregation` | assemblage | supervised | `cv_path` | `small`, `standard`, `wide` |
+| `component_aggregation` | assemblage | supervised | `cv_path` | `small`, `standard`, `wide` |
+| `rank_aggregation` | assemblage | supervised | `cv_path` | `small`, `standard`, `wide` |
+| `assemblage_regression` | assemblage | supervised | `cv_path` | `small`, `standard`, `wide` |
+| `albacore_components` | assemblage | supervised | `cv_path` | `small`, `standard`, `wide` |
+| `albacore_ranks` | assemblage | supervised | `cv_path` | `small`, `standard`, `wide` |
 | `random_walk_ridge` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
+| `tvp_ridge` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
 | `lasso` | linear | supervised | `cv_path` | `small`, `standard`, `wide` |
 | `elastic_net` | linear | supervised | `grid` | `small`, `standard`, `wide` |
 | `adaptive_lasso` | linear | supervised | `grid` | `small`, `standard`, `wide` |
@@ -466,6 +475,7 @@ head is a density-forecast object. Their metadata records
 | `gru` | neural | supervised | `random` | `small`, `standard`, `wide` |
 | `transformer` | neural | supervised | `random` | `small`, `standard`, `wide` |
 | `hemisphere_nn` | neural | supervised | `random` | `small`, `standard`, `wide` |
+| `density_hnn` | neural | supervised | `random` | `small`, `standard`, `wide` |
 | `pls` | composite | supervised | `grid` | `small`, `standard`, `wide` |
 | `scaled_pca` | composite | supervised | `grid` | `small`, `standard`, `wide` |
 | `supervised_pca` | composite | supervised | `grid` | `small`, `standard`, `wide` |
@@ -524,7 +534,9 @@ metadata exported by `describe_model()`, `list_model_specs()`, and saved
 | `nonneg_ridge` | package-native | augmented ridge design solved by `scipy.optimize.nnls` |
 | `shrink_to_target_ridge` | package-native | custom objective solved by `scipy.optimize.minimize(method="SLSQP")` |
 | `fused_difference_ridge` | package-native | custom difference-penalty objective solved by SLSQP |
+| `supervised_aggregation`, `component_aggregation`, `rank_aggregation`, `assemblage_regression`, `albacore_components`, `albacore_ranks` | package-native | Albacore/assemblage-derived constrained aggregation objectives solved by SLSQP |
 | `random_walk_ridge` | package-native | expanded time-varying design solved by `numpy.linalg.lstsq` |
+| `tvp_ridge` | package-native | Python port of `TVPRidge` R `tvp.ridge`, `Zfun`, `dualGRR`, and CV helpers |
 | `group_lasso` | package-native | proximal-gradient group-lasso solver |
 | `sparse_group_lasso` | package-native | proximal-gradient sparse-group-lasso solver |
 | `glmboost` | package-native | componentwise L2 boosting loop |
@@ -552,7 +564,11 @@ mathematical objective in macroforecast's callable API.
 | `nonneg_ridge` | `nnls`, `R/nnls.R`: <https://rdrr.io/cran/nnls/src/R/nnls.R>; also `glmnet` lower bounds | NNLS solves least squares under coefficient non-negativity. | Equivalent to NNLS on the augmented design `[X; sqrt(alpha) I]` and response `[y; 0]`, after optional centering. |
 | `shrink_to_target_ridge` | `penalized`: <https://search.r-project.org/CRAN/refmans/penalized/html/penalized.html>; target ridge family in `rags2ridges`: <https://rdrr.io/cran/rags2ridges/src/R/rags2ridges.R> | Compare target-shrinkage/tikhonov logic, not an identical regression API. | No exact same R regression callable found. macroforecast solves `||y-Xb||^2 + alpha ||b-b0||^2` with optional simplex/nonnegative constraints. |
 | `fused_difference_ridge` | fused L2 ridge family in `rags2ridgesFused.R`: <https://rdrr.io/cran/rags2ridges/src/R/rags2ridgesFused.R> | Compare L2 fusion/smoothness penalty structure. | Not identical domain: R source is primarily fused ridge for precision matrices; macroforecast applies an L2 finite-difference penalty directly to regression coefficients. |
+| `component_aggregation`, `albacore_components` | `assemblage`, `R/assemblage_v240228.R`: `nonneg.ridge.sum1` | Nonnegative component weights, optional target-weight shrinkage, sum-to-one basket constraint. | Same fixed-alpha objective family as the R CVXR fit: SSE plus feature-std-scaled target shrinkage, `w >= 0`, and `sum(w)=1`. R owns block CV for lambda; macroforecast delegates alpha selection to model selection/forecasting. |
+| `rank_aggregation`, `albacore_ranks` | `assemblage`, `R/assemblage_v240228.R`: `x.transformation`, `nonneg.ridge.meanD` | Sort components into rank space, estimate nonnegative smooth rank weights with a mean-matching constraint. | Same fixed-alpha rank objective family: row sorting, fused difference penalty on scaled rank weights, `w >= 0`, and `mean(Xw)=mean(y)`. |
+| `supervised_aggregation`, `assemblage_regression` | `assemblage`, `R/assemblage_v240228.R`: `assemblage`, `nonneg.ridge`, `nonneg.ridge.mean`, `nonneg.ridge.sum1`, `nonneg.ridge.meanD` | Generic component/rank supervised aggregation. | Exposes the reusable primitives without requiring inflation data. Paper-specific inflation semantics live in the `albacore_*` wrappers. |
 | `random_walk_ridge` | `walker`, `R/walker.R`: <https://rdrr.io/cran/walker/man/walker.html> | Random-walk coefficients in a time-varying regression. | Same modeling prior idea, different inference: `walker` is Bayesian/state-space via Stan; macroforecast computes the penalized least-squares MAP-style coefficient path and predicts with the final vector. |
+| `tvp_ridge` | `TVPRidge`, local source `wiki/raw/paper_code/coulombe_site_github_20260530/tvpridge/R/MV2SRR_v210407.R`; upstream <https://github.com/philgoucou/tvpridge> | Goulet Coulombe TVP ridge / two-step ridge regression. | Direct Python port of the R `tvp.ridge` pipeline: `Zfun` expansion, `dualGRR` dual/primal generalized ridge, R-style random-fold CV helpers, 2SRR coefficient-innovation reweighting, residual-volatility reweighting, and R return fields. |
 | `group_lasso` | `grpreg`, `R/grpreg.R`: <https://rdrr.io/cran/grpreg/src/R/grpreg.R> | Group penalty over coefficient blocks. | Same group-lasso penalty family for Gaussian loss; macroforecast uses a single-alpha proximal-gradient solver rather than a full regularization path. |
 | `sparse_group_lasso` | `sparsegl`, `R/sparsegl.R`: <https://rdrr.io/cran/sparsegl/src/R/sparsegl.R> | Sparse group lasso objective with group and feature-level penalties. | Same penalty decomposition; macroforecast uses one selected `alpha` and `l1_ratio`, while `sparsegl` is a full path solver with additional bounds/families. |
 | `glmboost` | `mboost`, `R/mboost.R`: <https://rdrr.io/cran/mboost/src/R/mboost.R>; component learner in `R/bolscw.R` | Componentwise gradient/L2 boosting. | Same Gaussian componentwise L2 update: center predictors by default, select the base learner by normalized correlation, and apply shrinkage. macroforecast omits formula handling, weights, families, hat values, and stopping machinery. |
@@ -737,6 +753,190 @@ to match and is intentionally outside the rags2ridges precision-matrix API.
 
 Default model-selection method: `cv_path`.
 
+## Assemblage / Supervised Aggregation
+
+This family is derived from Goulet Coulombe, Klieber, Barrette, and Goebel,
+*Maximally Forward-Looking Core Inflation*, and the R package `assemblage`.
+The package splits the paper model into generic reusable primitives plus thin
+inflation-specific wrappers.
+
+The generic problem is:
+
+```text
+given components X_t and future aggregate target y_t,h,
+learn weights w so X_t w predicts y_t,h
+```
+
+This is not ordinary ridge in disguise. The weights can be constrained to be
+nonnegative, sum to one, match the target mean, shrink toward reference basket
+weights, or vary smoothly across ranks. For inflation, those weights form an
+Albacore core-inflation measure. Outside inflation, the same functions can
+aggregate sectors, states, industries, survey items, or regional indicators.
+
+### supervised_aggregation
+
+```python
+macroforecast.models.supervised_aggregation(
+    X,
+    y,
+    *,
+    space="component",
+    penalty="ridge",
+    alpha=1.0,
+    reference_weights=None,
+    nonneg=True,
+    simplex=False,
+    mean_match=False,
+    difference_order=1,
+    fit_intercept=False,
+    penalty_scale="feature_std",
+    max_iter=1000,
+    tol=1e-9,
+)
+```
+
+| Parameter | Default | Choices | Meaning |
+| --- | --- | --- | --- |
+| `space` | `"component"` | `"component"`, `"rank"` | Use named components or row-wise sorted order statistics. |
+| `penalty` | `"ridge"` | `"ridge"`, `"target_shrinkage"`, `"fused_difference"` | Coefficient penalty family. |
+| `alpha` | `1.0` | nonnegative float | Penalty strength; tune with `model_selection` or `forecasting`. |
+| `reference_weights` | `None` | mapping, sequence, `Series`, or `None` | Target weights for `target_shrinkage`. |
+| `nonneg` | `True` | bool | Enforce `w_j >= 0`. |
+| `simplex` | `False` | bool | Enforce `sum(w)=1`. |
+| `mean_match` | `False` | bool | Enforce `mean(Xw)=mean(y)`. |
+| `difference_order` | `1` | positive int | Difference order for fused rank weights. |
+| `fit_intercept` | `False` | bool | Fit an intercept outside the aggregation weights when no equality constraint is active. |
+| `penalty_scale` | `"feature_std"` | `"feature_std"`, `"none"` | Match the R assemblage convention by scaling penalties with feature standard deviations. |
+
+Output: `ModelFit`. The fitted estimator exposes `coef_`, `weights_`, and,
+for rank space, `rank_weight_curve_`. Diagnostics include fitted values,
+residuals, metrics, and coefficient weights.
+
+### component_aggregation
+
+```python
+macroforecast.models.component_aggregation(
+    X,
+    y,
+    *,
+    alpha=1.0,
+    reference_weights=None,
+    penalty=None,
+    simplex=True,
+    nonneg=True,
+    penalty_scale="feature_std",
+    max_iter=1000,
+    tol=1e-9,
+)
+```
+
+Component-space aggregation estimates weights on named columns. With
+`reference_weights` supplied, `penalty=None` selects `target_shrinkage`, making
+this the generic version of Albacorecomps. Without reference weights, it is a
+nonnegative simplex ridge basket.
+
+R source cue: `nonneg.ridge.sum1` in `assemblage_v240228.R`.
+
+### rank_aggregation
+
+```python
+macroforecast.models.rank_aggregation(
+    X,
+    y,
+    *,
+    alpha=1.0,
+    penalty="fused_difference",
+    mean_match=True,
+    nonneg=True,
+    difference_order=1,
+    penalty_scale="feature_std",
+    max_iter=1000,
+    tol=1e-9,
+)
+```
+
+Rank-space aggregation sorts each row of `X` before fitting, then learns
+weights on `rank_1`, `rank_2`, ... rather than on named components. This is a
+generic supervised trimmed-mean model. The fitted object stores
+`estimator.rank_weight_curve_`, a table with rank, percentile, and weight.
+
+R source cue: `x.transformation` plus `nonneg.ridge.meanD`.
+
+### assemblage_regression
+
+```python
+macroforecast.models.assemblage_regression(
+    X,
+    y,
+    *,
+    space="component",
+    alpha=1.0,
+    reference_weights=None,
+    penalty=None,
+    max_iter=1000,
+    tol=1e-9,
+)
+```
+
+Convenience wrapper over `component_aggregation()` and `rank_aggregation()`.
+Use it when the model family is known to be assemblage-style but the final
+choice between component and rank space is part of the experiment design.
+
+### albacore_components
+
+```python
+macroforecast.models.albacore_components(
+    X,
+    y,
+    *,
+    reference_weights=None,
+    alpha=1.0,
+    max_iter=1000,
+    tol=1e-9,
+)
+```
+
+Inflation-specific wrapper for component-space Albacore. `X` should be a panel
+of price-component changes, `y` should be the forward average headline
+inflation target, and `reference_weights` should be official basket or
+expenditure weights when available. The wrapper sets `nonneg=True`,
+`simplex=True`, `penalty="target_shrinkage"`, and `fit_intercept=False`.
+
+### albacore_ranks
+
+```python
+macroforecast.models.albacore_ranks(
+    X,
+    y,
+    *,
+    alpha=1.0,
+    difference_order=1,
+    max_iter=1000,
+    tol=1e-9,
+)
+```
+
+Inflation-specific wrapper for rank-space Albacore. `X` should be price
+component changes and `y` should be the forward average headline inflation
+target. The wrapper sorts components row by row, estimates nonnegative fused
+rank weights, and enforces the Albacoreranks mean-matching constraint.
+
+### Low-Level Solver Helpers
+
+These return a weight `Series` rather than a full `ModelFit`:
+
+| Function | Meaning |
+| --- | --- |
+| `solve_nonnegative_ridge(X, y, alpha=...)` | R `nonneg.ridge`-style nonnegative ridge weights. |
+| `solve_simplex_ridge(X, y, alpha=...)` | Nonnegative weights constrained to sum to one. |
+| `solve_target_shrinkage_ridge(X, y, reference_weights=..., alpha=...)` | R `nonneg.ridge.sum1`-style component basket weights. |
+| `solve_mean_aligned_ridge(X, y, alpha=...)` | R `nonneg.ridge.mean`-style nonnegative mean-aligned weights. |
+| `solve_fused_difference_ridge(X, y, alpha=...)` | R `nonneg.ridge.meanD`-style fused rank-weight primitive. |
+
+These helpers are deliberately not inflation-specific. They exist so users can
+compose custom supervised aggregation models without taking the Albacore
+wrappers.
+
 ### random_walk_ridge
 
 ```python
@@ -788,6 +988,133 @@ vector.
 | `alpha` | `1.0` | yes | Penalty on adjacent coefficient changes. |
 | `initial_alpha` | `1.0` | fixed by preset | Penalty on the first coefficient vector. |
 | `fit_intercept` | `True` | fixed by preset | Fit an intercept outside the time-varying coefficient path. |
+
+Default model-selection method: `cv_path`.
+
+### tvp_ridge
+
+```python
+macroforecast.models.tvp_ridge(
+    X,
+    y,
+    *,
+    lambda_candidates=None,
+    oosX=None,
+    lambda2=0.1,
+    kfold=5,
+    cv_plot=False,
+    cv_2srr=True,
+    sig_u_param=0.75,
+    sig_eps_param=0.75,
+    ols_prior=False,
+    random_state=1071,
+    use_garch=True,
+)
+```
+
+Fits Philippe Goulet Coulombe's TVP ridge / two-step ridge regression
+estimator from **Time-varying parameters as ridge regressions**
+(International Journal of Forecasting, DOI
+<https://doi.org/10.1016/j.ijforecast.2024.08.006>). The implementation is a
+Python port of the R package `TVPRidge`, source file
+`R/MV2SRR_v210407.R`, local snapshot:
+
+```text
+wiki/raw/paper_code/coulombe_site_github_20260530/tvpridge/R/MV2SRR_v210407.R
+```
+
+This is not a thin wrapper around `random_walk_ridge()`. Both models use a
+random-walk coefficient idea, but `tvp_ridge()` ports the paper's full
+estimator:
+
+| Stage | R function | Python implementation |
+| --- | --- | --- |
+| Basis expansion | `Zfun` | `_tvp_z_basis` |
+| Generalized ridge solve | `dualGRR` | `_dual_generalized_ridge` |
+| Initial lambda CV | `CV.KF.MV` | `_cv_kfold_multivariate` |
+| Second-step lambda CV | `cv.univariate` | `_cv_univariate` |
+| Dropout correction | `cumul_zeros` | `_cumul_zeros` |
+| Public callable | `tvp.ridge` | `tvp_ridge` / `TVPRidgeRegressor` |
+
+The estimated path solves the paper's time-varying parameter ridge problem:
+
+```text
+min_{beta_1,...,beta_T}
+sum_t (y_t - x_t beta_t)^2
++ lambda * sum_t ||beta_t - beta_{t-1}||^2
++ lambda2 * ||beta_0||^2
+```
+
+`lambda` controls the amount of time variation. Large values force smoother
+coefficient paths; small values allow more movement. `lambda2` is the soft
+penalty on the starting coefficient values. The R code standardizes by sample
+standard deviation without centering; macroforecast follows that convention and
+rescales coefficient paths and fitted values back to the original data scale.
+
+The 2SRR step follows the R package logic. First, the homogeneous ridge TVP is
+estimated. Then coefficient innovations are used to build coefficient-specific
+variance weights, and residual volatility weights are optionally estimated by a
+GARCH(1,1) backend. The model is refit with those weights. If Python package
+`arch` is unavailable or the GARCH fit fails, residual-volatility weights fall
+back to ones and the reason is recorded in
+`fit.estimator.diagnostics_["garch_status"]`; the ridge/2SRR fit still runs.
+
+Input:
+
+| Argument | Required | Expected object | Meaning |
+| --- | --- | --- | --- |
+| `X` | yes | pandas DataFrame, NumPy array, or `FeatureSet` | Predictor matrix with shape `T x K`. |
+| `y` | yes unless `X` is a `FeatureSet` | pandas Series or one-column DataFrame for the public `ModelFit` wrapper | Target series aligned to `X`. |
+| `lambda_candidates` | no | sequence of positive floats or `None` | Candidate values for the time-variation penalty. `None` uses the R default grid. |
+| `oosX` | no | one predictor vector of length `K` | Optional one-step forecast using the final coefficient vector. |
+
+Output:
+
+| Object | Type | Contents |
+| --- | --- | --- |
+| return value | `ModelFit` | Standard macroforecast fitted model wrapper. |
+| `fit.estimator.betas_rr_` | NumPy array, shape `M x (K+1) x T` | First-step ridge TVP coefficient paths, original scale. |
+| `fit.estimator.betas_2srr_` | NumPy array, shape `M x (K+1) x T` | 2SRR coefficient paths, original scale. |
+| `fit.estimator.lambdas_` | NumPy array | Initial CV lambda for each target. |
+| `fit.estimator.lambda_step2_` | NumPy array | Second-step lambda used after reweighting. |
+| `fit.estimator.yhat_rr_` | DataFrame | In-sample first-step fitted values. |
+| `fit.estimator.yhat_2srr_` | DataFrame | In-sample 2SRR fitted values. |
+| `fit.estimator.sig_eps_` | DataFrame | Normalized residual-volatility weights. |
+| `fit.estimator.forecast_` | NumPy array | Optional forecast when `oosX` is supplied. |
+| `fit.estimator.coef_path_` | DataFrame | Final 2SRR path for the first target, excluding intercept. |
+| `fit.estimator.coef_path_full_` | DataFrame | MultiIndex coefficient path including intercept and target names. |
+
+Prediction rule:
+
+| Call | Behavior |
+| --- | --- |
+| `fit.predict(X_train)` with the original training index | Returns the time-varying in-sample `yhat_2srr_` path. |
+| `fit.predict(X_new)` with new rows | Uses the final estimated coefficient vector `beta_T`. |
+
+Default parameters:
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `lambda_candidates` | `exp(linspace(-6, 20, 15))` | yes | R default candidate grid for the time-variation penalty. |
+| `lambda2` | `0.1` | fixed by preset | Soft penalty on starting coefficient values. |
+| `kfold` | `5` | fixed by preset | Number of random CV folds. |
+| `cv_2srr` | `True` | fixed by preset | Re-run lambda CV after variance reweighting. |
+| `sig_u_param` | `0.75` | fixed by preset | Shrinkage exponent for coefficient-innovation variance weights. |
+| `sig_eps_param` | `0.75` | fixed by preset | Shrinkage exponent for residual-volatility weights. |
+| `ols_prior` | `False` | fixed by preset | Shrink starting coefficients toward OLS rather than zero. |
+| `random_state` | `1071` | fixed by preset | Fold seed matching the R source's `set.seed(1071)` convention. |
+| `use_garch` | `True` | fixed by preset | Use optional Python `arch` GARCH(1,1) for residual-volatility weights. |
+
+R parity notes:
+
+| Topic | Status |
+| --- | --- |
+| Standardization | Matches R: divide `X` and `Y` by sample standard deviation, no centering. |
+| Basis columns | Matches R `Zfun`: innovation blocks by coefficient, then static intercept/predictor block. |
+| Dual/primal solve | Matches R `dualGRR` algebra, with `numpy.linalg.solve` and pseudo-inverse fallback for singular systems. |
+| CV folds | Same random-fold design and default seed, but NumPy's RNG is not bit-identical to R's `sample()`. |
+| GARCH volatility | Uses optional Python `arch` backend; if unavailable, records fallback and continues with homogeneous residual weights. |
+| Multivariate `Y` | Estimator internals preserve `M x (K+1) x T` arrays; the public `ModelFit` wrapper is optimized for one target, consistent with macroforecast's standard supervised callable. |
 
 Default model-selection method: `cv_path`.
 
@@ -1403,12 +1730,14 @@ contract reason as `svr()`.
 
 ## Neural Models
 
-`nn`, `lstm`, `gru`, `transformer`, and `hemisphere_nn` are all torch-backed neural-network models and require
+`nn`, `lstm`, `gru`, `transformer`, `hemisphere_nn`, and `density_hnn` are all torch-backed neural-network models and require
 `macroforecast[deep]`. `nn` is the feed-forward neural network for tabular
 feature matrices; `lstm` and `gru` are recurrent neural networks that consume
 trailing row sequences; `transformer` is a compact Transformer encoder using
-the same trailing-row sequence contract. `hemisphere_nn` is a bagged dual-head
-network for mean and variance forecasts. The `deep` extra is intentionally separate from
+the same trailing-row sequence contract. `hemisphere_nn` is a compact bagged
+dual-head network for mean and variance forecasts, while `density_hnn` follows
+the Aionx/Paper DensityHNN procedure with prior-DNN OOB volatility emphasis and
+OOB volatility recalibration. The `deep` extra is intentionally separate from
 `macroforecast[all]` because torch is large and platform-sensitive.
 
 Torch recurrent example:
@@ -1647,19 +1976,113 @@ callable accepts legacy aliases `lr`, `n_epochs`, `B`, `sub_rate`,
 | `device` | `"auto"` | fixed by preset | Torch device. |
 | `quantile_levels` | `(0.05, 0.5, 0.95)` | fixed by preset | Default normal-approximation quantile levels returned by `predict_quantiles()`. |
 
+### density_hnn
+
+```python
+macroforecast.models.density_hnn(
+    X,
+    y,
+    *,
+    common_layers=2,
+    mean_layers=2,
+    volatility_layers=2,
+    prior_layers=3,
+    neurons=400,
+    dropout=0.2,
+    learning_rate=0.001,
+    max_epochs=100,
+    n_estimators=100,
+    prior_estimators=50,
+    subsample=0.8,
+    block_size=8,
+    volatility_emphasis=None,
+    rescale_volatility=True,
+    patience=15,
+    random_state=0,
+    device="auto",
+    quantile_levels=(0.05, 0.5, 0.95),
+    volatility_clip=0.05,
+)
+```
+
+Fits the Density Hemisphere Neural Network from Goulet Coulombe, Frenette, and
+Klieber, "From Reactive to Proactive Volatility Modeling with Hemisphere Neural
+Networks" (Journal of Applied Econometrics, 2025). The implementation is a
+torch-native port of the public Aionx `DensityHNN` logic, not a TensorFlow
+dependency wrapper. It is included because the method is a macro density
+forecast model: `macroforecast` uses it to produce conditional means,
+conditional variances, volatility forecasts, and normal-approximation
+quantiles. It does not create portfolio weights.
+
+The Aionx source-code correspondence is:
+
+| Aionx source item | `macroforecast` implementation |
+| --- | --- |
+| `aionx.models.DensityHNN.prior_dnn_architecture` | `prior_estimators` plain DNN ensemble fitted before the HNN. |
+| `aionx.bootstrap.TimeSeriesBlockBootstrap` | `block_size` and `subsample` create time-series block bootstrap samples. |
+| `aionx.kerasnn.ensemble.OutOfBagPredictor` | OOB forecasts use the Aionx denominator formula `sum(oob forecast) / ((1 - subsample) * n_estimators)`. |
+| `aionx.models.DensityHNN.base_architecture` | shared common core plus mean and volatility hemispheres; the volatility head is positive and normalized to the volatility-emphasis value. |
+| `aionx.models.DensityHNN.volatility_rescaling_algorithm` | OOB log squared residuals are regressed on log predicted volatility squared, then all volatility forecasts are rescaled. |
+
+The callable consumes the standard supervised model contract `density_hnn(X,
+y, **params)`. In Aionx, lags and trend terms are created inside
+`DensityHNN.run(...)`; in `macroforecast`, lags, MARX/MAF features, PCA,
+trends, and seasonal/time features should be built explicitly with
+`macroforecast.feature_engineering` before calling the model or through the
+forecasting runner. This keeps the model callable small and lets the same
+feature construction be reused by other models.
+
+Fit sequence:
+
+1. Standardize `X` and `y` inside the fit window.
+2. Fit a prior DNN ensemble on blocked bootstrap samples.
+3. Compute prior-DNN OOB mean squared error; this becomes the Aionx
+   `volatility_emphasis` unless the user supplies an override.
+4. Fit a DensityHNN ensemble with shared core, conditional-mean head, and
+   conditional-volatility head.
+5. Compute HNN OOB mean and volatility forecasts.
+6. Recalibrate volatility using the Aionx log residual-square regression.
+7. Return forecasts on the original target scale.
+
+Output:
+
+| Method | Output |
+| --- | --- |
+| `predict(X)` | pandas Series of conditional mean forecasts through `ModelFit`. |
+| `predict_variance(X)` | numpy array of conditional variance forecasts in target units squared. |
+| `predict_volatility(X)` | numpy array of conditional standard-deviation forecasts in target units. |
+| `predict_distribution(X)` | `(mean, variance)` arrays in target units. |
+| `predict_quantiles(X, levels=None)` | dictionary from quantile level to normal-approximation quantile forecast. |
+
+Diagnostics:
+
+| Field | Meaning |
+| --- | --- |
+| `fit.diagnostics["density"]["volatility_emphasis"]` | Aionx volatility-emphasis value used by the HNN volatility head. |
+| `fit.diagnostics["density"]["prior_oob_mse"]` | Prior-DNN OOB mean squared error used when `volatility_emphasis=None`. |
+| `fit.diagnostics["density"]["oob_rescaling"]` | Intercept, slope, scaler, and OOB count for the log residual-square volatility recalibration. |
+| `fit.estimator.oob_prediction_` | Fit-window OOB conditional mean, volatility, and variance table. |
+
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `sequence_length` | `4` | yes | Trailing rows per recurrent sequence. |
-| `hidden_size` | `32` | yes | Recurrent hidden-state width. |
-| `num_layers` | `1` | fixed by preset | Number of recurrent layers. |
-| `dropout` | `0.0` | fixed by preset | Dropout between recurrent layers. |
+| `common_layers` | `2` | fixed by preset | Shared common-core depth. |
+| `mean_layers` | `2` | fixed by preset | Conditional-mean hemisphere depth. |
+| `volatility_layers` | `2` | fixed by preset | Conditional-volatility hemisphere depth. |
+| `prior_layers` | `3` | fixed by preset | Prior-DNN hidden depth. |
+| `neurons` | `400` | yes | Hidden width. The paper/Aionx default is 400; smaller values are useful for smoke tests. |
+| `dropout` | `0.2` | fixed by preset | Dropout rate. |
 | `learning_rate` | `0.001` | yes | Adam learning rate. |
 | `max_epochs` | `100` | fixed by preset | Training epoch cap. |
-| `batch_size` | `32` | fixed by preset | Mini-batch size. |
-| `random_state` | `0` | fixed by preset | Random seed. |
-| `device` | `"auto"` | fixed by preset | Torch device: `"auto"`, `"cpu"`, or `"cuda"`. |
-
-The GRU presets match the LSTM presets.
+| `n_estimators` | `100` | yes | DensityHNN bootstrap ensemble size. |
+| `prior_estimators` | `50` | yes | Prior-DNN bootstrap ensemble size used to estimate volatility emphasis. |
+| `subsample` | `0.8` | fixed by preset | Blocked bootstrap sampling rate. |
+| `block_size` | `8` | fixed by preset | Time-series block size. The paper uses blocked subsampling to preserve temporal dependence. |
+| `volatility_emphasis` | `None` | fixed by preset | `None` estimates the value from prior-DNN OOB MSE. Passing a float overrides it. Values outside Aionx's `[0.01, 1.0]` range are mapped to `0.99`, following the source code. |
+| `rescale_volatility` | `True` | fixed by preset | Apply the blocked-OOB volatility reality-check recalibration. |
+| `patience` | `15` | fixed by preset | Early-stopping patience. |
+| `device` | `"auto"` | fixed by preset | Torch device. |
+| `quantile_levels` | `(0.05, 0.5, 0.95)` | fixed by preset | Default normal-approximation quantile levels. |
+| `volatility_clip` | `0.05` | fixed by preset | Minimum volatility used in Gaussian negative log likelihood, matching Aionx's numerical-stability clip. |
 
 ## Factor And Time-Series Models
 

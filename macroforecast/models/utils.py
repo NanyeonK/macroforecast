@@ -202,6 +202,10 @@ def _fit_diagnostics(estimator: Any, X: pd.DataFrame, y: pd.Series) -> dict[str,
     if training_history is not None:
         diagnostics["training_history"] = training_history
 
+    density_diagnostics = getattr(estimator, "density_diagnostics_", None)
+    if density_diagnostics:
+        diagnostics["density"] = density_diagnostics
+
     sequence_context = getattr(estimator, "sequence_context_", None)
     if sequence_context:
         diagnostics["sequence_context"] = sequence_context

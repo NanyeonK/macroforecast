@@ -256,6 +256,74 @@ def test_attention_weights_do_not_penalize_intercept() -> None:
     assert np.isclose(weights["weight"].sum(), 1.0)
 
 
+def test_ols_attention_weights_reconstruct_ols_predictions() -> None:
+    X, y = _xy()
+    X_train = X.iloc[:28]
+    y_train = y.iloc[:28]
+    X_test = X.iloc[28:34]
+    fit = mf.models.ols(X_train, y_train)
+
+    weights = mf.interpretation.ols_attention_weights(X_train, X_test)
+    attention_pred = weights.attrs["attention_matrix"] @ y_train.to_numpy(dtype=float)
+    model_pred = fit.predict(X_test).to_numpy(dtype=float)
+    equivalence = mf.interpretation.ols_attention_equivalence(
+        X_train,
+        y_train,
+        X_test,
+        reference_predictions=model_pred,
+    )
+
+    assert np.allclose(attention_pred, model_pred, atol=1e-10)
+    assert equivalence["abs_equivalence_error"].max() < 1e-10
+    assert (
+        weights.attrs["macroforecast_metadata_schema"]["reference"]["reference"]
+        == "Ordinary Least Squares as an Attention Mechanism, Goulet Coulombe (2026)"
+    )
+    assert (
+        equivalence.attrs["macroforecast_metadata_schema"]["kind"]
+        == "ols_attention_equivalence"
+    )
+
+
+def test_ridge_attention_weights_reconstruct_ridge_predictions() -> None:
+    X, y = _xy()
+    X_train = X.iloc[:30]
+    y_train = y.iloc[:30]
+    X_test = X.iloc[30:36]
+    fit = mf.models.ridge(X_train, y_train, alpha=0.25)
+
+    weights = mf.interpretation.ridge_attention_weights(
+        X_train,
+        X_test,
+        alpha=0.25,
+    )
+    attention_pred = weights.attrs["attention_matrix"] @ y_train.to_numpy(dtype=float)
+    model_pred = fit.predict(X_test).to_numpy(dtype=float)
+
+    assert np.allclose(attention_pred, model_pred, atol=1e-10)
+    assert weights.attrs["macroforecast_metadata_schema"]["kind"] == "ridge_attention_weights"
+    assert weights.attrs["macroforecast_metadata_schema"]["metadata"]["alpha"] == 0.25
+
+
+def test_ols_attention_embedding_reconstructs_attention_matrix() -> None:
+    X, _ = _xy()
+    X_train = X.iloc[:24]
+    X_test = X.iloc[24:28]
+
+    weights = mf.interpretation.ols_attention_weights(X_train, X_test)
+    embedding = mf.interpretation.ols_attention_embedding(X_train, X_test)
+
+    reconstructed = (
+        embedding.attrs["test_embedding"] @ embedding.attrs["train_embedding"].T
+    )
+    assert np.allclose(reconstructed, weights.attrs["attention_matrix"], atol=1e-10)
+    assert embedding.attrs["macroforecast_metadata_schema"]["kind"] == "ols_attention_embedding"
+    assert (
+        embedding.attrs["macroforecast_metadata_schema"]["metadata"]["identity"]
+        == "attention_matrix = test_embedding @ train_embedding.T"
+    )
+
+
 def test_dual_observation_weights_reconstruct_ridge_and_krr_predictions() -> None:
     X_train = pd.DataFrame(
         {"x1": [1.0, 0.0, 1.0, 2.0], "x2": [0.0, 1.0, 1.0, 1.0]},

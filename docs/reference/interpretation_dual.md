@@ -22,11 +22,22 @@ contrast. A concentrated weight vector means the forecast relies on a small
 number of episodes. A high short position or high gross leverage means the
 forecast is extrapolative rather than a simple local average.
 
+Relation to Goulet Coulombe (2026), "Ordinary Least Squares as an Attention
+Mechanism": OLS-as-attention is the exact linear algebra route
+`X_test (X_train'X_train)^-1 X_train'`. It is available through
+`macroforecast.interpretation.ols_attention_weights()`,
+`ridge_attention_weights()`, `ols_attention_embedding()`, and
+`ols_attention_equivalence()`. This `dual` namespace is broader: it uses the
+same historical-observation idea for ridge/OLS, kernel ridge, and random
+forest data-portfolio weights, plus contribution, diagnostic, top-observation,
+and group tables.
+
 ## Reference Sources
 
 | Source | Used for |
 | --- | --- |
 | Goulet Coulombe, Goebel, and Klieber (2024), "Dual Interpretation of Machine Learning Forecasts" | Paper terminology and interpretation target. |
+| Goulet Coulombe (2026), "Ordinary Least Squares as an Attention Mechanism" | Exact OLS/ridge attention identity and whitened embedding interpretation. |
 | `wiki/raw/paper_code/coulombe_site_github_20260530/dual_python/auxiliaries.py` | Ridge, kernel-ridge, and random-forest observation-weight formulas. |
 | `wiki/raw/paper_code/coulombe_site_github_20260530/DualML_R/DualML.R` | Forecast concentration, forecast short position, forecast leverage, and forecast turnover definitions. |
 | `wiki/raw/paper_code/coulombe_site_github_20260530/DualML_R/README.md` | Original model-route inventory: OLS, RF, LGB, RR, KRR, and NN. |

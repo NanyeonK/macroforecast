@@ -1,6 +1,13 @@
 from __future__ import annotations
 
 from macroforecast.feature_engineering.builder import build_features
+from macroforecast.feature_engineering.aggregation import (
+    align_reference_weights,
+    forward_average_target,
+    moving_average_changes,
+    rank_space_features,
+    weighted_aggregate,
+)
 from macroforecast.feature_engineering.compose import (
     compose_features,
     custom_step,
@@ -85,6 +92,7 @@ from macroforecast.feature_engineering.transforms import (
 
 __all__ = [
     "adaptive_ma_rf_features",
+    "align_reference_weights",
     "asymmetric_trim_features",
     "average_target",
     "boruta_selection",
@@ -98,6 +106,7 @@ __all__ = [
     "diff_features",
     "direct_target",
     "feature_matrix",
+    "forward_average_target",
     "fourier_step",
     "fourier_features",
     "genetic_selection",
@@ -120,6 +129,7 @@ __all__ = [
     "maf_step",
     "mixed_frequency_lags",
     "moving_average_ladder",
+    "moving_average_changes",
     "moving_average_pca_lags",
     "moving_average_step",
     "nystroem_features",
@@ -135,6 +145,7 @@ __all__ = [
     "polynomial_step",
     "random_projection_features",
     "random_projection_step",
+    "rank_space_features",
     "rfe_selection",
     "rolling_mean",
     "rolling_step",
@@ -158,4 +169,5 @@ __all__ = [
     "varimax_step",
     "variance_selection",
     "wavelet_features",
+    "weighted_aggregate",
 ]
