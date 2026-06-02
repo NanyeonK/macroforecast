@@ -16,7 +16,7 @@ Use this page as the inspection order for the current callable-first
 | How do I load and shape data? | [Data](data.md) | Panel contract, metadata, custom loaders, FRED loaders, frequency policies. |
 | Which FRED-family dataset should I use? | [FRED Datasets](../datasets/index.md) | FRED-MD, FRED-QD, FRED-SD, combined loaders, and frequency conversion warnings. |
 | How do I clean a panel? | [Preprocessing](preprocessing.md) | Transform codes, outliers, imputation, standardization, frame rules. |
-| How do I smooth a noisy macro series for monitoring? | [Feature Engineering](feature_engineering.md) | AlbaMA, one-sided/two-sided adaptive moving-average features, and learned weights. |
+| How do I smooth or filter one noisy macro series? | [Filters](filters.md) | HP, Hamilton, Savitzky-Golay, wavelet-style components, and AlbaMA. |
 | How do I inspect learned feature weights? | [Feature Analysis](feature_analysis.md) | Effective windows and recent weight shares from adaptive feature weight matrices. |
 | How do I create targets and predictors? | [Feature Engineering](feature_engineering.md) | Target construction, lags, rolling features, factors, selection, runner-safe specs. |
 | How do I define time windows? | [Window](window.md) | Train/validation/test windows, expanding/rolling/fixed policies, stage policies. |
@@ -41,22 +41,23 @@ Use this sequence when auditing the whole docs site.
 5. [Data](data.md)
 6. [FRED Datasets](../datasets/index.md)
 7. [Preprocessing](preprocessing.md)
-8. [Feature Engineering](feature_engineering.md)
-9. [Window](window.md)
-10. [Models](models.md)
-11. [Model Ensemble](model_ensemble.md)
-12. [Model Selection](model_selection.md)
-13. [Forecasting](forecasting.md)
-14. [Metrics](metrics.md)
-15. [Tests](tests.md)
-16. [Evaluation](evaluation.md)
-17. [Feature Analysis](feature_analysis.md)
-18. [Forecast Analysis](forecast_analysis.md)
-19. [Interpretation](interpretation.md)
-20. [Output](output.md)
-21. [Reporting](reporting.md)
-22. [Custom Extensions](custom/index.md)
-23. [Reference Verification](reference_verification.md)
+8. [Filters](filters.md)
+9. [Feature Engineering](feature_engineering.md)
+10. [Window](window.md)
+11. [Models](models.md)
+12. [Model Ensemble](model_ensemble.md)
+13. [Model Selection](model_selection.md)
+14. [Forecasting](forecasting.md)
+15. [Metrics](metrics.md)
+16. [Tests](tests.md)
+17. [Evaluation](evaluation.md)
+18. [Feature Analysis](feature_analysis.md)
+19. [Forecast Analysis](forecast_analysis.md)
+20. [Interpretation](interpretation.md)
+21. [Output](output.md)
+22. [Reporting](reporting.md)
+23. [Custom Extensions](custom/index.md)
+24. [Reference Verification](reference_verification.md)
 
 ## Reference Page Format
 
@@ -87,7 +88,8 @@ without explaining the meaning of each choice.
 | `meta` vs data pipeline | `meta` stores package defaults; it does not load, clean, summarize, or compare data. |
 | `data` vs `preprocessing` | `data` creates canonical panels and metadata; `preprocessing` transforms values. |
 | `preprocessing` vs `feature_engineering` | `preprocessing` cleans variables; `feature_engineering` creates targets and predictors. |
-| feature generation vs feature analysis | `feature_engineering` creates AlbaMA smoothed features and stores learned weights; `feature_analysis` summarizes those weights through effective windows and recent weight shares. |
+| `filters` vs `feature_engineering` | `filters` transforms one series; `feature_engineering` turns those filter outputs into panel feature columns. |
+| feature generation vs feature analysis | `feature_engineering` creates AlbaMA feature columns and stores learned weights; `feature_analysis` summarizes those weights through effective windows and recent weight shares. |
 | `feature_engineering` vs `window` | Feature functions build matrices; `window` decides which dates belong to train/validation/test. |
 | `models` vs `model_selection` | Models own fit functions and search spaces; `model_selection` runs parameter search on supplied windows. |
 | `model_selection` vs `forecasting` | `model_selection` picks model parameters; `forecasting` orchestrates repeated fits and predictions. |

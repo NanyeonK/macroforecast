@@ -12,6 +12,7 @@ REFERENCE_MODULES = (
     "data",
     "preprocessing",
     "feature_engineering",
+    "filters",
     "data_analysis",
     "feature_analysis",
     "forecast_analysis",

@@ -11,7 +11,8 @@ composition in the forecasting runner.
 | --- | --- | --- |
 | `macroforecast.data` | Canonical pandas panels and metadata. | Model-ready matrices. |
 | `macroforecast.preprocessing` | Callable data-cleaning transforms and reusable preprocessing specs. | Expanding/rolling schedule decisions. |
-| `macroforecast.feature_engineering` | Callable feature/target transforms, learned adaptive smoother features, and reusable feature specs. | Forecast-origin scheduling. |
+| `macroforecast.filters` | Callable one-series filters and smoothers, including HP, Hamilton, Savitzky-Golay, wavelet-style components, and AlbaMA. | Panel feature matrices or forecast-origin scheduling. |
+| `macroforecast.feature_engineering` | Callable feature/target transforms, filter-to-feature wrappers, and reusable feature specs. | Forecast-origin scheduling. |
 | `macroforecast.feature_analysis` | Feature-matrix and learned-weight diagnostics after feature construction. | Predictor construction or model fitting. |
 | `macroforecast.window` | Estimation mode, validation/test time frames, retrain/retune cadence, and reusable stage policies. | Low-level transformation formulas. |
 | `macroforecast.models` | Single-estimator model callables and model-owned hyperparameter spaces. | Forecast loops, forecast combination, or fit-time model ensembles. |

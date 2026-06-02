@@ -10,7 +10,7 @@ import macroforecast as mf
 def test_albama_two_sided_root_leaf_weights_match_terminal_membership() -> None:
     series = pd.Series([1.0, 2.0, 3.0, 4.0], name="cpi")
 
-    result = mf.feature_engineering.albama(
+    result = mf.filters.albama(
         series,
         mode="two_sided",
         n_estimators=1,
@@ -33,7 +33,7 @@ def test_albama_two_sided_root_leaf_weights_match_terminal_membership() -> None:
 def test_albama_one_sided_is_causal_and_normalized() -> None:
     series = pd.Series([1.0, 2.0, 3.0, 4.0], name="cpi")
 
-    result = mf.feature_engineering.albama(
+    result = mf.filters.albama(
         series,
         mode="one_sided",
         n_estimators=1,
@@ -62,7 +62,7 @@ def test_albama_one_sided_is_causal_and_normalized() -> None:
 def test_albama_constant_series_stays_constant() -> None:
     series = pd.Series(np.ones(12) * 7.0, name="constant")
 
-    result = mf.feature_engineering.AlbaMA(
+    result = mf.filters.AlbaMA(
         mode="one_sided",
         n_estimators=8,
         min_samples_leaf=2,
@@ -98,5 +98,5 @@ def test_adaptive_ma_rf_features_reuses_albama_smoother() -> None:
     meta = features.attrs["macroforecast_metadata"][
         "feature_engineering_adaptive_ma_rf"
     ]
-    assert meta["implementation"] == "macroforecast.feature_engineering.albama"
+    assert meta["implementation"] == "macroforecast.filters.albama"
     assert meta["sample_fraction"] == pytest.approx(0.8)

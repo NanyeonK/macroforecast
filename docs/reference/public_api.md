@@ -11,7 +11,7 @@ convenience exports are documented on their module reference pages.
 
 | Symbol | Source | Description |
 | --- | --- | --- |
-| `meta`, `data`, `preprocessing`, `feature_engineering`, `data_analysis`, `feature_analysis`, `feature_diagnostic`, `forecast_analysis`, `forecast_diagnostic`, `models`, `model_ensemble`, `model_selection`, `forecasting`, `metrics`, `tests`, `evaluation`, `window`, `interpretation`, `output`, `reporting` | package namespaces | Top-level module namespaces. `feature_diagnostic` and `forecast_diagnostic` are compatibility aliases for the corresponding analysis modules. |
+| `meta`, `data`, `preprocessing`, `feature_engineering`, `filters`, `data_analysis`, `feature_analysis`, `feature_diagnostic`, `forecast_analysis`, `forecast_diagnostic`, `models`, `model_ensemble`, `model_selection`, `forecasting`, `metrics`, `tests`, `evaluation`, `window`, `interpretation`, `output`, `reporting` | package namespaces | Top-level module namespaces. `feature_diagnostic` and `forecast_diagnostic` are compatibility aliases for the corresponding analysis modules. |
 | `configure`, `get_config`, `get_option`, `reset_config`, `use_config`, `DEFAULT_RANDOM_SEED`, `StageDefaultScope`, `MetadataLevel` | `macroforecast.meta` | Global package defaults and config types. |
 | `DataBundle`, `DataSpec`, `RegimeDirection`, `SamePeriodPolicy`, `as_panel`, `attach_metadata`, `custom_dataset`, `metadata`, `panel_info`, `set_frequencies`, `spec`, `validate_panel` | `macroforecast.data` | Canonical panel and metadata helpers. |
 | `align_frequency`, `chow_lin_disaggregate`, `infer_frequencies`, `frequency_hardening_issues`, `availability_lag`, `same_period_predictors`, `define_regime` | `macroforecast.data` | Frequency alignment/inference, Chow-Lin disaggregation, data availability, same-period predictor, and regime metadata policies. |
@@ -58,6 +58,7 @@ convenience exports are documented on their module reference pages.
 | `macroforecast.meta` | Global defaults. |
 | `macroforecast.data` | Data loading and study data specs. |
 | `macroforecast.preprocessing` | Pandas preprocessing functions. |
+| `macroforecast.filters` | Direct one-series filters and smoothers such as HP, Hamilton, Savitzky-Golay, wavelet-style components, and AlbaMA. |
 | `macroforecast.feature_engineering` | Direct-forecast target construction and composable ML feature transforms. |
 | `macroforecast.feature_analysis` | Feature-matrix analysis after feature engineering. |
 | `macroforecast.feature_diagnostic` | Compatibility alias for `macroforecast.feature_analysis`. |

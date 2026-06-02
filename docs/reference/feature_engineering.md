@@ -64,8 +64,8 @@ X_lag = mf.feature_engineering.lag(processed, columns=["PAYEMS", "INDPRO"], lags
 | Target construction | `direct_target`, `average_target`, `path_targets` | Build direct, average, or step-path forecast targets. |
 | Basic predictor transforms | `lag`, `rolling_mean`, `moving_average_ladder`, `mixed_frequency_lags`, `seasonal_lag`, `season_dummy`, `time_features`, `fourier_features` | Add lags, rolling blocks, mixed-frequency lag blocks, and deterministic date features. |
 | ML-side value transforms | `transform_features`, `log_features`, `diff_features`, `log_diff_features`, `pct_change_features`, `cumsum_features`, `scale_features` | Add post-preprocessing transformations and scaling used as model features. |
-| Nonlinear expansions | `polynomial_features`, `interaction_features`, `wavelet_features`, `savitzky_golay_features`, `albama`, `adaptive_ma_rf_features`, `asymmetric_trim_features` | Add nonlinear, smooth, rank, or multi-resolution feature blocks. `adaptive_ma_rf_features` wraps `albama`. |
-| Trend/cycle filters | `hamilton_filter_features`, `hp_filter_features` | Add Hamilton or HP trend/cycle columns with leakage warnings where needed. |
+| Nonlinear expansions | `polynomial_features`, `interaction_features`, `wavelet_features`, `savitzky_golay_features`, `adaptive_ma_rf_features`, `asymmetric_trim_features` | Add nonlinear, smooth, rank, or multi-resolution feature blocks. `adaptive_ma_rf_features` wraps `macroforecast.filters.albama`. |
+| Trend/cycle filter wrappers | `hamilton_filter_features`, `hp_filter_features` | Turn `macroforecast.filters` one-series filter outputs into panel feature columns with leakage warnings where needed. |
 | Factor features | `pca_features`, `dfm_features`, `group_pca`, `varimax_features`, `sparse_pca_chen_rohe_features`, `partial_least_squares_features`, `sliced_inverse_regression_features`, `random_projection_features`, `nystroem_features` | Build fitted factor, supervised-factor, sparse-factor, rotation, random projection, and kernel approximation features. |
 | Paper-style combinations | `feature_matrix`, `maf_features`, `moving_average_pca_lags`, `pca_then_lags`, `lags_then_pca` | Materialize named macro-ML blocks such as `X`, `F`, `MARX`, `MAF`, and compositions. |
 | Composition | `compose_features`, `custom_features`, `custom_step` | Run sequential feature steps or user-supplied transforms. |
@@ -90,8 +90,7 @@ implementation is split by responsibility:
 | File | Responsibility |
 | --- | --- |
 | `targets.py` | `direct_target()`, `average_target()`, and `path_targets()`. |
-| `_albama.py` | AlbaMA adaptive moving-average feature builder and R-code-aligned terminal-node weight extraction. Public surface remains `macroforecast.feature_engineering.albama()`. |
-| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, Hamilton filtering, AlbaMA panel wrapper, wavelet-style decomposition, custom feature callables, and time features. |
+| `transforms.py` | Direct pandas feature transforms: lags, rolling means, scaling, PCA, PLS, DFM-style factors, Chen-Rohe sparse component analysis, varimax rotation, grouped PCA, MAF, filter-to-feature wrappers, custom feature callables, and time features. |
 | `feature_selection.py` | Shared fitted feature-selection algorithms used by direct selection callables and runner-safe `feature_spec()` method names. |
 | `compose.py` | Reusable step builders and sequential feature composition. |
 | `matrix.py` | Paper-style `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. |
@@ -188,7 +187,7 @@ the same functions later.
 | `rolling_mean()` | Rolling-window means. | Fit-based filters or learned smoothers. |
 | `moving_average_ladder()` | Multi-scale trailing moving-average block used before optional factor/PCA steps. | PCA/factor extraction itself. |
 | `maf_features()` | Moving Average Factors from variable-specific lag panels. | Model fitting or choosing final feature combinations. |
-| `hamilton_filter_features()` | Hamilton-filter trend/cycle columns with explicit expanding or full-sample policy. | Model fitting, test windows, or choosing filter horizons. |
+| `hamilton_filter_features()` | Panel wrapper around `filters.hamilton_filter()` with explicit expanding or full-sample policy. | Model fitting, test windows, or choosing filter horizons. |
 | `feature_matrix()` | Named `X`, `F`, `MARX`, `MAF`, and `LEVEL` feature-matrix combinations. | Loading or preprocessing the raw/level panel. |
 | `scale_features()` | Fit-policy-aware z-score, min-max, or robust scaling. | Model fitting. |
 | `pca_features()` | Fit-policy-aware PCA factors. | Forecast model fitting. |
@@ -199,9 +198,8 @@ the same functions later.
 | `dfm_features()` | Static DFM approximation by standardized PCA. | State-space DFM estimation; use model callables for that. |
 | `variance_selection()`, `correlation_selection()`, `lasso_selection()`, `lasso_path_selection()`, `rfe_selection()`, `boruta_selection()`, `stability_selection()`, `genetic_selection()` | Direct column selection by one explicit algorithm. | Model fitting; runner-safe fitting uses the same method names inside `feature_spec(..., steps=[...])`. |
 | `asymmetric_trim_features()` | Per-period rank-space columns for asymmetric trimming weights. | Estimating the nonnegative rank weights. |
-| `wavelet_features()` | Causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
-| `albama()`, `AlbaMA`, `AdaptiveMovingAverage` | Goulet Coulombe-Klieber AlbaMA feature construction: bagged tree time-trend smoothing plus learned observation weights. `AlbaMAResult` stores `smoothed`, `weights`, and metadata. | Weight diagnostics; use `feature_analysis.effective_window()` and `feature_analysis.recent_weight_share()`. |
-| `adaptive_ma_rf_features()` | Feature-wrapper form of AlbaMA that returns `{column}_albama` columns and stores full `AlbaMAResult` objects in attrs. | Forecast model fitting. |
+| `wavelet_features()` | Panel wrapper around `filters.wavelet_filter()` returning causal rolling multi-resolution approximation/detail columns. | True DWT family-specific filtering. |
+| `adaptive_ma_rf_features()` | Feature-wrapper form of `filters.albama()` that returns `{column}_albama` columns and stores full `AlbaMAResult` objects in attrs. | Forecast model fitting. |
 | `group_pca()` | PCA factors within named column groups. | FAVAR-specific slow/fast construction, model estimation, or structural identification. |
 | `custom_features()` | One direct user-supplied pandas feature transform. | Window-safe fitted state. Use `custom_step()` inside `feature_spec()` for runner use. |
 | `compose_features()` | Sequential combinations such as `pca -> lag`, `lag -> pca`, `maf`, or `moving_average_ladder -> pca -> lag`. | Model fitting or evaluation. |
@@ -1343,9 +1341,7 @@ canonical panel has already been cleaned.
 | `hamilton_filter_features(data, h=8, p=4)` | Hamilton horizon `h`, regressor count `p`, `component`, `fit_policy`: `"expanding"` or `"full_sample"`, and missing policy. | `{column}_hamilton_cycle` and/or `{column}_hamilton_trend`. |
 | `savitzky_golay_features(data, window_length=5, polyorder=2)` | Centered filter window, polynomial order, derivative; `warn_full_sample=True`. | Smoothed columns. |
 | `wavelet_features(data, n_levels=3)` | Causal rolling approximation/detail levels; `wavelet` name is recorded for compatibility. | `{column}_wA{level}`, `{column}_wD{level}`. |
-| `albama(y, mode="one_sided", n_estimators=500, min_samples_leaf=6, sample_fraction=0.6)` | Direct AlbaMA call. Returns `AlbaMAResult(smoothed, weights, mode, backend, params, metadata)`. Weight summaries belong in `feature_analysis`. | `AlbaMAResult`. |
-| `AlbaMA(...)`, `AdaptiveMovingAverage(...)` | Class wrappers around `albama`. | Fitted object with `fit`, `fit_transform`, and `result`. |
-| `adaptive_ma_rf_features(data, sided="two", sample_fraction=0.6)` | Feature wrapper around `albama`; `sided="two"` warns, `sided="one"` uses expanding one-sided fits. Full `AlbaMAResult` objects are stored in `attrs["macroforecast_feature_weight_results"]`. | `{column}_albama`. |
+| `adaptive_ma_rf_features(data, sided="two", sample_fraction=0.6)` | Feature wrapper around `filters.albama`; `sided="two"` warns, `sided="one"` uses expanding one-sided fits. Full `AlbaMAResult` objects are stored in `attrs["macroforecast_feature_weight_results"]`. | `{column}_albama`. |
 | `asymmetric_trim_features(data)` | Sorts each row's selected columns in ascending order. | `rank_1`, `rank_2`, ... |
 | `partial_least_squares_features(data, target=..., n_components=...)` | Target-aware PLSRegression scores; warns by default. | `pls1`, `pls2`, ... |
 | `dfm_features(data, n_factors=...)` | Static DFM approximation by standardized PCA; warns by default. | `dfm1`, `dfm2`, ... |
@@ -1360,133 +1356,25 @@ canonical panel has already been cleaned.
 | `random_projection_features(data, n_components=...)` | Gaussian random projection; `warn_full_sample=True` by default. | `rp1`, `rp2`, ... |
 | `nystroem_features(data, kernel="rbf", n_components=...)` | Kernel approximation settings; `warn_full_sample=True` by default. | `nys1`, `nys2`, ... |
 
-### AlbaMA
+### Filter-Backed Features
 
-`albama()` implements the adaptive learning-based moving average from Goulet
-Coulombe and Klieber (2025). The method fits a random-forest-style ensemble to
-one macroeconomic series with deterministic time as the only predictor:
+`macroforecast.filters` owns one-series filter and smoother callables.
+`macroforecast.feature_engineering` owns panel wrappers that turn those outputs
+into feature columns:
 
-```text
-y_t = f(t) + error_t
-```
-
-Because each CART tree splits only the time axis, each terminal node is a local
-time interval and the tree prediction is a within-leaf average. Averaging many
-bagged trees therefore creates a learned moving average. The learned weights
-change by date: stable periods can resemble a longer moving average, while
-turning points or breaks can concentrate mass on more recent observations.
-
-This belongs in `feature_engineering`, not `models`. It does not estimate a
-multivariate forecasting equation, does not choose predictors, and does not
-return a forecast object. It transforms one observed series into an auditable
-feature plus the implicit observation weights that produced the feature.
-
-Reference:
-
-> Goulet Coulombe, Philippe, and Karin Klieber. 2025. "An Adaptive Moving
-> Average for Macroeconomic Monitoring." arXiv:2501.13222v1.
-> <https://arxiv.org/abs/2501.13222>
-
-Reviewed implementation source:
-
-| Source | Used for |
+| Feature wrapper | Direct filter |
 | --- | --- |
-| `AlbaMA/AMA_main.R` from <https://github.com/philgoucou/AlbaMA> | R-code alignment for the one-series CPI example, one-sided/two-sided loops, and terminal-node weight extraction. |
-| Local review note `10.48550arxiv.2501.13222-260bbf04.md` | Package placement decision, validation checklist, and documentation requirements. |
+| `hp_filter_features()` | `filters.hp_filter()` |
+| `hamilton_filter_features()` | `filters.hamilton_filter()` |
+| `savitzky_golay_features()` | `filters.savitzky_golay()` |
+| `wavelet_features()` | `filters.wavelet_filter()` |
+| `adaptive_ma_rf_features()` | `filters.albama()` |
 
-#### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `y` | array-like or `pandas.Series` | required | One numeric macro series. If a `Series` is provided, its index is used as dates. |
-| `dates` | array-like or `None` | `None` | Optional dates used when `y` is not already indexed. |
-| `mode` | `"one_sided"` or `"two_sided"` | `"one_sided"` | Real-time recursive fit or retrospective full-sample fit. |
-| `n_estimators` | positive integer | `500` | Number of bagged trees. Matches the R script's `N_trees`. |
-| `min_samples_leaf` | positive integer | `6` | Minimum terminal-node size. Maps to `ranger min.node.size`. |
-| `sample_fraction` | float in `(0, 1]` | `0.6` | Per-tree sample share. Maps to `ranger sample.fraction`. |
-| `random_state` | integer or `None` | `42` | Random seed for reproducible tree samples. |
-| `replace` | boolean | `True` | Whether per-tree samples are drawn with replacement. |
-| `inbag_rule` | `"single"` or `"positive"` | `"single"` | Whether terminal-node weights use observations sampled exactly once or at least once. `"single"` mirrors the R code condition `inbag.counts[[tree]] == 1`. |
-| `min_train_size` | positive integer | `2` | Minimum finite observations needed before fitting a tree ensemble. |
-| `name` | string or `None` | series name | Name used for the returned smoothed series. |
-
-#### Output
-
-`albama()` returns `AlbaMAResult`.
-
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `smoothed` | `pandas.Series` | The adaptive moving-average feature, named `{source}_albama`. |
-| `weights` | `pandas.DataFrame` | Source-date by target-date weight matrix. Columns sum to one when a target date has a fitted value. |
-| `mode` | string | Resolved mode, `"one_sided"` or `"two_sided"`. |
-| `backend` | string | Current backend identifier: manual sklearn decision-tree bagging. |
-| `params` | dictionary | Resolved forest and sampling settings. |
-| `metadata` | dictionary | Paper reference, R-code reference, weight-extraction method, source series, and implementation notes. |
-
-Weight summaries are intentionally not stored on `AlbaMAResult`; compute them
-with `macroforecast.feature_analysis.effective_window()` and
-`macroforecast.feature_analysis.recent_weight_share()` so feature construction
-and feature diagnostics remain separate.
-
-#### Modes
-
-| Mode | R script analogue | Fit sample | Use |
-| --- | --- | --- | --- |
-| `"one_sided"` | `Albama_right` | For each target date `t`, fit using observations through `t`. | Real-time monitoring and forecasting inputs. No future-date weights are allowed. |
-| `"two_sided"` | `Albama_center` | Fit once on the full available sample and predict every date. | Retrospective monitoring, charts, and diagnostic comparisons. It is not a strict forecasting feature unless the input is already a training-only slice. |
-
-`adaptive_ma_rf_features(..., sided="two")` warns by default because two-sided
-AlbaMA uses future observations relative to early dates. Use `sided="one"` when
-the generated feature enters a real-time forecasting design.
-
-#### Weight Extraction
-
-The original R code uses `ranger` with `keep.inbag=TRUE` and
-`type="terminalNodes"`. For a target date and each tree, it finds training
-observations that share the target's terminal node and satisfy the in-bag rule.
-Each selected observation receives `1 / leaf_size` for that tree; the column is
-then normalized across trees.
-
-The Python port follows that logic with explicit manual bagging:
-
-1. Draw each tree's bootstrap/subsample indices.
-2. Fit a `DecisionTreeRegressor` on deterministic time positions.
-3. Store per-tree in-bag counts.
-4. Use `tree.apply(...)` to obtain terminal nodes.
-5. Accumulate terminal-node co-membership weights.
-6. Normalize each target-date weight column.
-
-This is why the backend is not a plain `RandomForestRegressor`: sklearn does
-not expose the needed in-bag counts as a stable public interface, while the
-AlbaMA interpretation depends on the weights as much as on the smoothed series.
-
-#### Examples
-
-```python
-result = mf.feature_engineering.albama(
-    inflation,
-    mode="one_sided",
-    n_estimators=500,
-    min_samples_leaf=6,
-    sample_fraction=0.6,
-    random_state=42,
-)
-
-smooth = result.smoothed
-weights = result.weights
-
-window = mf.feature_analysis.effective_window(weights)
-recent = mf.feature_analysis.recent_weight_share(weights, mode="one_sided")
-```
-
-Use the class wrapper when an estimator-style object is more convenient:
-
-```python
-smoother = mf.feature_engineering.AlbaMA(mode="one_sided", random_state=42)
-result = smoother.fit_transform(inflation)
-```
-
-Use the feature-wrapper form for a panel:
+For AlbaMA method details, R-code alignment, and weight extraction, see
+[Filters](filters.md). `adaptive_ma_rf_features()` stores full `AlbaMAResult`
+objects in `attrs["macroforecast_feature_weight_results"]` so
+`feature_analysis.effective_window()` and
+`feature_analysis.recent_weight_share()` can inspect learned weights.
 
 ```python
 features = mf.feature_engineering.adaptive_ma_rf_features(
@@ -1497,18 +1385,6 @@ features = mf.feature_engineering.adaptive_ma_rf_features(
 
 albama_results = features.attrs["macroforecast_feature_weight_results"]
 ```
-
-#### Use And Non-Use
-
-Use AlbaMA for noisy macro monitoring series where the relevant look-back
-window can change over time: CPI inflation, core inflation, industrial
-production, unemployment, PMI, or similar monthly/quarterly indicators.
-
-Do not use AlbaMA as a substitute for a multivariate forecasting model, a
-structural break test, or a causal decomposition. If the task is to forecast a
-target from many leading indicators, create AlbaMA features first and then pass
-the resulting feature matrix to `forecasting.run()` with explicit model,
-window, and evaluation settings.
 
 `random_projection_features()` and `nystroem_features()` fit on complete rows
 of the provided input and warn by default because the direct helpers are

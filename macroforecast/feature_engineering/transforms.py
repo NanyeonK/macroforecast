@@ -6,13 +6,17 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from scipy.signal import savgol_filter
 from sklearn.kernel_approximation import Nystroem
 from sklearn.random_projection import GaussianRandomProjection
-from statsmodels.tsa.filters.hp_filter import hpfilter
 
 from macroforecast.data import attach_metadata, validate_panel
 from macroforecast.feature_engineering.types import FeatureInput
+from macroforecast.filters import (
+    hamilton_filter,
+    hp_filter,
+    savitzky_golay,
+    wavelet_filter,
+)
 from macroforecast.feature_engineering.shared import (
     FitPolicy,
     _coerce_input,
@@ -1376,16 +1380,15 @@ def wavelet_features(
         raise ValueError("n_levels must be positive")
     pieces: list[pd.Series] = []
     for column in selected:
-        series = panel[column].astype(float)
+        filtered = wavelet_filter(
+            panel[column],
+            n_levels=levels,
+            wavelet=wavelet,
+            name=str(column),
+        ).values
         for level in range(1, levels + 1):
-            window = 2**level
-            approx = (
-                series.rolling(window=window, min_periods=1)
-                .mean()
-                .rename(f"{column}_wA{level}")
-            )
-            detail = (series - approx).rename(f"{column}_wD{level}")
-            pieces.extend([approx, detail])
+            pieces.append(filtered[f"wA{level}"].rename(f"{column}_wA{level}"))
+            pieces.append(filtered[f"wD{level}"].rename(f"{column}_wD{level}"))
     result = pd.concat(pieces, axis=1) if pieces else pd.DataFrame(index=panel.index)
     if drop_missing:
         result = result.dropna()
@@ -1428,7 +1431,7 @@ def adaptive_ma_rf_features(
 ) -> pd.DataFrame:
     """Create adaptive moving-average smoothers using random forests over time."""
 
-    from macroforecast.feature_engineering._albama import albama
+    from macroforecast.filters import albama
 
     base = _coerce_input(data, metadata=metadata)
     panel = base.panel
@@ -1484,7 +1487,7 @@ def adaptive_ma_rf_features(
             if sided_value == "two"
             else "one_sided_expanding",
             "warn_full_sample": bool(warn_full_sample),
-            "implementation": "macroforecast.feature_engineering.albama",
+            "implementation": "macroforecast.filters.albama",
             "r_reference": "AlbaMA/AMA_main.R ranger keep.inbag terminalNodes loop",
         },
     )
@@ -1949,14 +1952,17 @@ def hp_filter_features(
     )
     result = pd.DataFrame(index=panel.index)
     for column in selected:
-        series = panel[column].astype(float)
-        if series.isna().any():
-            series = series.interpolate(limit_direction="both")
-        cycle, trend = hpfilter(series, lamb=float(lamb))
+        filtered = hp_filter(
+            panel[column],
+            lamb=float(lamb),
+            component="both",
+            interpolate_missing=True,
+            name=str(column),
+        ).values
         if component_value in {"cycle", "both"}:
-            result[f"{column}_hp_cycle"] = cycle
+            result[f"{column}_hp_cycle"] = filtered["cycle"]
         if component_value in {"trend", "both"}:
-            result[f"{column}_hp_trend"] = trend
+            result[f"{column}_hp_trend"] = filtered["trend"]
     if drop_missing:
         result = result.dropna()
     result.index.name = "date"
@@ -2042,20 +2048,20 @@ def hamilton_filter_features(
 
     result = pd.DataFrame(index=panel.index)
     for column in selected:
-        series = panel[column].astype(float)
-        if missing_value == "interpolate" and series.isna().any():
-            series = series.interpolate(limit_direction="both")
-        cycle, trend = _hamilton_filter_series(
-            series,
+        filtered = hamilton_filter(
+            panel[column],
             h=h_value,
             p=p_value,
+            component="both",
             fit_policy=fit_value,
             min_train_size=min_size,
-        )
+            missing=missing_value,
+            name=str(column),
+        ).values
         if component_value in {"cycle", "both"}:
-            result[f"{column}_hamilton_cycle"] = cycle
+            result[f"{column}_hamilton_cycle"] = filtered["cycle"]
         if component_value in {"trend", "both"}:
-            result[f"{column}_hamilton_trend"] = trend
+            result[f"{column}_hamilton_trend"] = filtered["trend"]
     if drop_missing:
         result = result.dropna()
     result.index.name = "date"
@@ -2128,16 +2134,15 @@ def savitzky_golay_features(
     )
     result = pd.DataFrame(index=panel.index)
     for column in selected:
-        series = panel[column].astype(float)
-        if series.isna().any():
-            series = series.interpolate(limit_direction="both")
-        values = savgol_filter(
-            series.to_numpy(dtype=float),
+        filtered = savitzky_golay(
+            panel[column],
             window_length=window,
             polyorder=order,
-            deriv=deriv,
-        )
-        result[f"{column}_savgol"] = values
+            derivative=deriv,
+            interpolate_missing=True,
+            name=str(column),
+        ).values
+        result[f"{column}_savgol"] = filtered["savgol"]
     if drop_missing:
         result = result.dropna()
     result.index.name = "date"
@@ -2552,65 +2557,6 @@ def _source_series_by_period(series: pd.Series, *, frequency: str) -> pd.Series:
     normalized = normalized.groupby(level=0).last().sort_index()
     normalized.index.name = "date"
     return normalized
-
-
-def _hamilton_filter_series(
-    series: pd.Series,
-    *,
-    h: int,
-    p: int,
-    fit_policy: str,
-    min_train_size: int,
-) -> tuple[pd.Series, pd.Series]:
-    values = pd.Series(series, index=series.index, dtype=float)
-    cycle = pd.Series(np.nan, index=values.index, name="cycle", dtype=float)
-    trend = pd.Series(np.nan, index=values.index, name="trend", dtype=float)
-    if len(values) <= h + p:
-        return cycle, trend
-
-    rows: list[tuple[int, np.ndarray, float]] = []
-    arr = values.to_numpy(dtype=float)
-    for anchor_pos in range(p - 1, len(arr) - h):
-        target_pos = anchor_pos + h
-        regressors = np.array([arr[anchor_pos - lag] for lag in range(p)], dtype=float)
-        target = float(arr[target_pos])
-        if not np.isfinite(target) or not np.isfinite(regressors).all():
-            continue
-        rows.append((target_pos, np.r_[1.0, regressors], target))
-    if len(rows) < min_train_size:
-        return cycle, trend
-
-    target_positions = np.array([row[0] for row in rows], dtype=int)
-    x_matrix = np.vstack([row[1] for row in rows]).astype(float)
-    y_vector = np.array([row[2] for row in rows], dtype=float)
-
-    if fit_policy == "full_sample":
-        fitted = _ols_predict(x_matrix, y_vector, x_matrix)
-        trend.iloc[target_positions] = fitted
-        cycle.iloc[target_positions] = y_vector - fitted
-        return cycle, trend
-
-    for row_idx, target_pos in enumerate(target_positions):
-        train_mask = target_positions < target_pos
-        if int(train_mask.sum()) < min_train_size:
-            continue
-        fitted_value = _ols_predict(
-            x_matrix[train_mask],
-            y_vector[train_mask],
-            x_matrix[row_idx : row_idx + 1],
-        )[0]
-        trend.iloc[target_pos] = fitted_value
-        cycle.iloc[target_pos] = y_vector[row_idx] - fitted_value
-    return cycle, trend
-
-
-def _ols_predict(
-    x_train: np.ndarray,
-    y_train: np.ndarray,
-    x_pred: np.ndarray,
-) -> np.ndarray:
-    beta, *_ = np.linalg.lstsq(x_train, y_train, rcond=None)
-    return np.asarray(x_pred @ beta, dtype=float).reshape(-1)
 
 
 def _normalize_frequency_label(value: Any) -> str:

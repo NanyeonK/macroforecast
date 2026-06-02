@@ -1,11 +1,5 @@
 from __future__ import annotations
 
-from macroforecast.feature_engineering._albama import (
-    AlbaMA,
-    AlbaMAResult,
-    AdaptiveMovingAverage,
-    albama,
-)
 from macroforecast.feature_engineering.builder import build_features
 from macroforecast.feature_engineering.compose import (
     compose_features,
@@ -90,11 +84,7 @@ from macroforecast.feature_engineering.transforms import (
 )
 
 __all__ = [
-    "AlbaMA",
-    "AlbaMAResult",
-    "AdaptiveMovingAverage",
     "adaptive_ma_rf_features",
-    "albama",
     "asymmetric_trim_features",
     "average_target",
     "boruta_selection",

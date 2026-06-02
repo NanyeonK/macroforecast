@@ -26,7 +26,7 @@ want to read.
 | Orientation | [Documentation Map](documentation_map.md), [Workflow](workflow.md), [Legacy Coverage](legacy_callable_coverage.md), [Reference Verification](reference_verification.md), [Public API](public_api.md) | How the package is organized and what is currently covered. |
 | Package Configuration | [Meta](meta.md) | Package-wide defaults used only when a direct function or runner policy does not pass a more specific value. |
 | Data Pipeline | [Data](data.md), [Preprocessing](preprocessing.md), [Data Analysis](data_analysis.md) | Data loading, metadata, cleaning, summaries, and before/after checks. See [FRED Datasets](../datasets/index.md) for dataset pages. |
-| Feature Pipeline | [Feature Engineering](feature_engineering.md), [Feature Analysis](feature_analysis.md) | Targets, predictors, transforms, learned adaptive smoothers, factor/selection tools, and feature diagnostics. |
+| Feature Pipeline | [Filters](filters.md), [Feature Engineering](feature_engineering.md), [Feature Analysis](feature_analysis.md) | One-series filters/smoothers, targets, predictors, transforms, factor/selection tools, and feature diagnostics. |
 | Forecast Pipeline | [Window](window.md), [Models](models.md), [Model Ensemble](model_ensemble.md), [Model Selection](model_selection.md), [Forecasting](forecasting.md), [Forecast Analysis](forecast_analysis.md) | Timing, model fits, fit-time model composition, parameter search, runner execution, and forecast diagnostics. |
 | Evaluation and Testing | [Metrics](metrics.md), [Tests](tests.md), [Evaluation](evaluation.md) | Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports. |
 | Explanation and Delivery | [Interpretation](interpretation.md), [Output](output.md), [Reporting](reporting.md) | Attribution, output generation, artifact writing, paper-table presets, and report/table rendering. |
@@ -80,6 +80,7 @@ data_analysis
 :maxdepth: 1
 :caption: Feature Pipeline
 
+filters
 feature_engineering
 feature_analysis
 ```

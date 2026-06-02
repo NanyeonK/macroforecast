@@ -22,8 +22,8 @@ The DataFrame input must satisfy the canonical macroforecast panel contract:
 `DatetimeIndex` named `"date"`, sorted, no duplicate dates, numeric columns,
 finite values or `NaN`, and non-empty shape.
 
-Learned feature builders can also produce weight matrices. For example,
-`feature_engineering.albama()` returns `AlbaMAResult.weights`, where rows
+Learned filters and feature builders can also produce weight matrices. For
+example, `filters.albama()` returns `AlbaMAResult.weights`, where rows
 are source observations and columns are target feature dates. `feature_analysis`
 owns the diagnostic summaries of those weights:
 
@@ -55,7 +55,7 @@ diagnostic = mf.feature_analysis.diagnose_features(
     selection_similarity_metric="jaccard",
 )
 
-albama = mf.feature_engineering.albama(inflation, mode="one_sided")
+albama = mf.filters.albama(inflation, mode="one_sided")
 window = mf.feature_analysis.effective_window(albama.weights)
 shares = mf.feature_analysis.recent_weight_share(albama.weights, mode="one_sided")
 ```

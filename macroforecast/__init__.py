@@ -312,6 +312,7 @@ _LAZY_MODULES: tuple[str, ...] = (
     "data_analysis",
     "feature_analysis",
     "feature_diagnostic",
+    "filters",
     "forecast_analysis",
     "forecast_diagnostic",
     "models",
