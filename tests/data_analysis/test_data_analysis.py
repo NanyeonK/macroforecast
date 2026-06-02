@@ -222,6 +222,10 @@ def test_analyze_data_returns_report_with_optional_correlation():
     assert report.metadata["data_analysis"]["effects"]["n_transform_codes"] == 1
     assert report.to_dict()["cleaning_effect_summary"]["transform_map_applied"] == {"x1": 1}
     assert report.to_dict()["metadata"]["data_analysis"]["after"]["missing_values"] == 0
+    assert report.missing_shift.attrs["macroforecast_metadata"] == report.metadata
+    assert report.distribution_shift.attrs["macroforecast_metadata"] == report.metadata
+    assert report.correlation_shift is not None
+    assert report.correlation_shift.attrs["macroforecast_metadata"] == report.metadata
 
 
 def test_analyze_data_reads_preprocessing_metadata_from_clean_panel():

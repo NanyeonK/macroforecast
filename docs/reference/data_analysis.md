@@ -172,6 +172,10 @@ Returns `DataSummaryReport`.
 `DataSummaryReport.to_dict()` converts DataFrame fields into nested
 dictionaries for serialization.
 
+The returned `coverage`, `univariate`, `missing`, `correlation`, and `outliers`
+tables carry `attrs["macroforecast_metadata"] == summary.metadata` when the
+table is present.
+
 ### Metadata
 
 `summarize_data(...)` stores run-level facts, not duplicate result tables:
@@ -426,6 +430,10 @@ Returns `DataAnalysisReport`.
 
 `DataAnalysisReport.to_dict()` converts DataFrame fields into nested
 dictionaries for serialization.
+
+The returned `missing_shift`, `distribution_shift`, and `correlation_shift`
+tables carry `attrs["macroforecast_metadata"] == analysis.metadata` when the
+table is present.
 
 ### Metadata
 

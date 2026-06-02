@@ -407,11 +407,14 @@ macroforecast.feature_analysis.marx_diagnostics(
 ```
 
 Detects MARX-style columns named like `x_ma4_lag1`. These are moving-average
-lag features, not PCA. The returned table adds `marx_formula`, for example:
+lag features, not PCA. The returned table adds `marx_formula` using the
+recorded starting lag and window. For example:
 
 ```text
 mean(x[t-1]...x[t-4])
 ```
+
+For `x_ma4_lag2`, the formula is `mean(x[t-2]...x[t-5])`.
 
 ### marx_weight_decay
 
@@ -425,7 +428,8 @@ macroforecast.feature_analysis.marx_weight_decay(
 
 Returns the equal lag weights implied by each MARX moving-average feature.
 For `x_ma4_lag1`, the table has four rows with weight `0.25` for lags 1
-through 4 and cumulative weights from `0.25` to `1.0`.
+through 4 and cumulative weights from `0.25` to `1.0`. For `x_ma4_lag2`,
+the lag rows are 2 through 5, with the same equal weights.
 
 ### selection_stability
 
@@ -464,7 +468,10 @@ macroforecast.feature_analysis.selection_similarity(
 
 Returns pairwise stability across origins/folds/windows. `metric="jaccard"`
 uses overlap divided by union. `metric="kuncheva"` adjusts overlap for expected
-random overlap using the declared or inferred feature universe size.
+random overlap using the declared or inferred feature universe size. Kuncheva
+stability is a fixed-selection-size measure; when two windows select different
+numbers of features, `score` is missing and the output still reports
+`selected_a`, `selected_b`, and `overlap`.
 
 ### custom_feature_diagnostic
 

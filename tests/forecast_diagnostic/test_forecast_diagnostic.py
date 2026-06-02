@@ -47,7 +47,7 @@ def test_diagnose_forecasts_reads_runner_outputs(tmp_path) -> None:
         model_store=tmp_path / "trained_model",
     )
 
-    report = mf.diagnose_forecasts(
+    report = mf.forecast_analysis.diagnose_forecasts(
         result,
         rolling_window=2,
         include_residual_acf=True,
@@ -171,6 +171,13 @@ def test_residual_and_tuning_callable_views() -> None:
 
     assert set(acf["lag"]) == {0, 1, 2, 3}
     assert len(qq["probability"].unique()) == 5
+    assert {
+        "window",
+        "n_trials",
+        "n_successful",
+        "n_failed",
+        "policy",
+    }.issubset(objective.columns)
     assert objective["best_score"].notna().all()
     assert set(params["parameter"]) == {"alpha"}
     assert {"mean", "median", "q75"}.issubset(scores.columns)
@@ -214,6 +221,93 @@ def test_forecast_origin_and_scale_views() -> None:
     assert set(scale["scale"]) == {"transformed", "back_transformed"}
     assert scale.loc[scale["scale"] == "back_transformed", "back_transform_available"].all()
     assert {"first_prediction", "last_prediction", "prediction_change"}.issubset(first_last.columns)
+
+
+def test_residual_report_autocorrelation_is_origin_ordered() -> None:
+    forecasts = pd.DataFrame(
+        {
+            "date": pd.date_range("2021-01-31", periods=4, freq="ME"),
+            "origin": pd.date_range("2020-12-31", periods=4, freq="ME"),
+            "origin_pos": [0, 1, 2, 3],
+            "horizon": [1, 1, 1, 1],
+            "model": ["ridge"] * 4,
+            "prediction": [0.0, 0.0, 0.0, 0.0],
+            "actual": [1.0, 2.0, 3.0, 4.0],
+        }
+    ).sample(frac=1.0, random_state=123)
+
+    report = mf.forecast_analysis.residual_report(forecasts)
+    acf = mf.forecast_analysis.residual_autocorrelation(forecasts, max_lag=1)
+    lag1 = acf.loc[acf["lag"] == 1, "acf"].iloc[0]
+
+    assert report.loc[0, "residual_autocorr1"] == pytest.approx(lag1)
+    assert report.loc[0, "residual_autocorr1"] == pytest.approx(1.0)
+
+
+def test_best_n_combination_weights_are_reconstructed_from_history() -> None:
+    dates = pd.date_range("2021-01-31", periods=3, freq="ME")
+    base_rows = []
+    predictions = {
+        "a": [0.0, 0.1, 0.2],
+        "b": [3.0, 0.2, 0.3],
+        "c": [4.0, 5.0, 6.0],
+    }
+    actual = [0.0, 0.0, 0.0]
+    for pos, date in enumerate(dates):
+        for model, values in predictions.items():
+            base_rows.append(
+                {
+                    "date": date,
+                    "origin": date - pd.offsets.MonthEnd(1),
+                    "origin_pos": pos,
+                    "horizon": 1,
+                    "model": model,
+                    "prediction": values[pos],
+                    "actual": actual[pos],
+                    "combined": False,
+                    "combination": None,
+                }
+            )
+    combined_rows = []
+    selected_by_origin = {
+        0: ("a", "b"),
+        1: ("a", "b"),
+        2: ("a", "b"),
+    }
+    for pos, date in enumerate(dates):
+        selected = selected_by_origin[pos]
+        combined_rows.append(
+            {
+                "date": date,
+                "origin": date - pd.offsets.MonthEnd(1),
+                "origin_pos": pos,
+                "horizon": 1,
+                "model": "combo_best",
+                "prediction": float(np.mean([predictions[name][pos] for name in selected])),
+                "actual": actual[pos],
+                "combined": True,
+                "combination": {
+                    "method": "best_n",
+                    "name": "combo_best",
+                    "models": ["a", "b", "c"],
+                    "params": {"n": 2},
+                },
+            }
+        )
+    forecasts = pd.DataFrame([*base_rows, *combined_rows])
+
+    weights = mf.forecast_analysis.ensemble_weights_over_time(forecasts)
+    concentration = mf.forecast_analysis.ensemble_weight_concentration(forecasts)
+    contributions = mf.forecast_analysis.ensemble_member_contribution(forecasts)
+
+    third = weights.loc[weights["origin_pos"] == 2].set_index("model")["weight"].to_dict()
+    assert third == {"a": 0.5, "b": 0.5, "c": 0.0}
+    assert {"min_weight", "max_weight", "hhi", "effective_n"}.issubset(concentration.columns)
+    summed = contributions.groupby(["date", "origin_pos", "horizon"])["contribution"].sum()
+    expected = forecasts.loc[forecasts["combined"], ["date", "origin_pos", "horizon", "prediction"]].set_index(
+        ["date", "origin_pos", "horizon"]
+    )["prediction"]
+    assert np.allclose(summed.sort_index(), expected.sort_index())
 
 
 def test_dfm_diagnostics_accept_model_fit() -> None:
@@ -293,7 +387,7 @@ def test_custom_forecast_diagnostic_wraps_user_callable() -> None:
             .agg(bias=("residual", "mean"))
         )
 
-    out = mf.custom_forecast_diagnostic(
+    out = mf.forecast_analysis.custom_forecast_diagnostic(
         forecasts,
         signed_bias,
         name="signed_bias",

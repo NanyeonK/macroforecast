@@ -38,6 +38,11 @@ def test_summarize_data_returns_single_panel_report() -> None:
     assert report.metadata["data_analysis"]["panel"]["n_rows"] == 4
     assert report.metadata["data_analysis"]["outputs"]["stationarity"] is False
     assert report.to_dict()["overview"]["n_columns"] == 2
+    assert report.coverage.attrs["macroforecast_metadata"] == report.metadata
+    assert report.univariate.attrs["macroforecast_metadata"] == report.metadata
+    assert report.missing.attrs["macroforecast_metadata"] == report.metadata
+    assert report.correlation is not None
+    assert report.correlation.attrs["macroforecast_metadata"] == report.metadata
 
 
 def test_data_analysis_accepts_preprocessed_data() -> None:

@@ -422,24 +422,41 @@ def summarize_data(
             },
         },
     )
-    return DataSummaryReport(
-        overview=panel_overview(bundle),
-        coverage=sample_coverage(bundle),
-        univariate=univariate_summary(bundle, metrics=selected_metrics),
-        missing=missing_summary(bundle),
-        correlation=correlation_matrix(bundle, method=correlation_method)
+    coverage = sample_coverage(bundle)
+    univariate = univariate_summary(bundle, metrics=selected_metrics)
+    missing = missing_summary(bundle)
+    correlation = (
+        correlation_matrix(bundle, method=correlation_method)
         if include_correlation
-        else None,
-        outliers=outlier_summary(bundle, method=outlier_method)
+        else None
+    )
+    outliers = (
+        outlier_summary(bundle, method=outlier_method)
         if include_outliers
-        else None,
-        stationarity=stationarity_tests(
+        else None
+    )
+    stationarity = (
+        stationarity_tests(
             data,
             test=stationarity_test,
             scope=stationarity_scope,
         )
         if include_stationarity
-        else None,
+        else None
+    )
+    _attach_metadata(coverage, report_metadata)
+    _attach_metadata(univariate, report_metadata)
+    _attach_metadata(missing, report_metadata)
+    _attach_metadata(correlation, report_metadata)
+    _attach_metadata(outliers, report_metadata)
+    return DataSummaryReport(
+        overview=panel_overview(bundle),
+        coverage=coverage,
+        univariate=univariate,
+        missing=missing,
+        correlation=correlation,
+        outliers=outliers,
+        stationarity=stationarity,
         metadata=report_metadata,
     )
 
@@ -531,6 +548,11 @@ def _metadata_input_summary(metadata: Mapping[str, Any]) -> dict[str, Any]:
         "has_preprocessing": "preprocessing" in metadata,
         "metadata_keys": sorted(str(key) for key in metadata),
     }
+
+
+def _attach_metadata(frame: pd.DataFrame | None, metadata: Mapping[str, Any]) -> None:
+    if frame is not None:
+        frame.attrs["macroforecast_metadata"] = dict(metadata)
 
 
 def _run_stationarity(name: str, series: pd.Series, alpha: float) -> dict[str, Any]:

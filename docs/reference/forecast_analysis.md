@@ -8,7 +8,7 @@ change forecasts. It reads two sources:
 
 | Source | Used for |
 | --- | --- |
-| `ForecastResult.forecasts` | Forecast-vs-actual rows, residuals, rolling loss, model-model-selection metadata, and combination rows. |
+| `ForecastResult.forecasts` | Forecast-vs-actual rows, residuals, rolling loss, model-selection metadata, and combination rows. |
 | Saved model sidecar JSON from `stored_model["metadata_path"]` | Coefficients, intercepts, hyperparameters, and fit diagnostics recorded by `macroforecast.models`. |
 
 `macroforecast.forecast_diagnostic` remains available as a compatibility alias.
@@ -100,7 +100,7 @@ macroforecast.forecast_analysis.diagnose_forecasts(
 | `include_dfm_factor_stability` | `bool` | `False` | Include filtered-factor stability summaries when sidecars contain DFM factors. |
 | `include_coefficients` | `bool` | `True` | Read saved model sidecar JSON and return coefficient paths when available. |
 | `include_parameter_stability` | `bool` | `True` | Summarize coefficient stability over origins/windows. |
-| `include_tuning` | `bool` | `True` | Include per-forecast model-model-selection metadata. |
+| `include_tuning` | `bool` | `True` | Include per-forecast model-selection metadata. |
 | `include_tuning_objective` | `bool` | `True` | Extract the selected objective and best score from tuning metadata. |
 | `include_hyperparameters` | `bool` | `True` | Return selected hyperparameter values over time. |
 | `include_tuning_scores` | `bool` | `True` | Summarize tuning best-score distributions. |
@@ -175,7 +175,7 @@ Returns counts and coverage for one forecast table:
 | `missing_prediction_count`, `missing_actual_count` | Missingness in forecast/actual columns. |
 | `combined_count`, `base_model_count` | Combination versus base model rows. |
 | `stored_model_count` | Rows with saved model metadata. |
-| `selection_count`, `retuned_count` | Rows with model-model-selection metadata and rows that retuned. |
+| `selection_count`, `retuned_count` | Rows with model-selection metadata and rows that retuned. |
 | `variance_prediction_count`, `quantile_prediction_count` | Uncertainty output coverage. |
 
 ### fitted_vs_actual
@@ -212,7 +212,9 @@ macroforecast.forecast_analysis.residual_report(
 
 Default grouping is model by horizon. Output columns include `n`, `bias`,
 `mae`, `mse`, `rmse`, `residual_sd`, `residual_autocorr1`, `mean_actual`,
-`mean_prediction`, `first_date`, and `last_date`.
+`mean_prediction`, `first_date`, and `last_date`. The lag-1 autocorrelation is
+computed after sorting each group by `origin_pos` and `date`; input row order
+does not affect the result.
 
 ### residual_autocorrelation
 
@@ -427,7 +429,7 @@ count. It is available only when model sidecars contain coefficient metadata.
 macroforecast.forecast_analysis.tuning_trace(forecasts) -> pandas.DataFrame
 ```
 
-Returns one row per forecast row with model-model-selection metadata. It records method,
+Returns one row per forecast row with model-selection metadata. It records method,
 metric, validation window, retune flag, best score, best params, trial counts,
 and policy. The current runner stores selection-event summaries, not full
 per-trial histories.
@@ -439,8 +441,13 @@ macroforecast.forecast_analysis.tuning_objective_trace(forecasts) -> pandas.Data
 ```
 
 Extracts the objective-facing part of `tuning_trace`: model, horizon, origin,
-method, metric, validation policy, retune flag, best score, and trial count.
-Use this when the question is whether model selection itself behaved consistently.
+method, metric, validation window, retune flag, best score, trial counts, and
+policy. Use this when the question is whether model selection itself behaved
+consistently.
+
+Output columns are `date`, `origin`, `origin_pos`, `horizon`, `model`,
+`model_spec`, `method`, `metric`, `window`, `best_score`, `retuned`,
+`n_trials`, `n_successful`, `n_failed`, and `policy`.
 
 ### hyperparameter_path
 
@@ -493,8 +500,9 @@ macroforecast.forecast_analysis.ensemble_weight_concentration(forecasts) -> pand
 ```
 
 Summarizes reconstructed weights for each combined forecast row. Output
-includes member count, Herfindahl index, effective number of members, max
-weight, and min weight.
+includes member count, min/max weight, Herfindahl index, effective number of
+members, and entropy. These are concentration diagnostics for identifiable
+weights; median, trimmed-mean, and custom combinations can be non-identifiable.
 
 ### ensemble_member_contribution
 

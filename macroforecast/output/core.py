@@ -628,8 +628,8 @@ def _attach_output_schema(
         "version": 1,
         "columns": [str(column) for column in table.columns],
         "n_rows": int(len(table)),
-        "metadata": _json_ready(dict(metadata or {})),
     }
+    table.attrs["macroforecast_metadata"] = _json_ready(dict(metadata or {}))
     return table
 
 

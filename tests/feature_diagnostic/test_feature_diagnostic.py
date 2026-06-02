@@ -32,7 +32,7 @@ def test_diagnose_features_accepts_feature_set_and_attaches_metadata() -> None:
         pca_components=1,
     ).fit_transform(_panel())
 
-    report = mf.diagnose_features(
+    report = mf.feature_analysis.diagnose_features(
         features,
         include_correlation=True,
         include_correlation_matrix=True,
@@ -80,7 +80,7 @@ def test_custom_feature_diagnostic_wraps_user_callable() -> None:
             ]
         )
 
-    out = mf.custom_feature_diagnostic(
+    out = mf.feature_analysis.custom_feature_diagnostic(
         features,
         missing_overview,
         name="missing_overview",
@@ -185,6 +185,23 @@ def test_lag_and_marx_diagnostics_parse_feature_names() -> None:
     assert np.allclose(weight_decay.groupby("feature")["weight"].sum().to_numpy(), 1.0)
 
 
+def test_marx_diagnostics_respect_starting_lag() -> None:
+    idx = pd.date_range("2021-01-31", periods=5, freq="ME", name="date")
+    features = pd.DataFrame(
+        {
+            "x_ma4_lag2": np.arange(5, dtype=float),
+        },
+        index=idx,
+    )
+
+    marx = mf.feature_analysis.marx_diagnostics(features)
+    weights = mf.feature_analysis.marx_weight_decay(features)
+
+    assert marx.loc[0, "marx_formula"] == "mean(x[t-2]...x[t-5])"
+    assert list(weights["lag"]) == [2, 3, 4, 5]
+    assert np.allclose(weights["weight"], 0.25)
+
+
 def test_compare_feature_stages_reports_column_deltas() -> None:
     base = _panel()[["x1", "x2"]]
     lagged = mf.feature_engineering.lag(_panel(), columns=["x1", "x2"], lags=(0, 1))
@@ -224,3 +241,19 @@ def test_selection_stability_accepts_indicator_frame() -> None:
 
     assert {"origin_a", "origin_b", "score", "overlap"}.issubset(similarity.columns)
     assert similarity.attrs["macroforecast_metadata_schema"]["metric"] == "kuncheva"
+
+
+def test_kuncheva_similarity_requires_equal_selection_size() -> None:
+    equal = mf.feature_analysis.selection_similarity(
+        {"w1": ["x1", "x2"], "w2": ["x1", "x3"]},
+        metric="kuncheva",
+        all_features=["x1", "x2", "x3", "x4"],
+    )
+    unequal = mf.feature_analysis.selection_similarity(
+        {"w1": ["x1"], "w2": ["x1", "x2"]},
+        metric="kuncheva",
+        all_features=["x1", "x2", "x3", "x4"],
+    )
+
+    assert equal.loc[0, "score"] == 0.0
+    assert pd.isna(unequal.loc[0, "score"])

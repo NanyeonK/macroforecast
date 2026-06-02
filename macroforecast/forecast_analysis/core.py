@@ -258,6 +258,10 @@ def residual_report(
     rows: list[dict[str, Any]] = []
     grouped = fitted.groupby(list(groups), dropna=False, sort=True) if groups else [((), fitted)]
     for key, group in grouped:
+        # Residual diagnostics are time-series diagnostics. Sort by the same
+        # origin/date order used by residual_autocorrelation so the lag-1
+        # summary is invariant to input row order.
+        group = group.sort_values(["origin_pos", "date"])
         values = group["residual"].dropna().astype(float)
         row = _group_row(key, groups)
         row.update(
@@ -268,7 +272,7 @@ def residual_report(
                 "mse": _float_or_none(group["squared_error"].mean()),
                 "rmse": _float_or_none(np.sqrt(group["squared_error"].mean())),
                 "residual_sd": _float_or_none(values.std(ddof=1)) if len(values) > 1 else 0.0,
-                "residual_autocorr1": _float_or_none(values.autocorr(lag=1)) if len(values) > 2 else None,
+                "residual_autocorr1": _acf_value(values, 1),
                 "mean_actual": _float_or_none(group["actual"].mean()),
                 "mean_prediction": _float_or_none(group["prediction"].mean()),
                 "first_date": _date_string(pd.to_datetime(group["date"], errors="coerce").min()),
@@ -1035,10 +1039,26 @@ def tuning_objective_trace(forecasts: Any) -> pd.DataFrame:
     """Return best validation objective over origins for tuned models."""
 
     trace = tuning_trace(forecasts)
-    columns = ["date", "origin", "origin_pos", "horizon", "model", "model_spec", "method", "metric", "best_score", "retuned"]
+    columns = [
+        "date",
+        "origin",
+        "origin_pos",
+        "horizon",
+        "model",
+        "model_spec",
+        "method",
+        "metric",
+        "window",
+        "best_score",
+        "retuned",
+        "n_trials",
+        "n_successful",
+        "n_failed",
+        "policy",
+    ]
     if trace.empty:
         return _empty_frame(columns, kind="tuning_objective_trace")
-    out = trace.loc[:, [column for column in columns if column in trace]].copy()
+    out = trace.loc[:, columns].copy()
     out.attrs["macroforecast_metadata_schema"] = {"kind": "tuning_objective_trace", "version": 1}
     return out
 
@@ -1178,7 +1198,7 @@ def ensemble_weight_concentration(forecasts: Any) -> pd.DataFrame:
 
     weights = ensemble_weights_over_time(forecasts, unsupported="skip")
     groups = ("combination", "method", "date", "origin_pos", "horizon")
-    columns = list(groups) + ["n_members", "max_weight", "hhi", "effective_n", "entropy"]
+    columns = list(groups) + ["n_members", "min_weight", "max_weight", "hhi", "effective_n", "entropy"]
     if weights.empty:
         return _empty_frame(columns, kind="ensemble_weight_concentration")
     rows: list[dict[str, Any]] = []
@@ -1190,6 +1210,7 @@ def ensemble_weight_concentration(forecasts: Any) -> pd.DataFrame:
         row.update(
             {
                 "n_members": int(values.shape[0]),
+                "min_weight": _float_or_none(values.min()) if len(values) else None,
                 "max_weight": _float_or_none(values.max()) if len(values) else None,
                 "hhi": hhi,
                 "effective_n": None if not hhi or hhi <= 0 else float(1.0 / hhi),

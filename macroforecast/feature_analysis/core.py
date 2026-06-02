@@ -857,7 +857,7 @@ def marx_diagnostics(
                 "source": source,
                 "window": window,
                 "lag": lag_value,
-                "marx_formula": f"mean({source}[t-1]...{source}[t-{window}])" if source and window else None,
+                "marx_formula": _marx_formula(source, lag_value, window),
             }
         )
         rows.append(row)
@@ -895,17 +895,18 @@ def marx_weight_decay(
     if not marx.empty:
         for item in marx.to_dict(orient="records"):
             window = _int_or_none(item.get("window"))
+            start_lag = _int_or_none(item.get("lag")) or 1
             if window is None or window < 1:
                 continue
-            for lag_position in range(1, window + 1):
+            for offset in range(window):
                 rows.append(
                     {
                         "feature": item.get("feature"),
                         "source": item.get("source"),
                         "window": int(window),
-                        "lag": int(lag_position),
+                        "lag": int(start_lag + offset),
                         "weight": 1.0 / float(window),
-                        "cumulative_weight": float(lag_position) / float(window),
+                        "cumulative_weight": float(offset + 1) / float(window),
                     }
                 )
     out = pd.DataFrame(rows)
@@ -1540,13 +1541,20 @@ def _pacf_value(series: pd.Series, lag: int) -> float | None:
 
 
 def _kuncheva_similarity(overlap: int, left_size: int, right_size: int, n_features: int) -> float | None:
-    if n_features <= 0:
+    # Kuncheva stability is defined for fixed-size selected subsets. When
+    # windows select different numbers of features, returning a scalar score
+    # would hide a change in selection budget; use Jaccard for variable-size
+    # selections or inspect selected_a/selected_b alongside the None score.
+    if n_features <= 0 or left_size != right_size:
         return None
-    expected = left_size * right_size / n_features
-    max_overlap = min(left_size, right_size)
-    denominator = max_overlap - expected
+    if left_size == 0:
+        return 1.0 if overlap == 0 else None
+    if left_size > n_features:
+        return None
+    expected = left_size * left_size / n_features
+    denominator = left_size - expected
     if denominator == 0:
-        return 1.0 if overlap == max_overlap else None
+        return 1.0 if overlap == left_size else None
     return float((overlap - expected) / denominator)
 
 
@@ -1583,7 +1591,17 @@ def _variance_share(frame: pd.DataFrame) -> pd.Series:
         total = group["variance"].fillna(0.0).sum()
         if total > 0:
             shares.loc[group.index] = group["variance"].fillna(0.0) / total
+        else:
+            shares.loc[group.index] = 0.0
     return shares
+
+
+def _marx_formula(source: str | None, start_lag: int | None, window: int | None) -> str | None:
+    if source is None or window is None or window < 1:
+        return None
+    first_lag = 1 if start_lag is None or start_lag < 1 else int(start_lag)
+    last_lag = first_lag + int(window) - 1
+    return f"mean({source}[t-{first_lag}]...{source}[t-{last_lag}])"
 
 
 def _validate_probability(value: float, name: str) -> None:

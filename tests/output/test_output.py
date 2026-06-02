@@ -194,8 +194,11 @@ def test_output_generation_tables_and_summary() -> None:
     summary = mf.output.run_summary(result, evaluation=report, metadata={"run": "demo"})
 
     assert list(forecasts["model"].unique()) == ["ridge"]
+    assert forecasts.attrs["macroforecast_metadata"]["source"] == "ForecastResult"
     assert metrics.attrs["macroforecast_metadata_schema"]["kind"] == "metric_table"
+    assert metrics.attrs["macroforecast_metadata"]["field"] == "scores"
     assert ranking.attrs["macroforecast_metadata_schema"]["kind"] == "ranking_table"
+    assert ranking.attrs["macroforecast_metadata"]["field"] == "ranking"
     assert summary["metadata_schema"]["kind"] == "run_summary"
     assert summary["forecasts"]["models"] == ["ridge"]
     assert summary["evaluation"]["ranking_rows"] == 1

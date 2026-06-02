@@ -360,6 +360,9 @@ def analyze_data(
         sample=sample,
         tolerance=tolerance,
     )
+    _attach_metadata(missing, metadata)
+    _attach_metadata(distribution, metadata)
+    _attach_metadata(correlation, metadata)
     return DataAnalysisReport(
         comparison=comparison,
         missing_shift=missing,
@@ -457,6 +460,11 @@ def _effect_snapshot(effects: Mapping[str, Any]) -> dict[str, Any]:
         "n_column_metadata": int(len(effects.get("column_metadata", {}) or {})),
         "has_cleaning_log": bool(effects.get("cleaning_log")),
     }
+
+
+def _attach_metadata(frame: pd.DataFrame | None, metadata: Mapping[str, Any]) -> None:
+    if frame is not None:
+        frame.attrs["macroforecast_metadata"] = dict(metadata)
 
 
 def _changed_cell_mask(

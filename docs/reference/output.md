@@ -7,6 +7,10 @@ provenance manifest. It replaces the old output stage with direct Python
 functions. It does not decide which models, windows, metrics, or tests belong
 in a study.
 
+Call these functions through the namespace, for example
+`mf.output.write_artifacts(...)`. Output helpers are not exported as
+top-level shortcuts.
+
 The output API is split into two parts:
 
 | Part | Functions | Role |
@@ -32,6 +36,8 @@ macroforecast.output.forecast_table(result) -> pandas.DataFrame
 
 Returns a `DataFrame` with
 `attrs["macroforecast_metadata_schema"]["kind"] == "forecast_table"`.
+Function-specific source metadata is stored separately in
+`attrs["macroforecast_metadata"]`.
 
 ### metric_table
 
@@ -361,10 +367,10 @@ metadata:
 ```
 
 This is important for outputs from `metrics`, `tests`, `feature_engineering`,
-and `interpretation`, where `attrs["macroforecast_metadata_schema"]` records
-the producing function and schema version. CSV and markdown are human-readable
-views; the manifest still records the DataFrame attrs so metadata is not lost
-silently.
+and `interpretation`. `attrs["macroforecast_metadata_schema"]` records table
+structure and schema version; `attrs["macroforecast_metadata"]` records source
+and function-specific metadata. CSV and markdown are human-readable views; the
+manifest still records the DataFrame attrs so metadata is not lost silently.
 
 ### Custom artifacts
 

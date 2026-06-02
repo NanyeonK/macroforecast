@@ -149,23 +149,25 @@ def report_table(
             )
             for value in formatted[column]
         ]
+    report_metadata = {
+        "source_shape": [int(frame.shape[0]), int(frame.shape[1])],
+        "precision": int(precision),
+        "percent_columns": sorted(percent_set),
+        **dict(metadata or {}),
+    }
     formatted.attrs["macroforecast_metadata_schema"] = {
         "kind": "report_table",
         "version": 1,
         "columns": [str(column) for column in formatted.columns],
         "n_rows": int(len(formatted)),
     }
+    formatted.attrs["macroforecast_metadata"] = _json_ready(report_metadata)
     return ReportTable(
         data=formatted,
         caption=caption,
         label=label,
         notes=tuple(str(note) for note in notes),
-        metadata={
-            "source_shape": [int(frame.shape[0]), int(frame.shape[1])],
-            "precision": int(precision),
-            "percent_columns": sorted(percent_set),
-            **dict(metadata or {}),
-        },
+        metadata=report_metadata,
     )
 
 
@@ -478,6 +480,7 @@ def figure_data(
     """Return a tidy frame intended for plotting or figure export."""
 
     frame = pd.DataFrame(data).copy()
+    source_shape = [int(frame.shape[0]), int(frame.shape[1])]
     selected = list(columns) if columns is not None else _figure_columns(x=x, y=y, group=group)
     if selected:
         missing = [column for column in selected if column not in frame.columns]
@@ -493,6 +496,13 @@ def figure_data(
         "version": 1,
         "columns": [str(column) for column in frame.columns],
         "n_rows": int(len(frame)),
+    }
+    frame.attrs["macroforecast_metadata"] = {
+        "source_shape": source_shape,
+        "x": x,
+        "y": [y] if isinstance(y, str) else list(y or ()),
+        "group": group,
+        "dropna": bool(dropna),
     }
     return frame
 

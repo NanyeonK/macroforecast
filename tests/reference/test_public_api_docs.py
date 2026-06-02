@@ -74,6 +74,53 @@ def test_top_level_all_symbols_are_importable() -> None:
         getattr(mf, name)
 
 
+def test_forecast_analysis_helpers_are_namespace_only() -> None:
+    assert "forecast_analysis" in mf.__all__
+    assert mf.forecast_analysis.diagnose_forecasts is not None
+    assert not hasattr(mf, "diagnose_forecasts")
+    assert not hasattr(mf, "custom_forecast_diagnostic")
+    assert not hasattr(mf, "forecast_overview")
+
+
+def test_feature_analysis_helpers_are_namespace_only() -> None:
+    assert "feature_analysis" in mf.__all__
+    assert mf.feature_analysis.diagnose_features is not None
+    assert not hasattr(mf, "diagnose_features")
+    assert not hasattr(mf, "custom_feature_diagnostic")
+    assert not hasattr(mf, "feature_overview")
+
+
+def test_data_analysis_helpers_are_namespace_only() -> None:
+    assert "data_analysis" in mf.__all__
+    assert mf.data_analysis.summarize_data is not None
+    assert mf.data_analysis.analyze_data is not None
+    assert not hasattr(mf, "summarize_data")
+    assert not hasattr(mf, "analyze_data")
+    assert not hasattr(mf, "panel_overview")
+
+
+def test_output_helpers_are_namespace_only() -> None:
+    assert "output" in mf.__all__
+    assert mf.output.write_artifacts is not None
+    assert mf.output.bundle_outputs is not None
+    assert mf.output.forecast_table is not None
+    assert not hasattr(mf, "write_artifacts")
+    assert not hasattr(mf, "bundle_outputs")
+    assert not hasattr(mf, "forecast_table")
+    assert not hasattr(mf, "OutputBundle")
+
+
+def test_reporting_helpers_are_namespace_only() -> None:
+    assert "reporting" in mf.__all__
+    assert mf.reporting.report_table is not None
+    assert mf.reporting.metric_report_table is not None
+    assert mf.reporting.test_report_table is not None
+    assert not hasattr(mf, "report_table")
+    assert not hasattr(mf, "metric_report_table")
+    assert not hasattr(mf, "test_report_table")
+    assert not hasattr(mf, "ReportTable")
+
+
 def test_reference_pages_mention_module_public_symbols() -> None:
     for module_name in REFERENCE_MODULES:
         module = importlib.import_module(f"macroforecast.{module_name}")

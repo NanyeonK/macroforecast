@@ -31,6 +31,8 @@ def test_report_table_formats_values_and_renders_text() -> None:
     assert report.data.loc[0, "RMSE"] == "0.12"
     assert report.data.loc[0, "R2 OOS"] == "10.10%"
     assert report.data.attrs["macroforecast_metadata_schema"]["kind"] == "report_table"
+    assert report.data.attrs["macroforecast_metadata"]["source_shape"] == [2, 3]
+    assert report.data.attrs["macroforecast_metadata"]["percent_columns"] == ["R2 OOS"]
     assert "\\caption{Forecast accuracy}" in report.to_latex()
     assert "<figcaption>Forecast accuracy</figcaption>" in report.to_html()
     assert "| Model | RMSE | R2 OOS |" in report.to_markdown()
@@ -55,6 +57,10 @@ def test_figure_data_and_report_bundle() -> None:
     rendered = mf.reporting.render_tables(bundle, format="markdown")
 
     assert figure.attrs["macroforecast_metadata_schema"]["kind"] == "figure_data"
+    assert figure.attrs["macroforecast_metadata"]["source_shape"] == [3, 4]
+    assert figure.attrs["macroforecast_metadata"]["x"] == "date"
+    assert figure.attrs["macroforecast_metadata"]["y"] == ["loss"]
+    assert figure.attrs["macroforecast_metadata"]["group"] == "model"
     assert list(figure.columns) == ["date", "loss", "model"]
     assert len(figure) == 2
     assert isinstance(bundle, mf.reporting.ReportBundle)
@@ -144,10 +150,14 @@ def test_metric_report_tables_format_evaluation_reports_for_papers() -> None:
     assert bundle.metadata["source_kind"] == "evaluation_report_tables"
 
 
-def test_reporting_exports_are_available_at_top_level() -> None:
-    assert mf.report_table is mf.reporting.report_table
-    assert mf.latex_table is mf.reporting.latex_table
-    assert mf.metric_report_table is mf.reporting.metric_report_table
-    assert mf.evaluation_report_tables is mf.reporting.evaluation_report_tables
-    assert mf.test_report_table is mf.reporting.test_report_table
-    assert mf.test_provenance_table is mf.reporting.test_provenance_table
+def test_reporting_helpers_are_namespace_only() -> None:
+    assert "reporting" in mf.__all__
+    assert mf.reporting.report_table is not None
+    assert mf.reporting.metric_report_table is not None
+    assert mf.reporting.test_report_table is not None
+    assert not hasattr(mf, "report_table")
+    assert not hasattr(mf, "latex_table")
+    assert not hasattr(mf, "metric_report_table")
+    assert not hasattr(mf, "evaluation_report_tables")
+    assert not hasattr(mf, "test_report_table")
+    assert not hasattr(mf, "test_provenance_table")

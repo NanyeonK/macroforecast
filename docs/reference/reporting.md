@@ -10,6 +10,8 @@
 | `macroforecast.reporting` | Format tables, render LaTeX/HTML/Markdown, create figure-ready data, and produce paper-facing metric/test tables. | Model fitting, evaluation, testing, or artifact writing. |
 
 The reporting functions are callable and in-memory. They do not write files.
+Call them through the namespace, for example `mf.reporting.report_table(...)`.
+Reporting helpers are not exported as top-level shortcuts.
 
 ## report_table
 
@@ -51,6 +53,8 @@ Output: `ReportTable(data, caption, label, notes, metadata)`.
 
 `ReportTable.data` is a formatted `DataFrame` and carries
 `attrs["macroforecast_metadata_schema"]["kind"] = "report_table"`.
+Formatting metadata such as source shape, precision, and percentage columns is
+stored separately in `attrs["macroforecast_metadata"]`.
 
 ## metric_report_table
 
@@ -220,6 +224,8 @@ column set, or use `x`, `y`, and `group` to select plot roles.
 
 Output: `DataFrame` with
 `attrs["macroforecast_metadata_schema"]["kind"] = "figure_data"`.
+Figure-role metadata such as `x`, `y`, `group`, `dropna`, and source shape is
+stored in `attrs["macroforecast_metadata"]`.
 
 ## report_bundle
 

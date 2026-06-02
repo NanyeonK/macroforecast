@@ -30,7 +30,7 @@ want to read.
 | Forecast Pipeline | [Window](window.md), [Models](models.md), [Model Ensemble](model_ensemble.md), [Model Selection](model_selection.md), [Forecasting](forecasting.md), [Forecast Analysis](forecast_analysis.md) | Timing, model fits, fit-time model composition, parameter search, runner execution, and forecast diagnostics. |
 | Evaluation And Testing | [Metrics](metrics.md), [Tests](tests.md), [Evaluation](evaluation.md) | Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports. |
 | Explanation And Delivery | [Interpretation](interpretation.md), [Output](output.md), [Reporting](reporting.md) | Attribution, output generation, artifact writing, and report/table rendering. |
-| Extension Surface | [Custom Extensions](custom.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
+| Extension Surface | [Custom Extensions](custom/index.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
 
 ## Orientation
 
@@ -43,7 +43,15 @@ workflow
 legacy_callable_coverage
 reference_verification
 public_api
-custom
+```
+
+## Custom Extension Surface
+
+```{toctree}
+:maxdepth: 1
+:caption: Custom Extension Surface
+
+custom/index
 ```
 
 ## Package Configuration

@@ -25,6 +25,7 @@ Use this page as the inspection order for the current callable-first
 | How do I inspect model behavior? | [Interpretation](interpretation.md) | Importance, SHAP, attribution, VAR interpretation, neural attribution. |
 | How do I save outputs? | [Output](output.md) | Output bundles, artifact writing, manifests, hashes, compression. |
 | How do I format paper/report tables? | [Reporting](reporting.md) | Table formatting, LaTeX/HTML/Markdown rendering, figure-ready data. |
+| How do I plug in my own loader, transform, model, test, diagnostic, or artifact? | [Custom Extensions](custom/index.md) | Stage-local custom callable hooks and input/output contracts. |
 | How do I know the formulas are not drifting? | [Reference Verification](reference_verification.md) | Reference anchors and expansion policy. |
 
 ## Recommended Review Sequence
@@ -52,7 +53,8 @@ Use this sequence when auditing the whole docs site.
 19. [Interpretation](interpretation.md)
 20. [Output](output.md)
 21. [Reporting](reporting.md)
-22. [Reference Verification](reference_verification.md)
+22. [Custom Extensions](custom/index.md)
+23. [Reference Verification](reference_verification.md)
 
 ## Reference Page Format
 
@@ -88,6 +90,7 @@ without explaining the meaning of each choice.
 | `model_selection` vs `forecasting` | `model_selection` picks model parameters; `forecasting` orchestrates repeated fits and predictions. |
 | `metrics` vs `tests` vs `evaluation` | `metrics` score errors; `tests` run statistical tests; `evaluation` assembles reports and slices. |
 | `output` vs `reporting` | `output` creates/writes artifacts; `reporting` formats presentation tables and figure data. |
+| built-in stages vs custom extensions | Custom callables stay inside the owning stage and must return the same object shape that the next stage expects. |
 | callable API vs future recipes | Current docs describe direct Python callables. YAML/recipe wrappers are intentionally deferred. |
 
 ## Current Review Focus
@@ -97,4 +100,5 @@ without explaining the meaning of each choice.
 | [Legacy Callable Coverage](legacy_callable_coverage.md) | Confirms that intentional removals are not mistaken for missing work. |
 | [Reference Verification](reference_verification.md) | Tracks the verification suite that should grow as paper-code checks are added. |
 | [Output](output.md) and [Reporting](reporting.md) | These were recently split; check whether their responsibility boundary is clear. |
+| [Custom Extensions](custom/index.md) | Confirms that custom hooks enter the normal callable flow instead of creating a parallel registry. |
 | [Tests](tests.md) | Contains `blocked_oob_reality_check()` and exact `model_confidence_set()`, which close recent legacy gaps. |
