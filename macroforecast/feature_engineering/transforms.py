@@ -77,7 +77,11 @@ def lag(
     result.attrs["macroforecast_metadata"] = attach_metadata(
         base.metadata,
         "feature_engineering_lag",
-        {"columns": list(selected), "lags": list(lag_values), "drop_missing": bool(drop_missing)},
+        {
+            "columns": list(selected),
+            "lags": list(lag_values),
+            "drop_missing": bool(drop_missing),
+        },
     )
     result.attrs["macroforecast_feature_metadata"] = _metadata_frame(
         _records_for_columns(result, operation="lag", sources=selected, included=True)
@@ -138,7 +142,9 @@ def mixed_frequency_lags(
             frequency=native_frequency,
         )
         for lag_value in lag_values:
-            lookup_dates = _lagged_lookup_dates(anchor_index, lag=lag_value, frequency=native_frequency)
+            lookup_dates = _lagged_lookup_dates(
+                anchor_index, lag=lag_value, frequency=native_frequency
+            )
             values = source.reindex(lookup_dates).to_numpy(dtype=float)
             feature_name = f"{column}_lag{lag_value}"
             result[feature_name] = values
@@ -153,8 +159,12 @@ def mixed_frequency_lags(
                     "included": True,
                     "source_frequency": native_frequency,
                     "anchor_position": str(anchor_position),
-                    "lookup_start": lookup_dates[0].strftime("%Y-%m-%d") if len(lookup_dates) else None,
-                    "lookup_end": lookup_dates[-1].strftime("%Y-%m-%d") if len(lookup_dates) else None,
+                    "lookup_start": lookup_dates[0].strftime("%Y-%m-%d")
+                    if len(lookup_dates)
+                    else None,
+                    "lookup_end": lookup_dates[-1].strftime("%Y-%m-%d")
+                    if len(lookup_dates)
+                    else None,
                     "lookup_calendar": "source_period_start",
                 }
             )
@@ -166,12 +176,16 @@ def mixed_frequency_lags(
         "feature_engineering_mixed_frequency_lags",
         {
             "target": target_name,
-            "anchor_dates": [pd.Timestamp(value).strftime("%Y-%m-%d") for value in anchor_index],
+            "anchor_dates": [
+                pd.Timestamp(value).strftime("%Y-%m-%d") for value in anchor_index
+            ],
             "columns": list(selected),
             "lags": list(lag_values),
             "target_frequency": target_frequency,
             "anchor_position": str(anchor_position),
-            "frequency_by_column": {column: frequency_map.get(column, "unknown") for column in selected},
+            "frequency_by_column": {
+                column: frequency_map.get(column, "unknown") for column in selected
+            },
             "lookup_calendar": "source_period_start",
             "n_rows_before_drop": n_rows_before_drop,
             "n_rows_after_drop": int(len(result)),
@@ -239,7 +253,9 @@ def transform_features(
         {
             "feature": str(feature),
             "operation": transform_value,
-            "source": _source_for_feature(str(feature).removesuffix(f"_{transform_value}"), selected),
+            "source": _source_for_feature(
+                str(feature).removesuffix(f"_{transform_value}"), selected
+            ),
             "parameter": f"periods={period_value}",
             "inputs": ",".join(selected),
             "included": True,
@@ -368,7 +384,11 @@ def seasonal_lag(
         lags=lag_values,
         drop_missing=drop_missing,
     )
-    result = result.rename(columns={column: column.replace("_lag", "_seasonlag") for column in result.columns})
+    result = result.rename(
+        columns={
+            column: column.replace("_lag", "_seasonlag") for column in result.columns
+        }
+    )
     base = _coerce_input(data, metadata=metadata)
     result.attrs["macroforecast_metadata"] = attach_metadata(
         base.metadata,
@@ -384,7 +404,9 @@ def seasonal_lag(
     selected = _resolve_columns(base.panel, columns=columns)
     records: list[dict[str, Any]] = []
     for column in selected:
-        for seasonal_lag_value, actual_lag in zip(seasonal_lag_values, lag_values, strict=True):
+        for seasonal_lag_value, actual_lag in zip(
+            seasonal_lag_values, lag_values, strict=True
+        ):
             records.append(
                 {
                     "feature": f"{column}_seasonlag{actual_lag}",
@@ -454,7 +476,9 @@ def rolling_mean(
         },
     )
     result.attrs["macroforecast_feature_metadata"] = _metadata_frame(
-        _records_for_columns(result, operation="rolling_mean", sources=selected, included=True)
+        _records_for_columns(
+            result, operation="rolling_mean", sources=selected, included=True
+        )
     )
     return result
 
@@ -523,7 +547,12 @@ def moving_average_ladder(
         },
     )
     result.attrs["macroforecast_feature_metadata"] = _metadata_frame(
-        _records_for_columns(result, operation="moving_average_ladder", sources=tuple(_resolve_columns(base.panel, columns=columns)), included=True)
+        _records_for_columns(
+            result,
+            operation="moving_average_ladder",
+            sources=tuple(_resolve_columns(base.panel, columns=columns)),
+            included=True,
+        )
     )
     return result
 
@@ -554,9 +583,13 @@ def scale_features(
     source = panel.loc[:, selected]
     method_value = _normalize_scale_method(method)
     fit_value = _normalize_fit_policy(fit_policy)
-    _warn_if_full_sample_fit(fit_value, context="scale_features()", enabled=warn_full_sample)
+    _warn_if_full_sample_fit(
+        fit_value, context="scale_features()", enabled=warn_full_sample
+    )
     min_size = _normalize_min_train_size(min_train_size, minimum=2)
-    result = _scale_frame(source, method=method_value, fit_policy=fit_value, min_train_size=min_size)
+    result = _scale_frame(
+        source, method=method_value, fit_policy=fit_value, min_train_size=min_size
+    )
     result = result.add_suffix(f"_{method_value}")
     if drop_missing:
         result = result.dropna()
@@ -577,7 +610,9 @@ def scale_features(
         {
             "feature": str(feature),
             "operation": "scale",
-            "source": _source_for_feature(str(feature).removesuffix(f"_{method_value}"), selected),
+            "source": _source_for_feature(
+                str(feature).removesuffix(f"_{method_value}"), selected
+            ),
             "parameter": f"method={method_value}",
             "fit_policy": fit_value,
             "inputs": ",".join(selected),
@@ -620,7 +655,9 @@ def pca_features(
     if n_value > len(selected):
         raise ValueError("n_components must be <= the number of selected columns")
     fit_value = _normalize_fit_policy(fit_policy)
-    _warn_if_full_sample_fit(fit_value, context="pca_features()", enabled=warn_full_sample)
+    _warn_if_full_sample_fit(
+        fit_value, context="pca_features()", enabled=warn_full_sample
+    )
     min_size = _normalize_min_train_size(min_train_size, minimum=n_value + 1)
     result = _pca_frame(
         source,
@@ -706,12 +743,18 @@ def sparse_pca_chen_rohe_features(
 
     source = panel.loc[:, selected]
     complete = source.dropna().astype(float)
-    resolved_components = max(1, min(n_value, len(complete), len(selected))) if len(complete) else n_value
-    output_prefix = str(prefix) if prefix is not None else ("scaf" if var_innovations else "sca")
+    resolved_components = (
+        max(1, min(n_value, len(complete), len(selected))) if len(complete) else n_value
+    )
+    output_prefix = (
+        str(prefix) if prefix is not None else ("scaf" if var_innovations else "sca")
+    )
     if len(complete) < min_size:
         result = pd.DataFrame(
             index=panel.index,
-            columns=[f"{output_prefix}{index}" for index in range(1, resolved_components + 1)],
+            columns=[
+                f"{output_prefix}{index}" for index in range(1, resolved_components + 1)
+            ],
             dtype=float,
         )
         result.index.name = "date"
@@ -829,7 +872,9 @@ def varimax_features(
         n_iter = 0
         n_fit_rows = int(len(complete))
     else:
-        rotation, n_iter = _fit_varimax_rotation(complete, max_iter=iter_value, tol=tol_value)
+        rotation, n_iter = _fit_varimax_rotation(
+            complete, max_iter=iter_value, tol=tol_value
+        )
         result = _apply_varimax_rotation(
             source,
             columns=selected,
@@ -920,12 +965,18 @@ def sliced_inverse_regression_features(
         target_name = base.target
         target_series = panel[target_name]
     else:
-        raise ValueError("sliced_inverse_regression_features() requires target or input target metadata")
+        raise ValueError(
+            "sliced_inverse_regression_features() requires target or input target metadata"
+        )
 
     if columns is None:
-        selected = tuple(str(column) for column in panel.columns if str(column) != str(target_name))
+        selected = tuple(
+            str(column) for column in panel.columns if str(column) != str(target_name)
+        )
         if not selected:
-            raise ValueError("sliced_inverse_regression_features() requires at least one predictor column")
+            raise ValueError(
+                "sliced_inverse_regression_features() requires at least one predictor column"
+            )
     else:
         selected = _resolve_columns(panel, columns=columns)
     n_value = int(n_components)
@@ -936,7 +987,9 @@ def sliced_inverse_regression_features(
         raise ValueError("n_slices must be at least 2")
     scaling_value = str(scaling_policy)
     if scaling_value not in {"scaled_pca", "marginal_R2", "none"}:
-        raise ValueError("scaling_policy must be 'scaled_pca', 'marginal_R2', or 'none'")
+        raise ValueError(
+            "scaling_policy must be 'scaled_pca', 'marginal_R2', or 'none'"
+        )
     _warn_if_full_sample_fit(
         "full_sample",
         context="sliced_inverse_regression_features()",
@@ -946,10 +999,16 @@ def sliced_inverse_regression_features(
     source = panel.loc[:, selected].astype(float)
     common_index = source.index.intersection(target_series.dropna().index)
     train_x = source.loc[common_index].dropna(axis=0, how="any")
-    train_y = pd.Series(target_series, index=target_series.index).reindex(train_x.index).dropna()
+    train_y = (
+        pd.Series(target_series, index=target_series.index)
+        .reindex(train_x.index)
+        .dropna()
+    )
     train_x = train_x.loc[train_y.index]
     if len(train_x) < 2:
-        raise ValueError("sliced_inverse_regression_features() requires at least two target-aligned complete rows")
+        raise ValueError(
+            "sliced_inverse_regression_features() requires at least two target-aligned complete rows"
+        )
     n_effective = min(n_value, train_x.shape[1])
 
     center = train_x.mean(axis=0)
@@ -957,7 +1016,13 @@ def sliced_inverse_regression_features(
     x_scaled = (train_x - center) / divisor
     beta = None
     if scaling_value in {"scaled_pca", "marginal_R2"}:
-        beta = np.array([_univariate_slope(x_scaled[column], train_y) for column in x_scaled.columns], dtype=float)
+        beta = np.array(
+            [
+                _univariate_slope(x_scaled[column], train_y)
+                for column in x_scaled.columns
+            ],
+            dtype=float,
+        )
         if scaling_value == "marginal_R2":
             beta = np.sign(beta) * np.abs(beta)
         x_scaled = x_scaled * beta
@@ -971,7 +1036,11 @@ def sliced_inverse_regression_features(
     slice_weights: list[float] = []
     for slice_index in range(n_slices_resolved):
         start = slice_index * slice_size
-        end = (slice_index + 1) * slice_size if slice_index < n_slices_resolved - 1 else n_total
+        end = (
+            (slice_index + 1) * slice_size
+            if slice_index < n_slices_resolved - 1
+            else n_total
+        )
         values = z_sorted[start:end]
         if values.size == 0:
             slice_means.append(np.zeros(z_sorted.shape[1]))
@@ -999,7 +1068,9 @@ def sliced_inverse_regression_features(
         x_full = x_full * beta
     scores = x_full.to_numpy(dtype=float) @ directions
     if scores.shape[1] < n_value:
-        scores = np.hstack([scores, np.zeros((scores.shape[0], n_value - scores.shape[1]))])
+        scores = np.hstack(
+            [scores, np.zeros((scores.shape[0], n_value - scores.shape[1]))]
+        )
     result = pd.DataFrame(
         scores,
         index=panel.index,
@@ -1061,9 +1132,13 @@ def partial_least_squares_features(
     base = _coerce_input(data, metadata=metadata)
     panel = base.panel
     validate_panel(panel)
-    target_name, target_series = _resolve_target_argument(base, panel, target, context="partial_least_squares_features()")
+    target_name, target_series = _resolve_target_argument(
+        base, panel, target, context="partial_least_squares_features()"
+    )
     selected = (
-        tuple(str(column) for column in panel.columns if str(column) != str(target_name))
+        tuple(
+            str(column) for column in panel.columns if str(column) != str(target_name)
+        )
         if columns is None
         else _resolve_columns(panel, columns=columns)
     )
@@ -1073,7 +1148,9 @@ def partial_least_squares_features(
     source = panel.loc[:, selected].astype(float)
     joined = pd.concat([source, target_series.rename("__target__")], axis=1).dropna()
     if len(joined) < 2:
-        raise ValueError("partial_least_squares_features() requires at least two target-aligned complete rows")
+        raise ValueError(
+            "partial_least_squares_features() requires at least two target-aligned complete rows"
+        )
     resolved = _effective_pls_components(joined.loc[:, selected], n_value)
     _warn_if_full_sample_fit(
         "full_sample",
@@ -1145,7 +1222,9 @@ def dfm_features(
     n_value = int(n_factors)
     if n_value <= 0:
         raise ValueError("n_factors must be positive")
-    _warn_if_full_sample_fit("full_sample", context="dfm_features()", enabled=warn_full_sample)
+    _warn_if_full_sample_fit(
+        "full_sample", context="dfm_features()", enabled=warn_full_sample
+    )
     result = _pca_frame(
         panel.loc[:, selected],
         n_components=min(n_value, len(selected)),
@@ -1259,7 +1338,11 @@ def asymmetric_trim_features(
     result.attrs["macroforecast_metadata"] = attach_metadata(
         base.metadata,
         "feature_engineering_asymmetric_trim",
-        {"columns": list(selected), "prefix": str(prefix), "drop_missing": bool(drop_missing)},
+        {
+            "columns": list(selected),
+            "prefix": str(prefix),
+            "drop_missing": bool(drop_missing),
+        },
     )
     result.attrs["macroforecast_feature_metadata"] = _metadata_frame(
         _component_records(
@@ -1296,7 +1379,11 @@ def wavelet_features(
         series = panel[column].astype(float)
         for level in range(1, levels + 1):
             window = 2**level
-            approx = series.rolling(window=window, min_periods=1).mean().rename(f"{column}_wA{level}")
+            approx = (
+                series.rolling(window=window, min_periods=1)
+                .mean()
+                .rename(f"{column}_wA{level}")
+            )
             detail = (series - approx).rename(f"{column}_wD{level}")
             pieces.extend([approx, detail])
     result = pd.concat(pieces, axis=1) if pieces else pd.DataFrame(index=panel.index)
@@ -1331,8 +1418,9 @@ def adaptive_ma_rf_features(
     *,
     metadata: Mapping[str, Any] | None = None,
     columns: Iterable[str] | None = None,
-    n_estimators: int = 100,
-    min_samples_leaf: int = 40,
+    n_estimators: int = 500,
+    min_samples_leaf: int = 6,
+    sample_fraction: float = 0.6,
     sided: str = "two",
     random_state: int | None = 0,
     drop_missing: bool = False,
@@ -1340,7 +1428,7 @@ def adaptive_ma_rf_features(
 ) -> pd.DataFrame:
     """Create adaptive moving-average smoothers using random forests over time."""
 
-    from sklearn.ensemble import RandomForestRegressor
+    from macroforecast.feature_engineering._albama import albama
 
     base = _coerce_input(data, metadata=metadata)
     panel = base.panel
@@ -1352,38 +1440,35 @@ def adaptive_ma_rf_features(
         raise ValueError("n_estimators must be positive")
     if min_leaf <= 0:
         raise ValueError("min_samples_leaf must be positive")
+    fraction = float(sample_fraction)
+    if not 0.0 < fraction <= 1.0:
+        raise ValueError("sample_fraction must be in (0, 1]")
     sided_value = str(sided).lower()
     if sided_value not in {"one", "two"}:
         raise ValueError("sided must be 'one' or 'two'")
     if sided_value == "two":
-        _warn_if_full_sample_fit("full_sample", context="adaptive_ma_rf_features()", enabled=warn_full_sample)
-    time_values: np.ndarray = np.arange(len(panel), dtype=float).reshape(-1, 1)
+        _warn_if_full_sample_fit(
+            "full_sample", context="adaptive_ma_rf_features()", enabled=warn_full_sample
+        )
     result = pd.DataFrame(index=panel.index)
+    feature_weight_results: dict[str, Any] = {}
     for offset, column in enumerate(selected):
         series = panel[column].astype(float)
-        if sided_value == "two":
-            mask = series.notna().to_numpy()
-            fitted: np.ndarray = np.full(len(series), np.nan, dtype=float)
-            if int(mask.sum()) >= 2:
-                model = RandomForestRegressor(
-                    n_estimators=n_tree,
-                    min_samples_leaf=min(min_leaf, int(mask.sum())),
-                    random_state=None if random_state is None else int(random_state) + offset,
-                )
-                model.fit(time_values[mask], series.to_numpy(dtype=float)[mask])
-                fitted = model.predict(time_values)
-            result[f"{column}_albama"] = fitted
-        else:
-            result[f"{column}_albama"] = _one_sided_adaptive_ma_rf(
-                time_values,
-                series,
-                n_estimators=n_tree,
-                min_samples_leaf=min_leaf,
-                random_state=None if random_state is None else int(random_state) + offset,
-            )
+        fit = albama(
+            series,
+            mode="two_sided" if sided_value == "two" else "one_sided",
+            n_estimators=n_tree,
+            min_samples_leaf=min_leaf,
+            sample_fraction=fraction,
+            random_state=None if random_state is None else int(random_state) + offset,
+            name=str(column),
+        )
+        result[f"{column}_albama"] = fit.smoothed
+        feature_weight_results[str(column)] = fit
     if drop_missing:
         result = result.dropna()
     result.index.name = "date"
+    result.attrs["macroforecast_feature_weight_results"] = feature_weight_results
     result.attrs["macroforecast_metadata"] = attach_metadata(
         base.metadata,
         "feature_engineering_adaptive_ma_rf",
@@ -1391,15 +1476,22 @@ def adaptive_ma_rf_features(
             "columns": list(selected),
             "n_estimators": n_tree,
             "min_samples_leaf": min_leaf,
+            "sample_fraction": fraction,
             "sided": sided_value,
             "random_state": random_state,
             "drop_missing": bool(drop_missing),
-            "fit_policy": "full_sample" if sided_value == "two" else "one_sided_expanding",
+            "fit_policy": "full_sample"
+            if sided_value == "two"
+            else "one_sided_expanding",
             "warn_full_sample": bool(warn_full_sample),
+            "implementation": "macroforecast.feature_engineering.albama",
+            "r_reference": "AlbaMA/AMA_main.R ranger keep.inbag terminalNodes loop",
         },
     )
     result.attrs["macroforecast_feature_metadata"] = _metadata_frame(
-        _records_for_columns(result, operation="adaptive_ma_rf", sources=selected, included=True)
+        _records_for_columns(
+            result, operation="adaptive_ma_rf", sources=selected, included=True
+        )
     )
     return result
 
@@ -1481,7 +1573,9 @@ def group_pca(
     result = pd.concat(pieces, axis=1) if pieces else pd.DataFrame(index=panel.index)
     if result.columns.has_duplicates:
         duplicate_columns = result.columns[result.columns.duplicated()].unique()
-        raise ValueError(f"group PCA produced duplicate columns: {list(map(str, duplicate_columns))}")
+        raise ValueError(
+            f"group PCA produced duplicate columns: {list(map(str, duplicate_columns))}"
+        )
     if drop_missing:
         result = result.dropna()
     result.index.name = "date"
@@ -1538,17 +1632,16 @@ def maf_features(
     if n_value > len(lag_values):
         raise ValueError("n_components must be <= the number of MAF lag columns")
     fit_value = _normalize_fit_policy(fit_policy)
-    _warn_if_full_sample_fit(fit_value, context="maf_features()", enabled=warn_full_sample)
+    _warn_if_full_sample_fit(
+        fit_value, context="maf_features()", enabled=warn_full_sample
+    )
     min_size = _normalize_min_train_size(min_train_size, minimum=n_value + 1)
 
     pieces: list[pd.DataFrame] = []
     feature_records: list[dict[str, Any]] = []
     for column in selected:
         lag_block = pd.DataFrame(
-            {
-                f"{column}_lag{lag}": panel[column].shift(lag)
-                for lag in lag_values
-            },
+            {f"{column}_lag{lag}": panel[column].shift(lag) for lag in lag_values},
             index=panel.index,
         )
         component_prefix = _maf_component_prefix(column, prefix=prefix)
@@ -1629,8 +1722,12 @@ def fourier_features(
     t: np.ndarray = np.arange(len(panel), dtype=float)
     result = pd.DataFrame(index=panel.index)
     for k in range(1, order_value + 1):
-        result[f"{prefix}_sin{k}_p{period_value}"] = np.sin(2.0 * np.pi * k * t / period_value)
-        result[f"{prefix}_cos{k}_p{period_value}"] = np.cos(2.0 * np.pi * k * t / period_value)
+        result[f"{prefix}_sin{k}_p{period_value}"] = np.sin(
+            2.0 * np.pi * k * t / period_value
+        )
+        result[f"{prefix}_cos{k}_p{period_value}"] = np.cos(
+            2.0 * np.pi * k * t / period_value
+        )
     result.index.name = "date"
     result.attrs["macroforecast_metadata"] = attach_metadata(
         base.metadata,
@@ -1666,7 +1763,11 @@ def season_dummy(
     freq = str(frequency).lower()
     if freq == "auto":
         inferred = pd.infer_freq(panel.index) or ""
-        freq = "quarter" if inferred.startswith("Q") or inferred.startswith("QE") else "month"
+        freq = (
+            "quarter"
+            if inferred.startswith("Q") or inferred.startswith("QE")
+            else "month"
+        )
     if freq not in {"month", "quarter"}:
         raise ValueError("frequency must be 'auto', 'month', or 'quarter'")
     result = pd.DataFrame(index=panel.index)
@@ -1727,7 +1828,11 @@ def polynomial_features(
     if include_bias:
         result["bias"] = 1.0
     for deg in range(1, degree_value + 1):
-        iterator = combinations(selected, deg) if interaction_only else combinations_with_replacement(selected, deg)
+        iterator = (
+            combinations(selected, deg)
+            if interaction_only
+            else combinations_with_replacement(selected, deg)
+        )
         for terms in iterator:
             name = _term_name(terms, power_separator="^")
             values = pd.Series(1.0, index=panel.index)
@@ -1974,7 +2079,9 @@ def hamilton_filter_features(
         {
             "feature": str(feature),
             "operation": "hamilton_filter",
-            "source": _source_for_feature(str(feature).split("_hamilton_")[0], selected),
+            "source": _source_for_feature(
+                str(feature).split("_hamilton_")[0], selected
+            ),
             "parameter": f"h={h_value};p={p_value};component={component_value}",
             "fit_policy": fit_value,
             "inputs": ",".join(selected),
@@ -2024,7 +2131,12 @@ def savitzky_golay_features(
         series = panel[column].astype(float)
         if series.isna().any():
             series = series.interpolate(limit_direction="both")
-        values = savgol_filter(series.to_numpy(dtype=float), window_length=window, polyorder=order, deriv=deriv)
+        values = savgol_filter(
+            series.to_numpy(dtype=float),
+            window_length=window,
+            polyorder=order,
+            deriv=deriv,
+        )
         result[f"{column}_savgol"] = values
     if drop_missing:
         result = result.dropna()
@@ -2090,36 +2202,6 @@ def _resolve_feature_keep_count(n_features: int | float, *, n_columns: int) -> i
     return max(1, min(n_columns, count))
 
 
-def _one_sided_adaptive_ma_rf(
-    time_values: np.ndarray,
-    series: pd.Series,
-    *,
-    n_estimators: int,
-    min_samples_leaf: int,
-    random_state: int | None,
-) -> np.ndarray:
-    from sklearn.ensemble import RandomForestRegressor
-
-    out: np.ndarray = np.full(len(series), np.nan, dtype=float)
-    values = series.to_numpy(dtype=float)
-    observed = np.isfinite(values)
-    row_numbers = np.arange(len(series))
-    for row in range(len(series)):
-        mask = observed & (row_numbers <= row)
-        n_fit = int(mask.sum())
-        if n_fit < 2:
-            out[row] = values[row] if np.isfinite(values[row]) else np.nan
-            continue
-        model = RandomForestRegressor(
-            n_estimators=n_estimators,
-            min_samples_leaf=min(min_samples_leaf, n_fit),
-            random_state=None if random_state is None else int(random_state) + row,
-        )
-        model.fit(time_values[mask], values[mask])
-        out[row] = float(model.predict(time_values[row : row + 1])[0])
-    return out
-
-
 def random_projection_features(
     data: FeatureInput,
     *,
@@ -2148,7 +2230,9 @@ def random_projection_features(
         context="random_projection_features()",
         enabled=warn_full_sample,
     )
-    transformer = GaussianRandomProjection(n_components=n_value, random_state=random_state)
+    transformer = GaussianRandomProjection(
+        n_components=n_value, random_state=random_state
+    )
     transformed = transformer.fit_transform(source.to_numpy(dtype=float))
     result = pd.DataFrame(
         transformed,
@@ -2282,7 +2366,12 @@ def time_features(
     result.attrs["macroforecast_metadata"] = attach_metadata(
         base.metadata,
         "feature_engineering_time",
-        {"trend": bool(trend), "month": bool(month), "quarter": bool(quarter), "year": bool(year)},
+        {
+            "trend": bool(trend),
+            "month": bool(month),
+            "quarter": bool(quarter),
+            "year": bool(year),
+        },
     )
     records: list[dict[str, Any]] = []
     for column in result.columns:
@@ -2333,10 +2422,19 @@ def _mixed_frequency_map(
         raw_map = metadata.get("native_frequency_by_column", {})
     result: dict[str, str] = {}
     if isinstance(raw_map, Mapping):
-        unknown = sorted(set(str(column) for column in raw_map).difference(str(column) for column in panel.columns))
+        unknown = sorted(
+            set(str(column) for column in raw_map).difference(
+                str(column) for column in panel.columns
+            )
+        )
         if unknown:
             raise ValueError(f"frequency_by_column includes unknown columns: {unknown}")
-        result.update({str(column): _normalize_frequency_label(value) for column, value in raw_map.items()})
+        result.update(
+            {
+                str(column): _normalize_frequency_label(value)
+                for column, value in raw_map.items()
+            }
+        )
     for column in panel.columns:
         name = str(column)
         result.setdefault(name, _infer_frequency(panel[column]))
@@ -2360,10 +2458,16 @@ def _resolve_anchor_dates(
         dates = pd.DatetimeIndex(panel.index)
     if dates.empty:
         raise ValueError("anchor_dates are empty")
-    freq = _normalize_frequency_label(target_frequency) if target_frequency is not None else None
+    freq = (
+        _normalize_frequency_label(target_frequency)
+        if target_frequency is not None
+        else None
+    )
     if freq is None and target is not None:
         freq = frequency_map.get(target, _infer_frequency(panel[target]))
-    positioned = _anchor_dates_to_position(dates, frequency=freq or "unknown", anchor_position=anchor_position)
+    positioned = _anchor_dates_to_position(
+        dates, frequency=freq or "unknown", anchor_position=anchor_position
+    )
     positioned.name = "date"
     return positioned
 
@@ -2378,18 +2482,26 @@ def _anchor_dates_to_position(
     if key in {"date", "as_is", "asis"}:
         return pd.DatetimeIndex(dates.to_period("M").to_timestamp())
     if key not in {"period_start", "start", "period_end", "end"}:
-        raise ValueError("anchor_position must be one of ['date', 'period_start', 'period_end']")
+        raise ValueError(
+            "anchor_position must be one of ['date', 'period_start', 'period_end']"
+        )
     how = "start" if key in {"period_start", "start"} else "end"
     if frequency == "quarterly":
-        return pd.DatetimeIndex(dates.to_period("Q").asfreq("M", how=how).to_timestamp())
+        return pd.DatetimeIndex(
+            dates.to_period("Q").asfreq("M", how=how).to_timestamp()
+        )
     if frequency == "annual":
-        return pd.DatetimeIndex(dates.to_period("Y").asfreq("M", how=how).to_timestamp())
+        return pd.DatetimeIndex(
+            dates.to_period("Y").asfreq("M", how=how).to_timestamp()
+        )
     if frequency in {"monthly", "unknown", "irregular", "weekly"}:
         return pd.DatetimeIndex(dates.to_period("M").to_timestamp())
     raise ValueError(f"cannot position anchors for frequency {frequency!r}")
 
 
-def _lagged_lookup_dates(anchor_index: pd.DatetimeIndex, *, lag: int, frequency: str) -> pd.DatetimeIndex:
+def _lagged_lookup_dates(
+    anchor_index: pd.DatetimeIndex, *, lag: int, frequency: str
+) -> pd.DatetimeIndex:
     freq = _normalize_frequency_label(frequency)
     if freq == "monthly":
         dates = anchor_index - pd.DateOffset(months=int(lag))
@@ -2406,7 +2518,9 @@ def _lagged_lookup_dates(anchor_index: pd.DatetimeIndex, *, lag: int, frequency:
     return _dates_to_source_period(dates, frequency=freq)
 
 
-def _dates_to_source_period(dates: pd.DatetimeIndex, *, frequency: str) -> pd.DatetimeIndex:
+def _dates_to_source_period(
+    dates: pd.DatetimeIndex, *, frequency: str
+) -> pd.DatetimeIndex:
     if frequency == "quarterly":
         return pd.DatetimeIndex(dates.to_period("Q").to_timestamp())
     if frequency == "annual":
@@ -2432,7 +2546,9 @@ def _source_series_by_period(series: pd.Series, *, frequency: str) -> pd.Series:
         pd.DatetimeIndex(observed.index),
         frequency=_normalize_frequency_label(frequency),
     )
-    normalized = pd.Series(observed.to_numpy(dtype=float), index=period_index, name=series.name)
+    normalized = pd.Series(
+        observed.to_numpy(dtype=float), index=period_index, name=series.name
+    )
     normalized = normalized.groupby(level=0).last().sort_index()
     normalized.index.name = "date"
     return normalized
@@ -2554,7 +2670,9 @@ def _coerce_custom_feature_output(output: Any, *, index: pd.Index) -> pd.DataFra
         if values.ndim == 1:
             values = values.reshape(-1, 1)
         if values.ndim != 2:
-            raise TypeError("custom feature output must be a Series, DataFrame, or 1D/2D array-like")
+            raise TypeError(
+                "custom feature output must be a Series, DataFrame, or 1D/2D array-like"
+            )
         frame = pd.DataFrame(
             values,
             columns=[f"custom_{idx}" for idx in range(1, values.shape[1] + 1)],
@@ -2563,7 +2681,9 @@ def _coerce_custom_feature_output(output: Any, *, index: pd.Index) -> pd.DataFra
         if len(frame.index) == len(index):
             frame.index = index
         else:
-            raise ValueError("custom feature output must keep the input DatetimeIndex or have matching length")
+            raise ValueError(
+                "custom feature output must keep the input DatetimeIndex or have matching length"
+            )
     frame.index = pd.DatetimeIndex(frame.index)
     frame.index.name = "date"
     frame.columns = [str(column) for column in frame.columns]

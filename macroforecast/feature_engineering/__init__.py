@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ._albama import AlbaMA, AlbaMAResult, AdaptiveMovingAverage, albama
 from .core import (
     average_target,
     adaptive_ma_rf_features,
@@ -86,12 +87,16 @@ from .types import FeatureInput, FeatureSet
 from .specs import FeatureSpec, FittedFeatureBuilder, feature_spec
 
 __all__ = [
+    "AlbaMA",
+    "AlbaMAResult",
+    "AdaptiveMovingAverage",
     "FeatureInput",
     "FeatureSpec",
     "FeatureSet",
     "FeatureSelectionResult",
     "FittedFeatureBuilder",
     "adaptive_ma_rf_features",
+    "albama",
     "asymmetric_trim_features",
     "average_target",
     "boruta_selection",

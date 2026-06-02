@@ -16,6 +16,8 @@ Use this page as the inspection order for the current callable-first
 | How do I load and shape data? | [Data](data.md) | Panel contract, metadata, custom loaders, FRED loaders, frequency policies. |
 | Which FRED-family dataset should I use? | [FRED Datasets](../datasets/index.md) | FRED-MD, FRED-QD, FRED-SD, combined loaders, and frequency conversion warnings. |
 | How do I clean a panel? | [Preprocessing](preprocessing.md) | Transform codes, outliers, imputation, standardization, frame rules. |
+| How do I smooth a noisy macro series for monitoring? | [Feature Engineering](feature_engineering.md) | AlbaMA, one-sided/two-sided adaptive moving-average features, and learned weights. |
+| How do I inspect learned feature weights? | [Feature Analysis](feature_analysis.md) | Effective windows and recent weight shares from adaptive feature weight matrices. |
 | How do I create targets and predictors? | [Feature Engineering](feature_engineering.md) | Target construction, lags, rolling features, factors, selection, runner-safe specs. |
 | How do I define time windows? | [Window](window.md) | Train/validation/test windows, expanding/rolling/fixed policies, stage policies. |
 | Which models are available? | [Models](models.md) | Model groups, parameter defaults, optional dependencies, model-owned search spaces. |
@@ -85,6 +87,7 @@ without explaining the meaning of each choice.
 | `meta` vs data pipeline | `meta` stores package defaults; it does not load, clean, summarize, or compare data. |
 | `data` vs `preprocessing` | `data` creates canonical panels and metadata; `preprocessing` transforms values. |
 | `preprocessing` vs `feature_engineering` | `preprocessing` cleans variables; `feature_engineering` creates targets and predictors. |
+| feature generation vs feature analysis | `feature_engineering` creates AlbaMA smoothed features and stores learned weights; `feature_analysis` summarizes those weights through effective windows and recent weight shares. |
 | `feature_engineering` vs `window` | Feature functions build matrices; `window` decides which dates belong to train/validation/test. |
 | `models` vs `model_selection` | Models own fit functions and search spaces; `model_selection` runs parameter search on supplied windows. |
 | `model_selection` vs `forecasting` | `model_selection` picks model parameters; `forecasting` orchestrates repeated fits and predictions. |

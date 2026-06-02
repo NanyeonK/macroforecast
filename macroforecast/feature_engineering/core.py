@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from macroforecast.feature_engineering._albama import (
+    AlbaMA,
+    AlbaMAResult,
+    AdaptiveMovingAverage,
+    albama,
+)
 from macroforecast.feature_engineering.builder import build_features
 from macroforecast.feature_engineering.compose import (
     compose_features,
@@ -31,7 +37,11 @@ from macroforecast.feature_engineering.compose import (
     varimax_step,
 )
 from macroforecast.feature_engineering.matrix import feature_matrix
-from macroforecast.feature_engineering.targets import average_target, direct_target, path_targets
+from macroforecast.feature_engineering.targets import (
+    average_target,
+    direct_target,
+    path_targets,
+)
 from macroforecast.feature_engineering.feature_selection import (
     boruta_selection,
     correlation_selection,
@@ -80,7 +90,11 @@ from macroforecast.feature_engineering.transforms import (
 )
 
 __all__ = [
+    "AlbaMA",
+    "AlbaMAResult",
+    "AdaptiveMovingAverage",
     "adaptive_ma_rf_features",
+    "albama",
     "asymmetric_trim_features",
     "average_target",
     "boruta_selection",

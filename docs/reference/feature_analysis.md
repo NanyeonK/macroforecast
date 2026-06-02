@@ -22,6 +22,16 @@ The DataFrame input must satisfy the canonical macroforecast panel contract:
 `DatetimeIndex` named `"date"`, sorted, no duplicate dates, numeric columns,
 finite values or `NaN`, and non-empty shape.
 
+Learned feature builders can also produce weight matrices. For example,
+`feature_engineering.albama()` returns `AlbaMAResult.weights`, where rows
+are source observations and columns are target feature dates. `feature_analysis`
+owns the diagnostic summaries of those weights:
+
+| Callable | Input | Output | Purpose |
+| --- | --- | --- | --- |
+| `effective_window(weights, threshold=1e-12)` | square source-by-target weight matrix | `Series` | Count nonzero source observations used at each target date. |
+| `recent_weight_share(weights, mode="one_sided")` | square source-by-target weight matrix | `DataFrame` | Summarize weight mass in recent lag/lead buckets. |
+
 ## Public Flow
 
 ```python
@@ -44,7 +54,53 @@ diagnostic = mf.feature_analysis.diagnose_features(
     selections={"origin_1": ["pc1", "PAYEMS_lag0"]},
     selection_similarity_metric="jaccard",
 )
+
+albama = mf.feature_engineering.albama(inflation, mode="one_sided")
+window = mf.feature_analysis.effective_window(albama.weights)
+shares = mf.feature_analysis.recent_weight_share(albama.weights, mode="one_sided")
 ```
+
+## effective_window
+
+```python
+macroforecast.feature_analysis.effective_window(
+    weights,
+    *,
+    threshold=1e-12,
+) -> pandas.Series
+```
+
+Input: a square weight matrix whose rows are source observations and whose
+columns are target feature dates. This is the shape returned by
+`AlbaMAResult.weights`.
+
+Output: one value per target date. The value is the number of source
+observations with absolute weight above `threshold`.
+
+## recent_weight_share
+
+```python
+macroforecast.feature_analysis.recent_weight_share(
+    weights,
+    *,
+    mode="one_sided",
+) -> pandas.DataFrame
+```
+
+Input: the same source-by-target weight matrix.
+
+Output for `mode="one_sided"`:
+
+| Column | Meaning |
+| --- | --- |
+| `y_t` | Weight on the target-date observation. |
+| `y_t_minus_1_2` | Weight on lags 1 and 2. |
+| `y_t_minus_3_5` | Weight on lags 3 through 5. |
+| `y_t_minus_6_plus` | Weight on lags 6 and older. |
+| `future_weight` | Weight assigned to future observations; should be zero for one-sided features. |
+
+Output for `mode="two_sided"` replaces `future_weight` with forward buckets
+`y_t_plus_1_2` and `y_t_plus_3_plus`.
 
 ## diagnose_features
 
