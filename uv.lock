@@ -1105,7 +1105,7 @@ wheels = [
 
 [[package]]
 name = "macroforecast"
-version = "0.10.0a0"
+version = "0.9.5a0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },

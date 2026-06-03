@@ -1120,6 +1120,11 @@ a standalone-first library API, cleans up internal DAG jargon from the public
 surface, and completes a full Diátaxis documentation overhaul including rewritten
 tutorials and per-algorithm how-tos. No algorithmic logic was changed.
 
+2026-06-03 publishing pass: `0.9.5a0` is the alpha label for the current
+callable-first package snapshot on `main`. This pass also adds the first
+paper-replication settings page for Goulet Coulombe et al. (2021), including a
+historical FRED-MD vintage policy for the `1980M01-2017M12` experiment.
+
 ### Breaking Changes
 
 None.

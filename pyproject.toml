@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "macroforecast"
-version = "0.10.0a0"
+version = "0.9.5a0"
 description = "Pandas-first macro forecasting workflow package"
 readme = "README.md"
 requires-python = ">=3.10"
