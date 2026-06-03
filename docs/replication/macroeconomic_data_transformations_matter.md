@@ -172,6 +172,9 @@ package bugs.
 The current page fixes the setting. The full replication notebook should execute
 the same cells and then attach paper-table captures plus package outputs.
 
+For the current package-only executed notebook report, see
+[Macroeconomic Data Transformations Matter: Package-Only Notebook](macroeconomic_data_transformations_matter_notebook.md).
+
 ### Cell 1: Load a Frozen FRED-MD Panel
 
 ```python

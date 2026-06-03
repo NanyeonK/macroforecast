@@ -296,6 +296,34 @@ def test_fixed_search_handles_none_parameter_values() -> None:
     assert result.best_params["min_samples_leaf"] == 2
 
 
+def test_grid_search_preserves_mixed_none_and_integer_param_types() -> None:
+    X, y = xy()
+
+    def depth_score_model(
+        X: pd.DataFrame,
+        y: pd.Series,
+        *,
+        max_depth: int | None = None,
+        min_samples_leaf: int = 1,
+    ) -> object:
+        value = 0.0 if max_depth is None else float(max_depth)
+        return score_model(X, y, score_value=value, min_samples_leaf=min_samples_leaf)
+
+    result = mf.model_selection.select_params(
+        depth_score_model,
+        X,
+        y,
+        mf.model_selection.grid({"max_depth": [3, None], "min_samples_leaf": [2]}),
+        window=mf.window.last_block(validation_size=5),
+        metric=first_prediction,
+        maximize=True,
+    )
+
+    assert result.best_params["max_depth"] == 3
+    assert isinstance(result.best_params["max_depth"], int)
+    assert result.best_params["min_samples_leaf"] == 2
+
+
 def test_explicit_search_rejects_separate_search_overrides() -> None:
     X, y = xy()
     search = mf.model_selection.grid({"alpha": [0.1, 1.0]})

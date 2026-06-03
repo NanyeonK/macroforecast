@@ -13,5 +13,5 @@ Each page separates three objects:
 :maxdepth: 1
 
 macroeconomic_data_transformations_matter
+macroeconomic_data_transformations_matter_notebook
 ```
-

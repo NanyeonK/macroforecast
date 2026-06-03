@@ -2798,11 +2798,14 @@ def _marx_from_lag_matrix(
     columns: tuple[str, ...],
     lag_values: tuple[int, ...],
 ) -> pd.DataFrame:
-    result = pd.DataFrame(index=lag_matrix.index)
+    data: dict[str, pd.Series] = {}
     for column in columns:
         for lag_order in lag_values:
             lag_columns = [f"{column}_lag{step}" for step in range(1, lag_order + 1)]
-            result[f"{column}_ma{lag_order}_lag1"] = lag_matrix.loc[:, lag_columns].mean(axis=1, skipna=False)
+            data[f"{column}_ma{lag_order}_lag1"] = lag_matrix.loc[
+                :, lag_columns
+            ].mean(axis=1, skipna=False)
+    result = pd.DataFrame(data, index=lag_matrix.index)
     result.index.name = "date"
     return result
 

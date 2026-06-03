@@ -173,12 +173,9 @@ def select_params(
         raise SearchError(f"All parameter trials failed: {first_error}", trials=trials)
     best_idx = ok["score"].idxmax() if maximize else ok["score"].idxmin()
     best_row = ok.loc[best_idx]
-    best_params = {}
-    for key in parameter_columns(trials):
-        value = best_row[key]
-        if isinstance(value, float) and np.isnan(value):
-            continue
-        best_params[key] = value
+    successful_rows = {int(row.trial): row for row in rows if row.status == "ok"}
+    best_trial = int(best_row["trial"])
+    best_params = dict(successful_rows[best_trial].params)
     return SearchResult(
         best_params=best_params,
         best_score=float(best_row["score"]),
