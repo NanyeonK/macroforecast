@@ -87,7 +87,7 @@ macroforecast.data.load_fred_md(
 | `force` | `bool` | `False` | Re-download or re-copy the raw file even if it already exists in cache. |
 | `cache_root` | path-like or `None` | `None` | Root directory for raw-file cache and manifest. |
 | `local_source` | path-like or `None` | `None` | Local CSV file to use instead of the online current/vintage CSV. |
-| `local_zip_source` | path-like or `None` | `None` | Local historical zip file used to extract a vintage CSV. |
+| `local_zip_source` | path-like or `None` | `None` | Optional local historical zip override. If omitted, `vintage="YYYY-MM"` automatically locates the official FRED-MD historical archive, caches the zip, extracts the requested CSV, and parses it. |
 
 ## Output
 
@@ -108,6 +108,13 @@ macroforecast.data.load_fred_md(
 
 The loader appends the raw artifact metadata to the raw manifest when
 `cache_root` is supplied.
+
+For vintage requests, the loader first searches the official McCracken-Ng
+FRED-MD/FRED-QD landing page for a historical archive covering the requested
+month. This is the preferred path because several older vintage CSVs are no
+longer reliably reachable through direct monthly URLs. The raw CSV used for the
+panel is still recorded in `bundle.metadata["artifact"]["source_url"]` as
+`archive.zip#entry.csv`, so the exact archive and member file remain auditable.
 
 ## Frequency Contract
 

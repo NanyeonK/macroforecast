@@ -90,6 +90,14 @@ macroforecast.data.load_fred_sd(
 | `states` | <code>list[str] &#124; None</code> | `None` | State subset. Example: `["CA", "TX"]`. |
 | `variables` | <code>list[str] &#124; None</code> | `None` | FRED-SD variable subset. Example: `["UR", "ICLAIMS"]`. |
 
+For current data, the loader reads the official FRED-SD landing page and uses
+the latest by-series workbook link. For vintage data, the loader first tries
+the official `series-YYYY-MM.xlsx` workbook URL. If that direct workbook is not
+available, it downloads the official by-series zip for that year or two-year
+archive and extracts the workbook matching the requested vintage. This differs
+from FRED-MD/FRED-QD because FRED-SD distributes state data as Excel workbooks,
+not CSV files with t-code rows.
+
 ## Output
 
 `load_fred_sd()` returns a `DataBundle`.

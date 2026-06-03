@@ -14,6 +14,7 @@ from macroforecast.data.loaders import (
     _extract_vintage_xlsx_from_zip,
     _fred_sd_series_xlsx_url,
     _fred_sd_series_zip_url,
+    _historical_zip_links_from_html,
     _latest_series_url_from_html,
     _parse_fred_csv,
 )
@@ -57,6 +58,79 @@ def test_load_fred_md_uses_local_historical_zip_fallback(tmp_path: Path) -> None
     assert metadata(bundle)["dataset"] == "fred_md"
     assert metadata(bundle)["vintage"] == "2018-02"
     assert bundle.panel.shape == (2, 4)
+
+
+def test_fred_md_qd_historical_zip_links_are_parsed_from_official_page() -> None:
+    html = """
+    <a href="/-/media/project/frbstl/stlouisfed/research/fred-md/historical-vintages-of-fred-md-2015-01-to-2024-12.zip?hash=abc">MD archive</a>
+    <a href="/-/media/project/frbstl/stlouisfed/research/fred-md/historical-vintages-of-fred-qd-2005-01-to-2024-10.zip?hash=def">QD archive</a>
+    """
+
+    md_links = _historical_zip_links_from_html(html, dataset="fred_md")
+    qd_links = _historical_zip_links_from_html(html, dataset="fred_qd")
+
+    assert md_links == [
+        (
+            "2015-01",
+            "2024-12",
+            "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/historical-vintages-of-fred-md-2015-01-to-2024-12.zip?hash=abc",
+        )
+    ]
+    assert qd_links == [
+        (
+            "2005-01",
+            "2024-10",
+            "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/historical-vintages-of-fred-qd-2005-01-to-2024-10.zip?hash=def",
+        )
+    ]
+
+
+def test_load_fred_md_auto_extracts_official_historical_zip(monkeypatch, tmp_path: Path) -> None:
+    zip_path = tmp_path / "fred_md_historical.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr(
+            "nested/2018-01.csv",
+            ",5,5,2\n"
+            "sasdate,INDPRO,RPI,UNRATE\n"
+            "1/1/2000,100.0,1000.0,4.0\n"
+            "2/1/2000,101.0,1010.0,4.1\n",
+        )
+
+    def fake_obtain(dataset, vintage, *, cache_root, force):
+        assert dataset == "fred_md"
+        assert vintage == "2018-01"
+        return zip_path, "https://example.test/fred-md-history.zip"
+
+    monkeypatch.setattr("macroforecast.data.loaders._obtain_fred_historical_zip", fake_obtain)
+    bundle = load_fred_md(vintage="2018-01", cache_root=tmp_path)
+
+    assert metadata(bundle)["dataset"] == "fred_md"
+    assert metadata(bundle)["artifact"]["source_url"] == "https://example.test/fred-md-history.zip#nested/2018-01.csv"
+    assert list(bundle.panel.columns) == ["INDPRO", "RPI", "UNRATE"]
+
+
+def test_load_fred_qd_auto_extracts_official_historical_zip(monkeypatch, tmp_path: Path) -> None:
+    zip_path = tmp_path / "fred_qd_historical.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr(
+            "FRED-QD_2018m05.csv",
+            ",5,2\n"
+            "sasqdate,GDPC1,UNRATE\n"
+            "1/1/2000,100.0,4.0\n"
+            "4/1/2000,101.0,4.1\n",
+        )
+
+    def fake_obtain(dataset, vintage, *, cache_root, force):
+        assert dataset == "fred_qd"
+        assert vintage == "2018-05"
+        return zip_path, "https://example.test/fred-qd-history.zip"
+
+    monkeypatch.setattr("macroforecast.data.loaders._obtain_fred_historical_zip", fake_obtain)
+    bundle = load_fred_qd(vintage="2018-05", cache_root=tmp_path)
+
+    assert metadata(bundle)["dataset"] == "fred_qd"
+    assert metadata(bundle)["artifact"]["source_url"] == "https://example.test/fred-qd-history.zip#FRED-QD_2018m05.csv"
+    assert list(bundle.panel.columns) == ["GDPC1", "UNRATE"]
 
 
 def test_load_fred_md_rejects_bad_vintage_format(tmp_path: Path) -> None:

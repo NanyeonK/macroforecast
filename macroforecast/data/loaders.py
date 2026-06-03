@@ -31,6 +31,12 @@ _CURRENT_MD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/
 _VINTAGE_MD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/{vintage}.csv"
 _CURRENT_QD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/quarterly/current.csv"
 _VINTAGE_QD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/quarterly/{vintage}.csv"
+_FRED_DATABASES_LANDING_PAGE_URL = "https://www.stlouisfed.org/research/economists/mccracken/fred-databases"
+_FRED_DATABASES_HEADERS = {"User-Agent": "macroforecast FRED-MD/QD loader (https://github.com/NanyeonK/macroforecast)"}
+_FRED_HISTORICAL_ZIP_RE = re.compile(
+    r"historical-vintages-of-fred-(md|qd)-(\d{4}-\d{2})-to-(\d{4}-\d{2})\.zip",
+    re.I,
+)
 
 _FRED_SD_LANDING_PAGE_URL = "https://www.stlouisfed.org/research/economists/owyang/fred-sd"
 _FRED_SD_SOURCE_BASE_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd"
@@ -303,6 +309,8 @@ def load_fred_md(
     target = _raw_file_path(request, cache_root, suffix="csv")
     cache_hit = target.exists() and not force and local_source is None and local_zip_source is None
     source_url = _CURRENT_MD_URL if request.mode == "current" else _VINTAGE_MD_URL.format(vintage=request.vintage)
+    if cache_hit and request.mode == "vintage" and request.vintage is not None:
+        source_url = _cached_fred_vintage_source_url("fred_md", request.vintage, cache_root) or source_url
 
     if not cache_hit:
         try:
@@ -312,11 +320,25 @@ def load_fred_md(
             elif local_zip_source is not None:
                 if request.vintage is None:
                     raise RawDownloadError("local_zip_source requires an explicit vintage")
-                _extract_md_vintage_from_zip(Path(local_zip_source), request.vintage, target)
-                source_url = str(local_zip_source)
+                entry = _extract_fred_vintage_from_zip(
+                    Path(local_zip_source),
+                    request.vintage,
+                    target,
+                    dataset="fred_md",
+                )
+                source_url = f"{local_zip_source}#{entry}"
             else:
-                with urlopen(source_url) as src:
-                    _atomic_write(src.read(), target)
+                if request.mode == "vintage" and request.vintage is not None:
+                    source_url = _write_official_fred_vintage_csv(
+                        "fred_md",
+                        request.vintage,
+                        target,
+                        direct_url=source_url,
+                        cache_root=cache_root,
+                        force=force,
+                    )
+                else:
+                    _atomic_write(_read_official_url(source_url), target)
         except Exception as exc:
             raise RawDownloadError(f"failed to obtain FRED-MD raw file for request={request}") from exc
 
@@ -344,20 +366,42 @@ def load_fred_qd(
     force: bool = False,
     cache_root: str | Path | None = None,
     local_source: str | Path | None = None,
+    local_zip_source: str | Path | None = None,
 ) -> DataBundle:
     request = _version_request("fred_qd", vintage=vintage)
     target = _raw_file_path(request, cache_root, suffix="csv")
-    cache_hit = target.exists() and not force and local_source is None
+    cache_hit = target.exists() and not force and local_source is None and local_zip_source is None
     source_url = _CURRENT_QD_URL if request.mode == "current" else _VINTAGE_QD_URL.format(vintage=request.vintage)
+    if cache_hit and request.mode == "vintage" and request.vintage is not None:
+        source_url = _cached_fred_vintage_source_url("fred_qd", request.vintage, cache_root) or source_url
 
     if not cache_hit:
         try:
             if local_source is not None:
                 _atomic_copy(Path(local_source), target)
                 source_url = str(local_source)
+            elif local_zip_source is not None:
+                if request.vintage is None:
+                    raise RawDownloadError("local_zip_source requires an explicit vintage")
+                entry = _extract_fred_vintage_from_zip(
+                    Path(local_zip_source),
+                    request.vintage,
+                    target,
+                    dataset="fred_qd",
+                )
+                source_url = f"{local_zip_source}#{entry}"
             else:
-                with urlopen(source_url) as src:
-                    _atomic_write(src.read(), target)
+                if request.mode == "vintage" and request.vintage is not None:
+                    source_url = _write_official_fred_vintage_csv(
+                        "fred_qd",
+                        request.vintage,
+                        target,
+                        direct_url=source_url,
+                        cache_root=cache_root,
+                        force=force,
+                    )
+                else:
+                    _atomic_write(_read_official_url(source_url), target)
         except Exception as exc:
             raise RawDownloadError(f"failed to obtain FRED-QD raw file for request={request}") from exc
 
@@ -714,6 +758,154 @@ def _atomic_write(content: bytes, target: Path) -> None:
         os.replace(tmp_path, target)
     finally:
         tmp_path.unlink(missing_ok=True)
+
+
+def _payload_looks_like_html(payload: bytes) -> bool:
+    head = payload[:1024].lstrip().lower()
+    return head.startswith((b"<!doctype html", b"<html")) or b"<html" in head[:256]
+
+
+def _read_official_url(url: str, *, headers: Mapping[str, str] | None = None, allow_html: bool = False) -> bytes:
+    request = Request(url, headers=dict(headers or {}))
+    with urlopen(request) as src:
+        payload = src.read()
+    if not allow_html and _payload_looks_like_html(payload):
+        raise RawDownloadError(f"official source returned an HTML response instead of raw data: {url}")
+    return payload
+
+
+def _historical_zip_links_from_html(
+    html: str,
+    *,
+    dataset: Literal["fred_md", "fred_qd"],
+) -> list[tuple[str, str, str]]:
+    expected = "md" if dataset == "fred_md" else "qd"
+    links: list[tuple[str, str, str]] = []
+    for href in re.findall(r'href=["\']([^"\']+)["\']', html, flags=re.I):
+        resolved = urljoin(_FRED_DATABASES_LANDING_PAGE_URL, unescape(href))
+        match = _FRED_HISTORICAL_ZIP_RE.search(resolved)
+        if match is None:
+            continue
+        family, start, end = match.groups()
+        if family.lower() != expected:
+            continue
+        links.append((start, end, resolved))
+    return sorted(set(links), key=lambda item: (item[0], item[1], item[2]))
+
+
+def _fred_historical_zip_url(dataset: Literal["fred_md", "fred_qd"], vintage: str) -> str:
+    payload = _read_official_url(_FRED_DATABASES_LANDING_PAGE_URL, headers=_FRED_DATABASES_HEADERS, allow_html=True)
+    links = _historical_zip_links_from_html(payload.decode("utf-8", errors="ignore"), dataset=dataset)
+    for start, end, url in links:
+        if start <= vintage <= end:
+            return url
+    available = ", ".join(f"{start}..{end}" for start, end, _url in links) or "none"
+    raise RawDownloadError(f"no official historical {dataset} zip covers vintage={vintage!r}; available ranges: {available}")
+
+
+def _obtain_fred_historical_zip(
+    dataset: Literal["fred_md", "fred_qd"],
+    vintage: str,
+    *,
+    cache_root: str | Path | None,
+    force: bool,
+) -> tuple[Path, str]:
+    source_url = _fred_historical_zip_url(dataset, vintage)
+    filename = Path(source_url.split("?", 1)[0]).name or f"{dataset}-{vintage}-historical.zip"
+    target = _raw_cache_root(cache_root) / dataset / "historical" / filename
+    if not target.exists() or force:
+        payload = _read_official_url(source_url, headers=_FRED_DATABASES_HEADERS)
+        if not payload.startswith(b"PK"):
+            raise RawDownloadError(f"official historical {dataset} source is not a zip file: {source_url}")
+        _atomic_write(payload, target)
+    return target, source_url
+
+
+def _extract_fred_vintage_from_zip(
+    zip_path: Path,
+    vintage: str,
+    target: Path,
+    *,
+    dataset: Literal["fred_md", "fred_qd"],
+) -> str:
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        match = _fred_vintage_zip_member(zf, vintage, dataset=dataset)
+        with zf.open(match) as src:
+            _atomic_write(src.read(), target)
+        return match
+
+
+def _fred_vintage_zip_member(
+    zf: zipfile.ZipFile,
+    vintage: str,
+    *,
+    dataset: Literal["fred_md", "fred_qd"],
+) -> str:
+    suffix = "md" if dataset == "fred_md" else "qd"
+    prefix = "FRED-MD" if dataset == "fred_md" else "FRED-QD"
+    year, month = vintage.split("-", 1)
+    candidates = [
+        f"{vintage}.csv",
+        f"{vintage}-{suffix}.csv",
+        f"{prefix}_{year}m{month}.csv",
+        f"{prefix}_{year}m{int(month)}.csv",
+    ]
+    normalized_candidates = [candidate.lower() for candidate in candidates]
+    match = next(
+        (
+            name
+            for name in zf.namelist()
+            if any(name.lower().endswith(candidate) for candidate in normalized_candidates)
+        ),
+        None,
+    )
+    if match is None:
+        raise RawDownloadError(f"vintage {vintage!r} not found in historical zip {zf.filename}")
+    return match
+
+
+def _cached_fred_vintage_source_url(
+    dataset: Literal["fred_md", "fred_qd"],
+    vintage: str,
+    cache_root: str | Path | None,
+) -> str | None:
+    archive_dir = _raw_cache_root(cache_root) / dataset / "historical"
+    if not archive_dir.exists():
+        return None
+    for archive in sorted(archive_dir.glob("*.zip")):
+        try:
+            with zipfile.ZipFile(archive, "r") as zf:
+                entry = _fred_vintage_zip_member(zf, vintage, dataset=dataset)
+            return f"{archive}#{entry}"
+        except (OSError, RawDownloadError, zipfile.BadZipFile):
+            continue
+    return None
+
+
+def _write_official_fred_vintage_csv(
+    dataset: Literal["fred_md", "fred_qd"],
+    vintage: str,
+    target: Path,
+    *,
+    direct_url: str,
+    cache_root: str | Path | None,
+    force: bool,
+) -> str:
+    try:
+        archive_path, archive_url = _obtain_fred_historical_zip(dataset, vintage, cache_root=cache_root, force=force)
+        entry = _extract_fred_vintage_from_zip(archive_path, vintage, target, dataset=dataset)
+        return f"{archive_url}#{entry}"
+    except Exception as historical_exc:
+        try:
+            _atomic_write(_read_official_url(direct_url), target)
+            return direct_url
+        except Exception as direct_exc:
+            error = RawDownloadError(
+                f"failed to obtain official {dataset} vintage={vintage!r} from historical zip or direct URL"
+            )
+            error.add_note(f"historical zip failure: {historical_exc!r}")
+            error.add_note(f"direct URL failure: {direct_exc!r}")
+            raise error from direct_exc
 
 
 def _file_artifact(*, dataset: str, request: _VersionRequest | None, source_url: str, local_path: Path, file_format: str, cache_hit: bool) -> dict[str, Any]:
@@ -1312,13 +1504,7 @@ def _data_through(panel: pd.DataFrame) -> str | None:
 
 
 def _extract_md_vintage_from_zip(zip_path: Path, vintage: str, target: Path) -> None:
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        candidates = [f"{vintage}.csv", f"{vintage}-md.csv"]
-        match = next((name for name in zf.namelist() if any(name.endswith(candidate) for candidate in candidates)), None)
-        if match is None:
-            raise RawDownloadError(f"vintage {vintage!r} not found in historical zip {zip_path}")
-        with zf.open(match) as src:
-            _atomic_write(src.read(), target)
+    _extract_fred_vintage_from_zip(zip_path, vintage, target, dataset="fred_md")
 
 
 def _parse_fred_csv(filepath: str | Path) -> tuple[pd.DataFrame, dict[str, int]]:

@@ -260,7 +260,7 @@ macroforecast.data.load_fred_md(
 | `force` | `bool` | `False` | Re-download or re-copy even if cache exists. |
 | `cache_root` | path-like or `None` | `None` | Raw cache root. |
 | `local_source` | path-like or `None` | `None` | Local CSV source instead of download. |
-| `local_zip_source` | path-like or `None` | `None` | Local historical zip source for vintage files. |
+| `local_zip_source` | path-like or `None` | `None` | Optional local historical zip override. Without it, vintage requests automatically download the official FRED-MD historical archive and extract the requested CSV. |
 
 ### Output
 
@@ -283,6 +283,7 @@ macroforecast.data.load_fred_qd(
     force: bool = False,
     cache_root: str | pathlib.Path | None = None,
     local_source: str | pathlib.Path | None = None,
+    local_zip_source: str | pathlib.Path | None = None,
 ) -> DataBundle
 ```
 
@@ -294,6 +295,7 @@ macroforecast.data.load_fred_qd(
 | `force` | `bool` | `False` | Re-download or re-copy even if cache exists. |
 | `cache_root` | path-like or `None` | `None` | Raw cache root. |
 | `local_source` | path-like or `None` | `None` | Local CSV source instead of download. |
+| `local_zip_source` | path-like or `None` | `None` | Optional local historical zip override. Without it, vintage requests automatically download the official FRED-QD historical archive and extract the requested CSV. |
 
 ### Output
 
@@ -336,6 +338,12 @@ series workbook. The same frequency and date-anchor maps are exposed in
 `metadata["native_frequency_by_column"]`,
 `metadata["native_frequency_counts"]`, `metadata["date_anchor_by_column"]`,
 `metadata["date_anchor_counts"]`, and `metadata["state_summary"]`.
+
+For `vintage="YYYY-MM"`, FRED-SD uses the official by-series workbook path. It
+tries `series-YYYY-MM.xlsx` first and then falls back to the official
+by-series zip archive containing that workbook. There is no
+`local_zip_source` parameter for FRED-SD because local overrides are supplied as
+`local_source=` with either an official workbook or a canonical wide CSV.
 
 See [FRED-SD](../datasets/fred_sd.md) for mixed-frequency state-series details
 and t-code limitations.

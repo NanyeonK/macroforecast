@@ -169,10 +169,7 @@ the same cells and then attach paper-table captures plus package outputs.
 import macroforecast as mf
 
 frozen_vintage = "2018-01"  # first candidate after the paper's 2017M12 sample end
-bundle = mf.data.load_fred_md(
-    vintage=frozen_vintage,
-    local_zip_source="data/fred_md_2015_2024_historical_vintages.zip",
-)
+bundle = mf.data.load_fred_md(vintage=frozen_vintage)
 
 raw_panel = bundle.panel
 raw_metadata = bundle.metadata
@@ -183,6 +180,7 @@ Expected output:
 ```text
 raw_panel: pandas.DataFrame indexed by monthly date
 raw_metadata: metadata dictionary attached to the data bundle
+raw_metadata["artifact"]["source_url"]: official historical archive plus member CSV
 ```
 
 ### Cell 2: Build the Stationary Panel and Preserve Levels

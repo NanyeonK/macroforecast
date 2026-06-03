@@ -9,6 +9,22 @@ full per-version honesty-pass history embedded in repo documentation.
 `core/ops/lN_ops.py` fully removed. Circular import workaround eliminated.
 `interpretation/` and `recipes/` converted to backward-compatible shims.
 
+## [0.9.5a1] -- 2026-06-03 -- "Vintage loader automation"
+
+- `mf.data.load_fred_md(vintage="YYYY-MM")` now resolves the official
+  McCracken-Ng historical FRED-MD archive automatically, caches the zip,
+  extracts the requested vintage CSV, and returns the same `DataBundle` contract
+  with the pandas panel in `bundle.panel`.
+- `mf.data.load_fred_qd(vintage="YYYY-MM")` now uses the same automatic
+  historical-archive path and accepts `local_zip_source=` as an explicit local
+  override.
+- FRED-SD vintage behavior is documented and regression-tested as the
+  by-series workbook path: direct `series-YYYY-MM.xlsx` first, then the official
+  by-series zip fallback for the requested vintage.
+- The transformation-paper replication skeleton no longer requires users to
+  pre-download a FRED-MD historical zip; `load_fred_md(vintage="2018-01")`
+  records the exact archive/member source in artifact metadata.
+
 ### Deprecations scheduled for removal in v0.10.0
 
 The following deprecated aliases emit `DeprecationWarning` in all v0.9.x releases
