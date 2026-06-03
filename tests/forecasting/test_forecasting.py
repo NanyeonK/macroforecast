@@ -191,6 +191,219 @@ def test_forecasting_runner_supports_path_average_policy() -> None:
     assert result.metadata["features"]["target_mode"] == "path"
 
 
+def test_forecasting_runner_supports_path_average_value_policy() -> None:
+    panel = _panel()
+
+    result = mf.forecasting.run(
+        panel,
+        "ols",
+        window=_window(),
+        target="y",
+        horizon=2,
+        forecast_policy="path_average",
+        target_transform="value",
+        save_models=False,
+    )
+    table = result.to_frame()
+    row = table.iloc[0]
+    origin_pos = int(row["origin_pos"])
+    y1 = panel["y"].iloc[origin_pos + 1]
+    y2 = panel["y"].iloc[origin_pos + 2]
+
+    assert set(table["forecast_policy"]) == {"path_average"}
+    assert set(table["horizon"]) == {2}
+    assert row["date"] == panel.index[origin_pos + 2]
+    assert np.isclose(row["actual"], (y1 + y2) / 2.0)
+    assert result.metadata["features"]["target_transform"] == "value"
+
+
+def test_forecasting_runner_feature_steps_include_target_lags_in_fit_x() -> None:
+    panel = _panel(36)
+    fit_columns: list[tuple[str, ...]] = []
+
+    class Fit:
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(0.0, index=X.index, name="prediction")
+
+    def recorder(X: pd.DataFrame, y: pd.Series, **_: object) -> Fit:
+        fit_columns.append(tuple(map(str, X.columns)))
+        return Fit()
+
+    model = mf.models.ModelSpec(
+        name="record_columns",
+        family="test",
+        fit_func=recorder,
+    )
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=2,
+        predictors=["x1"],
+        steps=[
+            mf.feature_engineering.lag_step(name="x_lag", lags=(0, 1)),
+        ],
+        target_lags=(0, 1),
+        drop_missing=False,
+    )
+
+    mf.forecasting.run(
+        panel,
+        model,
+        window=mf.window.spec(
+            estimation=mf.window.estimation_expanding(min_size=12),
+            val=mf.window.val_last_block(size=4),
+            test=mf.window.test_origins(
+                first_origin=panel.index[20],
+                last_origin=panel.index[20],
+                horizon=2,
+            ),
+        ),
+        features=features,
+        forecast_policy="direct",
+        model_selection={model.name: None},
+        save_models=False,
+    )
+
+    assert fit_columns
+    assert "x1_lag0" in fit_columns[0]
+    assert "x1_lag1" in fit_columns[0]
+    assert "y_lag0" in fit_columns[0]
+    assert "y_lag1" in fit_columns[0]
+
+
+def test_direct_forecast_fit_sample_respects_target_availability() -> None:
+    panel = _panel(36)
+    fit_indices: list[pd.Index] = []
+
+    class Fit:
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(0.0, index=X.index, name="prediction")
+
+    def recorder(X: pd.DataFrame, y: pd.Series, **_: object) -> Fit:
+        fit_indices.append(pd.Index(X.index))
+        return Fit()
+    spec = mf.models.ModelSpec(
+        name="record_direct",
+        family="test",
+        fit_func=recorder,
+    )
+
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=12),
+        val=mf.window.val_last_block(size=4),
+        test=mf.window.test_origins(
+            first_origin=panel.index[18],
+            last_origin=panel.index[18],
+            horizon=4,
+        ),
+    )
+    result = mf.forecasting.run(
+        panel,
+        spec,
+        window=window,
+        target="y",
+        horizon=4,
+        forecast_policy="direct",
+        save_models=False,
+    )
+    row = result.to_frame().iloc[0]
+    origin_pos = int(row["origin_pos"])
+    fit_positions = panel.index.get_indexer(fit_indices[0])
+
+    assert int(fit_positions.max()) + 4 <= origin_pos
+    assert row["window"]["target_availability_end_pos"] == origin_pos - 4
+
+
+def test_path_average_fit_sample_respects_step_availability() -> None:
+    panel = _panel(36)
+    fit_calls: list[tuple[str, pd.Index]] = []
+
+    class Fit:
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(0.0, index=X.index, name="prediction")
+
+    def recorder(X: pd.DataFrame, y: pd.Series, **_: object) -> Fit:
+        fit_calls.append((str(y.name), pd.Index(X.index)))
+        return Fit()
+    spec = mf.models.ModelSpec(
+        name="record_path",
+        family="test",
+        fit_func=recorder,
+    )
+
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=12),
+        val=mf.window.val_last_block(size=4),
+        test=mf.window.test_origins(
+            first_origin=panel.index[18],
+            last_origin=panel.index[18],
+            horizon=3,
+        ),
+    )
+    result = mf.forecasting.run(
+        panel,
+        spec,
+        window=window,
+        target="y",
+        horizon=3,
+        forecast_policy="path_average",
+        target_transform="change",
+        save_models=False,
+    )
+    row = result.to_frame().iloc[0]
+    origin_pos = int(row["origin_pos"])
+
+    assert len(fit_calls) == 3
+    for step, (_, index) in enumerate(fit_calls, start=1):
+        fit_positions = panel.index.get_indexer(index)
+        assert int(fit_positions.max()) + step <= origin_pos
+        step_window = row["window"]["target_availability_by_step"][str(step)]
+        assert step_window["target_availability_end_pos"] == origin_pos - step
+
+
+def test_direct_model_selection_splits_respect_target_availability() -> None:
+    panel = _panel(48)
+
+    class Fit:
+        def __init__(self, bias: float) -> None:
+            self.bias = float(bias)
+
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(self.bias, index=X.index, name="prediction")
+
+    def model(X: pd.DataFrame, y: pd.Series, *, bias: float = 0.0) -> Fit:
+        return Fit(float(y.mean()) + bias)
+    spec = mf.models.ModelSpec(
+        name="selection_record",
+        family="test",
+        fit_func=model,
+    )
+
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=18),
+        val=mf.window.val_last_block(size=6),
+        test=mf.window.test_origins(
+            first_origin=panel.index[30],
+            last_origin=panel.index[30],
+            horizon=5,
+        ),
+    )
+    result = mf.forecasting.run(
+        panel,
+        spec,
+        window=window,
+        target="y",
+        horizon=5,
+        model_selection=mf.model_selection.grid({"bias": [0.0, 0.1]}),
+        save_models=False,
+    )
+    selection = result.to_frame().iloc[0]["model_selection"]
+    summary = selection["metadata"]["split_summary"]
+
+    assert summary
+    for split in summary:
+        assert split["train_end_pos"] + 5 <= split["validation_start_pos"]
+
+
 def test_forecasting_runner_supports_recursive_policy_with_target_lags() -> None:
     panel = _panel(60)
 

@@ -38,11 +38,13 @@ def direct_target(
 ) -> pd.DataFrame:
     """Construct direct-forecast target columns from a canonical panel.
 
-    For date ``t`` and horizon ``h``, ``transform="level"`` returns
+    For date ``t`` and horizon ``h``, ``transform="level"`` or
+    ``transform="value"`` returns
     ``target[t + h]`` aligned on row ``t``. Other transforms compare
-    ``target[t + h]`` with ``target[t]``. ``average_*`` transforms build the
-    direct average target used in macro forecasting: the average of one-period
-    changes or growth rates from ``t + 1`` through ``t + h``.
+    ``target[t + h]`` with ``target[t]``. ``average_*`` transforms build direct
+    average targets from steps ``t + 1`` through ``t + h``; use
+    ``average_value`` when the input series is already a one-period transformed
+    forecasting object such as monthly growth or monthly difference.
     """
 
     base = _coerce_input(data, metadata=metadata)
@@ -59,7 +61,7 @@ def direct_target(
         for h in horizon_values:
             future = series.shift(-h)
             column = _target_column_name(name, horizon=h, transform=transform_method)
-            if transform_method == "level":
+            if transform_method in {"level", "value"}:
                 result[column] = future
             elif transform_method == "change":
                 result[column] = future - series
@@ -155,7 +157,8 @@ def path_targets(
     A path-average workflow fits and forecasts one model per future step; a
     later evaluation stage can average the step forecasts. This function
     creates the ``step1`` through ``stepH`` target columns required by the
-    model stage.
+    model stage. Use ``transform="value"`` when the input series is already a
+    one-period transformed forecasting object.
     """
 
     base = _coerce_input(data, metadata=metadata)

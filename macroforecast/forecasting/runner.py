@@ -27,6 +27,7 @@ from macroforecast.window import (
     Split,
     StagePolicy,
     WindowSpec,
+    make_splitter,
     resolve_stage_policy,
     resolve_window,
     stage_index,
@@ -417,6 +418,7 @@ def run(
             "forecast_horizon": horizon_values[0],
             "forecast_policy": policy,
             "future_feature_policy": future_policy,
+            "window_spec": execution_window,
             "target_transform": features.target_transform,
             "target_name": _feature_target_name(features),
             "target_key": f"{policy}_h{horizon_values[0]}",
@@ -824,6 +826,8 @@ def _run_feature_set(
         )
         item = {
             **item,
+            "base_index": X_all.index,
+            "window_spec": window_spec,
             "X_selection": X_selection,
             "y_selection": y_selection,
             "forecast_horizon": data.horizons[0] if data.horizons else item["row"].get("horizon", 1),
@@ -1185,6 +1189,27 @@ def _fit_predict_origin(
         base_index=item.get("base_index"),
         horizon=int(row["horizon"]),
     )
+    target_step = int(row["horizon"])
+    row.update(_target_availability_window_fields(item, target_step=target_step))
+    X_fit, y_fit = _filter_xy_to_target_availability(
+        X_fit,
+        y_fit,
+        item,
+        target_step=target_step,
+    )
+    X_selection, y_selection = _filter_xy_to_target_availability(
+        X_selection,
+        y_selection,
+        item,
+        target_step=target_step,
+    )
+    selection_splits = _availability_safe_selection_splits(
+        item,
+        X_selection.index,
+        target_step=target_step,
+    )
+    if X_fit.empty:
+        return []
     retune = bool(row.get("retune", True))
     for model_run in model_runs:
         model_spec = model_run.spec
@@ -1197,13 +1222,20 @@ def _fit_predict_origin(
         selection_metadata: dict[str, Any] | None = None
         cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
         if should_select:
+            if not selection_splits:
+                raise ValueError(
+                    "model selection has no target-availability-safe validation "
+                    f"splits for horizon {target_step}; increase the available "
+                    "sample, move the validation window earlier, or reduce the "
+                    "forecast horizon"
+                )
             if retune or cache_key not in param_cache:
                 result = select_params(
                     model_spec,
                     X_selection,
                     y_selection,
                     search=selected,
-                    splits=item.get("selection_splits"),
+                    splits=selection_splits,
                     metric=selection_metric,
                     maximize=maximize_selection,
                     random_state=selection_random_state if selected is None else None,
@@ -1482,6 +1514,19 @@ def _fit_predict_path_average_origin(
         "horizon": horizon,
         "forecast_policy": "path_average",
         "target_key": item.get("target_key"),
+        **_target_availability_window_fields(
+            item,
+            target_step=horizon,
+            policy="path_step_specific",
+        ),
+    }
+    row["target_availability_by_step"] = {
+        str(step): _target_availability_window_fields(
+            item,
+            target_step=step,
+            policy="row_pos_plus_step_lte_origin_pos",
+        )
+        for step in range(1, horizon + 1)
     }
     target_dates = _forecast_target_dates(
         X_test.index,
@@ -1510,17 +1555,38 @@ def _fit_predict_path_average_origin(
                 X_selection_base,
                 y_selection_step,
             )
-            selection_splits = _relative_splits_for_index(
-                item.get("absolute_val_splits", []),
-                X_selection_step.index,
-                item.get("base_index", X_selection_base.index),
+            X_fit_step, y_fit_aligned = _filter_xy_to_target_availability(
+                X_fit_step,
+                y_fit_aligned,
+                item,
+                target_step=step,
             )
+            X_selection_step, y_selection_aligned = _filter_xy_to_target_availability(
+                X_selection_step,
+                y_selection_aligned,
+                item,
+                target_step=step,
+            )
+            selection_splits = _availability_safe_selection_splits(
+                item,
+                X_selection_step.index,
+                target_step=step,
+            )
+            if X_fit_step.empty:
+                continue
             step_key = _model_cache_key(
                 model_run.alias,
                 f"{item.get('target_key', 'path')}_step{step}",
             )
             selection_metadata: dict[str, Any] | None = None
             if should_select:
+                if not selection_splits:
+                    raise ValueError(
+                        "model selection has no target-availability-safe "
+                        f"validation splits for path step {step}; increase the "
+                        "available sample, move the validation window earlier, "
+                        "or reduce the forecast horizon"
+                    )
                 if retune or step_key not in param_cache:
                     result = select_params(
                         model_spec,
@@ -1573,6 +1639,9 @@ def _fit_predict_path_average_origin(
             )
             selection_by_step[str(step)] = selection_metadata
             params_by_step[str(step)] = dict(fit_params)
+
+        if set(predictions_by_step) != set(range(1, horizon + 1)):
+            continue
 
         prediction_frame = pd.concat(predictions_by_step, axis=1)
         actual_frame = y_test.reindex(columns=step_columns)
@@ -1699,6 +1768,162 @@ def _single_target(y: pd.Series | pd.DataFrame) -> pd.Series:
             "forecasting runner currently expects exactly one target column"
         )
     return frame.iloc[:, 0].rename(str(frame.columns[0]))
+
+
+def _filter_xy_to_target_availability(
+    X: Any,
+    y: Any,
+    item: dict[str, Any],
+    *,
+    target_step: int,
+) -> tuple[pd.DataFrame, pd.Series]:
+    X_aligned, y_aligned = _align_feature_xy(X, y)
+    mask = _target_availability_mask(
+        X_aligned.index,
+        item,
+        target_step=target_step,
+    )
+    return X_aligned.loc[mask], y_aligned.loc[mask]
+
+
+def _target_availability_mask(
+    labels: pd.Index,
+    item: dict[str, Any],
+    *,
+    target_step: int,
+) -> np.ndarray:
+    base_index = _target_availability_base_index(item, labels)
+    positions = base_index.get_indexer(pd.Index(labels))
+    if (positions < 0).any():
+        missing = pd.Index(labels)[positions < 0]
+        raise ValueError(
+            "forecast target-availability filtering requires feature labels "
+            f"to be contained in base_index; missing labels: {list(missing[:3])}"
+        )
+    origin_pos = int(item["row"]["origin_pos"])
+    cutoff_pos = origin_pos - int(target_step)
+    return positions <= cutoff_pos
+
+
+def _target_availability_base_index(
+    item: dict[str, Any],
+    fallback: pd.Index,
+) -> pd.Index:
+    raw = item.get("base_index")
+    if raw is None:
+        return pd.Index(fallback)
+    return pd.Index(raw)
+
+
+def _target_availability_window_fields(
+    item: dict[str, Any],
+    *,
+    target_step: int,
+    policy: str = "row_pos_plus_target_step_lte_origin_pos",
+) -> dict[str, Any]:
+    origin_pos = int(item["row"]["origin_pos"])
+    cutoff_pos = origin_pos - int(target_step)
+    base_index = _target_availability_base_index(item, pd.Index([]))
+    cutoff_label: Any | None = None
+    if 0 <= cutoff_pos < len(base_index):
+        cutoff_label = base_index[cutoff_pos]
+    return {
+        "target_availability_policy": policy,
+        "target_availability_lag": int(target_step),
+        "target_availability_end": cutoff_label,
+        "target_availability_end_pos": int(cutoff_pos),
+    }
+
+
+def _availability_safe_selection_splits(
+    item: dict[str, Any],
+    selection_index: pd.Index,
+    *,
+    target_step: int,
+) -> list[Split]:
+    if len(selection_index) == 0:
+        return []
+    window_spec = item.get("window_spec")
+    if isinstance(window_spec, WindowSpec):
+        val = window_spec.val
+        base_embargo = (
+            val.embargo
+            if val.embargo is not None
+            else window_spec.estimation.embargo
+        )
+        embargo = max(int(base_embargo), max(int(target_step) - 1, 0))
+        min_train_size = (
+            window_spec.min_train_size
+            if window_spec.min_train_size is not None
+            else val.min_train_size
+        )
+        try:
+            return make_splitter(
+                val.method,
+                len(selection_index),
+                validation_size=val.size,
+                validation_ratio=val.ratio,
+                min_train_size=min_train_size,
+                n_splits=val.n_splits,
+                step=val.step,
+                horizon=val.horizon,
+                embargo=embargo,
+            )
+        except ValueError:
+            return _availability_safe_explicit_splits(
+                item,
+                selection_index,
+                target_step=target_step,
+            )
+    return _availability_safe_explicit_splits(
+        item,
+        selection_index,
+        target_step=target_step,
+    )
+
+
+def _availability_safe_explicit_splits(
+    item: dict[str, Any],
+    selection_index: pd.Index,
+    *,
+    target_step: int,
+) -> list[Split]:
+    absolute_splits = item.get("absolute_val_splits") or []
+    if not absolute_splits:
+        return []
+    base_index = _target_availability_base_index(item, selection_index)
+    out: list[Split] = []
+    for train_abs, val_abs in absolute_splits:
+        train_abs_arr = np.asarray(train_abs, dtype=int)
+        val_abs_arr = np.asarray(val_abs, dtype=int)
+        val_abs_arr = val_abs_arr[
+            (val_abs_arr >= 0)
+            & (val_abs_arr < len(base_index))
+        ]
+        if len(val_abs_arr) == 0:
+            continue
+        val_labels = base_index[val_abs_arr]
+        val_rel = selection_index.get_indexer(val_labels)
+        val_keep = val_rel >= 0
+        if not val_keep.any():
+            continue
+        kept_val_abs = val_abs_arr[val_keep]
+        val_rel = val_rel[val_keep]
+        train_cutoff = int(kept_val_abs.min()) - int(target_step)
+        train_abs_arr = train_abs_arr[
+            (train_abs_arr >= 0)
+            & (train_abs_arr < len(base_index))
+            & (train_abs_arr <= train_cutoff)
+        ]
+        if len(train_abs_arr) == 0:
+            continue
+        train_labels = base_index[train_abs_arr]
+        train_rel = selection_index.get_indexer(train_labels)
+        train_rel = train_rel[train_rel >= 0]
+        if len(train_rel) == 0:
+            continue
+        out.append((train_rel.astype(int, copy=False), val_rel.astype(int, copy=False)))
+    return out
 
 
 def _test_feature_builder(builder: Any) -> Any:

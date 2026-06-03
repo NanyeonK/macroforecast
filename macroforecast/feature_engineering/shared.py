@@ -18,14 +18,16 @@ from macroforecast.feature_engineering.types import FeatureInput, _InputBundle
 
 TargetTransform = Literal[
     "level",
+    "value",
     "change",
     "growth",
     "log_growth",
+    "average_value",
     "average_change",
     "average_growth",
     "average_log_growth",
 ]
-PathTransform = Literal["change", "growth", "log_growth"]
+PathTransform = Literal["value", "change", "growth", "log_growth"]
 TargetMode = Literal["direct", "path"]
 FitPolicy = Literal["expanding", "full_sample"]
 _FEATURE_METADATA_COLUMNS = (
@@ -651,6 +653,9 @@ def _normalize_target_transform(value: str) -> TargetTransform:
     aliases = {
         "level": "level",
         "future_level": "level",
+        "value": "value",
+        "future_value": "value",
+        "identity": "value",
         "change": "change",
         "diff": "change",
         "growth": "growth",
@@ -659,6 +664,13 @@ def _normalize_target_transform(value: str) -> TargetTransform:
         "log_growth": "log_growth",
         "log_change": "log_growth",
         "log_diff": "log_growth",
+        "average_value": "average_value",
+        "avg_value": "average_value",
+        "mean_value": "average_value",
+        "average_future": "average_value",
+        "future_average": "average_value",
+        "mean_future": "average_value",
+        "direct_average_value": "average_value",
         "average_change": "average_change",
         "avg_change": "average_change",
         "mean_change": "average_change",
@@ -682,6 +694,11 @@ def _normalize_target_transform(value: str) -> TargetTransform:
 
 def _normalize_path_transform(value: str) -> PathTransform:
     aliases = {
+        "value": "value",
+        "level": "value",
+        "future_value": "value",
+        "future_level": "value",
+        "identity": "value",
         "change": "change",
         "diff": "change",
         "growth": "growth",
@@ -702,6 +719,8 @@ def _normalize_path_transform(value: str) -> PathTransform:
 def _one_period_future_transform(series: pd.Series, *, step: int, transform: PathTransform) -> pd.Series:
     current = series.shift(-(step - 1))
     future = series.shift(-step)
+    if transform == "value":
+        return future
     if transform == "change":
         return future - current
     result = pd.Series(np.nan, index=series.index, dtype=float)
@@ -745,9 +764,11 @@ def _target_transform_to_path_transform(value: str) -> PathTransform:
     transform = _normalize_target_transform(value)
     if transform.startswith("average_"):
         return _normalize_path_transform(transform.removeprefix("average_"))
+    if transform in {"level", "value"}:
+        return "value"
     if transform in {"change", "growth", "log_growth"}:
         return transform  # type: ignore[return-value]
-    raise ValueError("target_mode='path' requires change, growth, log_growth, or an average_* transform")
+    raise ValueError("target_mode='path' requires value, change, growth, log_growth, or an average_* transform")
 
 
 def _maf_component_prefix(column: str, *, prefix: str) -> str:
@@ -1277,7 +1298,7 @@ def _warn_if_full_sample_fit(fit_policy: str, *, context: str, enabled: bool) ->
 
 
 def _target_formula(source: str, *, horizon: int, transform: str) -> str:
-    if transform == "level":
+    if transform in {"level", "value"}:
         return f"{source}[t+{horizon}]"
     if transform == "change":
         return f"{source}[t+{horizon}] - {source}[t]"
@@ -1296,6 +1317,8 @@ def _path_target_formula(source: str, *, step: int | str, transform: str) -> str
     current = f"{source}[t+{step}]"
     if transform == "change":
         return f"{current} - {previous}"
+    if transform == "value":
+        return current
     if transform == "growth":
         return f"{current} / {previous} - 1"
     if transform == "log_growth":

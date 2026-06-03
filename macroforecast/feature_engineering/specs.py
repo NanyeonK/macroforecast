@@ -978,7 +978,6 @@ def feature_spec(
         rolling_windows is not None
         or add_time
         or pca_components is not None
-        or target_lag_values
     ):
         raise ValueError(
             "feature_spec steps replace rolling/time/PCA shortcut options; "
@@ -1115,6 +1114,19 @@ def _build_step_predictors(
             step=step,
             source_columns=tuple(str(column) for column in source.columns),
         )
+        feature_records.extend(records)
+
+    if fitted.spec.target_lags:
+        target_lagged = lag(panel, columns=fitted.targets, lags=fitted.spec.target_lags)
+        included.append(target_lagged)
+        records = _records_for_columns(
+            target_lagged,
+            operation="target_lag",
+            sources=fitted.targets,
+            included=True,
+        )
+        for record in records:
+            record["step"] = "target_lags"
         feature_records.extend(records)
 
     if not included:

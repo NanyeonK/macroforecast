@@ -59,7 +59,7 @@ macroforecast.forecasting.run(
 | `horizons` | positive int, sequence, or `None` | `None` | Multiple target horizons. Provide either `horizon` or `horizons`, not both. |
 | `forecast_policy` | str | `"direct"` | Target/forecast construction policy: `"direct"`, `"direct_average"`, `"path_average"`, `"recursive"`, or alias `"iterated"`. |
 | `future_feature_policy` | str or `None` | `None` | Used only for recursive forecasting. `None` becomes `"target_lags"`. Use `"observed_future"` only for explicit oracle/scenario paths where future predictors are known or supplied. |
-| `target_transform` | str or `None` | `None` | Optional target transform override. For `direct_average`, `"growth"` becomes `"average_growth"`; for `path_average`, `"growth"` means average step growth forecasts; for `recursive`, allowed values are `level`, `change`, `growth`, and `log_growth`. |
+| `target_transform` | str or `None` | `None` | Optional target transform override. For `direct_average`, `"growth"` becomes `"average_growth"` and `"value"` becomes `"average_value"`; for `path_average`, `"growth"` means average step growth forecasts and `"value"` means step forecasts of an already transformed one-period target; for `recursive`, allowed values are `level`, `change`, `growth`, and `log_growth`. |
 | `combination` | str, `CombinationSpec`, sequence, mapping, or `None` | `None` | Optional forecast-combination requests. Combined forecasts are appended as additional model rows. |
 | `save_models` | bool | `True` | Save each fitted origin/model object and its metadata. |
 | `model_store` | str or path-like | `"trained_model"` | Root directory for saved fitted models. |
@@ -196,6 +196,24 @@ recursive = mf.forecasting.run(
     model_selection={"ridge": None},
 )
 ```
+
+Target availability rule:
+: for feature-matrix direct and direct-average forecasts, a training row `u` is
+  used only when `u + h <= origin`. For path-average forecasts, each step model
+  uses only rows satisfying `u + step <= origin`. Hyperparameter validation splits
+  are rebuilt under the same rule. Forecast rows expose
+  `window["target_availability_end"]`, `window["target_availability_end_pos"]`,
+  and `window["target_availability_lag"]` so users can audit the effective fit
+  sample. Path-average rows also expose
+  `window["target_availability_by_step"]`. This can be earlier than the generic
+  `WindowSpec` `fit_end`, because `fit_end` is an information-window boundary
+  while h-step target labels realize later.
+
+For FRED-MD-style replications where preprocessing has already produced the
+one-period target object, use `forecast_policy="direct_average",
+target_transform="value"` or `target_transform="average_value"` for direct
+average targets, and use `forecast_policy="path_average",
+target_transform="value"` for path-average step targets.
 
 Recursive forecasting has an explicit future-feature contract:
 

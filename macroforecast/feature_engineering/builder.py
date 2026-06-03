@@ -42,6 +42,7 @@ def build_features(
     horizons: Iterable[int] | int | None = None,
     predictors: Literal["all"] | Iterable[str] | None = None,
     lags: Iterable[int] | int = (0, 1),
+    target_lags: Iterable[int] | int | None = None,
     rolling_windows: Iterable[int] | int | None = None,
     rolling_min_periods: int | None = None,
     add_time: bool = False,
@@ -84,6 +85,11 @@ def build_features(
 
     rolling_values: tuple[int, ...] = ()
     lag_values: tuple[int, ...] = ()
+    target_lag_values = (
+        ()
+        if target_lags is None
+        else _normalize_lags(target_lags, allow_zero=True)
+    )
     step_list: list[dict[str, Any]] | None = None
     if feature_steps is not None and feature_specification is not None:
         raise ValueError("provide either feature_steps or feature_specification, not both")
@@ -156,6 +162,19 @@ def build_features(
 
         X = pd.concat(feature_parts, axis=1) if feature_parts else pd.DataFrame(index=panel.index)
         feature_metadata = _metadata_frame(feature_records)
+    if target_lag_values:
+        target_lagged = lag(panel, metadata=base.metadata, columns=target_values, lags=target_lag_values)
+        X = pd.concat([X, target_lagged], axis=1)
+        target_lag_records = _records_for_columns(
+            target_lagged,
+            operation="target_lag",
+            sources=target_values,
+            included=True,
+        )
+        feature_metadata = pd.concat(
+            [feature_metadata, _metadata_frame(target_lag_records)],
+            ignore_index=True,
+        )
     if X.empty:
         raise ValueError("feature choices produced an empty predictor matrix")
     target_mode_value = _normalize_target_mode(target_mode)
@@ -201,6 +220,7 @@ def build_features(
         "target_mode": target_mode_value,
         "path_target_columns_by_horizon": path_columns_by_horizon,
         "lags": list(lag_values),
+        "target_lags": list(target_lag_values),
         "rolling_windows": list(rolling_values),
         "rolling_min_periods": rolling_min_periods,
         "feature_specification": (

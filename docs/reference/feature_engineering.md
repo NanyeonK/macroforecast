@@ -244,7 +244,7 @@ macroforecast.feature_engineering.direct_target(
 | `targets` | iterable or `None` | from `data` | Multiple target columns. Mutually exclusive with `target`. |
 | `horizon` | positive `int` or `None` | from `data`, then `1` | One forecast horizon. |
 | `horizons` | positive int/iterable or `None` | from `data`, then `(1,)` | Multiple forecast horizons. Mutually exclusive with `horizon`. |
-| `transform` | `str` | `"level"` | `"level"`, `"change"`, `"growth"`, `"log_growth"`, `"average_change"`, `"average_growth"`, `"average_log_growth"`; common aliases include `"future_level"`, `"diff"`, `"pct_change"`, `"simple_growth"`, `"log_change"`, `"log_diff"`, `"avg_change"`, `"avg_growth"`, and `"direct_average_growth"`. |
+| `transform` | `str` | `"level"` | `"level"`, `"value"`, `"change"`, `"growth"`, `"log_growth"`, `"average_value"`, `"average_change"`, `"average_growth"`, `"average_log_growth"`; common aliases include `"future_level"`, `"future_value"`, `"identity"`, `"diff"`, `"pct_change"`, `"simple_growth"`, `"log_change"`, `"log_diff"`, `"avg_value"`, `"avg_change"`, `"avg_growth"`, and `"direct_average_growth"`. |
 
 ### Output
 
@@ -254,9 +254,11 @@ Returns a `pandas.DataFrame` indexed by `date`. Column names are
 | Transform | Formula aligned on row `t` |
 | --- | --- |
 | `"level"` | `x[t + h]` |
+| `"value"` | `x[t + h]`; same formula as `level`, used when the series is already on the target's forecasting scale. |
 | `"change"` | `x[t + h] - x[t]` |
 | `"growth"` | `x[t + h] / x[t] - 1` |
 | `"log_growth"` | `log(x[t + h]) - log(x[t])`; non-positive pairs become missing. |
+| `"average_value"` | Average of future values `x[t+1]` through `x[t+h]`; use this when `x` is already a one-period transformed forecast target. |
 | `"average_change"` | Average of one-period changes from `t+1` through `t+h`. |
 | `"average_growth"` | Average of one-period simple growth rates from `t+1` through `t+h`. |
 | `"average_log_growth"` | Average of one-period log growth rates from `t+1` through `t+h`. |
@@ -290,6 +292,7 @@ It returns the same output as:
 mf.feature_engineering.direct_target(..., transform="average_change")
 mf.feature_engineering.direct_target(..., transform="average_growth")
 mf.feature_engineering.direct_target(..., transform="average_log_growth")
+mf.feature_engineering.direct_target(..., transform="average_value")
 ```
 
 This is the direct average approach: one final target column is created per
@@ -297,6 +300,7 @@ requested horizon, and a later model can fit that column directly.
 
 | `transform` | Meaning |
 | --- | --- |
+| `"value"` | Average future values of an already transformed one-period target series. |
 | `"change"` | Average one-period differences over the future path. |
 | `"growth"` | Average one-period simple growth rates over the future path. |
 | `"log_growth"` | Average one-period log growth rates over the future path. |
@@ -365,13 +369,16 @@ macroforecast.feature_engineering.path_targets(
 forecasting. For `horizon=3`, it returns step columns for `t+1`, `t+2`, and
 `t+3`. The model stage should fit and forecast each step target separately.
 The evaluation stage can then average the step forecasts for the final horizon.
+Use `transform="value"` when the supplied target column is already a
+one-period transformed object, such as the monthly growth/difference target in a
+FRED-MD replication.
 
 ```python
 path_y = mf.feature_engineering.path_targets(
     processed,
     target="INDPRO",
     horizon=3,
-    transform="growth",
+    transform="value",
 )
 ```
 
@@ -1519,7 +1526,10 @@ training/reference panel and reused when transforming validation/test rows.
 When `steps` are supplied, they replace the shortcut predictor options
 `rolling_windows`, `add_time`, and `pca_components`; use the corresponding step
 builders instead. The default `lags=(0, 1)` shortcut is also not used in step
-mode unless you explicitly add a `lag_step()`.
+mode unless you explicitly add a `lag_step()`. `target_lags` is not a predictor
+shortcut; it is appended as a separate autoregressive target block after the
+step pipeline, so paper-style designs can combine `steps=[...]` with
+`target_lags=range(0, 13)`.
 
 ### Output
 
@@ -1663,6 +1673,7 @@ macroforecast.feature_engineering.build_features(
     horizons: Iterable[int] | int | None = None,
     predictors: Literal["all"] | Iterable[str] | None = None,
     lags: Iterable[int] | int = (0, 1),
+    target_lags: Iterable[int] | int | None = None,
     rolling_windows: Iterable[int] | int | None = None,
     rolling_min_periods: int | None = None,
     add_time: bool = False,
@@ -1698,6 +1709,7 @@ macroforecast.feature_engineering.build_features(
 | `horizon`, `horizons` | positive int/iterable or `None` | from input, then `(1,)` | Forecast horizons. |
 | `predictors` | `"all"`, iterable, or `None` | from input, then all non-target columns | Predictor columns. Target columns are rejected as predictors. |
 | `lags` | int or iterable | `(0, 1)` | Current value plus lag one by default. `lags=3` means `1, 2, 3`; `lags=0` means current values only; pass exact iterables when needed. |
+| `target_lags` | int, iterable, or `None` | `None` | Add autoregressive target-lag columns to `X` while still keeping targets out of ordinary predictors. `target_lags=range(0, 13)` means current target transform plus 12 past lags. |
 | `rolling_windows` | positive int/iterable or `None` | `None` | Add rolling-mean features for each window. |
 | `rolling_min_periods` | positive int or `None` | window length | Passed to `rolling_mean()`. |
 | `add_time` | bool | `False` | Add deterministic date features. |

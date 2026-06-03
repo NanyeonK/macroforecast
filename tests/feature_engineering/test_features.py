@@ -149,6 +149,25 @@ def test_average_target_supports_average_growth() -> None:
     assert target["target_average_growth_h2"].iloc[0] == pytest.approx(1.0)
 
 
+def test_average_target_supports_average_value_for_pretransformed_series() -> None:
+    target = mf.feature_engineering.average_target(_processed(), horizon=2, transform="value")
+    same = mf.feature_engineering.direct_target(_processed(), horizon=2, transform="average_value")
+
+    assert list(target.columns) == ["target_average_value_h2"]
+    assert target["target_average_value_h2"].iloc[0] == pytest.approx(3.0)
+    assert target["target_average_value_h2"].iloc[1] == pytest.approx(6.0)
+    pd.testing.assert_frame_equal(target, same)
+
+
+def test_direct_target_supports_value_for_pretransformed_series() -> None:
+    target = mf.feature_engineering.direct_target(_processed(), horizon=2, transform="value")
+
+    assert list(target.columns) == ["target_value_h2"]
+    assert target["target_value_h2"].iloc[0] == pytest.approx(4.0)
+    target_meta = target.attrs["macroforecast_target_metadata"].set_index("target_column")
+    assert target_meta.loc["target_value_h2", "formula"] == "target[t+2]"
+
+
 def test_path_targets_builds_step_level_targets() -> None:
     target = mf.feature_engineering.path_targets(_processed(), horizon=3, transform="change")
 
@@ -165,6 +184,19 @@ def test_path_targets_builds_step_level_targets() -> None:
     assert target_meta.loc["target_change_step2", "step"] == 2
     assert target_meta.loc["target_change_step2", "aggregation"] == "average_step_forecasts_in_evaluation"
     assert target_meta.loc["target_change_step2", "used_for_horizons"] == "3"
+
+
+def test_path_targets_supports_value_for_pretransformed_series() -> None:
+    target = mf.feature_engineering.path_targets(_processed(), horizon=3, transform="value")
+
+    assert list(target.columns) == [
+        "target_value_step1",
+        "target_value_step2",
+        "target_value_step3",
+    ]
+    assert target.iloc[0].tolist() == [2.0, 4.0, 8.0]
+    target_meta = target.attrs["macroforecast_target_metadata"].set_index("target_column")
+    assert target_meta.loc["target_value_step2", "formula"] == "target[t+2]"
 
 
 def test_direct_target_pct_change_turns_zero_denominator_into_missing() -> None:
@@ -651,6 +683,47 @@ def test_feature_spec_supports_explicit_target_lags() -> None:
     assert list(features.X.columns) == ["target_lag0", "target_lag1"]
     assert features.metadata["feature_spec"]["spec"]["target_lags"] == [0, 1]
     row = features.feature_metadata.loc[features.feature_metadata["feature"] == "target_lag0"].iloc[0]
+    assert row["operation"] == "target_lag"
+    assert row["source"] == "target"
+
+
+def test_feature_spec_steps_can_append_explicit_target_lags() -> None:
+    processed = _processed()
+    features = mf.feature_engineering.feature_spec(
+        target="target",
+        horizon=1,
+        predictors=["x1"],
+        steps=[
+            mf.feature_engineering.lag_step(name="x_lag", lags=(0, 1)),
+        ],
+        target_lags=(0, 1),
+        drop_missing=False,
+    ).fit_transform(processed)
+
+    assert "x1_lag0" in features.X.columns
+    assert "x1_lag1" in features.X.columns
+    assert "target_lag0" in features.X.columns
+    assert "target_lag1" in features.X.columns
+    assert features.metadata["feature_spec"]["spec"]["target_lags"] == [0, 1]
+    row = features.feature_metadata.loc[features.feature_metadata["feature"] == "target_lag1"].iloc[0]
+    assert row["operation"] == "target_lag"
+    assert row["step"] == "target_lags"
+
+
+def test_build_features_supports_explicit_target_lags() -> None:
+    features = mf.feature_engineering.build_features(
+        _processed(),
+        predictors=["x1"],
+        lags=(0,),
+        target_lags=(0, 2),
+        drop_missing=False,
+    )
+
+    assert "x1_lag0" in features.X.columns
+    assert "target_lag0" in features.X.columns
+    assert "target_lag2" in features.X.columns
+    assert features.metadata["feature_engineering"]["target_lags"] == [0, 2]
+    row = features.feature_metadata.loc[features.feature_metadata["feature"] == "target_lag2"].iloc[0]
     assert row["operation"] == "target_lag"
     assert row["source"] == "target"
 
@@ -1882,6 +1955,7 @@ def test_build_features_accepts_feature_matrix_specification() -> None:
         _processed(),
         feature_specification="F-X-MARX",
         lags=(0, 1),
+        target_lags=(0, 1),
         max_lag=2,
         n_factors=1,
         feature_fit_policy="full_sample",
@@ -1892,12 +1966,17 @@ def test_build_features_accepts_feature_matrix_specification() -> None:
     assert "F__F1_lag0" in features.X.columns
     assert "X__x1_lag1" in features.X.columns
     assert "MARX__x1_ma2_lag1" in features.X.columns
+    assert "target_lag0" in features.X.columns
+    assert "target_lag1" in features.X.columns
     stage = features.metadata["feature_engineering"]
     assert stage["feature_specification"] == "F-X-MARX"
+    assert stage["target_lags"] == [0, 1]
     assert stage["feature_matrix"]["fit_policy"] == "full_sample"
     marx_row = features.feature_metadata.loc[features.feature_metadata["feature"] == "MARX__x1_ma2_lag1"].iloc[0]
     assert marx_row["block"] == "MARX"
     assert marx_row["source"] == "x1"
+    target_lag_row = features.feature_metadata.loc[features.feature_metadata["feature"] == "target_lag0"].iloc[0]
+    assert target_lag_row["operation"] == "target_lag"
 
 
 def test_build_features_combines_path_targets_with_paper_feature_specification() -> None:
