@@ -1274,6 +1274,8 @@ def _fit_predict_origin(
         quantile_pred = _quantile_frame(fit, X_test=X_test, index=X_test.index)
         for date, value in pred.items():
             target_date = target_dates.loc[date]
+            if pd.isna(target_date):
+                continue
             actual: Any = (
                 y_test.reindex([date]).iloc[0] if date in y_test.index else None
             )
@@ -1646,6 +1648,9 @@ def _fit_predict_path_average_origin(
         prediction_frame = pd.concat(predictions_by_step, axis=1)
         actual_frame = y_test.reindex(columns=step_columns)
         for origin_label, path_values in prediction_frame.iterrows():
+            target_date = target_dates.loc[origin_label]
+            if pd.isna(target_date):
+                continue
             actual_values = actual_frame.reindex([origin_label]).iloc[0]
             actual_value = (
                 None
@@ -1654,7 +1659,7 @@ def _fit_predict_path_average_origin(
             )
             records.append(
                 {
-                    "date": target_dates.loc[origin_label],
+                    "date": target_date,
                     "origin": row.get("origin"),
                     "origin_pos": row.get("origin_pos"),
                     "horizon": horizon,
@@ -2490,9 +2495,12 @@ def _forecast_target_dates(
         return pd.Series(index, index=index)
     positions = base_index.get_indexer(index)
     target_positions = positions + int(horizon)
-    if (positions < 0).any() or (target_positions >= len(base_index)).any():
-        return pd.Series(index, index=index)
-    return pd.Series(base_index[target_positions], index=index)
+    valid = (positions >= 0) & (target_positions < len(base_index))
+    values = pd.Series(pd.NA, index=index, dtype="object")
+    if valid.any():
+        valid_positions = target_positions[valid]
+        values.iloc[np.flatnonzero(valid)] = list(base_index[valid_positions])
+    return values
 
 
 def _target_level_at(panel: pd.DataFrame, target: str, label: Any) -> float:

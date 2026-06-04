@@ -217,6 +217,70 @@ def test_forecasting_runner_supports_path_average_value_policy() -> None:
     assert result.metadata["features"]["target_transform"] == "value"
 
 
+def test_direct_average_drops_origins_without_realized_target_date() -> None:
+    panel = _panel(30)
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=18),
+        val=mf.window.val_last_block(size=4),
+        test=mf.window.test_origins(
+            first_origin=panel.index[-3],
+            last_origin=panel.index[-2],
+            horizon=2,
+        ),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "ols",
+        window=window,
+        target="y",
+        horizon=2,
+        forecast_policy="direct_average",
+        target_transform="value",
+        save_models=False,
+    )
+    table = result.to_frame()
+
+    assert len(table) == 1
+    row = table.iloc[0]
+    origin_pos = int(row["origin_pos"])
+    assert row["origin"] == panel.index[-3]
+    assert row["date"] == panel.index[origin_pos + 2]
+    assert not table[["prediction", "actual"]].isna().any().any()
+
+
+def test_path_average_drops_origins_without_realized_target_date() -> None:
+    panel = _panel(30)
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=18),
+        val=mf.window.val_last_block(size=4),
+        test=mf.window.test_origins(
+            first_origin=panel.index[-3],
+            last_origin=panel.index[-2],
+            horizon=2,
+        ),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "ols",
+        window=window,
+        target="y",
+        horizon=2,
+        forecast_policy="path_average",
+        target_transform="value",
+        save_models=False,
+    )
+    table = result.to_frame()
+
+    assert len(table) == 1
+    row = table.iloc[0]
+    origin_pos = int(row["origin_pos"])
+    assert row["origin"] == panel.index[-3]
+    assert row["date"] == panel.index[origin_pos + 2]
+    assert not table[["prediction", "actual"]].isna().any().any()
+
+
 def test_forecasting_runner_feature_steps_include_target_lags_in_fit_x() -> None:
     panel = _panel(36)
     fit_columns: list[tuple[str, ...]] = []
