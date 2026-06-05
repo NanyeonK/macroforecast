@@ -4287,3 +4287,6 @@ fit.predict_variance(horizon=12)
 - `expected_shortfall` -- Expected Shortfall (mean return below VaR) from a fitted volatility model.
 
 - `var_roots` -- VAR stability check: moduli of the companion-matrix eigenvalues, spectral radius, and is_stable (vars::roots).
+
+- `arima` -- (seasonal) ARIMA model via statsmodels, order (p,d,q) and seasonal_order (P,D,Q,m).
+- `auto_arima` -- automatic (seasonal) ARIMA order selection (forecast::auto.arima): KPSS-based d, AICc grid over (p,q[,P,Q]).

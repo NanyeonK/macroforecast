@@ -55,6 +55,8 @@ from .specs import (
 from .svm import linear_svr, nu_svr, svr
 from .timeseries import (
     ar,
+    arima,
+    auto_arima,
     bvar_minnesota,
     bvar_normal_inverse_wishart,
     dfm_mixed_mariano_murasawa,
@@ -131,6 +133,8 @@ __all__ = [
     "ar",
     "assemblage_regression",
     "bayesian_ridge",
+    "arima",
+    "auto_arima",
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
     "catboost",

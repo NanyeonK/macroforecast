@@ -1892,6 +1892,164 @@ def ets(
     )
 
 
+class _ArimaEstimator:
+    """statsmodels ARIMA / SARIMA wrapper with a forecast contract."""
+
+    def __init__(self, *, order: tuple[int, int, int],
+                 seasonal_order: tuple[int, int, int, int] = (0, 0, 0, 0),
+                 trend: str | None = None) -> None:
+        self.order = tuple(int(v) for v in order)
+        self.seasonal_order = tuple(int(v) for v in seasonal_order)
+        self.trend = trend
+        self.result_: Any = None
+        self.fallback_: float = 0.0
+        self.fit_error_: str | None = None
+        self.aic_: float | None = None
+        self.aicc_: float | None = None
+        self.bic_: float | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_ArimaEstimator":
+        from statsmodels.tsa.arima.model import ARIMA
+
+        series = pd.Series(y).astype(float).dropna()
+        self.fallback_ = float(series.iloc[-1]) if len(series) else 0.0
+        try:
+            res = ARIMA(
+                series, order=self.order, seasonal_order=self.seasonal_order,
+                trend=self.trend,
+            ).fit()
+            self.result_ = res
+            self.aic_ = float(res.aic)
+            self.aicc_ = float(res.aicc)
+            self.bic_ = float(res.bic)
+        except Exception as exc:  # noqa: BLE001 - keep callable on ill-posed orders
+            self.result_ = None
+            self.fit_error_ = str(exc)
+            warnings.warn(
+                f"ARIMA{self.order}x{self.seasonal_order} fit failed ({exc}); "
+                "falling back to last-value persistence.",
+                UserWarning, stacklevel=2,
+            )
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        steps = len(X)
+        if steps <= 0:
+            return np.empty(0, dtype=float)
+        if self.result_ is None:
+            return np.full(steps, self.fallback_, dtype=float)
+        try:
+            return np.asarray(self.result_.forecast(steps), dtype=float).reshape(-1)[:steps]
+        except Exception:
+            return np.full(steps, self.fallback_, dtype=float)
+
+
+def arima(
+    y: Any,
+    *,
+    order: tuple[int, int, int] = (1, 0, 0),
+    seasonal_order: tuple[int, int, int, int] = (0, 0, 0, 0),
+    trend: str | None = None,
+) -> ModelFit:
+    """Fit a (seasonal) ARIMA model via statsmodels for target-only forecasts.
+
+    ``order`` is ``(p, d, q)`` and ``seasonal_order`` is ``(P, D, Q, m)``. See
+    :func:`auto_arima` for automatic order selection (forecast::auto.arima).
+    """
+
+    target = as_series(y)
+    dummy = pd.DataFrame({"__origin__": np.arange(len(target), dtype=float)}, index=target.index)
+    params = {"order": tuple(int(v) for v in order),
+              "seasonal_order": tuple(int(v) for v in seasonal_order), "trend": trend}
+    return fit_estimator(
+        _ArimaEstimator(order=order, seasonal_order=seasonal_order, trend=trend),
+        dummy, target, model="arima", metadata=params,
+    )
+
+
+def _ndiffs_kpss(series: pd.Series, *, max_d: int = 2, alpha: float = 0.05) -> int:
+    """Number of first differences to reach stationarity (KPSS-based; forecast::ndiffs)."""
+    from statsmodels.tsa.stattools import kpss
+
+    current = pd.Series(series).dropna().astype(float)
+    d = 0
+    while d < max_d and len(current) >= 10:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                _, pval, *_ = kpss(current.values, regression="c", nlags="auto")
+        except Exception:
+            break
+        if pval >= alpha:  # KPSS null is stationarity -> fail to reject -> stop
+            break
+        current = current.diff().dropna()
+        d += 1
+    return d
+
+
+def auto_arima(
+    y: Any,
+    *,
+    max_p: int = 5,
+    max_q: int = 5,
+    max_d: int = 2,
+    seasonal: bool = False,
+    m: int = 1,
+    max_P: int = 1,
+    max_Q: int = 1,
+    seasonal_D: int = 0,
+    ic: str = "aicc",
+    trend: str | None = None,
+) -> ModelFit:
+    """Automatic (seasonal) ARIMA order selection (forecast::auto.arima).
+
+    The non-seasonal differencing order ``d`` is chosen by repeated KPSS tests
+    (Hyndman-Khandakar), then ``(p, q)`` (and seasonal ``(P, Q)`` when
+    ``seasonal`` and ``m>1``) are selected over a grid by minimum ``ic`` ('aicc',
+    'aic' or 'bic'). A constant is tried when ``d==0``. Returns the fitted best
+    model (an :func:`arima` fit).
+    """
+
+    from statsmodels.tsa.arima.model import ARIMA
+
+    if ic not in {"aicc", "aic", "bic"}:
+        raise ValueError("ic must be 'aicc', 'aic', or 'bic'")
+    target = as_series(y)
+    series = pd.Series(target).astype(float).dropna()
+    d = _ndiffs_kpss(series, max_d=max_d)
+    seas_orders = [(0, 0, 0, 0)]
+    if seasonal and m > 1:
+        seas_orders = [
+            (P, int(seasonal_D), Q, int(m))
+            for P in range(max_P + 1) for Q in range(max_Q + 1)
+        ]
+    trends: list[str | None] = [trend]
+    if trend is None and d == 0:
+        trends = ["c", None]
+    best: tuple[float, tuple[int, int, int], tuple[int, int, int, int], str | None] | None = None
+    for p in range(max_p + 1):
+        for q in range(max_q + 1):
+            for so in seas_orders:
+                for tr in trends:
+                    if p == 0 and q == 0 and so[0] == 0 and so[2] == 0 and tr is None:
+                        continue
+                    try:
+                        res = ARIMA(series, order=(p, d, q), seasonal_order=so, trend=tr).fit()
+                        crit = float(getattr(res, ic))
+                    except Exception:
+                        continue
+                    if not np.isfinite(crit):
+                        continue
+                    if best is None or crit < best[0]:
+                        best = (crit, (p, d, q), so, tr)
+    if best is None:
+        return arima(target, order=(0, d, 0))
+    _, order, so, tr = best
+    fit = arima(target, order=order, seasonal_order=so, trend=tr)
+    fit.metadata["selection"] = {"ic": ic, "value": float(best[0]), "d_kpss": int(d)}
+    return fit
+
+
 def holt_winters(
     y: Any,
     *,
@@ -3005,6 +3163,8 @@ def _midas_weights(
 
 __all__ = [
     "ar",
+    "arima",
+    "auto_arima",
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
     "dfm_mixed_mariano_murasawa",
