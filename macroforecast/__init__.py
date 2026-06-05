@@ -161,6 +161,7 @@ _LAZY_EXPORTS = {
     "naive": ".models",
     "seasonal_naive": ".models",
     "random_walk_drift": ".models",
+    "stlf": ".models",
     "arima": ".models",
     "auto_arima": ".models",
     "assemblage_regression": ".models",

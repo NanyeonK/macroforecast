@@ -2590,6 +2590,21 @@ Fits a univariate autoregression on the target series.
 | `standard` | `(1, 2, 4, 6, 12)` |
 | `wide` | `(1, 2, 3, 4, 6, 9, 12, 18, 24)` |
 
+### stlf
+
+```python
+macroforecast.models.stlf(y, *, period=None, sa_method="ets")
+```
+
+STL decomposition forecaster (R `forecast::stlf`). Seasonally adjusts the target
+with STL, forecasts the seasonally-adjusted series (additive-trend exponential
+smoothing, random-walk-drift fallback), and adds back the last seasonal cycle.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `period` | `None` | no | Seasonal period; inferred from the index frequency if omitted. |
+| `sa_method` | `"ets"` | no | Forecaster for the seasonally-adjusted series. |
+
 ### naive
 
 ```python

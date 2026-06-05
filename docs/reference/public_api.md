@@ -32,7 +32,7 @@ convenience exports are documented on their module reference pages.
 | `solve_nonnegative_ridge`, `solve_simplex_ridge`, `solve_target_shrinkage_ridge`, `solve_mean_aligned_ridge`, `solve_fused_difference_ridge` | `macroforecast.models` | Low-level constrained aggregation solver helpers returning weight vectors. |
 | `svr`, `linear_svr`, `nu_svr` | `macroforecast.models` | Support-vector regression models. |
 | `nn`, `lstm`, `gru`, `transformer`, `hemisphere_nn`, `density_hnn` | `macroforecast.models` | Torch-backed neural-network and density-forecast regressors; require `macroforecast[deep]`. |
-| `ar`, `arima`, `auto_arima`, `var`, `bvar_minnesota`, `bvar_normal_inverse_wishart`, `ets`, `holt_winters`, `theta_method`, `naive`, `seasonal_naive`, `random_walk_drift`, `far`, `favar` | `macroforecast.models` | Time-series, Bayesian VAR, exponential-smoothing, and factor-augmented forecasting models. |
+| `ar`, `arima`, `auto_arima`, `var`, `bvar_minnesota`, `bvar_normal_inverse_wishart`, `ets`, `holt_winters`, `theta_method`, `naive`, `seasonal_naive`, `random_walk_drift`, `stlf`, `far`, `favar` | `macroforecast.models` | Time-series, Bayesian VAR, exponential-smoothing, and factor-augmented forecasting models. |
 | `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas`, `midas_almon`, `midas_beta`, `midas_step`, `restricted_midas`, `unrestricted_midas` | `macroforecast.models` | Mixed-frequency dynamic-factor and MIDAS models. |
 | `decision_tree`, `random_forest`, `extra_trees`, `gradient_boosting`, `mars`, `xgboost`, `lightgbm`, `lgb_plus`, `lgba_plus`, `catboost` | `macroforecast.models` | Tree, spline, ML, and LGB+ hybrid regressors. |
 | `quantile_regression_forest`, `macro_random_forest` | `macroforecast.models` | Macro-specific tree models. |

@@ -63,6 +63,128 @@ def ar(y: Any, *, n_lag: int = 1) -> ModelFit:
     return fit_estimator(_AR(n_lag=n_lag), dummy, target, model="ar", metadata={"n_lag": int(n_lag)})
 
 
+def _infer_seasonal_period(index: Any) -> int | None:
+    """Infer a seasonal period from a DatetimeIndex frequency (12 monthly, 4 quarterly)."""
+    try:
+        freq = getattr(index, "freqstr", None) or pd.infer_freq(index)
+    except Exception:
+        freq = None
+    if not freq:
+        return None
+    head = str(freq).upper().split("-")[0]
+    if head in {"M", "MS", "ME", "BM"}:
+        return 12
+    if head in {"Q", "QS", "QE", "BQ"}:
+        return 4
+    if head in {"D", "B"}:
+        return 7
+    if head in {"H"}:
+        return 24
+    return None
+
+
+class _STLForecaster:
+    """STL decomposition forecaster (R forecast::stlf).
+
+    Seasonally adjust via STL, forecast the seasonally-adjusted series, then add
+    back the last seasonal cycle (seasonal-naive). ``predict(X)`` returns a
+    ``len(X)``-step path.
+    """
+
+    def __init__(self, *, period: int | None = None, sa_method: str = "ets") -> None:
+        self.period = period
+        self.sa_method = str(sa_method).lower()
+        self._seasonal: np.ndarray | None = None
+        self._sa_last: float = 0.0
+        self._sa_drift: float = 0.0
+        self._sa_forecast: Any = None
+        self._fallback: float = 0.0
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_STLForecaster":
+        series = pd.Series(y).astype(float).dropna()
+        self._fallback = float(series.mean()) if not series.empty else 0.0
+        if series.empty:
+            return self
+        period = self.period or _infer_seasonal_period(series.index)
+        values = series.to_numpy(dtype=float)
+        seasonally_adjusted = values
+        self._seasonal = None
+        if period and period >= 2 and len(values) >= 2 * period:
+            try:
+                from statsmodels.tsa.seasonal import STL
+
+                result = STL(series, period=int(period)).fit()
+                seasonal = np.asarray(result.seasonal, dtype=float)
+                self._seasonal = seasonal[-int(period):]
+                seasonally_adjusted = values - seasonal
+            except Exception:
+                self._seasonal = None
+                seasonally_adjusted = values
+        # Forecast the seasonally-adjusted component.
+        self._sa_last = float(seasonally_adjusted[-1])
+        n = len(seasonally_adjusted)
+        self._sa_drift = (
+            float((seasonally_adjusted[-1] - seasonally_adjusted[0]) / (n - 1))
+            if n > 1
+            else 0.0
+        )
+        if self.sa_method == "ets":
+            try:
+                from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
+                sa_series = pd.Series(seasonally_adjusted, index=series.index)
+                self._sa_forecast = ExponentialSmoothing(
+                    sa_series, trend="add", seasonal=None
+                ).fit()
+            except Exception:
+                self._sa_forecast = None
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        steps = len(X)
+        if self._sa_forecast is not None:
+            try:
+                sa_path = np.asarray(self._sa_forecast.forecast(steps), dtype=float)
+            except Exception:
+                sa_path = np.array(
+                    [self._sa_last + self._sa_drift * (k + 1) for k in range(steps)], dtype=float
+                )
+        else:
+            sa_path = np.array(
+                [self._sa_last + self._sa_drift * (k + 1) for k in range(steps)], dtype=float
+            )
+        if sa_path.size < steps:
+            sa_path = np.resize(sa_path, steps)
+        if self._seasonal is not None and len(self._seasonal):
+            m = len(self._seasonal)
+            seasonal_path = np.array([self._seasonal[k % m] for k in range(steps)], dtype=float)
+            return sa_path[:steps] + seasonal_path
+        return sa_path[:steps]
+
+
+def stlf(y: Any, *, period: int | None = None, sa_method: str = "ets", **kwargs: Any) -> ModelFit:
+    """STL + forecast: seasonally adjust, forecast, re-seasonalize (R forecast::stlf).
+
+    Decomposes the target with STL, forecasts the seasonally-adjusted series
+    (exponential smoothing with additive trend, falling back to a random-walk
+    drift), and adds back the last seasonal cycle. ``period`` defaults to the
+    index frequency (12 monthly, 4 quarterly); with no detectable seasonality the
+    forecast reduces to the seasonally-adjusted path. Target-only.
+    """
+
+    target = as_series(y)
+    dummy = pd.DataFrame(
+        {"__origin__": np.arange(len(target), dtype=float)}, index=target.index
+    )
+    return fit_estimator(
+        _STLForecaster(period=period, sa_method=sa_method),
+        dummy,
+        target,
+        model="stlf",
+        metadata={"period": (int(period) if period else None), "sa_method": str(sa_method)},
+    )
+
+
 class _NaiveForecaster:
     """Baseline path forecaster: random-walk, seasonal-naive, or drift.
 
@@ -3255,6 +3377,7 @@ def _midas_weights(
 
 
 __all__ = [
+    "stlf",
     "random_walk_drift",
     "ar",
     "arima",

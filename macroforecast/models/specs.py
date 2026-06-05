@@ -45,6 +45,7 @@ from macroforecast.models.timeseries import (
     naive,
     seasonal_naive,
     random_walk_drift,
+    stlf,
     arima,
     auto_arima,
     bvar_minnesota,
@@ -2633,6 +2634,19 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         input_kind="target",
         backend="macroforecast",
         description="Random-walk-with-drift baseline (forecast::rwf(drift=TRUE)).",
+    ),
+    "stlf": _spec(
+        "stlf",
+        "timeseries",
+        stlf,
+        default_params={"period": None, "sa_method": "ets"},
+        parameters=(
+            _p("period", None, "int | None", "Seasonal period; inferred from the index if omitted.", False),
+            _p("sa_method", "ets", "str", "Forecaster for the seasonally-adjusted series ('ets').", False),
+        ),
+        input_kind="target",
+        backend="statsmodels.tsa.seasonal.STL",
+        description="STL decomposition + forecast of the seasonally-adjusted series (forecast::stlf).",
     ),
     "theta_method": _spec(
         "theta_method",
