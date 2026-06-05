@@ -120,6 +120,16 @@ class PipelineSpec:
     window: Any
     arms: tuple[Arm, ...]
     evaluation: EvalSpec
+    # Spec-level SHARED preprocessing (freeze/vary contract): preprocessing is a
+    # shared, window-dependent stage applied identically to every arm (arms vary
+    # only in features + model). Window-invariant ops (t-codes) are deterministic
+    # and leak-free in any window; window-dependent ops (outliers, EM imputation,
+    # standardisation, factors) refit on the policy's cadence (use update="on_retrain"
+    # to match the paper's periodic refresh rather than every_origin). An arm may
+    # still override with its own preprocessing when a genuinely different
+    # transformation is part of the comparison.
+    preprocessing: Any | None = None
+    preprocessing_policy: Any | None = None
     combinations: tuple[CombinationContender, ...] = ()
     save_models: bool = True
     model_store: str = "trained_model"
@@ -246,6 +256,8 @@ def pipeline_spec(
     arms: Sequence[Arm],
     evaluation: EvalSpec,
     combinations: Sequence[CombinationContender] = (),
+    preprocessing: Any | None = None,
+    preprocessing_policy: Any | None = None,
     tcode_target_map: Mapping[int, tuple[str, str]] | None = None,
     save_models: bool = True,
     model_store: str = "trained_model",
@@ -293,6 +305,7 @@ def pipeline_spec(
     return PipelineSpec(
         data=data, targets=resolved, horizons=horizon_tuple, window=window,
         arms=arms, evaluation=evaluation, combinations=tuple(combinations),
+        preprocessing=preprocessing, preprocessing_policy=preprocessing_policy,
         save_models=bool(save_models), model_store=str(model_store), seed=seed,
         provenance=notes,
     )

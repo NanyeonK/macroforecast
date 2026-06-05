@@ -39,8 +39,9 @@ def _run_one_arm_target(
         spec.data,
         arm.model,
         window=spec.window,
-        preprocessing=arm.preprocessing,
-        preprocessing_policy=arm.preprocessing_policy,
+        preprocessing=arm.preprocessing if arm.preprocessing is not None else spec.preprocessing,
+        preprocessing_policy=(arm.preprocessing_policy if arm.preprocessing is not None
+                              else spec.preprocessing_policy),
         features=features,
         feature_policy=arm.feature_policy,
         params=arm.params,
