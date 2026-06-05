@@ -42,6 +42,8 @@ from macroforecast.models.spline import mars
 from macroforecast.models.svm import linear_svr, nu_svr, svr
 from macroforecast.models.timeseries import (
     ar,
+    arima,
+    auto_arima,
     bvar_minnesota,
     bvar_normal_inverse_wishart,
     dfm_mixed_mariano_murasawa,
@@ -72,7 +74,13 @@ from macroforecast.models.tree import (
     xgboost,
 )
 from macroforecast.models.tvp import tvp_ridge
-from macroforecast.models.volatility import egarch, garch11, realized_garch
+from macroforecast.models.volatility import (
+    egarch,
+    garch11,
+    gjr_garch,
+    realized_garch,
+    tgarch,
+)
 
 InputKind = Literal["supervised", "target", "panel", "volatility"]
 SearchSpace = dict[str, tuple[Any, ...]]
@@ -2368,6 +2376,37 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         input_kind="target",
         description="Univariate autoregression.",
     ),
+    "arima": _spec(
+        "arima",
+        "timeseries",
+        arima,
+        default_params={"order": (1, 0, 0), "seasonal_order": (0, 0, 0, 0), "trend": None},
+        parameters=(
+            _p("order", (1, 0, 0), "tuple[int, int, int]", "ARIMA (p, d, q) order."),
+            _p("seasonal_order", (0, 0, 0, 0), "tuple[int, int, int, int]", "Seasonal (P, D, Q, m) order.", False),
+            _p("trend", None, "str | None", "Deterministic trend ('n','c','t','ct').", False),
+        ),
+        input_kind="target",
+        backend="statsmodels.tsa.arima.model.ARIMA",
+        description="(Seasonal) ARIMA model.",
+    ),
+    "auto_arima": _spec(
+        "auto_arima",
+        "timeseries",
+        auto_arima,
+        default_params={"max_p": 5, "max_q": 5, "max_d": 2, "seasonal": False, "m": 1, "ic": "aicc"},
+        parameters=(
+            _p("max_p", 5, "int", "Maximum non-seasonal AR order.", False),
+            _p("max_q", 5, "int", "Maximum non-seasonal MA order.", False),
+            _p("max_d", 2, "int", "Maximum differencing order.", False),
+            _p("seasonal", False, "bool", "Search seasonal orders.", False),
+            _p("m", 1, "int", "Seasonal period.", False),
+            _p("ic", "aicc", "str", "Selection criterion ('aicc','aic','bic').", False),
+        ),
+        input_kind="target",
+        backend="statsmodels.tsa.arima.model.ARIMA",
+        description="Automatic (seasonal) ARIMA order selection (forecast::auto.arima).",
+    ),
     "var": _spec(
         "var",
         "timeseries",
@@ -3847,6 +3886,66 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         backend="arch.arch_model",
         requires_extra="arch",
         description="EGARCH volatility model.",
+    ),
+    "gjr_garch": _spec(
+        "gjr_garch",
+        "volatility",
+        gjr_garch,
+        default_params={
+            "p": 1,
+            "o": 1,
+            "q": 1,
+            "mean_model": "constant",
+            "dist": "normal",
+            "rescale": False,
+        },
+        parameters=(
+            _p("p", 1, "int", "GARCH innovation lag order."),
+            _p("o", 1, "int", "Asymmetric (leverage) lag order."),
+            _p("q", 1, "int", "GARCH variance lag order."),
+            _p("mean_model", "constant", "str", "Conditional mean model.", False),
+            _p("dist", "normal", "str", "Innovation distribution."),
+            _p("rescale", False, "bool", "arch package rescale option.", False),
+        ),
+        spaces={
+            "small": {"p": (1,), "o": (1,), "q": (1,), "dist": ("normal", "t")},
+            "standard": {"p": (1, 2), "o": (1, 2), "q": (1, 2), "dist": ("normal", "t")},
+            "wide": {"p": (1, 2, 3), "o": (1, 2), "q": (1, 2, 3), "dist": ("normal", "t", "skewt")},
+        },
+        input_kind="volatility",
+        backend="arch.arch_model",
+        requires_extra="arch",
+        description="GJR-GARCH asymmetric volatility model.",
+    ),
+    "tgarch": _spec(
+        "tgarch",
+        "volatility",
+        tgarch,
+        default_params={
+            "p": 1,
+            "o": 1,
+            "q": 1,
+            "mean_model": "constant",
+            "dist": "normal",
+            "rescale": False,
+        },
+        parameters=(
+            _p("p", 1, "int", "GARCH innovation lag order."),
+            _p("o", 1, "int", "Asymmetric (leverage) lag order."),
+            _p("q", 1, "int", "GARCH variance lag order."),
+            _p("mean_model", "constant", "str", "Conditional mean model.", False),
+            _p("dist", "normal", "str", "Innovation distribution."),
+            _p("rescale", False, "bool", "arch package rescale option.", False),
+        ),
+        spaces={
+            "small": {"p": (1,), "o": (1,), "q": (1,), "dist": ("normal", "t")},
+            "standard": {"p": (1, 2), "o": (1, 2), "q": (1, 2), "dist": ("normal", "t")},
+            "wide": {"p": (1, 2, 3), "o": (1, 2), "q": (1, 2, 3), "dist": ("normal", "t", "skewt")},
+        },
+        input_kind="volatility",
+        backend="arch.arch_model",
+        requires_extra="arch",
+        description="Threshold GARCH (TGARCH/Zakoian) volatility model.",
     ),
     "realized_garch": _spec(
         "realized_garch",

@@ -4290,3 +4290,27 @@ fit.predict_variance(horizon=12)
 
 - `arima` -- (seasonal) ARIMA model via statsmodels, order (p,d,q) and seasonal_order (P,D,Q,m).
 - `auto_arima` -- automatic (seasonal) ARIMA order selection (forecast::auto.arima): KPSS-based d, AICc grid over (p,q[,P,Q]).
+
+### arima
+
+```python
+macroforecast.models.arima(y, *, order=(1, 0, 0), seasonal_order=(0, 0, 0, 0), trend=None)
+```
+
+### auto_arima
+
+```python
+macroforecast.models.auto_arima(y, *, max_p=5, max_q=5, max_d=2, seasonal=False, m=1, ic="aicc", trend=None)
+```
+
+### gjr_garch
+
+```python
+macroforecast.models.gjr_garch(y, *, X=None, p=1, o=1, q=1, mean_model="constant", dist="normal", rescale=False)
+```
+
+### tgarch
+
+```python
+macroforecast.models.tgarch(y, *, X=None, p=1, o=1, q=1, mean_model="constant", dist="normal", rescale=False)
+```
