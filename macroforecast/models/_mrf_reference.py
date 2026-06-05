@@ -717,7 +717,9 @@ class MacroRandomForest:
         min_frac_times_no_cols = self.min_leaf_fracz*z.shape[1]
 
         y_as_list = np.array(y)
-        y = np.matrix(y)
+        # numpy>=1.20 np.matrix requires contiguous input; row slices from
+        # pandas .apply may be non-contiguous. ascontiguousarray is value-preserving.
+        y = np.matrix(np.ascontiguousarray(y))
 
         sse = np.repeat(np.inf, repeats=len(uni_x), axis=0)
         the_seq = np.arange(0, len(splits))
