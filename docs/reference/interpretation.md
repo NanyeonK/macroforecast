@@ -1856,3 +1856,5 @@ shap_table = mf.interpretation.shap_values(
     explainer="tree",
 )
 ```
+
+- `var_impulse_response` -- VAR impulse responses with Monte-Carlo bootstrap confidence bands (statsmodels errband_mc; vars::irf), as a tidy horizon/impulse/response table.

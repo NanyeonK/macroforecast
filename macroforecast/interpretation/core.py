@@ -2349,6 +2349,64 @@ def episode_group_weights(
     )
 
 
+def var_impulse_response(
+    panel: Any,
+    *,
+    n_lag: int = 1,
+    periods: int = 10,
+    orthogonalized: bool = True,
+    signif: float = 0.05,
+    repl: int = 1000,
+    seed: int | None = None,
+    trend: str = "c",
+) -> pd.DataFrame:
+    """Impulse-response functions with Monte-Carlo bootstrap confidence bands.
+
+    Fits a VAR(``n_lag``) on ``panel`` and returns a tidy table with, for each
+    horizon/impulse/response triple, the (orthogonalised by default) impulse
+    response and its ``1 - signif`` Monte-Carlo error band (statsmodels
+    ``IRAnalysis.errband_mc``; R vars::irf with bootstrap CI). Macro IRFs are
+    essentially always reported with such bands.
+    """
+
+    from statsmodels.tsa.api import VAR as _SMVAR
+
+    frame = pd.DataFrame(panel)
+    frame = frame.select_dtypes("number") if hasattr(frame, "select_dtypes") else frame
+    names = [str(c) for c in frame.columns]
+    k = len(names)
+    result = _SMVAR(np.asarray(frame, dtype=float)).fit(maxlags=int(n_lag), trend=trend)
+    irf = result.irf(int(periods))
+    point = irf.orth_irfs if orthogonalized else irf.irfs
+    lower, upper = irf.errband_mc(
+        orth=bool(orthogonalized), repl=int(repl), signif=float(signif), seed=seed
+    )
+    point = np.asarray(point); lower = np.asarray(lower); upper = np.asarray(upper)
+    rows: list[dict[str, Any]] = []
+    for h in range(point.shape[0]):
+        for response in range(k):
+            for impulse in range(k):
+                rows.append({
+                    "horizon": int(h),
+                    "impulse": names[impulse],
+                    "response": names[response],
+                    "irf": float(point[h, response, impulse]),
+                    "lower": float(lower[h, response, impulse]),
+                    "upper": float(upper[h, response, impulse]),
+                })
+    table = pd.DataFrame(rows)
+    table.attrs["macroforecast_metadata"] = {
+        "kind": "var_impulse_response",
+        "orthogonalized": bool(orthogonalized),
+        "signif": float(signif),
+        "repl": int(repl),
+        "n_lag": int(n_lag),
+        "periods": int(periods),
+        "names": names,
+    }
+    return table
+
+
 def generalized_irf(
     model: Any, *, n_periods: int = 12, target: str | int | None = None
 ) -> pd.DataFrame:
