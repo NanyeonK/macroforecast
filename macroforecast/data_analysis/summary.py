@@ -300,6 +300,71 @@ def stationarity_tests(
     }
 
 
+def adf_test(
+    series: Any,
+    *,
+    regression: str = "c",
+    autolag: str | None = "AIC",
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Augmented Dickey-Fuller unit-root test for a single series.
+
+    ``regression`` is the deterministic spec ('n','c','ct','ctt'); default 'c'
+    follows statsmodels (``tseries::adf.test`` defaults to 'ct'). Returns a flat
+    result dict (the multi-series entry point is ``stationarity_tests``).
+    """
+
+    from statsmodels.tsa.stattools import adfuller
+
+    if regression not in {"n", "c", "ct", "ctt"}:
+        raise ValueError("regression must be one of 'n', 'c', 'ct', 'ctt'")
+    values = pd.Series(series).dropna().astype(float).to_numpy()
+    stat, pvalue, used_lag, nobs, *_ = adfuller(values, regression=regression, autolag=autolag)
+    return {
+        "test": "adf",
+        "statistic": float(stat),
+        "p_value": float(pvalue),
+        "used_lag": int(used_lag),
+        "n_obs": int(nobs),
+        "regression": regression,
+        "reject_unit_root": bool(pvalue < alpha),
+    }
+
+
+def kpss_test(
+    series: Any,
+    *,
+    regression: str = "c",
+    nlags: Any = "auto",
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """KPSS stationarity test for a single series.
+
+    ``regression='c'`` tests level stationarity (the ``tseries::kpss.test``
+    'Level' default); ``'ct'`` tests trend stationarity. Returns a flat result
+    dict (the multi-series entry point is ``stationarity_tests``).
+    """
+
+    import warnings
+
+    from statsmodels.tsa.stattools import kpss as _kpss
+
+    if regression not in {"c", "ct"}:
+        raise ValueError("regression must be 'c' (level) or 'ct' (trend)")
+    values = pd.Series(series).dropna().astype(float).to_numpy()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        stat, pvalue, n_lags, _crit = _kpss(values, regression=regression, nlags=nlags)
+    return {
+        "test": "kpss",
+        "statistic": float(stat),
+        "p_value": float(pvalue),
+        "n_lags": int(n_lags),
+        "regression": regression,
+        "reject_stationarity": bool(pvalue < alpha),
+    }
+
+
 def phillips_perron_test(values: Sequence[float] | np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]:
     """Run the native Phillips-Perron Z_tau unit-root test."""
 
@@ -661,6 +726,8 @@ __all__ = [
     "outlier_summary",
     "panel_overview",
     "panel_snapshot",
+    "adf_test",
+    "kpss_test",
     "phillips_perron_test",
     "sample_coverage",
     "stationarity_tests",

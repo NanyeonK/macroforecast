@@ -567,3 +567,6 @@ step metadata.
 | What changed from raw to processed? | `mf.data_analysis.analyze_data(raw, processed)` | Two inputs, before/after deltas. |
 | Which preprocessing choices ran? | `mf.preprocessing.report(processed)` | Execution log rather than statistical summary. |
 | Should this table be written to disk? | `mf.output` or `mf.reporting` | Output/rendering is separate from analysis. |
+
+- `adf_test` -- Augmented Dickey-Fuller unit-root test for a single series (flat result).
+- `kpss_test` -- KPSS stationarity test for a single series (flat result).
