@@ -885,6 +885,94 @@ def variance_ratio(
     }
 
 
+def structural_stability(
+    y: Any,
+    x: Any | None = None,
+    *,
+    add_intercept: bool = True,
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """OLS-CUSUM test for parameter stability of a regression.
+
+    R analogue of ``strucchange::efp(type="OLS-CUSUM")`` / ``vars::stability``.
+    Fits ``y = X b + e`` by OLS and forms the empirical fluctuation process of the
+    cumulated standardised residuals, which converges to a Brownian bridge under
+    the null of constant coefficients. A large maximal fluctuation signals a
+    structural break. The supremum statistic has the Kolmogorov (sup Brownian
+    bridge) distribution.
+
+    Pass ``y`` and ``x`` separately, or a single panel whose first numeric column
+    is the dependent series. Returns the supremum statistic, the ``p`` value, the
+    10/5/1% critical values, the estimated break position (index of maximal
+    fluctuation), and the stability-rejection flag at ``alpha``.
+    """
+
+    from scipy import stats as _stats
+
+    if x is None:
+        frame = pd.DataFrame(y)
+        numeric = frame.select_dtypes("number")
+        if numeric.shape[1] < 1:
+            raise ValueError("structural_stability needs at least one numeric column")
+        if numeric.shape[1] == 1:
+            y_series = numeric.iloc[:, 0]
+            x_mat = np.empty((len(y_series), 0))
+            index = numeric.index
+        else:
+            y_series = numeric.iloc[:, 0]
+            x_mat = np.asarray(numeric.iloc[:, 1:], dtype=float)
+            index = numeric.index
+    else:
+        y_series = pd.Series(np.asarray(y, dtype=float).ravel())
+        x_frame = pd.DataFrame(x)
+        x_frame = x_frame.select_dtypes("number") if hasattr(x_frame, "select_dtypes") else x_frame
+        x_mat = np.asarray(x_frame, dtype=float)
+        index = y_series.index
+
+    y_vec = np.asarray(y_series, dtype=float).ravel()
+    if x_mat.shape[1]:
+        mask = np.isfinite(y_vec) & np.all(np.isfinite(x_mat), axis=1)
+        x_mat = x_mat[mask]
+    else:
+        mask = np.isfinite(y_vec)
+    y_vec = y_vec[mask]
+    labels = np.asarray(index)[mask] if len(np.asarray(index)) == len(mask) else None
+
+    design = x_mat
+    if add_intercept:
+        design = np.column_stack([np.ones(y_vec.shape[0]), design]) if design.shape[1] else np.ones((y_vec.shape[0], 1))
+    n_obs, k = design.shape
+    if n_obs <= k:
+        raise ValueError("structural_stability needs more observations than coefficients")
+
+    beta = np.linalg.lstsq(design, y_vec, rcond=None)[0]
+    resid = y_vec - design @ beta
+    sigma = float(np.sqrt(np.sum(resid**2) / (n_obs - k)))
+    if sigma <= 0:
+        raise ValueError("residual variance is zero; cannot form the fluctuation process")
+
+    process = np.cumsum(resid) / (sigma * np.sqrt(n_obs))
+    abs_process = np.abs(process)
+    statistic = float(np.max(abs_process))
+    break_pos = int(np.argmax(abs_process))
+    p_value = float(_stats.kstwobign.sf(statistic))
+    crit = {f"{int(level * 100)}%": float(_stats.kstwobign.ppf(1.0 - level)) for level in (0.10, 0.05, 0.01)}
+    break_label = (
+        str(labels[break_pos]) if labels is not None and 0 <= break_pos < len(labels) else None
+    )
+    return {
+        "test": "ols_cusum",
+        "statistic": statistic,
+        "p_value": p_value,
+        "n_obs": int(n_obs),
+        "n_coef": int(k),
+        "critical_values": crit,
+        "break_index": break_pos,
+        "break_label": break_label,
+        "reject_stability": bool(p_value < alpha),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -1468,6 +1556,7 @@ __all__ = [
     "engle_granger",
     "phillips_ouliaris",
     "variance_ratio",
+    "structural_stability",
     "newey_west",
     "vcov_hc",
     "breusch_pagan_test",
