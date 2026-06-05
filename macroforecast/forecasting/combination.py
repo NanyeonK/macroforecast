@@ -339,6 +339,68 @@ def combine_regularized(
     )
 
 
+
+def combine_linear_pool(
+    means: Any, sds: Any | None = None, *, weights: Any | None = None
+) -> pd.DataFrame:
+    """Linear opinion pool of (Gaussian) density forecasts.
+
+    The combined density is the mixture ``sum_i w_i N(mu_i, sigma_i^2)``. ``means``
+    and ``sds`` are frames (rows = dates, cols = models); ``weights`` default to
+    equal. Returns a frame with the pooled ``mean``, ``variance`` and ``sd``. The
+    mixture variance exceeds the weighted component variance, capturing model
+    disagreement. If ``sds`` is omitted the pool reduces to the weighted mean.
+    """
+    mu = _forecast_frame(means)
+    w = _pool_weights(weights, mu.columns)
+    pooled_mean = mu.mul(w, axis=1).sum(axis=1)
+    out = pd.DataFrame({"mean": pooled_mean}, index=mu.index)
+    if sds is not None:
+        sd = _forecast_frame(sds).reindex(index=mu.index, columns=mu.columns)
+        var_comp = (sd ** 2).mul(w, axis=1).sum(axis=1)
+        second = (mu ** 2).mul(w, axis=1).sum(axis=1)
+        mixture_var = var_comp + second - pooled_mean ** 2
+        out["variance"] = mixture_var.clip(lower=0.0)
+        out["sd"] = np.sqrt(out["variance"])
+    return out
+
+
+def combine_log_pool(means: Any, sds: Any, *, weights: Any | None = None) -> pd.DataFrame:
+    """Logarithmic opinion pool of Gaussian density forecasts.
+
+    The combined density is proportional to ``prod_i f_i^{w_i}``. For Gaussians the
+    pool is itself Gaussian with precision ``tau = sum_i w_i / sigma_i^2`` and mean
+    ``(sum_i w_i mu_i / sigma_i^2) / tau``. The log pool is sharper (smaller
+    variance) than the linear pool. Returns a frame with pooled ``mean``,
+    ``variance`` and ``sd``.
+    """
+    mu = _forecast_frame(means)
+    sd = _forecast_frame(sds).reindex(index=mu.index, columns=mu.columns)
+    w = _pool_weights(weights, mu.columns)
+    precision_i = sd.pow(-2.0)
+    tau = precision_i.mul(w, axis=1).sum(axis=1)
+    weighted_mean = (mu * precision_i).mul(w, axis=1).sum(axis=1)
+    pooled_var = 1.0 / tau
+    pooled_mean = weighted_mean * pooled_var
+    out = pd.DataFrame(
+        {"mean": pooled_mean, "variance": pooled_var, "sd": np.sqrt(pooled_var)},
+        index=mu.index,
+    )
+    return out
+
+
+def _pool_weights(weights: Any, columns: pd.Index) -> pd.Series:
+    if weights is None:
+        return pd.Series(1.0 / len(columns), index=columns)
+    w = pd.Series(weights)
+    if not w.index.equals(columns):
+        w = pd.Series(np.asarray(weights, dtype=float).ravel(), index=columns)
+    total = float(w.sum())
+    if total <= 0:
+        return pd.Series(1.0 / len(columns), index=columns)
+    return (w / total).astype(float)
+
+
 def resolve_combinations(value: Any) -> list[CombinationSpec]:
     """Normalize runner ``combination=...`` input into concrete specs."""
 
@@ -616,6 +678,8 @@ __all__ = [
     "combine_best_n",
     "combine_constrained_ls",
     "combine_regularized",
+    "combine_log_pool",
+    "combine_linear_pool",
     "combine_eigenvector",
     "combine_granger_ramanathan",
     "combine_bates_granger",

@@ -917,5 +917,12 @@ forecast outputs, not model fits. Fit-time member-model composition lives in
 | `combine_inverse_mspe(forecasts, y_true, discount=1.0)` | Inverse discounted MSPE weights. |
 | `combine_dmspe(forecasts, y_true, discount=1.0)` | Alias for inverse discounted MSPE. |
 | `combine_best_n(forecasts, y_true, n=3)` | Average historically best `n` models. |
+| `combine_bates_granger(forecasts, y_true, ...)` | Minimum error-variance weights (full covariance, 1969). |
+| `combine_granger_ramanathan(forecasts, y_true, variant=...)` | Regression combination (ols/no_intercept/constrained). |
+| `combine_constrained_ls(forecasts, y_true, ...)` | Non-negative weights summing to one. |
+| `combine_eigenvector(forecasts, y_true, ...)` | Principal-component (Hsiao-Wan) combination. |
+| `combine_regularized(forecasts, y_true, penalty=...)` | Ridge/Lasso-penalised regression weights. |
+| `combine_linear_pool(means, sds, weights=None)` | Linear opinion pool of Gaussian densities. |
+| `combine_log_pool(means, sds, weights=None)` | Logarithmic opinion pool of Gaussian densities. |
 | `combination_spec(method, name=None, models=None, **params)` | Build a reusable runner combination spec. |
 | `custom_combination(name, func, models=None, **params)` | Build a runner combination spec from a user callable. |

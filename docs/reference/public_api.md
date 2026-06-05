@@ -51,7 +51,7 @@ convenience exports are documented on their module reference pages.
 | `SearchSpec`, `SearchResult`, `SearchError`, `ParamDistribution`, `search_spec`, `select_params` | `macroforecast.model_selection` | Model-parameter selection over a supplied window and metric. |
 | `fixed`, `grid`, `random_search`, `cv_path`, `bayesian_search`, `genetic_search`, `custom_search`, `choice`, `uniform`, `log_uniform`, `randint` | `macroforecast.model_selection` | Search specification and distribution builders. |
 | `ForecastResult`, `run`, `run_forecast` | `macroforecast.forecasting` | Windowed forecast runner. |
-| `CombinationSpec`, `combination_spec`, `custom_combination`, `combine_mean`, `combine_median`, `combine_trimmed_mean`, `combine_winsorized_mean`, `combine_inverse_mspe`, `combine_dmspe`, `combine_best_n` | `macroforecast.forecasting` | Runner-integrated and direct forecast combination methods. |
+| `CombinationSpec`, `combination_spec`, `custom_combination`, `combine_mean`, `combine_median`, `combine_trimmed_mean`, `combine_winsorized_mean`, `combine_inverse_mspe`, `combine_dmspe`, `combine_best_n`, `combine_bates_granger`, `combine_granger_ramanathan`, `combine_constrained_ls`, `combine_eigenvector`, `combine_regularized`, `combine_linear_pool`, `combine_log_pool` | `macroforecast.forecasting` | Runner-integrated and direct forecast combination methods. |
 
 ## Submodules
 
