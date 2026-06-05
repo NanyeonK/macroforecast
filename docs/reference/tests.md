@@ -1043,3 +1043,9 @@ Source-alignment notes:
 - `instantaneous_causality` -- instantaneous (contemporaneous) causality test in a VAR.
 
 - `giacomini_white_test` -- Giacomini-White (2006) CONDITIONAL predictive ability Wald test (chi2, HAC), instrument [1, dL_{t-h}].
+
+- `var_serial_test` -- multivariate residual serial-correlation (Portmanteau/LM) test for a VAR (vars::serial.test).
+
+- `var_normality_test` -- multivariate normality (Doornik-Hansen/Lutkepohl JB) test for VAR residuals (vars::normality.test).
+
+- `var_arch_test` -- multivariate ARCH-LM test for VAR residuals (vars::arch.test, Lutkepohl).

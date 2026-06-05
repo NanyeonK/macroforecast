@@ -2785,6 +2785,130 @@ def jarque_bera_test(series: Any, *, alpha: float = 0.05) -> TestResult:
     )
 
 
+def _fit_statsmodels_var(panel: Any, n_lag: int, trend: str):
+    from statsmodels.tsa.api import VAR
+
+    frame = pd.DataFrame(panel)
+    frame = frame.select_dtypes("number") if hasattr(frame, "select_dtypes") else frame
+    matrix = np.asarray(frame, dtype=float)
+    result = VAR(matrix).fit(maxlags=int(n_lag), trend=trend)
+    return result, frame, matrix
+
+
+def var_serial_test(
+    panel: Any,
+    *,
+    n_lag: int = 1,
+    test_lags: int | None = None,
+    trend: str = "c",
+    adjusted: bool = False,
+    alpha: float = 0.05,
+) -> TestResult:
+    """Multivariate residual serial-correlation test for a VAR (vars::serial.test).
+
+    Lutkepohl Portmanteau / LM test of no autocorrelation in the VAR residual
+    vector up to ``test_lags`` lags (statsmodels VARResults.test_whiteness).
+    Rejects no-serial-correlation when p < alpha.
+    """
+
+    result, frame, _ = _fit_statsmodels_var(panel, n_lag, trend)
+    lags = int(test_lags) if test_lags is not None else max(int(n_lag) + 1, 12)
+    w = result.test_whiteness(nlags=lags, adjusted=bool(adjusted))
+    return TestResult(
+        statistic=float(w.test_statistic),
+        p_value=float(w.pvalue),
+        decision=bool(w.pvalue < alpha),
+        alternative="serial_correlation",
+        correction_policy="adjusted" if adjusted else None,
+        n_obs=int(frame.shape[0]),
+        metadata={"test": "var_serial_test", "df": int(w.df), "test_lags": lags, "n_lag": int(n_lag)},
+    )
+
+
+def var_normality_test(
+    panel: Any,
+    *,
+    n_lag: int = 1,
+    trend: str = "c",
+    alpha: float = 0.05,
+) -> TestResult:
+    """Multivariate normality test for VAR residuals (vars::normality.test).
+
+    Doornik-Hansen / Lutkepohl joint test of skewness and kurtosis on the
+    standardised VAR residuals (statsmodels VARResults.test_normality). Rejects
+    multivariate normality when p < alpha.
+    """
+
+    result, frame, _ = _fit_statsmodels_var(panel, n_lag, trend)
+    nrm = result.test_normality()
+    return TestResult(
+        statistic=float(nrm.test_statistic),
+        p_value=float(nrm.pvalue),
+        decision=bool(nrm.pvalue < alpha),
+        alternative="not_normal",
+        correction_policy=None,
+        n_obs=int(frame.shape[0]),
+        metadata={"test": "var_normality_test", "df": int(getattr(nrm, "df", 0)), "n_lag": int(n_lag)},
+    )
+
+
+def var_arch_test(
+    panel: Any,
+    *,
+    n_lag: int = 1,
+    arch_lags: int = 5,
+    trend: str = "c",
+    alpha: float = 0.05,
+) -> TestResult:
+    """Multivariate ARCH-LM test for VAR residuals (vars::arch.test, Lutkepohl).
+
+    Regresses the vech of the residual outer products on ``arch_lags`` of its own
+    lags and forms the multivariate ARCH-LM statistic
+    ``VARCH_LM = T * N * R2_m`` with ``R2_m = 1 - tr(Omega Omega0^-1)/N`` and
+    ``N = K(K+1)/2``, chi-squared with ``arch_lags * N^2`` df. Rejects no
+    multivariate ARCH when p < alpha.
+    """
+
+    from scipy.stats import chi2
+
+    result, frame, _ = _fit_statsmodels_var(panel, n_lag, trend)
+    resid = np.asarray(result.resid, dtype=float)
+    t_obs, k = resid.shape
+    tril = np.tril_indices(k)
+    vech = np.column_stack([resid[:, i] * resid[:, j] for i, j in zip(*tril)])
+    n_vech = vech.shape[1]
+    q = int(arch_lags)
+    if t_obs <= q + n_vech + 1:
+        return TestResult(
+            None, None, False, "multivariate_arch", None, int(t_obs),
+            {"test": "var_arch_test", "p_value_status": "insufficient_observations"},
+        )
+    y = vech[q:]
+    design = [np.ones((y.shape[0], 1))]
+    for lag in range(1, q + 1):
+        design.append(vech[q - lag : t_obs - lag])
+    x = np.hstack(design)
+    beta, *_ = np.linalg.lstsq(x, y, rcond=None)
+    resid_reg = y - x @ beta
+    n_eff = y.shape[0]
+    omega = resid_reg.T @ resid_reg / n_eff
+    centered = y - y.mean(axis=0)
+    omega0 = centered.T @ centered / n_eff
+    r2m = 1.0 - float(np.trace(omega @ np.linalg.pinv(omega0))) / n_vech
+    statistic = float(n_eff * n_vech * r2m)
+    df = int(q * n_vech * n_vech)
+    p_value = float(chi2.sf(max(statistic, 0.0), df=df))
+    return TestResult(
+        statistic=statistic,
+        p_value=p_value,
+        decision=bool(p_value < alpha),
+        alternative="multivariate_arch",
+        correction_policy=None,
+        n_obs=int(t_obs),
+        metadata={"test": "var_arch_test", "df": df, "arch_lags": q, "n_lag": int(n_lag)},
+    )
+
+
 def giacomini_white_test(
     loss_a: Any,
     loss_b: Any,
@@ -3891,6 +4015,9 @@ __all__ = [
     "dm_test",
     "jarque_bera_test",
     "giacomini_white_test",
+    "var_serial_test",
+    "var_normality_test",
+    "var_arch_test",
     "granger_causality",
     "instantaneous_causality",
     "dmp_test",
