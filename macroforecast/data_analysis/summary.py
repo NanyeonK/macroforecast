@@ -779,6 +779,69 @@ def engle_granger(
     }
 
 
+def phillips_ouliaris(
+    y: Any,
+    x: Any | None = None,
+    *,
+    trend: str = "c",
+    test_type: str = "Zt",
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Phillips-Ouliaris residual-based cointegration test.
+
+    R analogue of ``urca::ca.po`` / ``tseries::po.test`` (arch
+    ``unitroot.cointegration.phillips_ouliaris``). Like Engle-Granger it tests
+    the stationarity of the cointegrating-regression residuals, but uses a
+    non-parametric (long-run-variance corrected) statistic that does not require
+    choosing an ADF lag length, so it is robust to residual autocorrelation.
+    ``trend`` is the deterministic term ('n', 'c', 'ct', 'ctt'); ``test_type`` is
+    the statistic variant ('Zt' or 'Za' for the t-/rho-type, 'Pu'/'Pz' for the
+    variance-ratio forms). Returns the statistic, ``p`` value, 1/5/10% critical
+    values, the cointegrating vector, and the cointegration flag at ``alpha``.
+    """
+
+    from arch.unitroot.cointegration import phillips_ouliaris as _po
+
+    if trend not in {"n", "c", "ct", "ctt"}:
+        raise ValueError("trend must be one of 'n', 'c', 'ct', 'ctt'")
+    if str(test_type) not in {"Za", "Zt", "Pu", "Pz"}:
+        raise ValueError("test_type must be one of 'Za', 'Zt', 'Pu', 'Pz'")
+
+    if x is None:
+        frame = pd.DataFrame(y)
+        numeric = frame.select_dtypes("number")
+        if numeric.shape[1] < 2:
+            raise ValueError("phillips_ouliaris needs a dependent series plus at least one regressor")
+        y0 = numeric.iloc[:, 0]
+        x_frame = numeric.iloc[:, 1:]
+    else:
+        y0 = pd.Series(np.asarray(y, dtype=float).ravel())
+        x_frame = pd.DataFrame(x)
+        x_frame = x_frame.select_dtypes("number") if hasattr(x_frame, "select_dtypes") else x_frame
+
+    names = [str(c) for c in x_frame.columns]
+    y_vec = np.asarray(y0, dtype=float).ravel()
+    x_mat = np.asarray(x_frame, dtype=float)
+    mask = np.isfinite(y_vec) & np.all(np.isfinite(x_mat), axis=1)
+    y_vec, x_mat = y_vec[mask], x_mat[mask]
+
+    res = _po(y_vec, x_mat, trend=trend, test_type=str(test_type))
+    crit = {f"{int(level)}%": float(value) for level, value in dict(res.critical_values).items()}
+    coint_vec = [float(v) for v in np.asarray(res.cointegrating_vector, dtype=float).ravel()]
+    return {
+        "test": "phillips_ouliaris",
+        "test_type": str(test_type),
+        "statistic": float(res.stat),
+        "p_value": float(res.pvalue),
+        "n_obs": int(y_vec.size),
+        "names": names,
+        "trend": trend,
+        "critical_values": crit,
+        "cointegrating_vector": coint_vec,
+        "cointegrated": bool(res.pvalue < alpha),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -1360,6 +1423,7 @@ __all__ = [
     "acf",
     "johansen_cointegration",
     "engle_granger",
+    "phillips_ouliaris",
     "newey_west",
     "vcov_hc",
     "breusch_pagan_test",

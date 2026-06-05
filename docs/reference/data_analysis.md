@@ -581,6 +581,7 @@ step metadata.
 
 - `johansen_cointegration` -- Johansen cointegration test (trace + max-eigenvalue, rank selection, cointegrating vectors; urca::ca.jo).
 - `engle_granger` -- Engle-Granger two-step residual-based cointegration test with cointegrating coefficients (statsmodels coint).
+- `phillips_ouliaris` -- Phillips-Ouliaris residual-based cointegration test, non-parametric LRV-corrected (urca::ca.po / tseries::po.test).
 - `newey_west` -- Newey-West HAC covariance for OLS coefficients with Bartlett kernel and coefficient table (sandwich::NeweyWest + lmtest::coeftest).
 - `vcov_hc` -- heteroskedasticity-consistent (White HC0-HC3) covariance for OLS coefficients with coefficient table (sandwich::vcovHC + lmtest::coeftest).
 - `breusch_pagan_test` -- Breusch-Pagan test for heteroskedasticity, Koenker studentized or classic variant (lmtest::bptest).
