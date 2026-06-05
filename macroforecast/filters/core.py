@@ -235,6 +235,95 @@ def wavelet_filter(
     )
 
 
+def _infer_seasonal_period(series: pd.Series) -> int | None:
+    index = series.index
+    freq = getattr(index, "freqstr", None)
+    if freq is None and len(index) > 2:
+        try:
+            freq = pd.infer_freq(index)
+        except Exception:
+            freq = None
+    if not freq:
+        return None
+    code = str(freq).upper()
+    if code.startswith(("M", "BM", "ME", "MS")):
+        return 12
+    if code.startswith("Q"):
+        return 4
+    if code.startswith(("W",)):
+        return 52
+    if code.startswith(("D", "B")):
+        return 7
+    return None
+
+
+def stl_decompose(
+    y: Any,
+    *,
+    period: int | None = None,
+    seasonal: int = 7,
+    trend: int | None = None,
+    robust: bool = False,
+    dates: Any | None = None,
+    name: str | None = None,
+) -> FilterResult:
+    """Seasonal-Trend decomposition using Loess (STL).
+
+    Decomposes a single series into trend, seasonal and remainder components
+    (Cleveland et al. 1990; R ``stats::stl`` / statsmodels ``STL``). ``period`` is
+    the seasonal period (inferred from a monthly/quarterly/weekly DatetimeIndex
+    when omitted). This is a two-sided full-sample decomposition, so the
+    components are not real-time safe as forecasting features without a per-origin
+    refit (``fit_policy='full_input_two_sided'``).
+    """
+
+    from statsmodels.tsa.seasonal import STL
+
+    series = _coerce_series(y, dates=dates, name=name)
+    series = _interpolate_if_requested(series, enabled=True).astype(float)
+    resolved_period = int(period) if period is not None else _infer_seasonal_period(series)
+    if resolved_period is None or resolved_period < 2:
+        raise ValueError(
+            "stl_decompose needs a seasonal period >= 2; pass period= explicitly "
+            "when the index frequency cannot be inferred"
+        )
+    if len(series.dropna()) < 2 * resolved_period:
+        raise ValueError("stl_decompose needs at least two full seasonal periods")
+    result = STL(
+        series, period=resolved_period, seasonal=int(seasonal), trend=trend, robust=bool(robust)
+    ).fit()
+    values = pd.DataFrame(
+        {
+            "trend": np.asarray(result.trend, dtype=float),
+            "seasonal": np.asarray(result.seasonal, dtype=float),
+            "resid": np.asarray(result.resid, dtype=float),
+        },
+        index=series.index,
+    )
+    params = {
+        "period": resolved_period,
+        "seasonal": int(seasonal),
+        "trend": trend,
+        "robust": bool(robust),
+    }
+    metadata = {
+        "kind": "filter",
+        "method": "stl_decompose",
+        "source_series": str(series.name),
+        "fit_policy": "full_input_two_sided",
+        "backend": "statsmodels.tsa.seasonal.STL",
+        "params": params,
+    }
+    values.attrs["macroforecast_filter_metadata"] = metadata
+    return FilterResult(
+        values=values,
+        method="stl_decompose",
+        params=params,
+        metadata=metadata,
+        source=str(series.name),
+    )
+
+
 def _coerce_series(y: Any, *, dates: Any | None, name: str | None) -> pd.Series:
     if isinstance(y, pd.Series):
         series = y.astype(float).copy()

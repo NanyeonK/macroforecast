@@ -7,6 +7,7 @@ from .core import (
     hp_filter,
     savitzky_golay,
     wavelet_filter,
+    stl_decompose,
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "hp_filter",
     "savitzky_golay",
     "wavelet_filter",
+    "stl_decompose",
 ]

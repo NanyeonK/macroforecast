@@ -241,3 +241,5 @@ macroforecast.filters.albama(
 `inbag_rule="single"` mirrors the R code condition
 `inbag.counts[[tree]] == 1`. Use `macroforecast.feature_analysis` to summarize
 the returned weights.
+
+- `stl_decompose` -- Seasonal-Trend decomposition using Loess (STL): trend, seasonal and remainder components (stats::stl / statsmodels STL). Two-sided full-sample.
