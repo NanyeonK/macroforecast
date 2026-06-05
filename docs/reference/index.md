@@ -30,6 +30,7 @@ want to read.
 | Forecast Pipeline | [Window](window.md), [Models](models.md), [Model Ensemble](model_ensemble.md), [Model Selection](model_selection.md), [Forecasting](forecasting.md), [Forecast Analysis](forecast_analysis.md) | Timing, model fits, fit-time model composition, parameter search, runner execution, and forecast diagnostics. |
 | Evaluation and Testing | [Metrics](metrics.md), [Tests](tests.md), [Evaluation](evaluation.md) | Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports. |
 | Explanation and Delivery | [Interpretation](interpretation.md), [Dual Interpretation](interpretation_dual.md), [Output](output.md), [Reporting](reporting.md) | Attribution, observation-based dual interpretation, output generation, artifact writing, paper-table presets, and report/table rendering. |
+| Orchestration | [Pipeline](pipeline.md) | Comprehensive POOS engine: arms, t-code target resolution, relative RMSE + DM/CW/MCS, combinations, deferred interpretation, and a single report. |
 | Custom Hooks | [Custom Extensions](custom/index.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
 
 ## Orientation
@@ -120,4 +121,5 @@ interpretation
 interpretation_dual
 output
 reporting
+pipeline
 ```
