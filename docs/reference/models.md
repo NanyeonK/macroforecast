@@ -4276,3 +4276,5 @@ fit.predict_variance(horizon=12)
 | --- | --- |
 | `lasso_path` | Removed. Use `get_model("lasso")` and `model_selection.select_params()`. |
 | `pcr` | Removed. Use `feature_engineering.feature_spec(pca_components=...)` with a regression model. |
+
+- `var_select_order` -- VAR lag-order selection by AIC/BIC/HQ/FPE (vars::VARselect), via statsmodels `VAR.select_order`.

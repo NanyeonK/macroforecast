@@ -70,6 +70,7 @@ from .timeseries import (
     theta_method,
     unrestricted_midas,
     var,
+    var_select_order,
 )
 from .tree import (
     LGBAPlusRegressor,
@@ -196,5 +197,6 @@ __all__ = [
     "tvp_ridge",
     "unrestricted_midas",
     "var",
+    "var_select_order",
     "xgboost",
 ]

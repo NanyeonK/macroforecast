@@ -491,6 +491,43 @@ def far(
     )
 
 
+def var_select_order(
+    panel: Any,
+    *,
+    maxlags: int | None = None,
+    trend: str = "c",
+) -> dict[str, Any]:
+    """Select the VAR lag order by information criteria (vars::VARselect).
+
+    Fits VAR(p) for p up to ``maxlags`` and reports the lag order minimising each
+    of AIC, BIC (Schwarz), HQ (Hannan-Quinn) and FPE, via statsmodels
+    ``VAR.select_order``. ``trend`` is the deterministic term ('n','c','ct','ctt').
+    Returns the selected order per criterion plus the criterion values per lag.
+    """
+
+    from statsmodels.tsa.api import VAR as _SMVAR
+
+    frame = as_frame(panel)
+    data = frame.select_dtypes("number") if hasattr(frame, "select_dtypes") else frame
+    matrix = np.asarray(data, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[0] < 3:
+        raise ValueError("var_select_order needs a 2-D panel with at least 3 rows")
+    model = _SMVAR(matrix)
+    selected = model.select_order(maxlags=maxlags, trend=trend)
+    return {
+        "selected_orders": {
+            "aic": int(selected.aic),
+            "bic": int(selected.bic),
+            "hqic": int(selected.hqic),
+            "fpe": int(selected.fpe),
+        },
+        "ics": {key: [float(v) for v in vals] for key, vals in selected.ics.items()},
+        "trend": str(trend),
+        "n_vars": int(matrix.shape[1]),
+    }
+
+
+
 class _FAVAR:
     """FAVAR::FAVAR-aligned Bayesian FAVAR sampler."""
 
@@ -2951,4 +2988,5 @@ __all__ = [
     "theta_method",
     "unrestricted_midas",
     "var",
+    "var_select_order",
 ]
