@@ -208,6 +208,7 @@ class _BayesianVAR:
         iter: int = 10000,
         burnin: int = 5000,
         random_state: int = 0,
+        own_lag_prior_mean: float = 0.0,
     ) -> None:
         self.n_lag = max(1, int(n_lag))
         self.target = target
@@ -223,6 +224,7 @@ class _BayesianVAR:
         if self.burnin >= self.iter:
             raise ValueError("burnin must be smaller than iter")
         self.random_state = int(random_state)
+        self.own_lag_prior_mean = float(own_lag_prior_mean)
         self.names_: tuple[str, ...] = ()
         self.target_name_: str | None = None
         self.coef_: np.ndarray | None = None
@@ -273,6 +275,7 @@ class _BayesianVAR:
             n_iter=self.iter,
             burnin=self.burnin,
             random_state=self.random_state,
+            own_lag_prior_mean=self.own_lag_prior_mean,
         )
         self.coef_draws_ = draws["coef_draws"]
         self.sigma_draws_ = draws["sigma_draws"]
@@ -311,14 +314,21 @@ def bvar_minnesota(
     iter: int = 10000,
     burnin: int = 5000,
     random_state: int = 0,
+    own_lag_prior_mean: float = 0.0,
 ) -> ModelFit:
-    """Fit a FAVAR::BVAR-style Bayesian VAR with Minnesota prior variances."""
+    """Fit a FAVAR::BVAR-style Bayesian VAR with Minnesota prior variances.
+
+    ``own_lag_prior_mean`` sets the prior mean of each variable's own first lag
+    (default 0.0; pass 1.0 for the classic Litterman random-walk prior). The panel
+    is demeaned internally, so 0.0 shrinks toward white noise around the mean.
+    """
 
     frame = as_frame(panel)
     estimator = _BayesianVAR(
         n_lag=n_lag,
         target=target,
         prior="minnesota",
+        own_lag_prior_mean=own_lag_prior_mean,
         nu0=nu0,
         s0=s0,
         kappa0=kappa0,
@@ -1974,6 +1984,7 @@ def _favar_bvar_draws(
     n_iter: int,
     burnin: int,
     random_state: int,
+    own_lag_prior_mean: float = 0.0,
 ) -> dict[str, Any]:
     # R FAVAR::BVAR first calls bvartools::gen_var(..., deterministic='none')
     # and then works with y=t(Y), x=t(Z). _var_design(..., intercept=False)
@@ -1989,7 +2000,9 @@ def _favar_bvar_draws(
     if prior == "minnesota":
         if kappa0 is None or kappa1 is None:
             raise ValueError("Minnesota BVAR requires kappa0 and kappa1")
-        a_mu_prior, a_v_i_prior = _favar_minnesota_prior(values, n_lag, kappa0, kappa1)
+        a_mu_prior, a_v_i_prior = _favar_minnesota_prior(
+            values, n_lag, kappa0, kappa1, own_lag_prior_mean=own_lag_prior_mean
+        )
     else:
         a_mu_prior = np.full(n_coef, float(b0), dtype=float)
         a_v_i_prior = np.eye(n_coef, dtype=float) * float(vb0)
@@ -2063,6 +2076,8 @@ def _favar_minnesota_prior(
     n_lag: int,
     kappa0: float,
     kappa1: float,
+    *,
+    own_lag_prior_mean: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray]:
     _, response = _var_design(values, n_lag, intercept=False)
     k = response.shape[1]
@@ -2084,6 +2099,13 @@ def _favar_minnesota_prior(
                         / max(sigma[reg] ** 2, 1e-12)
                     )
     prior_mean = np.zeros(k * n_reg, dtype=float)
+    # Own first-lag prior mean (Litterman uses 1.0 for a random-walk prior; the
+    # default 0.0 shrinks toward white noise, appropriate for demeaned/stationary
+    # or standardized FAVAR inputs). Position of own lag-1 coef of equation eq in
+    # the order="F" flattening of the (k, n_reg) coefficient matrix is eq*k + eq.
+    if own_lag_prior_mean != 0.0:
+        for eq in range(k):
+            prior_mean[eq * k + eq] = float(own_lag_prior_mean)
     prior_precision = np.diag(1.0 / np.maximum(variance.flatten(order="F"), 1e-12))
     return prior_mean, prior_precision
 

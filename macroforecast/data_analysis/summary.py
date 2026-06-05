@@ -246,11 +246,21 @@ def stationarity_tests(
     target: str | None = None,
     targets: Sequence[str] | None = None,
     alpha: float = 0.05,
+    adf_regression: str = "c",
 ) -> dict[str, Any]:
-    """Run ADF, Phillips-Perron, KPSS, or all three on one panel."""
+    """Run ADF, Phillips-Perron, KPSS, or all three on one panel.
+
+    ``adf_regression`` is the ADF deterministic specification passed to
+    statsmodels ``adfuller`` ('n', 'c', 'ct', 'ctt'); the default 'c' (constant
+    only) follows statsmodels. Note ``tseries::adf.test`` instead defaults to 'ct'
+    (constant + linear trend) with a fixed lag, so pass ``adf_regression='ct'`` to
+    reproduce that reference.
+    """
 
     if test not in {"adf", "pp", "kpss", "multi", "none"}:
         raise ValueError("test must be one of 'adf', 'pp', 'kpss', 'multi', or 'none'")
+    if adf_regression not in {"n", "c", "ct", "ctt"}:
+        raise ValueError("adf_regression must be one of 'n', 'c', 'ct', 'ctt'")
     if scope not in {"all", "target_and_predictors", "target_only", "predictors_only"}:
         raise ValueError("scope must be one of 'all', 'target_and_predictors', 'target_only', or 'predictors_only'")
     _validate_alpha(alpha)
@@ -275,7 +285,9 @@ def stationarity_tests(
         column_result: dict[str, Any] = {"n_obs": int(series.size)}
         for selected in selected_tests:
             try:
-                column_result[selected] = _run_stationarity(selected, series, float(alpha))
+                column_result[selected] = _run_stationarity(
+                    selected, series, float(alpha), adf_regression=adf_regression
+                )
             except Exception as exc:  # pragma: no cover - defensive
                 column_result[selected] = {"status": "error", "error": str(exc)}
         results[name] = column_result
@@ -555,15 +567,20 @@ def _attach_metadata(frame: pd.DataFrame | None, metadata: Mapping[str, Any]) ->
         frame.attrs["macroforecast_metadata"] = dict(metadata)
 
 
-def _run_stationarity(name: str, series: pd.Series, alpha: float) -> dict[str, Any]:
+def _run_stationarity(
+    name: str, series: pd.Series, alpha: float, *, adf_regression: str = "c"
+) -> dict[str, Any]:
     if name == "adf":
         from statsmodels.tsa.stattools import adfuller
 
-        stat, pvalue, *_ = adfuller(series.values, autolag="AIC")
+        stat, pvalue, *_ = adfuller(
+            series.values, autolag="AIC", regression=adf_regression
+        )
         return {
             "statistic": float(stat),
             "p_value": float(pvalue),
             "reject_unit_root": bool(pvalue < alpha),
+            "regression": adf_regression,
         }
     if name == "kpss":
         from statsmodels.tsa.stattools import kpss as _kpss
