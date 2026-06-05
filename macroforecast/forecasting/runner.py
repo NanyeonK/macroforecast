@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -703,6 +705,20 @@ def _feature_spec_for_policy(
     )
 
 
+def _warn_change_based_target_default(transform: str) -> None:
+    warnings.warn(
+        "forecast_policy yields a change-based target_transform "
+        f"({transform!r}) by default, which differences the target. If the "
+        "panel has already been transformed to stationarity (e.g. McCracken-Ng "
+        "'official' codes), this double-differences the target. Pass an explicit "
+        "value-based target_transform ('average_value' for direct_average, "
+        "'value' for path_average) to build averages from the one-period "
+        "transformed series.",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
 def _target_transform_for_policy(
     forecast_policy: ForecastPolicy,
     *,
@@ -714,12 +730,14 @@ def _target_transform_for_policy(
             return explicit if explicit.startswith("average_") else f"average_{explicit}"
         if feature_transform and str(feature_transform).startswith("average_"):
             return feature_transform
+        _warn_change_based_target_default("average_change")
         return "average_change"
     if forecast_policy == "path_average":
         if explicit is not None:
             return explicit
         if feature_transform and feature_transform != "level":
             return feature_transform
+        _warn_change_based_target_default("change")
         return "change"
     if forecast_policy == "recursive":
         if explicit is not None:

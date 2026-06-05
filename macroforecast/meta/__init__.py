@@ -11,6 +11,7 @@ from .config import (
     configure,
     get_config,
     get_option,
+    resolve_n_jobs,
     reset_config,
     use_config,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "configure",
     "get_config",
     "get_option",
+    "resolve_n_jobs",
     "MetaConfig",
     "MetadataLevel",
     "NJobs",

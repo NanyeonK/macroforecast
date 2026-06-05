@@ -1056,11 +1056,21 @@ def from_cutoffs(
 
     val_key = normalize_window_name(val_method)
     inner_horizon = horizon if val_horizon is None else val_horizon
+    # For an h-step target, a training row at position p realises its label at
+    # p + h, so the validation train/val boundary must be embargoed by at least
+    # horizon - 1 to keep training labels from realising inside the validation
+    # block. Default the validation embargo to horizon - 1 (the standard h-step
+    # purge) for EVERY validation method when the caller does not set one.
+    effective_val_embargo = (
+        val_embargo
+        if val_embargo is not None
+        else (max(0, int(inner_horizon) - 1) if inner_horizon else 0)
+    )
     if val_key == "last_block":
         val = val_last_block(
             size=val_size,
             ratio=val_ratio,
-            embargo=val_embargo,
+            embargo=effective_val_embargo,
             retune_every=retune_every,
             retune_on_retrain=retune_on_retrain,
             reuse_params=reuse_params,
@@ -1069,7 +1079,7 @@ def from_cutoffs(
         val = val_poos(
             size=val_size,
             ratio=val_ratio,
-            embargo=val_embargo,
+            embargo=effective_val_embargo,
             retune_every=retune_every,
             retune_on_retrain=retune_on_retrain,
             reuse_params=reuse_params,
@@ -1079,7 +1089,7 @@ def from_cutoffs(
             min_train_size=val_min_train_size,
             step=val_step,
             horizon=inner_horizon,
-            embargo=val_embargo,
+            embargo=effective_val_embargo,
             retune_every=retune_every,
             retune_on_retrain=retune_on_retrain,
             reuse_params=reuse_params,
@@ -1088,7 +1098,7 @@ def from_cutoffs(
         val = val_rolling_blocks(
             n_blocks=val_n_splits,
             block_size=val_size,
-            embargo=val_embargo,
+            embargo=effective_val_embargo,
             retune_every=retune_every,
             retune_on_retrain=retune_on_retrain,
             reuse_params=reuse_params,
@@ -1096,7 +1106,7 @@ def from_cutoffs(
     else:
         val = val_blocked_kfold(
             n_splits=val_n_splits,
-            embargo=val_embargo,
+            embargo=effective_val_embargo,
             retune_every=retune_every,
             retune_on_retrain=retune_on_retrain,
             reuse_params=reuse_params,

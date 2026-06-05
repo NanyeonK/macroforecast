@@ -103,6 +103,21 @@ def get_option(name: str) -> Any:
         return _CONFIG[name]
 
 
+def resolve_n_jobs() -> int:
+    """Return the configured worker count, resolving ``'auto'`` to the CPU count.
+
+    This is the single resolution point so that ``meta.configure(n_jobs=...)``
+    actually controls parallelism in callers that opt in (e.g. tree ensembles).
+    """
+
+    import os
+
+    value = get_option("n_jobs")
+    if value == "auto":
+        return os.cpu_count() or 1
+    return int(value)
+
+
 def reset_config() -> MetaConfig:
     """Reset package-wide execution defaults to their initial values."""
 

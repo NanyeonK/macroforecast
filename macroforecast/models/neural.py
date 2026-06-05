@@ -688,7 +688,6 @@ class _TorchHemisphereNNRegressor:
         y_train_all = torch.tensor(y_values[train_idx], dtype=torch.float32, device=device)
         x_val = torch.tensor(x_scaled[val_idx], dtype=torch.float32, device=device)
         y_val = torch.tensor(y_values[val_idx], dtype=torch.float32, device=device)
-        x_all = torch.tensor(x_scaled, dtype=torch.float32, device=device)
         target_variance_tensor = torch.tensor(
             target_variance_mean,
             dtype=torch.float32,
@@ -720,7 +719,12 @@ class _TorchHemisphereNNRegressor:
                 optimizer.zero_grad()
                 mean, variance = model(x_bag)
                 nll = ((y_bag - mean) ** 2 / variance + torch.log(variance)).mean()
-                _, full_variance = model(x_all)
+                # Anchor the variance penalty on the training subsample only.
+                # Using x_all (the whole sample, including the chronological
+                # validation block used for early stopping) let validation rows
+                # feed the training gradient and weakened the early-stopping
+                # independence (mild validation leakage).
+                _, full_variance = model(x_bag)
                 scale = max(self.target_variance_**2, 1e-12)
                 penalty = (full_variance.mean() - target_variance_tensor) ** 2 / scale
                 loss = nll + self.variance_penalty * penalty

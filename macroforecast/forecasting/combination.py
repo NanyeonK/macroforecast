@@ -115,24 +115,39 @@ def combine_inverse_mspe(
     *,
     discount: float = 1.0,
     min_weight: float = 1e-12,
+    horizon: int = 1,
 ) -> pd.Series:
-    """Combine forecasts with inverse discounted MSPE weights."""
+    """Combine forecasts with inverse discounted MSPE weights.
+
+    For an h-step forecast the weights at a target date are decided at the
+    origin (h target-date steps earlier), so only forecast errors realised on or
+    before that origin are observable. The error history is therefore lagged by
+    ``horizon`` target-date rows (a 1-row lag for one-step forecasts), preventing
+    the use of not-yet-realised errors for multi-step combinations.
+    """
 
     frame = _forecast_frame(forecasts)
     target = pd.Series(y_true).reindex(frame.index).astype(float)
     if not 0 < discount <= 1:
         raise ValueError("discount must satisfy 0 < discount <= 1")
+    lag = max(1, int(horizon))
     errors = frame.sub(target, axis=0) ** 2
     weights = pd.DataFrame(index=frame.index, columns=frame.columns, dtype=float)
     running = pd.Series(0.0, index=frame.columns, dtype=float)
+    has_history = False
     for step, date in enumerate(frame.index):
-        if step == 0 or float(running.sum()) <= 0:
+        src = step - lag
+        if src >= 0:
+            current = errors.iloc[src]
+            running = discount * running + current.fillna(
+                running.mean() if running.notna().any() else 0.0
+            )
+            has_history = True
+        if not has_history or float(running.sum()) <= 0:
             weights.loc[date, :] = 1.0 / len(frame.columns)
         else:
             inv = 1.0 / running.clip(lower=min_weight)
             weights.loc[date, :] = inv / inv.sum()
-        current = errors.loc[date]
-        running = discount * running + current.fillna(running.mean() if running.notna().any() else 0.0)
     combined = (frame * weights).sum(axis=1)
     return combined.rename("combined")
 
@@ -140,15 +155,21 @@ def combine_inverse_mspe(
 combine_dmspe = combine_inverse_mspe
 
 
-def combine_best_n(forecasts: Any, y_true: Any, *, n: int = 3) -> pd.Series:
-    """Average the historically best ``n`` models by MSPE."""
+def combine_best_n(forecasts: Any, y_true: Any, *, n: int = 3, horizon: int = 1) -> pd.Series:
+    """Average the historically best ``n`` models by MSPE.
+
+    The ranking at each target date uses only errors observable at the forecast
+    origin, so the expanding MSPE is lagged by ``horizon`` target-date rows
+    (a 1-row lag for one-step forecasts).
+    """
 
     frame = _forecast_frame(forecasts)
     target = pd.Series(y_true).reindex(frame.index).astype(float)
     n_value = int(n)
     if n_value < 1:
         raise ValueError("n must be at least 1")
-    mspe = frame.sub(target, axis=0).pow(2).expanding(min_periods=1).mean().shift(1)
+    lag = max(1, int(horizon))
+    mspe = frame.sub(target, axis=0).pow(2).expanding(min_periods=1).mean().shift(lag)
     output = pd.Series(index=frame.index, dtype=float, name="combined")
     for date in frame.index:
         historical = mspe.loc[date]
@@ -280,6 +301,11 @@ def _apply_combination_method(
         return combine_trimmed_mean(forecasts, **params)
     if method == "winsorized_mean":
         return combine_winsorized_mean(forecasts, **params)
+    if method in {"inverse_mspe", "dmspe", "best_n"}:
+        if "horizon" in (forecasts.index.names or []):
+            levels = forecasts.index.get_level_values("horizon")
+            if len(levels):
+                params.setdefault("horizon", int(levels[0]))
     if method in {"inverse_mspe", "dmspe"}:
         return combine_inverse_mspe(forecasts, actual, **params)
     if method == "best_n":

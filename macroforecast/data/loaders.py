@@ -707,6 +707,14 @@ def _validate_vintage(vintage: str) -> None:
 def _version_request(dataset: str, vintage: str | None = None) -> _VersionRequest:
     dataset_id = _dataset_id(dataset)
     if vintage is None:
+        warnings.warn(
+            "load_fred_*(vintage=None) resolves to the latest revised data "
+            "(current.csv). For a pseudo-out-of-sample replication, pin a "
+            "historical vintage (e.g. vintage='2018-01') so revised values are "
+            "not used as if they had been available in real time.",
+            UserWarning,
+            stacklevel=3,
+        )
         return _VersionRequest(dataset=dataset_id, mode="current", vintage=None)
     _validate_vintage(vintage)
     return _VersionRequest(dataset=dataset_id, mode="vintage", vintage=vintage)

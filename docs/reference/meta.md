@@ -20,6 +20,7 @@ global settings.
 | `configure` | Update one or more global execution settings. |
 | `get_config` | Return the full active configuration. |
 | `get_option` | Return one active configuration value. |
+| `resolve_n_jobs` | Resolve the configured worker count (`'auto'` resolves to the CPU count). |
 | `reset_config` | Restore package defaults. |
 | `use_config` | Temporarily override settings inside a `with` block. |
 

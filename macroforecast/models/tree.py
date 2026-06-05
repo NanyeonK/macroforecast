@@ -50,6 +50,15 @@ def decision_tree(
     )
 
 
+def _resolved_n_jobs(n_jobs: int | None) -> int:
+    """Resolve an unset n_jobs to the package-wide meta default."""
+    if n_jobs is not None:
+        return int(n_jobs)
+    from macroforecast.meta import resolve_n_jobs
+
+    return resolve_n_jobs()
+
+
 def random_forest(
     X: Any,
     y: Any | None = None,
@@ -58,7 +67,7 @@ def random_forest(
     max_depth: int | None = None,
     min_samples_leaf: int = 1,
     random_state: int = 0,
-    n_jobs: int | None = 1,
+    n_jobs: int | None = None,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit a random forest regressor."""
@@ -72,7 +81,7 @@ def random_forest(
         "max_depth": max_depth,
         "min_samples_leaf": int(min_samples_leaf),
         "random_state": int(random_state),
-        "n_jobs": n_jobs,
+        "n_jobs": _resolved_n_jobs(n_jobs),
         "implementation_note": (
             "Thin sklearn.ensemble.RandomForestRegressor wrapper; macroforecast "
             "owns the pandas X/y contract, ModelFit metadata, and diagnostics."
@@ -99,7 +108,7 @@ def extra_trees(
     max_depth: int | None = None,
     min_samples_leaf: int = 1,
     random_state: int = 0,
-    n_jobs: int | None = 1,
+    n_jobs: int | None = None,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit an extremely randomized trees regressor."""
@@ -113,7 +122,7 @@ def extra_trees(
         "max_depth": max_depth,
         "min_samples_leaf": int(min_samples_leaf),
         "random_state": int(random_state),
-        "n_jobs": n_jobs,
+        "n_jobs": _resolved_n_jobs(n_jobs),
         "implementation_note": (
             "Thin sklearn.ensemble.ExtraTreesRegressor wrapper; macroforecast owns "
             "the pandas X/y contract, ModelFit metadata, and diagnostics."
