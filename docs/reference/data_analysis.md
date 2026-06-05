@@ -576,3 +576,5 @@ step metadata.
 
 - `acf` -- sample autocorrelation function with confidence bands (stats::acf / forecast::Acf).
 - `pacf` -- sample partial autocorrelation function with confidence bands (stats::pacf / forecast::Pacf).
+
+- `johansen_cointegration` -- Johansen cointegration test (trace + max-eigenvalue, rank selection, cointegrating vectors; urca::ca.jo).

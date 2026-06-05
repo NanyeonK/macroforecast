@@ -365,6 +365,65 @@ def kpss_test(
     }
 
 
+def johansen_cointegration(
+    panel: Any,
+    *,
+    det_order: int = 0,
+    k_ar_diff: int = 1,
+    significance: str = "95",
+) -> dict[str, Any]:
+    """Johansen cointegration test (R urca::ca.jo / statsmodels coint_johansen).
+
+    Tests the cointegration rank of a multivariate system via the trace and
+    maximum-eigenvalue statistics. ``det_order`` is the deterministic term
+    (-1 none, 0 constant, 1 linear trend); ``k_ar_diff`` the number of lagged
+    differences in the VECM. Returns, for each null rank r, the trace and
+    max-eigenvalue statistics with their 90/95/99% critical values, the selected
+    cointegration rank under each statistic (sequential test at ``significance``),
+    the eigenvalues, and the estimated cointegrating vectors.
+    """
+
+    from statsmodels.tsa.vector_ar.vecm import coint_johansen
+
+    frame = pd.DataFrame(panel)
+    frame = frame.select_dtypes("number") if hasattr(frame, "select_dtypes") else frame
+    names = [str(c) for c in frame.columns]
+    k = len(names)
+    res = coint_johansen(np.asarray(frame, dtype=float), int(det_order), int(k_ar_diff))
+    col = {"90": 0, "95": 1, "99": 2}.get(str(significance), 1)
+
+    def _rank(stats: np.ndarray, crit: np.ndarray) -> int:
+        rank = 0
+        for r in range(len(stats)):
+            if stats[r] > crit[r, col]:
+                rank = r + 1
+            else:
+                break
+        return rank
+
+    def _rows(stats: np.ndarray, crit: np.ndarray) -> list[dict[str, Any]]:
+        return [
+            {"rank_null": int(r), "statistic": float(stats[r]),
+             "crit_90": float(crit[r, 0]), "crit_95": float(crit[r, 1]), "crit_99": float(crit[r, 2]),
+             "reject": bool(stats[r] > crit[r, col])}
+            for r in range(len(stats))
+        ]
+
+    rank_trace = _rank(res.lr1, res.cvt)
+    return {
+        "n_vars": int(k),
+        "names": names,
+        "det_order": int(det_order),
+        "k_ar_diff": int(k_ar_diff),
+        "significance": str(significance),
+        "trace": _rows(res.lr1, res.cvt),
+        "max_eigen": _rows(res.lr2, res.cvm),
+        "eigenvalues": [float(v) for v in res.eig],
+        "cointegration_rank": {"trace": rank_trace, "max_eigen": _rank(res.lr2, res.cvm)},
+        "cointegrating_vectors": np.asarray(res.evec)[:, :max(rank_trace, 1)].tolist(),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -860,6 +919,7 @@ __all__ = [
     "adf_test",
     "kpss_test",
     "acf",
+    "johansen_cointegration",
     "pacf",
     "ndiffs",
     "nsdiffs",
