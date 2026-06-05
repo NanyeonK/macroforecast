@@ -708,6 +708,15 @@ Table 2 cell is callable with the package and creates a first comparison table.
 For the full paper run, replace `annual_december_origins()` with every monthly
 origin from `1980-01` through `2017-12`, and keep the same package calls.
 
+Long-horizon boundary:
+: the package window uses origin-date cutoffs. With monthly `step=1`, h=24
+  forecasts overlap month by month, but a scored forecast at origin `t` still
+  needs the realized target at `t + 24`. For a FRED-MD vintage ending in
+  `2017-12`, the last h=24 origin that can be scored is `2015-12`. Tail blocks
+  such as calendar year `2016` or `2017` should be skipped in a scored
+  replication run unless a later vintage supplies the required realized target
+  dates.
+
 ### Cell 6: Evaluate Against the FM Benchmark
 
 ```python

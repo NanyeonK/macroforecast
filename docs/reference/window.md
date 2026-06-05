@@ -640,6 +640,21 @@ Input:
 | `drop_incomplete` | Drop origins whose full horizon exceeds the available index. |
 | `exclude` | Sequence of `(start, end)` windows removed from the test mask. |
 
+`first_origin` and `last_origin` are forecast-origin labels, not realized
+target-date labels. With a monthly index and `step=1`, the test origin moves one
+row at a time, so h-step forecasts overlap in the usual macro-forecasting
+sense. The horizon still controls target availability: an origin `t` is
+evaluable only when `t + horizon` is in the supplied index. If the panel ends at
+`2017-12` and `horizon=24`, the last evaluable origin is `2015-12`; origins in
+`2016` and `2017` have no realized 24-month-ahead actual.
+
+With `drop_incomplete=True`, those tail origins are removed before the runner
+fits/evaluates them. A calendar block can therefore be empty for long horizons
+even when `step=1`; this is normal for evaluation runs and prevents RMSE/MAE
+from using forecasts without realized actuals. For future-only forecasting,
+build a forecast-only/scenario panel separately instead of scoring those tail
+origins.
+
 ### AlignmentWindow
 
 ```python
