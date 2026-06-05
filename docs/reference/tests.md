@@ -1038,3 +1038,6 @@ Source-alignment notes:
 | Durbin-Watson | `lmtest/R/dwtest.R::dwtest`: statistic `sum(diff(residuals)^2) / sum(residuals^2)`. P-values are omitted because R's exact/asymptotic p-value depends on the original regression design matrix. |
 
 - `jarque_bera_test` -- Jarque-Bera normality test (single series, chi2 df=2; tseries::jarque.bera.test convention).
+
+- `granger_causality` -- Granger causality test in a VAR (vars::causality; F or Wald).
+- `instantaneous_causality` -- instantaneous (contemporaneous) causality test in a VAR.

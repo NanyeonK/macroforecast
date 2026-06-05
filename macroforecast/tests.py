@@ -2785,6 +2785,91 @@ def jarque_bera_test(series: Any, *, alpha: float = 0.05) -> TestResult:
     )
 
 
+def granger_causality(
+    panel: Any,
+    *,
+    caused: str,
+    causing: str | Sequence[str],
+    n_lag: int = 1,
+    kind: str = "f",
+    trend: str = "c",
+    alpha: float = 0.05,
+) -> TestResult:
+    """Granger causality test in a VAR (R vars::causality / statsmodels).
+
+    Tests whether ``causing`` Granger-causes ``caused`` in a VAR(``n_lag``) fit on
+    ``panel``. ``kind='f'`` uses the F statistic, ``'wald'`` the chi-squared Wald.
+    The decision rejects non-causality (i.e. ``causing`` does Granger-cause
+    ``caused``) when p < alpha.
+    """
+
+    from statsmodels.tsa.api import VAR
+
+    frame = pd.DataFrame(panel)
+    frame = frame.select_dtypes("number") if hasattr(frame, "select_dtypes") else frame
+    causing_list = [causing] if isinstance(causing, str) else list(causing)
+    result = VAR(np.asarray(frame, dtype=float)).fit(maxlags=int(n_lag), trend=trend)
+    names = list(frame.columns)
+    caused_idx = names.index(caused)
+    causing_idx = [names.index(c) for c in causing_list]
+    gc = result.test_causality(caused_idx, causing_idx, kind=kind)
+    return TestResult(
+        statistic=float(gc.test_statistic),
+        p_value=float(gc.pvalue),
+        decision=bool(gc.pvalue < alpha),
+        alternative="granger_causes",
+        correction_policy=None,
+        n_obs=int(frame.shape[0]),
+        metadata={
+            "test": "granger_causality",
+            "caused": str(caused),
+            "causing": [str(c) for c in causing_list],
+            "kind": kind,
+            "n_lag": int(n_lag),
+            "df": [int(v) for v in np.atleast_1d(gc.df)],
+        },
+    )
+
+
+def instantaneous_causality(
+    panel: Any,
+    *,
+    caused: str,
+    causing: str | Sequence[str] | None = None,
+    n_lag: int = 1,
+    trend: str = "c",
+    alpha: float = 0.05,
+) -> TestResult:
+    """Instantaneous (contemporaneous) causality test in a VAR (vars::causality).
+
+    Tests for contemporaneous correlation between the residuals of ``caused`` and
+    the other variables (or ``causing`` if given). Rejects no-instantaneous-
+    causality when p < alpha.
+    """
+
+    from statsmodels.tsa.api import VAR
+
+    frame = pd.DataFrame(panel)
+    frame = frame.select_dtypes("number") if hasattr(frame, "select_dtypes") else frame
+    result = VAR(np.asarray(frame, dtype=float)).fit(maxlags=int(n_lag), trend=trend)
+    names = list(frame.columns)
+    target = names.index(caused)
+    if causing is None:
+        ic = result.test_inst_causality(target)
+    else:
+        causing_list = [causing] if isinstance(causing, str) else list(causing)
+        ic = result.test_inst_causality(target, [names.index(c) for c in causing_list])
+    return TestResult(
+        statistic=float(ic.test_statistic),
+        p_value=float(ic.pvalue),
+        decision=bool(ic.pvalue < alpha),
+        alternative="instantaneous_causality",
+        correction_policy=None,
+        n_obs=int(frame.shape[0]),
+        metadata={"test": "instantaneous_causality", "caused": str(caused), "n_lag": int(n_lag)},
+    )
+
+
 def _jarque_bera_from_r_moments(values: np.ndarray) -> tuple[float | None, float | None]:
     from scipy import stats as _stats
 
@@ -3742,6 +3827,8 @@ __all__ = [
     "directional_accuracy_test",
     "dm_test",
     "jarque_bera_test",
+    "granger_causality",
+    "instantaneous_causality",
     "dmp_test",
     "dynamic_quantile_test",
     "equal_predictive_tests",
