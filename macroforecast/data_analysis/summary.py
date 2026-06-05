@@ -842,6 +842,49 @@ def phillips_ouliaris(
     }
 
 
+def variance_ratio(
+    series: Any,
+    *,
+    lags: int = 2,
+    trend: str = "c",
+    robust: bool = True,
+    overlap: bool = True,
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Lo-MacKinlay variance-ratio test of the random-walk null.
+
+    R analogue of ``vrtest``/``DescTools::VarianceRatioTest`` (arch
+    ``unitroot.VarianceRatio``). Under a random walk the variance of ``lags``-period
+    returns grows linearly, so the variance ratio is one; values below one signal
+    mean reversion and above one signal momentum/positive autocorrelation.
+    ``lags`` is the aggregation horizon ``q``; ``robust=True`` uses the
+    heteroskedasticity-robust standard error. Returns the variance ratio, the
+    standardised statistic, the ``p`` value, and the random-walk rejection flag at
+    ``alpha`` (rejection means the series is NOT a random walk).
+    """
+
+    from arch.unitroot import VarianceRatio
+
+    if trend not in {"n", "c"}:
+        raise ValueError("trend must be 'n' or 'c'")
+    if int(lags) < 2:
+        raise ValueError("lags (aggregation horizon q) must be at least 2")
+    values = pd.Series(series).dropna().astype(float).to_numpy()
+    test = VarianceRatio(
+        values, lags=int(lags), trend=trend, robust=bool(robust), overlap=bool(overlap)
+    )
+    return {
+        "test": "variance_ratio",
+        "variance_ratio": float(test.vr),
+        "statistic": float(test.stat),
+        "p_value": float(test.pvalue),
+        "lags": int(lags),
+        "n_obs": int(values.size),
+        "robust": bool(robust),
+        "reject_random_walk": bool(test.pvalue < alpha),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -1424,6 +1467,7 @@ __all__ = [
     "johansen_cointegration",
     "engle_granger",
     "phillips_ouliaris",
+    "variance_ratio",
     "newey_west",
     "vcov_hc",
     "breusch_pagan_test",
