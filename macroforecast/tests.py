@@ -2764,6 +2764,27 @@ def _berkowitz_density_test(values: np.ndarray, *, lags: int, alpha: float) -> d
     return out
 
 
+def jarque_bera_test(series: Any, *, alpha: float = 0.05) -> TestResult:
+    """Jarque-Bera test of normality for a single series.
+
+    Uses population (1/n) skewness and excess-kurtosis moments, JB ~ chi2(2),
+    matching ``tseries::jarque.bera.test``. The decision rejects normality when
+    p < alpha.
+    """
+
+    values = pd.Series(series).dropna().astype(float).to_numpy()
+    stat, p_value = _jarque_bera_from_r_moments(values)
+    return TestResult(
+        statistic=None if stat is None else float(stat),
+        p_value=None if p_value is None else float(p_value),
+        decision=bool(p_value is not None and p_value < alpha),
+        alternative="not_normal",
+        correction_policy=None,
+        n_obs=int(len(values)),
+        metadata={"test": "jarque_bera", "df": 2, "reference": "tseries::jarque.bera.test"},
+    )
+
+
 def _jarque_bera_from_r_moments(values: np.ndarray) -> tuple[float | None, float | None]:
     from scipy import stats as _stats
 
@@ -3720,6 +3741,7 @@ __all__ = [
     "density_interval_tests",
     "directional_accuracy_test",
     "dm_test",
+    "jarque_bera_test",
     "dmp_test",
     "dynamic_quantile_test",
     "equal_predictive_tests",

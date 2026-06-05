@@ -1036,3 +1036,5 @@ Source-alignment notes:
 | Jarque-Bera | `tseries/R/test.R::jarque.bera.test`: population central moments, `n * skewness^2 / 6 + n * (kurtosis - 3)^2 / 24`, chi-squared df `2`. |
 | Breusch-Godfrey | `lmtest/R/bgtest.R::bgtest`: R takes a fitted model or formula. `macroforecast` takes residuals and optional `exog`, then applies the same Chisq LM auxiliary formula with fill-zero lagged residual columns under that residual-series contract. |
 | Durbin-Watson | `lmtest/R/dwtest.R::dwtest`: statistic `sum(diff(residuals)^2) / sum(residuals^2)`. P-values are omitted because R's exact/asymptotic p-value depends on the original regression design matrix. |
+
+- `jarque_bera_test` -- Jarque-Bera normality test (single series, chi2 df=2; tseries::jarque.bera.test convention).
