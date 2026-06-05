@@ -78,6 +78,7 @@ from .timeseries import (
     var,
     var_select_order,
     var_roots,
+    var_restrict,
 )
 from .tree import (
     LGBAPlusRegressor,
@@ -226,5 +227,6 @@ __all__ = [
     "var",
     "var_select_order",
     "var_roots",
+    "var_restrict",
     "xgboost",
 ]

@@ -363,6 +363,96 @@ class _VAR:
         return np.asarray(forecast[:, target_index], dtype=float)[: len(X)]
 
 
+def var_restrict(
+    panel: Any,
+    *,
+    n_lag: int = 1,
+    type: str = "const",
+    season: int | None = None,
+    threshold: float = 2.0,
+) -> dict[str, Any]:
+    """Restricted VAR by sequential elimination of regressors (R vars::restrict).
+
+    Fits a reduced-form VAR and, equation by equation, removes the regressor with
+    the smallest absolute ``t`` statistic whenever it falls below ``threshold``,
+    re-estimating after each removal (``method="ser"`` in ``vars::restrict``). This
+    yields a parsimonious VAR with zero restrictions on the insignificant
+    coefficients. Returns, per equation, the retained coefficients (and zeros for
+    the eliminated terms), their ``t`` statistics, the names of the eliminated
+    regressors, and a ``K x m`` restriction matrix (1 = retained, 0 = restricted).
+    """
+
+    frame = as_frame(panel).astype(float)
+    if frame.isna().any().any():
+        raise ValueError("var_restrict does not allow missing values")
+    if frame.shape[1] < 2:
+        raise ValueError("VAR panel must contain at least two variables")
+    names = tuple(str(c) for c in frame.columns)
+    vtype = _normalize_vars_type(type)
+    n_lag = max(1, int(n_lag))
+    values = frame.to_numpy(dtype=float)
+    if values.shape[0] <= n_lag + 1:
+        raise ValueError("not enough observations for the requested lag order")
+
+    yend, rhs, rhs_names = _vars_rhs(values, names, n_lag, type=vtype, season=season)
+    m = rhs.shape[1]
+    n_eq = yend.shape[1]
+
+    def _ols_t(y_col: np.ndarray, design: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        xtx_inv = np.linalg.inv(design.T @ design)
+        beta = xtx_inv @ (design.T @ y_col)
+        resid = y_col - design @ beta
+        dof = max(1, design.shape[0] - design.shape[1])
+        sigma2 = float(resid @ resid) / dof
+        se = np.sqrt(np.maximum(np.diag(xtx_inv) * sigma2, 0.0))
+        tvals = np.divide(beta, se, out=np.full_like(beta, np.inf), where=se > 0)
+        return beta, tvals
+
+    equations: list[dict[str, Any]] = []
+    restriction = np.ones((n_eq, m), dtype=int)
+    for j in range(n_eq):
+        y_col = yend[:, j]
+        active = list(range(m))
+        while len(active) > 1:
+            design = rhs[:, active]
+            beta, tvals = _ols_t(y_col, design)
+            abs_t = np.abs(tvals)
+            worst = int(np.argmin(abs_t))
+            if abs_t[worst] < float(threshold):
+                del active[worst]
+            else:
+                break
+        design = rhs[:, active]
+        beta, tvals = _ols_t(y_col, design)
+        coef_full = np.zeros(m, dtype=float)
+        t_full = np.zeros(m, dtype=float)
+        for pos, idx in enumerate(active):
+            coef_full[idx] = float(beta[pos])
+            t_full[idx] = float(tvals[pos])
+        eliminated = [rhs_names[i] for i in range(m) if i not in active]
+        for i in range(m):
+            restriction[j, i] = 1 if i in active else 0
+        equations.append({
+            "equation": names[j],
+            "coefficients": {rhs_names[i]: float(coef_full[i]) for i in range(m)},
+            "t_values": {rhs_names[i]: float(t_full[i]) for i in range(m)},
+            "retained": [rhs_names[i] for i in active],
+            "eliminated": eliminated,
+        })
+
+    return {
+        "n_vars": int(n_eq),
+        "n_lag": int(n_lag),
+        "type": vtype,
+        "threshold": float(threshold),
+        "names": list(names),
+        "rhs_names": list(rhs_names),
+        "equations": equations,
+        "restriction_matrix": restriction.tolist(),
+        "n_restricted": int((restriction == 0).sum()),
+    }
+
+
 def var(
     panel: Any,
     *,
@@ -3377,6 +3467,7 @@ def _midas_weights(
 
 
 __all__ = [
+    "var_restrict",
     "stlf",
     "random_walk_drift",
     "ar",

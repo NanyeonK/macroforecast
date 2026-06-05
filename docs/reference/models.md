@@ -4335,6 +4335,7 @@ fit.predict_variance(horizon=12)
 - `garch_roll` -- rolling one-step volatility / VaR backtest with periodic refit and coverage summary (rugarch::ugarchroll).
 
 - `var_roots` -- VAR stability check: moduli of the companion-matrix eigenvalues, spectral radius, and is_stable (vars::roots).
+- `var_restrict` -- restricted VAR by sequential elimination of insignificant regressors with restriction matrix (vars::restrict).
 
 - `arima` -- (seasonal) ARIMA model via statsmodels, order (p,d,q) and seasonal_order (P,D,Q,m).
 - `auto_arima` -- automatic (seasonal) ARIMA order selection (forecast::auto.arima): KPSS-based d, AICc grid over (p,q[,P,Q]).
