@@ -133,6 +133,7 @@ def run(
     | None = None,
     save_models: bool = True,
     model_store: str | Path = "trained_model",
+    preprocessing_cache: dict[Any, FittedPreprocessor] | None = None,
 ) -> ForecastResult:
     """Run a windowed macro forecasting experiment.
 
@@ -341,6 +342,9 @@ def run(
                 fitted_preprocessing=None
                 if preprocessing_updated
                 else fitted_preprocessing_cache,
+                preprocessing_cache=preprocessing_cache,
+                cache_key=(item.get("origin_pos"), tuple(horizon_values))
+                if preprocessing_cache is not None else None,
             )
             if preprocessing_updated:
                 fitted_preprocessing_cache = prepared.fitted_preprocessing
@@ -1769,9 +1773,23 @@ def _prepare_origin_panel(
     item: dict[str, Any],
     include_target_pos: bool = True,
     fitted_preprocessing: FittedPreprocessor | None = None,
+    preprocessing_cache: dict[Any, FittedPreprocessor] | None = None,
+    cache_key: Any | None = None,
 ) -> _PreparedStage:
     if preprocessing is None or preprocessing_policy is None:
         return _PreparedStage(panel=panel, fitted_preprocessing=None, metadata=None)
+    # Cross-arm reuse: a shared cache holds the per-origin FittedPreprocessor.
+    # Arms of the same target produce an identical fit input at each origin (the
+    # fit depends on target+horizons, not on the arm's predictors/model), so the
+    # first arm fits and the rest reuse -- removing the per-arm preprocessing
+    # redundancy without changing the result.
+    if (
+        fitted_preprocessing is None
+        and preprocessing_cache is not None
+        and cache_key is not None
+        and cache_key in preprocessing_cache
+    ):
+        fitted_preprocessing = preprocessing_cache[cache_key]
     if fitted_preprocessing is None:
         fit_panel = stage_panel(panel, item, preprocessing_policy)
         fit_policy = (
@@ -1783,6 +1801,8 @@ def _prepare_origin_panel(
             _preprocessor_fit_input(fit_panel, features),
             policy=fit_policy,
         )
+        if preprocessing_cache is not None and cache_key is not None:
+            preprocessing_cache[cache_key] = fitted
     else:
         fitted = fitted_preprocessing
     apply_labels = _origin_apply_labels(

@@ -16,7 +16,7 @@ def _contender_label(arm: Arm, model_value: Any) -> str:
 
 
 def _run_one_arm_target(
-    spec: PipelineSpec, arm: Arm, target: ResolvedTarget
+    spec: PipelineSpec, arm: Arm, target: ResolvedTarget, preprocessing_cache=None
 ) -> pd.DataFrame:
     """Run a single arm for a single resolved target across all horizons."""
     import dataclasses as _dc
@@ -53,6 +53,7 @@ def _run_one_arm_target(
         target_transform=target.transform,
         save_models=spec.save_models,
         model_store=spec.model_store,
+        preprocessing_cache=preprocessing_cache,
     )
     frame = result.to_frame().copy()
     frame["arm"] = arm.name
@@ -75,9 +76,15 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     (forecast_policy, target_transform).
     """
     frames: list[pd.DataFrame] = []
-    for arm in spec.arms:
-        for target in spec.targets:
-            frame = _run_one_arm_target(spec, arm, target)
+    # One shared preprocessing cache per target: arms of the same target reuse the
+    # per-origin FittedPreprocessor (spec-level preprocessing only -- arm overrides
+    # opt out by getting their own cache). Removes the per-arm EM redundancy.
+    target_caches = {t.name: {} for t in spec.targets} if spec.preprocessing is not None else {}
+    for target in spec.targets:
+        cache = target_caches.get(target.name)
+        for arm in spec.arms:
+            arm_cache = cache if arm.preprocessing is None else None
+            frame = _run_one_arm_target(spec, arm, target, preprocessing_cache=arm_cache)
             if not frame.empty:
                 frames.append(frame)
     if not frames:
