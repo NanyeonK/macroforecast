@@ -23,8 +23,9 @@ def min_variance_weights(errors: np.ndarray) -> np.ndarray:
     n_models = e.shape[1]
     if e.shape[0] < 2:
         return np.full(n_models, 1.0 / n_models)
-    sigma = np.cov(e, rowvar=False)
-    sigma = np.atleast_2d(sigma)
+    # Uncentered error second moment E[e e'] (MSE matrix): handles forecast bias
+    # (a biased model is downweighted) and is consistent with eigenvector_weights.
+    sigma = np.atleast_2d((e.T @ e) / e.shape[0])
     ones = np.ones(n_models)
     try:
         inv_ones = np.linalg.solve(sigma + 1e-12 * np.eye(n_models), ones)
@@ -49,17 +50,21 @@ def regression_weights(
     y = np.asarray(y, dtype=float).ravel()
     n_models = F.shape[1]
     if sum_to_one:
-        # Constrained OLS: min ||y - F w||^2 s.t. 1'w = 1, closed form via the
-        # equality-constrained least squares normal equations.
-        G = F.T @ F
-        try:
-            g_inv = np.linalg.inv(G + 1e-12 * np.eye(n_models))
-        except np.linalg.LinAlgError:
-            return np.full(n_models, 1.0 / n_models), 0.0
-        ones = np.ones(n_models)
+        # Equality-constrained OLS: min ||y - F w||^2 s.t. 1'w = 1. Solve the
+        # bordered KKT system so the constraint row holds EXACTLY even when F'F is
+        # rank-deficient (collinear forecasts).
+        G = F.T @ F + 1e-10 * np.eye(n_models)
         b = F.T @ y
-        lam = (float(ones @ g_inv @ b) - 1.0) / float(ones @ g_inv @ ones)
-        w = g_inv @ (b - lam * ones)
+        ones = np.ones(n_models)
+        kkt = np.block([[G, ones[:, None]], [ones[None, :], np.zeros((1, 1))]])
+        rhs = np.concatenate([b, [1.0]])
+        try:
+            solution = np.linalg.solve(kkt, rhs)
+        except np.linalg.LinAlgError:
+            solution = np.linalg.lstsq(kkt, rhs, rcond=None)[0]
+        w = solution[:n_models]
+        if not np.all(np.isfinite(w)):
+            return np.full(n_models, 1.0 / n_models), 0.0
         return w, 0.0
     design = np.column_stack([np.ones(len(F)), F]) if intercept else F
     coef, *_ = np.linalg.lstsq(design, y, rcond=None)
@@ -94,11 +99,19 @@ def constrained_ls_weights(F: np.ndarray, y: np.ndarray) -> np.ndarray:
         objective, w0, jac=gradient, bounds=bounds, constraints=constraints,
         method="SLSQP", options={"maxiter": 200, "ftol": 1e-10},
     )
-    if not result.success or not np.all(np.isfinite(result.x)):
-        return w0
-    w = np.clip(result.x, 0.0, None)
-    total = float(w.sum())
-    return w / total if total > 0 else w0
+    # SLSQP often reports success=False (status 8) on a CORRECT boundary/vertex
+    # solution when the simplex constraint binds. Accept any finite, feasible
+    # candidate that does not increase the objective over equal weights, rather
+    # than discarding a valid optimum.
+    x = np.asarray(result.x, dtype=float)
+    if np.all(np.isfinite(x)):
+        w = np.clip(x, 0.0, None)
+        total = float(w.sum())
+        if total > 0:
+            w = w / total
+            if objective(w) <= objective(w0) + 1e-9:
+                return w
+    return w0
 
 
 def eigenvector_weights(errors: np.ndarray) -> np.ndarray:
@@ -118,7 +131,9 @@ def eigenvector_weights(errors: np.ndarray) -> np.ndarray:
         return np.full(n_models, 1.0 / n_models)
     v = vectors[:, int(np.argmin(values))]
     denom = float(np.sum(v))
-    if abs(denom) < 1e-15:
+    # v has unit norm; if it is nearly orthogonal to 1 the sum-normalisation
+    # explodes, so fall back to equal weights well above machine epsilon.
+    if abs(denom) < 1e-6:
         return np.full(n_models, 1.0 / n_models)
     return v / denom
 

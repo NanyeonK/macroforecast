@@ -376,6 +376,8 @@ def combine_log_pool(means: Any, sds: Any, *, weights: Any | None = None) -> pd.
     """
     mu = _forecast_frame(means)
     sd = _forecast_frame(sds).reindex(index=mu.index, columns=mu.columns)
+    if not np.all(np.asarray(sd.to_numpy(), dtype=float) > 0):
+        raise ValueError("log pool requires strictly positive forecast standard deviations")
     w = _pool_weights(weights, mu.columns)
     precision_i = sd.pow(-2.0)
     tau = precision_i.mul(w, axis=1).sum(axis=1)
