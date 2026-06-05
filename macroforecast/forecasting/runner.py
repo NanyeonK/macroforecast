@@ -1770,12 +1770,14 @@ def _prepare_origin_panel(
         )
         prepared_panel = transformed.panel
     else:
-        # Rows observable at the forecast origin (everything except the appended
-        # post-origin target realization row). Passing these to transform()
-        # keeps origin_available imputation/outlier fitting leak-free.
-        available_labels = _origin_apply_labels(
-            panel.index, item, include_target_pos=False
-        )
+        # Rows observable AT the forecast origin: every apply row whose position
+        # is <= the origin position. This must exclude the ENTIRE forward test
+        # block (origin+1 .. origin+horizon-1) and the appended target row, not
+        # just the target row -- test_idx spans the whole horizon block, so a
+        # naive estimation/fit/test union would still feed h-1 strictly-future
+        # rows into the data-dependent preprocessing (EM imputation / outlier
+        # statistics) fit and leak the future into training-row features.
+        available_labels = _origin_available_labels(panel.index, item)
         transformed = fitted.transform(
             apply_panel,
             history=fitted.fit_panel,
@@ -1811,6 +1813,26 @@ def _origin_apply_labels(
     if 0 <= target_pos < len(index):
         positions = np.unique(np.concatenate([positions, np.asarray([target_pos])]))
     return index[positions]
+
+
+def _origin_available_labels(index: pd.Index, item: dict[str, Any]) -> pd.Index:
+    """Labels observable at the forecast origin: apply positions <= origin_pos.
+
+    ``test_idx`` spans the whole forward horizon block for direct/path policies,
+    so it contains rows strictly after the origin. Only rows at or before the
+    origin position may inform the origin_available data-dependent preprocessing
+    fit (imputation / outlier statistics); everything later is unrealised future.
+    """
+    positions = np.unique(
+        np.concatenate([item["estimation_idx"], item["fit_idx"], item["test_idx"]])
+    )
+    row = item.get("row", {})
+    try:
+        origin_pos = int(row.get("test_start_pos", item["test_idx"][0]))
+    except (TypeError, ValueError, IndexError):
+        origin_pos = int(positions.max()) if len(positions) else -1
+    available = positions[positions <= origin_pos]
+    return index[available]
 
 
 def _single_target(y: pd.Series | pd.DataFrame) -> pd.Series:
