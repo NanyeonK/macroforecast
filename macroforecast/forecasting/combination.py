@@ -139,9 +139,13 @@ def combine_inverse_mspe(
         src = step - lag
         if src >= 0:
             current = errors.iloc[src]
-            running = discount * running + current.fillna(
-                running.mean() if running.notna().any() else 0.0
-            )
+            # Update only models with an observed error at this date; a model
+            # missing a forecast carries its accumulated error forward unchanged
+            # rather than being imputed with the cross-model mean (which mixes
+            # scales and mis-weights a model that simply lacks one forecast).
+            observed = current.notna()
+            updated = discount * running + current.fillna(0.0)
+            running = running.where(~observed, updated)
             has_history = True
         if not has_history or float(running.sum()) <= 0:
             weights.loc[date, :] = 1.0 / len(frame.columns)

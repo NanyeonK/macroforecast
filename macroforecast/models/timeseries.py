@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import warnings
+
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
@@ -1669,6 +1671,7 @@ class _StatsmodelsForecastEstimator:
         self.result_: Any = None
         self.train_index_: pd.Index | None = None
         self.fallback_: float = 0.0
+        self.fit_error_: str | None = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_StatsmodelsForecastEstimator":
         series = pd.Series(y).astype(float).dropna()
@@ -1691,8 +1694,17 @@ class _StatsmodelsForecastEstimator:
                 self.result_ = ThetaModel(series, **self.params).fit()
             else:
                 raise ValueError(f"unknown method {self.method!r}")
-        except Exception:
+        except Exception as exc:  # noqa: BLE001 - keep callable on short/ill-posed panels
+            # Surface the failure instead of silently degrading to a last-value
+            # persistence forecast that is indistinguishable from a real fit.
             self.result_ = None
+            self.fit_error_ = str(exc)
+            warnings.warn(
+                f"{self.method} fit failed ({exc}); falling back to last-value "
+                "persistence. Inspect estimator.fit_error_.",
+                UserWarning,
+                stacklevel=2,
+            )
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:

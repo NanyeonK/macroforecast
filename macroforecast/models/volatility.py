@@ -151,7 +151,7 @@ def egarch(
     *,
     X: Any | None = None,
     p: int = 1,
-    o: int = 0,
+    o: int = 1,
     q: int = 1,
     mean_model: str = "constant",
     dist: str = "normal",

@@ -3814,7 +3814,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         egarch,
         default_params={
             "p": 1,
-            "o": 0,
+            "o": 1,
             "q": 1,
             "mean_model": "constant",
             "dist": "normal",
@@ -3822,7 +3822,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         },
         parameters=(
             _p("p", 1, "int", "EGARCH innovation lag order."),
-            _p("o", 0, "int", "Asymmetric innovation lag order."),
+            _p("o", 1, "int", "Asymmetric innovation lag order (leverage term)."),
             _p("q", 1, "int", "EGARCH variance lag order."),
             _p("mean_model", "constant", "str", "Conditional mean model.", False),
             _p("dist", "normal", "str", "Innovation distribution."),

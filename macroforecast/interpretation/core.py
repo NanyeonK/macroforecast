@@ -702,6 +702,7 @@ def accumulated_local_effect(
         raise ValueError("feature needs at least two non-empty ALE bins")
     effects = []
     centers = []
+    counts = []
     for low, high in zip(edges[:-1], edges[1:], strict=False):
         # Reference alignment: first-order ALEPlot/Apley-Zhu finite difference
         # within feature intervals, followed by cumulative centering.
@@ -711,6 +712,7 @@ def accumulated_local_effect(
         if not mask.any():
             effects.append(0.0)
             centers.append(float((low + high) / 2.0))
+            counts.append(0)
             continue
         lower = frame.loc[mask].copy()
         upper = lower.copy()
@@ -718,8 +720,16 @@ def accumulated_local_effect(
         upper[feature] = high
         effects.append(float(np.mean(_predict(model, upper) - _predict(model, lower))))
         centers.append(float((low + high) / 2.0))
+        counts.append(int(mask.sum()))
     accumulated = np.cumsum(np.asarray(effects, dtype=float))
-    accumulated = accumulated - accumulated.mean()
+    # Apley-Zhu (2020) ALE centering: subtract the FREQUENCY-WEIGHTED mean of the
+    # accumulated curve (weighted by per-bin observation counts) so it integrates
+    # to zero against the empirical feature distribution, not the unweighted mean.
+    bin_weights = np.asarray(counts, dtype=float)
+    if bin_weights.sum() > 0:
+        accumulated = accumulated - np.average(accumulated, weights=bin_weights)
+    else:
+        accumulated = accumulated - accumulated.mean()
     table = pd.DataFrame(
         {
             "feature": str(feature),
