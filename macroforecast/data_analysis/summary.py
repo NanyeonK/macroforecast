@@ -700,6 +700,85 @@ def breusch_pagan_test(
     }
 
 
+def engle_granger(
+    y: Any,
+    x: Any | None = None,
+    *,
+    trend: str = "c",
+    max_lag: int | None = None,
+    autolag: str | None = "aic",
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Engle-Granger two-step residual-based cointegration test.
+
+    R analogue of the two-step Engle-Granger procedure (statsmodels
+    ``tsa.stattools.coint``): regress ``y`` on ``x`` by OLS and apply an
+    augmented Dickey-Fuller test to the residuals. A rejection indicates the
+    residuals are stationary, i.e. ``y`` and ``x`` are cointegrated. ``trend`` is
+    the deterministic term in the cointegrating regression ('c', 'ct', or 'n');
+    ``max_lag``/``autolag`` control the ADF lag length on the residuals.
+
+    Pass ``y`` and ``x`` separately, or a single panel whose first numeric column
+    is the dependent series and the remaining columns the regressors. Returns the
+    ADF statistic on the residuals, the MacKinnon ``p`` value, the 1/5/10%
+    critical values, the cointegrating-regression coefficients, and the
+    cointegration flag at ``alpha``.
+    """
+
+    from statsmodels.tsa.stattools import coint
+
+    if x is None:
+        frame = pd.DataFrame(y)
+        numeric = frame.select_dtypes("number")
+        if numeric.shape[1] < 2:
+            raise ValueError("engle_granger needs a dependent series plus at least one regressor")
+        y0 = numeric.iloc[:, 0]
+        x_frame = numeric.iloc[:, 1:]
+    else:
+        y0 = pd.Series(np.asarray(y, dtype=float).ravel())
+        x_frame = pd.DataFrame(x)
+        x_frame = x_frame.select_dtypes("number") if hasattr(x_frame, "select_dtypes") else x_frame
+
+    names = [str(c) for c in x_frame.columns]
+    y_vec = np.asarray(y0, dtype=float).ravel()
+    x_mat = np.asarray(x_frame, dtype=float)
+    mask = np.isfinite(y_vec) & np.all(np.isfinite(x_mat), axis=1)
+    y_vec, x_mat = y_vec[mask], x_mat[mask]
+
+    if trend not in {"n", "c", "ct", "ctt"}:
+        raise ValueError("trend must be one of 'n', 'c', 'ct', 'ctt'")
+
+    stat, pvalue, crit = coint(
+        y_vec, x_mat, trend=trend, maxlag=max_lag, autolag=autolag
+    )
+
+    # Cointegrating regression for the long-run coefficients (and residuals).
+    design = x_mat
+    coef_names = list(names)
+    if trend in {"c", "ct", "ctt"}:
+        design = np.column_stack([np.ones(x_mat.shape[0]), design])
+        coef_names = ["(intercept)", *coef_names]
+    if trend in {"ct", "ctt"}:
+        design = np.column_stack([design, np.arange(x_mat.shape[0], dtype=float)])
+        coef_names = [*coef_names, "trend"]
+    beta = np.linalg.lstsq(design, y_vec, rcond=None)[0]
+
+    crit_values = {
+        "1%": float(crit[0]), "5%": float(crit[1]), "10%": float(crit[2])
+    }
+    return {
+        "test": "engle_granger",
+        "statistic": float(stat),
+        "p_value": float(pvalue),
+        "n_obs": int(y_vec.size),
+        "names": names,
+        "trend": trend,
+        "critical_values": crit_values,
+        "cointegrating_coef": {name: float(b) for name, b in zip(coef_names, beta)},
+        "cointegrated": bool(pvalue < alpha),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -1280,6 +1359,7 @@ __all__ = [
     "kpss_test",
     "acf",
     "johansen_cointegration",
+    "engle_granger",
     "newey_west",
     "vcov_hc",
     "breusch_pagan_test",
