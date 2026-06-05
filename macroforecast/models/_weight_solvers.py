@@ -129,3 +129,28 @@ def shrink_weights(weights: np.ndarray, shrinkage: float) -> np.ndarray:
     n = len(w)
     lam = float(np.clip(shrinkage, 0.0, 1.0))
     return (1.0 - lam) * w + lam * (1.0 / n)
+
+
+def regularized_weights(
+    F: np.ndarray, y: np.ndarray, *, penalty: str = "ridge", alpha: float = 1.0,
+    intercept: bool = True,
+) -> tuple[np.ndarray, float]:
+    """Ridge/Lasso-penalised regression combination weights.
+
+    Useful when combining many forecasts (high-dimensional weight estimation),
+    where unpenalised Granger-Ramanathan overfits. ``penalty`` is ``"ridge"`` or
+    ``"lasso"``; ``alpha`` is the regularisation strength.
+    """
+    from sklearn.linear_model import Lasso, Ridge
+
+    F = np.asarray(F, dtype=float)
+    y = np.asarray(y, dtype=float).ravel()
+    key = str(penalty).lower()
+    if key == "ridge":
+        model = Ridge(alpha=float(alpha), fit_intercept=bool(intercept))
+    elif key == "lasso":
+        model = Lasso(alpha=float(alpha), fit_intercept=bool(intercept), max_iter=5000)
+    else:
+        raise ValueError("penalty must be 'ridge' or 'lasso'")
+    model.fit(F, y)
+    return np.asarray(model.coef_, dtype=float).ravel(), float(getattr(model, "intercept_", 0.0))

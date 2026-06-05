@@ -301,6 +301,44 @@ def _shrink(weights: np.ndarray, shrinkage: float) -> np.ndarray:
     return shrink_weights(weights, shrinkage)
 
 
+
+def combine_eigenvector(
+    forecasts: Any, y_true: Any, *, horizon: int = 1, min_periods: int = 10,
+    window: int | None = None, shrink_to_equal: float | None = None,
+) -> pd.Series:
+    """Eigenvector (principal-component) combination (Hsiao-Wan)."""
+
+    from macroforecast.models._weight_solvers import eigenvector_weights
+
+    def _wf(Fh: np.ndarray, yh: np.ndarray) -> "tuple[np.ndarray, float]":
+        return eigenvector_weights(Fh - yh[:, None]), 0.0
+
+    return _recursive_combination(
+        forecasts, y_true, horizon=horizon, min_periods=min_periods,
+        weight_fn=_wf, window=window, shrink_to_equal=shrink_to_equal,
+    )
+
+
+def combine_regularized(
+    forecasts: Any, y_true: Any, *, penalty: str = "ridge", alpha: float = 1.0,
+    intercept: bool = True, horizon: int = 1, min_periods: int = 10,
+    window: int | None = None, shrink_to_equal: float | None = None,
+) -> pd.Series:
+    """Ridge/Lasso-penalised regression combination (high-dimensional weights)."""
+
+    from macroforecast.models._weight_solvers import regularized_weights
+
+    def _wf(Fh: np.ndarray, yh: np.ndarray) -> "tuple[np.ndarray, float]":
+        return regularized_weights(
+            Fh, yh, penalty=penalty, alpha=alpha, intercept=intercept
+        )
+
+    return _recursive_combination(
+        forecasts, y_true, horizon=horizon, min_periods=min_periods,
+        weight_fn=_wf, window=window, shrink_to_equal=shrink_to_equal,
+    )
+
+
 def resolve_combinations(value: Any) -> list[CombinationSpec]:
     """Normalize runner ``combination=...`` input into concrete specs."""
 
@@ -422,7 +460,7 @@ def _apply_combination_method(
     if method == "winsorized_mean":
         return combine_winsorized_mean(forecasts, **params)
     _estimated = {"inverse_mspe", "dmspe", "best_n", "bates_granger",
-                  "granger_ramanathan", "constrained_ls"}
+                  "granger_ramanathan", "constrained_ls", "eigenvector", "regularized"}
     if method in _estimated:
         if "horizon" in (forecasts.index.names or []):
             levels = forecasts.index.get_level_values("horizon")
@@ -438,6 +476,10 @@ def _apply_combination_method(
         return combine_granger_ramanathan(forecasts, actual, **params)
     if method == "constrained_ls":
         return combine_constrained_ls(forecasts, actual, **params)
+    if method == "eigenvector":
+        return combine_eigenvector(forecasts, actual, **params)
+    if method == "regularized":
+        return combine_regularized(forecasts, actual, **params)
     raise ValueError(f"unsupported combination method {method!r}")
 
 
@@ -511,6 +553,10 @@ def _normalize_method(method: str) -> str:
         "regression": "granger_ramanathan",
         "constrained": "constrained_ls",
         "nnls": "constrained_ls",
+        "eigen": "eigenvector",
+        "pc": "eigenvector",
+        "ridge": "regularized",
+        "lasso": "regularized",
     }
     key = aliases.get(key, key)
     allowed = {
@@ -524,6 +570,8 @@ def _normalize_method(method: str) -> str:
         "bates_granger",
         "granger_ramanathan",
         "constrained_ls",
+        "eigenvector",
+        "regularized",
         "custom",
     }
     if key not in allowed:
@@ -567,6 +615,8 @@ __all__ = [
     "apply_combinations",
     "combine_best_n",
     "combine_constrained_ls",
+    "combine_regularized",
+    "combine_eigenvector",
     "combine_granger_ramanathan",
     "combine_bates_granger",
     "combine_dmspe",
