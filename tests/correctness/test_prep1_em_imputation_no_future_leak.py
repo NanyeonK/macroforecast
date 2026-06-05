@@ -51,6 +51,19 @@ def test_prep1_em_imputation_ignores_future_row():
     pd.testing.assert_frame_equal(base, perturbed, rtol=1e-9, atol=1e-9)
 
 
+def test_prep2_zscore_outlier_stats_ignore_future_row():
+    # Non-tautological companion to the IQR test: z-score mean/std ARE moved by a
+    # future row, so under the old (leaky) code the flagged-cell pattern on
+    # available rows would change. The fix must keep them invariant.
+    spec = preprocess_spec(
+        transform="none", outliers="zscore", zscore_threshold=2.0,
+        outlier_action="flag_as_nan", impute="none", frame="keep",
+    )
+    base = _transform_available(spec, offset=0.0)
+    perturbed = _transform_available(spec, offset=8.0)
+    pd.testing.assert_frame_equal(base.isna(), perturbed.isna(), check_dtype=False)
+
+
 def test_prep2_iqr_outlier_stats_ignore_future_row():
     spec = preprocess_spec(
         transform="none", outliers="iqr", iqr_threshold=3.0,

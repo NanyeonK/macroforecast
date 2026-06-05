@@ -17,12 +17,26 @@ from macroforecast.forecasting.runner import _target_transform_for_policy
 from macroforecast.data.loaders import _version_request
 
 
-def test_tgt7_change_based_default_warns():
+def test_tgt7_change_based_default_warns_on_stationary_panel():
+    # Already-stationary features ('change') + change-based default target =
+    # double-difference risk -> must warn.
     with pytest.warns(UserWarning, match="double-differences"):
         out = _target_transform_for_policy(
-            "direct_average", feature_transform=None, explicit=None
+            "direct_average", feature_transform="change", explicit=None
         )
     assert out == "average_change"
+
+
+def test_tgt7_no_warning_on_raw_or_level_panel():
+    # Raw / level panels: change-based default is CORRECT, no false-positive warn.
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert _target_transform_for_policy(
+            "direct_average", feature_transform=None, explicit=None
+        ) == "average_change"
+        assert _target_transform_for_policy(
+            "path_average", feature_transform="level", explicit=None
+        ) == "change"
 
 
 def test_tgt7_explicit_value_transform_does_not_warn():
