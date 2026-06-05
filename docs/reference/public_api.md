@@ -48,6 +48,7 @@ convenience exports are documented on their module reference pages.
 | `tests` | `macroforecast.tests` | Forecast-comparison test namespace, including `mf.tests.custom_test`, `mf.tests.equal_predictive_tests`, `mf.tests.model_confidence_set`, `mf.tests.blocked_oob_reality_check`, `mf.tests.superior_predictive_ability_test`, `mf.tests.reality_check_test`, `mf.tests.stepm_test`, interval coverage, and PIT diagnostics. Use `mf.tests.dm_test`, not `mf.dm_test`. |
 | `EvaluationReport`, `evaluate_report`, `aggregate_scores`, `filter_oos_period`, `error_decomposition`, `benchmark_comparison`, `regime_scores` | `macroforecast.evaluation` | Multi-slice evaluation reports, OOS filtering, error decomposition, benchmark comparisons, and regime scoring. |
 | `evaluation` | `macroforecast.evaluation` | Evaluation namespace exposing report functions plus `metrics` and `tests`; raw metric/test functions are not re-exported directly from it. |
+| `pipeline` | `macroforecast.pipeline` | Comprehensive POOS pipeline namespace: `pipeline_spec`, `resolve_target`, `Arm`, `EvalSpec`, `CombinationContender`, `TCODE_TARGET_MAP`. |
 | `SearchSpec`, `SearchResult`, `SearchError`, `ParamDistribution`, `search_spec`, `select_params` | `macroforecast.model_selection` | Model-parameter selection over a supplied window and metric. |
 | `fixed`, `grid`, `random_search`, `cv_path`, `bayesian_search`, `genetic_search`, `custom_search`, `choice`, `uniform`, `log_uniform`, `randint` | `macroforecast.model_selection` | Search specification and distribution builders. |
 | `ForecastResult`, `run`, `run_forecast` | `macroforecast.forecasting` | Windowed forecast runner. |
@@ -77,4 +78,5 @@ convenience exports are documented on their module reference pages.
 | `macroforecast.interpretation` | Model-native importance, model-agnostic effects, SHAP/anatomy attribution, OLS-as-attention, VAR interpretation, and deep optional helpers. |
 | `macroforecast.output` | Output generation, artifact writing, provenance collection, hashing, and compression. |
 | `macroforecast.reporting` | Presentation/report formatting, paper-table presets, and rendering without artifact writing. |
+| `macroforecast.pipeline` | Comprehensive POOS pipeline: spec generator, t-code target resolution, arms, combinations, evaluation. |
 | `macroforecast.data_analysis` | Single-panel diagnostics, summaries, and raw-versus-processed comparison. |

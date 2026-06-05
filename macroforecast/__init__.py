@@ -362,6 +362,7 @@ _LAZY_MODULES: tuple[str, ...] = (
     "interpretation",
     "output",
     "reporting",
+    "pipeline",
 )
 
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
