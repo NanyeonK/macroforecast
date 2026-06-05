@@ -135,6 +135,59 @@ def theil_u2(y_true: Any, y_pred: Any, y_prev: Any) -> float:
     return float(np.sqrt(numerator / denominator)) if denominator > 0 else float("nan")
 
 
+def seasonal_naive_mae(y_train: Any, *, m: int = 1) -> float:
+    """In-sample (seasonal-)naive mean absolute error: ``mean(|y[t] - y[t-m]|)``.
+
+    This is the scale-free denominator used by MASE (Hyndman & Koehler, 2006).
+    ``m=1`` is the random-walk (no-change) scaling; ``m>1`` the seasonal-naive
+    scaling. Returns NaN when the training series is shorter than ``m+1``.
+    """
+
+    if m < 1:
+        raise ValueError("m must be >= 1")
+    train = pd.Series(y_train).dropna().astype(float).to_numpy()
+    if len(train) <= m:
+        return float("nan")
+    diffs = np.abs(train[m:] - train[:-m])
+    return float(np.mean(diffs)) if diffs.size else float("nan")
+
+
+def mase(y_true: Any, y_pred: Any, y_train: Any, *, m: int = 1) -> float:
+    """Mean Absolute Scaled Error (Hyndman & Koehler, 2006).
+
+    ``MASE = mean(|y_true - y_pred|) / mean(|y_train[t] - y_train[t-m]|)`` -- the
+    out-of-sample MAE scaled by the in-sample (seasonal-)naive MAE. ``m=1`` is the
+    non-seasonal MASE; ``m>1`` the seasonal MASE. The statistic is scale-free and
+    a value below 1 beats the in-sample naive benchmark. Matches forecast::accuracy.
+    """
+
+    truth, pred = _aligned_values(y_true, y_pred)
+    if truth.size == 0:
+        return float("nan")
+    scale = seasonal_naive_mae(y_train, m=m)
+    if not np.isfinite(scale) or scale <= 0:
+        return float("nan")
+    return float(np.mean(np.abs(truth - pred)) / scale)
+
+
+def acf1(values: Any) -> float:
+    """Lag-1 autocorrelation of a series (e.g. forecast residuals).
+
+    The ACF1 reported by ``forecast::accuracy``; canonical biased sample
+    autocorrelation ``gamma_1 / gamma_0`` with a single global mean.
+    """
+
+    arr = pd.Series(values).dropna().astype(float).to_numpy()
+    if len(arr) < 2:
+        return float("nan")
+    centered = arr - arr.mean()
+    gamma_0 = float(np.sum(centered * centered))
+    if gamma_0 == 0:
+        return float("nan")
+    gamma_1 = float(np.sum(centered[1:] * centered[:-1]))
+    return gamma_1 / gamma_0
+
+
 def relative_mse(y_true: Any, y_model: Any, y_benchmark: Any) -> float:
     """Candidate model MSE divided by benchmark MSE."""
 
@@ -1002,6 +1055,7 @@ _METRICS: dict[str, Callable[..., float]] = {
     "smape": smape,
     "theil_u1": theil_u1,
     "theil_u2": theil_u2,
+    "mase": mase,
     "relative_mse": relative_mse,
     "relative_mae": relative_mae,
     "mse_reduction": mse_reduction,
@@ -1028,6 +1082,9 @@ _QUANTILE_METRIC_NAMES = {
     "coverage_rate",
     "interval_width",
     "interval_score",
+    "mase",
+    "seasonal_naive_mae",
+    "acf1",
 }
 
 
@@ -1379,6 +1436,7 @@ def _metric_ascending(metric: str) -> bool:
         "median_absolute_error",
         "mape",
         "smape",
+        "mase",
         "theil_u1",
         "theil_u2",
         "relative_mse",

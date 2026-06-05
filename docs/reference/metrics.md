@@ -504,3 +504,7 @@ be finite.
 | --- | --- | --- |
 | `success_ratio` | `success_ratio(y_true, y_pred, y_prev)` | Directional hit rate relative to the previous realized value. |
 | `pesaran_timmermann_metric` | `pesaran_timmermann_metric(y_true, y_pred, *, threshold=0.0)` | Pesaran-Timmermann directional accuracy statistic. |
+
+- `mase` -- Mean Absolute Scaled Error (Hyndman-Koehler), out-of-sample MAE scaled by the in-sample (seasonal-)naive MAE.
+- `seasonal_naive_mae` -- in-sample (seasonal-)naive MAE `mean(|y[t]-y[t-m]|)`, the MASE scaling denominator.
+- `acf1` -- lag-1 autocorrelation (e.g. of forecast residuals), the ACF1 reported by `forecast::accuracy`.
