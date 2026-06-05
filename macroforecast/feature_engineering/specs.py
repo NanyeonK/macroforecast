@@ -2813,6 +2813,24 @@ def _marx_from_lag_matrix(
     columns: tuple[str, ...],
     lag_values: tuple[int, ...],
 ) -> pd.DataFrame:
+    if lag_values == tuple(range(1, max(lag_values, default=0) + 1)):
+        data: dict[str, np.ndarray] = {}
+        denominators = np.arange(1, len(lag_values) + 1, dtype=float)
+        for column in columns:
+            lag_columns = [f"{column}_lag{lag_value}" for lag_value in lag_values]
+            values = lag_matrix.loc[:, lag_columns].to_numpy(dtype=float, copy=False)
+            # MARX matches the author R loop: for lag order l, replace the
+            # l-th lag block by the row mean of lag 1..l for the same
+            # variable. np.cumsum preserves skipna=False semantics because any
+            # NaN in the cumulative block propagates to that and longer
+            # averages.
+            averages = np.cumsum(values, axis=1) / denominators
+            for position, lag_order in enumerate(lag_values):
+                data[f"{column}_ma{lag_order}_lag1"] = averages[:, position]
+        result = pd.DataFrame(data, index=lag_matrix.index)
+        result.index.name = "date"
+        return result
+
     data: dict[str, pd.Series] = {}
     for column in columns:
         for lag_order in lag_values:
