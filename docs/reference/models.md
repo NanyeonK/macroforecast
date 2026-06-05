@@ -2590,6 +2590,37 @@ Fits a univariate autoregression on the target series.
 | `standard` | `(1, 2, 4, 6, 12)` |
 | `wide` | `(1, 2, 3, 4, 6, 9, 12, 18, 24)` |
 
+### naive
+
+```python
+macroforecast.models.naive(y)
+```
+
+Random-walk baseline (R `forecast::naive`). Carries the last observed target
+value forward, so the h-step path is constant at `y_T`. Target-only.
+
+### seasonal_naive
+
+```python
+macroforecast.models.seasonal_naive(y, *, period=None)
+```
+
+Seasonal-naive baseline (R `forecast::snaive`). Repeats the last full seasonal
+cycle of length `period`, so step `k` returns the value from one season earlier.
+
+| Parameter | Default | Tunable | Meaning |
+| --- | --- | --- | --- |
+| `period` | `None` | no | Seasonal period `m`; defaults to 1 (plain naive). |
+
+### random_walk_drift
+
+```python
+macroforecast.models.random_walk_drift(y)
+```
+
+Random-walk-with-drift baseline (R `forecast::rwf(drift=TRUE)`). Extrapolates the
+last value by the average historical change: `y_T + h * (y_T - y_1) / (T - 1)`.
+
 ### var
 
 ```python

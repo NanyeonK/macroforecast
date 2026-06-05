@@ -42,6 +42,9 @@ from macroforecast.models.spline import mars
 from macroforecast.models.svm import linear_svr, nu_svr, svr
 from macroforecast.models.timeseries import (
     ar,
+    naive,
+    seasonal_naive,
+    random_walk_drift,
     arima,
     auto_arima,
     bvar_minnesota,
@@ -2598,6 +2601,38 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         input_kind="target",
         backend="statsmodels.tsa.holtwinters.ExponentialSmoothing",
         description="Holt-Winters exponential smoothing target-only forecasting model.",
+    ),
+    "naive": _spec(
+        "naive",
+        "timeseries",
+        naive,
+        default_params={},
+        parameters=(),
+        input_kind="target",
+        backend="macroforecast",
+        description="Random-walk (naive) baseline: carry the last value forward (forecast::naive).",
+    ),
+    "seasonal_naive": _spec(
+        "seasonal_naive",
+        "timeseries",
+        seasonal_naive,
+        default_params={"period": None},
+        parameters=(
+            _p("period", None, "int | None", "Seasonal period m; repeats the last m values.", False),
+        ),
+        input_kind="target",
+        backend="macroforecast",
+        description="Seasonal-naive baseline: repeat the last seasonal cycle (forecast::snaive).",
+    ),
+    "random_walk_drift": _spec(
+        "random_walk_drift",
+        "timeseries",
+        random_walk_drift,
+        default_params={},
+        parameters=(),
+        input_kind="target",
+        backend="macroforecast",
+        description="Random-walk-with-drift baseline (forecast::rwf(drift=TRUE)).",
     ),
     "theta_method": _spec(
         "theta_method",

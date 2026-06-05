@@ -55,6 +55,9 @@ from .specs import (
 from .svm import linear_svr, nu_svr, svr
 from .timeseries import (
     ar,
+    naive,
+    seasonal_naive,
+    random_walk_drift,
     arima,
     auto_arima,
     bvar_minnesota,
@@ -131,6 +134,9 @@ __all__ = [
     "albacore_components",
     "albacore_ranks",
     "ar",
+    "naive",
+    "seasonal_naive",
+    "random_walk_drift",
     "assemblage_regression",
     "bayesian_ridge",
     "arima",

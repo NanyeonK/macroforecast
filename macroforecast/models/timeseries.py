@@ -63,6 +63,99 @@ def ar(y: Any, *, n_lag: int = 1) -> ModelFit:
     return fit_estimator(_AR(n_lag=n_lag), dummy, target, model="ar", metadata={"n_lag": int(n_lag)})
 
 
+class _NaiveForecaster:
+    """Baseline path forecaster: random-walk, seasonal-naive, or drift.
+
+    ``predict(X)`` returns a ``len(X)``-step path (row ``k`` is the ``k+1``-step
+    forecast), matching the package's target-only multi-step contract.
+    """
+
+    def __init__(self, *, method: str = "naive", period: int | None = None) -> None:
+        self.method = str(method).lower()
+        self.period = period
+        self._last: float = 0.0
+        self._drift: float = 0.0
+        self._season: np.ndarray | None = None
+        self._fallback: float = 0.0
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_NaiveForecaster":
+        series = pd.Series(y).astype(float).dropna()
+        self._fallback = float(series.mean()) if not series.empty else 0.0
+        if series.empty:
+            self._last = self._fallback
+            return self
+        values = series.to_numpy(dtype=float)
+        self._last = float(values[-1])
+        if self.method == "drift":
+            n = len(values)
+            # forecast::rwf(drift=TRUE): slope = (y_T - y_1) / (T - 1)
+            self._drift = float((values[-1] - values[0]) / (n - 1)) if n > 1 else 0.0
+        if self.method in {"snaive", "seasonal_naive"}:
+            m = max(1, int(self.period)) if self.period else 1
+            self._season = values[-m:] if len(values) >= m else values
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        steps = len(X)
+        if self.method == "drift":
+            return np.asarray(
+                [self._last + self._drift * (k + 1) for k in range(steps)], dtype=float
+            )
+        if self.method in {"snaive", "seasonal_naive"} and self._season is not None and len(self._season):
+            m = len(self._season)
+            # forecast::snaive: repeat the last full season cyclically
+            return np.asarray([self._season[k % m] for k in range(steps)], dtype=float)
+        # naive / random walk: last observed value carried forward
+        return np.full(steps, self._last, dtype=float)
+
+
+def _naive_fit(method: str, y: Any, *, period: int | None = None) -> ModelFit:
+    target = as_series(y)
+    dummy = pd.DataFrame(
+        {"__origin__": np.arange(len(target), dtype=float)}, index=target.index
+    )
+    return fit_estimator(
+        _NaiveForecaster(method=method, period=period),
+        dummy,
+        target,
+        model=method if method != "seasonal_naive" else "seasonal_naive",
+        metadata={"method": method, "period": (int(period) if period else None)},
+    )
+
+
+def naive(y: Any, **kwargs: Any) -> ModelFit:
+    """Random-walk (naive) forecaster: carry the last observed value forward.
+
+    R analogue of ``forecast::naive`` / ``forecast::rwf(drift=FALSE)``. The h-step
+    path is constant at ``y_T``. Target-only; the horizon is taken from the number
+    of test rows by the forecasting runner.
+    """
+
+    return _naive_fit("naive", y)
+
+
+def seasonal_naive(y: Any, *, period: int | None = None, **kwargs: Any) -> ModelFit:
+    """Seasonal-naive forecaster: repeat the last full seasonal cycle.
+
+    R analogue of ``forecast::snaive``. With seasonal period ``m`` the h-step path
+    cycles the last ``m`` observed values, so step ``k`` returns ``y_{T-m+1+((k-1) mod m)}``.
+    ``period`` defaults to 1 (degenerates to the plain naive forecast).
+    """
+
+    return _naive_fit("seasonal_naive", y, period=period)
+
+
+def random_walk_drift(y: Any, **kwargs: Any) -> ModelFit:
+    """Random-walk-with-drift forecaster.
+
+    R analogue of ``forecast::rwf(drift=TRUE)``. The h-step path is
+    ``y_T + h * (y_T - y_1) / (T - 1)``: the last value plus the average
+    historical change extrapolated linearly.
+    """
+
+    return _naive_fit("drift", y)
+
+
 class _VAR:
     # R source alignment, vars/R/VAR.R and vars/R/predict.varest.R:
     # - build ylags with lag order 1..p, append deterministic terms according
@@ -3162,6 +3255,7 @@ def _midas_weights(
 
 
 __all__ = [
+    "random_walk_drift",
     "ar",
     "arima",
     "auto_arima",
