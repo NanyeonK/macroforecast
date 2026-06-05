@@ -579,3 +579,4 @@ step metadata.
 
 - `johansen_cointegration` -- Johansen cointegration test (trace + max-eigenvalue, rank selection, cointegrating vectors; urca::ca.jo).
 - `newey_west` -- Newey-West HAC covariance for OLS coefficients with Bartlett kernel and coefficient table (sandwich::NeweyWest + lmtest::coeftest).
+- `vcov_hc` -- heteroskedasticity-consistent (White HC0-HC3) covariance for OLS coefficients with coefficient table (sandwich::vcovHC + lmtest::coeftest).

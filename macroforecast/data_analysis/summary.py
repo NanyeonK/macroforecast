@@ -526,6 +526,102 @@ def newey_west(
     }
 
 
+def vcov_hc(
+    X: Any,
+    y: Any | None = None,
+    *,
+    cov_type: str = "HC1",
+    add_intercept: bool = True,
+) -> dict[str, Any]:
+    """Heteroskedasticity-consistent (White) covariance for an OLS regression.
+
+    R analogue of ``sandwich::vcovHC`` with ``lmtest::coeftest``. Fits
+    ``y = X b + e`` by OLS and forms a robust covariance that is consistent
+    under heteroskedasticity but assumes no autocorrelation (for serial
+    correlation use :func:`newey_west`). ``cov_type`` selects the small-sample
+    weighting of the squared residuals:
+
+    - ``"HC0"`` -- White (1980), ``u_i^2``;
+    - ``"HC1"`` -- MacKinnon-White degrees-of-freedom scaling ``u_i^2 T/(T-k)``;
+    - ``"HC2"`` -- leverage-adjusted ``u_i^2/(1-h_i)``;
+    - ``"HC3"`` -- jackknife approximation ``u_i^2/(1-h_i)^2`` (default in R for
+      small samples).
+
+    Returns the coefficient table (estimate, robust SE, ``t``, two-sided ``p``
+    with ``T - k`` degrees of freedom), the robust covariance matrix, and the
+    regressor names.
+    """
+
+    from scipy import stats as _stats
+
+    if y is None:
+        frame = pd.DataFrame(X)
+        numeric = frame.select_dtypes("number")
+        if numeric.shape[1] < 2:
+            raise ValueError("vcov_hc needs a target plus at least one regressor")
+        y_series = numeric.iloc[:, 0]
+        x_frame = numeric.iloc[:, 1:]
+    else:
+        x_frame = pd.DataFrame(X)
+        x_frame = x_frame.select_dtypes("number") if hasattr(x_frame, "select_dtypes") else x_frame
+        y_series = pd.Series(np.asarray(y, dtype=float).ravel())
+
+    names = [str(c) for c in x_frame.columns]
+    x_mat = np.asarray(x_frame, dtype=float)
+    y_vec = np.asarray(y_series, dtype=float).ravel()
+    mask = np.isfinite(y_vec) & np.all(np.isfinite(x_mat), axis=1)
+    x_mat, y_vec = x_mat[mask], y_vec[mask]
+    if add_intercept:
+        x_mat = np.column_stack([np.ones(x_mat.shape[0]), x_mat])
+        names = ["(intercept)", *names]
+
+    n_obs, k = x_mat.shape
+    if n_obs <= k:
+        raise ValueError("vcov_hc needs more observations than coefficients")
+
+    bread = np.linalg.inv(x_mat.T @ x_mat)
+    beta = bread @ (x_mat.T @ y_vec)
+    resid = y_vec - x_mat @ beta
+    leverage = np.einsum("ij,jk,ik->i", x_mat, bread, x_mat)
+
+    kind = str(cov_type).upper()
+    u2 = resid**2
+    if kind == "HC0":
+        weights = u2
+    elif kind == "HC1":
+        weights = u2 * (n_obs / (n_obs - k))
+    elif kind == "HC2":
+        weights = u2 / (1.0 - leverage)
+    elif kind == "HC3":
+        weights = u2 / (1.0 - leverage) ** 2
+    else:
+        raise ValueError("cov_type must be one of 'HC0', 'HC1', 'HC2', 'HC3'")
+
+    meat = (x_mat * weights[:, None]).T @ x_mat
+    vcov = bread @ meat @ bread
+    se = np.sqrt(np.maximum(np.diag(vcov), 0.0))
+    tstat = np.divide(beta, se, out=np.full_like(beta, np.nan), where=se > 0)
+    pval = 2.0 * _stats.t.sf(np.abs(tstat), df=n_obs - k)
+
+    coefficients = [
+        {"name": names[i], "estimate": float(beta[i]), "std_error": float(se[i]),
+         "t_value": float(tstat[i]), "p_value": float(pval[i])}
+        for i in range(k)
+    ]
+    return {
+        "n_obs": int(n_obs),
+        "n_coef": int(k),
+        "names": names,
+        "cov_type": kind,
+        "coefficients": coefficients,
+        "estimate": beta.tolist(),
+        "std_error": se.tolist(),
+        "t_value": tstat.tolist(),
+        "p_value": pval.tolist(),
+        "vcov": vcov.tolist(),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -1023,6 +1119,7 @@ __all__ = [
     "acf",
     "johansen_cointegration",
     "newey_west",
+    "vcov_hc",
     "pacf",
     "ndiffs",
     "nsdiffs",
