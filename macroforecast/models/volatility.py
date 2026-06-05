@@ -693,7 +693,92 @@ def expected_shortfall(fit: VolatilityFit, *, alpha: float = 0.05, horizon: int 
     return np.asarray(risk_forecast(fit, alpha=alpha, horizon=horizon)["es"], dtype=float)
 
 
+def news_impact_curve(
+    fit: VolatilityFit,
+    *,
+    shocks: Any | None = None,
+    n_points: int = 101,
+    span: float = 3.0,
+    reference_variance: float | None = None,
+) -> dict[str, Any]:
+    """Engle-Ng (1993) news impact curve for a fitted GARCH-family model.
+
+    Traces the one-step conditional variance ``h_t`` as a function of the lagged
+    shock ``eps_{t-1}``, holding the lagged variance ``h_{t-1}`` fixed at a
+    reference level. A symmetric model gives a symmetric U-shaped curve centred at
+    zero; leverage (GJR/EGARCH/TGARCH ``gamma``) tilts it so negative shocks raise
+    variance more than positive ones.
+
+    ``reference_variance`` is ``h_{t-1}`` (defaults to the last fitted conditional
+    variance). ``shocks`` is an explicit eps grid; if omitted, ``n_points`` points
+    spanning +/- ``span`` reference standard deviations are used. Returns the shock
+    grid, the implied conditional variance, the reference variance, and the model
+    variant. EGARCH uses the Gaussian ``E|z| = sqrt(2/pi)``; for non-normal
+    innovations its curve is approximate.
+    """
+
+    est = fit.estimator
+    fitted = getattr(est, "_fitted", None)
+    if fitted is None:
+        raise ValueError("news_impact_curve requires a fitted GARCH-family model")
+    params = {str(k): float(v) for k, v in fitted.params.to_dict().items()}
+    variant = str(getattr(est, "variant", "garch11"))
+
+    omega = params.get("omega", 0.0)
+    alpha = params.get("alpha[1]", 0.0)
+    beta = params.get("beta[1]", 0.0)
+    gamma = params.get("gamma[1]", 0.0)
+
+    sigma2 = (
+        float(reference_variance)
+        if reference_variance is not None
+        else float(getattr(est, "_last_variance", 1.0))
+    )
+    sigma2 = max(sigma2, 1e-12)
+
+    if shocks is None:
+        bound = float(span) * np.sqrt(sigma2)
+        eps = np.linspace(-bound, bound, int(n_points))
+    else:
+        eps = np.asarray(shocks, dtype=float).ravel()
+
+    neg = (eps < 0.0).astype(float)
+    if variant == "garch11":
+        variance = omega + alpha * eps**2 + beta * sigma2
+    elif variant == "gjr":
+        # arch GJR: omega + alpha*eps^2 + gamma*eps^2*I(eps<0) + beta*h_{t-1}
+        variance = omega + alpha * eps**2 + gamma * eps**2 * neg + beta * sigma2
+    elif variant == "tgarch":
+        # arch power=1 GARCH models the conditional std dev; square back to variance
+        sigma = (
+            omega
+            + alpha * np.abs(eps)
+            + gamma * np.abs(eps) * neg
+            + beta * np.sqrt(sigma2)
+        )
+        variance = np.maximum(sigma, 0.0) ** 2
+    elif variant == "egarch":
+        z = eps / np.sqrt(sigma2)
+        e_abs_z = np.sqrt(2.0 / np.pi)
+        log_h = omega + alpha * (np.abs(z) - e_abs_z) + gamma * z + beta * np.log(sigma2)
+        variance = np.exp(log_h)
+    else:
+        raise ValueError(
+            f"news_impact_curve does not support variant {variant!r} "
+            "(supported: garch11, gjr, tgarch, egarch)"
+        )
+
+    return {
+        "variant": variant,
+        "reference_variance": float(sigma2),
+        "shock": np.asarray(eps, dtype=float),
+        "variance": np.asarray(variance, dtype=float),
+        "coefficients": {"omega": omega, "alpha": alpha, "gamma": gamma, "beta": beta},
+    }
+
+
 __all__ = [
+    "news_impact_curve",
     "GARCHEstimator",
     "RealizedGARCHEstimator",
     "egarch",
