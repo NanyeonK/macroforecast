@@ -622,6 +622,84 @@ def vcov_hc(
     }
 
 
+def breusch_pagan_test(
+    X: Any,
+    y: Any | None = None,
+    *,
+    studentize: bool = True,
+    add_intercept: bool = True,
+) -> dict[str, Any]:
+    """Breusch-Pagan test for heteroskedasticity in an OLS regression.
+
+    R analogue of ``lmtest::bptest``. Fits ``y = X b + e`` by OLS and tests the
+    null of homoskedasticity by an auxiliary regression of the squared residuals
+    on the regressors. With ``studentize=True`` (the ``lmtest`` default) the
+    Koenker robust version ``LM = n R^2`` is used, valid without normality; with
+    ``studentize=False`` the classic Breusch-Pagan-Godfrey statistic
+    ``0.5 * explained-SS`` of the scaled squared residuals is returned. Both are
+    chi-squared with ``p`` degrees of freedom (the number of regressors excluding
+    the intercept). Returns the statistic, degrees of freedom, ``p`` value, and
+    the auxiliary-regression R-squared.
+    """
+
+    from scipy import stats as _stats
+
+    if y is None:
+        frame = pd.DataFrame(X)
+        numeric = frame.select_dtypes("number")
+        if numeric.shape[1] < 2:
+            raise ValueError("breusch_pagan_test needs a target plus at least one regressor")
+        y_series = numeric.iloc[:, 0]
+        x_frame = numeric.iloc[:, 1:]
+    else:
+        x_frame = pd.DataFrame(X)
+        x_frame = x_frame.select_dtypes("number") if hasattr(x_frame, "select_dtypes") else x_frame
+        y_series = pd.Series(np.asarray(y, dtype=float).ravel())
+
+    x_mat = np.asarray(x_frame, dtype=float)
+    y_vec = np.asarray(y_series, dtype=float).ravel()
+    mask = np.isfinite(y_vec) & np.all(np.isfinite(x_mat), axis=1)
+    x_mat, y_vec = x_mat[mask], y_vec[mask]
+    if add_intercept:
+        x_mat = np.column_stack([np.ones(x_mat.shape[0]), x_mat])
+
+    n_obs, k = x_mat.shape
+    if n_obs <= k:
+        raise ValueError("breusch_pagan_test needs more observations than coefficients")
+
+    bread = np.linalg.inv(x_mat.T @ x_mat)
+    beta = bread @ (x_mat.T @ y_vec)
+    resid = y_vec - x_mat @ beta
+    u2 = resid**2
+
+    # Auxiliary regression of squared residuals on the regressors.
+    aux_coef = bread @ (x_mat.T @ u2)
+    aux_fit = x_mat @ aux_coef
+    ss_tot = float(np.sum((u2 - u2.mean()) ** 2))
+    ss_res = float(np.sum((u2 - aux_fit) ** 2))
+    r_squared = 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
+    ss_explained = ss_tot - ss_res
+    df = k - 1 if add_intercept else k
+
+    if studentize:
+        statistic = n_obs * r_squared
+        version = "koenker"
+    else:
+        sigma2 = float(np.mean(u2))  # MLE variance, SSR/n
+        statistic = 0.5 * ss_explained / (sigma2**2) if sigma2 > 0 else 0.0
+        version = "breusch_pagan_godfrey"
+
+    p_value = float(_stats.chi2.sf(statistic, df))
+    return {
+        "statistic": float(statistic),
+        "df": int(df),
+        "p_value": p_value,
+        "r_squared": float(r_squared),
+        "version": version,
+        "n_obs": int(n_obs),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -1120,6 +1198,7 @@ __all__ = [
     "johansen_cointegration",
     "newey_west",
     "vcov_hc",
+    "breusch_pagan_test",
     "pacf",
     "ndiffs",
     "nsdiffs",
