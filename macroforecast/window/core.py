@@ -722,6 +722,16 @@ class WindowSpec:
             warnings.append("fit window lags estimation window when retrain_every > 1")
         if plan["test_start_pos"].duplicated().any():
             warnings.append("test origins contain duplicate test_start positions")
+        test_horizon = int(self.test.horizon)
+        if test_horizon > 1 and (
+            plan["estimation_end_pos"] + test_horizon > plan["test_start_pos"]
+        ).any():
+            warnings.append(
+                "estimation/test embargo is below horizon - 1: the production fit "
+                "includes training rows whose h-step targets realise at or after the "
+                "forecast origin (pseudo-out-of-sample convention). Pass "
+                "embargo=horizon - 1 for a strict real-time protocol."
+            )
         return {
             "ok": not errors,
             "n_obs": len(labels),
@@ -1036,7 +1046,32 @@ def from_cutoffs(
     alignment: AlignmentWindow | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> WindowSpec:
-    """Build a window from common estimation/test cutoff dates."""
+    """Build a window from common estimation/test cutoff dates.
+
+    Embargo conventions for h-step targets (``horizon > 1``)
+    --------------------------------------------------------
+    A row at position ``p`` carries the direct h-step target realised at
+    ``p + horizon``. Two boundaries are embargoed independently:
+
+    * Estimation/test boundary (``embargo``, default ``0``). With ``embargo=0``
+      the production model for origin ``t`` is fit on rows up to ``t - 1`` whose
+      targets realise at ``t + horizon - 1`` -- i.e. after the forecast is
+      issued. This is the standard *pseudo-out-of-sample* convention used on a
+      fixed (final-vintage) dataset, and it maximises the training sample. For a
+      *strict real-time* protocol, where every training label must be observable
+      at the origin, pass ``embargo=horizon - 1`` (the last training label then
+      realises at the origin). The default is deliberately the pseudo-OOS choice;
+      it does not enforce real-time observability.
+
+    * Train/validation boundary (``val_embargo``, default ``horizon - 1``). This
+      purges the gap between the last training label and the first validation
+      input. The default ``horizon - 1`` leaves the single boundary timestamp
+      shared between the last training label and the first validation feature;
+      pass ``val_embargo=horizon`` for a fully disjoint purge.
+
+    Both defaults are conventions, not guarantees of real-time observability;
+    set the embargoes explicitly when the forecasting protocol requires it.
+    """
 
     mode_key = str(mode).lower().replace("-", "_")
     if mode_key == "expanding":
