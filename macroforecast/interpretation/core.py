@@ -3554,7 +3554,14 @@ class _InternalVARResults:
         k = max(1, len(self.names))
         if resid.size == 0:
             return np.eye(k, dtype=float)
-        denom = max(1, resid.shape[0] - k)
+        # Match statsmodels VARResults.sigma_u: divide by the residual degrees of
+        # freedom T_eff - (k*p + n_det), i.e. the per-equation regressor count
+        # (coef_ has shape (k, k*p + n_det)). Dividing by T_eff - k under-deflated
+        # Sigma_u for p>1 or with deterministic terms, inflating the Cholesky
+        # factor and every orthogonalised IRF / GIRF / FEVD built from it.
+        coef = np.asarray(getattr(self._estimator, "coef_", None), dtype=float)
+        n_reg = int(coef.shape[1]) if coef.ndim == 2 and coef.size else k
+        denom = max(1, resid.shape[0] - n_reg)
         sigma = resid.T @ resid / float(denom)
         return _positive_definite_covariance(sigma)
 

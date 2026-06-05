@@ -2046,7 +2046,9 @@ def _prior_scale_matrix(value: float | Sequence[Sequence[float]] | None, k: int)
     if value is None:
         raise ValueError("s0 must not be None for FAVAR::BVAR-compatible fitting")
     if np.isscalar(value):
-        return np.full((k, k), float(value), dtype=float)
+        # A scalar s0 denotes an isotropic inverse-Wishart scale s0*I. The old
+        # np.full((k,k), s0) produced a rank-1 (singular) matrix for k>1.
+        return float(value) * np.eye(k, dtype=float)
     arr = np.asarray(value, dtype=float)
     if arr.shape != (k, k):
         raise ValueError(f"s0 must be scalar or a {k}x{k} matrix")
