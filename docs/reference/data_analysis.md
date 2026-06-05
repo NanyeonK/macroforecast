@@ -570,3 +570,6 @@ step metadata.
 
 - `adf_test` -- Augmented Dickey-Fuller unit-root test for a single series (flat result).
 - `kpss_test` -- KPSS stationarity test for a single series (flat result).
+
+- `ndiffs` -- number of first differences for stationarity (KPSS/ADF/PP; forecast::ndiffs).
+- `nsdiffs` -- number of seasonal differences via STL seasonal strength (forecast::nsdiffs).

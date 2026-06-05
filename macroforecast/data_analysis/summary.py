@@ -365,6 +365,81 @@ def kpss_test(
     }
 
 
+def ndiffs(
+    series: Any,
+    *,
+    test: str = "kpss",
+    max_d: int = 2,
+    alpha: float = 0.05,
+) -> int:
+    """Number of first differences to make a series stationary (forecast::ndiffs).
+
+    Repeatedly applies a unit-root / stationarity test until the differenced
+    series is judged stationary (KPSS: fail to reject; ADF/PP: reject the unit
+    root), up to ``max_d``.
+    """
+
+    key = str(test).lower()
+    if key not in {"kpss", "adf", "pp"}:
+        raise ValueError("test must be 'kpss', 'adf', or 'pp'")
+    current = pd.Series(series).dropna().astype(float)
+    d = 0
+    while d < int(max_d) and len(current) >= 10:
+        try:
+            if key == "kpss":
+                stationary = not kpss_test(current, alpha=alpha)["reject_stationarity"]
+            elif key == "adf":
+                stationary = adf_test(current, alpha=alpha)["reject_unit_root"]
+            else:
+                res = phillips_perron_test(current)
+                stationary = bool(res.get("reject_unit_root", False))
+        except Exception:
+            break
+        if stationary:
+            break
+        current = current.diff().dropna()
+        d += 1
+    return d
+
+
+def nsdiffs(
+    series: Any,
+    *,
+    m: int,
+    max_D: int = 1,
+    threshold: float = 0.64,
+) -> int:
+    """Number of seasonal differences via seasonal strength (forecast::nsdiffs).
+
+    Uses the Wang-Smyth-Hyndman seasonal strength F_s = max(0, 1 - Var(remainder)
+    / Var(seasonal + remainder)) from an STL decomposition; a seasonal difference
+    is applied while F_s exceeds ``threshold`` (default 0.64), up to ``max_D``.
+    """
+
+    period = int(m)
+    if period < 2:
+        raise ValueError("m must be >= 2")
+    from statsmodels.tsa.seasonal import STL
+
+    current = pd.Series(series).dropna().astype(float)
+    D = 0
+    while D < int(max_D) and len(current) >= 2 * period:
+        try:
+            res = STL(current, period=period).fit()
+            resid = np.asarray(res.resid, dtype=float)
+            seasonal = np.asarray(res.seasonal, dtype=float)
+            var_resid = float(np.var(resid))
+            var_sr = float(np.var(seasonal + resid))
+            strength = max(0.0, 1.0 - var_resid / var_sr) if var_sr > 0 else 0.0
+        except Exception:
+            break
+        if strength < float(threshold):
+            break
+        current = current.diff(period).dropna()
+        D += 1
+    return D
+
+
 def phillips_perron_test(values: Sequence[float] | np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]:
     """Run the native Phillips-Perron Z_tau unit-root test."""
 
@@ -728,6 +803,8 @@ __all__ = [
     "panel_snapshot",
     "adf_test",
     "kpss_test",
+    "ndiffs",
+    "nsdiffs",
     "phillips_perron_test",
     "sample_coverage",
     "stationarity_tests",
