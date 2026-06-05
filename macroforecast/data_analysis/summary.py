@@ -868,6 +868,53 @@ def dfgls_test(
     }
 
 
+def zivot_andrews_test(
+    series: Any,
+    *,
+    regression: str = "c",
+    trim: float = 0.15,
+    maxlag: int | None = None,
+    autolag: str | None = "AIC",
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Zivot-Andrews unit-root test allowing one endogenous structural break.
+
+    R analogue of ``urca::ur.za``. Tests the unit-root null against a
+    trend-stationary alternative with a single break whose date is chosen
+    endogenously to be least favourable to the null. ``regression`` places the
+    break in the intercept ('c'), the trend ('t'), or both ('ct'); ``trim`` is
+    the fraction of the sample excluded at each end when searching for the break.
+    Returns the minimised statistic, the ``p`` value, the 1/5/10% critical
+    values, the selected lag, the estimated break position (index and label), and
+    the unit-root rejection flag at ``alpha``.
+    """
+
+    from statsmodels.tsa.stattools import zivot_andrews
+
+    if regression not in {"c", "t", "ct"}:
+        raise ValueError("regression must be 'c', 't', or 'ct'")
+    clean = pd.Series(series).dropna().astype(float)
+    values = clean.to_numpy()
+    stat, pvalue, crit, used_lag, break_idx = zivot_andrews(
+        values, trim=trim, maxlag=maxlag, regression=regression, autolag=autolag
+    )
+    crit_values = {str(level): float(value) for level, value in crit.items()}
+    break_idx = int(break_idx)
+    break_label = clean.index[break_idx] if 0 <= break_idx < len(clean.index) else None
+    return {
+        "test": "zivot_andrews",
+        "statistic": float(stat),
+        "p_value": float(pvalue),
+        "used_lag": int(used_lag),
+        "n_obs": int(values.size),
+        "regression": regression,
+        "critical_values": crit_values,
+        "break_index": break_idx,
+        "break_label": (str(break_label) if break_label is not None else None),
+        "reject_unit_root": bool(pvalue < alpha),
+    }
+
+
 def phillips_perron_test(values: Sequence[float] | np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]:
     """Run the native Phillips-Perron Z_tau unit-root test."""
 
@@ -1241,6 +1288,7 @@ __all__ = [
     "nsdiffs",
     "phillips_perron_test",
     "dfgls_test",
+    "zivot_andrews_test",
     "sample_coverage",
     "stationarity_tests",
     "summarize_data",

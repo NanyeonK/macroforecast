@@ -571,6 +571,7 @@ step metadata.
 - `adf_test` -- Augmented Dickey-Fuller unit-root test for a single series (flat result).
 - `kpss_test` -- KPSS stationarity test for a single series (flat result).
 - `dfgls_test` -- Elliott-Rothenberg-Stock DF-GLS GLS-detrended unit-root test (urca::ur.ers).
+- `zivot_andrews_test` -- Zivot-Andrews unit-root test with one endogenous structural break (urca::ur.za).
 
 - `ndiffs` -- number of first differences for stationarity (KPSS/ADF/PP; forecast::ndiffs).
 - `nsdiffs` -- number of seasonal differences via STL seasonal strength (forecast::nsdiffs).
