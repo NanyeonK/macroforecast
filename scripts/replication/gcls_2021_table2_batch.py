@@ -77,6 +77,52 @@ def _slug(target: str, horizon: int, policy: str, model: str, feature: str) -> s
     return f"{target}_h{horizon}_{policy}_{model}_{feature}".replace("/", "_")
 
 
+def _csv_values(value: str | None) -> set[str] | None:
+    if value is None:
+        return None
+    values = {part.strip() for part in value.split(",") if part.strip()}
+    return values or None
+
+
+def _csv_ints(value: str | None) -> set[int] | None:
+    values = _csv_values(value)
+    if values is None:
+        return None
+    return {int(value) for value in values}
+
+
+def _filter_tasks(
+    tasks: list[tuple[str, int, str, str, str]],
+    args: argparse.Namespace,
+) -> list[tuple[str, int, str, str, str]]:
+    targets = _csv_values(args.targets)
+    horizons = _csv_ints(args.horizons)
+    policies = _csv_values(args.policies)
+    models = _csv_values(args.models)
+    features = _csv_values(args.feature_cases)
+    contains = _csv_values(args.task_contains)
+    out: list[tuple[str, int, str, str, str]] = []
+    for task in tasks:
+        target, horizon, policy, model, feature = task
+        slug = _slug(target, horizon, policy, model, feature)
+        if targets is not None and target not in targets:
+            continue
+        if horizons is not None and horizon not in horizons:
+            continue
+        if policies is not None and policy not in policies:
+            continue
+        if models is not None and model not in models:
+            continue
+        if features is not None and feature not in features:
+            continue
+        if contains is not None and not any(token in slug for token in contains):
+            continue
+        out.append(task)
+    if args.limit is not None:
+        out = out[: max(0, int(args.limit))]
+    return out
+
+
 def _run_task(task: tuple[str, int, str, str, str], args: argparse.Namespace) -> dict[str, object]:
     target, horizon, policy, model, feature = task
     slug = _slug(target, horizon, policy, model, feature)
@@ -180,6 +226,17 @@ def main() -> None:
     parser.add_argument("--ga-population", type=int, default=25)
     parser.add_argument("--ga-generations", type=int, default=25)
     parser.add_argument("--skip-existing", action="store_true")
+    parser.add_argument("--targets", help="Comma-separated target aliases, e.g. INDPRO,EMP")
+    parser.add_argument("--horizons", help="Comma-separated horizons, e.g. 1,3,6")
+    parser.add_argument("--policies", help="Comma-separated target policies")
+    parser.add_argument("--models", help="Comma-separated model names")
+    parser.add_argument("--feature-cases", help="Comma-separated feature cases")
+    parser.add_argument(
+        "--task-contains",
+        help="Comma-separated substrings matched against the task slug",
+    )
+    parser.add_argument("--limit", type=int, help="Run only the first N filtered tasks")
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     out_root = Path(args.out_root)
@@ -190,14 +247,40 @@ def main() -> None:
         (target, horizon, policy, model, feature)
         for (target, horizon), (policy, model, feature) in sorted(PAPER_TABLE2.items())
     ]
+    tasks = _filter_tasks(tasks, args)
     summary = {
         "status": "running",
         "workers": args.workers,
         "task_count": len(tasks),
         "started_at_epoch": time.time(),
         "args": vars(args),
+        "tasks": [
+            {
+                "target": target,
+                "horizon": horizon,
+                "policy": policy,
+                "model": model,
+                "feature": feature,
+                "slug": _slug(target, horizon, policy, model, feature),
+            }
+            for target, horizon, policy, model, feature in tasks
+        ],
     }
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    if args.dry_run:
+        for task in summary["tasks"]:
+            print("TASK_PLAN", json.dumps(task), flush=True)
+        summary.update(
+            {
+                "status": "dry_run",
+                "finished_at_epoch": time.time(),
+                "finished_count": 0,
+                "failed_count": 0,
+                "failures": [],
+            }
+        )
+        summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        return
 
     results: list[dict[str, object]] = []
     with cf.ThreadPoolExecutor(max_workers=args.workers) as executor:

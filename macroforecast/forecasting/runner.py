@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import warnings
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -383,13 +383,29 @@ def run(
             fitted_features = fixed_feature_builder
             feature_updated = origin_count == 0
 
-        train_features = fitted_features.transform(prepared.panel, index=fit_labels)
-        test_features = _test_feature_builder(fitted_features).transform(
-            prepared.panel, index=test_labels
+        feature_labels = _combined_feature_labels(
+            fit_labels,
+            selection_labels,
+            test_labels,
         )
-        selection_features = _test_feature_builder(fitted_features).transform(
+        all_features = _test_feature_builder(fitted_features).transform(
             prepared.panel,
-            index=selection_labels,
+            index=feature_labels,
+        )
+        train_features = _slice_feature_set(
+            all_features,
+            fit_labels,
+            drop_missing=bool(getattr(fitted_features.spec, "drop_missing", True)),
+        )
+        test_features = _slice_feature_set(
+            all_features,
+            test_labels,
+            drop_missing=False,
+        )
+        selection_features = _slice_feature_set(
+            all_features,
+            selection_labels,
+            drop_missing=False,
         )
         if policy == "path_average":
             X_selection = selection_features.X
@@ -2015,6 +2031,43 @@ def _test_feature_builder(builder: Any) -> Any:
     if not getattr(builder.spec, "drop_missing", True):
         return builder
     return replace(builder, spec=replace(builder.spec, drop_missing=False))
+
+
+def _combined_feature_labels(*indexes: Iterable[Any]) -> pd.Index:
+    labels = pd.Index([])
+    for index in indexes:
+        labels = labels.append(pd.Index(index))
+    return labels.unique()
+
+
+def _slice_feature_set(
+    features: FeatureSet,
+    index: Iterable[Any],
+    *,
+    drop_missing: bool,
+) -> FeatureSet:
+    labels = pd.Index(index)
+    X = features.X.reindex(labels)
+    y = features.y.reindex(labels)
+    if drop_missing:
+        aligned = pd.concat([X, y], axis=1).dropna()
+        X = aligned.loc[:, X.columns]
+        y = aligned.loc[:, y.columns]
+    X = X.copy()
+    y = y.copy()
+    X.attrs.update(features.X.attrs)
+    y.attrs.update(features.y.attrs)
+    return FeatureSet(
+        X=X,
+        y=y,
+        metadata=dict(features.metadata),
+        feature_metadata=features.feature_metadata.copy(),
+        target_metadata=features.target_metadata.copy(),
+        target=features.target,
+        targets=features.targets,
+        horizons=features.horizons,
+        predictors=features.predictors,
+    )
 
 
 def _align_feature_xy(X: Any, y: Any) -> tuple[pd.DataFrame, pd.Series]:
