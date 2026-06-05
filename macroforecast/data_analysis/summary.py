@@ -831,6 +831,43 @@ def nsdiffs(
     return D
 
 
+def dfgls_test(
+    series: Any,
+    *,
+    trend: str = "c",
+    method: str = "aic",
+    alpha: float = 0.05,
+) -> dict[str, Any]:
+    """Elliott-Rothenberg-Stock DF-GLS unit-root test for a single series.
+
+    R analogue of ``urca::ur.ers`` (type ``"DF-GLS"``). The series is locally
+    GLS-detrended before an augmented Dickey-Fuller regression, giving higher
+    power than the standard ADF test against persistent stationary alternatives.
+    ``trend`` is the deterministic specification, ``'c'`` (demeaned) or ``'ct'``
+    (de-trended); ``method`` selects the lag length ('aic', 'bic', or 't-stat').
+    Returns the statistic, the MacKinnon ``p`` value, the selected lag, the 1/5/10%
+    critical values, and the unit-root rejection flag at ``alpha``.
+    """
+
+    from arch.unitroot import DFGLS
+
+    if trend not in {"c", "ct"}:
+        raise ValueError("trend must be 'c' (demean) or 'ct' (detrend)")
+    values = pd.Series(series).dropna().astype(float).to_numpy()
+    test = DFGLS(values, trend=trend, method=str(method).lower())
+    crit = {str(level): float(value) for level, value in test.critical_values.items()}
+    return {
+        "test": "dfgls",
+        "statistic": float(test.stat),
+        "p_value": float(test.pvalue),
+        "used_lag": int(test.lags),
+        "n_obs": int(values.size),
+        "trend": trend,
+        "critical_values": crit,
+        "reject_unit_root": bool(test.pvalue < alpha),
+    }
+
+
 def phillips_perron_test(values: Sequence[float] | np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]:
     """Run the native Phillips-Perron Z_tau unit-root test."""
 
@@ -1203,6 +1240,7 @@ __all__ = [
     "ndiffs",
     "nsdiffs",
     "phillips_perron_test",
+    "dfgls_test",
     "sample_coverage",
     "stationarity_tests",
     "summarize_data",
