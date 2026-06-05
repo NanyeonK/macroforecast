@@ -153,6 +153,7 @@ class FeatureSpec:
         step_states = _fit_feature_step_pipeline(
             panel,
             predictors=predictor_values,
+            targets=target_values,
             steps=self.feature_steps,
             target_frame=_target_frame_for_feature_steps(
                 panel,
@@ -1087,6 +1088,10 @@ def _build_step_predictors(
     root = panel.loc[:, fitted.predictors].copy()
     root.index.name = "date"
     outputs: dict[str, pd.DataFrame] = {"panel": root}
+    if fitted.targets:
+        target_root = panel.loc[:, fitted.targets].copy()
+        target_root.index.name = "date"
+        outputs["target_panel"] = target_root
     included: list[pd.DataFrame] = []
     feature_records: list[dict[str, Any]] = []
     if fitted.spec.include_original:
@@ -1227,6 +1232,7 @@ def _fit_feature_step_pipeline(
     panel: pd.DataFrame,
     *,
     predictors: tuple[str, ...],
+    targets: tuple[str, ...],
     steps: tuple[dict[str, Any], ...],
     target_frame: pd.DataFrame | None = None,
 ) -> tuple[_FittedFeatureStep, ...]:
@@ -1235,6 +1241,15 @@ def _fit_feature_step_pipeline(
     root = panel.loc[:, predictors].copy()
     root.index.name = "date"
     outputs: dict[str, pd.DataFrame] = {"panel": root}
+    if targets:
+        # Explicit target-derived feature transforms are needed by forecasting
+        # designs such as Goulet Coulombe et al. (2021), where MARX_y and MAF_y
+        # are separate from the plain autoregressive target-lag block. The
+        # resolved predictor set still rejects target overlap; users must opt in
+        # by setting a feature step's input to "target_panel".
+        target_root = panel.loc[:, targets].copy()
+        target_root.index.name = "date"
+        outputs["target_panel"] = target_root
     fitted_steps: list[_FittedFeatureStep] = []
     for step in steps:
         plan = _feature_step_plan(step)
@@ -2884,7 +2899,7 @@ def _normalize_feature_steps(
     if steps is None:
         return ()
     normalized: list[dict[str, Any]] = []
-    seen = {"panel"}
+    seen = {"panel", "target_panel"}
     for position, step in enumerate(steps, start=1):
         if not isinstance(step, Mapping):
             raise TypeError("each feature step must be a mapping")

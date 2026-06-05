@@ -29,7 +29,7 @@ Sources checked for this page:
 | Exact FRED-MD vintage | not stated in the checked public/local materials | Use a historical FRED-MD vintage just after the `2017M12` sample end; verify `2018-01`, then compare `2018-02`/`2018-03` if Dec. 2017 coverage differs. |
 | MATLAB default optimizer behavior | partially stated | We can match the high-level optimizer design, but MATLAB default internal randomness/surrogate settings are not exactly portable. |
 | MARX reference code | available as a small R snippet | `macroforecast.feature_engineering.feature_matrix(..., specification="MARX")` implements the same moving-average lag rotation logic. |
-| `macroforecast==0.9.5a1` diagnostic run | invalid as replication evidence | The runner and diagnostic harness used `row < origin` for h-step targets, which leaks labels whose realization date is after the forecast origin. The diagnostic also used `average_change` on an already transformed FRED-MD target, creating a double-difference target. Keep the run as an investigation log only. |
+| `macroforecast==0.9.5a1` diagnostic run | invalid as replication evidence | The runner and diagnostic harness used `row < origin` for h-step targets, which leaks labels whose realization date is after the forecast origin. The diagnostic also used `average_change` on an already transformed FRED-MD target, creating a double-difference target. A later audit also found that the first Table 2 script omitted the paper's `MARX_y` and `MAF_y` target-derived blocks. Keep those runs as investigation logs only. |
 
 Replication level:
 : `reconstructed_design`, not `exact_table_replication`.
@@ -91,22 +91,26 @@ alias map before running the grid. Do not silently substitute a nearby series.
 ## Feature Matrices
 
 The main text fixes sixteen feature-matrix cases. Lags of the
-month-to-month change or log-change of the target are always included.
+month-to-month change or log-change of the target are always included. Cases
+with `MARX` and `MAF` also include target-derived blocks, written in the paper
+as `MARX_y` and `MAF_y`; these are not the same as the plain autoregressive
+target lags. Cases with `Level` include raw level variables and the target's raw
+level `Y_t`.
 
 | Paper case | Content | Package expression |
 | --- | --- | --- |
 | `F` | factors and factor lags | `feature_matrix(X, specification="F", n_factors=8, lags=range(1, 13))` |
 | `F-X` | factors plus lagged transformed observables | `specification="F-X"` |
-| `F-MARX` | factors plus MARX rotations | `specification="F-MARX"` |
-| `F-MAF` | factors plus moving-average factors | `specification="F-MAF"` |
-| `F-Level` | factors plus levels | `specification="F-Level"`, with `level_data=levels` |
+| `F-MARX` | factors plus predictor MARX and `MARX_y` | `pca_step(...)`, factor lags, `marx_step(name="MARX_X")`, and `marx_step(name="MARX_y", input="target_panel")` |
+| `F-MAF` | factors plus predictor MAF and `MAF_y` | `pca_step(...)`, factor lags, `maf_step(name="MAF_X")`, and `maf_step(name="MAF_y", input="target_panel")` |
+| `F-Level` | factors plus raw levels including `Y_t` | `specification="F-Level"` for inspection, or `LEVEL__*` columns with `lag_step(lags=range(0, 1))` in runner mode |
 | `F-X-MARX` | factors, lagged observables, MARX | `specification="F-X-MARX"` |
 | `F-X-MAF` | factors, lagged observables, MAF | `specification="F-X-MAF"` |
 | `F-X-Level` | factors, lagged observables, levels | `specification="F-X-Level"`, with `level_data=levels` |
 | `F-X-MARX-Level` | factors, lagged observables, MARX, levels | `specification="F-X-MARX-Level"`, with `level_data=levels` |
 | `X` | lagged transformed observables | `specification="X"` |
-| `MARX` | MARX rotations | `specification="MARX"` |
-| `MAF` | moving-average factors | `specification="MAF"` |
+| `MARX` | predictor MARX plus `MARX_y` | `marx_step(name="MARX_X")` plus `marx_step(name="MARX_y", input="target_panel")` |
+| `MAF` | predictor MAF plus `MAF_y` | `maf_step(name="MAF_X")` plus `maf_step(name="MAF_y", input="target_panel")` |
 | `X-MARX` | lagged observables plus MARX | `specification="X-MARX"` |
 | `X-MAF` | lagged observables plus MAF | `specification="X-MAF"` |
 | `X-Level` | lagged observables plus levels | `specification="X-Level"`, with `level_data=levels` |
@@ -138,9 +142,9 @@ order `l`, replace the lag-`l` column by the mean of lags `1, ..., l`.
 | --- | --- | --- |
 | AR | autoregressive benchmark; lag order selected by BIC | `mf.models.ar`; add BIC lag search in the runner grid when matching the benchmark |
 | FM | Stock-Watson-style factor model; BIC hyperparameter selection mentioned in main text | `mf.models.far` or factor features with `mf.models.ols`; for ML comparisons keep `(P_y, P_f, k)=(12, 12, 8)` where relevant |
-| Adaptive Lasso | gamma `1`; first-step ridge; ridge lambda by GA; 100 log-spaced lasso lambdas; 5-fold squared-loss CV | `mf.models.adaptive_lasso(gamma=1, initial="ridge")`; use `mf.model_selection` to search `initial_alpha` and `alpha` |
-| Elastic Net | 100 lambda values; 100 alpha values in `[0.01, 1]`; 5-fold squared-loss CV | `mf.models.elastic_net`; use model-owned search space over `alpha` and `l1_ratio` |
-| Linear Boosting | component-wise L2 boosting; `m=min(200,#Z/3)` sampled features; `N in 1..500`, `eta in [0,1]` via GA | `mf.models.glmboost`; search `n_iter` and `learning_rate`; candidate subsampling is an approximation unless a custom GLMBoost candidate sampler is supplied |
+| Adaptive Lasso | gamma `1`; first-step ridge; ridge lambda by GA; 100 log-spaced lasso lambdas; random 5-fold squared-loss CV | `mf.models.adaptive_lasso(gamma=1, initial="ridge")`; use `mf.model_selection.custom_search()` for the paper lambda grid and ridge-first-step search. The supplied script uses a deterministic ridge-alpha grid approximation because the original MATLAB GA state is unavailable. |
+| Elastic Net | 100 lambda values; 100 alpha values in `[0.01, 1]`; random 5-fold squared-loss CV | `mf.models.elastic_net(standardize=True)` plus `mf.model_selection.custom_search()` over a data-dependent lambda grid and `l1_ratio` grid. `standardize=True` is model-local scaling inside each fit window, not a full-sample preprocessing step. |
+| Linear Boosting | component-wise L2 boosting; `m=min(200,#Z/3)` sampled features; `N in 1..500`, `eta in [0,1]` via GA | `mf.models.glmboost(candidate_sampling="random", candidate_fraction=1/3, candidate_cap=200, candidate_rounding="floor")`; search `n_iter` and `learning_rate` with `mf.model_selection.genetic_search()`. |
 | Random Forest | 200 trees; bootstrap sample; terminal node size greater than 5; `#Z/3` split candidates; no CV | `mf.models.random_forest(n_estimators=200, min_samples_leaf=5, max_features=max(1, p//3), bootstrap=True)` |
 | Boosted Trees | initial mean; depth 5 splits; `#Z/3` split candidates; `N in 1..500`, `eta in (0,1)` by Bayesian optimization, 5-fold CV | `mf.models.gradient_boosting`; search `n_estimators` and `learning_rate`; use `max_depth=5` or a leaf-count equivalent depending on the backend |
 
@@ -379,7 +383,7 @@ expanding window with a `FeatureSpec` step pipeline.
 features = mf.feature_engineering.feature_spec(
     target="INDPRO",
     horizon=3,
-    predictors="all",
+    predictors=[column for column in X.columns if column != "INDPRO"],
     lags=None,
     target_lags=range(0, 13),
     target_transform="average_value",
@@ -404,8 +408,15 @@ features = mf.feature_engineering.feature_spec(
             include=True,
         ),
         mf.feature_engineering.marx_step(
-            name="MARX",
+            name="MARX_X",
             input="panel",
+            max_lag=12,
+            include=True,
+        ),
+        mf.feature_engineering.marx_step(
+            name="MARX_y",
+            input="target_panel",
+            columns=["INDPRO"],
             max_lag=12,
             include=True,
         ),
@@ -422,6 +433,9 @@ features: FeatureSpec fitted by forecasting.run() according to feature_policy.
 `FeatureSpec` does not call `feature_matrix()` internally. It uses smaller
 step-level callables so PCA, MAF, scaling, and custom fitted transforms can be
 estimated only on the rows available to each forecast origin.
+The paper's `MARX_y`/`MAF_y` target-derived blocks use
+`input="target_panel"`; this keeps target columns out of `predictors` while
+still allowing the target's observed history to enter the feature matrix.
 
 ### Cell 4C: Run One Reconstructed Design Point
 
@@ -431,8 +445,9 @@ window = mf.window.from_cutoffs(
     test_start="1980-01",
     test_end="2017-12",
     mode="expanding",
-    val_method="blocked_kfold",
+    val_method="random_kfold",
     val_n_splits=5,
+    val_random_state=123,
     horizon=3,
     step=1,
 )
@@ -464,6 +479,11 @@ result.metadata: run-level record of data, feature, model, selection, and window
 The `max_features` value uses a fraction because sklearn accepts fractional
 feature subsampling. If an exact floor rule is required, resolve
 `max(1, p // 3)` after the feature matrix has been materialized.
+
+For learner tuning, the paper reports randomly assigned 5-fold CV, not
+chronological blocked CV. `mf.window.val_random_kfold(...)` is therefore used
+only for this replication surface. The ordinary macro-forecasting default should
+remain time-aware validation such as `blocked_kfold`, `poos`, or `expanding`.
 
 ### Cell 5: Run Table 2 Cells With Package Callables
 
@@ -501,6 +521,7 @@ def package_model_fit_predict(model_name, X_train, y_train, X_test):
             alpha=0.01,
             l1_ratio=0.5,
             max_iter=20_000,
+            standardize=True,
         )
     elif model_name == "glmboost":
         fit = mf.models.glmboost(
@@ -508,6 +529,11 @@ def package_model_fit_predict(model_name, X_train, y_train, X_test):
             y_train,
             n_iter=100,
             learning_rate=0.1,
+            candidate_sampling="random",
+            candidate_fraction=1 / 3,
+            candidate_cap=200,
+            candidate_rounding="floor",
+            random_state=123,
         )
     elif model_name == "random_forest":
         p = X_train.shape[1]
@@ -717,6 +743,27 @@ Long-horizon boundary:
   replication run unless a later vintage supplies the required realized target
   dates.
 
+Scripted package run:
+
+```bash
+uv run python scripts/replication/gcls_2021_table2_batch.py \
+  --out-root /path/to/table2_run \
+  --vintage 2018-01 \
+  --start-year 1980 \
+  --end-year 2017 \
+  --workers 8 \
+  --tuning-mode paper-small
+```
+
+`--tuning-mode off` uses fixed paper-style defaults and is the fastest pipeline
+check. `--tuning-mode paper-small` uses the same callable path as the paper
+settings but with small lambda grids and short stochastic searches; use it for
+server smoke runs. `--tuning-mode paper` expands Elastic Net to 100 lambda
+values by 100 `l1_ratio` values, uses random 5-fold CV, and uses the configured
+Bayesian/GA search sizes for boosted trees and linear boosting. Because the
+original MATLAB GA/Bayesian optimizer state is not available, exact
+bit-for-bit optimizer replication is not claimed.
+
 ### Cell 6: Evaluate Against the FM Benchmark
 
 ```python
@@ -908,10 +955,10 @@ Why the diagnostics can differ from the paper:
 | Gap | Current handling |
 | --- | --- |
 | Exact FRED-MD vintage | start from `2018-01.csv` extracted from the official historical vintage zip; compare nearby 2018 vintages if Dec. 2017 coverage differs |
-| MATLAB GA/Bayesian optimizer defaults | use the article's ranges, folds, and iteration counts; record backend difference |
+| MATLAB GA/Bayesian optimizer defaults | use the article's ranges, random 5-fold CV, and iteration counts where possible; record backend difference and unavailable MATLAB optimizer seed/state |
 | BIC lag selection for AR/FM | add a small benchmark helper or run fixed `(12, 12, 8)` for the first reconstructed pass |
 | Boosted-tree depth interpretation | document whether Python backend uses `max_depth=5` or an exact 5-split/6-leaf equivalent |
-| Linear Boosting candidate sampling | current `glmboost` is component-wise boosting; add a candidate-sampling option for exact appendix alignment if needed |
+| Linear Boosting candidate sampling | implemented with explicit `glmboost` candidate settings: `candidate_sampling="random"`, `candidate_fraction=1/3`, `candidate_cap=200`, `candidate_rounding="floor"`, which samples `m=min(200, floor(#Z/3))` candidate predictors per boosting step; MATLAB GA optimizer state remains unavailable |
 | Full monthly OOS calendar | monthly capped diagnostic now runs all realized months from `1980-01` through `2017-12`; exact replication still needs uncapped learner settings, optimizer search, and fit-aware feature state |
 | Fit-aware feature replication | current diagnostics use full-sample feature fitting; next replication pass should use expanding feature state inside each origin |
 | Paper captures | add static captures of Table 1, Table 2, and selected Appendix B tables only after the settings page is accepted |

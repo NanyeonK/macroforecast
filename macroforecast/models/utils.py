@@ -248,17 +248,28 @@ def _residual_metrics(residuals: pd.Series) -> dict[str, float | int]:
 def _coefficient_diagnostics(
     estimator: Any, columns: pd.Index
 ) -> pd.Series | pd.DataFrame | None:
-    coef = getattr(estimator, "coef_", None)
+    target_estimator = estimator
+    coef = getattr(target_estimator, "coef_", None)
+    if coef is None and hasattr(estimator, "steps"):
+        try:
+            target_estimator = estimator.steps[-1][1]
+            coef = getattr(target_estimator, "coef_", None)
+        except Exception:  # noqa: BLE001 - diagnostics should stay best-effort.
+            coef = None
     if coef is None:
         return None
     values = np.asarray(coef, dtype=float)
     if values.ndim == 0:
         return pd.Series([float(values)], index=["coef"], name="coefficient")
     if values.ndim == 1:
-        index = _coefficient_feature_names(estimator, columns, len(values))
+        index = _coefficient_feature_names(target_estimator, columns, len(values))
         return pd.Series(values, index=index, name="coefficient")
     if values.ndim == 2:
-        feature_index = _coefficient_feature_names(estimator, columns, values.shape[1])
+        feature_index = _coefficient_feature_names(
+            target_estimator,
+            columns,
+            values.shape[1],
+        )
         return pd.DataFrame(values, columns=feature_index)
     return None
 

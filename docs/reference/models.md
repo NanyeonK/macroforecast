@@ -420,6 +420,22 @@ The clean model API does not silently standardize predictors for models that
 are traditionally scale-sensitive. Instead, those models advertise
 `requires_scaling=True` through `ModelSpec`, `list_model_specs()`,
 `model_search_space()`, and `select_params()` metadata.
+`lasso(..., standardize=True)` and `elastic_net(..., standardize=True)` are
+explicit opt-in replication helpers; the default remains `False`.
+
+There are two different scaling locations:
+
+- `macroforecast.preprocessing.standardize_panel()` standardizes a panel before
+  model fitting. If it is run on the full sample outside the forecasting runner,
+  it uses full-sample moments. In a leakage-safe run, use runner preprocessing
+  specs and window policies so the scaling state is fitted only on allowed rows.
+- `model(..., standardize=True)` standardizes inside that model's own fit call.
+  It is useful when only selected models need model-local scaling, or when a
+  lasso/elastic-net replication requires the penalty grid to be defined on
+  window-local standardized predictors. For broader model-specific
+  transformations beyond scaling, run separate model pipelines or use a
+  model-pipeline runner layer rather than hiding those transformations inside a
+  single estimator.
 
 Current scale-sensitive callable models:
 
@@ -571,7 +587,7 @@ mathematical objective in macroforecast's callable API.
 | `tvp_ridge` | `TVPRidge`, local source `wiki/raw/paper_code/coulombe_site_github_20260530/tvpridge/R/MV2SRR_v210407.R`; upstream <https://github.com/philgoucou/tvpridge> | Goulet Coulombe TVP ridge / two-step ridge regression. | Direct Python port of the R `tvp.ridge` pipeline: `Zfun` expansion, `dualGRR` dual/primal generalized ridge, R-style random-fold CV helpers, 2SRR coefficient-innovation reweighting, residual-volatility reweighting, and R return fields. |
 | `group_lasso` | `grpreg`, `R/grpreg.R`: <https://rdrr.io/cran/grpreg/src/R/grpreg.R> | Group penalty over coefficient blocks. | Same group-lasso penalty family for Gaussian loss; macroforecast uses a single-alpha proximal-gradient solver rather than a full regularization path. |
 | `sparse_group_lasso` | `sparsegl`, `R/sparsegl.R`: <https://rdrr.io/cran/sparsegl/src/R/sparsegl.R> | Sparse group lasso objective with group and feature-level penalties. | Same penalty decomposition; macroforecast uses one selected `alpha` and `l1_ratio`, while `sparsegl` is a full path solver with additional bounds/families. |
-| `glmboost` | `mboost`, `R/mboost.R`: <https://rdrr.io/cran/mboost/src/R/mboost.R>; component learner in `R/bolscw.R` | Componentwise gradient/L2 boosting. | Same Gaussian componentwise L2 update: center predictors by default, select the base learner by normalized correlation, and apply shrinkage. macroforecast omits formula handling, weights, families, hat values, and stopping machinery. |
+| `glmboost` | `mboost`, `R/mboost.R`: <https://rdrr.io/cran/mboost/src/R/mboost.R>; component learner in `R/bolscw.R`; Goulet Coulombe et al. (2021) Appendix A.6 for random candidate sampling | Componentwise gradient/L2 boosting. | Same Gaussian componentwise L2 update: center predictors by default, select the base learner by normalized correlation, and apply shrinkage. The paper's per-step random candidate rule is expressed as `candidate_sampling="random"`, `candidate_fraction=1/3`, `candidate_cap=200`, `candidate_rounding="floor"`, not as a hidden preset. macroforecast omits formula handling, weights, families, hat values, and stopping machinery. |
 
 The direct implementations should be reviewed against the objective, scaling,
 intercept handling, penalty normalization, and solver stopping rule separately.
@@ -1121,7 +1137,14 @@ Default model-selection method: `cv_path`.
 ### lasso
 
 ```python
-macroforecast.models.lasso(X, y, *, alpha=1.0, max_iter=20000)
+macroforecast.models.lasso(
+    X,
+    y,
+    *,
+    alpha=1.0,
+    max_iter=20000,
+    standardize=False,
+)
 ```
 
 Fits lasso regression with an L1 penalty. There is no `lasso_path()` model
@@ -1133,6 +1156,7 @@ Backend: `sklearn.linear_model.Lasso`.
 | --- | --- | --- | --- |
 | `alpha` | `1.0` | yes | L1 penalty strength. |
 | `max_iter` | `20000` | fixed by preset | Optimization iteration cap. |
+| `standardize` | `False` | fixed by preset | Standardize predictors inside the fitted estimator. Defaults to `False` because preprocessing/window policy usually owns scaling. Set `True` for lasso-style replications where scaling must be fit inside each model window. |
 
 | Preset | `alpha` |
 | --- | --- |
@@ -1152,6 +1176,7 @@ macroforecast.models.elastic_net(
     alpha=1.0,
     l1_ratio=0.5,
     max_iter=20000,
+    standardize=False,
 )
 ```
 
@@ -1164,6 +1189,7 @@ Backend: `sklearn.linear_model.ElasticNet`.
 | `alpha` | `1.0` | yes | Overall penalty strength. |
 | `l1_ratio` | `0.5` | yes | L1 share of the elastic-net penalty. |
 | `max_iter` | `20000` | fixed by preset | Optimization iteration cap. |
+| `standardize` | `False` | fixed by preset | Standardize predictors inside the fitted estimator. Defaults to `False`; set `True` for glmnet/MATLAB-style elastic-net replications whose penalty grid assumes window-local standardized predictors. |
 
 | Preset | `alpha` | `l1_ratio` |
 | --- | --- | --- |
@@ -1516,6 +1542,13 @@ macroforecast.models.glmboost(
     n_iter=100,
     learning_rate=0.1,
     center=True,
+    candidate_sampling="all",
+    candidate_count=None,
+    candidate_fraction=None,
+    candidate_cap=None,
+    candidate_min=1,
+    candidate_rounding="floor",
+    random_state=None,
 )
 ```
 
@@ -1526,12 +1559,24 @@ is `mboost::glmboost`. macroforecast implements the matrix-input Gaussian path:
 predictors are centered by default, each iteration selects the column with the
 largest normalized correlation with the current residual, and the selected
 least-squares coefficient is shrunk by `learning_rate`.
+Candidate sampling is deliberately decomposed into separate arguments. For
+Goulet Coulombe, Leroux, Stevanovic, and Surprenant (2021), Appendix A.6, use
+`candidate_sampling="random"`, `candidate_fraction=1/3`,
+`candidate_cap=200`, and `candidate_rounding="floor"`, which gives
+`m=min(200, floor(n_features / 3))` sampled predictors at each boosting step.
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
 | `n_iter` | `100` | yes | Number of boosting iterations. |
 | `learning_rate` | `0.1` | yes | Shrinkage applied to each update. |
 | `center` | `True` | no | Center predictors before componentwise updates, matching `mboost::glmboost(..., center = TRUE)`. |
+| `candidate_sampling` | `"all"` | fixed by preset | `"all"` searches every usable predictor each step; `"random"` samples a candidate subset before selecting the best base learner. |
+| `candidate_count` | `None` | fixed by preset | Fixed sampled candidate count when `candidate_sampling="random"`. Mutually exclusive with `candidate_fraction`. |
+| `candidate_fraction` | `None` | fixed by preset | Fraction of predictors sampled each step when `candidate_sampling="random"`. |
+| `candidate_cap` | `None` | fixed by preset | Maximum sampled candidate count after resolving `candidate_count` or `candidate_fraction`. |
+| `candidate_min` | `1` | fixed by preset | Minimum sampled candidate count. |
+| `candidate_rounding` | `"floor"` | fixed by preset | Rounding rule for `candidate_fraction`: `"floor"`, `"ceil"`, or `"round"`. |
+| `random_state` | `None` | fixed by preset | Seed for per-step candidate feature sampling when `candidate_sampling="random"`. |
 
 | Preset | `n_iter` | `learning_rate` |
 | --- | --- | --- |

@@ -566,6 +566,28 @@ result = mf.forecasting.run(
 an error instead of being silently ignored. For a single model, direct parameter
 names are also accepted, including dict-valued parameters such as
 `params={"base_params": {"alpha": 0.1}}` for a fit-time ensemble spec.
+This is also how model-local preprocessing options are expressed. For example,
+Elastic Net can standardize predictors inside each fit window while a tree model
+uses the raw feature matrix:
+
+```python
+result = mf.forecasting.run(
+    panel,
+    ["elastic_net", "random_forest"],
+    window=window,
+    features=features,
+    params={
+        "elastic_net": {"standardize": True},
+        "random_forest": {"n_estimators": 200, "max_features": 1 / 3},
+    },
+)
+```
+
+This differs from `macroforecast.preprocessing.standardize_panel()`, which is a
+panel preprocessing step. If that preprocessing is run on the full panel outside
+the runner, it uses full-sample moments. If leakage-safe scaling is needed for
+all models, use runner preprocessing specs and window policies. If only selected
+models need scaling, use model-local options such as `standardize=True`.
 
 Forecast rows record the actual fixed-plus-selected parameter set in the
 `params` column. For example, if `params={"ridge": {"fit_intercept": False}}`

@@ -258,7 +258,7 @@ func(
 | --- | --- |
 | `model` | Fit callable resolved from the model name, callable, or `ModelSpec`. |
 | `X`, `y` | Aligned model-selection sample. |
-| `splits` | List of temporal train/validation position splits. |
+| `splits` | List of train/validation position splits. The default contract is temporal unless non-temporal folds are explicitly allowed. |
 | `metric` | Resolved metric callable. |
 | `fixed_params` | Parameters applied to every candidate. |
 | `search` | The prepared `SearchSpec`. |
@@ -397,6 +397,7 @@ macroforecast.model_selection.select_params(
     population_size=None,
     generations=None,
     mutation_rate=None,
+    allow_non_temporal_splits=False,
 )
 ```
 
@@ -408,7 +409,7 @@ Input:
 | `X` | pandas object | required | Predictors, panel, or target series depending on model input kind. |
 | `y` | pandas Series or `None` | `None` | Supervised target when separate from `X`. |
 | `search` | `SearchSpec` or `None` | `None` | Explicit search spec. If absent, model-owned search space is used. |
-| `window` | `WindowSpec`, str, or `None` | `None` | Temporal window used to create validation splits. Do not pass with `splits`. |
+| `window` | `WindowSpec`, str, or `None` | `None` | Window used to create validation splits. Do not pass with `splits`. |
 | `splits` | sequence of `(train_pos, validation_pos)` or `None` | `None` | Explicit integer-position validation splits, usually produced by `macroforecast.window`. Do not pass with `window`. |
 | `metric` | str or callable | `"mse"` | Metric from `macroforecast.metrics` or custom callable. |
 | `maximize` | bool | `False` | Whether larger metric values are better. |
@@ -416,6 +417,7 @@ Input:
 | `preset` | str or `None` | `None` | Model preset when resolving a registered model. |
 | `method` | str or `None` | model default | Search method when `search=None`. |
 | stochastic options | int/float or `None` | `None` | Used when building a model-owned search spec. |
+| `allow_non_temporal_splits` | bool | `False` | Allow explicit splits whose training positions do not all precede validation positions. Use only for replications that intentionally use random folds. |
 
 Output: `SearchResult`.
 
@@ -438,7 +440,7 @@ result = mf.model_selection.select_params(
 For loss metrics such as `mse`, `rmse`, and `mae`, keep `maximize=False`.
 For custom reward metrics, set `maximize=True`.
 
-When a forecasting runner already has a complete temporal plan, pass explicit
+When a forecasting runner already has a complete window plan, pass explicit
 splits instead of another `window`:
 
 ```python
@@ -461,9 +463,29 @@ result = mf.model_selection.select_params(
 - each split must contain non-empty train and validation integer positions
 - positions must be inside `X`/`y`
 - train and validation positions cannot overlap
-- train positions must precede validation positions; explicit splits are still
-  temporal validation splits, not random iid folds
+- by default, train positions must precede validation positions
 - boolean masks are allowed only when mask length equals the aligned sample
+
+Non-temporal folds are opt-in:
+
+```python
+random_window = mf.window.random_kfold(n_splits=5, random_state=123)
+
+result = mf.model_selection.select_params(
+    "elastic_net",
+    X,
+    y,
+    search=search,
+    window=random_window,
+)
+```
+
+`mf.window.random_kfold(...)` records that the fold assignment is intentionally
+random and the selection metadata stores `temporal_order=False`. If you pass
+explicit random folds yourself, set
+`allow_non_temporal_splits=True`; otherwise `select_params()` raises. This
+keeps ordinary macro-forecast validation time-aware while still allowing
+paper replications whose appendix used random iid folds.
 
 `SearchResult.window` is `"explicit_splits"` when `splits` is used. Metadata
 stores `split_source`, `n_splits`, and a compact `split_summary` with counts and

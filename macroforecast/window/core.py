@@ -28,6 +28,9 @@ _VALIDATION_ALIASES = {
     "blocked_kfold": "blocked_kfold",
     "block_cv": "blocked_kfold",
     "kfold": "blocked_kfold",
+    "random_kfold": "random_kfold",
+    "iid_kfold": "random_kfold",
+    "random_cv": "random_kfold",
 }
 
 
@@ -289,6 +292,7 @@ class ValWindow:
     horizon: int = 1
     step: int = 1
     embargo: int | None = None
+    random_state: int | None = None
     retune_every: TemporalCadence = 1
     retune_on_retrain: bool = True
     reuse_params: bool = True
@@ -326,6 +330,7 @@ class ValWindow:
             "horizon": self.horizon,
             "step": self.step,
             "embargo": self.embargo,
+            "random_state": self.random_state,
             "retune_every": _json_ready(self.retune_every),
             "retune_on_retrain": self.retune_on_retrain,
             "reuse_params": self.reuse_params,
@@ -454,6 +459,7 @@ class WindowSpec:
             n_splits=self.val.n_splits,
             step=self.val.step,
             horizon=self.val.horizon,
+            random_state=self.val.random_state,
             embargo=self.val.embargo
             if self.val.embargo is not None
             else self.embargo
@@ -480,6 +486,7 @@ class WindowSpec:
             n_splits=self.val.n_splits,
             step=self.val.step,
             horizon=self.val.horizon,
+            random_state=self.val.random_state,
             embargo=self.val.embargo
             if self.val.embargo is not None
             else self.embargo
@@ -591,6 +598,7 @@ class WindowSpec:
             n_splits=self.val.n_splits,
             step=self.val.step,
             horizon=self.val.horizon,
+            random_state=self.val.random_state,
             embargo=self.val.embargo
             if self.val.embargo is not None
             else self.estimation.embargo,
@@ -949,7 +957,10 @@ def normalize_window_name(window: str) -> str:
     try:
         return _VALIDATION_ALIASES[key]
     except KeyError as exc:
-        allowed = "last_block, poos, expanding, rolling_blocks, blocked_kfold"
+        allowed = (
+            "last_block, poos, expanding, rolling_blocks, blocked_kfold, "
+            "random_kfold"
+        )
         raise ValueError(
             f"Unknown window method {window!r}. Available methods: {allowed}."
         ) from exc
@@ -1014,6 +1025,7 @@ def from_cutoffs(
     val_horizon: int | None = None,
     val_step: int = 1,
     val_embargo: int | None = None,
+    val_random_state: int | None = None,
     retune_every: TemporalCadence = 1,
     retune_on_retrain: bool = True,
     reuse_params: bool = True,
@@ -1093,10 +1105,18 @@ def from_cutoffs(
             retune_on_retrain=retune_on_retrain,
             reuse_params=reuse_params,
         )
-    else:
+    elif val_key == "blocked_kfold":
         val = val_blocked_kfold(
             n_splits=val_n_splits,
             embargo=val_embargo,
+            retune_every=retune_every,
+            retune_on_retrain=retune_on_retrain,
+            reuse_params=reuse_params,
+        )
+    else:
+        val = val_random_kfold(
+            n_splits=val_n_splits,
+            random_state=val_random_state,
             retune_every=retune_every,
             retune_on_retrain=retune_on_retrain,
             reuse_params=reuse_params,
@@ -1288,6 +1308,31 @@ def val_blocked_kfold(
     )
 
 
+def val_random_kfold(
+    *,
+    n_splits: int = 5,
+    random_state: int | None = 0,
+    retune_every: TemporalCadence = 1,
+    retune_on_retrain: bool = True,
+    reuse_params: bool = True,
+) -> ValWindow:
+    """Validation rule with randomly assigned iid-style folds.
+
+    This is useful for reproducing papers that explicitly used random K-fold
+    CV. It is not the default macro-forecasting validation rule because train
+    folds can contain observations later than their validation folds.
+    """
+
+    return ValWindow(
+        method="random_kfold",
+        n_splits=n_splits,
+        random_state=random_state,
+        retune_every=retune_every,
+        retune_on_retrain=retune_on_retrain,
+        reuse_params=reuse_params,
+    )
+
+
 def test_origins(
     *,
     first_origin: Any | None = None,
@@ -1409,6 +1454,16 @@ def blocked_kfold(*, n_splits: int = 5, embargo: int = 0) -> WindowSpec:
     return spec(
         estimation=estimation_expanding(embargo=embargo),
         val=val_blocked_kfold(n_splits=n_splits, embargo=embargo),
+        test=test_origins(horizon=1),
+    )
+
+
+def random_kfold(*, n_splits: int = 5, random_state: int | None = 0) -> WindowSpec:
+    """Configure randomly assigned iid-style K-fold validation."""
+
+    return spec(
+        estimation=estimation_expanding(),
+        val=val_random_kfold(n_splits=n_splits, random_state=random_state),
         test=test_origins(horizon=1),
     )
 
@@ -1560,6 +1615,40 @@ def blocked_kfold_split(
         raise ValueError("blocked_kfold_split produced no valid chronological folds")
 
 
+def random_kfold_split(
+    n_samples: int,
+    *,
+    n_splits: int = 5,
+    random_state: int | None = 0,
+) -> Iterator[Split]:
+    """Yield randomly assigned K-fold splits.
+
+    Each fold trains on all non-validation positions. This intentionally does
+    not enforce temporal ordering, so use it only when reproducing methods that
+    used random iid folds, not as the default macro forecast validation design.
+    """
+
+    n = _check_n_samples(n_samples)
+    splits = int(n_splits)
+    if splits < 2:
+        raise ValueError("n_splits must be at least 2")
+    if splits > n:
+        raise ValueError("n_splits must be smaller than or equal to n_samples")
+    rng = np.random.default_rng(random_state)
+    shuffled = np.arange(n, dtype=int)
+    rng.shuffle(shuffled)
+    folds = np.array_split(shuffled, splits)
+    all_idx = np.arange(n, dtype=int)
+    for fold in folds:
+        val_idx = np.sort(fold.astype(int, copy=False))
+        if len(val_idx) == 0:
+            continue
+        train_idx = np.setdiff1d(all_idx, val_idx, assume_unique=True)
+        if len(train_idx) == 0:
+            continue
+        yield (train_idx.astype(int, copy=False), val_idx.astype(int, copy=False))
+
+
 def make_splitter(
     validation: str,
     n_samples: int,
@@ -1570,6 +1659,7 @@ def make_splitter(
     n_splits: int = 5,
     step: int = 1,
     horizon: int = 1,
+    random_state: int | None = None,
     embargo: int = 0,
 ) -> list[Split]:
     """Build validation splits from a validation method name."""
@@ -1614,6 +1704,14 @@ def make_splitter(
         )
     elif key == "blocked_kfold":
         splits = list(blocked_kfold_split(n_samples, n_splits=n_splits, embargo=embargo))
+    elif key == "random_kfold":
+        splits = list(
+            random_kfold_split(
+                n_samples,
+                n_splits=n_splits,
+                random_state=random_state,
+            )
+        )
     if not splits:
         raise ValueError(f"Validation method {key!r} produced no splits")
     return splits
@@ -1630,6 +1728,7 @@ def split_table(
     n_splits: int = 5,
     step: int = 1,
     horizon: int = 1,
+    random_state: int | None = None,
     embargo: int = 0,
 ) -> pd.DataFrame:
     """Return validation splits as an inspectable table."""
@@ -1643,6 +1742,7 @@ def split_table(
         n_splits=n_splits,
         step=step,
         horizon=horizon,
+        random_state=random_state,
         embargo=embargo,
     )
     labels = index if index is not None else pd.RangeIndex(int(n_samples))
@@ -1689,6 +1789,8 @@ __all__ = [
     "normalize_window_name",
     "poos",
     "poos_split",
+    "random_kfold",
+    "random_kfold_split",
     "resolve_window",
     "rolling_blocks",
     "rolling_blocks_split",
@@ -1699,5 +1801,6 @@ __all__ = [
     "val_expanding",
     "val_last_block",
     "val_poos",
+    "val_random_kfold",
     "val_rolling_blocks",
 ]

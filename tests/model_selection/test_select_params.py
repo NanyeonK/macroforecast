@@ -348,6 +348,46 @@ def test_select_params_accepts_explicit_integer_splits() -> None:
     assert result.metadata["n_splits"] == 2
     assert result.metadata["split_summary"][1]["validation_end_pos"] == 35
     assert set(result.trials["n_splits"]) == {2}
+    assert result.metadata["temporal_order"] is True
+
+
+def test_select_params_accepts_random_kfold_window() -> None:
+    X, y = xy()
+    search = mf.model_selection.grid({"alpha": [0.1, 1.0]})
+
+    result = mf.model_selection.select_params(
+        mf.models.ridge,
+        X,
+        y,
+        search,
+        window=mf.window.random_kfold(n_splits=5, random_state=123),
+    )
+
+    assert result.window == "random_kfold"
+    assert result.metadata["temporal_order"] is False
+    assert result.metadata["window"]["val"]["random_state"] == 123
+    assert set(result.trials["n_splits"]) == {5}
+
+
+def test_select_params_explicit_non_temporal_splits_require_opt_in() -> None:
+    X, y = xy()
+    search = mf.model_selection.grid({"alpha": [0.1]})
+    splits = [(np.r_[0:6, 12:24], np.arange(6, 12))]
+
+    with pytest.raises(ValueError, match="must precede validation"):
+        mf.model_selection.select_params(mf.models.ridge, X, y, search, splits=splits)
+
+    result = mf.model_selection.select_params(
+        mf.models.ridge,
+        X,
+        y,
+        search,
+        splits=splits,
+        allow_non_temporal_splits=True,
+    )
+
+    assert result.window == "explicit_splits"
+    assert result.metadata["temporal_order"] is False
 
 
 def test_select_params_rejects_ambiguous_or_invalid_splits() -> None:

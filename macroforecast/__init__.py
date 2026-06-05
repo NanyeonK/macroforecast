@@ -306,6 +306,8 @@ _LAZY_EXPORTS = {
     "normalize_window_name": ".window",
     "poos": ".window",
     "poos_split": ".window",
+    "random_kfold": ".window",
+    "random_kfold_split": ".window",
     "resolve_window": ".window",
     "resolve_stage_policy": ".window",
     "rolling_blocks": ".window",
@@ -319,6 +321,7 @@ _LAZY_EXPORTS = {
     "val_expanding": ".window",
     "val_last_block": ".window",
     "val_poos": ".window",
+    "val_random_kfold": ".window",
     "val_rolling_blocks": ".window",
 }
 

@@ -1239,6 +1239,7 @@ def _fit_predict_origin(
                     metric=selection_metric,
                     maximize=maximize_selection,
                     random_state=selection_random_state if selected is None else None,
+                    allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
                 )
                 param_cache[cache_key] = dict(result.best_params)
                 selection_metadata = {
@@ -1385,6 +1386,7 @@ def _fit_predict_recursive_origin(
                     metric=selection_metric,
                     maximize=maximize_selection,
                     random_state=selection_random_state if selected is None else None,
+                    allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
                 )
                 param_cache[cache_key] = dict(result.best_params)
                 selection_metadata = {
@@ -1599,6 +1601,7 @@ def _fit_predict_path_average_origin(
                         metric=selection_metric,
                         maximize=maximize_selection,
                         random_state=selection_random_state if selected is None else None,
+                        allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
                     )
                     param_cache[step_key] = dict(result.best_params)
                     selection_metadata = {
@@ -1872,6 +1875,7 @@ def _availability_safe_selection_splits(
                 n_splits=val.n_splits,
                 step=val.step,
                 horizon=val.horizon,
+                random_state=val.random_state,
                 embargo=embargo,
             )
         except ValueError:
@@ -1885,6 +1889,11 @@ def _availability_safe_selection_splits(
         selection_index,
         target_step=target_step,
     )
+
+
+def _allow_non_temporal_selection_splits(item: dict[str, Any]) -> bool:
+    window_spec = item.get("window_spec")
+    return isinstance(window_spec, WindowSpec) and window_spec.val.method == "random_kfold"
 
 
 def _availability_safe_explicit_splits(
@@ -1971,9 +1980,10 @@ def _relative_splits_for_index(
             raise ValueError(
                 f"validation split {split_id} has no train rows after feature alignment"
             )
-        if (val_pos < 0).any():
+        val_pos = val_pos[val_pos >= 0]
+        if len(val_pos) == 0:
             raise ValueError(
-                f"validation split {split_id} is not contained in the selection feature index"
+                f"validation split {split_id} has no validation rows after feature alignment"
             )
         out.append((train_pos.astype(int, copy=False), val_pos.astype(int, copy=False)))
     return out
