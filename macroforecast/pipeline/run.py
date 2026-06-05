@@ -28,7 +28,10 @@ def _run_one_arm_target(
     features = arm.features
     if features is not None and getattr(features, "target", None) != target.name:
         try:
-            features = _dc.replace(features, target=target.name)
+            kwargs = {"target": target.name}
+            if getattr(features, "targets", None):
+                kwargs["targets"] = ()
+            features = _dc.replace(features, **kwargs)
         except Exception:
             features = arm.features
 
