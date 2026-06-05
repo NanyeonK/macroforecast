@@ -241,13 +241,12 @@ class TVPRidgeRegressor:
             fill_value=0.0,
         )
         frame = frame.astype(float)
-        if (
-            hasattr(self, "training_index_")
-            and len(frame) == len(self.training_index_)
-            and frame.index.equals(self.training_index_)
-        ):
-            values = self.yhat_2srr_.to_numpy(dtype=float)
-            return values[:, 0] if values.shape[1] == 1 else values
+        # predict() always applies the leak-free terminal-coefficient forecast
+        # rule (betas at time T). The previous in-sample shortcut returned
+        # full-sample-SMOOTHED fitted values whenever the prediction index
+        # matched the training index, which silently leaked future information
+        # if a caller used predict() on training rows as "forecasts". Smoothed
+        # in-sample fits remain available directly via the .yhat_2srr_ attribute.
         x_aug = np.column_stack(
             [np.ones(len(frame), dtype=float), frame.to_numpy(dtype=float)]
         )

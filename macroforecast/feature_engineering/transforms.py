@@ -1424,7 +1424,7 @@ def adaptive_ma_rf_features(
     n_estimators: int = 500,
     min_samples_leaf: int = 6,
     sample_fraction: float = 0.6,
-    sided: str = "two",
+    sided: str = "one",
     random_state: int | None = 0,
     drop_missing: bool = False,
     warn_full_sample: bool = True,

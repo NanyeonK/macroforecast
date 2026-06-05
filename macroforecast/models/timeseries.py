@@ -224,6 +224,7 @@ class _BayesianVAR:
         self.summary_: dict[str, np.ndarray] = {}
         self.last_values_: np.ndarray | None = None
         self.fallback_: float = 0.0
+        self.column_means_: np.ndarray | None = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "_BayesianVAR":
         if y is None:
@@ -241,6 +242,13 @@ class _BayesianVAR:
             raise ValueError(f"target {target_name!r} is not in the VAR panel")
         self.target_name_ = target_name
         self.fallback_ = float(data[target_name].mean())
+        # The FAVAR::BVAR design is intentionally intercept-free, so the panel
+        # must be demeaned before fitting; otherwise a non-zero series mean is
+        # absorbed by an inflated (near-unit-root) own-lag coefficient and the
+        # forecast cannot revert to the unconditional mean. The column means are
+        # added back when forecasting (mirroring how _FAVAR standardizes).
+        self.column_means_ = data.mean().to_numpy(dtype=float)
+        data = data - data.mean()
         values = data.to_numpy(dtype=float)
         if len(values) <= self.n_lag:
             self.last_values_ = values[-self.n_lag :]
@@ -278,7 +286,10 @@ class _BayesianVAR:
             season=None,
         )
         target_pos = self.names_.index(self.target_name_)
-        return np.asarray(forecast[:, target_pos], dtype=float)
+        centered = np.asarray(forecast[:, target_pos], dtype=float)
+        if self.column_means_ is not None:
+            centered = centered + float(self.column_means_[target_pos])
+        return centered
 
 
 def bvar_minnesota(
@@ -1934,9 +1945,14 @@ def _favar_bvar_draws(
             sigma_draws.append(sigma)
     coef_arr = np.stack(coef_draws, axis=0)
     sigma_arr = np.stack(sigma_draws, axis=0)
+    posterior_sd = coef_arr.std(axis=0, ddof=1)
     summary = {
         "mean": coef_arr.mean(axis=0),
-        "se": coef_arr.std(axis=0, ddof=1) / np.sqrt(max(1, coef_arr.shape[0])),
+        # Posterior standard deviation of each coefficient (the measure of
+        # coefficient uncertainty). The Monte-Carlo standard error of the
+        # posterior mean is exposed separately as 'mcse'.
+        "se": posterior_sd,
+        "mcse": posterior_sd / np.sqrt(max(1, coef_arr.shape[0])),
         "q025": np.quantile(coef_arr, 0.025, axis=0),
         "q975": np.quantile(coef_arr, 0.975, axis=0),
     }

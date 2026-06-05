@@ -1730,8 +1730,17 @@ def _prepare_origin_panel(
         )
         prepared_panel = transformed.panel
     else:
+        # Rows observable at the forecast origin (everything except the appended
+        # post-origin target realization row). Passing these to transform()
+        # keeps origin_available imputation/outlier fitting leak-free.
+        available_labels = _origin_apply_labels(
+            panel.index, item, include_target_pos=False
+        )
         transformed = fitted.transform(
-            apply_panel, history=fitted.fit_panel, policy="origin_available"
+            apply_panel,
+            history=fitted.fit_panel,
+            policy="origin_available",
+            available=available_labels,
         )
         prepared_panel = transformed.panel
     return _PreparedStage(

@@ -584,6 +584,7 @@ def test_bvar_and_target_timeseries_models_fit_and_predict() -> None:
     assert set(bvar.diagnostics) == {
         "coef_mean",
         "coef_se",
+        "coef_mcse",
         "coef_q025",
         "coef_q975",
         "sigma_mean",

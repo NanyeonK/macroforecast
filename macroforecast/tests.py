@@ -1809,8 +1809,13 @@ def _iterative_mcs_wide(
             else float(np.mean(boot_stats > observed))
         )
         eliminate_model = active[int(eliminate_pos)]
+        # Hansen-Lunde-Nason (2011) MCS: membership is decided by the cumulative
+        # (running-maximum) MCS p-value, not the raw per-step elimination
+        # p-value. Once a step fails to reject (cumulative p > alpha) the set is
+        # nested, so every model eliminated thereafter -- even one with a small
+        # raw p-value -- stays in the confidence set.
         mcs_p_value = max(final_p if step > 0 else 0.0, p_value)
-        if p_value > alpha:
+        if mcs_p_value > alpha:
             included_candidates.add(eliminate_model)
         else:
             rejected.append(eliminate_model)
@@ -1822,7 +1827,7 @@ def _iterative_mcs_wide(
                 "statistic": float(observed),
                 "p_value": p_value,
                 "mcs_p_value": float(mcs_p_value),
-                "eliminated_model": eliminate_model if p_value <= alpha else None,
+                "eliminated_model": eliminate_model if mcs_p_value <= alpha else None,
                 "removed_model": eliminate_model,
                 "worst_score": float(scores[int(eliminate_pos)]),
                 "mean_losses": {

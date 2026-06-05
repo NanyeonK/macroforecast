@@ -164,12 +164,20 @@ class FittedPreprocessor:
         metadata: dict[str, Any] | None = None,
         history: pd.DataFrame | None = None,
         policy: str | None = None,
+        available: pd.Index | None = None,
     ) -> PreprocessedData:
         """Transform new rows using the fitted training history.
 
         ``policy="origin_available"`` replays non-standardization steps on
         ``history + data``. ``policy="fit_window"`` applies states fitted on
         the fit window to the requested rows.
+
+        ``available`` lists the row labels that were observable at the forecast
+        origin. When supplied, origin_available fits the data-dependent steps
+        (outlier statistics and EM/iterative imputation) using only those rows
+        plus the training history, so a post-origin row appended to ``data``
+        (e.g. the h-step target realization row) cannot leak future information
+        into the imputed/flagged values of origin-available rows.
         """
 
         base = _coerce_input(data, metadata=metadata)
@@ -177,13 +185,16 @@ class FittedPreprocessor:
         if scope == "fit_window":
             return self._transform_fit_window(base, history=history)
 
-        return self._transform_origin_available(base, history=history)
+        return self._transform_origin_available(
+            base, history=history, available=available
+        )
 
     def _transform_origin_available(
         self,
         base: Any,
         *,
         history: pd.DataFrame | None,
+        available: pd.Index | None = None,
     ) -> PreprocessedData:
         source_history = self.fit_panel if history is None else history
         combined = _combine_panels(source_history, base.panel)
@@ -194,9 +205,32 @@ class FittedPreprocessor:
         transform_options.setdefault("warn_metadata", False)
         if self.standardization_state is not None:
             transform_options["standardize"] = "none"
-        processed = reprocess((combined, combined_metadata), **transform_options)
-        processed = _apply_custom_preprocess_steps(processed, custom_steps)
-        selected = processed.panel.reindex(base.panel.index)
+
+        def _run(frame: pd.DataFrame) -> PreprocessedData:
+            out = reprocess((frame, combined_metadata), **transform_options)
+            return _apply_custom_preprocess_steps(out, custom_steps)
+
+        processed = _run(combined)
+        merged_panel = processed.panel
+        # Leak-free origin_available: data-dependent steps (outlier thresholds,
+        # EM/iterative imputation) for origin-available rows are recomputed using
+        # only origin-available rows (training history + the rows observable at
+        # the origin). Post-origin rows appended to ``data`` (e.g. the h-step
+        # target realization row) therefore cannot influence the imputed or
+        # flagged feature values of any origin-available row. Post-origin rows
+        # keep the full-panel reconstruction (they are never used as training
+        # features; the runner's target-availability mask excludes them).
+        if available is not None:
+            available_labels = pd.Index(source_history.index).union(pd.Index(available))
+            available_rows = combined.index.intersection(available_labels)
+            if len(available_rows) and len(available_rows) < len(combined.index):
+                processed_available = _run(combined.loc[available_rows])
+                merged_panel = merged_panel.copy()
+                overlap = merged_panel.index.intersection(processed_available.panel.index)
+                merged_panel.loc[overlap, :] = processed_available.panel.loc[
+                    overlap, merged_panel.columns
+                ]
+        selected = merged_panel.reindex(base.panel.index)
         selected_metadata = dict(processed.metadata)
         if self.standardization_state is not None:
             selected = apply_standardization_state(selected, self.standardization_state)
@@ -411,7 +445,9 @@ def _validate_fit_window_options(options: dict[str, Any]) -> None:
         raise ValueError(
             "policy='fit_window' currently supports impute='none', "
             "impute='mean', and impute='forward_fill'. Use "
-            "policy='origin_available' for EM or linear imputation."
+            "policy='origin_available' for EM or linear imputation -- it now "
+            "fits imputation only on rows observable at each forecast origin, "
+            "so it is leak-free for pseudo-out-of-sample runs."
         )
 
 
@@ -606,7 +642,9 @@ def _fit_impute_state(panel: pd.DataFrame, options: dict[str, Any]) -> dict[str,
         raise ValueError(
             "policy='fit_window' currently supports impute='none', "
             "impute='mean', and impute='forward_fill'. Use "
-            "policy='origin_available' for EM or linear imputation."
+            "policy='origin_available' for EM or linear imputation -- it now "
+            "fits imputation only on rows observable at each forecast origin, "
+            "so it is leak-free for pseudo-out-of-sample runs."
         )
     if method == "none":
         return {"method": "none"}
