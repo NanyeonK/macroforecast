@@ -1615,16 +1615,23 @@ def _empty_weight_frame() -> pd.DataFrame:
 
 
 def _acf_value(series: pd.Series, lag: int) -> float | None:
-    values = series.dropna().astype(float)
+    # Canonical biased sample autocorrelation (matches statsmodels.acf with
+    # adjusted=False): a single global mean and the gamma_k / gamma_0 ratio.
+    # The previous np.corrcoef of the two lagged sub-windows used separate
+    # per-window means/variances and diverged from the standard ACF, most
+    # noticeably on trending series.
+    values = series.dropna().astype(float).to_numpy()
+    n = len(values)
     if lag == 0:
-        return 1.0 if len(values) else None
-    if len(values) <= lag:
+        return 1.0 if n else None
+    if n <= lag:
         return None
-    left = values.iloc[lag:].to_numpy(dtype=float)
-    right = values.iloc[:-lag].to_numpy(dtype=float)
-    if np.std(left) == 0 or np.std(right) == 0:
+    centered = values - values.mean()
+    gamma_0 = float(np.sum(centered * centered))
+    if gamma_0 == 0:
         return None
-    return float(np.corrcoef(left, right)[0, 1])
+    gamma_k = float(np.sum(centered[lag:] * centered[:-lag]))
+    return gamma_k / gamma_0
 
 
 def _normalize_group_by(group_by: Sequence[str], frame: pd.DataFrame) -> tuple[str, ...]:

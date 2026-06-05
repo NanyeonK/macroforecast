@@ -241,7 +241,8 @@ def test_residual_report_autocorrelation_is_origin_ordered() -> None:
     lag1 = acf.loc[acf["lag"] == 1, "acf"].iloc[0]
 
     assert report.loc[0, "residual_autocorr1"] == pytest.approx(lag1)
-    assert report.loc[0, "residual_autocorr1"] == pytest.approx(1.0)
+    # Canonical biased ACF of residuals [1,2,3,4]: gamma_1/gamma_0 = 1.25/5.0.
+    assert report.loc[0, "residual_autocorr1"] == pytest.approx(0.25)
 
 
 def test_best_n_combination_weights_are_reconstructed_from_history() -> None:
