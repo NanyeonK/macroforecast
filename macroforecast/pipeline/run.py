@@ -150,4 +150,5 @@ def run_pipeline(spec: PipelineSpec):
         leakage_audit=leakage,
         interpretation=None,
         model_store=spec.model_store,
+        spec=spec,
     )

@@ -140,6 +140,7 @@ class PipelineReport:
     leakage_audit: Mapping[str, Any] = field(default_factory=dict)
     interpretation: Mapping[str, Any] | None = None
     model_store: str = "trained_model"
+    spec: "Any" = None
 
     def to_frame(self) -> "Any":
         """Return the master forecast frame."""
