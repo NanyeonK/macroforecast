@@ -20,7 +20,8 @@ TCODE_TARGET_MAP: dict[int, tuple[str, str]] = {
     1: ("direct", "level"),
     2: ("direct_average", "change"),
     3: ("direct_average", "change"),
-    4: ("direct", "level"),
+    4: ("direct", "level"),  # log(x): forecast the level directly (log is a monotone
+                            # reparametrisation; no distinct log-level target_transform exists)
     5: ("direct_average", "log_growth"),
     6: ("direct_average", "log_growth"),
     7: ("direct_average", "growth"),

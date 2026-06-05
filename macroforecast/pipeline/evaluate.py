@@ -42,8 +42,15 @@ def apply_combinations(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     if master.empty or not spec.combinations:
         return master
     rows: list[pd.DataFrame] = []
+    if "combined" in master.columns:
+        base = master.loc[~master["combined"].fillna(False).astype(bool)]
+    else:
+        base = master
+    existing = set(master["contender"].unique()) if "contender" in master.columns else set()
     for combo in spec.combinations:
-        for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
+        if combo.name in existing:
+            continue  # already present -> idempotent re-application
+        for (target, horizon), group in base.groupby(["target", "horizon"], dropna=False):
             wide = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean").sort_index()
             actual = group.groupby("origin")["actual"].first().reindex(wide.index)
             date = group.groupby("origin")["date"].first().reindex(wide.index)
@@ -76,10 +83,20 @@ def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
     bench = spec.evaluation.benchmark
     out: list[dict[str, Any]] = []
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
+        # Enforce a COMMON sample: every contender is scored on the same origins
+        # (those where all contenders and the realised target are observed), so
+        # relative RMSE / OOS-R2 are not biased by ragged coverage. This matches
+        # the listwise-deletion sample the MCS uses, keeping the three tables
+        # mutually consistent.
+        wide = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
+        actual = group.groupby("origin")["actual"].first().reindex(wide.index)
+        common = actual.notna() & wide.notna().all(axis=1)
+        wide_c = wide.loc[common]
+        y = actual.loc[common].to_numpy(dtype=float)
+        n_common = int(common.sum())
         scored = {}
-        for contender, g in group.groupby("contender"):
-            err = (g["prediction"].to_numpy(dtype=float) - g["actual"].to_numpy(dtype=float))
-            err = err[np.isfinite(err)]
+        for contender in wide_c.columns:
+            err = wide_c[contender].to_numpy(dtype=float) - y
             scored[contender] = float(np.mean(err ** 2)) if err.size else np.nan
         bench_mse = scored.get(bench, np.nan)
         for contender, mse in scored.items():
@@ -88,6 +105,7 @@ def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
                 "rmse": float(np.sqrt(mse)) if np.isfinite(mse) else np.nan,
                 "relative_mse": (mse / bench_mse) if (np.isfinite(mse) and np.isfinite(bench_mse) and bench_mse > 0) else np.nan,
                 "r2_oos": (1.0 - mse / bench_mse) if (np.isfinite(mse) and np.isfinite(bench_mse) and bench_mse > 0) else np.nan,
+                "n_common": n_common,
                 "is_benchmark": contender == bench,
             })
     return pd.DataFrame(out)

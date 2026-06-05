@@ -100,14 +100,33 @@ def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
     })
     leakage: dict = {}
     # Surface window.validate() warnings (e.g. embargo < horizon-1) when available.
-    try:
-        index = _panel_index(spec.data)
-        report = spec.window.validate(index) if (index is not None and hasattr(spec.window, "validate")) else None
-    except Exception:
-        report = None
-    if isinstance(report, dict):
-        leakage["window_warnings"] = list(report.get("warnings", []))
-        leakage["window_ok"] = bool(report.get("ok", True))
+    # The runner injects each horizon into the window's test spec at execution
+    # time, so validate the window once PER horizon (not the base test.horizon)
+    # to surface the embargo / pseudo-OOS warning that only fires for horizon > 1.
+    import dataclasses as _dc
+
+    index = _panel_index(spec.data)
+    warnings_seen: list[str] = []
+    window_ok = True
+    if index is not None and hasattr(spec.window, "validate"):
+        for h in spec.horizons:
+            try:
+                if hasattr(spec.window, "test"):
+                    test_spec = _dc.replace(spec.window.test, horizon=int(h))
+                    wspec = _dc.replace(spec.window, test=test_spec)
+                else:
+                    wspec = spec.window
+                report = wspec.validate(index)
+            except Exception:
+                report = None
+            if isinstance(report, dict):
+                window_ok = window_ok and bool(report.get("ok", True))
+                for w in report.get("warnings", []):
+                    tagged = w if str(h) in w else f"h={h}: {w}"
+                    if tagged not in warnings_seen:
+                        warnings_seen.append(tagged)
+        leakage["window_warnings"] = warnings_seen
+        leakage["window_ok"] = window_ok
     leakage["preprocessing_policies"] = {
         a.name: str(a.preprocessing_policy) for a in spec.arms
     }
