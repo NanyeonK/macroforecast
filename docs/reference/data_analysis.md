@@ -573,3 +573,6 @@ step metadata.
 
 - `ndiffs` -- number of first differences for stationarity (KPSS/ADF/PP; forecast::ndiffs).
 - `nsdiffs` -- number of seasonal differences via STL seasonal strength (forecast::nsdiffs).
+
+- `acf` -- sample autocorrelation function with confidence bands (stats::acf / forecast::Acf).
+- `pacf` -- sample partial autocorrelation function with confidence bands (stats::pacf / forecast::Pacf).

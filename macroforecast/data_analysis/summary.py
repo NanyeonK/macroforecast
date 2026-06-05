@@ -365,6 +365,62 @@ def kpss_test(
     }
 
 
+def acf(
+    series: Any,
+    *,
+    nlags: int = 20,
+    alpha: float = 0.05,
+    adjusted: bool = False,
+) -> pd.DataFrame:
+    """Sample autocorrelation function (stats::acf / forecast::Acf).
+
+    Returns a tidy table with the autocorrelation at lags 0..nlags and the
+    approximate ``1 - alpha`` confidence band (statsmodels acf). ``adjusted``
+    selects the n-k (unbiased) divisor instead of the biased 1/n estimator.
+    """
+
+    from statsmodels.tsa.stattools import acf as _acf
+
+    x = pd.Series(series).dropna().astype(float).to_numpy()
+    values, confint = _acf(x, nlags=int(nlags), alpha=float(alpha), adjusted=bool(adjusted), fft=True)
+    rows = [
+        {"lag": int(k), "acf": float(values[k]),
+         "lower": float(confint[k, 0]), "upper": float(confint[k, 1])}
+        for k in range(len(values))
+    ]
+    table = pd.DataFrame(rows)
+    table.attrs["macroforecast_metadata"] = {"kind": "acf", "nlags": int(nlags), "adjusted": bool(adjusted)}
+    return table
+
+
+def pacf(
+    series: Any,
+    *,
+    nlags: int = 20,
+    alpha: float = 0.05,
+    method: str = "ywadjusted",
+) -> pd.DataFrame:
+    """Sample partial autocorrelation function (stats::pacf / forecast::Pacf).
+
+    Returns a tidy table with the partial autocorrelation at lags 0..nlags and
+    the approximate ``1 - alpha`` confidence band (statsmodels pacf). ``method``
+    is the statsmodels PACF estimator ('ywadjusted','ols','ld', ...).
+    """
+
+    from statsmodels.tsa.stattools import pacf as _pacf
+
+    x = pd.Series(series).dropna().astype(float).to_numpy()
+    values, confint = _pacf(x, nlags=int(nlags), alpha=float(alpha), method=method)
+    rows = [
+        {"lag": int(k), "pacf": float(values[k]),
+         "lower": float(confint[k, 0]), "upper": float(confint[k, 1])}
+        for k in range(len(values))
+    ]
+    table = pd.DataFrame(rows)
+    table.attrs["macroforecast_metadata"] = {"kind": "pacf", "nlags": int(nlags), "method": method}
+    return table
+
+
 def ndiffs(
     series: Any,
     *,
@@ -803,6 +859,8 @@ __all__ = [
     "panel_snapshot",
     "adf_test",
     "kpss_test",
+    "acf",
+    "pacf",
     "ndiffs",
     "nsdiffs",
     "phillips_perron_test",
