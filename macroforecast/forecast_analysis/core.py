@@ -1846,6 +1846,36 @@ def _back_transformed_values(
     origin_level = _level_at(levels, row.get("origin"))
     if origin_level is None:
         return None, _level_at(levels, row.get("date")), False
+
+    # Path-average / direct-average targets store the MEAN one-period transform
+    # over `horizon` steps, so the level at t+h needs the horizon factor (the
+    # one-step inversion silently drops it). For change and log_growth the path
+    # telescopes exactly to the endpoint; simple growth and level-value averages
+    # have no exact pointwise level inverse and are reported unavailable.
+    policy = str(row.get("forecast_policy") or "").lower()
+    is_average = policy in {"path_average", "direct_average"} or transform_key.startswith(
+        "average_"
+    )
+    if is_average:
+        step_key = (
+            transform_key[len("average_"):]
+            if transform_key.startswith("average_")
+            else transform_key
+        )
+        try:
+            horizon = int(row.get("horizon") or 1)
+        except (TypeError, ValueError):
+            horizon = 1
+        if step_key not in {"change", "diff", "difference", "log_growth", "log_diff"}:
+            # growth (arithmetic mean of simple returns) and value (mean of
+            # levels) do not determine x[t+h]; do not report a misleading level.
+            return None, None, False
+        pred_level = _path_average_back_transform(origin_level, prediction, step_key, horizon)
+        actual_level = _level_at(levels, row.get("date"))
+        if actual_level is None:
+            actual_level = _path_average_back_transform(origin_level, actual, step_key, horizon)
+        return pred_level, actual_level, pred_level is not None or actual_level is not None
+
     actual_level = _level_at(levels, row.get("date"))
     pred_level = _one_step_back_transform(origin_level, prediction, transform_key)
     if actual_level is None:
@@ -1891,6 +1921,24 @@ def _one_step_back_transform(origin_level: float, value: float | None, transform
         return float(origin_level * (1.0 + value))
     if transform in {"log_growth", "log_diff"}:
         return float(origin_level * np.exp(value))
+    return None
+
+
+def _path_average_back_transform(
+    origin_level: float, avg_value: float | None, step_transform: str, horizon: int
+) -> float | None:
+    """Reconstruct x[t+h] from the mean one-period transform over ``horizon`` steps.
+
+    The sum of one-period transforms equals ``horizon * mean``; for change and
+    log_growth this telescopes exactly to the endpoint level.
+    """
+    if avg_value is None:
+        return None
+    total = float(horizon) * float(avg_value)
+    if step_transform in {"change", "diff", "difference"}:
+        return float(origin_level + total)
+    if step_transform in {"log_growth", "log_diff"}:
+        return float(origin_level * np.exp(total))
     return None
 
 
