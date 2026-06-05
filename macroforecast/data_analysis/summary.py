@@ -420,7 +420,7 @@ def johansen_cointegration(
         "max_eigen": _rows(res.lr2, res.cvm),
         "eigenvalues": [float(v) for v in res.eig],
         "cointegration_rank": {"trace": rank_trace, "max_eigen": _rank(res.lr2, res.cvm)},
-        "cointegrating_vectors": np.asarray(res.evec)[:, :max(rank_trace, 1)].tolist(),
+        "cointegrating_vectors": np.asarray(res.evec)[:, :rank_trace].tolist(),
     }
 
 
@@ -759,8 +759,12 @@ def engle_granger(
         design = np.column_stack([np.ones(x_mat.shape[0]), design])
         coef_names = ["(intercept)", *coef_names]
     if trend in {"ct", "ctt"}:
-        design = np.column_stack([design, np.arange(x_mat.shape[0], dtype=float)])
+        time = np.arange(x_mat.shape[0], dtype=float)
+        design = np.column_stack([design, time])
         coef_names = [*coef_names, "trend"]
+    if trend == "ctt":
+        design = np.column_stack([design, np.arange(x_mat.shape[0], dtype=float) ** 2])
+        coef_names = [*coef_names, "trend_squared"]
     beta = np.linalg.lstsq(design, y_vec, rcond=None)[0]
 
     crit_values = {

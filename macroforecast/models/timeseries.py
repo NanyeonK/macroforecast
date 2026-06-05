@@ -185,6 +185,30 @@ def stlf(y: Any, *, period: int | None = None, sa_method: str = "ets", **kwargs:
     )
 
 
+def _absolute_season_positions(index: Any, length: int) -> np.ndarray:
+    """Absolute season positions for a possibly-gapped series index.
+
+    The forecasting harness drops rows with a missing target before a model sees
+    them, but preserves the index, so the original season phase is recoverable
+    from the index values rather than the positional count. DatetimeIndex maps to
+    positions in the complete date range at the inferred frequency; an integer
+    index uses its own values; otherwise a contiguous positional fallback is used.
+    """
+    try:
+        if isinstance(index, pd.DatetimeIndex) and len(index) > 1:
+            freq = index.freqstr or pd.infer_freq(index)
+            if freq:
+                full = pd.date_range(index[0], index[-1], freq=freq)
+                lookup = {ts: i for i, ts in enumerate(full)}
+                return np.asarray([lookup.get(ts, i) for i, ts in enumerate(index)], dtype=int)
+        values = np.asarray(index)
+        if np.issubdtype(values.dtype, np.integer):
+            return values.astype(int)
+    except Exception:
+        pass
+    return np.arange(length, dtype=int)
+
+
 class _NaiveForecaster:
     """Baseline path forecaster: random-walk, seasonal-naive, or drift.
 
@@ -198,10 +222,14 @@ class _NaiveForecaster:
         self._last: float = 0.0
         self._drift: float = 0.0
         self._season: np.ndarray | None = None
+        self._season_by_slot: np.ndarray | None = None
+        self._period_: int = 1
+        self._last_slot: int = 0
         self._fallback: float = 0.0
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_NaiveForecaster":
-        series = pd.Series(y).astype(float).dropna()
+        raw = pd.Series(y).astype(float)
+        series = raw.dropna()
         self._fallback = float(series.mean()) if not series.empty else 0.0
         if series.empty:
             self._last = self._fallback
@@ -214,7 +242,20 @@ class _NaiveForecaster:
             self._drift = float((values[-1] - values[0]) / (n - 1)) if n > 1 else 0.0
         if self.method in {"snaive", "seasonal_naive"}:
             m = max(1, int(self.period)) if self.period else 1
-            self._season = values[-m:] if len(values) >= m else values
+            # forecast::snaive indexes by ABSOLUTE season position: each season slot
+            # carries its last OBSERVED value. Positions come from the index (which
+            # preserves gaps from dropped/missing observations), so a ragged edge or
+            # an interior gap does not shift the seasons.
+            positions = _absolute_season_positions(series.index, len(values))
+            by_slot = np.full(m, np.nan, dtype=float)
+            for pos, value in zip(positions, values):
+                if np.isfinite(value):
+                    by_slot[int(pos) % m] = value
+            by_slot = np.where(np.isfinite(by_slot), by_slot, self._last)
+            self._season_by_slot = by_slot
+            self._period_ = m
+            self._last_slot = int(positions[-1]) % m
+            self._season = by_slot
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
@@ -223,10 +264,17 @@ class _NaiveForecaster:
             return np.asarray(
                 [self._last + self._drift * (k + 1) for k in range(steps)], dtype=float
             )
-        if self.method in {"snaive", "seasonal_naive"} and self._season is not None and len(self._season):
-            m = len(self._season)
-            # forecast::snaive: repeat the last full season cyclically
-            return np.asarray([self._season[k % m] for k in range(steps)], dtype=float)
+        if (
+            self.method in {"snaive", "seasonal_naive"}
+            and self._season_by_slot is not None
+            and len(self._season_by_slot)
+        ):
+            m = self._period_
+            # step k (1-based) targets absolute position last+k -> season slot
+            return np.asarray(
+                [self._season_by_slot[(self._last_slot + k) % m] for k in range(1, steps + 1)],
+                dtype=float,
+            )
         # naive / random walk: last observed value carried forward
         return np.full(steps, self._last, dtype=float)
 
