@@ -578,3 +578,4 @@ step metadata.
 - `pacf` -- sample partial autocorrelation function with confidence bands (stats::pacf / forecast::Pacf).
 
 - `johansen_cointegration` -- Johansen cointegration test (trace + max-eigenvalue, rank selection, cointegrating vectors; urca::ca.jo).
+- `newey_west` -- Newey-West HAC covariance for OLS coefficients with Bartlett kernel and coefficient table (sandwich::NeweyWest + lmtest::coeftest).

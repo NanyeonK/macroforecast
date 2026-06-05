@@ -424,6 +424,108 @@ def johansen_cointegration(
     }
 
 
+def newey_west(
+    X: Any,
+    y: Any | None = None,
+    *,
+    lags: int | str = "auto",
+    add_intercept: bool = True,
+    small_sample: bool = False,
+) -> dict[str, Any]:
+    """Newey-West HAC covariance for an OLS regression.
+
+    R analogue of ``sandwich::NeweyWest`` combined with ``lmtest::coeftest``:
+    fit ``y = X b + e`` by ordinary least squares, then form the
+    heteroskedasticity- and autocorrelation-consistent (HAC) covariance of the
+    coefficients using a Bartlett (Newey-West) kernel. ``lags`` is the bandwidth
+    ``L``; ``"auto"`` uses the Newey-West fixed rule ``floor(4 (T/100)^(2/9))``.
+    With ``small_sample=True`` the meat is scaled by ``T / (T - k)`` (the
+    finite-sample adjustment used by ``lmtest::coeftest`` defaults).
+
+    Returns the coefficient estimates, HAC standard errors, ``t`` statistics,
+    two-sided ``p`` values (Student-``t`` with ``T - k`` degrees of freedom), the
+    HAC covariance matrix, the bandwidth, and the regressor names.
+    """
+
+    from scipy import stats as _stats
+
+    if y is None:
+        frame = pd.DataFrame(X)
+        numeric = frame.select_dtypes("number")
+        if numeric.shape[1] < 2:
+            raise ValueError("newey_west needs a target plus at least one regressor")
+        y_series = numeric.iloc[:, 0]
+        x_frame = numeric.iloc[:, 1:]
+    else:
+        x_frame = pd.DataFrame(X)
+        x_frame = x_frame.select_dtypes("number") if hasattr(x_frame, "select_dtypes") else x_frame
+        y_series = pd.Series(np.asarray(y, dtype=float).ravel())
+
+    names = [str(c) for c in x_frame.columns]
+    x_mat = np.asarray(x_frame, dtype=float)
+    y_vec = np.asarray(y_series, dtype=float).ravel()
+
+    mask = np.isfinite(y_vec) & np.all(np.isfinite(x_mat), axis=1)
+    x_mat = x_mat[mask]
+    y_vec = y_vec[mask]
+    if add_intercept:
+        x_mat = np.column_stack([np.ones(x_mat.shape[0]), x_mat])
+        names = ["(intercept)", *names]
+
+    n_obs, k = x_mat.shape
+    if n_obs <= k:
+        raise ValueError("newey_west needs more observations than coefficients")
+
+    xtx = x_mat.T @ x_mat
+    bread = np.linalg.inv(xtx)
+    beta = bread @ (x_mat.T @ y_vec)
+    resid = y_vec - x_mat @ beta
+
+    if isinstance(lags, str):
+        if lags != "auto":
+            raise ValueError("lags must be a nonnegative int or 'auto'")
+        band = int(np.floor(4.0 * (n_obs / 100.0) ** (2.0 / 9.0)))
+    else:
+        band = int(lags)
+        if band < 0:
+            raise ValueError("lags must be nonnegative")
+    band = min(band, n_obs - 1)
+
+    # Score s_t = x_t * e_t (n x k); HAC meat = Gamma_0 + sum_j w_j (Gamma_j + Gamma_j').
+    scores = x_mat * resid[:, None]
+    meat = scores.T @ scores
+    for j in range(1, band + 1):
+        weight = 1.0 - j / (band + 1.0)
+        gamma = scores[j:].T @ scores[:-j]
+        meat += weight * (gamma + gamma.T)
+    if small_sample:
+        meat *= n_obs / (n_obs - k)
+
+    vcov = bread @ meat @ bread
+    se = np.sqrt(np.maximum(np.diag(vcov), 0.0))
+    tstat = np.divide(beta, se, out=np.full_like(beta, np.nan), where=se > 0)
+    pval = 2.0 * _stats.t.sf(np.abs(tstat), df=n_obs - k)
+
+    coefficients = [
+        {"name": names[i], "estimate": float(beta[i]), "std_error": float(se[i]),
+         "t_value": float(tstat[i]), "p_value": float(pval[i])}
+        for i in range(k)
+    ]
+    return {
+        "n_obs": int(n_obs),
+        "n_coef": int(k),
+        "names": names,
+        "lags": int(band),
+        "kernel": "bartlett",
+        "coefficients": coefficients,
+        "estimate": beta.tolist(),
+        "std_error": se.tolist(),
+        "t_value": tstat.tolist(),
+        "p_value": pval.tolist(),
+        "vcov": vcov.tolist(),
+    }
+
+
 def acf(
     series: Any,
     *,
@@ -920,6 +1022,7 @@ __all__ = [
     "kpss_test",
     "acf",
     "johansen_cointegration",
+    "newey_west",
     "pacf",
     "ndiffs",
     "nsdiffs",
