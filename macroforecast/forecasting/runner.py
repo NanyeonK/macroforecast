@@ -1481,6 +1481,14 @@ def _fit_predict_recursive_origin(
                 transform=transform,
             )
             step_predictions.append(step_value)
+            # An ill-conditioned fit (e.g. near-collinear level predictors) can
+            # produce a non-finite recursive level. Stop the recursion and report
+            # the forecast as missing rather than poisoning the working panel
+            # (panel validation rejects inf) or feeding NaN into the next predict.
+            if not np.isfinite(current_level):
+                current_level = float("nan")
+                step_levels.append(current_level)
+                break
             step_levels.append(current_level)
             update_pos = origin_pos + step
             if update_pos < len(base_index) and base_index[update_pos] in working_panel.index:
