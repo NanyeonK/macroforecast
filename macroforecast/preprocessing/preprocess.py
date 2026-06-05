@@ -78,7 +78,7 @@ def reprocess(
     *,
     metadata: Mapping[str, Any] | None = None,
     frequency: str = "keep",
-    quarterly_to_monthly: str = "step_backward",
+    quarterly_to_monthly: str = "step_forward",
     weekly_to_monthly: str = "mean",
     monthly_to_quarterly: str = "quarterly_average",
     weekly_to_quarterly: str = "mean",

@@ -266,7 +266,7 @@ def freq_align_quarterly_to_monthly_clean(
     panel: pd.DataFrame,
     quarterly_columns: Sequence[str],
     *,
-    rule: str = "step_backward",
+    rule: str = "step_forward",
 ) -> pd.DataFrame:
     """Align selected quarterly columns on the panel's monthly grid."""
 
