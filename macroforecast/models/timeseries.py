@@ -51,7 +51,12 @@ class _AR:
 
 
 def ar(y: Any, *, n_lag: int = 1) -> ModelFit:
-    """Fit an autoregression on a single target series."""
+    """Fit a fixed-order AR(``n_lag``) by OLS on a single target series.
+
+    This is a fixed-order least-squares AR with an explicit intercept. It is NOT
+    ``stats::ar`` (which defaults to AIC order selection up to floor(10*log10(N))
+    and Yule-Walker estimation); pass ``n_lag`` explicitly or select it upstream.
+    """
 
     target = as_series(y)
     dummy = pd.DataFrame({"__origin__": np.arange(len(target), dtype=float)}, index=target.index)

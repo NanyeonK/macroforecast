@@ -81,6 +81,11 @@ class GARCHEstimator:
         return np.full(len(X), self._mu, dtype=float)
 
     def predict_variance(self, horizon: int = 1) -> np.ndarray:
+        # Conditional-expectation forecast of the log-linear realized GARCH.
+        # Returns exp(E[log h_{t+k}]) -- the conditional MEDIAN of the log-normal
+        # variance. For multi-step horizons this is biased low relative to the
+        # mean E[h] by the Jensen gap 0.5*Var[log h]; treat the output as the
+        # conditional median, not the mean variance.
         horizon = _validate_positive_int("horizon", horizon)
         if self._fitted is None:
             return np.full(horizon, self._last_variance, dtype=float)
@@ -158,7 +163,12 @@ def egarch(
     rescale: bool = False,
     **kwargs: Any,
 ) -> VolatilityFit:
-    """Fit EGARCH."""
+    """Fit EGARCH.
+
+    ``o`` defaults to 1 so the asymmetric leverage term that defines Nelson's
+    EGARCH is present (matching rugarch's eGARCH), deliberately overriding the
+    ``arch`` backend's own ``o=0`` default (which gives a symmetric log-GARCH).
+    """
 
     target = as_series(y)
     frame = _vol_frame(X, target)
@@ -352,6 +362,11 @@ class RealizedGARCHEstimator:
         return np.full(len(X), self._mu, dtype=float)
 
     def predict_variance(self, horizon: int = 1) -> np.ndarray:
+        # Conditional-expectation forecast of the log-linear realized GARCH.
+        # Returns exp(E[log h_{t+k}]) -- the conditional MEDIAN of the log-normal
+        # variance. For multi-step horizons this is biased low relative to the
+        # mean E[h] by the Jensen gap 0.5*Var[log h]; treat the output as the
+        # conditional median, not the mean variance.
         horizon = _validate_positive_int("horizon", horizon)
         if not self.params_:
             return np.full(horizon, self._last_h, dtype=float)

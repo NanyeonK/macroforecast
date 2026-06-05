@@ -93,7 +93,11 @@ def mape(y_true: Any, y_pred: Any, *, eps: float = 1e-10) -> float:
 
 
 def smape(y_true: Any, y_pred: Any, *, eps: float = 1e-10) -> float:
-    """Symmetric mean absolute percentage error on the 0-100 scale."""
+    """Symmetric mean absolute percentage error, M4/Mcomp convention.
+
+    Uses the ``(|A|+|F|)/2`` denominator, so each term is bounded by 200 and the
+    statistic ranges on **0-200** (not 0-100); this matches published M4 sMAPE.
+    """
 
     if eps <= 0:
         raise ValueError("eps must be positive")
@@ -112,7 +116,12 @@ def theil_u1(y_true: Any, y_pred: Any) -> float:
 
 
 def theil_u2(y_true: Any, y_pred: Any, y_prev: Any) -> float:
-    """Theil U2 relative to a no-change forecast based on ``y_prev``."""
+    """Proportional-change Theil U relative to a no-change forecast.
+
+    Each squared error is normalised by ``y_prev`` (the Theil/Bliemel
+    proportional-change form). This differs from ``forecast::accuracy``'s
+    \"Theil's U\", which is the unweighted RMSE ratio (model vs naive).
+    """
 
     joined = _aligned_frame(y_true, y_pred, y_prev, names=("truth", "pred", "prev"))
     if len(joined) < 2:

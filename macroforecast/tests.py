@@ -3332,7 +3332,9 @@ def _residual_test_statistic(
                     "statistic": float(statistic),
                     "p_value": float(p_value),
                     "decision": bool(p_value < alpha),
-                    "df": int(max_lag),
+                    # statsmodels het_arch p-value uses df = nlags - ddof; report the
+                    # matching df so the reported df is consistent with the p-value.
+                    "df": int(max(1, max_lag - model_df)),
                     "source_reference": "FinTS/R/ArchTest.R::ArchTest",
                     "r_reference": "FinTS/R/ArchTest.R::ArchTest",
                     "r_alignment": (
