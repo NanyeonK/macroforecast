@@ -19,7 +19,18 @@ def _run_one_arm_target(
     spec: PipelineSpec, arm: Arm, target: ResolvedTarget
 ) -> pd.DataFrame:
     """Run a single arm for a single resolved target across all horizons."""
+    import dataclasses as _dc
+
     from macroforecast.forecasting import run
+
+    # A multi-target pipeline runs each arm for every target, but an arm's feature
+    # spec carries a single target; align it (and its transform) to this target.
+    features = arm.features
+    if features is not None and getattr(features, "target", None) != target.name:
+        try:
+            features = _dc.replace(features, target=target.name)
+        except Exception:
+            features = arm.features
 
     result = run(
         spec.data,
@@ -27,7 +38,7 @@ def _run_one_arm_target(
         window=spec.window,
         preprocessing=arm.preprocessing,
         preprocessing_policy=arm.preprocessing_policy,
-        features=arm.features,
+        features=features,
         feature_policy=arm.feature_policy,
         params=arm.params,
         model_selection=arm.model_selection,
