@@ -1725,6 +1725,53 @@ class _StatsmodelsForecastEstimator:
             return np.full(steps, self.fallback_, dtype=float)
 
 
+def _ets_auto_select(series: pd.Series, seasonal_periods: int | None) -> dict[str, Any]:
+    """Select the (error, trend, seasonal, damped) ETS spec minimising AICc.
+
+    Mirrors ``forecast::ets(y, model="ZZZ")`` default behaviour: search the
+    admissible state-space ETS family and keep the minimum-AICc model. Falls back
+    to simple exponential smoothing if nothing fits.
+    """
+    from statsmodels.tsa.exponential_smoothing.ets import ETSModel
+
+    positive = bool(len(series) and (series.to_numpy(dtype=float) > 0).all())
+    m = int(seasonal_periods) if seasonal_periods and int(seasonal_periods) > 1 else None
+    best: tuple[float, dict[str, Any]] | None = None
+    for error in ("add", "mul"):
+        if error == "mul" and not positive:
+            continue
+        for trend in (None, "add"):
+            for damped in ((False, True) if trend is not None else (False,)):
+                seasonals = (None,) if m is None else (None, "add", "mul")
+                for seasonal in seasonals:
+                    if seasonal == "mul" and not positive:
+                        continue
+                    if seasonal is not None and (m is None or len(series) < 2 * m):
+                        continue
+                    try:
+                        res = ETSModel(
+                            series,
+                            error=error,
+                            trend=trend,
+                            seasonal=seasonal,
+                            seasonal_periods=m if seasonal else None,
+                            damped_trend=damped,
+                        ).fit(disp=False)
+                        aicc = float(res.aicc)
+                    except Exception:
+                        continue
+                    if best is None or aicc < best[0]:
+                        best = (aicc, {
+                            "error": error, "trend": trend, "seasonal": seasonal,
+                            "seasonal_periods": m if seasonal else None,
+                            "damped_trend": damped,
+                        })
+    if best is None:
+        return {"error": "add", "trend": None, "seasonal": None,
+                "seasonal_periods": None, "damped_trend": False}
+    return best[1]
+
+
 def ets(
     y: Any,
     *,
@@ -1733,20 +1780,32 @@ def ets(
     seasonal: str | None = None,
     seasonal_periods: int | None = None,
     damped_trend: bool = False,
+    model: str | None = None,
 ) -> ModelFit:
-    """Fit statsmodels ETSModel for target-only forecasts."""
+    """Fit statsmodels ETSModel for target-only forecasts.
 
-    params = {
-        "error": error,
-        "trend": trend,
-        "seasonal": seasonal,
-        "seasonal_periods": seasonal_periods,
-        "damped_trend": bool(damped_trend),
-    }
+    Pass ``model="auto"`` to select the (error, trend, seasonal, damped) spec by
+    minimum AICc over the admissible ETS family (akin to ``forecast::ets``).
+    Otherwise the explicit ``error``/``trend``/``seasonal``/``damped_trend`` spec
+    is used (default: simple exponential smoothing).
+    """
+
     target = as_series(y)
+    if model is not None and str(model).lower() in {"auto", "zzz"}:
+        params = _ets_auto_select(target, seasonal_periods)
+        params["selection"] = "aicc_auto"
+    else:
+        params = {
+            "error": error,
+            "trend": trend,
+            "seasonal": seasonal,
+            "seasonal_periods": seasonal_periods,
+            "damped_trend": bool(damped_trend),
+        }
+    estimator_params = {k: v for k, v in params.items() if k != "selection"}
     dummy = pd.DataFrame({"__origin__": np.arange(len(target), dtype=float)}, index=target.index)
     return fit_estimator(
-        _StatsmodelsForecastEstimator(method="ets", params=params),
+        _StatsmodelsForecastEstimator(method="ets", params=estimator_params),
         dummy,
         target,
         model="ets",
