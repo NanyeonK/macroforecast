@@ -777,7 +777,106 @@ def news_impact_curve(
     }
 
 
+_GARCH_FACTORIES = {
+    "garch11": garch11,
+    "gjr_garch": gjr_garch,
+    "gjr": gjr_garch,
+    "tgarch": tgarch,
+    "egarch": egarch,
+}
+
+
+def garch_roll(
+    returns: Any,
+    *,
+    variant: str = "garch11",
+    forecast_length: int | None = None,
+    refit_every: int = 25,
+    window: str = "expanding",
+    window_size: int | None = None,
+    alpha: float = 0.05,
+    dist: str = "normal",
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Rolling 1-step volatility / Value-at-Risk backtest (rugarch::ugarchroll).
+
+    Walks forward over the last ``forecast_length`` observations, producing a
+    one-step-ahead conditional volatility and VaR forecast at each origin. The
+    model is re-estimated every ``refit_every`` origins and filtered forward in
+    between (the k-step variance forecast from the last fit, exactly as
+    ``ugarchroll`` filters between refits). ``window`` is ``"expanding"`` or
+    ``"rolling"`` (with ``window_size``). Returns the per-origin forecast sigma,
+    lower-tail VaR and Expected Shortfall at ``alpha``, the realised return, the
+    VaR-violation indicator, and a coverage summary (empirical vs nominal
+    violation rate) for backtesting.
+    """
+
+    key = str(variant).lower()
+    if key not in _GARCH_FACTORIES:
+        raise ValueError(f"variant must be one of {sorted(_GARCH_FACTORIES)}")
+    if not 0.0 < alpha < 0.5:
+        raise ValueError("alpha must be in (0, 0.5)")
+    factory = _GARCH_FACTORIES[key]
+
+    series = pd.Series(returns).dropna().astype(float)
+    n = len(series)
+    if n < 60:
+        raise ValueError("garch_roll requires at least 60 non-missing observations")
+    horizon_cap = max(10, int(refit_every))
+    length = int(forecast_length) if forecast_length is not None else max(1, n // 4)
+    length = min(length, n - 30)
+    start = n - length
+
+    dates, sigmas, vars_, ess, realized = [], [], [], [], []
+    fit = None
+    steps_since = 0
+    for i in range(start, n):
+        rel = i - start
+        if fit is None or rel % int(refit_every) == 0:
+            if window == "rolling" and window_size is not None:
+                train = series.iloc[max(0, i - int(window_size)): i]
+            else:
+                train = series.iloc[:i]
+            fit = factory(train, dist=dist, **kwargs)
+            steps_since = 0
+        steps_since += 1
+        rf = risk_forecast(fit, alpha=alpha, horizon=steps_since)
+        sigma = float(np.asarray(rf["sigma"], dtype=float).reshape(-1)[-1])
+        var_val = float(np.asarray(rf["var"], dtype=float).reshape(-1)[-1])
+        es_val = float(np.asarray(rf["es"], dtype=float).reshape(-1)[-1])
+        dates.append(series.index[i])
+        sigmas.append(sigma)
+        vars_.append(var_val)
+        ess.append(es_val)
+        realized.append(float(series.iloc[i]))
+
+    realized_arr = np.asarray(realized, dtype=float)
+    var_arr = np.asarray(vars_, dtype=float)
+    violations = realized_arr < var_arr
+    n_obs = int(violations.size)
+    return {
+        "variant": key,
+        "alpha": float(alpha),
+        "n_forecasts": n_obs,
+        "refit_every": int(refit_every),
+        "window": window,
+        "date": list(dates),
+        "sigma": np.asarray(sigmas, dtype=float),
+        "var": var_arr,
+        "es": np.asarray(ess, dtype=float),
+        "realized": realized_arr,
+        "violation": violations,
+        "coverage": {
+            "n_violations": int(violations.sum()),
+            "expected_violations": float(alpha * n_obs),
+            "empirical_rate": float(violations.mean()) if n_obs else float("nan"),
+            "nominal_rate": float(alpha),
+        },
+    }
+
+
 __all__ = [
+    "garch_roll",
     "news_impact_curve",
     "GARCHEstimator",
     "RealizedGARCHEstimator",

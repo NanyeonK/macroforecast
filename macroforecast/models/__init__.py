@@ -108,6 +108,7 @@ from .volatility import (
     risk_forecast,
     value_at_risk,
     news_impact_curve,
+    garch_roll,
     expected_shortfall,
 )
 
@@ -200,6 +201,7 @@ __all__ = [
     "risk_forecast",
     "value_at_risk",
     "news_impact_curve",
+    "garch_roll",
     "expected_shortfall",
     "ridge",
     "save_fit",

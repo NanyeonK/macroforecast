@@ -4317,6 +4317,7 @@ fit.predict_variance(horizon=12)
 - `value_at_risk` -- lower-tail VaR return quantile(s) from a fitted volatility model.
 - `expected_shortfall` -- Expected Shortfall (mean return below VaR) from a fitted volatility model.
 - `news_impact_curve` -- Engle-Ng (1993) news impact curve: conditional variance vs lagged shock for a fitted GARCH-family model.
+- `garch_roll` -- rolling one-step volatility / VaR backtest with periodic refit and coverage summary (rugarch::ugarchroll).
 
 - `var_roots` -- VAR stability check: moduli of the companion-matrix eigenvalues, spectral radius, and is_stable (vars::roots).
 
