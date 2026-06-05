@@ -596,6 +596,71 @@ def _validate_nonnegative_int(name: str, value: Any) -> int:
     return out
 
 
+def _standardized_tail(dist: str, alpha: float, est: Any) -> tuple[float, float, str]:
+    """Return (lower-tail quantile, ES factor, label) of the standardized
+    innovation distribution at level ``alpha`` (unit-variance scaling)."""
+    from scipy import stats
+
+    key = str(dist).lower()
+    if key in {"t", "studentst", "studentt", "skewt", "skewstudent", "std", "sstd"}:
+        nu = None
+        try:
+            params = est._fitted.params.to_dict() if est._fitted is not None else {}
+            raw = params.get("nu", params.get("eta"))
+            nu = None if raw is None else float(raw)
+        except Exception:
+            nu = None
+        if nu is not None and nu > 2:
+            scale = float(np.sqrt((nu - 2.0) / nu))
+            x = float(stats.t.ppf(alpha, df=nu))
+            q = x * scale
+            es = (-(stats.t.pdf(x, df=nu) * (nu + x * x) / (nu - 1.0)) / alpha) * scale
+            return q, es, f"standardized_t(nu={nu:.3g})"
+    q = float(stats.norm.ppf(alpha))
+    es = -float(stats.norm.pdf(q)) / alpha
+    return q, es, "normal"
+
+
+def risk_forecast(fit: VolatilityFit, *, alpha: float = 0.05, horizon: int = 1) -> dict[str, Any]:
+    """Value-at-Risk and Expected Shortfall forecast from a fitted volatility model.
+
+    Returns, per horizon step, the lower-tail return quantile (``var``) and the
+    mean return conditional on falling below it (``es``) at level ``alpha``, using
+    the fitted conditional mean, the h-step conditional variance forecast, and the
+    fitted innovation distribution (Normal or standardized Student-t; other
+    distributions fall back to Normal). VaR/ES are in return space (losses are
+    negative), matching rugarch's quantile()/ES convention.
+    """
+
+    if not 0.0 < alpha < 0.5:
+        raise ValueError("alpha must be in (0, 0.5)")
+    horizon = _validate_positive_int("horizon", horizon)
+    est = fit.estimator
+    mu = float(getattr(est, "_mu", 0.0))
+    variance = np.asarray(est.predict_variance(horizon=horizon), dtype=float)
+    sigma = np.sqrt(np.maximum(variance, 0.0))
+    z_q, z_es, label = _standardized_tail(getattr(est, "dist", "normal"), alpha, est)
+    return {
+        "alpha": float(alpha),
+        "horizon": int(horizon),
+        "distribution": label,
+        "mean": mu,
+        "sigma": sigma,
+        "var": mu + sigma * z_q,
+        "es": mu + sigma * z_es,
+    }
+
+
+def value_at_risk(fit: VolatilityFit, *, alpha: float = 0.05, horizon: int = 1) -> np.ndarray:
+    """Lower-tail Value-at-Risk return quantile(s); see :func:`risk_forecast`."""
+    return np.asarray(risk_forecast(fit, alpha=alpha, horizon=horizon)["var"], dtype=float)
+
+
+def expected_shortfall(fit: VolatilityFit, *, alpha: float = 0.05, horizon: int = 1) -> np.ndarray:
+    """Expected Shortfall (mean return below VaR); see :func:`risk_forecast`."""
+    return np.asarray(risk_forecast(fit, alpha=alpha, horizon=horizon)["es"], dtype=float)
+
+
 __all__ = [
     "GARCHEstimator",
     "RealizedGARCHEstimator",
@@ -604,4 +669,7 @@ __all__ = [
     "gjr_garch",
     "tgarch",
     "realized_garch",
+    "risk_forecast",
+    "value_at_risk",
+    "expected_shortfall",
 ]

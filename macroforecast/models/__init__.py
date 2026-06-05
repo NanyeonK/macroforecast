@@ -99,6 +99,9 @@ from .volatility import (
     gjr_garch,
     tgarch,
     realized_garch,
+    risk_forecast,
+    value_at_risk,
+    expected_shortfall,
 )
 
 __all__ = [
@@ -182,6 +185,9 @@ __all__ = [
     "random_walk_ridge",
     "random_forest",
     "realized_garch",
+    "risk_forecast",
+    "value_at_risk",
+    "expected_shortfall",
     "ridge",
     "save_fit",
     "scaled_pca",

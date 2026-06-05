@@ -4281,3 +4281,7 @@ fit.predict_variance(horizon=12)
 
 - `gjr_garch` -- GJR-GARCH (Glosten-Jagannathan-Runkle) asymmetric/leverage volatility (arch GARCH, o>0; rugarch gjrGARCH).
 - `tgarch` -- Threshold GARCH (TGARCH/Zakoian), absolute-value (power=1) asymmetric volatility.
+
+- `risk_forecast` -- Value-at-Risk and Expected Shortfall forecast from a fitted volatility model (Normal / standardized-t).
+- `value_at_risk` -- lower-tail VaR return quantile(s) from a fitted volatility model.
+- `expected_shortfall` -- Expected Shortfall (mean return below VaR) from a fitted volatility model.
