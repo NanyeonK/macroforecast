@@ -4278,3 +4278,6 @@ fit.predict_variance(horizon=12)
 | `pcr` | Removed. Use `feature_engineering.feature_spec(pca_components=...)` with a regression model. |
 
 - `var_select_order` -- VAR lag-order selection by AIC/BIC/HQ/FPE (vars::VARselect), via statsmodels `VAR.select_order`.
+
+- `gjr_garch` -- GJR-GARCH (Glosten-Jagannathan-Runkle) asymmetric/leverage volatility (arch GARCH, o>0; rugarch gjrGARCH).
+- `tgarch` -- Threshold GARCH (TGARCH/Zakoian), absolute-value (power=1) asymmetric volatility.

@@ -34,6 +34,7 @@ class GARCHEstimator:
         dist: str = "normal",
         rescale: bool = False,
         realized_variance: str | None = None,
+        power: float = 2.0,
         **kwargs: Any,
     ) -> None:
         self.variant = variant
@@ -44,6 +45,7 @@ class GARCHEstimator:
         self.dist = dist
         self.rescale = bool(rescale)
         self.realized_variance = realized_variance
+        self.power = float(power)
         self.kwargs = dict(kwargs)
         self._fitted: Any = None
         self._mu = 0.0
@@ -65,6 +67,12 @@ class GARCHEstimator:
             model = arch_model(r, vol="GARCH", p=self.p, q=self.q, **kwargs)
         elif self.variant == "egarch":
             model = arch_model(r, vol="EGARCH", p=self.p, o=self.o, q=self.q, **kwargs)
+        elif self.variant == "gjr":
+            model = arch_model(r, vol="GARCH", p=self.p, o=self.o, q=self.q, **kwargs)
+        elif self.variant == "tgarch":
+            model = arch_model(
+                r, vol="GARCH", p=self.p, o=self.o, q=self.q, power=1.0, **kwargs
+            )
         else:
             rv = _realized_measure(X, r, self.realized_variance)
             model = arch_model(r, vol="GARCH", p=1, q=1, x=rv.to_frame(), **kwargs)
@@ -145,6 +153,102 @@ def garch11(
                 "arch.arch_model(vol='GARCH'); comparable rugarch surface is "
                 "ugarchspec(variance.model=list(model='sGARCH'))."
             ),
+            **kwargs,
+        },
+        diagnostics=_volatility_diagnostics(estimator),
+    )
+
+
+def gjr_garch(
+    y: Any,
+    *,
+    X: Any | None = None,
+    p: int = 1,
+    o: int = 1,
+    q: int = 1,
+    mean_model: str = "constant",
+    dist: str = "normal",
+    rescale: bool = False,
+    **kwargs: Any,
+) -> VolatilityFit:
+    """Fit GJR-GARCH(p, o, q) (Glosten-Jagannathan-Runkle), default GJR-GARCH(1, 1, 1).\n\n    Adds an asymmetric (leverage) term so negative shocks raise conditional\n    variance more than positive shocks. arch.arch_model(vol='GARCH', o>0); the\n    comparable rugarch surface is ugarchspec(variance.model=list(model='gjrGARCH'))."""
+
+    target = as_series(y)
+    frame = _vol_frame(X, target)
+    estimator = GARCHEstimator(
+        variant="gjr",
+        p=p,
+        o=o,
+        q=q,
+        mean_model=mean_model,
+        dist=dist,
+        rescale=rescale,
+        **kwargs,
+    )
+    estimator.fit(frame, target)
+    return VolatilityFit(
+        estimator=estimator,
+        model="gjr_garch",
+        feature_names=tuple(frame.columns),
+        target_name=str(target.name),
+        metadata={
+            "n_obs": int(target.dropna().shape[0]),
+            "p": int(p),
+            "o": int(o),
+            "q": int(q),
+            "mean_model": mean_model,
+            "dist": dist,
+            "rescale": bool(rescale),
+            "backend": "arch.arch_model",
+            "implementation_note": "arch.arch_model(vol='GARCH') with o>0 (GJR/TARCH asymmetry); rugarch gjrGARCH.",
+            **kwargs,
+        },
+        diagnostics=_volatility_diagnostics(estimator),
+    )
+
+
+def tgarch(
+    y: Any,
+    *,
+    X: Any | None = None,
+    p: int = 1,
+    o: int = 1,
+    q: int = 1,
+    mean_model: str = "constant",
+    dist: str = "normal",
+    rescale: bool = False,
+    **kwargs: Any,
+) -> VolatilityFit:
+    """Fit Threshold GARCH (TGARCH / Zakoian), default order (1, 1, 1).\n\n    Absolute-value (power=1) GARCH with an asymmetric threshold term, so the\n    conditional standard deviation responds asymmetrically to the sign of the\n    shock. arch.arch_model(vol='GARCH', o>0, power=1)."""
+
+    target = as_series(y)
+    frame = _vol_frame(X, target)
+    estimator = GARCHEstimator(
+        variant="tgarch",
+        p=p,
+        o=o,
+        q=q,
+        mean_model=mean_model,
+        dist=dist,
+        rescale=rescale,
+        **kwargs,
+    )
+    estimator.fit(frame, target)
+    return VolatilityFit(
+        estimator=estimator,
+        model="tgarch",
+        feature_names=tuple(frame.columns),
+        target_name=str(target.name),
+        metadata={
+            "n_obs": int(target.dropna().shape[0]),
+            "p": int(p),
+            "o": int(o),
+            "q": int(q),
+            "mean_model": mean_model,
+            "dist": dist,
+            "rescale": bool(rescale),
+            "backend": "arch.arch_model",
+            "implementation_note": "arch.arch_model(vol='GARCH') with o>0 and power=1 (Zakoian threshold GARCH).",
             **kwargs,
         },
         diagnostics=_volatility_diagnostics(estimator),
@@ -497,5 +601,7 @@ __all__ = [
     "RealizedGARCHEstimator",
     "egarch",
     "garch11",
+    "gjr_garch",
+    "tgarch",
     "realized_garch",
 ]

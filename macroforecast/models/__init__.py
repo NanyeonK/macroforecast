@@ -96,6 +96,8 @@ from .volatility import (
     RealizedGARCHEstimator,
     egarch,
     garch11,
+    gjr_garch,
+    tgarch,
     realized_garch,
 )
 
@@ -143,6 +145,8 @@ __all__ = [
     "favar",
     "fused_difference_ridge",
     "garch11",
+    "gjr_garch",
+    "tgarch",
     "get_model",
     "glmboost",
     "gradient_boosting",
