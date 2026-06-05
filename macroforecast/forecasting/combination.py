@@ -185,6 +185,122 @@ def combine_best_n(forecasts: Any, y_true: Any, *, n: int = 3, horizon: int = 1)
     return output
 
 
+
+def _recursive_combination(
+    forecasts: Any,
+    y_true: Any,
+    *,
+    horizon: int,
+    min_periods: int,
+    weight_fn: "Callable[[np.ndarray, np.ndarray], tuple[np.ndarray, float]]",
+    window: int | None = None,
+    shrink_to_equal: float | None = None,
+) -> pd.Series:
+    """Leak-free recursive combiner.
+
+    At each target date the weights are fit by ``weight_fn`` on the (forecast,
+    realised) history whose errors are observable at the forecast origin (lagged
+    by ``horizon`` target-date rows), then applied to the current forecasts.
+    Falls back to the equal-weight mean until ``min_periods`` of history exist.
+    """
+    frame = _forecast_frame(forecasts)
+    target = pd.Series(y_true).reindex(frame.index).astype(float)
+    lag = max(1, int(horizon))
+    n_models = frame.shape[1]
+    F = frame.to_numpy(dtype=float)
+    y = target.to_numpy(dtype=float)
+    combined = pd.Series(index=frame.index, dtype=float, name="combined")
+    for step in range(len(frame.index)):
+        row = F[step]
+        finite_row = np.isfinite(row)
+        avail = step - lag  # last history row whose realised error is observable
+        used_weights = False
+        if avail + 1 >= int(min_periods) and finite_row.all():
+            lo = 0 if window is None else max(0, avail + 1 - int(window))
+            Fh = F[lo : avail + 1]
+            yh = y[lo : avail + 1]
+            mask = np.isfinite(yh) & np.all(np.isfinite(Fh), axis=1)
+            if int(mask.sum()) >= int(min_periods):
+                weights, intercept = weight_fn(Fh[mask], yh[mask])
+                if shrink_to_equal is not None:
+                    weights = _shrink(weights, float(shrink_to_equal))
+                if np.all(np.isfinite(weights)):
+                    combined.iloc[step] = float(intercept + row @ weights)
+                    used_weights = True
+        if not used_weights:
+            combined.iloc[step] = (
+                float(np.nanmean(row[finite_row])) if finite_row.any() else np.nan
+            )
+    return combined
+
+
+def combine_bates_granger(
+    forecasts: Any, y_true: Any, *, horizon: int = 1, min_periods: int = 10,
+    window: int | None = None, shrink_to_equal: float | None = None,
+) -> pd.Series:
+    """Bates-Granger (1969) minimum error-variance combination (full covariance)."""
+
+    from macroforecast.models._weight_solvers import min_variance_weights
+
+    def _wf(Fh: np.ndarray, yh: np.ndarray) -> "tuple[np.ndarray, float]":
+        return min_variance_weights(Fh - yh[:, None]), 0.0
+
+    return _recursive_combination(
+        forecasts, y_true, horizon=horizon, min_periods=min_periods,
+        weight_fn=_wf, window=window, shrink_to_equal=shrink_to_equal,
+    )
+
+
+def combine_granger_ramanathan(
+    forecasts: Any, y_true: Any, *, variant: str = "constrained", horizon: int = 1,
+    min_periods: int = 10, window: int | None = None, shrink_to_equal: float | None = None,
+) -> pd.Series:
+    """Granger-Ramanathan (1984) regression combination.
+
+    ``variant``: ``"ols"`` (with intercept), ``"no_intercept"``, or
+    ``"constrained"`` (no intercept, weights sum to one).
+    """
+
+    from macroforecast.models._weight_solvers import regression_weights
+
+    key = str(variant).lower()
+    if key not in {"ols", "no_intercept", "constrained"}:
+        raise ValueError("variant must be 'ols', 'no_intercept', or 'constrained'")
+
+    def _wf(Fh: np.ndarray, yh: np.ndarray) -> "tuple[np.ndarray, float]":
+        return regression_weights(
+            Fh, yh, intercept=(key == "ols"), sum_to_one=(key == "constrained")
+        )
+
+    return _recursive_combination(
+        forecasts, y_true, horizon=horizon, min_periods=min_periods,
+        weight_fn=_wf, window=window, shrink_to_equal=shrink_to_equal,
+    )
+
+
+def combine_constrained_ls(
+    forecasts: Any, y_true: Any, *, horizon: int = 1, min_periods: int = 10,
+    window: int | None = None, shrink_to_equal: float | None = None,
+) -> pd.Series:
+    """Non-negative weights summing to one minimising squared combination error."""
+
+    from macroforecast.models._weight_solvers import constrained_ls_weights
+
+    def _wf(Fh: np.ndarray, yh: np.ndarray) -> "tuple[np.ndarray, float]":
+        return constrained_ls_weights(Fh, yh), 0.0
+
+    return _recursive_combination(
+        forecasts, y_true, horizon=horizon, min_periods=min_periods,
+        weight_fn=_wf, window=window, shrink_to_equal=shrink_to_equal,
+    )
+
+
+def _shrink(weights: np.ndarray, shrinkage: float) -> np.ndarray:
+    from macroforecast.models._weight_solvers import shrink_weights
+
+    return shrink_weights(weights, shrinkage)
+
+
 def resolve_combinations(value: Any) -> list[CombinationSpec]:
     """Normalize runner ``combination=...`` input into concrete specs."""
 
@@ -305,7 +421,9 @@ def _apply_combination_method(
         return combine_trimmed_mean(forecasts, **params)
     if method == "winsorized_mean":
         return combine_winsorized_mean(forecasts, **params)
-    if method in {"inverse_mspe", "dmspe", "best_n"}:
+    _estimated = {"inverse_mspe", "dmspe", "best_n", "bates_granger",
+                  "granger_ramanathan", "constrained_ls"}
+    if method in _estimated:
         if "horizon" in (forecasts.index.names or []):
             levels = forecasts.index.get_level_values("horizon")
             if len(levels):
@@ -314,6 +432,12 @@ def _apply_combination_method(
         return combine_inverse_mspe(forecasts, actual, **params)
     if method == "best_n":
         return combine_best_n(forecasts, actual, **params)
+    if method == "bates_granger":
+        return combine_bates_granger(forecasts, actual, **params)
+    if method == "granger_ramanathan":
+        return combine_granger_ramanathan(forecasts, actual, **params)
+    if method == "constrained_ls":
+        return combine_constrained_ls(forecasts, actual, **params)
     raise ValueError(f"unsupported combination method {method!r}")
 
 
@@ -380,6 +504,13 @@ def _normalize_method(method: str) -> str:
         "inverse_msfe": "inverse_mspe",
         "discounted_mspe": "dmspe",
         "best": "best_n",
+        "bates": "bates_granger",
+        "bg": "bates_granger",
+        "granger_ramanathan": "granger_ramanathan",
+        "gr": "granger_ramanathan",
+        "regression": "granger_ramanathan",
+        "constrained": "constrained_ls",
+        "nnls": "constrained_ls",
     }
     key = aliases.get(key, key)
     allowed = {
@@ -390,6 +521,9 @@ def _normalize_method(method: str) -> str:
         "inverse_mspe",
         "dmspe",
         "best_n",
+        "bates_granger",
+        "granger_ramanathan",
+        "constrained_ls",
         "custom",
     }
     if key not in allowed:
@@ -432,6 +566,9 @@ __all__ = [
     "CombinationSpec",
     "apply_combinations",
     "combine_best_n",
+    "combine_constrained_ls",
+    "combine_granger_ramanathan",
+    "combine_bates_granger",
     "combine_dmspe",
     "combine_inverse_mspe",
     "combine_mean",
