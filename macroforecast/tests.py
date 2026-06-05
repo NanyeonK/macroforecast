@@ -2785,6 +2785,69 @@ def jarque_bera_test(series: Any, *, alpha: float = 0.05) -> TestResult:
     )
 
 
+def giacomini_white_test(
+    loss_a: Any,
+    loss_b: Any,
+    *,
+    horizon: int = 1,
+    instruments: Any | None = None,
+    alpha: float = 0.05,
+) -> TestResult:
+    """Giacomini-White (2006) conditional predictive ability (Wald) test.
+
+    Tests H0: ``E[h_{t-1} * dL_t] = 0`` where ``dL_t = loss_a - loss_b`` is the
+    loss differential and ``h_{t-1}`` is a test-function instrument available at
+    the forecast origin (default ``[1, dL_{t-h}]``). The statistic
+    ``n * Rbar' Omega^{-1} Rbar ~ chi2(q)`` with ``q`` instruments and ``Omega`` a
+    Newey-West HAC of ``R_t = h_{t-1} * dL_t`` (horizon-1 lags). Unlike the
+    unconditional Diebold-Mariano test, this tests CONDITIONAL equal predictive
+    ability. ``instruments`` may be supplied as an array aligned to ``dL_t``.
+    """
+
+    _validate_alpha(alpha)
+    h = max(1, int(horizon))
+    a = pd.Series(loss_a).astype(float).reset_index(drop=True)
+    b = pd.Series(loss_b).astype(float).reset_index(drop=True)
+    dl = (a - b).dropna().to_numpy()
+    if dl.size <= h + 2:
+        return TestResult(
+            None, None, False, "conditional_equal_predictive_ability", None,
+            int(dl.size), {"test": "giacomini_white", "p_value_status": "insufficient_observations"},
+        )
+    dl_t = dl[h:]
+    if instruments is None:
+        inst = np.column_stack([np.ones(dl_t.size), dl[:-h]])
+    else:
+        arr = np.asarray(instruments, dtype=float)
+        arr = arr.reshape(-1, 1) if arr.ndim == 1 else arr
+        if arr.shape[0] != dl_t.size:
+            raise ValueError("instruments must align with the loss differential after the horizon lag")
+        inst = np.column_stack([np.ones(dl_t.size), arr])
+    reg = inst * dl_t[:, None]
+    n, q = reg.shape
+    rbar = reg.mean(axis=0)
+    centered = reg - rbar
+    omega = centered.T @ centered / n
+    for lag in range(1, h):
+        weight = 1.0 - lag / float(h)
+        gamma = centered[lag:].T @ centered[:-lag] / n
+        omega += weight * (gamma + gamma.T)
+    omega_inv = np.linalg.pinv(omega)
+    statistic = float(n * rbar @ omega_inv @ rbar)
+    from scipy.stats import chi2
+
+    p_value = float(chi2.sf(statistic, df=q))
+    return TestResult(
+        statistic=statistic,
+        p_value=p_value,
+        decision=bool(p_value < alpha),
+        alternative="conditional_equal_predictive_ability",
+        correction_policy="newey_west_hac",
+        n_obs=int(n),
+        metadata={"test": "giacomini_white", "instruments": int(q), "horizon": int(h), "df": int(q)},
+    )
+
+
 def granger_causality(
     panel: Any,
     *,
@@ -3827,6 +3890,7 @@ __all__ = [
     "directional_accuracy_test",
     "dm_test",
     "jarque_bera_test",
+    "giacomini_white_test",
     "granger_causality",
     "instantaneous_causality",
     "dmp_test",

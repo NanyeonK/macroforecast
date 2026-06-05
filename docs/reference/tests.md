@@ -1041,3 +1041,5 @@ Source-alignment notes:
 
 - `granger_causality` -- Granger causality test in a VAR (vars::causality; F or Wald).
 - `instantaneous_causality` -- instantaneous (contemporaneous) causality test in a VAR.
+
+- `giacomini_white_test` -- Giacomini-White (2006) CONDITIONAL predictive ability Wald test (chi2, HAC), instrument [1, dL_{t-h}].
