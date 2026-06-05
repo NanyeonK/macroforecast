@@ -527,6 +527,38 @@ def var_select_order(
     }
 
 
+def var_roots(fit: ModelFit) -> dict[str, Any]:
+    """VAR stability: moduli of the companion-matrix eigenvalues (vars::roots).
+
+    Builds the kp x kp companion matrix from the fitted lag coefficients and
+    returns the eigenvalue moduli (descending), the spectral radius, and
+    ``is_stable`` (all moduli < 1, i.e. the VAR is covariance-stationary).
+    """
+
+    estimator = getattr(fit, "estimator", fit)
+    coef = getattr(estimator, "coef_", None)
+    if coef is None:
+        raise ValueError("var_roots requires a fitted var() model with coefficients")
+    coef = np.asarray(coef, dtype=float)
+    k = len(getattr(estimator, "names_", ()))
+    p = int(getattr(estimator, "n_lag", 1))
+    if k == 0 or coef.ndim != 2 or coef.shape[1] < k * p:
+        raise ValueError("var_roots could not read the lag-coefficient block")
+    lag_block = coef[:, : k * p]
+    companion = np.zeros((k * p, k * p), dtype=float)
+    companion[:k, :] = lag_block
+    if p > 1:
+        companion[k:, : k * (p - 1)] = np.eye(k * (p - 1), dtype=float)
+    moduli = sorted((float(m) for m in np.abs(np.linalg.eigvals(companion))), reverse=True)
+    return {
+        "moduli": moduli,
+        "max_modulus": moduli[0] if moduli else float("nan"),
+        "is_stable": bool(moduli[0] < 1.0) if moduli else False,
+        "n_lag": p,
+        "n_vars": k,
+    }
+
+
 
 class _FAVAR:
     """FAVAR::FAVAR-aligned Bayesian FAVAR sampler."""
@@ -2989,4 +3021,5 @@ __all__ = [
     "unrestricted_midas",
     "var",
     "var_select_order",
+    "var_roots",
 ]

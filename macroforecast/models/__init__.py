@@ -71,6 +71,7 @@ from .timeseries import (
     unrestricted_midas,
     var,
     var_select_order,
+    var_roots,
 )
 from .tree import (
     LGBAPlusRegressor,
@@ -208,5 +209,6 @@ __all__ = [
     "unrestricted_midas",
     "var",
     "var_select_order",
+    "var_roots",
     "xgboost",
 ]

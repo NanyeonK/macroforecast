@@ -4285,3 +4285,5 @@ fit.predict_variance(horizon=12)
 - `risk_forecast` -- Value-at-Risk and Expected Shortfall forecast from a fitted volatility model (Normal / standardized-t).
 - `value_at_risk` -- lower-tail VaR return quantile(s) from a fitted volatility model.
 - `expected_shortfall` -- Expected Shortfall (mean return below VaR) from a fitted volatility model.
+
+- `var_roots` -- VAR stability check: moduli of the companion-matrix eigenvalues, spectral radius, and is_stable (vars::roots).
