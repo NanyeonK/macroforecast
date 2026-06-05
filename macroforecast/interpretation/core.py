@@ -2349,6 +2349,94 @@ def episode_group_weights(
     )
 
 
+def accumulated_local_effect_2d(
+    model: Any,
+    X: pd.DataFrame,
+    *,
+    features: tuple[str, str],
+    bins: int = 10,
+) -> pd.DataFrame:
+    """Second-order (two-feature) accumulated local effect (Apley-Zhu 2020).
+
+    Computes the pure interaction ALE surface of two features: per 2D quantile
+    cell it averages the second-order finite difference of the prediction over
+    the cell corners, accumulates it over both axes, and removes the (weighted)
+    main effects so the surface is the interaction not explained by the
+    first-order ALEs. Returns a tidy table with the cell centres, the interaction
+    ALE, and the cell counts. A purely additive model yields ~0 everywhere.
+    """
+
+    if len(features) != 2:
+        raise ValueError("features must be a (feature_1, feature_2) pair")
+    f1, f2 = str(features[0]), str(features[1])
+    frame = _as_feature_frame(X)
+    for feature in (f1, f2):
+        if feature not in frame.columns:
+            raise ValueError(f"feature {feature!r} is not in X")
+    if bins <= 1:
+        raise ValueError("bins must be greater than 1")
+    x1 = frame[f1].astype(float).to_numpy()
+    x2 = frame[f2].astype(float).to_numpy()
+    e1 = np.unique(np.quantile(x1, np.linspace(0.0, 1.0, int(bins) + 1)))
+    e2 = np.unique(np.quantile(x2, np.linspace(0.0, 1.0, int(bins) + 1)))
+    if len(e1) < 3 or len(e2) < 3:
+        raise ValueError("each feature needs at least two non-empty ALE bins")
+    k1, k2 = len(e1) - 1, len(e2) - 1
+    a1 = np.clip(np.searchsorted(e1[1:-1], x1, side="right"), 0, k1 - 1)
+    a2 = np.clip(np.searchsorted(e2[1:-1], x2, side="right"), 0, k2 - 1)
+    delta = np.zeros((k1, k2), dtype=float)
+    counts = np.zeros((k1, k2), dtype=float)
+    for i in range(k1):
+        for l in range(k2):
+            mask = (a1 == i) & (a2 == l)
+            n_cell = int(mask.sum())
+            counts[i, l] = n_cell
+            if n_cell == 0:
+                continue
+            sub = frame.loc[mask]
+
+            def _corner(v1: float, v2: float) -> np.ndarray:
+                grid = sub.copy()
+                grid[f1] = v1
+                grid[f2] = v2
+                return _predict(model, grid)
+
+            diff = (_corner(e1[i + 1], e2[l + 1]) - _corner(e1[i], e2[l + 1])) - (
+                _corner(e1[i + 1], e2[l]) - _corner(e1[i], e2[l])
+            )
+            delta[i, l] = float(np.mean(diff))
+    accumulated = np.cumsum(np.cumsum(delta, axis=0), axis=1)
+    total = counts.sum()
+    weights = counts / total if total > 0 else np.full_like(counts, 1.0 / counts.size)
+    row_w = weights.sum(axis=1, keepdims=True)
+    col_w = weights.sum(axis=0, keepdims=True)
+    grand = float(np.sum(accumulated * weights))
+    row_mean = (accumulated * weights).sum(axis=1, keepdims=True) / np.maximum(row_w, 1e-12)
+    col_mean = (accumulated * weights).sum(axis=0, keepdims=True) / np.maximum(col_w, 1e-12)
+    interaction = accumulated - row_mean - col_mean + grand
+    centers1 = 0.5 * (e1[:-1] + e1[1:])
+    centers2 = 0.5 * (e2[:-1] + e2[1:])
+    rows: list[dict[str, Any]] = []
+    for i in range(k1):
+        for l in range(k2):
+            rows.append({
+                "bin_1": int(i),
+                "bin_2": int(l),
+                "center_1": float(centers1[i]),
+                "center_2": float(centers2[l]),
+                "ale": float(interaction[i, l]),
+                "count": int(counts[i, l]),
+            })
+    table = pd.DataFrame(rows)
+    table.attrs["macroforecast_metadata"] = {
+        "kind": "accumulated_local_effect_2d",
+        "features": [f1, f2],
+        "bins_1": int(k1),
+        "bins_2": int(k2),
+    }
+    return table
+
+
 def var_impulse_response(
     panel: Any,
     *,

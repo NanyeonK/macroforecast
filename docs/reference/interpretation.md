@@ -1858,3 +1858,5 @@ shap_table = mf.interpretation.shap_values(
 ```
 
 - `var_impulse_response` -- VAR impulse responses with Monte-Carlo bootstrap confidence bands (statsmodels errband_mc; vars::irf), as a tidy horizon/impulse/response table.
+
+- `accumulated_local_effect_2d` -- second-order (two-feature) accumulated local effect: the pure interaction ALE surface (Apley-Zhu 2020; ALEPlot 2D).

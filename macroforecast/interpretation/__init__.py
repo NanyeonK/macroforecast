@@ -21,6 +21,7 @@ from .anatomy import (
 )
 from .core import (
     accumulated_local_effect,
+    accumulated_local_effect_2d,
     anatomy_explain,
     attention_weights,
     bootstrap_jackknife,
@@ -94,6 +95,7 @@ __all__ = [
     "DualInterpretationResult",
     "ForecastShapleyResult",
     "accumulated_local_effect",
+    "accumulated_local_effect_2d",
     "anatomy_from_forecast_result",
     "anatomy_model",
     "anatomy_output_transformer",
