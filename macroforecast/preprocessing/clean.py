@@ -114,6 +114,115 @@ def em_multivariate_impute_clean(
     return _pca_em_imputation(panel, n_factors=None, max_iter=max_iter, tol=tol)
 
 
+def box_cox_lambda(
+    series: Any,
+    *,
+    method: str = "loglik",
+    period: int | None = None,
+    bounds: tuple[float, float] = (-1.0, 2.0),
+) -> float:
+    """Select a Box-Cox transformation parameter ``lambda`` for one series.
+
+    ``method='loglik'`` uses the profile-likelihood (Box-Cox MLE, via scipy);
+    ``method='guerrero'`` minimises the coefficient of variation of the
+    subseries dispersion (Guerrero 1993), the ``forecast::BoxCox.lambda`` default.
+    Requires strictly positive values (use a signed/Yeo-Johnson transform for
+    series with non-positive values).
+    """
+
+    x = pd.Series(series).dropna().astype(float).to_numpy()
+    if x.size < 4:
+        return 1.0
+    if np.any(x <= 0):
+        raise ValueError(
+            "box_cox requires strictly positive values; use a Yeo-Johnson / signed "
+            "transform for series with zero or negative values"
+        )
+    lo, hi = float(bounds[0]), float(bounds[1])
+    if method == "loglik":
+        from scipy.stats import boxcox_normmax
+
+        lam = float(boxcox_normmax(x, brack=(lo, hi), method="mle"))
+        return float(np.clip(lam, lo, hi))
+    if method == "guerrero":
+        m = int(period) if period and int(period) > 1 else 2
+        n_groups = x.size // m
+        if n_groups < 2:
+            m = 2
+            n_groups = x.size // m
+        groups = x[: n_groups * m].reshape(n_groups, m)
+        means = groups.mean(axis=1)
+        stds = groups.std(axis=1, ddof=1)
+        valid = means > 0
+        means, stds = means[valid], stds[valid]
+        if means.size < 2:
+            return 1.0
+        grid = np.linspace(lo, hi, 101)
+        best_lam, best_cv = 1.0, np.inf
+        for lam in grid:
+            ratio = stds / np.power(means, 1.0 - lam)
+            mu = float(np.mean(ratio))
+            if mu <= 0:
+                continue
+            cv = float(np.std(ratio, ddof=1) / mu)
+            if cv < best_cv:
+                best_cv, best_lam = cv, float(lam)
+        return best_lam
+    raise ValueError("method must be 'loglik' or 'guerrero'")
+
+
+def _box_cox_transform(x: np.ndarray, lam: float) -> np.ndarray:
+    if abs(lam) < 1e-8:
+        return np.log(x)
+    return (np.power(x, lam) - 1.0) / lam
+
+
+def inverse_box_cox(values: Any, lmbda: float) -> np.ndarray:
+    """Invert a Box-Cox transform with parameter ``lmbda``."""
+
+    y = np.asarray(values, dtype=float)
+    if abs(float(lmbda)) < 1e-8:
+        return np.exp(y)
+    return np.power(np.maximum(lmbda * y + 1.0, 0.0), 1.0 / float(lmbda))
+
+
+def box_cox_clean(
+    panel: pd.DataFrame,
+    *,
+    lmbda: float | None = None,
+    method: str = "loglik",
+    period: int | None = None,
+) -> pd.DataFrame:
+    """Apply a Box-Cox variance-stabilising transform to each numeric column.
+
+    When ``lmbda`` is None the parameter is selected per column by ``method``
+    ('loglik' or 'guerrero'); the chosen lambdas are recorded in
+    ``panel.attrs['macroforecast_box_cox_lambda']``. Columns must be strictly
+    positive.
+    """
+
+    _require_non_empty(panel)
+    result = panel.copy()
+    numeric = result.select_dtypes("number")
+    lambdas: dict[str, float] = {}
+    for column in numeric.columns:
+        col = result[column].astype(float)
+        observed = col.dropna()
+        if observed.empty:
+            continue
+        lam = float(lmbda) if lmbda is not None else box_cox_lambda(
+            observed, method=method, period=period
+        )
+        lambdas[str(column)] = lam
+        mask = col.notna()
+        result.loc[mask, column] = _box_cox_transform(col[mask].to_numpy(), lam)
+    out = _copy_attrs(panel, result)
+    attrs = dict(out.attrs)
+    attrs["macroforecast_box_cox_lambda"] = lambdas
+    out.attrs.update(attrs)
+    return out
+
+
 def mean_impute_clean(panel: pd.DataFrame) -> pd.DataFrame:
     """Replace missing numeric cells with full-column means."""
 
@@ -626,6 +735,9 @@ __all__ = [
     "winsorize_clean",
     "em_factor_impute_clean",
     "em_multivariate_impute_clean",
+    "box_cox_lambda",
+    "box_cox_clean",
+    "inverse_box_cox",
     "mean_impute_clean",
     "forward_fill_clean",
     "linear_interpolate_clean",

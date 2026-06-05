@@ -836,3 +836,7 @@ quarterly_bundle = mf.data.load_fred_qd_sd(states=["CA"], variables=["UR"])
 The FRED-MD/FRED-QD defaults are based on the public FRED-Databases Matlab code
 linked from the St. Louis Fed FRED-MD/FRED-QD page, specifically
 `fredfactors.m`, `prepare_missing.m`, `remove_outliers.m`, and `factors_em.m`.
+
+- `box_cox_lambda` -- select a Box-Cox lambda for one series ('loglik' MLE or 'guerrero'; forecast::BoxCox.lambda).
+- `box_cox_clean` -- apply a Box-Cox variance-stabilising transform per numeric column (lambda selected or supplied).
+- `inverse_box_cox` -- invert a Box-Cox transform given lambda.
