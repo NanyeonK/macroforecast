@@ -28,17 +28,18 @@ All major macro-forecasting time-frame choices are explicit:
 | How often does the final test origin move? | `step` | `test_origins(step=...)` |
 | Is test-origin movement row-count based or calendar based? | positive integer or pandas offset | `test_origins(step=1)`, `test_origins(step="1ME")`, `test_origins(step=pd.offsets.MonthEnd(3))` |
 | How far does each final test target run? | `horizon` | `test_origins(horizon=...)` |
-| Which inner validation design is used for model selection? | `method` | `val_last_block()`, `val_poos()`, `val_expanding()`, `val_rolling_blocks()`, `val_blocked_kfold()` |
+| Which inner validation design is used for model selection? | `method` | `val_last_block()`, `val_poos()`, `val_expanding()`, `val_rolling_blocks()`, `val_blocked_kfold()`, `val_random_kfold()` |
 | How many time blocks are used for tail-block validation? | `n_blocks` | `val_rolling_blocks(n_blocks=...)` |
 | How large is each time block? | `block_size` | `val_rolling_blocks(block_size=...)` |
 | How many chronological CV folds are used? | `n_splits` | `val_blocked_kfold(n_splits=...)` |
+| How many randomly assigned CV folds are used? | `n_splits` and `random_state` | `val_random_kfold(n_splits=..., random_state=...)` |
 | How often is the model refit? | positive integer or pandas offset | `estimation_* (retrain_every=12)`, `estimation_* (retrain_every="12ME")` |
 | How often are hyperparameters reselected? | positive integer or pandas offset | `val_* (retune_every=12)`, `val_* (retune_every="12ME")` |
 | Should retuning happen only when the model is refit? | `retune_on_retrain` | `val_* (retune_on_retrain=True/False)` |
 | Can skipped retune origins reuse the previous selected parameters? | `reuse_params` | `val_* (reuse_params=True/False)` |
 | Where may preprocessing, feature engineering, or model selection fit state? | `scope` | `stage_policy("full_panel")`, `stage_policy("origin_available")`, `stage_policy("fit_window")`, `stage_policy("fixed_reference")` |
 
-Validation choices are time-aware:
+Validation choices have explicit time-order semantics:
 
 | Function | Design | Typical use |
 | --- | --- | --- |
@@ -47,6 +48,7 @@ Validation choices are time-aware:
 | `val_expanding(min_train_size=..., step=..., horizon=...)` | Expanding inner training sample and forward validation blocks. | Walk-forward validation inside each estimation window. |
 | `val_rolling_blocks(n_blocks=..., block_size=...)` | Several consecutive tail time blocks. | Time-block model selection over recent history. |
 | `val_blocked_kfold(n_splits=...)` | Chronological blocked folds with only past data used for training. | Time-aware CV. This is not random iid k-fold. |
+| `val_random_kfold(n_splits=..., random_state=...)` | Randomly assigned iid-style folds over the estimation sample. | Paper replication when the original study explicitly used random folds. This is not time-safe validation. |
 
 ```python
 window = mf.window.spec(
@@ -130,14 +132,14 @@ window = mf.window.spec(
 | Compose full window | `spec()` |
 | Build from common cutoffs | `from_cutoffs()` |
 | Configure estimation | `estimation_expanding()`, `estimation_rolling()`, `estimation_fixed()` |
-| Configure val | `val_last_block()`, `val_poos()`, `val_expanding()`, `val_rolling_blocks()`, `val_blocked_kfold()` |
+| Configure val | `val_last_block()`, `val_poos()`, `val_expanding()`, `val_rolling_blocks()`, `val_blocked_kfold()`, `val_random_kfold()` |
 | Configure test | `test_origins()` |
 | Configure alignment | `alignment_drop_incomplete()`, `alignment_keep_missing()` |
 | Configure runner stage timing | `stage_policy()`, `custom_stage_policy()`, `stage_index()`, `stage_panel()` |
-| Shortcut windows | `last_block()`, `poos()`, `expanding()`, `rolling_blocks()`, `blocked_kfold()` |
+| Shortcut windows | `last_block()`, `poos()`, `expanding()`, `rolling_blocks()`, `blocked_kfold()`, `random_kfold()` |
 | Inspect windows | `WindowSpec.plan()`, `WindowSpec.origins()`, `WindowSpec.test_mask()`, `WindowSpec.align()`, `WindowSpec.to_table()` |
 | Runner handoff | `WindowSpec.val_splits_for_origin()`, `WindowSpec.iter_origins()`, `WindowSpec.iter_slices()` |
-| Low-level split generators | `make_splitter()`, `last_block_split()`, `poos_split()`, `expanding_split()`, `rolling_blocks_split()`, `blocked_kfold_split()` |
+| Low-level split generators | `make_splitter()`, `last_block_split()`, `poos_split()`, `expanding_split()`, `rolling_blocks_split()`, `blocked_kfold_split()`, `random_kfold_split()` |
 
 ## StagePolicy
 
@@ -440,6 +442,7 @@ macroforecast.window.from_cutoffs(
     val_ratio=0.2,
     val_min_train_size=None,
     val_n_splits=5,
+    val_random_state=None,
     val_horizon=None,
     val_step=1,
     val_embargo=None,
@@ -533,6 +536,7 @@ macroforecast.window.ValWindow(
     ratio=0.2,
     min_train_size=None,
     n_splits=5,
+    random_state=None,
     horizon=1,
     step=1,
     embargo=None,
@@ -585,17 +589,25 @@ mf.window.val_blocked_kfold(
     retune_on_retrain=True,
     reuse_params=True,
 )
+mf.window.val_random_kfold(
+    n_splits=5,
+    random_state=0,
+    retune_every=1,
+    retune_on_retrain=True,
+    reuse_params=True,
+)
 ```
 
 Input:
 
 | Argument | Meaning |
 | --- | --- |
-| `method` | Validation splitter: `last_block`, `poos`, `expanding`, `rolling_blocks`, or `blocked_kfold`. |
+| `method` | Validation splitter: `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold`, or `random_kfold`. |
 | `size` | Explicit validation size for holdout-style splitters. |
 | `ratio` | Validation ratio when `size` is absent. |
 | `min_train_size` | Minimum inner training size for expanding validation inside the estimation window. |
 | `n_splits` | Number of validation folds or blocks. |
+| `random_state` | Seed for `random_kfold` fold assignment. Ignored by temporal splitters. |
 | `horizon` | Validation target length. Defaults to one-step validation. |
 | `step` | Validation split movement. |
 | `embargo` | Validation-specific embargo. If absent, estimation embargo is used. |
@@ -639,6 +651,21 @@ Input:
 | `step` | Origin movement. Positive integers move by row count. Pandas offset strings or `DateOffset` objects move by calendar time and require a `DatetimeIndex`. |
 | `drop_incomplete` | Drop origins whose full horizon exceeds the available index. |
 | `exclude` | Sequence of `(start, end)` windows removed from the test mask. |
+
+`first_origin` and `last_origin` are forecast-origin labels, not realized
+target-date labels. With a monthly index and `step=1`, the test origin moves one
+row at a time, so h-step forecasts overlap in the usual macro-forecasting
+sense. The horizon still controls target availability: an origin `t` is
+evaluable only when `t + horizon` is in the supplied index. If the panel ends at
+`2017-12` and `horizon=24`, the last evaluable origin is `2015-12`; origins in
+`2016` and `2017` have no realized 24-month-ahead actual.
+
+With `drop_incomplete=True`, those tail origins are removed before the runner
+fits/evaluates them. A calendar block can therefore be empty for long horizons
+even when `step=1`; this is normal for evaluation runs and prevents RMSE/MAE
+from using forecasts without realized actuals. For future-only forecasting,
+build a forecast-only/scenario panel separately instead of scoring those tail
+origins.
 
 ### AlignmentWindow
 
@@ -706,6 +733,18 @@ macroforecast.window.blocked_kfold(n_splits=5, embargo=0)
 
 Chronological blocked folds with past-only training.
 
+### random_kfold
+
+```python
+macroforecast.window.random_kfold(n_splits=5, random_state=0)
+```
+
+Randomly assigned iid-style folds. Each fold trains on all non-validation rows,
+so the training set can contain rows later than validation rows. Use this only
+to reproduce studies whose appendix or code explicitly used random folds. For
+ordinary macro forecasting, prefer `blocked_kfold`, `poos`, `expanding`, or
+other time-aware validation designs.
+
 ## Low-Level Splitters
 
 Low-level splitters return iterators of `(train_idx, val_idx)`.
@@ -716,6 +755,7 @@ macroforecast.window.poos_split(n_samples, validation_size=None, validation_rati
 macroforecast.window.expanding_split(n_samples, min_train_size=None, step=1, horizon=1, embargo=0)
 macroforecast.window.rolling_blocks_split(n_samples, n_blocks=3, block_size=None, embargo=0)
 macroforecast.window.blocked_kfold_split(n_samples, n_splits=5, embargo=0)
+macroforecast.window.random_kfold_split(n_samples, n_splits=5, random_state=0)
 ```
 
 ## split_table
@@ -732,6 +772,7 @@ macroforecast.window.split_table(
     n_splits=5,
     step=1,
     horizon=1,
+    random_state=None,
     embargo=0,
 )
 ```
@@ -760,3 +801,4 @@ accepting a `StagePolicy`, string scope, mapping, or `None`.
 | `time_series_split` | `expanding` |
 | `rolling`, `rolling_walk_forward` | `rolling_blocks` |
 | `blocked_kfold`, `block_cv`, `kfold` | `blocked_kfold` |
+| `random_kfold`, `iid_kfold`, `random_cv` | `random_kfold` |

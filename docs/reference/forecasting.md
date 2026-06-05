@@ -209,6 +209,18 @@ Target availability rule:
   `WindowSpec` `fit_end`, because `fit_end` is an information-window boundary
   while h-step target labels realize later.
 
+Test-origin rule:
+: `window.test.first_origin` and `window.test.last_origin` are origin dates.
+  `step=1` means every emitted row in the input index, so overlapping h-step
+  macro forecasts are supported. The runner writes a scored row only when the
+  realized target date is available. With `drop_incomplete=True`, an h-step
+  origin `t` is kept for scoring only if `t + h` is inside the panel. For a
+  monthly panel ending in `2017-12`, h=24 origins after `2015-12` are not
+  evaluable even though the origin dates themselves exist. If an entire final
+  calendar block has no evaluable origins, `WindowSpec.validate(...)` reports
+  no test origins; replication scripts should skip that tail block rather than
+  count it as a forecast error.
+
 For FRED-MD-style replications where preprocessing has already produced the
 one-period target object, use `forecast_policy="direct_average",
 target_transform="value"` or `target_transform="average_value"` for direct
@@ -554,6 +566,28 @@ result = mf.forecasting.run(
 an error instead of being silently ignored. For a single model, direct parameter
 names are also accepted, including dict-valued parameters such as
 `params={"base_params": {"alpha": 0.1}}` for a fit-time ensemble spec.
+This is also how model-local preprocessing options are expressed. For example,
+Elastic Net can standardize predictors inside each fit window while a tree model
+uses the raw feature matrix:
+
+```python
+result = mf.forecasting.run(
+    panel,
+    ["elastic_net", "random_forest"],
+    window=window,
+    features=features,
+    params={
+        "elastic_net": {"standardize": True},
+        "random_forest": {"n_estimators": 200, "max_features": 1 / 3},
+    },
+)
+```
+
+This differs from `macroforecast.preprocessing.standardize_panel()`, which is a
+panel preprocessing step. If that preprocessing is run on the full panel outside
+the runner, it uses full-sample moments. If leakage-safe scaling is needed for
+all models, use runner preprocessing specs and window policies. If only selected
+models need scaling, use model-local options such as `standardize=True`.
 
 Forecast rows record the actual fixed-plus-selected parameter set in the
 `params` column. For example, if `params={"ridge": {"fit_intercept": False}}`

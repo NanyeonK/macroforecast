@@ -1567,9 +1567,33 @@ features = mf.feature_engineering.feature_spec(
 ```
 
 Each step has a `name`, `method`, `input`, and `include` flag. `input="panel"`
-reads the original predictor panel; `input="<step name>"` reads a prior step.
-If `include=False`, the step is an intermediate fitted transformation and its
+reads the original predictor panel; `input="<step name>"` reads a prior step;
+`input="target_panel"` reads the resolved target columns. The last input is
+explicitly opt-in: `predictors` still reject target overlap, but paper designs
+that require target-derived feature blocks such as `MARX_y` or `MAF_y` can
+construct them without treating the target as an ordinary predictor. If
+`include=False`, the step is an intermediate fitted transformation and its
 output is not included in the final `X`, but its metadata is still recorded.
+
+Example target-derived MARX block:
+
+```python
+features = mf.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=3,
+    predictors=["PAYEMS", "UNRATE", "HOUST"],
+    steps=[
+        mf.feature_engineering.marx_step(name="MARX_X", max_lag=12),
+        mf.feature_engineering.marx_step(
+            name="MARX_y",
+            input="target_panel",
+            columns=["INDPRO"],
+            max_lag=12,
+        ),
+    ],
+    target_lags=range(0, 13),
+)
+```
 
 Stateful step builders are interpreted as fixed-fit transformations inside
 `FeatureSpec`: the runner's `feature_policy` determines which rows are used to

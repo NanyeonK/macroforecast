@@ -63,6 +63,7 @@ def select_params(
     population_size: int | None = None,
     generations: int | None = None,
     mutation_rate: float | None = None,
+    allow_non_temporal_splits: bool = False,
 ) -> SearchResult:
     """Select model parameters by temporal validation.
 
@@ -107,6 +108,7 @@ def select_params(
         len(frame),
         window=window,
         splits=splits,
+        allow_non_temporal_splits=allow_non_temporal_splits,
     )
     base_params = dict(fixed_params or {})
     rng = np.random.default_rng(spec.random_state)
@@ -317,34 +319,50 @@ def _resolve_selection_splits(
     *,
     window: WindowSpec | str | None,
     splits: Sequence[tuple[Any, Any]] | None,
+    allow_non_temporal_splits: bool = False,
 ) -> tuple[list[Split], str, dict[str, Any]]:
     if splits is not None and window is not None:
         raise ValueError("pass either window or splits, not both")
     if splits is None:
         window_spec = resolve_window(window)
         resolved = window_spec.split(n_obs)
+        allow_non_temporal_splits = (
+            allow_non_temporal_splits
+            or window_spec.val.method == "random_kfold"
+        )
         return (
             resolved,
             window_spec.to_dict()["method"],
             {
                 "split_source": "window",
                 "window": window_spec.to_dict(),
+                "temporal_order": not allow_non_temporal_splits,
                 "split_summary": _split_summary(resolved),
             },
         )
-    resolved = _normalize_splits(splits, n_obs)
+    resolved = _normalize_splits(
+        splits,
+        n_obs,
+        allow_non_temporal_splits=allow_non_temporal_splits,
+    )
     return (
         resolved,
         "explicit_splits",
         {
             "split_source": "explicit",
             "window": None,
+            "temporal_order": not allow_non_temporal_splits,
             "split_summary": _split_summary(resolved),
         },
     )
 
 
-def _normalize_splits(splits: Sequence[tuple[Any, Any]], n_obs: int) -> list[Split]:
+def _normalize_splits(
+    splits: Sequence[tuple[Any, Any]],
+    n_obs: int,
+    *,
+    allow_non_temporal_splits: bool = False,
+) -> list[Split]:
     if len(splits) == 0:
         raise ValueError("splits must contain at least one train/validation pair")
     resolved: list[Split] = []
@@ -365,7 +383,10 @@ def _normalize_splits(splits: Sequence[tuple[Any, Any]], n_obs: int) -> list[Spl
         )
         if np.intersect1d(train_idx, val_idx).size:
             raise ValueError(f"split {split_id} train and validation positions overlap")
-        if int(train_idx.max()) >= int(val_idx.min()):
+        if (
+            not allow_non_temporal_splits
+            and int(train_idx.max()) >= int(val_idx.min())
+        ):
             raise ValueError(
                 f"split {split_id} train positions must precede validation positions"
             )

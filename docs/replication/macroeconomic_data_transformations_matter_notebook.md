@@ -16,6 +16,9 @@ Scope:
 - The quick outputs below use a short sanity window and a 20-tree random forest.
   The full-paper run cell keeps the paper-style 200-tree setting and full
   `1980-01` to `2017-12` test calendar.
+- Tuned learners use the paper's randomly assigned 5-fold CV through
+  `mf.window.val_random_kfold(...)` / `val_method="random_kfold"`. Random folds
+  are used here for replication, not as the default time-safe validation design.
 
 ## Cell 0: Import the package
 
@@ -162,7 +165,7 @@ replication_panel = processed.panel.join(
 
 TARGET = "INDPRO"
 transformed_predictors = [column for column in processed.panel.columns if column != TARGET]
-level_predictors = [f"LEVEL__{column}" for column in bundle.panel.columns if column != TARGET]
+level_predictors = [f"LEVEL__{column}" for column in bundle.panel.columns]
 
 print("replication_panel_shape", replication_panel.shape)
 print("transformed_predictor_count", len(transformed_predictors))
@@ -175,21 +178,22 @@ Output:
 ```text
 replication_panel_shape (706, 254)
 transformed_predictor_count 126
-level_predictor_count 126
+level_predictor_count 127
 first_level_columns ['LEVEL__RPI', 'LEVEL__W875RX1', 'LEVEL__DPCERA3M086SBEA', 'LEVEL__CMRMTSPLx', 'LEVEL__RETAILx']
 ```
 
 Interpretation:
 
 - The target remains the transformed FRED-MD target column.
-- `LEVEL__*` columns preserve raw level variables for `*-Level` feature cases.
+- `LEVEL__*` columns preserve raw level variables for `*-Level` feature cases,
+  including `LEVEL__INDPRO` when the paper calls for `Y_t`.
 - The feature step builder can select transformed and level predictors
   separately.
 
 ## Cell 5: Define paper feature steps
 
 ```python
-def paper_feature_steps(case, transformed_predictors, level_predictors):
+def paper_feature_steps(case, target, transformed_predictors, level_predictors):
     steps = []
     parts = case.split("-")
 
@@ -225,8 +229,18 @@ def paper_feature_steps(case, transformed_predictors, level_predictors):
     if "MARX" in parts:
         steps.append(
             mf.feature_engineering.marx_step(
-                name="MARX",
+                name="MARX_X",
                 columns=transformed_predictors,
+                max_lag=12,
+                scale_lags=False,
+                include=True,
+            )
+        )
+        steps.append(
+            mf.feature_engineering.marx_step(
+                name="MARX_y",
+                input="target_panel",
+                columns=[target],
                 max_lag=12,
                 scale_lags=False,
                 include=True,
@@ -236,8 +250,19 @@ def paper_feature_steps(case, transformed_predictors, level_predictors):
     if "MAF" in parts:
         steps.append(
             mf.feature_engineering.maf_step(
-                name="MAF",
+                name="MAF_X",
                 columns=transformed_predictors,
+                max_lag=12,
+                n_components=2,
+                scale=False,
+                include=True,
+            )
+        )
+        steps.append(
+            mf.feature_engineering.maf_step(
+                name="MAF_y",
+                input="target_panel",
+                columns=[target],
                 max_lag=12,
                 n_components=2,
                 scale=False,
@@ -250,7 +275,7 @@ def paper_feature_steps(case, transformed_predictors, level_predictors):
             mf.feature_engineering.lag_step(
                 name="Level",
                 columns=level_predictors,
-                lags=range(0, 13),
+                lags=range(0, 1),
                 include=True,
             )
         )
@@ -258,7 +283,7 @@ def paper_feature_steps(case, transformed_predictors, level_predictors):
     return steps
 
 
-for step in paper_feature_steps("F-X-MARX-Level", transformed_predictors, level_predictors):
+for step in paper_feature_steps("F-X-MARX-Level", TARGET, transformed_predictors, level_predictors):
     print(step["name"], step["method"], step["include"])
 ```
 
@@ -268,7 +293,8 @@ Output:
 F_raw pca False
 F lag True
 X lag True
-MARX marx True
+MARX_X marx True
+MARX_y marx True
 Level lag True
 ```
 
@@ -276,6 +302,8 @@ Interpretation:
 
 - `F_raw` is not included directly; it is a fitted PCA state used by the lagged
   factor block.
+- `MARX_y` and `MAF_y` use `input="target_panel"` so the target is transformed
+  as a target-derived block without becoming a normal predictor.
 - `target_lags` are not mixed into `paper_feature_steps`; they are appended by
   `feature_spec(..., target_lags=range(0, 13))` so every feature case keeps the
   paper's target autoregressive block.
@@ -287,7 +315,7 @@ features = mf.feature_engineering.feature_spec(
     target=TARGET,
     horizon=3,
     predictors=transformed_predictors,
-    steps=paper_feature_steps("F-MARX", transformed_predictors, level_predictors),
+    steps=paper_feature_steps("F-MARX", TARGET, transformed_predictors, level_predictors),
     target_lags=range(0, 13),
     target_transform="average_value",
     target_mode="direct",
@@ -316,13 +344,14 @@ print(
 Output:
 
 ```text
-X_shape (345, 1629)
+X_shape (345, 1641)
 y_shape (345, 1)
 last_X_columns ['INDPRO_lag0', 'INDPRO_lag1', 'INDPRO_lag2', 'INDPRO_lag3', 'INDPRO_lag4', 'INDPRO_lag5', 'INDPRO_lag6', 'INDPRO_lag7', 'INDPRO_lag8', 'INDPRO_lag9', 'INDPRO_lag10', 'INDPRO_lag11', 'INDPRO_lag12']
        step  operation  included  n_columns
           F        lag      True        104
       F_raw        pca     False          8
-       MARX       marx      True       1512
+     MARX_X       marx      True       1512
+     MARX_y       marx      True         12
 target_lags target_lag      True         13
           target_column source  horizon   mode     transform             operation     aggregation
 INDPRO_average_value_h3 INDPRO        3 direct average_value direct_average_target mean_step_value
@@ -331,6 +360,8 @@ INDPRO_average_value_h3 INDPRO        3 direct average_value direct_average_targ
 Interpretation:
 
 - `target_lags=range(0, 13)` creates `INDPRO_lag0` through `INDPRO_lag12`.
+- `MARX_y` creates the separate target MARX block required by the paper's
+  feature table.
 - Under the row-date convention, `lag0` is the transformed target available at
   forecast origin `t`; the runner masks unavailable future target values before
   prediction.
@@ -344,7 +375,9 @@ paper_window_h3 = mf.window.from_cutoffs(
     estimation_start="1960-01",
     test_start="1980-01",
     test_end="2017-12",
-    val_size=60,
+    val_method="random_kfold",
+    val_n_splits=5,
+    val_random_state=123,
     horizon=3,
     step=1,
 )
@@ -352,7 +385,8 @@ paper_window_h3 = mf.window.from_cutoffs(
 print("estimation_mode", paper_window_h3.estimation.mode)
 print("estimation_start", paper_window_h3.estimation.start)
 print("validation_method", paper_window_h3.val.method)
-print("validation_size", paper_window_h3.val.size)
+print("validation_n_splits", paper_window_h3.val.n_splits)
+print("validation_random_state", paper_window_h3.val.random_state)
 print("test_first_origin", paper_window_h3.test.first_origin)
 print("test_last_origin", paper_window_h3.test.last_origin)
 print("test_step", paper_window_h3.test.step)
@@ -365,13 +399,14 @@ Output:
 ```text
 estimation_mode expanding
 estimation_start 1960-01
-validation_method last_block
-validation_size 60
+validation_method random_kfold
+validation_n_splits 5
+validation_random_state 123
 test_first_origin 1980-01
 test_last_origin 2017-12
 test_step 1
 test_horizon 3
-window_method last_block
+window_method random_kfold
 ```
 
 ## Cell 8: Run a direct-average smoke forecast
@@ -393,7 +428,7 @@ direct_features = mf.feature_engineering.feature_spec(
     target=TARGET,
     horizon=3,
     predictors=transformed_predictors,
-    steps=paper_feature_steps("F", transformed_predictors, level_predictors),
+    steps=paper_feature_steps("F", TARGET, transformed_predictors, level_predictors),
     target_lags=range(0, 13),
     target_transform="average_value",
     target_mode="direct",
@@ -412,7 +447,7 @@ direct_result = mf.forecasting.run(
     params={
         "n_estimators": 20,
         "max_features": 1 / 3,
-        "min_samples_leaf": 6,
+        "min_samples_leaf": 5,
         "bootstrap": True,
         "random_state": 123,
         "n_jobs": 1,
@@ -458,7 +493,7 @@ path_features = mf.feature_engineering.feature_spec(
     target=TARGET,
     horizon=3,
     predictors=transformed_predictors,
-    steps=paper_feature_steps("F", transformed_predictors, level_predictors),
+    steps=paper_feature_steps("F", TARGET, transformed_predictors, level_predictors),
     target_lags=range(0, 13),
     target_transform="value",
     target_mode="path",
@@ -477,7 +512,7 @@ path_result = mf.forecasting.run(
     params={
         "n_estimators": 20,
         "max_features": 1 / 3,
-        "min_samples_leaf": 6,
+        "min_samples_leaf": 5,
         "bootstrap": True,
         "random_state": 123,
         "n_jobs": 1,
@@ -543,12 +578,16 @@ forecast_policy  horizon  n     rmse      mae
 
 This cell is the package-only long-run template. It should be run in a server
 batch session, not as an interactive smoke check.
+Random Forest is fixed in the paper, so `model_selection={"random_forest":
+None}` is correct. For Adaptive Lasso, Elastic Net, Boosted Trees, and Linear
+Boosting, use the same `paper_window_h3` random-fold validation and pass a
+paper-style `SearchSpec` to `model_selection`.
 
 ```python
 PAPER_RF_PARAMS = {
     "n_estimators": 200,
     "max_features": 1 / 3,
-    "min_samples_leaf": 6,
+    "min_samples_leaf": 5,
     "bootstrap": True,
     "random_state": 123,
     "n_jobs": 1,
@@ -567,13 +606,13 @@ def run_one(target_alias, horizon, feature_case, target_policy):
     )
     panel = replication_panel if "Level" in feature_case else processed.panel
     transformed_cols = [column for column in processed.panel.columns if column != target]
-    level_cols = [f"LEVEL__{column}" for column in bundle.panel.columns if column != target]
+    level_cols = [f"LEVEL__{column}" for column in bundle.panel.columns]
     feature_predictors = transformed_cols + (level_cols if "Level" in feature_case else [])
     features = mf.feature_engineering.feature_spec(
         target=target,
         horizon=horizon,
         predictors=feature_predictors,
-        steps=paper_feature_steps(feature_case, transformed_cols, level_cols),
+        steps=paper_feature_steps(feature_case, target, transformed_cols, level_cols),
         target_lags=range(0, 13),
         target_transform="average_value" if target_policy == "direct_average" else "value",
         target_mode="direct" if target_policy == "direct_average" else "path",

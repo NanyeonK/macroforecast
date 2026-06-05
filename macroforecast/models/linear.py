@@ -574,15 +574,25 @@ def lasso(
     *,
     alpha: float = 1.0,
     max_iter: int = 20000,
+    standardize: bool = False,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit lasso regression with a user-supplied alpha."""
 
     from sklearn.linear_model import Lasso
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
 
-    params = {"alpha": float(alpha), "max_iter": int(max_iter), **kwargs}
+    estimator_params = {"alpha": float(alpha), "max_iter": int(max_iter), **kwargs}
+    estimator = Lasso(**estimator_params)
+    if standardize:
+        estimator = make_pipeline(StandardScaler(), estimator)
+    params = {
+        **estimator_params,
+        "standardize": bool(standardize),
+    }
     return fit_estimator(
-        Lasso(**params),
+        estimator,
         X,
         y,
         model="lasso",
@@ -597,15 +607,30 @@ def elastic_net(
     alpha: float = 1.0,
     l1_ratio: float = 0.5,
     max_iter: int = 20000,
+    standardize: bool = False,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit elastic net regression."""
 
     from sklearn.linear_model import ElasticNet
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
 
-    params = {"alpha": float(alpha), "l1_ratio": float(l1_ratio), "max_iter": int(max_iter), **kwargs}
+    estimator_params = {
+        "alpha": float(alpha),
+        "l1_ratio": float(l1_ratio),
+        "max_iter": int(max_iter),
+        **kwargs,
+    }
+    estimator = ElasticNet(**estimator_params)
+    if standardize:
+        estimator = make_pipeline(StandardScaler(), estimator)
+    params = {
+        **estimator_params,
+        "standardize": bool(standardize),
+    }
     return fit_estimator(
-        ElasticNet(**params),
+        estimator,
         X,
         y,
         model="elastic_net",
@@ -1070,10 +1095,24 @@ class _GLMBoost:
         n_iter: int = 100,
         learning_rate: float = 0.1,
         center: bool = True,
+        candidate_sampling: str = "all",
+        candidate_count: int | None = None,
+        candidate_fraction: float | None = None,
+        candidate_cap: int | None = None,
+        candidate_min: int = 1,
+        candidate_rounding: str = "floor",
+        random_state: int | None = None,
     ) -> None:
         self.n_iter = max(1, int(n_iter))
         self.learning_rate = float(learning_rate)
         self.center = bool(center)
+        self.candidate_sampling = candidate_sampling
+        self.candidate_count = candidate_count
+        self.candidate_fraction = candidate_fraction
+        self.candidate_cap = candidate_cap
+        self.candidate_min = candidate_min
+        self.candidate_rounding = candidate_rounding
+        self.random_state = random_state
         self.coef_: np.ndarray | None = None
         self.intercept_: float = 0.0
         self.feature_names_in_: np.ndarray | None = None
@@ -1093,6 +1132,16 @@ class _GLMBoost:
         self.intercept_ = float(np.mean(target)) if target.size else 0.0
         residual = target - self.intercept_
         self.coef_ = np.zeros(x.shape[1], dtype=float)
+        rng = np.random.default_rng(self.random_state)
+        n_candidates = _resolve_glmboost_candidate_count(
+            self.candidate_sampling,
+            n_features=x.shape[1],
+            candidate_count=self.candidate_count,
+            candidate_fraction=self.candidate_fraction,
+            candidate_cap=self.candidate_cap,
+            candidate_min=self.candidate_min,
+            candidate_rounding=self.candidate_rounding,
+        )
         # R source cues, mboost/R/mboost.R and mboost/R/bolscw.R:
         #   glmboost.matrix <- function(x, y, center = TRUE, ...)
         #   if (center) X <- scale(X, center = cm, scale = FALSE)
@@ -1103,7 +1152,12 @@ class _GLMBoost:
         # This aligns with mboost's Gaussian componentwise L2 update for a
         # matrix input: center predictors by default, select the best one-step
         # base learner by normalized correlation, then apply the shrinkage
-        # update. It does not reproduce mboost's formula handling, weights,
+        # update. When candidate_sampling="random", each boosting step samples
+        # a candidate subset before the best-base-learner search. Goulet
+        # Coulombe et al. (2021) Appendix A.6 is expressed without a magic
+        # preset as candidate_fraction=1/3, candidate_cap=200,
+        # candidate_rounding="floor", candidate_min=1.
+        # It does not reproduce mboost's formula handling, weights,
         # alternative families, hat values, or stopping machinery.
         for iteration in range(1, self.n_iter + 1):
             covariances = x.T @ residual
@@ -1111,9 +1165,14 @@ class _GLMBoost:
             usable = denominators > 1e-12
             if not bool(np.any(usable)):
                 break
+            candidates = np.flatnonzero(usable)
+            if n_candidates and n_candidates < len(candidates):
+                candidates = np.sort(
+                    rng.choice(candidates, size=n_candidates, replace=False)
+                )
             scores = np.zeros_like(covariances, dtype=float)
-            scores[usable] = covariances[usable] / np.sqrt(denominators[usable])
-            best = int(np.argmax(np.abs(scores)))
+            scores[candidates] = covariances[candidates] / np.sqrt(denominators[candidates])
+            best = int(candidates[np.argmax(np.abs(scores[candidates]))])
             denom = float(denominators[best])
             if denom <= 1e-12:
                 break
@@ -1138,11 +1197,29 @@ def glmboost(
     n_iter: int = 100,
     learning_rate: float = 0.1,
     center: bool = True,
+    candidate_sampling: str = "all",
+    candidate_count: int | None = None,
+    candidate_fraction: float | None = None,
+    candidate_cap: int | None = None,
+    candidate_min: int = 1,
+    candidate_rounding: str = "floor",
+    random_state: int | None = None,
 ) -> ModelFit:
     """Fit componentwise linear boosting."""
 
     return fit_estimator(
-        _GLMBoost(n_iter=n_iter, learning_rate=learning_rate, center=center),
+        _GLMBoost(
+            n_iter=n_iter,
+            learning_rate=learning_rate,
+            center=center,
+            candidate_sampling=candidate_sampling,
+            candidate_count=candidate_count,
+            candidate_fraction=candidate_fraction,
+            candidate_cap=candidate_cap,
+            candidate_min=candidate_min,
+            candidate_rounding=candidate_rounding,
+            random_state=random_state,
+        ),
         X,
         y,
         model="glmboost",
@@ -1150,8 +1227,74 @@ def glmboost(
             "n_iter": int(n_iter),
             "learning_rate": float(learning_rate),
             "center": bool(center),
+            "candidate_sampling": candidate_sampling,
+            "candidate_count": candidate_count,
+            "candidate_fraction": candidate_fraction,
+            "candidate_cap": candidate_cap,
+            "candidate_min": int(candidate_min),
+            "candidate_rounding": candidate_rounding,
+            "random_state": random_state,
         },
     )
+
+
+def _resolve_glmboost_candidate_count(
+    candidate_sampling: str,
+    *,
+    n_features: int,
+    candidate_count: int | None,
+    candidate_fraction: float | None,
+    candidate_cap: int | None,
+    candidate_min: int,
+    candidate_rounding: str,
+) -> int | None:
+    key = str(candidate_sampling).lower().replace("-", "_")
+    if key in {"all", "none", "full"}:
+        if candidate_count is not None or candidate_fraction is not None or candidate_cap is not None:
+            raise ValueError(
+                "candidate_count, candidate_fraction, and candidate_cap require "
+                "candidate_sampling='random'"
+            )
+        return None
+    if key not in {"random", "random_subset", "subsample"}:
+        raise ValueError("candidate_sampling must be 'all' or 'random'")
+    if candidate_count is not None and candidate_fraction is not None:
+        raise ValueError("use either candidate_count or candidate_fraction, not both")
+    if candidate_count is None and candidate_fraction is None:
+        raise ValueError(
+            "candidate_sampling='random' requires candidate_count or candidate_fraction"
+        )
+    lower = int(candidate_min)
+    if lower < 1:
+        raise ValueError("candidate_min must be at least 1")
+    cap: int | None = None
+    if candidate_cap is not None:
+        cap = int(candidate_cap)
+        if cap < 1:
+            raise ValueError("candidate_cap must be at least 1")
+        if lower > cap:
+            raise ValueError("candidate_min must be smaller than or equal to candidate_cap")
+    if candidate_count is not None:
+        raw = int(candidate_count)
+        if raw < 1:
+            raise ValueError("candidate_count must be at least 1")
+    else:
+        fraction = float(candidate_fraction)
+        if not 0 < fraction <= 1:
+            raise ValueError("candidate_fraction must be in (0, 1]")
+        rounding_key = str(candidate_rounding).lower()
+        value = fraction * float(n_features)
+        if rounding_key == "floor":
+            raw = int(np.floor(value))
+        elif rounding_key == "ceil":
+            raw = int(np.ceil(value))
+        elif rounding_key == "round":
+            raw = int(round(value))
+        else:
+            raise ValueError("candidate_rounding must be 'floor', 'ceil', or 'round'")
+    if cap is not None:
+        raw = min(raw, cap)
+    return max(1, min(n_features, max(lower, raw)))
 
 
 class _PLSCompositeRegressor:

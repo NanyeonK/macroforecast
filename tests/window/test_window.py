@@ -118,6 +118,26 @@ def test_window_spec_builders_split_and_table() -> None:
     assert table["validation_start"].iloc[0] == X.index[9]
 
 
+def test_random_kfold_split_is_seeded_and_non_temporal() -> None:
+    first = list(mf.window.random_kfold_split(20, n_splits=5, random_state=123))
+    second = list(mf.window.random_kfold_split(20, n_splits=5, random_state=123))
+
+    assert [(a.tolist(), b.tolist()) for a, b in first] == [
+        (a.tolist(), b.tolist()) for a, b in second
+    ]
+    assert len(first) == 5
+    assert sorted(np.concatenate([val for _, val in first]).tolist()) == list(range(20))
+    assert any(int(train.max()) > int(val.min()) for train, val in first)
+
+
+def test_random_kfold_window_records_random_state() -> None:
+    window = mf.window.random_kfold(n_splits=4, random_state=99)
+
+    assert window.to_dict()["method"] == "random_kfold"
+    assert window.to_dict()["val"]["random_state"] == 99
+    assert len(window.split(24)) == 4
+
+
 def test_direct_window_spec_method_still_drives_val_split() -> None:
     window = mf.window.WindowSpec(method="last_block", validation_size=3)
 

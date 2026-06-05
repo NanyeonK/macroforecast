@@ -468,6 +468,52 @@ def test_direct_model_selection_splits_respect_target_availability() -> None:
         assert split["train_end_pos"] + 5 <= split["validation_start_pos"]
 
 
+def test_direct_model_selection_can_use_random_kfold_when_requested() -> None:
+    panel = _panel(48)
+
+    class Fit:
+        def __init__(self, bias: float) -> None:
+            self.bias = float(bias)
+
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(self.bias, index=X.index, name="prediction")
+
+    def model(X: pd.DataFrame, y: pd.Series, *, bias: float = 0.0) -> Fit:
+        return Fit(float(y.mean()) + bias)
+
+    spec = mf.models.ModelSpec(
+        name="selection_random_kfold_record",
+        family="test",
+        fit_func=model,
+    )
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=18),
+        val=mf.window.val_random_kfold(n_splits=4, random_state=321),
+        test=mf.window.test_origins(
+            first_origin=panel.index[30],
+            last_origin=panel.index[30],
+            horizon=5,
+        ),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        spec,
+        window=window,
+        target="y",
+        horizon=5,
+        model_selection=mf.model_selection.grid({"bias": [0.0, 0.1]}),
+        save_models=False,
+    )
+    selection = result.to_frame().iloc[0]["model_selection"]
+    summary = selection["metadata"]["split_summary"]
+
+    assert selection["window"] == "explicit_splits"
+    assert selection["metadata"]["temporal_order"] is False
+    assert len(summary) == 4
+    assert any(split["train_end_pos"] > split["validation_start_pos"] for split in summary)
+
+
 def test_forecasting_runner_supports_recursive_policy_with_target_lags() -> None:
     panel = _panel(60)
 
@@ -850,6 +896,48 @@ def test_forecasting_runner_supports_fit_aware_marx_step() -> None:
     assert table["prediction"].notna().all()
     assert result.metadata["features"]["feature_steps"][0]["method"] == "marx"
     assert stage["metadata"]["feature_steps"][0]["fit_state"]["scale_lags"] is True
+
+
+def test_forecasting_runner_supports_target_panel_feature_step_input() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        steps=[
+            mf.feature_engineering.marx_step(
+                name="MARX_y",
+                input="target_panel",
+                columns=["y"],
+                max_lag=2,
+            ),
+        ],
+        target_lags=(0, 1),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "ridge",
+        window=_window(),
+        features=features,
+        feature_policy=mf.window.stage_policy("fit_window"),
+        params={"ridge": {"alpha": 0.1}},
+        model_selection={"ridge": None},
+        save_models=False,
+    )
+    table = result.to_frame()
+    stage = next(
+        item
+        for item in result.metadata["stages"]
+        if item["stage"] == "feature_engineering"
+    )
+
+    assert not table.empty
+    assert table["prediction"].notna().all()
+    assert result.metadata["features"]["feature_steps"][0]["input"] == "target_panel"
+    step_meta = stage["metadata"]["feature_steps"][0]
+    assert step_meta["input"] == "target_panel"
+    assert step_meta["fit_state"]["columns"] == ["y"]
 
 
 def test_forecasting_runner_supports_fit_aware_hamilton_step() -> None:
@@ -1499,6 +1587,36 @@ def test_forecasting_runner_records_fixed_and_selected_model_params() -> None:
     selected_params = selected.to_frame()["params"].iloc[0]
 
     assert selected_params == {"fit_intercept": False, "alpha": 0.1}
+
+
+def test_forecasting_runner_supports_model_specific_standardization_params() -> None:
+    panel = _panel()
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        ["elastic_net", "random_forest"],
+        window=_window(),
+        features=features,
+        params={
+            "elastic_net": {"alpha": 0.01, "l1_ratio": 0.5, "standardize": True},
+            "random_forest": {"n_estimators": 2, "random_state": 0, "n_jobs": 1},
+        },
+        model_selection={"elastic_net": None, "random_forest": None},
+        save_models=False,
+    )
+    table = result.to_frame()
+    params_by_model = {
+        row["model"]: row["params"] for _, row in table.drop_duplicates("model").iterrows()
+    }
+
+    assert params_by_model["elastic_net"]["standardize"] is True
+    assert "standardize" not in params_by_model["random_forest"]
 
 
 def test_forecasting_runner_accepts_direct_dict_valued_model_params() -> None:

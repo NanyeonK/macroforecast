@@ -23,6 +23,8 @@ from macroforecast.window.core import (
     normalize_window_name,
     poos,
     poos_split,
+    random_kfold,
+    random_kfold_split,
     resolve_window,
     rolling_blocks,
     rolling_blocks_split,
@@ -33,6 +35,7 @@ from macroforecast.window.core import (
     val_expanding,
     val_last_block,
     val_poos,
+    val_random_kfold,
     val_rolling_blocks,
 )
 from macroforecast.window.policy import (
@@ -69,6 +72,8 @@ __all__ = [
     "normalize_window_name",
     "poos",
     "poos_split",
+    "random_kfold",
+    "random_kfold_split",
     "resolve_window",
     "resolve_stage_policy",
     "rolling_blocks",
@@ -83,5 +88,6 @@ __all__ = [
     "val_expanding",
     "val_last_block",
     "val_poos",
+    "val_random_kfold",
     "val_rolling_blocks",
 ]

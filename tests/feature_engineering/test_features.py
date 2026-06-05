@@ -710,6 +710,41 @@ def test_feature_spec_steps_can_append_explicit_target_lags() -> None:
     assert row["step"] == "target_lags"
 
 
+def test_feature_spec_steps_can_use_explicit_target_panel_input() -> None:
+    processed = _processed()
+    features = mf.feature_engineering.feature_spec(
+        target="target",
+        horizon=1,
+        predictors=["x1"],
+        steps=[
+            mf.feature_engineering.marx_step(
+                name="MARX_x",
+                columns=["x1"],
+                max_lag=2,
+            ),
+            mf.feature_engineering.marx_step(
+                name="MARX_y",
+                input="target_panel",
+                columns=["target"],
+                max_lag=2,
+            ),
+        ],
+        target_lags=(0,),
+        drop_missing=False,
+    ).fit_transform(processed)
+
+    assert "target" not in features.predictors
+    assert "x1_ma2_lag1" in features.X.columns
+    assert "target_ma2_lag1" in features.X.columns
+    assert "target_lag0" in features.X.columns
+    target_row = features.feature_metadata.loc[
+        features.feature_metadata["feature"] == "target_ma2_lag1"
+    ].iloc[0]
+    assert target_row["operation"] == "marx"
+    assert target_row["source"] == "target"
+    assert target_row["step"] == "MARX_y"
+
+
 def test_build_features_supports_explicit_target_lags() -> None:
     features = mf.feature_engineering.build_features(
         _processed(),
@@ -1599,6 +1634,32 @@ def test_feature_spec_supports_group_pca_and_maf_steps() -> None:
     assert list(maf.X.columns) == ["x1_maf1"]
     assert grouped.feature_metadata.loc[0, "operation"] == "group_pca"
     assert maf.feature_metadata.loc[0, "operation"] == "maf"
+
+
+def test_feature_spec_maf_step_can_use_explicit_target_panel_input() -> None:
+    processed = _processed()
+    features = mf.feature_engineering.feature_spec(
+        target="target",
+        horizon=1,
+        predictors=["x1"],
+        steps=[
+            mf.feature_engineering.maf_step(
+                name="MAF_y",
+                input="target_panel",
+                columns=["target"],
+                max_lag=1,
+                n_components=1,
+                min_train_size=2,
+            )
+        ],
+    ).fit_transform(processed)
+
+    assert "target" not in features.predictors
+    assert list(features.X.columns) == ["target_MAF_y1"]
+    row = features.feature_metadata.loc[0]
+    assert row["operation"] == "maf"
+    assert row["source"] == "target"
+    assert row["step"] == "MAF_y"
 
 
 def test_composed_feature_convenience_callables_are_short() -> None:

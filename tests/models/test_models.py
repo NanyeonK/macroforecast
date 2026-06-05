@@ -152,6 +152,7 @@ def test_basic_linear_models_fit_and_predict() -> None:
     fits = [
         mf.models.ols(X, y),
         mf.models.elastic_net(X, y, alpha=0.01, l1_ratio=0.5),
+        mf.models.elastic_net(X, y, alpha=0.01, l1_ratio=0.5, standardize=True),
         mf.models.bayesian_ridge(X, y),
         mf.models.huber(X, y, max_iter=100),
         mf.models.glmboost(X, y, n_iter=5),
@@ -452,7 +453,7 @@ def test_model_specs_own_default_params_and_search_spaces() -> None:
     assert spec.search_space() == {"alpha": (0.01, 0.1, 1.0)}
 
     table = mf.models.describe_model(spec)
-    assert set(table["parameter"]) == {"alpha", "max_iter"}
+    assert set(table["parameter"]) == {"alpha", "max_iter", "standardize"}
     assert table.loc[table["parameter"] == "alpha", "small_space"].iloc[0] == (
         0.01,
         0.1,
@@ -975,6 +976,8 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert group_lasso_spec.backend == "internal proximal-gradient solver"
     assert glmboost_spec.backend == "internal componentwise L2 boosting"
     assert glmboost_spec.default_params["center"] is True
+    assert glmboost_spec.default_params["candidate_sampling"] == "all"
+    assert glmboost_spec.default_params["candidate_min"] == 1
     assert pls_spec.backend == "sklearn.cross_decomposition.PLSRegression"
     assert pls_spec.default_params["include_constant"] is True
     assert kernel_ridge_spec.backend == "sklearn.kernel_ridge.KernelRidge"
@@ -1181,6 +1184,68 @@ def test_glmboost_matches_mboost_componentwise_selection_rule() -> None:
     assert fit.estimator.coef_[0] == pytest.approx(0.0)
     assert fit.estimator.coef_[1] == pytest.approx(1.0)
     assert fit.metadata["center"] is True
+
+
+def test_glmboost_can_sample_candidate_features_deterministically() -> None:
+    X, y = _xy(n=40)
+
+    first = mf.models.glmboost(
+        X,
+        y,
+        n_iter=8,
+        learning_rate=0.2,
+        candidate_sampling="random",
+        candidate_fraction=1 / 3,
+        candidate_cap=200,
+        candidate_rounding="floor",
+        random_state=7,
+    )
+    second = mf.models.glmboost(
+        X,
+        y,
+        n_iter=8,
+        learning_rate=0.2,
+        candidate_sampling="random",
+        candidate_fraction=1 / 3,
+        candidate_cap=200,
+        candidate_rounding="floor",
+        random_state=7,
+    )
+
+    assert np.allclose(first.predict(X), second.predict(X))
+    assert first.metadata["candidate_sampling"] == "random"
+    assert first.metadata["candidate_fraction"] == pytest.approx(1 / 3)
+    assert first.metadata["candidate_cap"] == 200
+    assert first.metadata["random_state"] == 7
+
+
+def test_glmboost_candidate_sampling_validates_structured_options() -> None:
+    X, y = _xy(n=20)
+
+    with pytest.raises(ValueError, match="requires candidate_count or candidate_fraction"):
+        mf.models.glmboost(X, y, candidate_sampling="random")
+
+    with pytest.raises(ValueError, match="either candidate_count or candidate_fraction"):
+        mf.models.glmboost(
+            X,
+            y,
+            candidate_sampling="random",
+            candidate_count=2,
+            candidate_fraction=0.5,
+        )
+
+    with pytest.raises(ValueError, match="require candidate_sampling='random'"):
+        mf.models.glmboost(X, y, candidate_count=2)
+
+    with pytest.raises(ValueError, match="candidate_min"):
+        mf.models.glmboost(
+            X,
+            y,
+            candidate_sampling="random",
+            candidate_count=2,
+            candidate_min=5,
+            candidate_cap=3,
+        )
 
 
 def test_tree_model_records_feature_importance_diagnostics() -> None:
