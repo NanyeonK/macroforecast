@@ -69,3 +69,66 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
         return pd.DataFrame()
     master = pd.concat(frames, ignore_index=True)
     return master
+
+
+def _panel_index(data: Any):
+    """Best-effort extraction of the panel DatetimeIndex from any data input."""
+    panel = getattr(data, "panel", None)
+    if panel is None and isinstance(data, tuple) and data:
+        panel = data[0]
+    if panel is None and isinstance(data, pd.DataFrame):
+        panel = data
+    return getattr(panel, "index", None)
+
+
+def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
+    """Collect provenance and a leakage audit for the run."""
+    import macroforecast as _mf
+
+    provenance: dict = dict(spec.provenance)
+    provenance.update({
+        "package_version": getattr(_mf, "__version__", "unknown"),
+        "seed": spec.seed,
+        "targets": [
+            {"name": t.name, "policy": t.policy, "transform": t.transform, "tcode": t.tcode}
+            for t in spec.targets
+        ],
+        "horizons": list(spec.horizons),
+        "arms": [a.name for a in spec.arms],
+        "benchmark": spec.evaluation.benchmark,
+        "combinations": [c.name for c in spec.combinations],
+    })
+    leakage: dict = {}
+    # Surface window.validate() warnings (e.g. embargo < horizon-1) when available.
+    try:
+        index = _panel_index(spec.data)
+        report = spec.window.validate(index) if (index is not None and hasattr(spec.window, "validate")) else None
+    except Exception:
+        report = None
+    if isinstance(report, dict):
+        leakage["window_warnings"] = list(report.get("warnings", []))
+        leakage["window_ok"] = bool(report.get("ok", True))
+    leakage["preprocessing_policies"] = {
+        a.name: str(a.preprocessing_policy) for a in spec.arms
+    }
+    return provenance, leakage
+
+
+def run_pipeline(spec: PipelineSpec):
+    """Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport."""
+    from macroforecast.pipeline.evaluate import evaluate
+    from macroforecast.pipeline.spec import PipelineReport
+
+    master = run_arms(spec)
+    results = evaluate(master, spec)
+    provenance, leakage = _audit(spec)
+    return PipelineReport(
+        forecasts=results["forecasts"],
+        accuracy=results["accuracy"],
+        significance=results["significance"],
+        mcs=results["mcs"],
+        provenance=provenance,
+        leakage_audit=leakage,
+        interpretation=None,
+        model_store=spec.model_store,
+    )

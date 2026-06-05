@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from .evaluate import apply_combinations, evaluate
-from .run import run_arms
+from .run import run_arms, run_pipeline
 from .spec import (
     TCODE_TARGET_MAP,
     Arm,
     CombinationContender,
     EvalSpec,
     InterpretSpec,
+    PipelineReport,
     PipelineSpec,
     ResolvedTarget,
     TargetSpec,
@@ -20,6 +21,8 @@ from .spec import (
 __all__ = [
     "TCODE_TARGET_MAP",
     "run_arms",
+    "run_pipeline",
+    "PipelineReport",
     "evaluate",
     "apply_combinations",
     "Arm",

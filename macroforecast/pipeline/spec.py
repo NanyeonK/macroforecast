@@ -126,6 +126,24 @@ class PipelineSpec:
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
 
+
+@dataclass
+class PipelineReport:
+    """Standard pipeline output (mutable: interpretation is filled in later)."""
+
+    forecasts: "Any"
+    accuracy: "Any"
+    significance: "Any"
+    mcs: "Any"
+    provenance: Mapping[str, Any] = field(default_factory=dict)
+    leakage_audit: Mapping[str, Any] = field(default_factory=dict)
+    interpretation: Mapping[str, Any] | None = None
+    model_store: str = "trained_model"
+
+    def to_frame(self) -> "Any":
+        """Return the master forecast frame."""
+        return self.forecasts
+
 # --------------------------------------------------------------------------- #
 # resolution helpers
 # --------------------------------------------------------------------------- #
