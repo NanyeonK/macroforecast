@@ -596,13 +596,37 @@ def _validate_nonnegative_int(name: str, value: Any) -> int:
     return out
 
 
+def _arch_distribution_tail(est: Any, alpha: float) -> tuple[float, float, str] | None:
+    """Lower-tail quantile and Expected Shortfall of the FITTED arch standardized
+    innovation distribution at ``alpha``, using its own ppf (exact for skew-t,
+    GED, etc.) and a numerical ES = (1/alpha) integral_0^alpha F^{-1}(u) du."""
+    fitted = getattr(est, "_fitted", None)
+    if fitted is None:
+        return None
+    try:
+        distribution = fitted.model.distribution
+        n_shape = int(getattr(distribution, "num_params", 0))
+        shape = fitted.params.to_numpy()[-n_shape:] if n_shape > 0 else None
+        q = float(np.asarray(distribution.ppf(np.array([float(alpha)]), shape)).reshape(-1)[0])
+        grid = np.linspace(max(float(alpha) * 1e-4, 1e-8), float(alpha), 1024)
+        quantiles = np.asarray(distribution.ppf(grid, shape), dtype=float)
+        trapezoid = getattr(np, "trapezoid", None) or getattr(np, "trapz")
+        es = float(trapezoid(quantiles, grid) / float(alpha))
+        if not (np.isfinite(q) and np.isfinite(es)):
+            return None
+        return q, es, f"arch:{getattr(distribution, 'name', 'distribution')}"
+    except Exception:
+        return None
+
+
 def _standardized_tail(dist: str, alpha: float, est: Any) -> tuple[float, float, str]:
     """Return (lower-tail quantile, ES factor, label) of the standardized
     innovation distribution at level ``alpha`` (unit-variance scaling)."""
     from scipy import stats
 
     key = str(dist).lower()
-    if key in {"t", "studentst", "studentt", "skewt", "skewstudent", "std", "sstd"}:
+    # Symmetric Student-t: exact closed form.
+    if key in {"t", "studentst", "studentt", "std"}:
         nu = None
         try:
             params = est._fitted.params.to_dict() if est._fitted is not None else {}
@@ -616,6 +640,14 @@ def _standardized_tail(dist: str, alpha: float, est: Any) -> tuple[float, float,
             q = x * scale
             es = (-(stats.t.pdf(x, df=nu) * (nu + x * x) / (nu - 1.0)) / alpha) * scale
             return q, es, f"standardized_t(nu={nu:.3g})"
+    # Skew-t / GED / other non-normal distributions: use the fitted arch
+    # distribution's own ppf so the skew/shape is honoured. The previous code
+    # lumped skew-t into the SYMMETRIC t formula (ignoring the skew parameter)
+    # and sent GED to the Normal tail, mis-specifying VaR/ES for those models.
+    if key not in {"normal", "gaussian", "norm", ""}:
+        resolved = _arch_distribution_tail(est, alpha)
+        if resolved is not None:
+            return resolved
     q = float(stats.norm.ppf(alpha))
     es = -float(stats.norm.pdf(q)) / alpha
     return q, es, "normal"
