@@ -26,14 +26,22 @@ def _run_one_arm_target(
     # A multi-target pipeline runs each arm for every target, but an arm's feature
     # spec carries a single target; align it (and its transform) to this target.
     features = arm.features
-    if features is not None and getattr(features, "target", None) != target.name:
-        try:
-            kwargs = {"target": target.name}
+    if features is not None:
+        needs_retarget = (
+            getattr(features, "target", None) != target.name
+            or bool(getattr(features, "targets", ()))
+        )
+        if needs_retarget:
+            kwargs: dict[str, Any] = {"target": target.name}
             if getattr(features, "targets", None):
                 kwargs["targets"] = ()
-            features = _dc.replace(features, **kwargs)
-        except Exception:
-            features = arm.features
+            try:
+                features = _dc.replace(features, **kwargs)
+            except Exception as exc:  # surface a real misconfiguration
+                raise ValueError(
+                    f"could not re-target feature spec of arm {arm.name!r} "
+                    f"to {target.name!r}: {exc}"
+                ) from exc
 
     result = run(
         spec.data,
@@ -139,8 +147,14 @@ def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
                 else:
                     wspec = spec.window
                 report = wspec.validate(index)
-            except Exception:
+            except Exception as exc:
+                # A validation that crashes must NOT be read as leak-free; record
+                # the failure and mark the window not-ok rather than staying silent.
                 report = None
+                window_ok = False
+                msg = f"h={h}: window.validate raised {type(exc).__name__}: {exc}"
+                if msg not in warnings_seen:
+                    warnings_seen.append(msg)
             if isinstance(report, dict):
                 window_ok = window_ok and bool(report.get("ok", True))
                 for w in report.get("warnings", []):

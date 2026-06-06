@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from macroforecast.pipeline.spec import CombinationContender, PipelineSpec
+from macroforecast.pipeline.spec import CombinationContender, PipelineSpec, contender_names
 
 # combination methods that need realised values (estimated weights), and their lag
 _ESTIMATED = {
@@ -98,6 +98,7 @@ def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
         for contender in wide_c.columns:
             err = wide_c[contender].to_numpy(dtype=float) - y
             scored[contender] = float(np.mean(err ** 2)) if err.size else np.nan
+        bench_present = bench in scored
         bench_mse = scored.get(bench, np.nan)
         for contender, mse in scored.items():
             out.append({
@@ -107,6 +108,7 @@ def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
                 "r2_oos": (1.0 - mse / bench_mse) if (np.isfinite(mse) and np.isfinite(bench_mse) and bench_mse > 0) else np.nan,
                 "n_common": n_common,
                 "is_benchmark": contender == bench,
+                "benchmark_present": bench_present,
             })
     return pd.DataFrame(out)
 
@@ -117,6 +119,13 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
 
     bench = spec.evaluation.benchmark
     use_cw = bool(spec.evaluation.cw_for_nested)
+    # Clark-West is only licensed where the benchmark is nested in the contender.
+    # Build the set of contenders whose arm declares nesting; CW is emitted only
+    # for those. Non-nested contenders get DM only (CW would be an invalid test).
+    nested: set[str] = set()
+    for a in spec.arms:
+        if getattr(a, "nested_in_benchmark", False):
+            nested |= set(contender_names(a))
     out: list[dict[str, Any]] = []
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
         pivot_f = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
@@ -140,7 +149,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                 row["dm_stat"] = float(dm.statistic); row["dm_p"] = float(dm.p_value)
             except Exception:
                 row["dm_stat"] = np.nan; row["dm_p"] = np.nan
-            if use_cw:
+            if use_cw and contender in nested:
                 try:
                     cw = clark_west_test(loss_b, loss_c, fb[common].to_numpy(float),
                                          fc[common].to_numpy(float), horizon=int(horizon))

@@ -29,8 +29,9 @@ def _spec(**over):
     feats = mf.feature_engineering.feature_spec(target="y", predictors=["x1"], lags=1, target_lags=(0, 1))
     kw = dict(
         data=_bundle(), targets=["y"], horizons=[1], window=_window(),
-        arms=[Arm("AR", model="ar", features=feats), Arm("OLS", model="ols", features=feats),
-              Arm("RIDGE", model="ridge", features=feats)],
+        arms=[Arm("AR", model="ar", features=feats),
+              Arm("OLS", model="ols", features=feats, nested_in_benchmark=True),
+              Arm("RIDGE", model="ridge", features=feats, nested_in_benchmark=True)],
         evaluation=EvalSpec(benchmark="AR"), save_models=False,
     )
     kw.update(over)

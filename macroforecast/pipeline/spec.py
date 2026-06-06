@@ -77,6 +77,11 @@ class Arm:
     model_selection_metric: str = "mse"
     interpret: InterpretSpec | tuple[str, ...] | None = None
     is_benchmark: bool = False
+    # Clark-West is only valid when the benchmark is NESTED within this arm's model
+    # (the benchmark is a parameter restriction of the larger model, e.g. AR nested
+    # in ARDI). Declare it so the evaluator emits CW only where it is licensed;
+    # otherwise CW is silently invalid. Diebold-Mariano is reported regardless.
+    nested_in_benchmark: bool = False
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
 

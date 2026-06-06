@@ -11,6 +11,7 @@ from __future__ import annotations
 import dataclasses as _dc
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from macroforecast.pipeline.spec import Arm, InterpretSpec, PipelineReport
@@ -147,7 +148,14 @@ def _aggregate(tables: list[pd.DataFrame]) -> pd.DataFrame:
     keys = [c for c in combined.columns if c not in numeric]
     if keys and numeric:
         return combined.groupby(keys, dropna=False, as_index=False)[numeric].mean()
-    return combined.groupby(combined.index % len(tables[0]))[numeric].mean() if numeric else tables[0]
+    if not numeric:
+        return tables[0]
+    # No key columns: only average when every per-origin table shares shape, so we
+    # never average misaligned rows (the old positional modulo could mix features).
+    if len({len(t) for t in tables}) == 1:
+        stacked = np.stack([t[numeric].to_numpy(dtype=float) for t in tables])
+        return pd.DataFrame(stacked.mean(axis=0), columns=numeric, index=tables[0].index)
+    return tables[0]
 
 
 def interpret_pipeline(
