@@ -179,6 +179,10 @@ the same cells and then attach paper-table captures plus package outputs.
 For the current package-only executed notebook report, see
 [Macroeconomic Data Transformations Matter: Package-Only Notebook](macroeconomic_data_transformations_matter_notebook.md).
 
+For the corrected executed INDPRO reconstructed result, including best-spec
+RMSEs and same-support FM relative RMSEs, see
+[GCLS 2021 INDPRO Reconstructed Replication Report](gcls_2021_indpro_reconstructed_report.md).
+
 ### Cell 1: Load a Frozen FRED-MD Panel
 
 ```python
