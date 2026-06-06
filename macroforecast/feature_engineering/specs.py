@@ -1203,7 +1203,17 @@ def _fit_pca_state(
         raise ValueError(f"pca columns are not in the panel: {missing}")
     if n_value > len(selected):
         raise ValueError("pca_components must be <= the number of PCA columns")
-    train = panel.loc[:, selected].dropna().astype(float)
+    sub = panel.loc[:, list(selected)].astype(float)
+    # Drop series with no observation in this window (ragged-start predictors,
+    # e.g. a FRED-MD series that begins after the early estimation window). The
+    # factor space is estimated from the series available at this origin.
+    usable = [column for column in sub.columns if sub[column].notna().any()]
+    if not usable:
+        raise ValueError("all PCA columns are empty in this window")
+    sub = sub.loc[:, usable]
+    n_value = min(n_value, len(usable))
+    selected = tuple(usable)
+    train = sub.dropna()
     if len(train) < n_value + 1:
         raise ValueError("not enough complete training rows to fit PCA")
     center = None

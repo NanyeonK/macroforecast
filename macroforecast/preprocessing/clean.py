@@ -566,10 +566,23 @@ def _fred_md_em_factor_impute(
     missing = np.isnan(matrix)
     if not missing.any():
         return panel.copy()
-    if (missing.sum(axis=1) == matrix.shape[1]).any():
-        raise ValueError("em_factor cannot process an all-missing row")
-    if (missing.sum(axis=0) == matrix.shape[0]).any():
-        raise ValueError("em_factor cannot process an all-missing column")
+    # Drop fully-missing rows/columns (e.g. a series with no history in an early
+    # estimation window) and impute the dense sub-block; fully-missing cells are
+    # left as NaN rather than raising, so ragged-start panels are handled.
+    all_missing_rows = missing.all(axis=1)
+    all_missing_cols = missing.all(axis=0)
+    if all_missing_rows.any() or all_missing_cols.any():
+        keep_rows = numeric.index[~all_missing_rows]
+        keep_cols = numeric.columns[~all_missing_cols]
+        if len(keep_rows) == 0 or len(keep_cols) == 0:
+            return panel.copy()
+        sub = panel.loc[keep_rows, keep_cols]
+        imputed_sub = _fred_md_em_factor_impute(
+            sub, kmax=kmax, jj=jj, demean=demean, max_iter=max_iter, tol=tol
+        )
+        result = panel.copy()
+        result.loc[keep_rows, keep_cols] = imputed_sub
+        return _copy_attrs(panel, result)
     means = np.nanmean(matrix, axis=0)
     x2 = matrix.copy()
     x2[missing] = np.take(means, np.where(missing)[1])
