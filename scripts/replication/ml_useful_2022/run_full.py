@@ -91,6 +91,7 @@ def main(data_csv: str) -> None:
                     data=raw, targets=[tspec], horizons=[h], window=window, arms=arms,
                     evaluation=EvalSpec(benchmark="AR", tests=["dm"]),
                     preprocessing=pp, preprocessing_policy=pol, save_models=False,
+                    checkpoint_dir=os.path.join(RESULTS, "_checkpoints"),
                 ))
                 _sanitize_for_parquet(rep.forecasts).to_parquet(panel_path)
                 acc = rep.accuracy.assign(horizon=h)

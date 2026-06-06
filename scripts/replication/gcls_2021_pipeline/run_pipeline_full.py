@@ -289,6 +289,7 @@ def run_target(
             preprocessing=pp,
             preprocessing_policy=pp_policy,
             save_models=False,
+            checkpoint_dir=str(out_dir / "_checkpoints"),
         )
         t0 = time.time()
         try:
