@@ -116,6 +116,22 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
             frame = _run_one_arm_target(spec, arm, target, preprocessing_cache=arm_cache)
             if not frame.empty:
                 frames.append(frame)
+            else:
+                # An arm that yields zero forecast rows is dropped from evaluation
+                # entirely, which silently hides a misconfiguration (e.g. a feature
+                # block that is all-NaN over every origin so the per-origin dropna
+                # empties the fit sample). Surface it rather than letting the arm
+                # disappear without a trace.
+                import warnings as _warnings
+
+                _warnings.warn(
+                    f"pipeline arm {arm.name!r} produced ZERO forecast rows for "
+                    f"target {target.name!r}; it will be absent from the evaluation. "
+                    "Check the arm's feature spec / preprocessing (an all-NaN feature "
+                    "block over every origin empties the fit sample).",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
     if not frames:
         return pd.DataFrame()
     master = pd.concat(frames, ignore_index=True)

@@ -1432,6 +1432,22 @@ def _fit_feature_step(
         drop_missing = bool(params.pop("drop_missing", False))
         params.pop("warn_full_sample", None)
         _reject_extra_params(params, plan.name)
+        # Drop predictor columns with no observation over the fit window (ragged-start
+        # series, e.g. a FRED-MD series that begins after the early estimation window,
+        # or one left all-NaN by leak-free per-origin EM imputation). Mirrors the PCA
+        # step (_fit_pca_state): an all-NaN predictor would otherwise produce an
+        # all-NaN MARX block, and the downstream feature-level dropna (drop_missing)
+        # would then wipe out EVERY row -- silently emptying the whole arm. The fitted
+        # (reduced) column set is fixed for the transform, so the column set stays
+        # consistent across fit/transform at this origin.
+        usable = tuple(
+            column for column in selected if source.loc[:, column].notna().any()
+        )
+        if not usable:
+            raise ValueError(
+                f"feature step {plan.name!r} has no MARX columns with any observation in this window"
+            )
+        selected = usable
         marx_min_size: int | None = None
         center = None
         divisor = None
