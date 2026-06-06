@@ -32,6 +32,33 @@ HORIZONS = (1, 3, 9, 12, 24)
 ARM_KEEP = {"AR", "ARDI", "RFAR", "RFARDI"}
 
 
+
+# --- parquet serialisation guard ---------------------------------------------
+# The pipeline forecast frame carries object columns holding dicts/structs
+# (params, model_selection, fixed_model_params, stored_model, window, ...). When
+# such a column is empty pyarrow raises "Cannot write struct type ... with no
+# child field to Parquet". Drop the non-scalar metadata columns and stringify any
+# remaining object cells before writing; all columns needed for accuracy and the
+# treatment regression (prediction, actual, contender, arm, target, horizon,
+# origin, date, forecast_policy, target_transform, combined) are scalar and kept.
+_PARQUET_DROP_COLS = {
+    "params", "model_selection", "fixed_model_params", "stored_model", "window",
+    "preprocessed", "combination", "quantile_predictions", "model_spec",
+    "trained_model", "variance_prediction",
+}
+
+
+def _sanitize_for_parquet(df):
+    keep = [c for c in df.columns if c not in _PARQUET_DROP_COLS]
+    out = df[keep].copy()
+    for c in list(out.columns):
+        if out[c].dtype == object:
+            out[c] = out[c].map(
+                lambda v: v if (v is None or isinstance(v, (str, int, float, bool))) else str(v)
+            )
+    return out
+# -----------------------------------------------------------------------------
+
 def main(data_csv: str) -> None:
     os.makedirs(RESULTS, exist_ok=True)
     raw = mf.data.load_fred_md(local_source=data_csv)
@@ -65,7 +92,7 @@ def main(data_csv: str) -> None:
                     evaluation=EvalSpec(benchmark="AR", tests=["dm"]),
                     preprocessing=pp, preprocessing_policy=pol, save_models=False,
                 ))
-                rep.forecasts.to_parquet(panel_path)
+                _sanitize_for_parquet(rep.forecasts).to_parquet(panel_path)
                 acc = rep.accuracy.assign(horizon=h)
                 acc.to_csv(os.path.join(RESULTS, f"accuracy_{tag}.csv"), index=False)
                 acc_rows.append(acc)

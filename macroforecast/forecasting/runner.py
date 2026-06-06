@@ -41,6 +41,12 @@ from macroforecast.forecasting.combination import (
     resolve_combinations,
 )
 from macroforecast.forecasting.types import ForecastResult
+from macroforecast.forecasting.checkpoint import (
+    LEAN_FORECAST_COLUMNS,
+    append_origin_records,
+    completed_origin_positions,
+    load_checkpoint_frame,
+)
 
 ForecastPolicy = Literal["direct", "direct_average", "path_average", "recursive"]
 FutureFeaturePolicy = Literal["target_lags", "observed_future"]
@@ -134,6 +140,7 @@ def run(
     save_models: bool = True,
     model_store: str | Path = "trained_model",
     preprocessing_cache: dict[Any, FittedPreprocessor] | None = None,
+    checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:
     """Run a windowed macro forecasting experiment.
 
@@ -184,6 +191,8 @@ def run(
             combination=combination,
             save_models=save_models,
             model_store=model_store,
+            preprocessing_cache=preprocessing_cache,
+            checkpoint_path=checkpoint_path,
         )
     config = get_config()
     model_runs = _resolve_model_runs(model, preset=preset, params=params)
@@ -324,7 +333,51 @@ def run(
 
     execution_window = _feature_window_for_policy(window_spec, horizon_values[0])
     _validate_runner_window(execution_window, panel.index)
+
+    # --- Incremental checkpoint setup (feature-matrix single-horizon path) ----
+    # When checkpoint_path is set we persist each origin's LEAN records as soon as
+    # the origin finishes, and on resume we skip origins already on disk. Skipping
+    # an origin's COMPUTATION is only safe when no in-loop stage carries fitted
+    # state forward across origins; otherwise a skipped early origin would leave a
+    # later origin's cached fit unbuilt. We therefore detect that condition: when
+    # both preprocessing and features are either fitted once before the loop
+    # (full_panel / fixed_reference, which do not depend on the loop) or refit on
+    # every origin (no carry-forward), computation-skipping is safe. Otherwise we
+    # still COMPUTE every origin but skip the redundant WRITE, so correctness holds
+    # on every policy while the common POOS configs get the resume speedup.
+    completed_positions: set[int] = set()
+    skip_computation = False
+    if checkpoint_path is not None:
+        completed_positions = completed_origin_positions(checkpoint_path)
+
+        def _stage_is_independent(policy: StagePolicy | None, fitted_once: bool) -> bool:
+            if fitted_once:
+                return True  # full_panel / fixed_reference: built before the loop
+            if policy is None:
+                return True  # stage absent -> nothing carried forward
+            return policy.update == "every_origin"
+
+        preprocessing_independent = _stage_is_independent(
+            preprocessing_stage_policy, full_stage is not None
+        )
+        feature_independent = _stage_is_independent(
+            feature_stage_policy, fixed_feature_builder is not None
+        )
+        skip_computation = preprocessing_independent and feature_independent
+    # -------------------------------------------------------------------------
+
     for origin_count, item in enumerate(execution_window.iter_origins(panel.index)):
+        origin_pos = item["row"].get("origin_pos")
+        already_done = (
+            checkpoint_path is not None
+            and origin_pos is not None
+            and int(origin_pos) in completed_positions
+        )
+        if already_done and skip_computation:
+            # This origin is on disk and the in-loop stages do not carry state
+            # forward, so it is safe to skip computation entirely.
+            continue
+
         preprocessing_updated = False
         if full_stage is None:
             preprocessing_updated = _stage_update_due(
@@ -343,7 +396,7 @@ def run(
                 if preprocessing_updated
                 else fitted_preprocessing_cache,
                 preprocessing_cache=preprocessing_cache,
-                cache_key=(item.get("origin_pos"), tuple(horizon_values))
+                cache_key=_preprocessing_cache_key(item)
                 if preprocessing_cache is not None else None,
             )
             if preprocessing_updated:
@@ -424,6 +477,12 @@ def run(
                 item.get("val_splits", []),
                 X_selection.index,
                 panel.index,
+                # Computed eagerly for every arm (even arms that never tune). A
+                # single fold emptied by feature alignment at one origin/horizon
+                # must not abort the whole consolidated multi-horizon run; drop the
+                # unusable fold here and let select_params raise only for arms that
+                # actually need tuning and are left with no usable folds.
+                allow_degenerate=True,
             )
         stage_records.append(
             _origin_stage_record(
@@ -476,7 +535,18 @@ def run(
             save_models=save_models,
             model_store=model_store,
         )
+        if already_done:
+            # Origin was recomputed only to keep stage caches consistent (state
+            # carries forward); its records are already on disk, so do not add
+            # them to the in-memory frame or rewrite them. The checkpoint-loaded
+            # frame supplies this origin at merge time.
+            continue
         records.extend(origin_records)
+        if checkpoint_path is not None and origin_pos is not None:
+            append_origin_records(checkpoint_path, origin_pos, origin_records)
+
+    if checkpoint_path is not None:
+        records = _merge_checkpoint_records(records, checkpoint_path)
 
     forecast_table = _forecast_table(records)
     combination_records = apply_combinations(forecast_table, combination_specs)
@@ -540,7 +610,14 @@ def _run_multiple_horizons(
     | None,
     save_models: bool,
     model_store: str | Path,
+    preprocessing_cache: dict[Any, FittedPreprocessor] | None = None,
+    checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:
+    # The per-origin EM/factor fit is horizon-independent (it uses only the
+    # origin_available rows), and the shared cache is keyed on origin_pos alone.
+    # Forwarding the SAME cache to every horizon's single-horizon run() therefore
+    # computes the EM once per origin and reuses it across all horizons (and arms),
+    # which is the dominant cost in the GCLS pipeline.
     results = [
         run(
             data,
@@ -565,6 +642,14 @@ def _run_multiple_horizons(
             combination=combination,
             save_models=save_models,
             model_store=model_store,
+            preprocessing_cache=preprocessing_cache,
+            # Each horizon is a distinct forecast cell; give it its own checkpoint
+            # subdirectory so origins of different horizons never collide.
+            checkpoint_path=(
+                None
+                if checkpoint_path is None
+                else Path(checkpoint_path) / f"h{int(horizon_value)}"
+            ),
         )
         for horizon_value in horizons
     ]
@@ -837,12 +922,31 @@ def _validate_recursive_feature_contract(
         )
 
 
+def _horizon_val_window(val: "ValWindow", horizon: int) -> "ValWindow":
+    """Re-derive the train/validation embargo for an h-step target.
+
+    ``window.from_cutoffs`` defaults ``val_embargo`` to ``horizon - 1`` (the
+    standard h-step purge that keeps training labels from realising inside the
+    validation block). When a multi-horizon run injects the per-horizon test
+    horizon into a base window built at horizon 1 (the consolidated-spec path used
+    to share the per-origin EM across horizons), the validation embargo must be
+    re-derived for the new horizon too -- otherwise the validation splits for h>1
+    keep the h=1 purge (embargo 0) and leak the h-step training labels into the
+    validation fold (and, downstream, fail feature alignment). We therefore set the
+    val embargo to ``max(current, horizon - 1)`` so the per-horizon window matches
+    a window that was built directly with ``from_cutoffs(horizon=h)``.
+    """
+    current = val.embargo if val.embargo is not None else 0
+    return replace(val, embargo=max(int(current), max(0, int(horizon) - 1)))
+
+
 def _feature_window_for_policy(window_spec: WindowSpec, horizon: int) -> WindowSpec:
     """Use h for origin cutoff while fitting one feature row per origin."""
 
     return replace(
         window_spec,
         test=replace(window_spec.test, horizon=int(horizon)),
+        val=_horizon_val_window(window_spec.val, int(horizon)),
         horizon=int(horizon),
     )
 
@@ -851,6 +955,7 @@ def _panel_window_for_horizon(window_spec: WindowSpec, horizon: int) -> WindowSp
     return replace(
         window_spec,
         test=replace(window_spec.test, horizon=int(horizon)),
+        val=_horizon_val_window(window_spec.val, int(horizon)),
         horizon=int(horizon),
     )
 
@@ -1764,6 +1869,27 @@ def _fit_predict_path_average_origin(
     return records
 
 
+def _preprocessing_cache_key(item: Mapping[str, Any]) -> Any:
+    """Horizon-independent key for the shared per-origin preprocessing cache.
+
+    The spec-level EM/factor fit at one origin uses only the ``origin_available``
+    (estimation) rows, which are fully determined by the origin POSITION and do not
+    depend on the forecast horizon (test block / target row are excluded from the
+    fit). Keying the cache on ``origin_pos`` alone therefore lets arms AND horizons
+    of the same target reuse the identical FittedPreprocessor without recomputing
+    the EM SVD, while staying leak-free (the fit never sees future rows).
+    """
+    row = item.get("row")
+    if isinstance(row, Mapping) and "origin_pos" in row:
+        return ("origin_pos", int(row["origin_pos"]))
+    # Fallback: estimation block identity (still horizon-independent).
+    est = item.get("estimation_idx")
+    if est is not None:
+        arr = np.asarray(est, dtype=int)
+        return ("estimation_span", int(arr[0]), int(arr[-1])) if arr.size else ("empty",)
+    return ("origin_pos", item.get("origin_pos"))
+
+
 def _prepare_origin_panel(
     panel: pd.DataFrame,
     *,
@@ -1778,18 +1904,37 @@ def _prepare_origin_panel(
 ) -> _PreparedStage:
     if preprocessing is None or preprocessing_policy is None:
         return _PreparedStage(panel=panel, fitted_preprocessing=None, metadata=None)
-    # Cross-arm reuse: a shared cache holds the per-origin FittedPreprocessor.
-    # Arms of the same target produce an identical fit input at each origin (the
-    # fit depends on target+horizons, not on the arm's predictors/model), so the
-    # first arm fits and the rest reuse -- removing the per-arm preprocessing
-    # redundancy without changing the result.
+    # Cross-arm reuse of the TRANSFORMED panel. The leak-free origin_available
+    # transform re-runs the (expensive) EM imputation on the apply window, and the
+    # output panel depends only on (panel, the origin's apply/available labels,
+    # preprocessing spec) -- NOT on the arm's features/model. Arms of the same
+    # target therefore produce an identical prepared panel at each origin, so the
+    # first arm computes it and the rest reuse the cached _PreparedStage. This
+    # removes the dominant per-arm EM-transform redundancy (the fit cache alone
+    # only saved the cheaper .fit(), not the per-origin transform).
+    prepared_key = (
+        ("prepared",) + tuple(cache_key) + (int(bool(include_target_pos)),
+            int(_origin_target_pos(panel.index, item)))
+        if (preprocessing_cache is not None and cache_key is not None)
+        else None
+    )
+    if prepared_key is not None and prepared_key in preprocessing_cache:
+        cached = preprocessing_cache[prepared_key]
+        if isinstance(cached, _PreparedStage):
+            return cached
+    # Cross-arm/cross-horizon reuse of the per-origin FittedPreprocessor (the EM
+    # FIT). The fit depends on target+horizons metadata only, not the arm's
+    # predictors/model, and is horizon-independent (origin_available rows), so the
+    # first caller fits and the rest reuse via the origin-keyed cache.
     if (
         fitted_preprocessing is None
         and preprocessing_cache is not None
         and cache_key is not None
         and cache_key in preprocessing_cache
     ):
-        fitted_preprocessing = preprocessing_cache[cache_key]
+        candidate = preprocessing_cache[cache_key]
+        if isinstance(candidate, FittedPreprocessor):
+            fitted_preprocessing = candidate
     if fitted_preprocessing is None:
         fit_panel = stage_panel(panel, item, preprocessing_policy)
         fit_policy = (
@@ -1832,11 +1977,31 @@ def _prepare_origin_panel(
             available=available_labels,
         )
         prepared_panel = transformed.panel
-    return _PreparedStage(
+    stage = _PreparedStage(
         panel=prepared_panel,
         fitted_preprocessing=fitted,
         metadata=fitted.to_metadata(),
     )
+    if prepared_key is not None:
+        preprocessing_cache[prepared_key] = stage
+    return stage
+
+
+def _origin_target_pos(index: pd.Index, item: Mapping[str, Any]) -> int:
+    """Position of the appended post-origin target row (origin_pos + horizon).
+
+    Used only as part of the prepared-stage cache key so that two arms sharing the
+    SAME (origin, horizon) reuse the identical transformed panel, while different
+    horizons (different target rows) get distinct cache entries.
+    """
+    row = item.get("row", {})
+    try:
+        origin_pos = int(row.get("test_start_pos", item["test_idx"][0]))
+        horizon = int(row.get("horizon", 1))
+    except (TypeError, ValueError, IndexError, KeyError):
+        return -1
+    target_pos = origin_pos + horizon
+    return target_pos if 0 <= target_pos < len(index) else -1
 
 
 def _origin_apply_labels(
@@ -2114,8 +2279,24 @@ def _relative_splits_for_index(
     splits: Sequence[Split],
     selection_index: pd.Index,
     base_index: pd.Index,
+    *,
+    allow_degenerate: bool = False,
 ) -> list[Split]:
-    """Map absolute window positions onto a stage-local feature matrix."""
+    """Map absolute window positions onto a stage-local feature matrix.
+
+    ``allow_degenerate`` controls what happens when feature alignment empties a
+    fold's train or validation side. After data-dependent preprocessing (EM
+    imputation that flags outliers as NaN) and lag-feature construction, some rows
+    referenced by an absolute validation split may be dropped from the selection
+    feature matrix, occasionally emptying one fold at a particular origin/horizon.
+    With ``allow_degenerate=False`` (the default, used by the feature-set path) an
+    empty fold is a hard error. With ``allow_degenerate=True`` (used by the
+    per-origin selection-splits computation, which runs for every arm even those
+    that never tune) the unusable fold is SKIPPED rather than aborting the whole
+    multi-horizon run; ``select_params`` still raises downstream if an arm that
+    needs tuning is left with no usable folds. Skipping an unusable CV fold is a
+    standard, leak-free behaviour (it never feeds future rows into training).
+    """
 
     if not splits:
         return []
@@ -2129,11 +2310,15 @@ def _relative_splits_for_index(
         val_pos = selection_index.get_indexer(val_labels)
         train_pos = train_pos[train_pos >= 0]
         if len(train_pos) == 0:
+            if allow_degenerate:
+                continue
             raise ValueError(
                 f"validation split {split_id} has no train rows after feature alignment"
             )
         val_pos = val_pos[val_pos >= 0]
         if len(val_pos) == 0:
+            if allow_degenerate:
+                continue
             raise ValueError(
                 f"validation split {split_id} has no validation rows after feature alignment"
             )
@@ -2808,6 +2993,41 @@ def _validate_runner_policies(
         return
     if preprocessing_policy is None:
         return
+
+
+def _checkpoint_record_key(record: Mapping[str, Any]) -> tuple[Any, ...]:
+    """Identity of a forecast row for de-duplicating checkpoint vs in-memory rows."""
+    return (
+        record.get("origin_pos"),
+        record.get("model"),
+        record.get("target"),
+        record.get("horizon"),
+        record.get("date"),
+    )
+
+
+def _merge_checkpoint_records(
+    records: list[dict[str, Any]],
+    checkpoint_path: str | Path,
+) -> list[dict[str, Any]]:
+    """Merge in-memory rich records with checkpoint-loaded lean records.
+
+    Newly-computed origins are kept with their full (rich) columns. Origins that
+    were resumed from disk (and therefore never recomputed) are supplied by the
+    checkpoint as lean rows. Rows present in memory win; only checkpoint rows with
+    a key not already in memory are appended, so a resumed run returns the
+    complete frame across all origins without duplication.
+    """
+    in_memory_keys = {_checkpoint_record_key(record) for record in records}
+    frame = load_checkpoint_frame(checkpoint_path)
+    if frame.empty:
+        return records
+    merged = list(records)
+    for lean_record in frame.to_dict(orient="records"):
+        if _checkpoint_record_key(lean_record) in in_memory_keys:
+            continue
+        merged.append({column: lean_record.get(column) for column in LEAN_FORECAST_COLUMNS})
+    return merged
 
 
 def _forecast_table(records: list[dict[str, Any]]) -> pd.DataFrame:

@@ -36,6 +36,7 @@ macroforecast.forecasting.run(
     combination=None,
     save_models=True,
     model_store="trained_model",
+    checkpoint_path=None,
 )
 ```
 
@@ -63,6 +64,7 @@ macroforecast.forecasting.run(
 | `combination` | str, `CombinationSpec`, sequence, mapping, or `None` | `None` | Optional forecast-combination requests. Combined forecasts are appended as additional model rows. |
 | `save_models` | bool | `True` | Save each fitted origin/model object and its metadata. |
 | `model_store` | str or path-like | `"trained_model"` | Root directory for saved fitted models. |
+| `checkpoint_path` | str, path-like, or `None` | `None` | Optional incremental-checkpoint directory. When set, each origin's lean forecast records are persisted as soon as the origin completes, and a restarted run skips origins already on disk. `None` keeps the prior behavior with no checkpoint writes. |
 
 Output: `ForecastResult`.
 
@@ -901,6 +903,29 @@ Methods:
 | `sidecar_names()` | Lists attached sidecars. |
 | `to_dict()` | JSON-ready dictionary. |
 | `to_json(path=None)` | JSON text and optional file write. |
+
+## Incremental Checkpointing
+
+Long pseudo-out-of-sample runs can persist progress per origin so a crash does
+not discard hours of compute. Pass `checkpoint_path=<dir>` to `run()` (or set
+`checkpoint_dir` on a `PipelineSpec`). Each origin writes one
+`origin_<pos>.parquet` file holding only the lean, scalar columns that are a
+sufficient statistic for every metric and test (`prediction`, `actual`, `model`,
+plus the keys). One file per origin makes each write atomic, so a crash mid-write
+corrupts at most one origin's file, which is simply ignored on resume. A
+restarted run lists the directory, skips origins already on disk, and returns the
+complete frame across all origins.
+
+The checkpoint covers the feature-matrix single-horizon execution path
+(`direct`, `direct_average`, `path_average`, `recursive`), which is the path the
+replications use. For a multi-horizon `run(..., horizons=[...])`, each horizon is
+written under an `h<h>` subdirectory. The panel-input and prebuilt-`FeatureSet`
+paths are not checkpointed.
+
+| Symbol | Meaning |
+| --- | --- |
+| `LEAN_FORECAST_COLUMNS` | The scalar lean schema persisted per origin: `target`, `horizon`, `origin`, `origin_pos`, `date`, `model`, `prediction`, `actual`, `forecast_policy`, `target_transform`. |
+| `load_checkpoint_frame(checkpoint_path)` | Load all persisted lean records under a checkpoint directory into a single frame (empty if none). |
 
 ## Direct Forecast Combination Functions
 

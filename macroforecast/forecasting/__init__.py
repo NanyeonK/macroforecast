@@ -21,11 +21,17 @@ from macroforecast.forecasting.combination import (
 )
 from macroforecast.forecasting.runner import run
 from macroforecast.forecasting.types import ForecastResult
+from macroforecast.forecasting.checkpoint import (
+    LEAN_FORECAST_COLUMNS,
+    load_checkpoint_frame,
+)
 
 run_forecast = run
 
 __all__ = [
     "ForecastResult",
+    "LEAN_FORECAST_COLUMNS",
+    "load_checkpoint_frame",
     "CombinationSpec",
     "combine_best_n",
     "combine_bates_granger",

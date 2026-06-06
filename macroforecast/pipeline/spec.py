@@ -138,6 +138,12 @@ class PipelineSpec:
     combinations: tuple[CombinationContender, ...] = ()
     save_models: bool = True
     model_store: str = "trained_model"
+    # When set, each (target, arm, horizon) forecast cell persists its lean
+    # forecast records incrementally under
+    # ``<checkpoint_dir>/<target>__<arm>/h<h>/`` so a crashed multi-hour POOS run
+    # resumes without recomputing finished origins. None (default) disables
+    # checkpointing and is byte-for-byte the prior behavior.
+    checkpoint_dir: str | None = None
     seed: int | None = 42
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
@@ -266,6 +272,7 @@ def pipeline_spec(
     tcode_target_map: Mapping[int, tuple[str, str]] | None = None,
     save_models: bool = True,
     model_store: str = "trained_model",
+    checkpoint_dir: str | None = None,
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
 ) -> PipelineSpec:
@@ -311,6 +318,8 @@ def pipeline_spec(
         data=data, targets=resolved, horizons=horizon_tuple, window=window,
         arms=arms, evaluation=evaluation, combinations=tuple(combinations),
         preprocessing=preprocessing, preprocessing_policy=preprocessing_policy,
-        save_models=bool(save_models), model_store=str(model_store), seed=seed,
+        save_models=bool(save_models), model_store=str(model_store),
+        checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
+        seed=seed,
         provenance=notes,
     )

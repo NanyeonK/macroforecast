@@ -64,3 +64,46 @@ def test_predictions_are_finite_on_each_contender():
     master = run_arms(_spec())
     assert master["prediction"].notna().any()
     assert np.isfinite(master["prediction"].dropna().to_numpy()).all()
+
+
+def _sorted_master(frame):
+    cols = ["arm", "contender", "target", "horizon", "origin", "date"]
+    cols = [c for c in cols if c in frame.columns]
+    return frame.sort_values(cols).reset_index(drop=True)
+
+
+def test_checkpoint_dir_threads_through_and_creates_per_cell_layout(tmp_path):
+    ckpt_dir = tmp_path / "ckpt"
+    spec = _spec(checkpoint_dir=str(ckpt_dir))
+    assert spec.checkpoint_dir == str(ckpt_dir)
+
+    master = run_arms(spec)
+    assert not master.empty
+
+    # Layout: <dir>/<target>__<arm>/h<h>/origin_<pos>.parquet (multi-horizon spec).
+    cells = sorted(p.name for p in ckpt_dir.iterdir())
+    assert cells == ["y__AR", "y__OLS"]
+    for cell in cells:
+        horizon_dirs = sorted(p.name for p in (ckpt_dir / cell).iterdir())
+        assert horizon_dirs == ["h1", "h3"]
+        for hd in horizon_dirs:
+            files = list((ckpt_dir / cell / hd).glob("origin_*.parquet"))
+            assert files
+
+
+def test_checkpoint_dir_resume_matches_no_checkpoint(tmp_path):
+    baseline = _sorted_master(run_arms(_spec()))
+
+    ckpt_dir = tmp_path / "ckpt"
+    # First pass writes the checkpoint; second pass resumes entirely from disk.
+    run_arms(_spec(checkpoint_dir=str(ckpt_dir)))
+    resumed = _sorted_master(run_arms(_spec(checkpoint_dir=str(ckpt_dir))))
+
+    assert list(resumed["arm"]) == list(baseline["arm"])
+    assert list(resumed["horizon"]) == list(baseline["horizon"])
+    np.testing.assert_allclose(
+        resumed["prediction"].to_numpy(dtype=float),
+        baseline["prediction"].to_numpy(dtype=float),
+        rtol=0,
+        atol=1e-9,
+    )

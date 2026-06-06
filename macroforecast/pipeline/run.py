@@ -1,11 +1,31 @@
 """Pipeline execution: run arms into the master forecast frame (Stage 1+)."""
 from __future__ import annotations
 
+import re
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 from macroforecast.pipeline.spec import Arm, PipelineSpec, ResolvedTarget, _arm_model_names
+
+
+def _safe_segment(value: str) -> str:
+    """Make a target/arm name safe to use as a single filesystem path segment."""
+    return re.sub(r"[^0-9A-Za-z._-]+", "_", str(value)).strip("_") or "x"
+
+
+def _cell_checkpoint_path(spec: PipelineSpec, arm: Arm, target: ResolvedTarget):
+    """Per-(target, arm) checkpoint directory, or None when disabled.
+
+    ``run()`` appends an ``h<h>`` subdirectory for each horizon when the spec
+    carries more than one horizon, so the final layout is
+    ``<checkpoint_dir>/<target>__<arm>/h<h>/origin_<pos>.parquet``.
+    """
+    if spec.checkpoint_dir is None:
+        return None
+    cell = f"{_safe_segment(target.name)}__{_safe_segment(arm.name)}"
+    return Path(spec.checkpoint_dir) / cell
 
 
 def _contender_label(arm: Arm, model_value: Any) -> str:
@@ -62,6 +82,7 @@ def _run_one_arm_target(
         save_models=spec.save_models,
         model_store=spec.model_store,
         preprocessing_cache=preprocessing_cache,
+        checkpoint_path=_cell_checkpoint_path(spec, arm, target),
     )
     frame = result.to_frame().copy()
     frame["arm"] = arm.name
