@@ -195,6 +195,18 @@ def run(
             checkpoint_path=checkpoint_path,
         )
     config = get_config()
+    # Namespace the checkpoint directory by horizon, mirroring the per-horizon
+    # subdirectory that ``_run_multiple_horizons`` appends. Origin positions are
+    # horizon-independent, so a single ``checkpoint_path`` reused across distinct
+    # single-horizon runs of the SAME forecast cell (e.g. a per-horizon loop that
+    # passes the same per-cell checkpoint dir) would otherwise collide: the first
+    # horizon's lean records (carrying its own horizon/date) would be loaded as
+    # "already done" for every later horizon, silently forecasting horizon 1 for
+    # all of them. Anchoring on the resolved horizon keeps each horizon's origins
+    # in their own ``h<h>`` subdirectory, so the single- and multi-horizon
+    # checkpoint layouts are identical and never collide.
+    if checkpoint_path is not None:
+        checkpoint_path = Path(checkpoint_path) / f"h{int(horizon_values[0])}"
     model_runs = _resolve_model_runs(model, preset=preset, params=params)
     _validate_selection_mapping(selection, model_runs)
     combination_specs = resolve_combinations(combination)
@@ -643,13 +655,12 @@ def _run_multiple_horizons(
             save_models=save_models,
             model_store=model_store,
             preprocessing_cache=preprocessing_cache,
-            # Each horizon is a distinct forecast cell; give it its own checkpoint
-            # subdirectory so origins of different horizons never collide.
-            checkpoint_path=(
-                None
-                if checkpoint_path is None
-                else Path(checkpoint_path) / f"h{int(horizon_value)}"
-            ),
+            # Each horizon is a distinct forecast cell; the single-horizon run()
+            # gives it its own ``h<h>`` checkpoint subdirectory (keyed on the
+            # resolved horizon), so origins of different horizons never collide.
+            # Pass the bare per-cell directory through and let run() namespace it
+            # exactly once -- the same path a single-horizon run produces.
+            checkpoint_path=checkpoint_path,
         )
         for horizon_value in horizons
     ]

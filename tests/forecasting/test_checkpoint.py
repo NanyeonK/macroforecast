@@ -60,6 +60,16 @@ def _run(checkpoint_path=None, policy: str = "direct"):
     )
 
 
+def _cell_horizon_dir(cell: Path, policy: str = "direct") -> Path:
+    """Resolve the per-horizon checkpoint subdirectory ``run()`` writes into.
+
+    The runner namespaces each cell's checkpoint by horizon (``cell/h<h>``) so a
+    per-cell directory reused across horizons never collides. ``_run`` uses
+    horizon 1 for the direct policy and horizon 3 otherwise.
+    """
+    return cell / ("h1" if policy == "direct" else "h3")
+
+
 def _sorted_frame(frame: pd.DataFrame) -> pd.DataFrame:
     cols = ["origin_pos", "model", "horizon", "date"]
     return (
@@ -106,14 +116,15 @@ def test_resume_skips_completed_origins(tmp_path: Path, monkeypatch) -> None:
     full = _run(checkpoint_path=cell, policy="direct")
     full_frame = _sorted_frame(full.to_frame())
 
-    origin_files = sorted(cell.glob("origin_*.parquet"))
+    hdir = _cell_horizon_dir(cell, "direct")
+    origin_files = sorted(hdir.glob("origin_*.parquet"))
     assert len(origin_files) >= 2, "need multiple origins to test resume"
 
     # Remove the LAST origin's file so a resume must recompute exactly one origin.
-    completed_before = ckpt.completed_origin_positions(cell)
+    completed_before = ckpt.completed_origin_positions(hdir)
     last_pos = max(completed_before)
-    (cell / f"origin_{last_pos}.parquet").unlink()
-    remaining = ckpt.completed_origin_positions(cell)
+    (hdir / f"origin_{last_pos}.parquet").unlink()
+    remaining = ckpt.completed_origin_positions(hdir)
     assert last_pos not in remaining
 
     # Spy on the per-origin fit/predict to record which origins are actually
@@ -155,7 +166,7 @@ def test_checkpoint_files_are_scalar_only(tmp_path: Path) -> None:
     cell = tmp_path / "cell"
     _run(checkpoint_path=cell, policy="direct_average")
 
-    files = sorted(cell.glob("origin_*.parquet"))
+    files = sorted(_cell_horizon_dir(cell, "direct_average").glob("origin_*.parquet"))
     assert files, "expected per-origin parquet files"
 
     for path in files:
@@ -194,10 +205,11 @@ def test_resume_recomputes_when_stage_state_carries_forward(
     full = go(cell)
     full_frame = _sorted_frame(full.to_frame())
 
-    all_pos = sorted(ckpt.completed_origin_positions(cell))
+    hdir = _cell_horizon_dir(cell, "direct")  # go() uses the default horizon 1
+    all_pos = sorted(ckpt.completed_origin_positions(hdir))
     assert len(all_pos) >= 2
     last_pos = all_pos[-1]
-    (cell / f"origin_{last_pos}.parquet").unlink()
+    (hdir / f"origin_{last_pos}.parquet").unlink()
 
     import macroforecast.forecasting.runner as runner
 
@@ -216,7 +228,7 @@ def test_resume_recomputes_when_stage_state_carries_forward(
     # Every origin recomputed (state carries forward), not just the deleted one.
     assert sorted(computed) == all_pos
     # ... but only the deleted origin's file is (re)written.
-    assert ckpt.completed_origin_positions(cell) == set(all_pos)
+    assert ckpt.completed_origin_positions(hdir) == set(all_pos)
     # ... and the merged frame is complete and numerically identical.
     assert list(resumed_frame["origin_pos"]) == list(full_frame["origin_pos"])
     np.testing.assert_allclose(
