@@ -27,7 +27,7 @@ TARGET_MAP = {
     "HOUST": "HOUST",
     "M2": "M2SL",
     "CPI": "CPIAUCSL",
-    "PPI": "PPICMM",
+    "PPI": "WPSFD49207",  # PPI Finished Goods (standard headline PPI); PPICMM=Metals is far more volatile and mismatches the appendix scale
 }
 
 

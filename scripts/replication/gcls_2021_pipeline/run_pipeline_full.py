@@ -66,12 +66,51 @@ import macroforecast as mf  # noqa: E402
 from macroforecast.pipeline import EvalSpec, pipeline_spec, run_pipeline  # noqa: E402
 
 from scripts.replication.gcls_2021_pipeline.registry import (  # noqa: E402
+    CORE_ARMS,
     TARGET_MAP,
+    YGROWTH_PREFIX,
     gcls_arms,
     gcls_targets,
+    ygrowth_column,
 )
 
+import numpy as np  # noqa: E402
+
 HORIZONS = (1, 3, 6, 9, 12, 24)
+
+# Per-target one-period growth object for the forecast TARGET (the paper's "average
+# growth rate" is the horizon-average of these). For UNRATE the paper's one-period
+# object is the first difference of the level (FRED-MD t-code 2); for every other
+# target it is the log-difference (Delta log). This is decoupled from the predictor
+# t-codes on purpose: the paper transforms predictors X with the McCracken-Ng
+# t-codes but forecasts the target Y as a growth/inflation rate.
+_TARGET_GROWTH_KIND: dict[str, str] = {
+    "UNRATE": "diff",  # Y_t - Y_{t-1}
+}
+# everything else defaults to "log_diff" (log Y_t - log Y_{t-1})
+
+
+def _one_period_growth(level: pd.Series, kind: str) -> pd.Series:
+    """One-period stationary growth object built from the RAW level series.
+
+    ``"diff"``     -> first difference  Y_t - Y_{t-1}            (UNRATE).
+    ``"log_diff"`` -> log difference    log Y_t - log Y_{t-1}   (all others).
+
+    This is exactly the FRED-MD t-code-2 / t-code-5 transform, applied here directly
+    to the raw level so the TARGET object is correct regardless of the column's own
+    FRED-MD t-code (HOUST is t-code 4 = log-level, the I(2) price series are t-code 6
+    = second log-difference; neither yields the paper's growth target if averaged).
+    """
+    values = level.astype(float)
+    if kind == "diff":
+        return values.diff()
+    if kind == "log_diff":
+        # log is only defined for strictly positive levels; non-positive entries
+        # (none in these 9 series, but guard anyway) yield NaN, which the per-origin
+        # EM imputation never touches for a complete YGROWTH__ column.
+        positive = values.where(values > 0)
+        return np.log(positive) - np.log(positive.shift(1))
+    raise ValueError(f"unknown growth kind {kind!r}")
 
 
 
@@ -119,10 +158,30 @@ def _augmented_bundle(raw):
     panel = raw.panel.copy()
     complete_cols = [c for c in raw.panel.columns if raw.panel[c].notna().all()]
     levels = raw.panel[complete_cols].add_prefix("LEVEL__")
-    new_panel = pd.concat([panel, levels], axis=1)
+
+    # TARGET growth columns (the paper's "average growth rate" object). For EVERY
+    # target alias we build a dedicated ``YGROWTH__<col>`` column = the one-period
+    # growth computed from the RAW level (Delta log, or Delta for UNRATE), decoupled
+    # from the predictor t-codes. These columns are the stationary one-period object
+    # already, so they get t-code 1 (identity) and the official transform passes them
+    # through unchanged; the forecast policy's ``average_value`` then builds
+    # (1/h) sum_{h'} growth_{t+h'} = the paper's direct h-step target. They are EXCLUDED
+    # from the predictor set by ``transformed_predictors`` (which filters the
+    # YGROWTH__ prefix) so they cannot leak as features.
+    growth_frames: list[pd.Series] = []
+    for col in TARGET_MAP.values():
+        kind = _TARGET_GROWTH_KIND.get(col, "log_diff")
+        growth = _one_period_growth(raw.panel[col], kind)
+        growth.name = ygrowth_column(col)
+        growth_frames.append(growth)
+    growths = pd.concat(growth_frames, axis=1)
+
+    new_panel = pd.concat([panel, levels, growths], axis=1)
     codes = dict(raw.metadata.get("transform_codes", {}))
     for column in complete_cols:
         codes[f"LEVEL__{column}"] = 1
+    for col in TARGET_MAP.values():
+        codes[ygrowth_column(col)] = 1
     # IMPORTANT (performance): the panel ``.attrs`` carries a large per-panel report
     # (input/output column lists, nested metadata copies). pandas deep-copies attrs
     # on virtually every operation via ``__finalize__``; doubling the columns and
@@ -201,6 +260,7 @@ def run_target(
     out_root: Path,
     skip_existing: bool,
     smoke: bool,
+    core_arms_only: bool = False,
 ) -> None:
     target = TARGET_MAP[target_alias]
     print(f"macroforecast {mf.__version__}", flush=True)
@@ -212,8 +272,21 @@ def run_target(
     )
     bundle = _augmented_bundle(raw)
 
-    # Transformed predictors = all official-transform columns except the target.
-    transformed_predictors = [c for c in raw.panel.columns if c != target]
+    # The forecast TARGET column is the dedicated one-period growth column built from
+    # the raw level (see _augmented_bundle). It is also the feature target so that the
+    # target lags and the target-derived MARX_y/MAF_y blocks operate on the growth
+    # object (consistent with the forecast object); the PREDICTOR blocks still use the
+    # official t-coded ``transformed_predictors``.
+    target_growth = ygrowth_column(target)
+
+    # Transformed predictors = all official-transform columns except the target and
+    # the engineered YGROWTH__/LEVEL__ columns. The YGROWTH__ columns MUST be excluded
+    # so the realized target object never leaks into the predictor set.
+    transformed_predictors = [
+        c
+        for c in raw.panel.columns
+        if c != target and not str(c).startswith(YGROWTH_PREFIX)
+    ]
     level_predictors = _level_predictors(raw)
 
     # Shared spec-level preprocessing (leak-free, refit on the retrain cadence).
@@ -240,11 +313,12 @@ def run_target(
     n_estimators = 50 if smoke else 200
 
     base_arms = gcls_arms(
-        target,
+        target_growth,
         transformed_predictors,
         level_predictors,
         n_estimators=n_estimators,
         smoke=smoke,
+        core_arms_only=core_arms_only,
     )
     # Attach the feature cadence policy to every arm (mirrors run_full.py).
     arms = [dataclasses.replace(a, feature_policy=feat_policy) for a in base_arms]
@@ -266,7 +340,7 @@ def run_target(
     )
 
     for policy in policies:
-        targets = [t for t in gcls_targets(policy) if t.name == target]
+        targets = [t for t in gcls_targets(policy) if t.name == target_growth]
         out_dir = out_root / target_alias / policy
 
         # Resume granularity stays per-cell: skip the whole spec only if EVERY
@@ -362,6 +436,14 @@ def main() -> None:
         action="store_true",
         help="horizons={1,3} (tests consolidation), arms {FM, RF_F-Level}, test_end=1981-12.",
     )
+    parser.add_argument(
+        "--core-arms-only",
+        action="store_true",
+        help=(
+            "Restrict the arm grid to the three core arms (FM, RF_F-Level, RF_MARX) "
+            "needed for the appendix growth-target comparison."
+        ),
+    )
     args = parser.parse_args()
 
     policies = [p.strip() for p in args.policies.split(",") if p.strip()]
@@ -377,6 +459,7 @@ def main() -> None:
         out_root=Path(args.out_root),
         skip_existing=args.skip_existing,
         smoke=args.smoke,
+        core_arms_only=args.core_arms_only,
     )
 
 
