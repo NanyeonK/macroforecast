@@ -99,6 +99,16 @@ class _PreparedStage:
     panel: pd.DataFrame
     fitted_preprocessing: FittedPreprocessor | None
     metadata: dict[str, Any] | None
+    # Full per-origin panel metadata (the ``macroforecast_metadata`` payload that
+    # ``_prepare_origin_panel`` would otherwise leave on ``panel.attrs``). It is
+    # held here on the dataclass instead of on ``panel.attrs`` because the cached
+    # ``panel`` is operated on repeatedly in the per-origin/per-arm hot loop, and
+    # pandas deep-copies ``.attrs`` on every operation via ``__finalize__``. The
+    # preprocessing metadata is large (EM/factor + standardization state, ~40 KB),
+    # so carrying it on ``.attrs`` makes that deepcopy dominate runtime in
+    # multi-horizon runs that share the panel across many origins. Consumers read
+    # the metadata from this field and re-attach it only where it is needed.
+    panel_metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -311,14 +321,23 @@ def run(
         fitted = preprocessing.fit(
             _preprocessor_fit_input(panel, features), policy="origin_available"
         )
+        full_panel = fitted.processed_train.panel
+        full_panel_metadata = _detach_panel_metadata(full_panel)
         full_stage = _PreparedStage(
-            panel=fitted.processed_train.panel,
+            panel=full_panel,
             fitted_preprocessing=fitted,
             metadata=fitted.to_metadata(),
+            panel_metadata=full_panel_metadata,
         )
     elif preprocessing is None:
+        # No preprocessing: the raw input panel's metadata is small and already
+        # lives on ``panel.attrs``; mirror it onto ``panel_metadata`` so callers
+        # have a single, consistent source for the per-origin metadata.
         full_stage = _PreparedStage(
-            panel=panel, fitted_preprocessing=None, metadata=None
+            panel=panel,
+            fitted_preprocessing=None,
+            metadata=None,
+            panel_metadata=dict(panel.attrs.get("macroforecast_metadata", {})),
         )
 
     if feature_stage_policy.scope in {"full_panel", "fixed_reference"}:
@@ -427,6 +446,12 @@ def run(
                 )
             )
 
+        # The preprocessing metadata is detached from ``prepared.panel.attrs`` (see
+        # ``_detach_panel_metadata``) so the cached panel stays cheap to deep-copy
+        # in this per-origin/per-arm loop. Pass it explicitly to feature fit and
+        # transform so the feature stage still records full upstream provenance.
+        prepared_metadata = prepared.panel_metadata
+
         fit_labels = panel.index[item["fit_idx"]]
         test_labels = panel.index[[int(item["test_idx"][0])]]
         selection_labels = stage_index(panel.index, item, selection_stage_policy)
@@ -444,7 +469,9 @@ def run(
                 feature_fit_panel = prepared.panel.reindex(feature_fit_labels).dropna(
                     how="all"
                 )
-                fitted_feature_cache = features.fit(feature_fit_panel)
+                fitted_feature_cache = features.fit(
+                    feature_fit_panel, metadata=prepared_metadata
+                )
                 feature_updated = True
                 _mark_stage_updated(feature_state, item)
             fitted_features = fitted_feature_cache
@@ -460,6 +487,7 @@ def run(
         all_features = _test_feature_builder(fitted_features).transform(
             prepared.panel,
             index=feature_labels,
+            metadata=prepared_metadata,
         )
         train_features = _slice_feature_set(
             all_features,
@@ -1147,8 +1175,15 @@ def _run_panel_models(
                     updated=preprocessing_updated,
                 )
             )
+        # Metadata now lives on the dataclass (``panel_metadata``) rather than on
+        # ``prepared.panel.attrs`` -- see ``_detach_panel_metadata`` -- so the
+        # cached panel stays cheap to deep-copy in the per-origin loop. Re-attach
+        # the full metadata onto the per-origin fit/test slices below, where the
+        # model and forecast records actually consume it.
         prepared_metadata = dict(
-            prepared.panel.attrs.get("macroforecast_metadata", metadata)
+            prepared.panel_metadata
+            if prepared.panel_metadata is not None
+            else prepared.panel.attrs.get("macroforecast_metadata", metadata)
         )
         fit_panel = prepared.panel.reindex(panel.index[item["fit_idx"]]).copy()
         test_panel = prepared.panel.reindex(panel.index[item["test_idx"]]).copy()
@@ -1914,7 +1949,12 @@ def _prepare_origin_panel(
     cache_key: Any | None = None,
 ) -> _PreparedStage:
     if preprocessing is None or preprocessing_policy is None:
-        return _PreparedStage(panel=panel, fitted_preprocessing=None, metadata=None)
+        return _PreparedStage(
+            panel=panel,
+            fitted_preprocessing=None,
+            metadata=None,
+            panel_metadata=dict(panel.attrs.get("macroforecast_metadata", {})),
+        )
     # Cross-arm reuse of the TRANSFORMED panel. The leak-free origin_available
     # transform re-runs the (expensive) EM imputation on the apply window, and the
     # output panel depends only on (panel, the origin's apply/available labels,
@@ -1988,14 +2028,48 @@ def _prepare_origin_panel(
             available=available_labels,
         )
         prepared_panel = transformed.panel
+    # Move the heavy ``macroforecast_metadata`` payload off ``panel.attrs`` and
+    # onto the dataclass. The transformed panel below is reindexed/dropna'd/fed to
+    # feature fit+transform once per origin AND reused across arms/horizons from
+    # the shared cache; pandas deep-copies ``.attrs`` on each of those operations
+    # via ``__finalize__``, so leaving the ~40 KB preprocessing/standardization
+    # metadata on ``.attrs`` makes that deepcopy dominate multi-horizon runtime.
+    # Small keys that downstream code reads directly off the panel (e.g. the
+    # transform-code map) are preserved on ``.attrs``; the full metadata is kept
+    # on ``panel_metadata`` and re-attached by callers only where it is consumed.
+    panel_metadata = _detach_panel_metadata(prepared_panel)
     stage = _PreparedStage(
         panel=prepared_panel,
         fitted_preprocessing=fitted,
         metadata=fitted.to_metadata(),
+        panel_metadata=panel_metadata,
     )
     if prepared_key is not None:
         preprocessing_cache[prepared_key] = stage
     return stage
+
+
+# Small ``.attrs`` keys that are cheap to deep-copy and are read directly off the
+# panel by downstream stages (transform-code resolution, etc.). These stay on the
+# panel; the large ``macroforecast_metadata`` payload is detached.
+_LIGHT_PANEL_ATTR_KEYS = ("macroforecast_transform_codes",)
+
+
+def _detach_panel_metadata(panel: pd.DataFrame) -> dict[str, Any] | None:
+    """Strip the heavy ``macroforecast_metadata`` from ``panel.attrs`` in place.
+
+    Returns the detached metadata dict (or ``None`` if absent). After this call
+    ``panel.attrs`` retains only the small, deep-copy-cheap keys in
+    ``_LIGHT_PANEL_ATTR_KEYS``, so the per-origin/per-arm pandas operations on the
+    cached panel no longer pay the cost of deep-copying the full preprocessing
+    metadata on every ``__finalize__``.
+    """
+
+    attrs = panel.attrs
+    detached = attrs.get("macroforecast_metadata")
+    light = {key: attrs[key] for key in _LIGHT_PANEL_ATTR_KEYS if key in attrs}
+    panel.attrs = light
+    return dict(detached) if isinstance(detached, Mapping) else detached
 
 
 def _origin_target_pos(index: pd.Index, item: Mapping[str, Any]) -> int:
