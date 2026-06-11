@@ -9,6 +9,39 @@ full per-version honesty-pass history embedded in repo documentation.
 `core/ops/lN_ops.py` fully removed. Circular import workaround eliminated.
 `interpretation/` and `recipes/` converted to backward-compatible shims.
 
+**Replication-driven robustness pass** (defects surfaced by the GCLS 2021
+"transformations matter" and ML-Useful 2022 pseudo-out-of-sample replications, now
+guarded by regression tests):
+
+- `forecasting`: incremental per-origin checkpointing -- `run(checkpoint_path=...)`
+  and `PipelineSpec.checkpoint_dir` write a lean forecast record per origin and resume
+  after a crash. Single-horizon checkpoints are namespaced by horizon to prevent a
+  cross-horizon collision that silently returned horizon-1 forecasts for every horizon.
+- `forecasting`: multi-horizon runs share the per-origin preprocessing fit across
+  horizons (keyed on origin position), and the `from_cutoffs(horizon=h)` validation
+  embargo is re-derived per horizon -- a stale zero embargo could leak the h-step label
+  into validation folds for `h > 1`.
+- `forecasting`: the per-origin transformed panel no longer carries the full
+  `macroforecast_metadata` on `.attrs`; it is held on the prepared-stage dataclass and
+  re-attached only where consumed. This removes an `O(origins x arms x horizons)` cost
+  of pandas deep-copying a large attrs dict on every operation, which made multi-horizon
+  runs appear to hang.
+- `forecasting`: model selection degrades gracefully when an early retrain origin cannot
+  form a target-availability-safe validation split (reuses the last-tuned or default
+  params, warns, tags `selection_degraded`) instead of aborting the whole run; it still
+  raises when no origin can ever tune.
+- `preprocessing`: `em_factor` imputation and PCA drop all-missing rows and columns, so
+  ragged-start FRED-MD panels impute the dense sub-block instead of raising.
+- `feature_engineering`: MARX fit drops predictor columns with no observation over the
+  fit window (mirroring the PCA pattern), so an all-NaN series no longer empties the
+  whole feature matrix under leak-free preprocessing.
+- `pipeline`: the accuracy table uses a common sample across contenders (removes
+  survivorship bias); the leakage audit validates every horizon and surfaces a crashed
+  validation; Clark-West is emitted only for arms declaring `nested_in_benchmark`
+  (Diebold-Mariano otherwise); a benchmark missing from a `(target, horizon)` slice is
+  surfaced via `benchmark_present`; interpretation aggregation no longer averages
+  misaligned rows; and a zero-row arm is reported via a warning rather than dropped.
+
 ## [0.9.5a1] -- 2026-06-03 -- "Vintage loader automation"
 
 - `mf.data.load_fred_md(vintage="YYYY-MM")` now resolves the official
