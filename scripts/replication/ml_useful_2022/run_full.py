@@ -104,10 +104,19 @@ def main(data_csv: str) -> None:
     # time, so the base window's ``horizon`` is overridden per horizon. We supply
     # horizon=1 so the base window validates; test_start/test_end/retrain cadence
     # are the load-bearing fields.
+    #
+    # Hyperparameter tuning follows the paper's K-fold cross-validation (Goulet
+    # Coulombe, Leroux, Stevanovic, Surprenant 2022, Sec. 3): a random K-fold CV
+    # rather than a temporal hold-out. ``random_kfold`` is the methodologically
+    # faithful choice and is robust at early origins where a single trailing
+    # ``last_block`` of size 24 cannot be formed from the (often sparse) target-
+    # available selection sample. The runner special-cases random_kfold via
+    # ``_allow_non_temporal_selection_splits`` so the non-temporal folds are
+    # accepted by ``select_params``.
     window = mf.window.from_cutoffs(
         estimation_start="1960-01", test_start="1980-01", test_end="2017-12",
         mode="expanding", horizon=1, embargo=0, retrain_every=24,
-        val_method="last_block", val_size=24,
+        val_method="random_kfold", val_n_splits=5, val_random_state=0,
     )
 
     acc_rows = []

@@ -514,6 +514,119 @@ def test_direct_model_selection_can_use_random_kfold_when_requested() -> None:
     assert any(split["train_end_pos"] > split["validation_start_pos"] for split in summary)
 
 
+def _sparse_early_feature_panel(n: int, *, nan_until: int) -> pd.DataFrame:
+    # A panel whose predictor carries NaN for the first ``nan_until`` rows. The
+    # window plan validates on index positions (it does not see the NaNs), so the
+    # upfront check passes, but feature alignment at an early origin drops the NaN
+    # rows and collapses the runtime selection sample below what the validation
+    # splitter needs. This mirrors the ML-Useful failure, where IQR outlier
+    # flagging / factor warmup leaves an early origin with too few rows to tune
+    # even though the planned estimation window is large.
+    idx = pd.date_range("2000-01-31", periods=n, freq="ME", name="date")
+    t = np.arange(n, dtype=float)
+    x1 = np.sin(t / 4.0)
+    x1[:nan_until] = np.nan
+    return pd.DataFrame(
+        {"y": 1.0 + 0.05 * t + 0.3 * np.cos(t / 5.0), "x1": x1},
+        index=idx,
+    )
+
+
+def _bias_model_spec(name: str) -> "mf.models.ModelSpec":
+    class Fit:
+        def __init__(self, bias: float) -> None:
+            self.bias = float(bias)
+
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(self.bias, index=X.index, name="prediction")
+
+    def model(X: pd.DataFrame, y: pd.Series, *, bias: float = 0.0) -> Fit:
+        return Fit(float(y.mean()) + bias)
+
+    return mf.models.ModelSpec(name=name, family="test", fit_func=model)
+
+
+def test_model_selection_degrades_gracefully_at_early_origin() -> None:
+    # A long pseudo-out-of-sample run with tuned models must not abort entirely
+    # because ONE early origin's runtime selection sample (after feature
+    # alignment) is too small to form a validation split. The early origin should
+    # warn and fall back to defaults / last-tuned params, while later origins
+    # (whose larger windows clear the sparse early rows) still tune normally.
+    # rows 0..7 carry NaN x1; origin 15's estimation window keeps only rows 8..14
+    # (7 < val_size 10) so it cannot tune, while origin 70 keeps ~62 rows and can.
+    panel = _sparse_early_feature_panel(80, nan_until=8)
+    spec = _bias_model_spec("degrade_record")
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=12),
+        val=mf.window.val_last_block(size=10),
+        test=mf.window.test_origins(
+            first_origin=panel.index[15],
+            last_origin=panel.index[70],
+            horizon=1,
+            step=27,
+        ),
+    )
+
+    with pytest.warns(RuntimeWarning, match="no target-availability-safe validation split"):
+        result = mf.forecasting.run(
+            panel,
+            spec,
+            window=window,
+            target="y",
+            horizon=1,
+            model_selection=mf.model_selection.grid({"bias": [0.0, 0.1]}),
+            save_models=False,
+        )
+
+    table = result.to_frame()
+    # The run completes and produces forecasts at every origin (early + late).
+    assert len(table) >= 2
+    assert table["prediction"].notna().all()
+    selections = list(table["model_selection"])
+    degraded = [
+        s for s in selections
+        if isinstance(s, dict) and s.get("selection_degraded")
+    ]
+    tuned = [
+        s for s in selections
+        if isinstance(s, dict) and s.get("retuned") is True
+    ]
+    assert degraded, "expected at least one degraded (untuned) early origin"
+    assert tuned, "expected at least one origin to tune successfully"
+
+
+def test_model_selection_raises_when_no_origin_can_ever_tune() -> None:
+    # A configuration where every emitted origin's runtime selection sample is too
+    # small to form a split is a genuine misconfiguration and must still raise,
+    # not silently degrade at every origin.
+    # rows 0..32 carry NaN x1, so every emitted origin (20, 26, 32, 38) keeps at
+    # most 5 aligned rows (< val_size 10) and none can ever form a split.
+    panel = _sparse_early_feature_panel(60, nan_until=33)
+    spec = _bias_model_spec("impossible_record")
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=12),
+        val=mf.window.val_last_block(size=10),
+        test=mf.window.test_origins(
+            first_origin=panel.index[20],
+            last_origin=panel.index[40],
+            horizon=1,
+            step=6,
+        ),
+    )
+
+    with pytest.warns(RuntimeWarning):
+        with pytest.raises(ValueError, match="at ANY origin"):
+            mf.forecasting.run(
+                panel,
+                spec,
+                window=window,
+                target="y",
+                horizon=1,
+                model_selection=mf.model_selection.grid({"bias": [0.0, 0.1]}),
+                save_models=False,
+            )
+
+
 def test_forecasting_runner_supports_recursive_policy_with_target_lags() -> None:
     panel = _panel(60)
 

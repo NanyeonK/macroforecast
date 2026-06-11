@@ -588,6 +588,8 @@ def run(
     if checkpoint_path is not None:
         records = _merge_checkpoint_records(records, checkpoint_path)
 
+    _assert_selection_was_possible(selection_cache, target_step=horizon_values[0])
+
     forecast_table = _forecast_table(records)
     combination_records = apply_combinations(forecast_table, combination_specs)
     if combination_records:
@@ -1060,6 +1062,10 @@ def _run_feature_set(
                 model_store=model_store,
             )
         )
+    _assert_selection_was_possible(
+        selection_cache,
+        target_step=data.horizons[0] if data.horizons else 1,
+    )
     forecast_table = _forecast_table(records)
     combination_records = apply_combinations(forecast_table, combination_specs)
     if combination_records:
@@ -1434,13 +1440,16 @@ def _fit_predict_origin(
         cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
         if should_select:
             if not selection_splits:
-                raise ValueError(
-                    "model selection has no target-availability-safe validation "
-                    f"splits for horizon {target_step}; increase the available "
-                    "sample, move the validation window earlier, or reduce the "
-                    "forecast horizon"
+                best_params, selection_metadata = _resolve_degraded_selection(
+                    cache_key=cache_key,
+                    alias=model_run.alias,
+                    target_step=target_step,
+                    origin_label=row.get("origin"),
+                    param_cache=param_cache,
+                    selection_cache=selection_cache,
+                    selection_policy=selection_policy,
                 )
-            if retune or cache_key not in param_cache:
+            elif retune or cache_key not in param_cache:
                 result = select_params(
                     model_spec,
                     X_selection,
@@ -1459,11 +1468,13 @@ def _fit_predict_origin(
                     "retuned": True,
                 }
                 selection_cache[cache_key] = selection_metadata
+                selection_cache[_SELECTION_TUNED_KEY] = True
+                best_params = dict(param_cache.get(cache_key, {}))
             else:
                 selection_metadata = selection_cache.get(cache_key)
                 if selection_metadata is not None:
                     selection_metadata = {**selection_metadata, "retuned": False}
-            best_params = dict(param_cache.get(cache_key, {}))
+                best_params = dict(param_cache.get(cache_key, {}))
         else:
             best_params = {}
         fit_params = _actual_model_params(model_spec, best_params)
@@ -1586,14 +1597,25 @@ def _fit_predict_recursive_origin(
         )
         selection_metadata: dict[str, Any] | None = None
         cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
+        recursive_splits = item.get("selection_splits")
         if should_select:
-            if retune or cache_key not in param_cache:
+            if not recursive_splits:
+                best_params, selection_metadata = _resolve_degraded_selection(
+                    cache_key=cache_key,
+                    alias=model_run.alias,
+                    target_step=horizon,
+                    origin_label=row.get("origin"),
+                    param_cache=param_cache,
+                    selection_cache=selection_cache,
+                    selection_policy=selection_policy,
+                )
+            elif retune or cache_key not in param_cache:
                 result = select_params(
                     model_spec,
                     X_selection,
                     y_selection,
                     search=selected,
-                    splits=item.get("selection_splits"),
+                    splits=recursive_splits,
                     metric=selection_metric,
                     maximize=maximize_selection,
                     random_state=selection_random_state if selected is None else None,
@@ -1608,11 +1630,13 @@ def _fit_predict_recursive_origin(
                     "future_feature_policy": future_policy,
                 }
                 selection_cache[cache_key] = selection_metadata
+                selection_cache[_SELECTION_TUNED_KEY] = True
+                best_params = dict(param_cache.get(cache_key, {}))
             else:
                 selection_metadata = selection_cache.get(cache_key)
                 if selection_metadata is not None:
                     selection_metadata = {**selection_metadata, "retuned": False}
-            best_params = dict(param_cache.get(cache_key, {}))
+                best_params = dict(param_cache.get(cache_key, {}))
         else:
             best_params = {}
         fit_params = _actual_model_params(model_spec, best_params)
@@ -1804,13 +1828,18 @@ def _fit_predict_path_average_origin(
             selection_metadata: dict[str, Any] | None = None
             if should_select:
                 if not selection_splits:
-                    raise ValueError(
-                        "model selection has no target-availability-safe "
-                        f"validation splits for path step {step}; increase the "
-                        "available sample, move the validation window earlier, "
-                        "or reduce the forecast horizon"
+                    best_params, selection_metadata = _resolve_degraded_selection(
+                        cache_key=step_key,
+                        alias=f"{model_run.alias} (path step {step})",
+                        target_step=step,
+                        origin_label=row.get("origin"),
+                        param_cache=param_cache,
+                        selection_cache=selection_cache,
+                        selection_policy=selection_policy,
                     )
-                if retune or step_key not in param_cache:
+                    if isinstance(selection_metadata, dict):
+                        selection_metadata = {**selection_metadata, "path_step": step}
+                elif retune or step_key not in param_cache:
                     result = select_params(
                         model_spec,
                         X_selection_step,
@@ -1830,6 +1859,8 @@ def _fit_predict_path_average_origin(
                         "path_step": step,
                     }
                     selection_cache[step_key] = selection_metadata
+                    selection_cache[_SELECTION_TUNED_KEY] = True
+                    best_params = dict(param_cache.get(step_key, {}))
                 else:
                     selection_metadata = selection_cache.get(step_key)
                     if selection_metadata is not None:
@@ -1838,7 +1869,7 @@ def _fit_predict_path_average_origin(
                             "retuned": False,
                             "path_step": step,
                         }
-                best_params = dict(param_cache.get(step_key, {}))
+                    best_params = dict(param_cache.get(step_key, {}))
             else:
                 best_params = {}
             fit_params = _actual_model_params(model_spec, best_params)
@@ -2206,6 +2237,80 @@ def _target_availability_window_fields(
         "target_availability_end": cutoff_label,
         "target_availability_end_pos": int(cutoff_pos),
     }
+
+
+_SELECTION_TUNED_KEY = "__macroforecast_selection_ever_tuned__"
+_SELECTION_DEGRADED_KEY = "__macroforecast_selection_ever_degraded__"
+
+
+def _resolve_degraded_selection(
+    *,
+    cache_key: str,
+    alias: str,
+    target_step: int,
+    origin_label: Any,
+    param_cache: dict[str, dict[str, Any]],
+    selection_cache: dict[str, dict[str, Any] | None],
+    selection_policy: StagePolicy,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Degrade gracefully when no target-availability-safe split exists.
+
+    A long pseudo-out-of-sample run must not abort entirely because ONE early
+    origin lacks enough target-available data to form a tuning split. We reuse
+    the model's last successfully-tuned parameters when available, otherwise
+    fall back to the model's registered defaults (empty override), and emit a
+    RuntimeWarning naming the origin/horizon/model. A run-level flag records the
+    degradation so ``run`` can still raise if NO origin ever tunes (a genuinely
+    impossible configuration rather than a sparse early origin).
+    """
+
+    selection_cache[_SELECTION_DEGRADED_KEY] = True
+    reused = cache_key in param_cache
+    best_params = dict(param_cache.get(cache_key, {}))
+    source = "last-tuned params" if reused else "model defaults"
+    warnings.warn(
+        f"model selection found no target-availability-safe validation split for "
+        f"model {alias!r} at origin {origin_label} (horizon {target_step}); "
+        f"falling back to {source} for this origin instead of tuning",
+        RuntimeWarning,
+        stacklevel=3,
+    )
+    cached_metadata = selection_cache.get(cache_key)
+    base_metadata = (
+        dict(cached_metadata) if isinstance(cached_metadata, dict) else {}
+    )
+    selection_metadata = {
+        **base_metadata,
+        "policy": selection_policy.to_dict(),
+        "retuned": False,
+        "selection_degraded": True,
+        "selection_degraded_reason": "no_availability_safe_split",
+        "selection_degraded_source": source,
+    }
+    return best_params, selection_metadata
+
+
+def _assert_selection_was_possible(
+    selection_cache: dict[str, dict[str, Any] | None],
+    *,
+    target_step: int,
+) -> None:
+    """Raise if model selection degraded at every origin (impossible config).
+
+    Graceful degradation tolerates sparse early origins, but a configuration
+    that can NEVER form a tuning split for ANY origin is a genuine
+    misconfiguration that should still surface as an error.
+    """
+
+    ever_degraded = bool(selection_cache.get(_SELECTION_DEGRADED_KEY))
+    ever_tuned = bool(selection_cache.get(_SELECTION_TUNED_KEY))
+    if ever_degraded and not ever_tuned:
+        raise ValueError(
+            "model selection has no target-availability-safe validation splits "
+            f"for horizon {target_step} at ANY origin; increase the available "
+            "sample, move the validation window earlier, reduce the validation "
+            "size, or reduce the forecast horizon"
+        )
 
 
 def _availability_safe_selection_splits(
