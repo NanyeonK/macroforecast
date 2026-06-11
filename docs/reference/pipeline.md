@@ -85,3 +85,10 @@ interpret_pipeline(report, methods=("shap", "ale"))   # deferred, no re-forecast
 - The leakage audit validates the window for each horizon, surfacing the multi-horizon
   pseudo-out-of-sample embargo convention.
 - Models are saved by default so `interpret_pipeline` runs without re-forecasting.
+- `Arm.nested_in_benchmark` (default `False`) marks an arm whose model nests the
+  benchmark, for example a data-poor autoregressive benchmark nested in a
+  factor-augmented or penalised model. The evaluator reports a Clark-West
+  statistic only for such contenders, since Clark-West is valid only when the
+  benchmark is nested within the contender. Arms that do not nest the benchmark
+  receive Diebold-Mariano only, and forecast combinations are never treated as
+  nested.

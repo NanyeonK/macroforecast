@@ -495,3 +495,27 @@ When a `ModelSpec` already carries fixed parameters, `select_params()` keeps
 those fixed during every candidate fit and stores them in
 `SearchResult.metadata["fixed_model_params"]`. The selected `best_params` remain
 the searched candidate parameters.
+
+## Graceful degradation in windowed runs
+
+When model selection runs inside a windowed pseudo-out-of-sample experiment, the
+validation splits are built leak-free. Training and validation folds are
+separated by an embargo of at least the forecast horizon minus one, so that an
+h-step training label can never realise inside the validation block. At very
+early retrain origins the target-available selection sample can be too small to
+form any such split. This happens with long horizons, a large `val_size`, or a
+sparse early sample. In that case the runner does not abort the whole run. It
+reuses the most recently tuned parameters for the model, or the model's
+registered defaults when nothing has been tuned yet, records
+`selection_degraded` (set to `True`) in the forecast's `model_selection`
+metadata, and emits a `RuntimeWarning` naming the model, the origin, and the
+horizon. The metadata also carries `selection_degraded_reason` and
+`selection_degraded_source` to explain the fallback.
+
+If selection degrades at every origin for a horizon, the configuration can never
+tune and the runner raises a `ValueError`. The error names the horizon and
+suggests increasing the available sample, moving the validation window earlier,
+reducing the validation size, or reducing the forecast horizon. Random k-fold
+validation, built with `mf.window.random_kfold(...)`, is robust at sparse early
+origins and is accepted by the selection path, so it is a further option when an
+early-origin tuning split cannot otherwise be formed.
