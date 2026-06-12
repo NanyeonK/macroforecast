@@ -180,6 +180,12 @@ class PipelineReport:
     # some arms are absent from the evaluation because their run() failed (the rest
     # of the set still ran). Empty (default) means every cell completed.
     failed_cells: "Sequence[Mapping[str, Any]]" = field(default_factory=tuple)
+    # (target, horizon) cells that RAN without error but produced ZERO forecast
+    # rows. These are NOT failures (no exception) yet are silently absent from the
+    # evaluation, so a missing long-horizon output would otherwise be invisible.
+    # Each entry is {"target", "horizon", "arms": [...]} listing the arm(s) that
+    # yielded no rows for that cell. Empty (default) means every cell had rows.
+    empty_cells: "Sequence[Mapping[str, Any]]" = field(default_factory=tuple)
 
     def to_frame(self) -> "Any":
         """Return the master forecast frame."""

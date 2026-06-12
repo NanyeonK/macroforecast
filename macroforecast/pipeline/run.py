@@ -213,18 +213,70 @@ def _cell_failure(spec: PipelineSpec, cell: _Cell, error: str) -> dict[str, Any]
     }
 
 
-def _run_cells(spec: PipelineSpec) -> "tuple[pd.DataFrame, list[dict[str, Any]]]":
+def _empty_cell_warning(target_name: str, horizon: int, arms: "Sequence[str]") -> str:
+    """The diagnostic emitted when a (target, horizon) cell produces zero rows."""
+    arms_txt = ", ".join(repr(a) for a in arms)
+    return (
+        f"pipeline (target={target_name!r}, horizon={int(horizon)}) produced ZERO "
+        f"forecast rows for arm(s) {arms_txt}; this (target, horizon) will be "
+        "SILENTLY ABSENT from the evaluation. The cell ran without error, so this "
+        "is a zero-scorable-origin / data-availability condition rather than a "
+        "failure -- inspect target availability at this horizon over the window."
+    )
+
+
+def _find_empty_cells(
+    spec: PipelineSpec,
+    master: pd.DataFrame,
+    failed_keys: "set[tuple[str, str]]",
+) -> list[dict[str, Any]]:
+    """Find (target, horizon) cells that ran but yielded zero forecast rows.
+
+    Compares the expected (target, horizon) grid against the (target, horizon)
+    pairs actually present in the assembled master. A pair is reported as empty
+    only when at least one arm was expected to populate it AND that arm did not
+    FAIL (failures are surfaced separately on ``failed_cells``). Each record lists
+    the arm(s) that produced no rows for that (target, horizon).
+    """
+    horizons = [int(h) for h in spec.horizons]
+    # (target, horizon) -> contenders present in the master
+    present: dict[tuple[str, int], set[str]] = {}
+    if not master.empty and {"target", "horizon", "contender"}.issubset(master.columns):
+        for (tgt, hor), grp in master.groupby(["target", "horizon"], dropna=False):
+            present[(str(tgt), int(hor))] = set(grp["contender"].unique())
+
+    empty: list[dict[str, Any]] = []
+    for target in spec.targets:
+        for h in horizons:
+            here = present.get((target.name, h), set())
+            missing_arms = [
+                arm.name
+                for arm in spec.arms
+                if arm.name not in here
+                and (arm.name, target.name) not in failed_keys
+            ]
+            if missing_arms:
+                empty.append(
+                    {"target": target.name, "horizon": h, "arms": missing_arms}
+                )
+    return empty
+
+
+def _run_cells(
+    spec: PipelineSpec,
+) -> "tuple[pd.DataFrame, list[dict[str, Any]], list[dict[str, Any]]]":
     """Execute every cell, isolating per-cell failures.
 
-    Returns ``(master, failed_cells)``. The two backends share this one
-    enumerate-then-execute structure; the master frame and ``failed_cells`` are
-    assembled in the deterministic cell order independent of execution backend.
+    Returns ``(master, failed_cells, empty_cells)``. The two backends share this
+    one enumerate-then-execute structure; the master frame, ``failed_cells`` and
+    the zero-row ``empty_cells`` are assembled in the deterministic cell order
+    independent of execution backend.
     """
     import warnings as _warnings
 
     cells = _enumerate_cells(spec)
     if not cells:
-        return pd.DataFrame(), []
+        return pd.DataFrame(), [], []
 
     results: dict[_Cell, pd.DataFrame] = {}
     failed: list[dict[str, Any]] = []
@@ -286,7 +338,20 @@ def _run_cells(spec: PipelineSpec) -> "tuple[pd.DataFrame, list[dict[str, Any]]]
         )
 
     master = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-    return master, failed
+
+    # Surface (target, horizon) cells that RAN but produced zero rows. These are a
+    # distinct, more granular signal from the per-(arm, target) empty-arm warning
+    # above: a multi-horizon arm can populate some horizons and silently drop a
+    # long horizon, which the (arm, target) check cannot see. Warn once per cell.
+    empty_cells = _find_empty_cells(spec, master, failed_keys)
+    for cell_rec in empty_cells:
+        _warnings.warn(
+            _empty_cell_warning(cell_rec["target"], cell_rec["horizon"], cell_rec["arms"]),
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+    return master, failed, empty_cells
 
 
 def run_arms(spec: PipelineSpec) -> pd.DataFrame:
@@ -305,7 +370,7 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     Per-cell failures are isolated -- see :func:`run_pipeline` /
     ``PipelineReport.failed_cells`` for how they are surfaced.
     """
-    master, _failed = _run_cells(spec)
+    master, _failed, _empty = _run_cells(spec)
     return master
 
 
@@ -382,12 +447,17 @@ def run_pipeline(spec: PipelineSpec):
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.spec import PipelineReport
 
-    master, failed_cells = _run_cells(spec)
+    master, failed_cells, empty_cells = _run_cells(spec)
     results = evaluate(master, spec)
     provenance, leakage = _audit(spec)
-    # Mirror per-cell failures into the leakage audit so any consumer that reads
-    # only the audit still sees that some arms failed to run.
-    leakage = {**leakage, "failed_cells": list(failed_cells)}
+    # Mirror per-cell failures and zero-row cells into the leakage audit so any
+    # consumer that reads only the audit still sees that some arms failed to run or
+    # that some (target, horizon) cells silently produced no forecasts.
+    leakage = {
+        **leakage,
+        "failed_cells": list(failed_cells),
+        "empty_cells": list(empty_cells),
+    }
     return PipelineReport(
         forecasts=results["forecasts"],
         accuracy=results["accuracy"],
@@ -399,4 +469,5 @@ def run_pipeline(spec: PipelineSpec):
         model_store=spec.model_store,
         spec=spec,
         failed_cells=tuple(failed_cells),
+        empty_cells=tuple(empty_cells),
     )

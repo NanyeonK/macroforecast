@@ -8,6 +8,25 @@ import pandas as pd
 
 from macroforecast.pipeline.spec import CombinationContender, PipelineSpec, contender_names
 
+# The (target, horizon) grouping keys every evaluation table requires. When the
+# master forecast frame is EMPTY (zero rows, hence no columns) or otherwise lacks
+# these columns, ``groupby(["target","horizon"])`` raises KeyError; the tables
+# instead return an empty frame with the right columns.
+_GROUP_KEYS = {"target", "horizon"}
+
+_ACCURACY_COLUMNS = [
+    "target", "horizon", "contender", "rmse", "relative_mse", "r2_oos",
+    "n_common", "is_benchmark", "benchmark_present",
+]
+_SIGNIFICANCE_COLUMNS = ["target", "horizon", "contender"]
+_MCS_COLUMNS = ["target", "horizon", "contender", "in_mcs"]
+
+
+def _has_groups(master: pd.DataFrame) -> bool:
+    """True when ``master`` is non-empty and carries the (target, horizon) keys."""
+    return not master.empty and _GROUP_KEYS.issubset(master.columns)
+
+
 # combination methods that need realised values (estimated weights), and their lag
 _ESTIMATED = {
     "inverse_mspe", "dmspe", "best_n", "bates_granger",
@@ -39,7 +58,9 @@ def _combine(method: str, frame: pd.DataFrame, y_true: pd.Series, *, horizon: in
 
 def apply_combinations(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
     """Append cross-arm combination contenders to the master forecast frame."""
-    if master.empty or not spec.combinations:
+    # An empty / column-less master (a cell that produced zero rows) has nothing to
+    # combine; return it unchanged rather than letting the groupby raise KeyError.
+    if not spec.combinations or not _has_groups(master):
         return master
     rows: list[pd.DataFrame] = []
     if "combined" in master.columns:
@@ -81,6 +102,8 @@ def apply_combinations(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
 def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
     """RMSE, relative-MSE (vs benchmark) and OOS-R2 per (target, horizon, contender)."""
     bench = spec.evaluation.benchmark
+    if not _has_groups(master):
+        return pd.DataFrame(columns=_ACCURACY_COLUMNS)
     out: list[dict[str, Any]] = []
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
         # Enforce a COMMON sample: every contender is scored on the same origins
@@ -110,7 +133,7 @@ def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
                 "is_benchmark": contender == bench,
                 "benchmark_present": bench_present,
             })
-    return pd.DataFrame(out)
+    return pd.DataFrame(out, columns=_ACCURACY_COLUMNS)
 
 
 def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
@@ -118,6 +141,8 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     from macroforecast.tests import clark_west_test, dm_test
 
     bench = spec.evaluation.benchmark
+    if not _has_groups(master):
+        return pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
     use_cw = bool(spec.evaluation.cw_for_nested)
     # Clark-West is only licensed where the benchmark is nested in the contender.
     # Build the set of contenders whose arm declares nesting; CW is emitted only
@@ -157,17 +182,21 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                 except Exception:
                     row["cw_stat"] = np.nan; row["cw_p"] = np.nan
             out.append(row)
-    return pd.DataFrame(out)
+    return pd.DataFrame(out) if out else pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
 
 
 def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) -> pd.DataFrame:
     """Model Confidence Set membership per (target, horizon)."""
     from macroforecast.tests import model_confidence_set
 
+    # An empty / column-less master has no scorable cells; the required columns
+    # (actual/prediction as well as the group keys) may be entirely absent.
+    if not _has_groups(master) or not {"actual", "prediction", "contender"}.issubset(master.columns):
+        return pd.DataFrame(columns=_MCS_COLUMNS)
     panel = master.copy()
     panel = panel[panel["actual"].notna() & panel["prediction"].notna()]
     if panel.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=_MCS_COLUMNS)
     panel = panel.assign(
         squared_error=(panel["prediction"].astype(float) - panel["actual"].astype(float)) ** 2,
         model_id=panel["contender"],
@@ -193,7 +222,7 @@ def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) ->
                 "target": target, "horizon": horizon, "contender": contender,
                 "in_mcs": contender in included,
             })
-    return pd.DataFrame(out)
+    return pd.DataFrame(out) if out else pd.DataFrame(columns=_MCS_COLUMNS)
 
 
 def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame]:

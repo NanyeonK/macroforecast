@@ -145,6 +145,23 @@ def main(data_csv: str) -> None:
             continue
         dt_spec = time.time() - t0
 
+        # Surface failed and zero-row cells so a silently-missing horizon is
+        # visible in the run log (does not change the run numerics). ``failed_cells``
+        # are cells whose run() raised; ``empty_cells`` are (target, horizon) cells
+        # that ran without error but produced ZERO forecast rows (e.g. INDPRO h24).
+        for fc in (rep.failed_cells or ()):
+            print(
+                f"[failed-cell] {tspec.name} arm={fc.get('arm')} "
+                f"horizons={fc.get('horizons')} error={fc.get('error')}",
+                flush=True,
+            )
+        for ec in (rep.empty_cells or ()):
+            print(
+                f"[empty-cell] target={ec.get('target')} horizon={ec.get('horizon')} "
+                f"arms={ec.get('arms')} (ran OK, zero rows -> absent from evaluation)",
+                flush=True,
+            )
+
         # Split the consolidated report into per-(target, horizon) cells.
         for h in HORIZONS:
             tag = stems[h]
