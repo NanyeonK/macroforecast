@@ -98,26 +98,39 @@ def test_diagnose_forecasts_reads_runner_outputs(tmp_path) -> None:
 
 
 def test_forecast_overview_counts_combination_and_uncertainty(tmp_path) -> None:
-    result = mf.forecasting.run(
-        _panel(),
-        ["ridge", "quantile_regression_forest"],
-        window=_window(),
-        features=_features(),
-        params={
-            "ridge": {"alpha": 0.1},
-            "quantile_regression_forest": {
-                "n_estimators": 8,
-                "min_samples_leaf": 2,
-                "quantile_levels": (0.1, 0.5, 0.9),
-                "random_state": 123,
-            },
-        },
-        model_selection={"ridge": None, "quantile_regression_forest": None},
-        combination="mean",
-        model_store=tmp_path / "trained_model",
-    )
+    # ``run`` is atomic: fit each model in its own single-model run, concat the
+    # forecast tables, and append the cross-model combination rows. The overview
+    # diagnostic consumes the assembled frame, so the combination/stored/quantile
+    # counts are exercised exactly as before.
+    from macroforecast.forecasting.combination import apply_combinations, resolve_combinations
 
-    overview = mf.forecast_analysis.forecast_overview(result)
+    per_model = {
+        "ridge": {"alpha": 0.1},
+        "quantile_regression_forest": {
+            "n_estimators": 8,
+            "min_samples_leaf": 2,
+            "quantile_levels": (0.1, 0.5, 0.9),
+            "random_state": 123,
+        },
+    }
+    tables = []
+    for name, params in per_model.items():
+        result = mf.forecasting.run(
+            _panel(),
+            name,
+            window=_window(),
+            features=_features(),
+            params=params,
+            model_selection={name: None},
+            model_store=tmp_path / "trained_model",
+        )
+        tables.append(result.to_frame())
+
+    master = pd.concat(tables, ignore_index=True)
+    records = apply_combinations(master, resolve_combinations("mean"))
+    full = pd.concat([master, pd.DataFrame(records)], ignore_index=True)
+
+    overview = mf.forecast_analysis.forecast_overview(full)
 
     assert overview["n_models"] == 3
     assert overview["combined_count"] > 0
@@ -126,19 +139,31 @@ def test_forecast_overview_counts_combination_and_uncertainty(tmp_path) -> None:
 
 
 def test_ensemble_weights_over_time_reconstructs_equal_and_inverse_weights() -> None:
-    result = mf.forecasting.run(
-        _panel(),
-        ["ols", "ridge"],
-        window=_window(),
-        features=_features(),
-        params={"ridge": {"alpha": 0.1}},
-        model_selection={"ols": None, "ridge": None},
-        combination=[
-            "mean",
-            mf.forecasting.combination_spec("inverse_mspe", name="combined_dmspe"),
-        ],
-        save_models=False,
+    # ``run`` is atomic: fit each model separately, concat, then append the
+    # cross-model combination rows; the weight diagnostics consume the frame.
+    from macroforecast.forecasting.combination import apply_combinations, resolve_combinations
+
+    tables = []
+    for name, params in (("ols", None), ("ridge", {"alpha": 0.1})):
+        result = mf.forecasting.run(
+            _panel(),
+            name,
+            window=_window(),
+            features=_features(),
+            params=params,
+            model_selection={name: None},
+            save_models=False,
+        )
+        tables.append(result.to_frame())
+
+    master = pd.concat(tables, ignore_index=True)
+    records = apply_combinations(
+        master,
+        resolve_combinations(
+            ["mean", mf.forecasting.combination_spec("inverse_mspe", name="combined_dmspe")]
+        ),
     )
+    result = pd.concat([master, pd.DataFrame(records)], ignore_index=True)
 
     weights = mf.forecast_analysis.ensemble_weights_over_time(result)
     concentration = mf.forecast_analysis.ensemble_weight_concentration(result)

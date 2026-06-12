@@ -787,37 +787,6 @@ def test_forecasting_runner_recursive_saves_trained_model(tmp_path) -> None:
     assert result.metadata["run"]["save_models"] is True
 
 
-def test_forecasting_runner_combines_recursive_rows() -> None:
-    panel = _panel(60)
-
-    result = mf.forecasting.run(
-        panel,
-        ["ols", "ridge"],
-        window=_window(),
-        target="y",
-        horizon=2,
-        forecast_policy="recursive",
-        params={"ridge": {"alpha": 0.1}},
-        model_selection={"ols": None, "ridge": None},
-        combination="mean",
-        save_models=False,
-    )
-    table = result.to_frame()
-    base = table.loc[table["model"].isin(["ols", "ridge"])]
-    combined = table.loc[table["model"] == "combined_mean"]
-
-    assert not combined.empty
-    assert set(combined["forecast_policy"]) == {"recursive"}
-    assert combined["combined"].all()
-    assert {item["method"] for item in combined["combination"]} == {"mean"}
-    for key, group in base.groupby(["date", "origin_pos", "horizon"], sort=False):
-        prediction = combined.set_index(["date", "origin_pos", "horizon"]).loc[
-            key,
-            "prediction",
-        ]
-        assert np.isclose(prediction, group["prediction"].mean())
-
-
 def test_forecasting_runner_rejects_recursive_target_lags_with_exog_features() -> None:
     panel = _panel()
     features = mf.feature_engineering.feature_spec(
@@ -1538,7 +1507,9 @@ def test_forecasting_runner_accepts_explicit_mixed_frequency_midas_feature_set()
     assert result.metadata["features"]["method"] == "mixed_frequency_lags"
 
 
-def test_forecasting_runner_supports_multiple_models_and_stage_policies() -> None:
+def test_forecasting_runner_single_model_per_call_with_stage_policies() -> None:
+    # ``run`` is atomic (one model per call); comparing models is a loop over
+    # single-model runs rather than a multi-model run.
     panel = _panel()
     features = mf.feature_engineering.feature_spec(
         target="y",
@@ -1547,99 +1518,42 @@ def test_forecasting_runner_supports_multiple_models_and_stage_policies() -> Non
         lags=(0, 1),
     )
 
-    result = mf.forecasting.run(
-        panel,
-        ["ols", "ridge"],
-        window=_window(),
-        features=features,
-        feature_policy=mf.window.stage_policy("fit_window"),
-        params={"ridge": {"alpha": 0.1}},
-    )
-    table = result.to_frame()
+    results = {
+        name: mf.forecasting.run(
+            panel,
+            name,
+            window=_window(),
+            features=features,
+            feature_policy=mf.window.stage_policy("fit_window"),
+            params=({"alpha": 0.1} if name == "ridge" else None),
+        )
+        for name in ("ols", "ridge")
+    }
 
-    assert set(table["model"]) == {"ols", "ridge"}
-    assert (
-        result.metadata["stage_policies"]["feature_engineering"]["scope"]
-        == "fit_window"
-    )
-    assert len(result.metadata["models"]) == 2
-    ridge_selection = (
-        table.loc[table["model"] == "ridge", "model_selection"].dropna().iloc[0]
-    )
+    for name, result in results.items():
+        table = result.to_frame()
+        assert set(table["model"]) == {name}
+        assert (
+            result.metadata["stage_policies"]["feature_engineering"]["scope"]
+            == "fit_window"
+        )
+        assert len(result.metadata["models"]) == 1
+
+    ridge_table = results["ridge"].to_frame()
+    ridge_selection = ridge_table["model_selection"].dropna().iloc[0]
     assert ridge_selection["window"] == "explicit_splits"
     assert ridge_selection["metadata"]["split_source"] == "explicit"
 
 
-def test_forecasting_runner_adds_combination_rows() -> None:
+def test_forecasting_run_rejects_multiple_models() -> None:
+    # The atomic-run contract: a sequence or mapping of models is a TypeError.
     panel = _panel()
-    features = mf.feature_engineering.feature_spec(
-        target="y",
-        horizon=1,
-        predictors=["x1", "x2"],
-        lags=(0, 1),
-    )
-
-    result = mf.forecasting.run(
-        panel,
-        ["ols", "ridge"],
-        window=_window(),
-        features=features,
-        params={"ridge": {"alpha": 0.1}},
-        combination="mean",
-        save_models=False,
-    )
-    table = result.to_frame()
-    base = table.loc[table["model"].isin(["ols", "ridge"])]
-    combined = table.loc[table["model"] == "combined_mean"].copy()
-    combined_indexed = combined.set_index(["date", "origin_pos", "horizon"])
-
-    assert not combined.empty
-    assert result.metadata["run"]["n_combinations"] == 1
-    assert result.metadata["run"]["n_combination_forecasts"] == len(combined)
-    assert result.metadata["combination"][0]["method"] == "mean"
-    assert base["combined"].eq(False).all()
-    assert base["combination"].isna().all()
-    assert combined["combined"].all()
-    assert combined["preprocessed"].eq(False).all()
-    assert combined["model_selection"].isna().all()
-    assert combined["stored_model"].isna().all()
-    assert {item["method"] for item in combined["combination"]} == {"mean"}
-    for key, group in base.groupby(["date", "origin_pos", "horizon"], sort=False):
-        assert np.isclose(
-            combined_indexed.loc[key, "prediction"],
-            group["prediction"].mean(),
+    with pytest.raises(TypeError, match="exactly ONE model"):
+        mf.forecasting.run(panel, ["ols", "ridge"], window=_window(), target="y")
+    with pytest.raises(TypeError, match="exactly ONE model"):
+        mf.forecasting.run(
+            panel, {"linear": "ols", "penalized": "ridge"}, window=_window(), target="y"
         )
-
-
-def test_forecasting_runner_supports_named_combination_specs() -> None:
-    panel = _panel()
-    features = mf.feature_engineering.feature_spec(
-        target="y",
-        horizon=1,
-        predictors=["x1", "x2"],
-        lags=(0, 1),
-    )
-
-    result = mf.forecasting.run(
-        panel,
-        {"linear": "ols", "penalized": "ridge"},
-        window=_window(),
-        features=features,
-        params={"penalized": {"alpha": 0.1}},
-        combination={
-            "combo": {
-                "method": "dmspe",
-                "models": ["linear", "penalized"],
-                "discount": 0.95,
-            }
-        },
-        save_models=False,
-    )
-    table = result.to_frame()
-
-    assert "combo" in set(table["model"])
-    assert result.metadata["combination"][0]["name"] == "combo"
-    assert result.metadata["combination"][0]["params"]["discount"] == 0.95
 
 
 def test_forecasting_runner_can_disable_model_owned_selection() -> None:
@@ -1711,22 +1625,23 @@ def test_forecasting_runner_supports_model_specific_standardization_params() -> 
         lags=(0, 1),
     )
 
-    result = mf.forecasting.run(
-        panel,
-        ["elastic_net", "random_forest"],
-        window=_window(),
-        features=features,
-        params={
-            "elastic_net": {"alpha": 0.01, "l1_ratio": 0.5, "standardize": True},
-            "random_forest": {"n_estimators": 2, "random_state": 0, "n_jobs": 1},
-        },
-        model_selection={"elastic_net": None, "random_forest": None},
-        save_models=False,
-    )
-    table = result.to_frame()
-    params_by_model = {
-        row["model"]: row["params"] for _, row in table.drop_duplicates("model").iterrows()
+    per_model_params = {
+        "elastic_net": {"alpha": 0.01, "l1_ratio": 0.5, "standardize": True},
+        "random_forest": {"n_estimators": 2, "random_state": 0, "n_jobs": 1},
     }
+    params_by_model = {}
+    for name, model_params in per_model_params.items():
+        result = mf.forecasting.run(
+            panel,
+            name,
+            window=_window(),
+            features=features,
+            params=model_params,
+            model_selection={name: None},
+            save_models=False,
+        )
+        table = result.to_frame()
+        params_by_model[name] = table.drop_duplicates("model").iloc[0]["params"]
 
     assert params_by_model["elastic_net"]["standardize"] is True
     assert "standardize" not in params_by_model["random_forest"]
@@ -2064,21 +1979,22 @@ def test_forecasting_runner_supports_timeseries_and_ensemble_models() -> None:
         lags=(0, 1),
     )
 
-    result = mf.forecasting.run(
-        panel,
-        ["ar", "bagging"],
-        window=_window(),
-        features=features,
-        params={
-            "ar": {"n_lag": 2},
-            "bagging": {"base": "ridge", "n_estimators": 3, "random_state": 0},
-        },
-        model_selection={"ar": None, "bagging": None},
-    )
-    table = result.to_frame()
-
-    assert set(table["model"]) == {"ar", "bagging"}
-    assert table["prediction"].notna().all()
+    per_model_params = {
+        "ar": {"n_lag": 2},
+        "bagging": {"base": "ridge", "n_estimators": 3, "random_state": 0},
+    }
+    for name, model_params in per_model_params.items():
+        result = mf.forecasting.run(
+            panel,
+            name,
+            window=_window(),
+            features=features,
+            params=model_params,
+            model_selection={name: None},
+        )
+        table = result.to_frame()
+        assert set(table["model"]) == {name}
+        assert table["prediction"].notna().all()
 
 
 @pytest.mark.parametrize(

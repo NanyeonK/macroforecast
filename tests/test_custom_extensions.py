@@ -155,7 +155,13 @@ def test_custom_feature_helpers_and_runner_safe_step() -> None:
     assert spec.to_dict()["feature_steps"][0]["func"].endswith("square_feature")
 
 
-def test_custom_model_combination_and_stage_policy_work_in_runner() -> None:
+def test_custom_model_and_stage_policy_work_in_runner() -> None:
+    # ``run`` is atomic (one model per call); comparing/combining models is done by
+    # running each single-model arm and combining their forecast tables. Here we
+    # run the two models separately, concat their tables, and exercise the custom
+    # forecast-combination primitive (``custom_combination`` -> apply_combinations).
+    from macroforecast.forecasting.combination import apply_combinations
+
     panel = _panel()
     features = mf.feature_engineering.feature_spec(
         target="target",
@@ -163,14 +169,11 @@ def test_custom_model_combination_and_stage_policy_work_in_runner() -> None:
         predictors=["x", "z"],
         lags=(0,),
     )
-    model = {
-        "ols": "ols",
-        "mean_custom": mf.models.custom_model(
-            "mean_custom",
-            mean_model,
-            default_params={"offset": 0.1},
-        ),
-    }
+    mean_custom = mf.models.custom_model(
+        "mean_custom",
+        mean_model,
+        default_params={"offset": 0.1},
+    )
     tuned_custom = mf.models.custom_model(
         "mean_tuned_custom",
         mean_model,
@@ -180,20 +183,25 @@ def test_custom_model_combination_and_stage_policy_work_in_runner() -> None:
     assert tuned_custom.search_space() == {"offset": (-0.1, 0.0, 0.1)}
 
     selection_policy = mf.window.custom_stage_policy(last_fit_half)
-    result = mf.forecasting.run(
-        panel,
-        model,
-        window=_window(),
-        features=features,
-        model_selection_policy=selection_policy,
-        combination=mf.forecasting.custom_combination("blend", blend, weight=0.25),
-    )
-    table = result.to_frame()
+    tables = []
+    for model in ("ols", mean_custom):
+        result = mf.forecasting.run(
+            panel,
+            model,
+            window=_window(),
+            features=features,
+            model_selection_policy=selection_policy,
+        )
+        assert result.metadata["stage_policies"]["model_selection"]["scope"] == "custom"
+        tables.append(result.to_frame())
 
-    assert "blend" in set(table["model"])
-    assert table.loc[table["model"] == "blend", "combined"].all()
-    assert result.metadata["stage_policies"]["model_selection"]["scope"] == "custom"
-    assert result.metadata["combination"][0]["callable"].endswith("blend")
+    master = pd.concat(tables, ignore_index=True)
+    combo = mf.forecasting.custom_combination("blend", blend, weight=0.25)
+    assert combo.to_dict()["callable"].endswith("blend")
+    records = apply_combinations(master, [combo])
+    assert records
+    assert all(rec["model"] == "blend" for rec in records)
+    assert all(rec["combined"] for rec in records)
 
 
 def test_custom_extension_flow_runs_from_data_to_output(tmp_path) -> None:
@@ -236,28 +244,54 @@ def test_custom_extension_flow_runs_from_data_to_output(tmp_path) -> None:
         ordered_offset_search,
         values=(-0.1, 0.0, 0.1),
     )
-    result = mf.forecasting.run(
+    # ``run`` is atomic: fit each model in its own single-model run, then combine
+    # the resulting forecast tables with the custom combination primitive.
+    from macroforecast.forecasting.combination import apply_combinations
+
+    ols_result = mf.forecasting.run(
         bundle,
-        {"ols": "ols", "mean_tuned": mean_tuned},
+        "ols",
         window=_window(),
         preprocessing=preprocessing,
         features=features,
-        model_selection={"ols": None, "mean_tuned": search},
+        model_selection=None,
         model_selection_policy=mf.window.custom_stage_policy(last_fit_half),
-        combination=mf.forecasting.custom_combination("blend", blend, weight=0.5),
+        model_store=tmp_path / "trained_model",
+    )
+    tuned_result = mf.forecasting.run(
+        bundle,
+        mean_tuned,
+        window=_window(),
+        preprocessing=preprocessing,
+        features=features,
+        model_selection=search,
+        model_selection_policy=mf.window.custom_stage_policy(last_fit_half),
         model_store=tmp_path / "trained_model",
     )
 
-    forecast_table = result.to_frame()
+    master = pd.concat(
+        [ols_result.to_frame(), tuned_result.to_frame()], ignore_index=True
+    )
+    records = apply_combinations(
+        master, [mf.forecasting.custom_combination("blend", blend, weight=0.5)]
+    )
+    forecast_table = pd.concat(
+        [master, pd.DataFrame(records)], ignore_index=True
+    )
     assert {"ols", "mean_tuned", "blend"}.issubset(set(forecast_table["model"]))
-    selected = forecast_table.loc[forecast_table["model"] == "mean_tuned", "model_selection"].dropna().iloc[0]
+    selected = (
+        tuned_result.to_frame()
+        .loc[lambda t: t["model"] == "mean_tuned", "model_selection"]
+        .dropna()
+        .iloc[0]
+    )
     assert selected["method"] == "custom"
     assert selected["metadata"]["custom_runtime"] == {"evaluated": 3}
 
     def mean_bias(y_true, y_pred):
         return float(pd.Series(y_pred).sub(pd.Series(y_true)).mean())
 
-    scores = result.evaluate(metrics=("mse", mean_bias))
+    scores = tuned_result.evaluate(metrics=("mse", mean_bias))
     assert "mean_bias" in scores.columns
 
     test = mf.tests.custom_test(
@@ -284,13 +318,13 @@ def test_custom_extension_flow_runs_from_data_to_output(tmp_path) -> None:
         name="shape_check",
     )
     forecast_diag = mf.forecast_analysis.custom_forecast_diagnostic(
-        result,
+        tuned_result,
         lambda forecasts, **_: forecasts.groupby("model", as_index=False)["prediction"].mean(),
         name="mean_prediction_by_model",
     )
     manifest = mf.output.write_artifacts(
         {
-            "forecast_result": result,
+            "forecast_result": tuned_result,
             "scores": scores,
             "custom_test": test.to_dict(),
             "custom_interpretation": interpretation,

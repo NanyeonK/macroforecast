@@ -19,18 +19,18 @@ FRED-MD/QD t-code, and ML arms can be interpreted (SHAP/ALE/PDP) without re-runn
 | `evaluate(master, spec)` | Accuracy + DM/CW + MCS + combinations on a master frame. |
 | `apply_combinations(master, spec)` | Append cross-arm combination contenders. |
 | `resolve_target(target, *, data, tcode, tcode_map, reduce_i2)` | Resolve a target's (policy, transform). |
-| `contender_names(arm)` | Display contender labels for an arm. |
+| `contender_names(arm)` | The contender label for an arm. A contender IS exactly an arm (one model per arm), so this returns `[arm.name]`. |
 
 ## Configuration objects
 
 - `PipelineSpec` -- validated, frozen run configuration.
-- `Arm` -- one comparison unit: name, model, preprocessing, features, params, interpret.
+- `Arm` -- one comparison unit and exactly ONE model: name, model, preprocessing, features, params, interpret. Comparing models means multiple arms identical except for `model`; comparing feature cases means arms differing in features. A list/mapping of models in one arm is rejected.
 - `TargetSpec` -- a target and how its forecast object is defined (transform, policy, reduce_i2).
 - `ResolvedTarget` -- a target with its forecast policy and transform resolved.
 - `InterpretSpec` -- ML interpretation request (methods, which_fit, background, top_k).
 - `EvalSpec` -- benchmark, metrics, tests, primary_axis, MCS settings, subsamples.
 - `CombinationContender` -- a forecast combination that becomes an additional contender.
-- `PipelineReport` -- output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation.
+- `PipelineReport` -- output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`.
 - `TCODE_TARGET_MAP` -- FRED t-code to (forecast_policy, target_transform) mapping.
 
 ## t-code to target mapping

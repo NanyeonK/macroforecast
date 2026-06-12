@@ -4,7 +4,9 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
-from macroforecast.pipeline import Arm, EvalSpec, pipeline_spec, run_arms
+from macroforecast.pipeline import (
+    Arm, EvalSpec, pipeline_spec, run_arms, run_pipeline,
+)
 
 
 def _bundle(n=72):
@@ -49,15 +51,22 @@ def test_master_frame_has_required_columns_and_tags():
     assert set(master["horizon"]) == {1, 3}
 
 
-def test_multi_model_arm_yields_arm_colon_model_contenders():
+def test_comparing_models_uses_one_arm_per_model():
+    # Comparing models = multiple Arms identical except for ``model``; each arm is
+    # its own contender (no arm:model labels).
     feats = mf.feature_engineering.feature_spec(target="y", predictors=["x1"], lags=1, target_lags=(0, 1))
     spec = _spec(
-        arms=[Arm("bench", model="ar", features=feats), Arm("ML", model=["ols", "ridge"], features=feats)],
+        arms=[
+            Arm("bench", model="ar", features=feats),
+            Arm("OLS", model="ols", features=feats),
+            Arm("RIDGE", model="ridge", features=feats),
+        ],
         evaluation=EvalSpec(benchmark="bench"),
     )
     master = run_arms(spec)
-    ml = set(master.loc[master["arm"] == "ML", "contender"])
-    assert ml == {"ML:ols", "ML:ridge"}
+    assert set(master["arm"]) == {"bench", "OLS", "RIDGE"}
+    # contender == arm name for every row
+    assert (master["contender"] == master["arm"]).all()
 
 
 def test_predictions_are_finite_on_each_contender():
@@ -89,6 +98,64 @@ def test_checkpoint_dir_threads_through_and_creates_per_cell_layout(tmp_path):
         for hd in horizon_dirs:
             files = list((ckpt_dir / cell / hd).glob("origin_*.parquet"))
             assert files
+
+
+def _exploding_fit(X, y):
+    raise RuntimeError("boom: this arm fails on purpose")
+
+
+def test_failed_cell_is_isolated_and_recorded():
+    # One arm raises during run(); the managed run still returns the other arms'
+    # forecasts and records the failure (cell identity + error) on the report.
+    feats = mf.feature_engineering.feature_spec(
+        target="y", predictors=["x1"], lags=1, target_lags=(0, 1)
+    )
+    boom = mf.models.custom_model("boom", _exploding_fit)
+    spec = _spec(
+        arms=[
+            Arm("AR", model="ar", features=feats),
+            Arm("BOOM", model=boom, features=feats),
+            Arm("OLS", model="ols", features=feats),
+        ],
+        evaluation=EvalSpec(benchmark="AR"),
+    )
+
+    report = run_pipeline(spec)
+
+    # The healthy arms are present; the failing arm is absent from the master frame.
+    assert set(report.forecasts["arm"]) == {"AR", "OLS"}
+
+    # The failure is recorded with the cell identity and the error text.
+    assert len(report.failed_cells) >= 1
+    failed_arms = {fc["arm"] for fc in report.failed_cells}
+    assert failed_arms == {"BOOM"}
+    assert all("boom" in fc["error"].lower() for fc in report.failed_cells)
+    assert all("horizons" in fc and "target" in fc for fc in report.failed_cells)
+    # Mirrored into the leakage audit too.
+    assert report.leakage_audit["failed_cells"] == list(report.failed_cells)
+
+
+def test_failed_cell_isolation_is_identical_under_parallel():
+    # The same isolation holds when cells are split per-horizon across a pool.
+    feats = mf.feature_engineering.feature_spec(
+        target="y", predictors=["x1"], lags=1, target_lags=(0, 1)
+    )
+    boom = mf.models.custom_model("boom", _exploding_fit)
+    spec = _spec(
+        arms=[
+            Arm("AR", model="ar", features=feats),
+            Arm("BOOM", model=boom, features=feats),
+            Arm("OLS", model="ols", features=feats),
+        ],
+        evaluation=EvalSpec(benchmark="AR"),
+        n_jobs=2,
+    )
+
+    report = run_pipeline(spec)
+    assert set(report.forecasts["arm"]) == {"AR", "OLS"}
+    assert {fc["arm"] for fc in report.failed_cells} == {"BOOM"}
+    # Parallel splits BOOM into one failed cell per horizon (h1, h3).
+    assert len(report.failed_cells) == 2
 
 
 def test_checkpoint_dir_resume_matches_no_checkpoint(tmp_path):

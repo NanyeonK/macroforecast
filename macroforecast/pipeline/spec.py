@@ -170,6 +170,11 @@ class PipelineReport:
     interpretation: Mapping[str, Any] | None = None
     model_store: str = "trained_model"
     spec: "Any" = None
+    # Cells (target, arm, horizon-group) that raised during the managed run. Each
+    # entry records the cell identity and the error text. A non-empty list means
+    # some arms are absent from the evaluation because their run() failed (the rest
+    # of the set still ran). Empty (default) means every cell completed.
+    failed_cells: "Sequence[Mapping[str, Any]]" = field(default_factory=tuple)
 
     def to_frame(self) -> "Any":
         """Return the master forecast frame."""
@@ -238,28 +243,42 @@ def resolve_target(
     )
 
 
-def _arm_model_names(arm: Arm) -> list[str]:
-    """Enumerate the model names an arm contributes (for contender keys)."""
+def _is_multi_model(model: Any) -> bool:
+    """True if ``model`` is a multi-model request (sequence or mapping).
+
+    An ``Arm`` is exactly ONE model. A string is a single model name and a
+    ``ModelSpec``/callable is a single model; a mapping or a non-string sequence
+    is a multi-model request and is rejected by ``pipeline_spec``.
+    """
+    from macroforecast.models import ModelSpec
+
+    if isinstance(model, (str, bytes, ModelSpec)):
+        return False
+    return isinstance(model, Mapping) or (
+        isinstance(model, Sequence) and not isinstance(model, (str, bytes))
+    )
+
+
+def _arm_model_name(arm: Arm) -> str:
+    """The single model name an arm contributes (for the contender key)."""
     model = arm.model
     if isinstance(model, str):
-        return [model]
-    if isinstance(model, Mapping):
-        return [str(k) for k in model]
-    if isinstance(model, Sequence) and not isinstance(model, (str, bytes)):
-        names: list[str] = []
-        for item in model:
-            names.extend(_arm_model_names(Arm(name=arm.name, model=item)))
-        return names
+        return model
     name = getattr(model, "name", None) or getattr(model, "__name__", None)
-    return [str(name) if name else "model"]
+    return str(name) if name else "model"
+
+
+def _arm_model_names(arm: Arm) -> list[str]:
+    """An arm is one model; this returns the single name as a one-element list.
+
+    Retained for call sites that expect a list of contributed model names.
+    """
+    return [_arm_model_name(arm)]
 
 
 def contender_names(arm: Arm) -> list[str]:
-    """Display contender labels for an arm: ``arm`` (single model) or ``arm:model``."""
-    models = _arm_model_names(arm)
-    if len(models) == 1:
-        return [arm.name]
-    return [f"{arm.name}:{m}" for m in models]
+    """Display contender labels for an arm. A contender IS exactly an arm."""
+    return [arm.name]
 
 
 # --------------------------------------------------------------------------- #
@@ -296,6 +315,18 @@ def pipeline_spec(
     if len(set(names)) != len(names):
         raise ValueError("arm names must be unique")
 
+    # An Arm is exactly ONE model. Comparing models means multiple Arms that are
+    # identical except for ``model``; comparing feature cases means Arms that
+    # differ in features (and model). A sequence/mapping of models in one arm is
+    # the old multi-model arm and is no longer supported.
+    for arm in arms:
+        if _is_multi_model(arm.model):
+            raise ValueError(
+                f"arm {arm.name!r} was given a {type(arm.model).__name__} of "
+                "models, but an Arm is exactly ONE model. Use one Arm per model "
+                "(identical arms differing only in 'model') to compare models."
+            )
+
     horizon_tuple = (
         (int(horizons),) if isinstance(horizons, int) else tuple(int(h) for h in horizons)
     )
@@ -308,7 +339,8 @@ def pipeline_spec(
     if not resolved:
         raise ValueError("at least one target is required")
 
-    # benchmark must resolve to an existing contender (arm name or arm:model)
+    # benchmark must resolve to an existing contender (an arm name, since a
+    # contender IS an arm, or a combination contender name)
     all_contenders = {c for a in arms for c in contender_names(a)}
     all_contenders |= {c.name for c in combinations}
     if evaluation.benchmark not in all_contenders:

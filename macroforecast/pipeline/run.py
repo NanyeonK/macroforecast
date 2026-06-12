@@ -5,11 +5,11 @@ import os
 import re
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import pandas as pd
 
-from macroforecast.pipeline.spec import Arm, PipelineSpec, ResolvedTarget, _arm_model_names
+from macroforecast.pipeline.spec import Arm, PipelineSpec, ResolvedTarget
 
 
 def _safe_segment(value: str) -> str:
@@ -28,13 +28,6 @@ def _cell_checkpoint_path(spec: PipelineSpec, arm: Arm, target: ResolvedTarget):
         return None
     cell = f"{_safe_segment(target.name)}__{_safe_segment(arm.name)}"
     return Path(spec.checkpoint_dir) / cell
-
-
-def _contender_label(arm: Arm, model_value: Any) -> str:
-    """arm name for a single-model arm, else ``arm:model``."""
-    if len(_arm_model_names(arm)) <= 1:
-        return arm.name
-    return f"{arm.name}:{model_value}"
 
 
 def _run_one_arm_target(
@@ -101,10 +94,9 @@ def _run_one_arm_target(
     )
     frame = result.to_frame().copy()
     frame["arm"] = arm.name
-    if "model" in frame.columns:
-        frame["contender"] = [_contender_label(arm, m) for m in frame["model"]]
-    else:
-        frame["contender"] = arm.name
+    # A contender IS exactly an arm (one model per arm), so the contender label is
+    # always the arm name regardless of the underlying model row.
+    frame["contender"] = arm.name
     # ensure the target column carries the resolved target name
     if "target" not in frame.columns:
         frame["target"] = target.name
@@ -121,85 +113,173 @@ def _empty_arm_warning(arm_name: str, target_name: str) -> str:
     )
 
 
-def _parallel_unit_worker(
-    args: "tuple[PipelineSpec, int, int, int]",
-) -> "tuple[int, int, int, pd.DataFrame]":
-    """Module-level worker: run ONE (arm, target, horizon) cell in a subprocess.
+# --------------------------------------------------------------------------- #
+# Unified cell run-manager
+# --------------------------------------------------------------------------- #
+# The pipeline MANAGES atomic ``run()`` calls. The managed unit is a "cell":
+# ``(target, arm, horizon-group)``. Both backends enumerate the SAME cells and
+# execute them through one structure; they differ only in how horizons are grouped
+# and whether a preprocessing cache is shared.
+#
+#   * serial (n_jobs == 1): one cell per ``(target, arm)`` covering ALL horizons in
+#     a single multi-horizon ``run()`` so the per-origin preprocessing cache / EM
+#     state is shared across horizons (the byte-for-byte prior behavior).
+#   * parallel (n_jobs > 1): one cell per ``(target, arm, horizon)`` -- a single
+#     horizon per ``run()`` -- so independent processes each compute just their
+#     cell. No shared cache across processes (each recomputes its own EM); the
+#     forecasts are numerically identical to the serial path.
+#
+# Per cell: respect the per-(target, arm, horizon) checkpoint dirs; if a cell
+# raises, record the failure (cell identity + error) and CONTINUE the rest of the
+# set rather than aborting. Failures are surfaced on ``PipelineReport.failed_cells``
+# (and mirrored into ``leakage_audit``).
 
-    Receives integer indices into ``spec.arms`` / ``spec.targets`` and the horizon
-    rather than the (unpicklable-by-identity) objects themselves, so the unit is
-    fully reconstructed from the pickled spec. Caps nested BLAS/OpenMP threads to
-    one so that a pool of ``n_jobs`` processes does not oversubscribe the cores.
-    Returns ``(arm_idx, target_idx, horizon, frame)`` so the parent reassembles the
-    master frame in a deterministic order independent of completion order.
+
+class _Cell(NamedTuple):
+    """One managed work unit: a (target, arm, horizon-group) forecast cell."""
+
+    target_idx: int
+    arm_idx: int
+    horizons: tuple[int, ...]
+
+
+def _enumerate_cells(spec: PipelineSpec) -> list[_Cell]:
+    """Enumerate cells in the deterministic (target -> arm -> horizon) visit order.
+
+    Serial groups all horizons per (target, arm); parallel splits one horizon per
+    cell. The reassembly order is the enumeration order, so the master frame's row
+    order is identical regardless of backend or worker completion order.
     """
-    # Avoid nested thread oversubscription: each worker process runs single-threaded
-    # BLAS so n_jobs processes map cleanly onto n_jobs cores.
+    horizons = tuple(int(h) for h in spec.horizons)
+    cells: list[_Cell] = []
+    for t_idx, _target in enumerate(spec.targets):
+        for a_idx, _arm in enumerate(spec.arms):
+            if spec.n_jobs > 1:
+                cells.extend(_Cell(t_idx, a_idx, (h,)) for h in horizons)
+            else:
+                cells.append(_Cell(t_idx, a_idx, horizons))
+    return cells
+
+
+def _execute_cell(
+    spec: PipelineSpec, cell: _Cell, *, preprocessing_cache=None
+) -> pd.DataFrame:
+    """Run ONE cell as a single (multi- or single-horizon) ``run()`` call."""
+    arm = spec.arms[cell.arm_idx]
+    target = spec.targets[cell.target_idx]
+    return _run_one_arm_target(
+        spec, arm, target,
+        preprocessing_cache=preprocessing_cache,
+        horizons=list(cell.horizons),
+    )
+
+
+def _parallel_cell_worker(
+    args: "tuple[PipelineSpec, _Cell]",
+) -> "tuple[_Cell, pd.DataFrame | None, str | None]":
+    """Module-level worker: run ONE cell in a subprocess, returning any error text.
+
+    Caps nested BLAS/OpenMP threads to one so a pool of ``n_jobs`` processes does
+    not oversubscribe the cores. Returns ``(cell, frame, error)`` where exactly one
+    of ``frame``/``error`` is set, so the parent isolates per-cell failures.
+    """
     for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
                 "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
         os.environ.setdefault(var, "1")
-
-    spec, arm_idx, target_idx, horizon = args
-    arm = spec.arms[arm_idx]
-    target = spec.targets[target_idx]
-    # No shared cache across processes: each unit recomputes its own preprocessing.
-    frame = _run_one_arm_target(spec, arm, target, preprocessing_cache=None,
-                                horizons=[horizon])
-    return arm_idx, target_idx, horizon, frame
+    spec, cell = args
+    try:
+        # No shared cache across processes: each cell recomputes its own preprocessing.
+        return cell, _execute_cell(spec, cell, preprocessing_cache=None), None
+    except Exception as exc:  # isolate the failure; the parent records it
+        return cell, None, f"{type(exc).__name__}: {exc}"
 
 
-def _run_arms_parallel(spec: PipelineSpec) -> pd.DataFrame:
-    """Fan out (arm x target x horizon) units across a process pool.
+def _cell_failure(spec: PipelineSpec, cell: _Cell, error: str) -> dict[str, Any]:
+    """A structured record of one failed cell (identity + error)."""
+    arm = spec.arms[cell.arm_idx]
+    target = spec.targets[cell.target_idx]
+    return {
+        "target": target.name,
+        "arm": arm.name,
+        "horizons": list(cell.horizons),
+        "error": error,
+    }
 
-    Numerically identical to the sequential path: every unit is deterministic in
-    ``spec.seed`` and the per-cell computation does not depend on sibling cells.
-    Units are reassembled in a fixed (target, arm, horizon) order so the master
-    frame's row order is independent of which worker finishes first.
+
+def _run_cells(spec: PipelineSpec) -> "tuple[pd.DataFrame, list[dict[str, Any]]]":
+    """Execute every cell, isolating per-cell failures.
+
+    Returns ``(master, failed_cells)``. The two backends share this one
+    enumerate-then-execute structure; the master frame and ``failed_cells`` are
+    assembled in the deterministic cell order independent of execution backend.
     """
     import warnings as _warnings
-    from concurrent.futures import ProcessPoolExecutor
 
-    # Build the work list in the SAME nesting order the sequential path visits
-    # (target -> arm -> horizon) so the concatenated frame matches row-for-row.
-    units: list[tuple[PipelineSpec, int, int, int]] = []
-    for t_idx, _target in enumerate(spec.targets):
-        for a_idx, _arm in enumerate(spec.arms):
-            for h in spec.horizons:
-                units.append((spec, a_idx, t_idx, int(h)))
+    cells = _enumerate_cells(spec)
+    if not cells:
+        return pd.DataFrame(), []
 
-    if not units:
-        return pd.DataFrame()
+    results: dict[_Cell, pd.DataFrame] = {}
+    failed: list[dict[str, Any]] = []
 
-    max_workers = min(spec.n_jobs, len(units))
-    # Collect results keyed by their deterministic (target, arm, horizon) position.
-    results: dict[tuple[int, int, int], pd.DataFrame] = {}
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        for arm_idx, target_idx, horizon, frame in executor.map(
-            _parallel_unit_worker, units
-        ):
-            results[(target_idx, arm_idx, horizon)] = frame
+    if spec.n_jobs > 1:
+        from concurrent.futures import ProcessPoolExecutor
 
+        max_workers = min(spec.n_jobs, len(cells))
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            for cell, frame, error in executor.map(
+                _parallel_cell_worker, [(spec, c) for c in cells]
+            ):
+                if error is not None:
+                    failed.append(_cell_failure(spec, cell, error))
+                elif frame is not None:
+                    results[cell] = frame
+    else:
+        # One shared preprocessing cache per target: arms of the same target reuse
+        # the per-origin FittedPreprocessor (spec-level preprocessing only -- arm
+        # overrides opt out by getting their own cache). Removes per-arm EM redundancy.
+        target_caches = (
+            {t.name: {} for t in spec.targets} if spec.preprocessing is not None else {}
+        )
+        for cell in cells:
+            arm = spec.arms[cell.arm_idx]
+            target = spec.targets[cell.target_idx]
+            cache = target_caches.get(target.name)
+            arm_cache = cache if arm.preprocessing is None else None
+            try:
+                results[cell] = _execute_cell(spec, cell, preprocessing_cache=arm_cache)
+            except Exception as exc:
+                # Record the failure and CONTINUE the rest of the set rather than
+                # aborting the whole pipeline on one bad cell.
+                failed.append(
+                    _cell_failure(spec, cell, f"{type(exc).__name__}: {exc}")
+                )
+
+    # Reassemble in enumeration order; warn once per (arm, target) that yielded no
+    # rows (an empty arm hides a misconfiguration). A failed cell does NOT also warn
+    # as empty -- the failure is already recorded on failed_cells.
     frames: list[pd.DataFrame] = []
-    horizons = [int(h) for h in spec.horizons]
     seen_empty: set[tuple[str, str]] = set()
-    for t_idx, target in enumerate(spec.targets):
-        for a_idx, arm in enumerate(spec.arms):
-            for h in horizons:
-                frame = results.get((t_idx, a_idx, h))
-                if frame is not None and not frame.empty:
-                    frames.append(frame)
-                elif (arm.name, target.name) not in seen_empty:
-                    # Warn once per (arm, target) -- matches the sequential path's
-                    # single warning even though units are split by horizon here.
-                    seen_empty.add((arm.name, target.name))
-                    _warnings.warn(
-                        _empty_arm_warning(arm.name, target.name),
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
-    if not frames:
-        return pd.DataFrame()
-    return pd.concat(frames, ignore_index=True)
+    failed_keys = {(f["arm"], f["target"]) for f in failed}
+    for cell in cells:
+        arm = spec.arms[cell.arm_idx]
+        target = spec.targets[cell.target_idx]
+        frame = results.get(cell)
+        if frame is not None and not frame.empty:
+            frames.append(frame)
+            continue
+        key = (arm.name, target.name)
+        if key in failed_keys or key in seen_empty:
+            continue
+        seen_empty.add(key)
+        _warnings.warn(
+            _empty_arm_warning(arm.name, target.name),
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+    master = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    return master, failed
 
 
 def run_arms(spec: PipelineSpec) -> pd.DataFrame:
@@ -210,40 +290,13 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     own preprocessing/features/model, and each target with its resolved
     (forecast_policy, target_transform).
 
-    When ``spec.n_jobs > 1`` the (arm x target x horizon) work units run across a
-    process pool; the result is numerically identical to the sequential path.
+    The pipeline MANAGES atomic ``run()`` calls over (target, arm, horizon-group)
+    cells. When ``spec.n_jobs > 1`` the cells run across a process pool, one horizon
+    per cell; the result is numerically identical to the serial multi-horizon path.
+    Per-cell failures are isolated -- see :func:`run_pipeline` /
+    ``PipelineReport.failed_cells`` for how they are surfaced.
     """
-    if spec.n_jobs > 1:
-        return _run_arms_parallel(spec)
-
-    frames: list[pd.DataFrame] = []
-    # One shared preprocessing cache per target: arms of the same target reuse the
-    # per-origin FittedPreprocessor (spec-level preprocessing only -- arm overrides
-    # opt out by getting their own cache). Removes the per-arm EM redundancy.
-    target_caches = {t.name: {} for t in spec.targets} if spec.preprocessing is not None else {}
-    for target in spec.targets:
-        cache = target_caches.get(target.name)
-        for arm in spec.arms:
-            arm_cache = cache if arm.preprocessing is None else None
-            frame = _run_one_arm_target(spec, arm, target, preprocessing_cache=arm_cache)
-            if not frame.empty:
-                frames.append(frame)
-            else:
-                # An arm that yields zero forecast rows is dropped from evaluation
-                # entirely, which silently hides a misconfiguration (e.g. a feature
-                # block that is all-NaN over every origin so the per-origin dropna
-                # empties the fit sample). Surface it rather than letting the arm
-                # disappear without a trace.
-                import warnings as _warnings
-
-                _warnings.warn(
-                    _empty_arm_warning(arm.name, target.name),
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
-    if not frames:
-        return pd.DataFrame()
-    master = pd.concat(frames, ignore_index=True)
+    master, _failed = _run_cells(spec)
     return master
 
 
@@ -320,9 +373,12 @@ def run_pipeline(spec: PipelineSpec):
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.spec import PipelineReport
 
-    master = run_arms(spec)
+    master, failed_cells = _run_cells(spec)
     results = evaluate(master, spec)
     provenance, leakage = _audit(spec)
+    # Mirror per-cell failures into the leakage audit so any consumer that reads
+    # only the audit still sees that some arms failed to run.
+    leakage = {**leakage, "failed_cells": list(failed_cells)}
     return PipelineReport(
         forecasts=results["forecasts"],
         accuracy=results["accuracy"],
@@ -333,4 +389,5 @@ def run_pipeline(spec: PipelineSpec):
         interpretation=None,
         model_store=spec.model_store,
         spec=spec,
+        failed_cells=tuple(failed_cells),
     )

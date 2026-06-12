@@ -43,7 +43,7 @@ macroforecast.forecasting.run(
 | Input | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `data` | `FeatureSet`, `DataBundle`, `DataSpec`, `(panel, metadata)`, or pandas-like panel | required | Prebuilt model matrix or canonical panel. `DataBundle` metadata, including native frequencies, is preserved. |
-| `model` | str, callable, `ModelSpec`, list, or mapping | required | One or more model or fit-time model-ensemble specs to fit at each origin. |
+| `model` | str, callable, or `ModelSpec` | required | A SINGLE model (or fit-time model-ensemble) spec to fit at each origin. `run` is atomic: exactly one model per call. To compare or combine models, run each model in its own call (or use the pipeline with one `Arm` per model). Passing a list or mapping of models raises `TypeError`. |
 | `window` | `WindowSpec`, str, or `None` | `None` | Forecast experiment design: estimation mode, validation, test origins, retrain and retune cadence. |
 | `preprocessing` | `PreprocessSpec` or `None` | `None` | Callable preprocessing operations. |
 | `preprocessing_policy` | `StagePolicy`, str, or `None` | `origin_available` when preprocessing is supplied | Where preprocessing may fit and apply: `full_panel`, `origin_available`, `fit_window`, or `fixed_reference`. |
@@ -595,75 +595,65 @@ Forecast rows record the actual fixed-plus-selected parameter set in the
 `params` column. For example, if `params={"ridge": {"fit_intercept": False}}`
 and model selection picks `{"alpha": 0.1}`, the row records both values.
 
-### Forecast Combination In The Runner
+### Forecast Combination Across Models
 
-`combination` asks the runner to append combined forecasts after all base model
-forecasts have been collected. Combination rows use the same `date`, `origin`,
-`origin_pos`, `horizon`, `actual`, and `window` fields as the base rows, with
-`model` set to the combination name.
+`run` is atomic: it fits exactly one model per call, so a combination across
+several models is built by running each model in its own call and combining the
+resulting forecast tables. The combination primitives in
+`macroforecast.forecasting` operate on a forecast frame that already contains the
+base model rows. `apply_combinations` appends combined rows that use the same
+`date`, `origin`, `origin_pos`, `horizon`, and `actual` fields as the base rows,
+with `model` set to the combination name.
 
 The `models=` filter inside a combination spec refers to the output `model`
-column, not the registry `model_spec`. If `model={"bagged": "bagging"}`, use
-`models=["bagged"]` when selecting that fit-time ensemble for a forecast
-combination.
+column, not the registry `model_spec`. If an arm was run under the alias
+`"bagged"`, use `models=["bagged"]` when selecting it for a forecast combination.
 
 ```python
-result = mf.forecasting.run(
-    panel,
-    ["ridge", "lasso", "random_forest"],
-    window=window,
-    features=features,
-    preset="small",
-    combination="mean",
-)
+from macroforecast.forecasting.combination import apply_combinations, resolve_combinations
 
-result.to_frame().query("model == 'combined_mean'")
+tables = [
+    mf.forecasting.run(panel, name, window=window, features=features).to_frame()
+    for name in ("ridge", "lasso", "random_forest")
+]
+master = pd.concat(tables, ignore_index=True)
+records = apply_combinations(master, resolve_combinations("mean"))
+combined = pd.DataFrame(records)  # model == "combined_mean"
 ```
 
-Multiple combinations can be requested together:
+Multiple combinations can be requested together by passing a mapping to
+`resolve_combinations`:
 
 ```python
-result = mf.forecasting.run(
-    panel,
-    {"linear": "ridge", "sparse": "lasso", "tree": "random_forest"},
-    window=window,
-    features=features,
-    combination={
-        "avg": "mean",
-        "dmspe": {
-            "method": "dmspe",
-            "models": ["linear", "sparse", "tree"],
-            "discount": 0.95,
-        },
-        "best_two": {
-            "method": "best_n",
-            "n": 2,
-        },
-    },
+records = apply_combinations(
+    master,
+    resolve_combinations(
+        {
+            "avg": "mean",
+            "dmspe": {"method": "dmspe", "models": ["ridge", "lasso"], "discount": 0.95},
+            "best_two": {"method": "best_n", "n": 2},
+        }
+    ),
 )
 ```
+
+For a managed comparison the pipeline applies the same combination methods across
+arms via `CombinationContender` (see the pipeline reference), so combinations
+become additional contenders in the master frame without manual table assembly.
 
 `inverse_mspe`, `dmspe`, and `best_n` use only historical forecast errors when
 forming the current combined forecast. The current row's realized value is used
 only after that row's weight or best-model decision has already been made.
 
-Custom forecast combinations use the same runner hook:
+Custom forecast combinations use the same primitive:
 
 ```python
 def blend(forecasts, *, actual, weight=0.5):
     return weight * forecasts.iloc[:, 0] + (1.0 - weight) * forecasts.iloc[:, -1]
 
-result = mf.forecasting.run(
-    panel,
-    {"ridge": "ridge", "lasso": "lasso"},
-    window=window,
-    features=features,
-    combination=mf.forecasting.custom_combination(
-        "ridge_lasso_blend",
-        blend,
-        models=["ridge", "lasso"],
-        weight=0.25,
-    ),
+records = apply_combinations(
+    master,
+    [mf.forecasting.custom_combination("ridge_lasso_blend", blend, models=["ridge", "lasso"], weight=0.25)],
 )
 ```
 

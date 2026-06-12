@@ -53,10 +53,30 @@ def test_tcode_map_override():
     assert (rt.policy, rt.transform) == ("direct", "level")
 
 
-def test_contender_names_single_vs_multi_model():
+def test_contender_names_is_exactly_the_arm():
+    # An Arm is exactly ONE model; a contender IS an arm (no arm:model labels).
     assert contender_names(Arm("AR", model="ar")) == ["AR"]
-    multi = contender_names(Arm("ML", model=["ridge", "lasso"]))
-    assert multi == ["ML:ridge", "ML:lasso"]
+    assert contender_names(Arm("FM", model="ridge")) == ["FM"]
+
+
+def test_multi_model_arm_is_rejected():
+    frame = pd.DataFrame(
+        {"y": np.arange(60.0)},
+        index=pd.date_range("2000-01-31", periods=60, freq="ME", name="date"),
+    )
+    bundle = mf.data.custom_dataset(frame, transform_codes={"y": 5})
+    with pytest.raises(ValueError, match="exactly ONE model"):
+        pipeline_spec(
+            data=bundle, targets=["y"], horizons=[1], window="dummy",
+            arms=[Arm("ML", model=["ridge", "lasso"])],
+            evaluation=EvalSpec(benchmark="ML"),
+        )
+    with pytest.raises(ValueError, match="exactly ONE model"):
+        pipeline_spec(
+            data=bundle, targets=["y"], horizons=[1], window="dummy",
+            arms=[Arm("ML", model={"a": "ridge", "b": "lasso"})],
+            evaluation=EvalSpec(benchmark="ML"),
+        )
 
 
 def _basic_spec(**over):

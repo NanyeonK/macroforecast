@@ -266,6 +266,14 @@ def test_forecasting_and_model_selection_resolve_model_ensemble_names() -> None:
 
 
 def test_forecasting_runner_combines_model_ensemble_aliases() -> None:
+    # ``run`` is atomic: each model (a plain model and a model-ensemble alias) is
+    # fitted in its own single-model run; the two forecast tables are then combined
+    # with the cross-model combination primitive.
+    from macroforecast.forecasting.combination import (
+        apply_combinations,
+        resolve_combinations,
+    )
+
     X, y = _xy()
     panel = pd.concat([y, X], axis=1)
     features = mf.feature_engineering.feature_spec(
@@ -275,36 +283,45 @@ def test_forecasting_runner_combines_model_ensemble_aliases() -> None:
         lags=(0, 1),
     )
 
-    result = mf.forecasting.run(
+    linear = mf.forecasting.run(
         panel,
-        {"linear": "ridge", "bagged": "bagging"},
+        "ridge",
         target="y",
         horizon=1,
         window=mf.window.last_block(validation_size=6),
         features=features,
-        params={
-            "linear": {"alpha": 0.1},
-            "bagged": {"base": "ridge", "n_estimators": 3, "random_state": 0},
-        },
-        model_selection={
-            "linear": None,
-            "bagged": mf.model_selection.fixed({"n_estimators": 2, "base": "ridge"}),
-        },
-        combination={
-            "linear_plus_bagged": {
-                "method": "mean",
-                "models": ["linear", "bagged"],
-            }
-        },
+        params={"alpha": 0.1},
+        model_selection=None,
+        save_models=False,
+    )
+    bagged = mf.forecasting.run(
+        panel,
+        "bagging",
+        target="y",
+        horizon=1,
+        window=mf.window.last_block(validation_size=6),
+        features=features,
+        params={"base": "ridge", "n_estimators": 3, "random_state": 0},
+        model_selection=mf.model_selection.fixed({"n_estimators": 2, "base": "ridge"}),
         save_models=False,
     )
 
-    table = result.forecasts
-    base = table.loc[table["model"].isin(["linear", "bagged"])]
-    combined = table.loc[table["model"] == "linear_plus_bagged"].copy()
+    linear_table = linear.forecasts.assign(model="linear")
+    bagged_table = bagged.forecasts.assign(model="bagged")
+    master = pd.concat([linear_table, bagged_table], ignore_index=True)
+
+    assert set(linear.forecasts["model_spec"]) == {"ridge"}
+    assert set(bagged.forecasts["model_spec"]) == {"bagging"}
+
+    records = apply_combinations(
+        master,
+        resolve_combinations(
+            {"linear_plus_bagged": {"method": "mean", "models": ["linear", "bagged"]}}
+        ),
+    )
+    combined = pd.DataFrame(records)
     combined_indexed = combined.set_index(["date", "origin_pos", "horizon"])
 
-    assert set(base["model_spec"]) == {"ridge", "bagging"}
     assert not combined.empty
     assert combined["model_spec"].eq("forecast_combination").all()
     assert combined["combined"].all()
@@ -312,10 +329,11 @@ def test_forecasting_runner_combines_model_ensemble_aliases() -> None:
         ("linear", "bagged")
     }
     bagged_selection = (
-        base.loc[base["model"] == "bagged", "model_selection"].dropna().iloc[0]
+        bagged.forecasts["model_selection"].dropna().iloc[0]
     )
     assert bagged_selection["metadata"]["model_family"] == "model_ensemble"
     assert bagged_selection["best_params"]["n_estimators"] == 2
+    base = master
     for key, group in base.groupby(["date", "origin_pos", "horizon"], sort=False):
         assert np.isclose(
             combined_indexed.loc[key, "prediction"],

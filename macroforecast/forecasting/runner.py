@@ -119,11 +119,7 @@ class _StageUpdateState:
 
 def run(
     data: Any,
-    model: str
-    | Callable[..., Any]
-    | ModelSpec
-    | Sequence[str | Callable[..., Any] | ModelSpec]
-    | Mapping[str, Any],
+    model: str | Callable[..., Any] | ModelSpec,
     *,
     window: WindowSpec | str | None = None,
     preprocessing: PreprocessSpec | None = None,
@@ -158,6 +154,12 @@ def run(
     design, stage policies decide where preprocessing, features, and model
     selection are fitted, model specs fit predictors to targets, and the result
     records a run-level metadata ledger.
+
+    A ``run`` is ATOMIC: it fits exactly ONE model. ``model`` must be a single
+    ``str`` model name, a ``Callable`` model factory, or a ``ModelSpec`` (a
+    fit-time model-ensemble spec still counts as one model). Passing a sequence
+    or a mapping of models raises ``TypeError`` -- run one model per call, or use
+    the pipeline with one ``Arm`` per model when comparing models.
     """
 
     selection = model_selection
@@ -623,11 +625,7 @@ def run(
 
 def _run_multiple_horizons(
     data: Any,
-    model: str
-    | Callable[..., Any]
-    | ModelSpec
-    | Sequence[str | Callable[..., Any] | ModelSpec]
-    | Mapping[str, Any],
+    model: str | Callable[..., Any] | ModelSpec,
     *,
     window: WindowSpec,
     preprocessing: PreprocessSpec | None,
@@ -2663,63 +2661,46 @@ def _validate_runner_window(
 
 
 def _resolve_model_runs(
-    model: str
-    | Callable[..., Any]
-    | ModelSpec
-    | Sequence[str | Callable[..., Any] | ModelSpec]
-    | Mapping[str, Any],
+    model: str | Callable[..., Any] | ModelSpec,
     *,
     preset: str | Mapping[str, str | None] | None,
     params: Mapping[str, Any] | None,
 ) -> list[_ModelRun]:
-    if isinstance(model, Mapping):
-        runs = []
-        for alias, value in model.items():
-            base = _get_model_or_ensemble(value)
-            runs.append(
-                _ModelRun(
-                    alias=str(alias),
-                    spec=_get_model_or_ensemble(
-                        value,
-                        preset=_preset_for_model(preset, str(alias), base.name),
-                        params=_params_for_model(
-                            params,
-                            str(alias),
-                            base.name,
-                            model_spec=base,
-                        ),
-                    ),
-                )
-            )
-    elif _is_model_sequence(model):
-        runs = []
-        seen: dict[str, int] = {}
-        model_sequence = cast(Sequence[str | Callable[..., Any] | ModelSpec], model)
-        for value in model_sequence:
-            base = _get_model_or_ensemble(value)
-            spec = _get_model_or_ensemble(
-                value,
-                preset=_preset_for_model(preset, None, base.name),
-                params=_params_for_model(params, None, base.name, model_spec=base),
-            )
-            count = seen.get(spec.name, 0) + 1
-            seen[spec.name] = count
-            alias = spec.name if count == 1 else f"{spec.name}_{count}"
-            runs.append(_ModelRun(alias=alias, spec=spec))
-    else:
-        single_model = cast(str | Callable[..., Any] | ModelSpec, model)
-        base = _get_model_or_ensemble(single_model)
-        spec = _get_model_or_ensemble(
-            single_model,
-            preset=_preset_for_model(preset, None, base.name),
-            params=_params_for_model(params, None, base.name, model_spec=base),
-        )
-        runs = [_ModelRun(alias=spec.name, spec=spec)]
-    if not runs:
-        raise ValueError("model must contain at least one model")
+    # ``run`` is ATOMIC: exactly one model per call. A mapping or a (non-str)
+    # sequence used to fit several models in one run; that is now rejected at the
+    # public boundary. The internal ``model_runs`` list is kept as a one-element
+    # list so the downstream per-model loops iterate exactly once without churn.
+    _reject_multi_model(model)
+    single_model = cast(str | Callable[..., Any] | ModelSpec, model)
+    base = _get_model_or_ensemble(single_model)
+    spec = _get_model_or_ensemble(
+        single_model,
+        preset=_preset_for_model(preset, None, base.name),
+        params=_params_for_model(params, None, base.name, model_spec=base),
+    )
+    runs = [_ModelRun(alias=spec.name, spec=spec)]
     _validate_preset_mapping(preset, runs)
     _validate_params_mapping(params, runs)
     return runs
+
+
+def _reject_multi_model(model: Any) -> None:
+    """Raise ``TypeError`` if ``model`` is a multi-model sequence or mapping.
+
+    A ``ModelSpec`` is a mapping-like dataclass but is a SINGLE model, and a
+    string is a single model name, so both are allowed. Anything else that is a
+    ``Mapping`` or a non-string ``Sequence`` is a multi-model request and is no
+    longer supported by the atomic ``run``.
+    """
+    if isinstance(model, ModelSpec):
+        return
+    if isinstance(model, Mapping) or _is_model_sequence(model):
+        raise TypeError(
+            "forecasting.run fits exactly ONE model per call; got a "
+            f"{type(model).__name__} of models. Run one model per call "
+            "(loop over single-model run() calls), or use the pipeline with one "
+            "Arm per model to compare models in a single managed run."
+        )
 
 
 def _get_model_or_ensemble(
