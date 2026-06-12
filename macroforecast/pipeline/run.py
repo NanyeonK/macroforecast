@@ -194,6 +194,16 @@ def _parallel_cell_worker(
                 "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
         os.environ.setdefault(var, "1")
     spec, cell = args
+    # Pin this worker's model-internal thread budget from the AUTO allocator so the
+    # parallelizable models (RF/GBM/XGB/LGBM) inside the cell use exactly
+    # spec.model_threads threads -- using the leftover cores while keeping
+    # cell_workers * model_threads <= cores (no oversubscription). Only changes the
+    # thread COUNT, never the numerical result (tree training is deterministic in
+    # random_state regardless of n_jobs). This runs in the worker's own process, so
+    # it does not touch the parent's meta config.
+    import macroforecast as mf
+
+    mf.meta.configure(n_jobs=int(spec.model_threads))
     try:
         # No shared cache across processes: each cell recomputes its own preprocessing.
         return cell, _execute_cell(spec, cell, preprocessing_cache=None), None

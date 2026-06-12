@@ -154,6 +154,28 @@ natively, so a fan-out across cores no longer needs hand-rolled shell processes.
 - **Memory scales with `n_jobs`**: each worker holds its own copy of the data panel,
   so peak memory is roughly `n_jobs ×` the single-process footprint.
 
+### `n_jobs="auto"`
+
+`pipeline_spec(..., n_jobs="auto")` removes the need to hand-tune the worker count.
+It inspects the core budget (the affinity count, `len(os.sched_getaffinity(0))`, which
+respects cgroup/taskset pinning) and the work structure
+(`len(targets) × len(arms) × len(horizons)` cells), then splits the cores between
+**cell workers** and **per-cell model-internal threads** so the CPU is saturated
+without oversubscription (`cell_workers × model_threads ≤ cores`). Cell-level
+parallelism comes first (one worker per cell up to the core count); leftover cores
+become model-internal threads handed to the parallelizable models
+(`random_forest`, `gradient_boosting`, `xgboost`, `lightgbm`) inside each worker.
+The single-threaded models (`ar`, `ols`, `ridge`, `lasso`, `elastic_net`, `far`)
+ignore the thread budget and are unaffected. The resolved cell-worker count is stored
+as `PipelineSpec.n_jobs` and the per-cell thread budget as `PipelineSpec.model_threads`.
+
+This also fixes a latent oversubscription: previously a tree model inside a parallel
+worker defaulted its internal `n_jobs` to `'auto'` (= full CPU count), so `N` workers
+each spawned `cpu_count` threads. Each worker now pins its model-internal threads to
+`model_threads`. The split changes only the number of internal threads, **not** the
+numerical result (tree training is deterministic in `random_state` regardless of the
+thread count), so a `n_jobs="auto"` run is byte-for-byte identical to `n_jobs=1`.
+
 ## Notes
 
 - Accuracy uses a **common sample**: every contender is scored on the origins where

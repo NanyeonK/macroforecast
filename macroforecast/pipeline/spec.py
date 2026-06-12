@@ -157,6 +157,13 @@ class PipelineSpec:
     # own EM) for wall-clock parallelism. Memory scales with ``n_jobs`` because
     # every worker holds the data panel.
     n_jobs: int = 1
+    # Model-internal thread budget per cell worker, set by the AUTO allocator.
+    # In parallel mode (n_jobs>1) each worker pins its tree-ensemble (RF/GBM/XGB/
+    # LGBM) internal n_jobs to this value so cell_workers * model_threads <= cores
+    # and the CPU is saturated without oversubscription. Default 1 (serial mode and
+    # any explicit-int n_jobs leave each worker single-threaded internally, the
+    # prior behavior). Only changes thread COUNT, never the numerical result.
+    model_threads: int = 1
     seed: int | None = 42
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
@@ -463,17 +470,31 @@ def pipeline_spec(
     save_models: bool = True,
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
-    n_jobs: int = 1,
+    n_jobs: int | str = 1,
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
 ) -> PipelineSpec:
-    """Validate and build a :class:`PipelineSpec`."""
+    """Validate and build a :class:`PipelineSpec`.
+
+    ``n_jobs`` is a positive int (explicit cell-worker count) or the literal
+    ``"auto"``. ``"auto"`` inspects the core budget and the work structure
+    (``len(targets) * len(arms) * len(horizons)`` cells) via
+    :func:`auto_parallelism` and splits the cores between cell workers
+    (stored as the resolved ``PipelineSpec.n_jobs``) and per-cell model-internal
+    threads (stored as ``PipelineSpec.model_threads``).
+    """
     arms = tuple(arms)
     if not arms:
         raise ValueError("pipeline requires at least one arm")
-    n_jobs = int(n_jobs)
-    if n_jobs < 1:
-        raise ValueError("n_jobs must be a positive integer (>= 1)")
+    # n_jobs is a positive int OR the literal "auto"; the auto split is computed
+    # below once the cell count (targets x arms x horizons) is known.
+    auto_jobs = n_jobs == "auto"
+    if not auto_jobs:
+        if isinstance(n_jobs, bool) or not isinstance(n_jobs, int):
+            raise ValueError("n_jobs must be a positive integer (>= 1) or 'auto'")
+        n_jobs = int(n_jobs)
+        if n_jobs < 1:
+            raise ValueError("n_jobs must be a positive integer (>= 1) or 'auto'")
     names = [a.name for a in arms]
     if len(set(names)) != len(names):
         raise ValueError("arm names must be unique")
@@ -502,6 +523,17 @@ def pipeline_spec(
     if not resolved:
         raise ValueError("at least one target is required")
 
+    # AUTO allocator: split the core budget between cell workers and per-cell
+    # model-internal threads from the (target x arm x horizon) cell count. The
+    # resolved cell-worker count becomes n_jobs; model_threads is the per-worker
+    # tree-ensemble thread budget (used only when n_jobs>1, see _parallel_cell_worker).
+    model_threads = 1
+    if auto_jobs:
+        from macroforecast.pipeline.parallelism import auto_parallelism
+
+        n_cells = len(resolved) * len(arms) * len(horizon_tuple)
+        n_jobs, model_threads = auto_parallelism(n_cells)
+
     # benchmark must resolve to an existing contender (an arm name, since a
     # contender IS an arm, or a combination contender name)
     all_contenders = {c for a in arms for c in contender_names(a)}
@@ -528,6 +560,7 @@ def pipeline_spec(
         save_models=bool(save_models), model_store=str(model_store),
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
         n_jobs=n_jobs,
+        model_threads=int(model_threads),
         seed=seed,
         provenance=notes,
     )
