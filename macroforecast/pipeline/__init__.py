@@ -15,6 +15,7 @@ from .spec import (
     ResolvedTarget,
     TargetSpec,
     contender_names,
+    model_arms,
     pipeline_spec,
     resolve_target,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "ResolvedTarget",
     "TargetSpec",
     "contender_names",
+    "model_arms",
     "pipeline_spec",
     "resolve_target",
 ]

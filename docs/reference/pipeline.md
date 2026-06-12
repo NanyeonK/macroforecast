@@ -13,6 +13,7 @@ FRED-MD/QD t-code, and ML arms can be interpreted (SHAP/ALE/PDP) without re-runn
 | Symbol | Summary |
 | --- | --- |
 | `pipeline_spec(...)` | Validating generator that builds a `PipelineSpec`. |
+| `model_arms(models, ...)` | Build one `Arm` per model for a pure model comparison. |
 | `run_pipeline(spec)` | Run arms, evaluate, and return a `PipelineReport`. |
 | `interpret_pipeline(report, *, methods, which_fit, arms)` | Deferred multi-method ML interpretation. |
 | `run_arms(spec)` | Execute arms into the master forecast frame (lower-level). |
@@ -78,6 +79,35 @@ report.leakage_audit   # window.validate() warnings (per horizon)
 from macroforecast.pipeline import interpret_pipeline
 interpret_pipeline(report, methods=("shap", "ale"))   # deferred, no re-forecast
 ```
+
+## Comparing models (`model_arms`)
+
+Since an `Arm` is exactly ONE model, a pure model comparison is "several arms
+identical except `model`". Writing one `Arm` per model by hand is verbose, so
+`model_arms(...)` builds them for you:
+
+```python
+from macroforecast.pipeline import model_arms, pipeline_spec, EvalSpec
+
+arms = model_arms(["ar", "random_forest", "far"], features=feats, preprocessing=pp)
+spec = pipeline_spec(..., arms=arms, evaluation=EvalSpec(benchmark="ar"))
+```
+
+Each model becomes one atomic `Arm` (one `run`, one contender), and the contender
+is the arm name. Arm names default to the model name (`str(model)` /
+`ModelSpec.name` / `callable.__name__`); pass a `Mapping[name -> model]` or
+`names=[...]` to label them explicitly. All arms share the given `preprocessing`,
+`features`, and evaluation config.
+
+`params` and `model_selection` are shared by every arm unless given as a Mapping
+whose keys are exactly the arm names, in which case each entry is applied to its
+own arm. A plain shared dict of hyperparameters (whose keys are hyperparameter
+names, not arm names) is therefore unambiguously shared. `nested_in_benchmark` is
+a bool shared by all, or a set/sequence of arm names that nest the benchmark.
+
+This shares all config, so it is for **pure model comparison**. Comparing feature
+cases (arms differing in `features` or `preprocessing`) still needs explicit
+`Arm` objects built by hand.
 
 ## Parallel execution (`n_jobs`)
 

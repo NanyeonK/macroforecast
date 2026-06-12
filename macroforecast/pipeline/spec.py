@@ -282,6 +282,157 @@ def contender_names(arm: Arm) -> list[str]:
 
 
 # --------------------------------------------------------------------------- #
+# multi-model convenience
+# --------------------------------------------------------------------------- #
+
+def _model_default_name(model: Any) -> str:
+    """The default arm name for a single model (str / ModelSpec.name / __name__)."""
+    from macroforecast.models import ModelSpec
+
+    if isinstance(model, str):
+        return model
+    if isinstance(model, ModelSpec):
+        return model.name
+    name = getattr(model, "name", None) or getattr(model, "__name__", None)
+    return str(name) if name else "model"
+
+
+def _per_arm_or_shared(
+    value: Any, arm_names: Sequence[str], *, label: str
+) -> dict[str, Any]:
+    """Resolve a config that is either shared by all arms or varied per arm.
+
+    The disambiguation heuristic: if ``value`` is a Mapping whose key set is
+    exactly the set of arm names, it is treated as a per-arm mapping (one entry
+    per arm). Otherwise the whole ``value`` is treated as the shared value given
+    to every arm. This means a single shared ``params``/``model_selection`` dict
+    (whose keys are hyperparameter names, not arm names) is correctly shared, and
+    per-arm variation requires keys that are *exactly* the arm names.
+    """
+    if isinstance(value, Mapping) and set(value.keys()) == set(arm_names):
+        return {name: value[name] for name in arm_names}
+    return {name: value for name in arm_names}
+
+
+def model_arms(
+    models: Sequence[Any] | Mapping[str, Any],
+    *,
+    names: Sequence[str] | None = None,
+    preprocessing: Any | None = None,
+    preprocessing_policy: Any | None = None,
+    features: Any | None = None,
+    feature_policy: Any | None = None,
+    params: Mapping[str, Any] | None = None,
+    model_selection: Any | None = None,
+    model_selection_metric: str = "mse",
+    interpret: InterpretSpec | tuple[str, ...] | None = None,
+    nested_in_benchmark: bool | set[str] | Sequence[str] = False,
+    metadata: Mapping[str, Any] | None = None,
+) -> list[Arm]:
+    """Build one :class:`Arm` per model for a pure model comparison.
+
+    A model comparison is "several Arms identical except ``model``". This helper
+    is the pipeline idiom for that: it returns a ``list[Arm]`` -- one atomic arm
+    (one run, one contender) per model -- all sharing the given preprocessing,
+    features, and evaluation config, differing only in ``model`` (and in the
+    per-model ``params``/``model_selection``/nesting when those are given as
+    mappings/sets).
+
+    ``models`` is a sequence of single models (``str`` | ``Callable`` |
+    ``ModelSpec``) or a ``Mapping[name -> model]``. Arm names default to the
+    model name (``str(model)`` / ``ModelSpec.name`` / ``callable.__name__``), or
+    the mapping keys, or the explicit ``names``. Names must be unique.
+
+    ``params`` and ``model_selection`` are shared by every arm unless they are a
+    Mapping whose key set is exactly the arm names, in which case each entry is
+    applied to its arm (see :func:`_per_arm_or_shared`). A single shared dict of
+    hyperparameters is therefore unambiguous from a per-arm mapping.
+
+    ``nested_in_benchmark`` is either a bool shared by all arms, or a set/sequence
+    of arm names that nest the benchmark.
+
+    The returned list is ready to pass to ``pipeline_spec(arms=...)``. Pure model
+    comparison shares all config; comparing feature cases still needs explicit
+    Arms (build them by hand, varying ``features``).
+    """
+    # Normalise the models into parallel (name, model) lists.
+    if isinstance(models, Mapping):
+        if names is not None:
+            raise ValueError(
+                "model_arms: pass either a Mapping of {name: model} or a sequence "
+                "of models with names=, not a Mapping together with names="
+            )
+        arm_names = [str(k) for k in models.keys()]
+        model_list = list(models.values())
+    else:
+        model_list = list(models)
+        if not model_list:
+            raise ValueError("model_arms requires at least one model")
+        if names is not None:
+            names = list(names)
+            if len(names) != len(model_list):
+                raise ValueError(
+                    f"model_arms: names has length {len(names)} but there are "
+                    f"{len(model_list)} models"
+                )
+            arm_names = [str(n) for n in names]
+        else:
+            arm_names = [_model_default_name(m) for m in model_list]
+
+    if not model_list:
+        raise ValueError("model_arms requires at least one model")
+    if len(set(arm_names)) != len(arm_names):
+        raise ValueError(f"model_arms: arm names must be unique, got {arm_names}")
+
+    # Each entry must be a SINGLE model; reject a nested sequence/mapping early
+    # with a clear message (pipeline_spec would also catch it later).
+    for name, model in zip(arm_names, model_list):
+        if _is_multi_model(model):
+            raise ValueError(
+                f"model_arms: arm {name!r} was given a {type(model).__name__} of "
+                "models, but each model must be a SINGLE model. Pass one model per "
+                "arm; to vary features build Arms by hand."
+            )
+
+    params_by_arm = _per_arm_or_shared(params, arm_names, label="params")
+    selection_by_arm = _per_arm_or_shared(
+        model_selection, arm_names, label="model_selection"
+    )
+
+    # nested_in_benchmark: bool shared by all, or a collection of arm names.
+    if isinstance(nested_in_benchmark, bool):
+        nested_names: set[str] = set(arm_names) if nested_in_benchmark else set()
+    else:
+        nested_names = {str(n) for n in nested_in_benchmark}
+        unknown = nested_names - set(arm_names)
+        if unknown:
+            raise ValueError(
+                f"model_arms: nested_in_benchmark names {sorted(unknown)} are not "
+                f"among the arm names {arm_names}"
+            )
+
+    shared_metadata = dict(metadata) if metadata is not None else {}
+
+    return [
+        Arm(
+            name=name,
+            model=model,
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_policy,
+            features=features,
+            feature_policy=feature_policy,
+            params=params_by_arm[name],
+            model_selection=selection_by_arm[name],
+            model_selection_metric=model_selection_metric,
+            interpret=interpret,
+            nested_in_benchmark=(name in nested_names),
+            metadata=dict(shared_metadata),
+        )
+        for name, model in zip(arm_names, model_list)
+    ]
+
+
+# --------------------------------------------------------------------------- #
 # generator
 # --------------------------------------------------------------------------- #
 
