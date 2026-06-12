@@ -5,6 +5,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html import unescape
+from http.client import IncompleteRead, RemoteDisconnected
 from io import BytesIO
 import hashlib
 import json
@@ -12,8 +13,11 @@ import os
 from pathlib import Path
 import re
 import shutil
+import socket
 import tempfile
+import time
 from typing import Any, Literal, cast
+from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 import warnings
@@ -21,7 +25,13 @@ import zipfile
 
 import pandas as pd
 
-from .errors import RawDownloadError, RawManifestError, RawParseError, RawVersionFormatError
+from .errors import (
+    RawDownloadError,
+    RawManifestError,
+    RawNetworkError,
+    RawParseError,
+    RawVersionFormatError,
+)
 from .panel import DataBundle, as_panel, set_frequencies
 
 DatasetId = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
@@ -46,6 +56,12 @@ _FRED_SD_SERIES_RANGE_ZIP_URL_TEMPLATE = f"{_FRED_SD_SOURCE_BASE_URL}/series/fre
 _FRED_SD_SERIES_XLSX_LINK_RE = re.compile(r'href=["\']([^"\']*?/series/series-(\d{4}-\d{2})\.xlsx[^"\']*)["\']', re.I)
 _FRED_SD_HEADERS = {"User-Agent": "macroforecast FRED-SD loader (https://github.com/NanyeonK/macroforecast)"}
 _FRED_SD_SERIES_METADATA_CONTRACT_VERSION = "fred_sd_series_metadata_v1"
+
+# Network robustness: the St. Louis Fed CDN intermittently resets connections,
+# so every official download is retried with exponential backoff before failing.
+_DOWNLOAD_TIMEOUT_SECONDS = 60
+_DOWNLOAD_RETRY_ATTEMPTS = 4
+_DOWNLOAD_RETRY_BACKOFF_SECONDS = 1.0
 
 _FIRST_VINTAGE: dict[DatasetId, str] = {
     "fred_md": "1999-01",
@@ -773,9 +789,73 @@ def _payload_looks_like_html(payload: bytes) -> bool:
     return head.startswith((b"<!doctype html", b"<html")) or b"<html" in head[:256]
 
 
+def _is_retryable_network_error(exc: BaseException) -> bool:
+    """Classify transient/connection-level fetch errors as retryable.
+
+    Deterministic failures (HTTP 4xx, missing resources) are NOT retried because a
+    retry would just reproduce the same response. Connection resets, dropped
+    keep-alives, truncated reads, socket timeouts, and server-side 5xx errors are
+    transient and worth a retry against the flaky St. Louis Fed CDN.
+    """
+    # HTTPError is a subclass of URLError; only server errors (>= 500) are transient.
+    if isinstance(exc, HTTPError):
+        return exc.code >= 500
+    # URLError wraps an underlying socket/connection reason for non-HTTP failures.
+    if isinstance(exc, URLError):
+        reason = exc.reason
+        if isinstance(reason, (ConnectionError, socket.timeout, TimeoutError, OSError)):
+            return True
+        return False
+    # Bare connection-level exceptions raised directly by the socket/http stack.
+    return isinstance(
+        exc,
+        (
+            ConnectionError,
+            RemoteDisconnected,
+            IncompleteRead,
+            socket.timeout,
+            TimeoutError,
+            OSError,
+        ),
+    )
+
+
+def _urlopen_with_retry(
+    request: Request,
+    *,
+    timeout: float = _DOWNLOAD_TIMEOUT_SECONDS,
+    attempts: int = _DOWNLOAD_RETRY_ATTEMPTS,
+    backoff: float = _DOWNLOAD_RETRY_BACKOFF_SECONDS,
+):
+    """Open ``request`` with an explicit timeout, retrying transient failures.
+
+    Returns the open response object from :func:`urlopen` (the caller is
+    responsible for reading/closing it, typically via a context manager). Only
+    retryable connection-level errors trigger another attempt with exponential
+    backoff; deterministic errors (e.g. HTTP 404/403) propagate immediately.
+    """
+    last_exc: BaseException | None = None
+    for attempt in range(attempts):
+        try:
+            return urlopen(request, timeout=timeout)
+        except BaseException as exc:  # noqa: BLE001 - re-raised below after classification
+            if not _is_retryable_network_error(exc):
+                raise
+            last_exc = exc
+            if attempt + 1 >= attempts:
+                break
+            # Exponential backoff: 1s, 2s, 4s, ... between attempts.
+            time.sleep(backoff * (2**attempt))
+    url = request.full_url
+    raise RawNetworkError(
+        f"official source {url} failed after {attempts} attempts; this is likely a "
+        f"transient St. Louis Fed CDN issue, please retry"
+    ) from last_exc
+
+
 def _read_official_url(url: str, *, headers: Mapping[str, str] | None = None, allow_html: bool = False) -> bytes:
     request = Request(url, headers=dict(headers or {}))
-    with urlopen(request) as src:
+    with _urlopen_with_retry(request) as src:
         payload = src.read()
     if not allow_html and _payload_looks_like_html(payload):
         raise RawDownloadError(f"official source returned an HTML response instead of raw data: {url}")
@@ -1579,7 +1659,7 @@ def _fred_sd_local_source_format(local_source: str | Path | None) -> str:
 
 
 def _fred_sd_request_url(url: str):
-    return urlopen(Request(url, headers=_FRED_SD_HEADERS))
+    return _urlopen_with_retry(Request(url, headers=_FRED_SD_HEADERS))
 
 
 def _is_remote_xlsx(payload: bytes, content_type: str | None) -> bool:

@@ -17,6 +17,10 @@ class RawDownloadError(RawDataError):
     """Raised when a raw file cannot be fetched."""
 
 
+class RawNetworkError(RawDownloadError):
+    """Raised when a raw file cannot be fetched after retrying transient errors."""
+
+
 class RawParseError(RawDataError):
     """Raised when a raw file cannot be parsed."""
 

@@ -202,6 +202,8 @@ def test_load_fred_qd_wraps_download_failure(monkeypatch, tmp_path: Path) -> Non
         raise OSError("network unavailable")
 
     monkeypatch.setattr("macroforecast.data.loaders.urlopen", fail_urlopen)
+    # OSError is retryable, so avoid real sleeps during backoff in this test.
+    monkeypatch.setattr("macroforecast.data.loaders.time.sleep", lambda _seconds: None)
     with pytest.raises(RawDownloadError):
         load_fred_qd(vintage="2020-01", cache_root=tmp_path)
 
