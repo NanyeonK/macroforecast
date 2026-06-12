@@ -1,4 +1,10 @@
-"""Pipeline execution: run arms into the master forecast frame (Stage 1+)."""
+"""Pipeline execution: schedule and run cells into the master forecast frame (Stage 1+).
+
+The pipeline MANAGES execution by enumerating cells -- one ``arm`` applied to one
+``target`` over the window for a horizon-group -- and executing each cell with one
+atomic ``run()`` call. The serial backend groups all horizons of a (target, arm)
+into one cell; the parallel backend splits one horizon per cell.
+"""
 from __future__ import annotations
 
 import os
@@ -37,13 +43,13 @@ def _run_one_arm_target(
     preprocessing_cache=None,
     horizons: "Sequence[int] | None" = None,
 ) -> pd.DataFrame:
-    """Run a single arm for a single resolved target.
+    """Execute one cell: a single arm applied to a single resolved target.
 
     By default every horizon in ``spec.horizons`` is computed in one consolidated
-    multi-horizon call (sharing one ``preprocessing_cache`` across horizons). When
-    ``horizons`` is given, only those horizons are computed -- the parallel path
-    passes a single horizon per work unit so independent processes each compute
-    just their cell.
+    multi-horizon ``run()`` call (the serial cell, sharing one
+    ``preprocessing_cache`` across horizons). When ``horizons`` is given, only
+    those horizons are computed -- the parallel path passes a single horizon per
+    cell so independent processes each execute just their cell.
     """
     import dataclasses as _dc
 
@@ -136,7 +142,7 @@ def _empty_arm_warning(arm_name: str, target_name: str) -> str:
 
 
 class _Cell(NamedTuple):
-    """One managed work unit: a (target, arm, horizon-group) forecast cell."""
+    """One cell, the managed execution unit: a (target, arm, horizon-group)."""
 
     target_idx: int
     arm_idx: int
@@ -177,7 +183,8 @@ def _execute_cell(
 def _parallel_cell_worker(
     args: "tuple[PipelineSpec, _Cell]",
 ) -> "tuple[_Cell, pd.DataFrame | None, str | None]":
-    """Module-level worker: run ONE cell in a subprocess, returning any error text.
+    """Module-level worker: execute ONE cell (its single ``run()``) in a subprocess,
+    returning any error text.
 
     Caps nested BLAS/OpenMP threads to one so a pool of ``n_jobs`` processes does
     not oversubscribe the cores. Returns ``(cell, frame, error)`` where exactly one
@@ -283,11 +290,13 @@ def _run_cells(spec: PipelineSpec) -> "tuple[pd.DataFrame, list[dict[str, Any]]]
 
 
 def run_arms(spec: PipelineSpec) -> pd.DataFrame:
-    """Execute every (arm, target) and concatenate into one master forecast frame.
+    """Execute every cell and concatenate into one master forecast frame.
 
+    (The name is retained for back-compat; the managed unit is a cell -- one arm
+    applied to one target over the window for a horizon-group -- not an arm.)
     Columns include arm, model, contender, target, horizon, origin, date,
-    prediction, actual, target_transform, forecast_policy. Each arm is run with its
-    own preprocessing/features/model, and each target with its resolved
+    prediction, actual, target_transform, forecast_policy. Each cell runs its arm
+    with its own preprocessing/features/model against its target's resolved
     (forecast_policy, target_transform).
 
     The pipeline MANAGES atomic ``run()`` calls over (target, arm, horizon-group)
@@ -311,7 +320,7 @@ def _panel_index(data: Any):
 
 
 def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
-    """Collect provenance and a leakage audit for the run."""
+    """Collect provenance and a leakage audit for the pipeline execution."""
     import macroforecast as _mf
 
     provenance: dict = dict(spec.provenance)

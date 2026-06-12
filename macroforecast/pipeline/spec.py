@@ -64,7 +64,12 @@ class InterpretSpec:
 
 @dataclass(frozen=True)
 class Arm:
-    """One comparison unit: a full (preprocessing, features, model) configuration."""
+    """A target-agnostic configuration: preprocessing + features + a single model.
+
+    An arm is NOT itself a cell. Applied to a target and a horizon it forms one
+    cell (executed by one ``run()`` call); in the evaluation it appears as exactly
+    one contender (one arm = one contender).
+    """
 
     name: str
     model: Any
@@ -144,9 +149,9 @@ class PipelineSpec:
     # resumes without recomputing finished origins. None (default) disables
     # checkpointing and is byte-for-byte the prior behavior.
     checkpoint_dir: str | None = None
-    # Native fan-out: when >1, the (arm x target x horizon) work units run across a
+    # Native fan-out: when >1, the (arm x target x horizon) cells run across a
     # process pool. Default 1 keeps the sequential, cross-horizon EM-sharing path
-    # byte-for-byte unchanged. The parallel path is deterministic (every unit uses
+    # byte-for-byte unchanged. The parallel path is deterministic (every cell uses
     # ``seed``) and produces forecasts numerically identical to ``n_jobs=1``; it
     # trades the shared per-origin preprocessing cache (each worker recomputes its
     # own EM) for wall-clock parallelism. Memory scales with ``n_jobs`` because
@@ -332,8 +337,9 @@ def model_arms(
     """Build one :class:`Arm` per model for a pure model comparison.
 
     A model comparison is "several Arms identical except ``model``". This helper
-    is the pipeline idiom for that: it returns a ``list[Arm]`` -- one atomic arm
-    (one run, one contender) per model -- all sharing the given preprocessing,
+    is the pipeline idiom for that: it returns a ``list[Arm]`` -- one arm (one
+    contender; each (target, horizon) of it is one cell) per model -- all
+    sharing the given preprocessing,
     features, and evaluation config, differing only in ``model`` (and in the
     per-model ``params``/``model_selection``/nesting when those are given as
     mappings/sets).

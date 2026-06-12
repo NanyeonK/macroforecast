@@ -8,6 +8,27 @@ Diebold-Mariano, Clark-West and the Model Confidence Set, builds forecast
 combinations, and assembles a single `PipelineReport`. Targets are resolved from the
 FRED-MD/QD t-code, and ML arms can be interpreted (SHAP/ALE/PDP) without re-running.
 
+## Terminology
+
+The pipeline uses four terms consistently.
+
+- **cell** -- the execution unit the pipeline manages: one `arm` applied to one
+  `target` over the window for a horizon-group. The pipeline enumerates and
+  schedules cells, and each cell is executed by exactly one `run()` call. The
+  serial backend groups all horizons of a (target, arm) into one cell; the
+  parallel backend splits one horizon per cell.
+- **run()** -- the atomic forecasting function (`forecasting.run`) that executes
+  one cell (one model, one target, over the window). "run" is the function and the
+  verb; the execution unit it produces is a cell, not "a run".
+- **arm** -- a target-agnostic configuration (preprocessing + features + a single
+  model). It is not a cell by itself; applied to a target and a horizon it forms a
+  cell, and in the evaluation it appears as one contender.
+- **contender** -- an arm as it appears in the evaluation comparison, the named
+  entity compared via DM/CW/MCS. One arm is one contender; forecast combinations
+  are additional contenders.
+
+In one line: **arm × target × horizon → cell = one run(); arm = contender.**
+
 ## Entry points
 
 | Symbol | Summary |
@@ -16,7 +37,7 @@ FRED-MD/QD t-code, and ML arms can be interpreted (SHAP/ALE/PDP) without re-runn
 | `model_arms(models, ...)` | Build one `Arm` per model for a pure model comparison. |
 | `run_pipeline(spec)` | Run arms, evaluate, and return a `PipelineReport`. |
 | `interpret_pipeline(report, *, methods, which_fit, arms)` | Deferred multi-method ML interpretation. |
-| `run_arms(spec)` | Execute arms into the master forecast frame (lower-level). |
+| `run_arms(spec)` | Execute every cell into the master forecast frame (lower-level; name retained for back-compat). |
 | `evaluate(master, spec)` | Accuracy + DM/CW + MCS + combinations on a master frame. |
 | `apply_combinations(master, spec)` | Append cross-arm combination contenders. |
 | `resolve_target(target, *, data, tcode, tcode_map, reduce_i2)` | Resolve a target's (policy, transform). |
@@ -25,7 +46,7 @@ FRED-MD/QD t-code, and ML arms can be interpreted (SHAP/ALE/PDP) without re-runn
 ## Configuration objects
 
 - `PipelineSpec` -- validated, frozen run configuration.
-- `Arm` -- one comparison unit and exactly ONE model: name, model, preprocessing, features, params, interpret. Comparing models means multiple arms identical except for `model`; comparing feature cases means arms differing in features. A list/mapping of models in one arm is rejected.
+- `Arm` -- a target-agnostic configuration with exactly ONE model: name, model, preprocessing, features, params, interpret. An arm is one contender in the evaluation; applied to a target and horizon it forms a cell. Comparing models means multiple arms identical except for `model`; comparing feature cases means arms differing in features. A list/mapping of models in one arm is rejected.
 - `TargetSpec` -- a target and how its forecast object is defined (transform, policy, reduce_i2).
 - `ResolvedTarget` -- a target with its forecast policy and transform resolved.
 - `InterpretSpec` -- ML interpretation request (methods, which_fit, background, top_k).
@@ -68,7 +89,7 @@ spec = pipeline_spec(
     ],
     evaluation=EvalSpec(benchmark="AR", tests=["dm", "cw", "mcs"]),
     combinations=[CombinationContender("POOL", method="constrained_ls")],
-    n_jobs=8,                                     # fan (arm × target × horizon) units across 8 processes
+    n_jobs=8,                                     # fan (arm × target × horizon) cells across 8 processes
 )
 report = run_pipeline(spec)
 report.accuracy        # contender x target x horizon relative RMSE (common sample)
@@ -93,8 +114,8 @@ arms = model_arms(["ar", "random_forest", "far"], features=feats, preprocessing=
 spec = pipeline_spec(..., arms=arms, evaluation=EvalSpec(benchmark="ar"))
 ```
 
-Each model becomes one atomic `Arm` (one `run`, one contender), and the contender
-is the arm name. Arm names default to the model name (`str(model)` /
+Each model becomes one `Arm` (one contender; each of its (target, horizon) is one
+cell run by one `run()`), and the contender is the arm name. Arm names default to the model name (`str(model)` /
 `ModelSpec.name` / `callable.__name__`); pass a `Mapping[name -> model]` or
 `names=[...]` to label them explicitly. All arms share the given `preprocessing`,
 `features`, and evaluation config.
@@ -114,15 +135,16 @@ cases (arms differing in `features` or `preprocessing`) still needs explicit
 `pipeline_spec(..., n_jobs=N)` parallelises the pseudo-out-of-sample replication
 natively, so a fan-out across cores no longer needs hand-rolled shell processes.
 
-- `n_jobs=1` (default) keeps the sequential path byte-for-byte: each `(arm, target)`
-  is run as one consolidated multi-horizon call that shares a single per-origin
-  preprocessing cache across horizons (EM imputation is computed once per origin).
-- `n_jobs>1` splits the work into `(arm × target × horizon)` units and runs them
-  across a `ProcessPoolExecutor` with `min(n_jobs, n_units)` workers. Each unit is a
-  single-horizon run, so it trades the cross-horizon EM-sharing for wall-clock
-  parallelism: every unit recomputes its own preprocessing. On a many-core machine
+- `n_jobs=1` (default) keeps the sequential path byte-for-byte: each `(target, arm)`
+  is one cell run as a consolidated multi-horizon `run()` that shares a single
+  per-origin preprocessing cache across horizons (EM imputation is computed once
+  per origin).
+- `n_jobs>1` splits the work into `(arm × target × horizon)` cells and runs them
+  across a `ProcessPoolExecutor` with `min(n_jobs, n_cells)` workers. Each cell is a
+  single-horizon `run()`, so it trades the cross-horizon EM-sharing for wall-clock
+  parallelism: every cell recomputes its own preprocessing. On a many-core machine
   this finishes in a fraction of the sequential wall-clock.
-- The parallel path is **deterministic**: every unit uses `spec.seed` and the
+- The parallel path is **deterministic**: every cell uses `spec.seed` and the
   per-cell computation is independent of sibling cells, so the assembled forecast
   frame and every downstream accuracy table are numerically identical to `n_jobs=1`.
 - Workers coordinate through the existing per-`(target, arm, horizon)` checkpoints
