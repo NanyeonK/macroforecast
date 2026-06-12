@@ -1,7 +1,9 @@
 """Pipeline execution: run arms into the master forecast frame (Stage 1+)."""
 from __future__ import annotations
 
+import os
 import re
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -36,12 +38,25 @@ def _contender_label(arm: Arm, model_value: Any) -> str:
 
 
 def _run_one_arm_target(
-    spec: PipelineSpec, arm: Arm, target: ResolvedTarget, preprocessing_cache=None
+    spec: PipelineSpec,
+    arm: Arm,
+    target: ResolvedTarget,
+    preprocessing_cache=None,
+    horizons: "Sequence[int] | None" = None,
 ) -> pd.DataFrame:
-    """Run a single arm for a single resolved target across all horizons."""
+    """Run a single arm for a single resolved target.
+
+    By default every horizon in ``spec.horizons`` is computed in one consolidated
+    multi-horizon call (sharing one ``preprocessing_cache`` across horizons). When
+    ``horizons`` is given, only those horizons are computed -- the parallel path
+    passes a single horizon per work unit so independent processes each compute
+    just their cell.
+    """
     import dataclasses as _dc
 
     from macroforecast.forecasting import run
+
+    run_horizons = list(spec.horizons if horizons is None else horizons)
 
     # A multi-target pipeline runs each arm for every target, but an arm's feature
     # spec carries a single target; align it (and its transform) to this target.
@@ -76,7 +91,7 @@ def _run_one_arm_target(
         model_selection=arm.model_selection,
         model_selection_metric=arm.model_selection_metric,
         target=target.name,
-        horizons=list(spec.horizons),
+        horizons=run_horizons,
         forecast_policy=target.policy,
         target_transform=target.transform,
         save_models=spec.save_models,
@@ -96,6 +111,97 @@ def _run_one_arm_target(
     return frame
 
 
+def _empty_arm_warning(arm_name: str, target_name: str) -> str:
+    """The diagnostic emitted when an arm yields zero forecast rows for a target."""
+    return (
+        f"pipeline arm {arm_name!r} produced ZERO forecast rows for "
+        f"target {target_name!r}; it will be absent from the evaluation. "
+        "Check the arm's feature spec / preprocessing (an all-NaN feature "
+        "block over every origin empties the fit sample)."
+    )
+
+
+def _parallel_unit_worker(
+    args: "tuple[PipelineSpec, int, int, int]",
+) -> "tuple[int, int, int, pd.DataFrame]":
+    """Module-level worker: run ONE (arm, target, horizon) cell in a subprocess.
+
+    Receives integer indices into ``spec.arms`` / ``spec.targets`` and the horizon
+    rather than the (unpicklable-by-identity) objects themselves, so the unit is
+    fully reconstructed from the pickled spec. Caps nested BLAS/OpenMP threads to
+    one so that a pool of ``n_jobs`` processes does not oversubscribe the cores.
+    Returns ``(arm_idx, target_idx, horizon, frame)`` so the parent reassembles the
+    master frame in a deterministic order independent of completion order.
+    """
+    # Avoid nested thread oversubscription: each worker process runs single-threaded
+    # BLAS so n_jobs processes map cleanly onto n_jobs cores.
+    for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+        os.environ.setdefault(var, "1")
+
+    spec, arm_idx, target_idx, horizon = args
+    arm = spec.arms[arm_idx]
+    target = spec.targets[target_idx]
+    # No shared cache across processes: each unit recomputes its own preprocessing.
+    frame = _run_one_arm_target(spec, arm, target, preprocessing_cache=None,
+                                horizons=[horizon])
+    return arm_idx, target_idx, horizon, frame
+
+
+def _run_arms_parallel(spec: PipelineSpec) -> pd.DataFrame:
+    """Fan out (arm x target x horizon) units across a process pool.
+
+    Numerically identical to the sequential path: every unit is deterministic in
+    ``spec.seed`` and the per-cell computation does not depend on sibling cells.
+    Units are reassembled in a fixed (target, arm, horizon) order so the master
+    frame's row order is independent of which worker finishes first.
+    """
+    import warnings as _warnings
+    from concurrent.futures import ProcessPoolExecutor
+
+    # Build the work list in the SAME nesting order the sequential path visits
+    # (target -> arm -> horizon) so the concatenated frame matches row-for-row.
+    units: list[tuple[PipelineSpec, int, int, int]] = []
+    for t_idx, _target in enumerate(spec.targets):
+        for a_idx, _arm in enumerate(spec.arms):
+            for h in spec.horizons:
+                units.append((spec, a_idx, t_idx, int(h)))
+
+    if not units:
+        return pd.DataFrame()
+
+    max_workers = min(spec.n_jobs, len(units))
+    # Collect results keyed by their deterministic (target, arm, horizon) position.
+    results: dict[tuple[int, int, int], pd.DataFrame] = {}
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        for arm_idx, target_idx, horizon, frame in executor.map(
+            _parallel_unit_worker, units
+        ):
+            results[(target_idx, arm_idx, horizon)] = frame
+
+    frames: list[pd.DataFrame] = []
+    horizons = [int(h) for h in spec.horizons]
+    seen_empty: set[tuple[str, str]] = set()
+    for t_idx, target in enumerate(spec.targets):
+        for a_idx, arm in enumerate(spec.arms):
+            for h in horizons:
+                frame = results.get((t_idx, a_idx, h))
+                if frame is not None and not frame.empty:
+                    frames.append(frame)
+                elif (arm.name, target.name) not in seen_empty:
+                    # Warn once per (arm, target) -- matches the sequential path's
+                    # single warning even though units are split by horizon here.
+                    seen_empty.add((arm.name, target.name))
+                    _warnings.warn(
+                        _empty_arm_warning(arm.name, target.name),
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
 def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     """Execute every (arm, target) and concatenate into one master forecast frame.
 
@@ -103,7 +209,13 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     prediction, actual, target_transform, forecast_policy. Each arm is run with its
     own preprocessing/features/model, and each target with its resolved
     (forecast_policy, target_transform).
+
+    When ``spec.n_jobs > 1`` the (arm x target x horizon) work units run across a
+    process pool; the result is numerically identical to the sequential path.
     """
+    if spec.n_jobs > 1:
+        return _run_arms_parallel(spec)
+
     frames: list[pd.DataFrame] = []
     # One shared preprocessing cache per target: arms of the same target reuse the
     # per-origin FittedPreprocessor (spec-level preprocessing only -- arm overrides
@@ -125,10 +237,7 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
                 import warnings as _warnings
 
                 _warnings.warn(
-                    f"pipeline arm {arm.name!r} produced ZERO forecast rows for "
-                    f"target {target.name!r}; it will be absent from the evaluation. "
-                    "Check the arm's feature spec / preprocessing (an all-NaN feature "
-                    "block over every origin empties the fit sample).",
+                    _empty_arm_warning(arm.name, target.name),
                     RuntimeWarning,
                     stacklevel=2,
                 )

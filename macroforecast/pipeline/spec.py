@@ -144,6 +144,14 @@ class PipelineSpec:
     # resumes without recomputing finished origins. None (default) disables
     # checkpointing and is byte-for-byte the prior behavior.
     checkpoint_dir: str | None = None
+    # Native fan-out: when >1, the (arm x target x horizon) work units run across a
+    # process pool. Default 1 keeps the sequential, cross-horizon EM-sharing path
+    # byte-for-byte unchanged. The parallel path is deterministic (every unit uses
+    # ``seed``) and produces forecasts numerically identical to ``n_jobs=1``; it
+    # trades the shared per-origin preprocessing cache (each worker recomputes its
+    # own EM) for wall-clock parallelism. Memory scales with ``n_jobs`` because
+    # every worker holds the data panel.
+    n_jobs: int = 1
     seed: int | None = 42
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
@@ -273,6 +281,7 @@ def pipeline_spec(
     save_models: bool = True,
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
+    n_jobs: int = 1,
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
 ) -> PipelineSpec:
@@ -280,6 +289,9 @@ def pipeline_spec(
     arms = tuple(arms)
     if not arms:
         raise ValueError("pipeline requires at least one arm")
+    n_jobs = int(n_jobs)
+    if n_jobs < 1:
+        raise ValueError("n_jobs must be a positive integer (>= 1)")
     names = [a.name for a in arms]
     if len(set(names)) != len(names):
         raise ValueError("arm names must be unique")
@@ -320,6 +332,7 @@ def pipeline_spec(
         preprocessing=preprocessing, preprocessing_policy=preprocessing_policy,
         save_models=bool(save_models), model_store=str(model_store),
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
+        n_jobs=n_jobs,
         seed=seed,
         provenance=notes,
     )

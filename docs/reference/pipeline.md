@@ -67,6 +67,7 @@ spec = pipeline_spec(
     ],
     evaluation=EvalSpec(benchmark="AR", tests=["dm", "cw", "mcs"]),
     combinations=[CombinationContender("POOL", method="constrained_ls")],
+    n_jobs=8,                                     # fan (arm × target × horizon) units across 8 processes
 )
 report = run_pipeline(spec)
 report.accuracy        # contender x target x horizon relative RMSE (common sample)
@@ -77,6 +78,29 @@ report.leakage_audit   # window.validate() warnings (per horizon)
 from macroforecast.pipeline import interpret_pipeline
 interpret_pipeline(report, methods=("shap", "ale"))   # deferred, no re-forecast
 ```
+
+## Parallel execution (`n_jobs`)
+
+`pipeline_spec(..., n_jobs=N)` parallelises the pseudo-out-of-sample replication
+natively, so a fan-out across cores no longer needs hand-rolled shell processes.
+
+- `n_jobs=1` (default) keeps the sequential path byte-for-byte: each `(arm, target)`
+  is run as one consolidated multi-horizon call that shares a single per-origin
+  preprocessing cache across horizons (EM imputation is computed once per origin).
+- `n_jobs>1` splits the work into `(arm × target × horizon)` units and runs them
+  across a `ProcessPoolExecutor` with `min(n_jobs, n_units)` workers. Each unit is a
+  single-horizon run, so it trades the cross-horizon EM-sharing for wall-clock
+  parallelism: every unit recomputes its own preprocessing. On a many-core machine
+  this finishes in a fraction of the sequential wall-clock.
+- The parallel path is **deterministic**: every unit uses `spec.seed` and the
+  per-cell computation is independent of sibling cells, so the assembled forecast
+  frame and every downstream accuracy table are numerically identical to `n_jobs=1`.
+- Workers coordinate through the existing per-`(target, arm, horizon)` checkpoints
+  (`checkpoint_dir`), which are already namespaced so parallel processes never
+  collide. Each worker caps nested BLAS/OpenMP threads to one to avoid
+  oversubscribing cores.
+- **Memory scales with `n_jobs`**: each worker holds its own copy of the data panel,
+  so peak memory is roughly `n_jobs ×` the single-process footprint.
 
 ## Notes
 
