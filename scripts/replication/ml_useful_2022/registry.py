@@ -16,14 +16,48 @@ import macroforecast as mf
 from macroforecast.pipeline import Arm, TargetSpec
 
 
-# Section 4 / Appendix F target construction rules (review lines 212-221).
+# Prefix for the dedicated per-target forecast-OBJECT column (the paper's eqs
+# fcst0/fcst1 target). The target is built FROM THE RAW LEVEL Y_t in
+# run_full._augmented_bundle and assigned an identity t-code so the official panel
+# transform passes it through unchanged. This DECOUPLES the forecast target from
+# the predictor t-codes and avoids the double-transform that t-coding-then-log_growth
+# produced (NaN for HOUST/CPI long horizons). Mirrors the GCLS ``YGROWTH__`` pattern.
+YTARGET_PREFIX = "YTARGET__"
+
+
+def ytarget_column(column: str) -> str:
+    """Name of the dedicated forecast-target column for a raw FRED-MD ``column``."""
+    return f"{YTARGET_PREFIX}{column}"
+
+
+# Per-target one-period object built FROM THE RAW LEVEL (run_full._augmented_bundle).
+# The h-step forecast TARGET is the horizon-average (direct_average) of this object,
+# except T10YFFM which is the level forecast h-ahead (direct, no averaging).
+#   "log_diff" -> log Y_t - log Y_{t-1}  (INDPRO, CPIAUCSL, HOUST: I(1) avg growth)
+#   "diff"     -> Y_t - Y_{t-1}          (UNRATE: I(1) avg change, no log)
+#   "level"    -> Y_t                    (T10YFFM: I(0) spread, forecast the level)
+TARGET_KIND: dict[str, str] = {
+    "INDPRO": "log_diff",
+    "CPIAUCSL": "log_diff",   # inflation = Delta log (NOT the panel's Delta^2-log t-code 6)
+    "HOUST": "log_diff",      # re-differenced from level (panel t-code 4 is log level)
+    "UNRATE": "diff",
+    "T10YFFM": "level",
+}
+
+
+# Section 4 / Appendix F target construction rules (paper eqs fcst0/fcst1).
+# Each target forecasts the dedicated ``YTARGET__<col>`` column with transform="value":
+#   * direct_average -> target_transform resolves to "average_value" =
+#     (1/h) sum_{h'=1..h} object_{t+h'} (the paper's average growth/change rate).
+#   * direct         -> target_transform resolves to "value" = object_{t+h} =
+#     the level h-ahead (T10YFFM spread; no average, no log, can be negative).
 def ml_useful_targets() -> list[TargetSpec]:
     return [
-        TargetSpec("INDPRO", transform="log_growth", policy="direct_average"),   # I(1) log avg growth
-        TargetSpec("CPIAUCSL", transform="log_growth", policy="direct_average"), # I(1) price treatment (paper)
-        TargetSpec("HOUST", transform="log_growth", policy="direct_average"),    # tcode-4 override per paper
-        TargetSpec("UNRATE", transform="change", policy="direct_average"),       # I(1) avg change, no log
-        TargetSpec("T10YFFM", transform="level", policy="direct"),               # stationary spread level
+        TargetSpec(ytarget_column("INDPRO"), transform="value", policy="direct_average"),    # I(1) log avg growth
+        TargetSpec(ytarget_column("CPIAUCSL"), transform="value", policy="direct_average"),  # I(1) inflation (Delta log)
+        TargetSpec(ytarget_column("HOUST"), transform="value", policy="direct_average"),     # I(1) log avg growth (from level)
+        TargetSpec(ytarget_column("UNRATE"), transform="value", policy="direct_average"),    # I(1) avg change, no log
+        TargetSpec(ytarget_column("T10YFFM"), transform="value", policy="direct"),           # I(0) spread level h-ahead
     ]
 
 

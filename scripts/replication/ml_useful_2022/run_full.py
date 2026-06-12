@@ -36,18 +36,87 @@ for _v in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
 import warnings
 warnings.simplefilter("ignore")
 
+import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import macroforecast as mf  # noqa: E402
 
 HERE = os.path.dirname(__file__)
 sys.path.insert(0, HERE)
-from registry import ml_useful_arms, ml_useful_targets  # noqa: E402
+from registry import (  # noqa: E402
+    TARGET_KIND,
+    YTARGET_PREFIX,
+    ml_useful_arms,
+    ml_useful_targets,
+    ytarget_column,
+)
 from treatment import treatment_effects  # noqa: E402
 from macroforecast.pipeline import EvalSpec, pipeline_spec, run_pipeline  # noqa: E402
 
 RESULTS = os.path.join(HERE, "results")
 HORIZONS = (1, 3, 9, 12, 24)
 ARM_KEEP = {"AR", "ARDI", "RFAR", "RFARDI"}
+
+# Raw FRED-MD columns underlying the 5 forecast targets (paper eqs fcst0/fcst1).
+TARGET_COLUMNS = ("INDPRO", "CPIAUCSL", "HOUST", "UNRATE", "T10YFFM")
+
+
+def _one_period_object(level: pd.Series, kind: str) -> pd.Series:
+    """One-period forecast OBJECT built from the RAW level series (paper target).
+
+    ``"log_diff"`` -> log Y_t - log Y_{t-1}   (INDPRO, CPIAUCSL, HOUST: I(1) growth).
+    ``"diff"``     -> Y_t - Y_{t-1}            (UNRATE: I(1) change, no log).
+    ``"level"``    -> Y_t                      (T10YFFM: I(0) spread level).
+
+    This is DECOUPLED from the predictor t-codes on purpose: building the target on
+    the already-t-coded panel column double-transforms (log of a signed Delta-log is
+    NaN -> empty long-horizon cells). Computing it directly from the raw level is the
+    paper's construction regardless of the column's own FRED-MD t-code (HOUST is
+    t-code 4 = log level, CPIAUCSL is t-code 6 = second log-difference).
+    """
+    values = level.astype(float)
+    if kind == "diff":
+        return values.diff()
+    if kind == "level":
+        return values
+    if kind == "log_diff":
+        # log is only defined for strictly positive levels (all 4 growth targets are
+        # strictly positive in this vintage); non-positive entries yield NaN.
+        positive = values.where(values > 0)
+        return np.log(positive) - np.log(positive.shift(1))
+    raise ValueError(f"unknown target kind {kind!r}")
+
+
+def _augmented_bundle(raw):
+    """Return a bundle whose panel also carries the dedicated ``YTARGET__<col>`` columns.
+
+    Each ``YTARGET__<col>`` column is the one-period forecast object (Delta log,
+    Delta, or the raw level) computed from the RAW level (see ``_one_period_object``)
+    and assigned t-code 1 (identity) so the official panel transform passes it through
+    unchanged. The forecast policy's ``average_value`` (direct_average) then builds
+    (1/h) sum_{h'} object_{t+h'} = the paper's average growth/change target; for
+    T10YFFM the ``direct`` policy forecasts the level h-ahead. The YTARGET__ columns
+    are EXCLUDED from the predictor set so the realized target never leaks as a feature.
+    """
+    panel = raw.panel.copy()
+    target_frames: list[pd.Series] = []
+    for col in TARGET_COLUMNS:
+        obj = _one_period_object(raw.panel[col], TARGET_KIND[col])
+        obj.name = ytarget_column(col)
+        target_frames.append(obj)
+    targets = pd.concat(target_frames, axis=1)
+
+    new_panel = pd.concat([panel, targets], axis=1)
+    codes = dict(raw.metadata.get("transform_codes", {}))
+    for col in TARGET_COLUMNS:
+        codes[ytarget_column(col)] = 1  # identity: official transform passes through
+    metadata = {
+        k: raw.metadata.get(k)
+        for k in ("dataset", "frequency", "version_mode", "vintage", "data_through")
+        if k in raw.metadata
+    }
+    metadata["transform_codes"] = codes
+    new_panel.attrs = {"macroforecast_transform_codes": dict(codes)}
+    return dataclasses.replace(raw, panel=new_panel, metadata=metadata)
 
 
 
@@ -91,13 +160,25 @@ def _slice_by_horizon(frame, horizon: int):
 def main(data_csv: str) -> None:
     os.makedirs(RESULTS, exist_ok=True)
     raw = mf.data.load_fred_md(local_source=data_csv)
-    predictors = tuple(c for c in raw.panel.columns
-                       if c not in {t.name for t in ml_useful_targets()})
+    # Augment the panel with the dedicated YTARGET__<col> forecast-object columns
+    # (built from the RAW level, identity t-code). The official panel transform then
+    # passes them through unchanged; the forecast policy averages the one-period
+    # object over the horizon (paper eqs fcst0/fcst1).
+    bundle = _augmented_bundle(raw)
+    # Predictors = the full McCracken-Ng t-coded panel EXCLUDING the engineered
+    # YTARGET__ columns (so the realized target never leaks as a feature). The raw
+    # target columns remain in the predictor panel as standard panel members.
+    predictors = tuple(c for c in bundle.panel.columns
+                       if not str(c).startswith(YTARGET_PREFIX))
     pp = mf.preprocessing.preprocess_spec(transform="official", impute="em_factor",
                                           outliers="iqr", outlier_action="flag_as_nan", standardize="none")
     pol = mf.window.stage_policy("origin_available", update="on_retrain")
     fpol = mf.window.stage_policy("fit_window", update="on_retrain")
-    base_arms = [a for a in ml_useful_arms("INDPRO", predictors, subset="core") if a.name in ARM_KEEP]
+    # Build the arms once against the INDPRO YTARGET column; the pipeline runtime
+    # re-targets each arm's feature spec (target lags / target-derived blocks) to the
+    # per-target YTARGET__ column, while the PCA-factor predictor block stays fixed.
+    base_arms = [a for a in ml_useful_arms(ytarget_column("INDPRO"), predictors, subset="core")
+                 if a.name in ARM_KEEP]
     arms = [dataclasses.replace(a, feature_policy=fpol) for a in base_arms]
 
     # The runner injects each horizon into the window's test spec at execution
@@ -121,9 +202,12 @@ def main(data_csv: str) -> None:
 
     acc_rows = []
     for tspec in ml_useful_targets():
+        # Output filenames key on the RAW column name (strip the YTARGET__ prefix)
+        # so they match the stable per-target convention (forecast_INDPRO_h1.parquet).
+        raw_col = tspec.name[len(YTARGET_PREFIX):] if tspec.name.startswith(YTARGET_PREFIX) else tspec.name
         # Resume granularity stays per (target, horizon): skip the whole target
         # only if EVERY horizon parquet already exists (it is one EM pass anyway).
-        stems = {h: f"{tspec.name}_h{h}" for h in HORIZONS}
+        stems = {h: f"{raw_col}_h{h}" for h in HORIZONS}
         if all(os.path.exists(os.path.join(RESULTS, f"forecast_{stems[h]}.parquet")) for h in HORIZONS):
             print(f"[skip] {tspec.name} all horizons {list(HORIZONS)} (exist)", flush=True)
             continue
@@ -135,7 +219,7 @@ def main(data_csv: str) -> None:
         t0 = time.time()
         try:
             rep = run_pipeline(pipeline_spec(
-                data=raw, targets=[tspec], horizons=list(HORIZONS), window=window, arms=arms,
+                data=bundle, targets=[tspec], horizons=list(HORIZONS), window=window, arms=arms,
                 evaluation=EvalSpec(benchmark="AR", tests=["dm"]),
                 preprocessing=pp, preprocessing_policy=pol, save_models=False,
                 checkpoint_dir=os.path.join(RESULTS, "_checkpoints"),
