@@ -609,6 +609,20 @@ The drop in the row count for any case that includes Level or long lags is the l
 removed by `drop_missing`, since a thirteen-lag block cannot be evaluated until thirteen
 observations have accrued.
 
+### Reproducible factor extraction
+
+A subtle point underlies the factor block. For panels of this shape, more than five
+hundred rows with a small number of factors, scikit-learn's PCA selects a randomized
+singular value decomposition by default, and that solver draws on the global random
+state, so the factors it returns differ from one run to the next unless a seed is fixed.
+A factor that changes run to run makes the factor-model benchmark and every factor-based
+feature non-reproducible, which is unacceptable for a replication. The `macroforecast`
+package therefore routes every principal-component extraction through a single helper
+that uses the exact full decomposition for panels of ordinary width, matching the
+decomposition used by the imputation step, and falls back to a seeded randomized solver
+only for very wide panels. The factors are exact and identical across runs, so no seed
+needs to be set by hand, which is why the cells above pass no `random_state`.
+
 ### The 16 information sets
 
 A random-forest arm is one of the sixteen admissible combinations of the five blocks. Each
