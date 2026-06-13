@@ -795,8 +795,10 @@ class _FAR:
         self._fallback = float(y_clean.mean())
         self._x_mean = X_clean.mean(axis=0)
         n_factors = min(self.n_factors, X_clean.shape[1], max(1, X_clean.shape[0] - 1))
-        self._pca = PCA(n_components=n_factors, random_state=self.random_state)
-        factors = self._pca.fit_transform((X_clean - self._x_mean).fillna(0.0))
+        from macroforecast.feature_engineering.shared import _deterministic_pca
+        fit_block = (X_clean - self._x_mean).fillna(0.0)
+        self._pca = _deterministic_pca(n_factors, *fit_block.shape, random_state=self.random_state)
+        factors = self._pca.fit_transform(fit_block)
         values = y_clean.to_numpy(dtype=float)
         rows = []
         target = []

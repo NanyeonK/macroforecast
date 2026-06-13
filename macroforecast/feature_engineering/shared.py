@@ -164,6 +164,31 @@ def _pca_frame(
     return result
 
 
+def _deterministic_pca(
+    n_components: int,
+    n_samples: int,
+    n_features: int,
+    *,
+    random_state: int | None = None,
+):
+    """Construct a sklearn PCA whose factors are reproducible across runs.
+
+    sklearn's ``svd_solver="auto"`` selects the randomized SVD for macro-shaped
+    panels (more than 500 rows with a few factors), which is non-deterministic
+    when no seed is fixed. Use the exact full SVD for panels of ordinary width,
+    matching the full SVD used by the EM-imputation path, and fall back to a
+    seeded randomized solver only for very wide panels where the full SVD is
+    costly. Every PCA in the package routes through this helper so factor
+    extraction is reproducible by default.
+    """
+    from sklearn.decomposition import PCA
+
+    if min(int(n_samples), int(n_features)) <= 1000:
+        return PCA(n_components=n_components, svd_solver="full")
+    seed = 0 if random_state is None else random_state
+    return PCA(n_components=n_components, random_state=seed, svd_solver="randomized")
+
+
 def _fit_transform_pca(
     train: pd.DataFrame,
     data: pd.DataFrame,
@@ -184,20 +209,7 @@ def _fit_transform_pca(
         train_values = (train_values - center) / divisor
         data_values = (data_values - center) / divisor
     fit_values = train_values.dropna()
-    # Deterministic factor extraction. sklearn's 'auto' solver selects the
-    # randomized SVD for macro-shaped panels (more than 500 rows with a few
-    # factors), and that solver is not reproducible across runs unless a seed is
-    # fixed. Use the exact full SVD for panels of ordinary width, which matches
-    # the full SVD used by the EM-imputation path, and fall back to a seeded
-    # randomized solver only for very wide panels where the full SVD is costly.
-    n_obs, n_feat = fit_values.shape
-    if min(int(n_obs), int(n_feat)) <= 1000:
-        svd_solver = "full"
-    else:
-        svd_solver = "randomized"
-        if random_state is None:
-            random_state = 0
-    model = PCA(n_components=n_components, random_state=random_state, svd_solver=svd_solver)
+    model = _deterministic_pca(n_components, *fit_values.shape, random_state=random_state)
     model.fit(fit_values)
     transformed = pd.DataFrame(
         model.transform(data_values),

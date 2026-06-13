@@ -39,3 +39,30 @@ def test_pca_features_deterministic_despite_global_rng() -> None:
         fit_policy="full_sample", warn_full_sample=False,
     )
     pd.testing.assert_frame_equal(first, second)
+
+
+def test_group_pca_deterministic_despite_global_rng() -> None:
+    panel = _macro_panel()
+    cols = list(panel.columns)
+
+    first = mf.feature_engineering.group_pca(
+        panel, groups={"g": cols}, n_components=8, fit_policy="full_sample",
+    )
+    np.random.seed(2024)
+    _ = np.random.randn(10_000)
+    second = mf.feature_engineering.group_pca(
+        panel, groups={"g": cols}, n_components=8, fit_policy="full_sample",
+    )
+    pd.testing.assert_frame_equal(first, second)
+
+
+def test_far_factor_model_deterministic_despite_global_rng() -> None:
+    panel = _macro_panel()
+    y = panel["x0"]
+    X = panel[[c for c in panel.columns if c != "x0"]]
+
+    first = mf.far(X, y, n_factors=8, n_lag=12).predict(X.iloc[-50:])
+    np.random.seed(7)
+    _ = np.random.randn(10_000)
+    second = mf.far(X, y, n_factors=8, n_lag=12).predict(X.iloc[-50:])
+    np.testing.assert_allclose(np.asarray(first), np.asarray(second))

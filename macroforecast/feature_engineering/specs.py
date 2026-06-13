@@ -9,6 +9,7 @@ import pandas as pd
 
 from macroforecast.data import DataBundle, attach_metadata, panel_info, validate_panel
 from macroforecast.feature_engineering.shared import (
+    _deterministic_pca,
     TargetMode,
     TargetTransform,
     _apply_sparse_pca_chen_rohe,
@@ -1225,7 +1226,7 @@ def _fit_pca_state(
         fit_values = (train - center) / divisor
     from sklearn.decomposition import PCA
 
-    model = PCA(n_components=n_value)
+    model = _deterministic_pca(n_value, *fit_values.shape)
     model.fit(fit_values)
     return _PCAState(
         columns=tuple(selected),
@@ -2392,7 +2393,7 @@ def _fit_pca_state_with_random_state(
         fit_values = (train - center) / divisor
     from sklearn.decomposition import PCA
 
-    model = PCA(n_components=n_value, random_state=random_state)
+    model = _deterministic_pca(n_value, *fit_values.shape, random_state=random_state)
     model.fit(fit_values)
     return _PCAState(
         columns=tuple(columns),
