@@ -18,6 +18,9 @@ class _AR:
         self._coef: np.ndarray | None = None
         self._history: np.ndarray | None = None
         self._fallback: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_AR":
         series = pd.Series(y).astype(float).dropna()
@@ -34,6 +37,11 @@ class _AR:
         design = np.asarray(rows, dtype=float)
         response = np.asarray(target, dtype=float)
         self._coef = np.linalg.lstsq(design, response, rcond=None)[0]
+        # In-sample one-step residuals for information-criterion order selection.
+        resid = response - design @ self._coef
+        self.ssr_ = float(resid @ resid)
+        self.nobs_ = int(response.shape[0])
+        self.n_params_ = int(self._coef.shape[0])
         self._history = values[-self.n_lag :]
         return self
 
@@ -775,6 +783,9 @@ def bvar_normal_inverse_wishart(
 class _FAR:
     def __init__(self, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0) -> None:
         self.n_factors = max(1, int(n_factors))
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
         self.n_lag = max(1, int(n_lag))
         self.random_state = int(random_state)
         self._pca: Any = None
@@ -808,7 +819,13 @@ class _FAR:
         if not rows:
             self._y_history = values[-self.n_lag :]
             return self
-        self._regression = LinearRegression().fit(np.asarray(rows), np.asarray(target))
+        design = np.asarray(rows); response = np.asarray(target)
+        self._regression = LinearRegression().fit(design, response)
+        # In-sample one-step residuals for information-criterion order selection.
+        resid = response - self._regression.predict(design)
+        self.ssr_ = float(resid @ resid)
+        self.nobs_ = int(response.shape[0])
+        self.n_params_ = int(np.size(self._regression.coef_) + 1)
         self._y_history = values[-self.n_lag :]
         return self
 

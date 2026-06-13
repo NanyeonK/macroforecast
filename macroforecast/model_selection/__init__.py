@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .search import select_by_information_criterion
 from .core import (
     ParamDistribution,
     SearchError,
@@ -21,6 +22,7 @@ from .core import (
 )
 
 __all__ = [
+    "select_by_information_criterion",
     "ParamDistribution",
     "SearchError",
     "SearchResult",

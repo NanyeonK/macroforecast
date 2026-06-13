@@ -133,6 +133,7 @@ class ModelSpec:
     requires_scaling: bool = False
     recommended_preprocessing: tuple[str, ...] = ()
     description: str = ""
+    selection_method: str = "cv"
 
     def with_preset(self, preset: str) -> "ModelSpec":
         """Return the same model spec with a different hyperparameter preset."""
@@ -404,11 +405,13 @@ def _spec(
     requires_scaling: bool = False,
     recommended_preprocessing: tuple[str, ...] = (),
     description: str = "",
+    selection_method: str = "cv",
 ) -> ModelSpec:
     return ModelSpec(
         name=name,
         family=family,
         fit_func=fit_func,
+        selection_method=selection_method,
         default_params=dict(default_params or {}),
         parameters=parameters,
         search_spaces=dict(spaces or {}),
@@ -2379,6 +2382,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         spaces=_AR_SPACES,
         input_kind="target",
         description="Univariate autoregression.",
+        selection_method="bic",
     ),
     "arima": _spec(
         "arima",
@@ -3112,6 +3116,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             key: {**space, **_AR_SPACES[key]} for key, space in _FACTOR_SPACES.items()
         },
         description="Factor-augmented autoregression.",
+        selection_method="bic",
     ),
     "favar": _spec(
         "favar",

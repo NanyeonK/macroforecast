@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from typing import Any
@@ -603,3 +605,101 @@ __all__ = [
     "search_spec",
     "uniform",
 ]
+
+
+def _gaussian_information_criterion(
+    ssr: float, nobs: int, n_params: int, criterion: str
+) -> float:
+    """Information criterion of a Gaussian OLS fit from its residual sum of squares.
+
+    Uses the concentrated Gaussian log-likelihood, so AIC = 2k - 2 logL and
+    BIC = k log n - 2 logL, with logL = -n/2 (log 2pi + log(SSR/n) + 1).
+    """
+    n = int(nobs)
+    k = int(n_params)
+    if n <= 0 or ssr <= 0.0:
+        return float("inf")
+    loglik = -0.5 * n * (math.log(2.0 * math.pi) + math.log(ssr / n) + 1.0)
+    crit = str(criterion).lower()
+    if crit == "aic":
+        return 2.0 * k - 2.0 * loglik
+    if crit == "aicc":
+        denom = n - k - 1
+        penalty = (2.0 * k * (k + 1) / denom) if denom > 0 else float("inf")
+        return 2.0 * k - 2.0 * loglik + penalty
+    # bic / sic / schwarz
+    return k * math.log(n) - 2.0 * loglik
+
+
+def select_by_information_criterion(
+    model: "str | Callable[..., Any] | ModelSpec",
+    X: Any,
+    y: Any | None = None,
+    search: SearchSpec | None = None,
+    *,
+    criterion: str = "bic",
+    fixed_params: dict[str, Any] | None = None,
+    preset: str | None = None,
+) -> SearchResult:
+    """Select model hyperparameters by an in-sample information criterion.
+
+    Unlike ``select_params``, each candidate is fitted on the whole supplied
+    sample and scored by an information criterion (BIC by default) computed from
+    the in-sample residual sum of squares and the parameter count, so no
+    validation split is used. This matches the order selection the paper applies
+    to the autoregression and the factor model. The fitted estimator must expose
+    ``ssr_``, ``nobs_`` and ``n_params_``.
+    """
+    fit_model, model_spec = _resolve_model(model, preset=preset)
+    frame, target = _resolve_selection_xy(model_spec, X, y, fixed_params=fixed_params)
+    fit_model = _selection_fit_callable(fit_model, model_spec)
+    spec = search or (
+        _search_from_model(
+            model_spec, method=None, random_state=None, n_iter=None,
+            population_size=None, generations=None, mutation_rate=None,
+        )
+        if model_spec is not None
+        else fixed()
+    )
+    spec = _prepare_search_spec(spec)
+    rng = np.random.default_rng(spec.random_state)
+    base_params = dict(fixed_params or {})
+    candidates = _candidates(spec, rng)
+
+    rows: list[dict[str, Any]] = []
+    best: tuple[float, dict[str, Any]] | None = None
+    for candidate in candidates:
+        params = {**base_params, **candidate}
+        try:
+            fitted = fit_model(frame, target, **params)
+            estimator = getattr(fitted, "estimator", fitted)
+            ssr = getattr(estimator, "ssr_", None)
+            nobs = getattr(estimator, "nobs_", None)
+            n_params = getattr(estimator, "n_params_", None)
+            if ssr is None or nobs is None or n_params is None:
+                raise AttributeError(
+                    "model does not expose ssr_/nobs_/n_params_ required for "
+                    f"{criterion!r} information-criterion selection"
+                )
+            score = _gaussian_information_criterion(ssr, int(nobs), int(n_params), criterion)
+            rows.append({**candidate, "score": float(score),
+                         "nobs": int(nobs), "n_params": int(n_params)})
+        except Exception as exc:  # noqa: BLE001 - record and skip bad candidates
+            rows.append({**candidate, "score": float("inf"), "status": f"error: {exc}"})
+            continue
+        if best is None or score < best[0]:
+            best = (float(score), dict(candidate))
+
+    if best is None:
+        raise ValueError("information-criterion selection produced no valid candidate")
+    return SearchResult(
+        best_params=dict(best[1]),
+        best_score=float(best[0]),
+        trials=pd.DataFrame(rows),
+        metric=str(criterion),
+        method=f"information_criterion:{criterion}",
+        window="none",
+        metadata={"criterion": str(criterion),
+                  "n_candidates": int(len(candidates)),
+                  "validation": "none"},
+    )

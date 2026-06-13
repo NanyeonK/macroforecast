@@ -24,7 +24,11 @@ from macroforecast.meta import get_config
 from macroforecast.model_ensemble import get_model_ensemble
 from macroforecast.models import ModelSpec, get_model, save_fit
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
-from macroforecast.model_selection import SearchSpec, select_params
+from macroforecast.model_selection import (
+    SearchSpec,
+    select_by_information_criterion,
+    select_params,
+)
 from macroforecast.window import (
     Split,
     StagePolicy,
@@ -1436,7 +1440,37 @@ def _fit_predict_origin(
         )
         selection_metadata: dict[str, Any] | None = None
         cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
-        if should_select:
+        uses_ic = str(getattr(model_spec, "selection_method", "cv")).lower() in (
+            "bic", "aic", "aicc"
+        )
+        if should_select and uses_ic:
+            # Information-criterion models (AR, FM) select their order by BIC/AIC on
+            # the training sample, so they need no validation split. This is both
+            # paper-faithful and what lets the autoregression run with a window that
+            # carries no validation block.
+            if retune or cache_key not in param_cache:
+                result = select_by_information_criterion(
+                    model_spec,
+                    X_selection,
+                    y_selection,
+                    search=selected,
+                    criterion=str(model_spec.selection_method).lower(),
+                )
+                param_cache[cache_key] = dict(result.best_params)
+                selection_metadata = {
+                    **result.to_metadata(),
+                    "policy": selection_policy.to_dict(),
+                    "retuned": True,
+                }
+                selection_cache[cache_key] = selection_metadata
+                selection_cache[_SELECTION_TUNED_KEY] = True
+                best_params = dict(param_cache.get(cache_key, {}))
+            else:
+                selection_metadata = selection_cache.get(cache_key)
+                if selection_metadata is not None:
+                    selection_metadata = {**selection_metadata, "retuned": False}
+                best_params = dict(param_cache.get(cache_key, {}))
+        elif should_select:
             if not selection_splits:
                 best_params, selection_metadata = _resolve_degraded_selection(
                     cache_key=cache_key,
