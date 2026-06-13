@@ -183,8 +183,22 @@ def _fit_transform_pca(
         divisor = divisor.fillna(1.0)
         train_values = (train_values - center) / divisor
         data_values = (data_values - center) / divisor
-    model = PCA(n_components=n_components, random_state=random_state)
-    model.fit(train_values.dropna())
+    fit_values = train_values.dropna()
+    # Deterministic factor extraction. sklearn's 'auto' solver selects the
+    # randomized SVD for macro-shaped panels (more than 500 rows with a few
+    # factors), and that solver is not reproducible across runs unless a seed is
+    # fixed. Use the exact full SVD for panels of ordinary width, which matches
+    # the full SVD used by the EM-imputation path, and fall back to a seeded
+    # randomized solver only for very wide panels where the full SVD is costly.
+    n_obs, n_feat = fit_values.shape
+    if min(int(n_obs), int(n_feat)) <= 1000:
+        svd_solver = "full"
+    else:
+        svd_solver = "randomized"
+        if random_state is None:
+            random_state = 0
+    model = PCA(n_components=n_components, random_state=random_state, svd_solver=svd_solver)
+    model.fit(fit_values)
     transformed = pd.DataFrame(
         model.transform(data_values),
         index=data_values.index,
