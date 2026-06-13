@@ -759,6 +759,85 @@ inside each origin, which is the only per-cell tuning the design carries.
 
 ## Step 7. Pseudo-out-of-sample window
 
+### Paper to package
+
+The paper uses an expanding estimation window that starts in 1960M01 and a pseudo-out-of-
+sample period that runs from 1980M01 to 2017M12. The package builds this with
+`from_cutoffs`. Two cadence settings carry the design. The model is re-estimated at every
+origin, set by `retrain_every=1`, while the hyperparameters are re-selected only every two
+years, set by `retune_every=24` with `retune_on_retrain=False` and `reuse_params=True`.
+This decoupling matters because the autoregressive benchmark forecasts recursively from its
+training tail and ignores the test predictors, so freezing the fit for two years would let
+its forecast go stale and inflate every model's relative RMSE.
+
+```python
+window = mf.window.from_cutoffs(
+    estimation_start="1960-01", test_start="1980-01", test_end="2017-12",
+    mode="expanding", horizon=1,
+    retrain_every=1, retune_every=24, retune_on_retrain=False, reuse_params=True,
+    val_method="last_block", val_size=60,
+)
+schedule = window.origins(panel.index)
+print("POOS origins:", len(schedule))
+print("test span:   ", schedule["test_start"].iloc[0].date(),
+      "->", schedule["test_start"].iloc[-1].date())
+print("estimation:  ", schedule["estimation_mode"].iloc[0],
+      "from", schedule["estimation_start"].iloc[0].date(), "(fixed)")
+print("train obs grow:", int(schedule["n_estimation"].iloc[0]),
+      "->", int(schedule["n_estimation"].iloc[-1]))
+print("refit (retrain=True):", int(schedule["retrain"].sum()), "of", len(schedule),
+      "origins  (retrain_every=1)")
+```
+
+```
+POOS origins: 456
+test span:    1980-01-01 -> 2017-12-01
+estimation:   expanding from 1960-01-01 (fixed)
+train obs grow: 240 -> 695
+refit (retrain=True): 456 of 456 origins  (retrain_every=1)
+```
+
+The 456 origins span every month from 1980M01 to 2017M12. The estimation window keeps its
+1960M01 start and grows with each origin, from 240 observations to 695. The model refits at
+all 456 origins.
+
+### Why the cadence is decoupled
+
+The earlier scaffold used a single cadence that refit only every twenty-four months. The
+contrast below shows the consequence. Under that setting the model, and with it the
+autoregressive benchmark, refits at only 19 of the 456 origins and is frozen in between.
+Because the benchmark is the denominator of every relative RMSE, a stale benchmark inflates
+the whole table, which is the bug this step fixes.
+
+```python
+buggy = mf.window.from_cutoffs(
+    estimation_start="1960-01", test_start="1980-01", test_end="2017-12",
+    mode="expanding", horizon=1, retrain_every=24,
+    val_method="last_block", val_size=60,
+)
+refit_fixed = int(window.origins(panel.index)["retrain"].sum())
+refit_buggy = int(buggy.origins(panel.index)["retrain"].sum())
+print(f"refit origins, fixed cadence (retrain_every=1):  {refit_fixed} of 456")
+print(f"refit origins, buggy cadence (retrain_every=24): {refit_buggy} of 456  (benchmark frozen between)")
+```
+
+```
+refit origins, fixed cadence (retrain_every=1):  456 of 456
+refit origins, buggy cadence (retrain_every=24): 19 of 456  (benchmark frozen between)
+```
+
+### Cell view
+
+The window is shared by every cell of a target. Each origin defines one training slice and
+one test point, and the per-origin preprocessing and feature steps attach to it through the
+stage policies of Step 4. A cell walks the same 456 origins, refitting its model at each and
+re-selecting hyperparameters on the two-year cadence, so the schedule is identical across
+models and transformation sets and only the fitted values differ.
+
+---
+
+## Step 8. Evaluation and execution
+
 *Next.*
 
 ## Step 6. Models and arms
