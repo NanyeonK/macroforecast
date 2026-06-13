@@ -12,7 +12,6 @@ Each page separates three objects:
 ```{toctree}
 :maxdepth: 1
 
-macroeconomic_data_transformations_matter
-macroeconomic_data_transformations_matter_notebook
-gcls_2021_indpro_reconstructed_report
+gcls_2021_replication
+gcls_2021_appendix_ground_truth
 ```
