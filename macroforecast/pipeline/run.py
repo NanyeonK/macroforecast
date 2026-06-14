@@ -80,7 +80,7 @@ def _run_one_arm_target(
     result = run(
         spec.data,
         arm.model,
-        window=spec.window,
+        window=arm.window if getattr(arm, "window", None) is not None else spec.window,
         preprocessing=arm.preprocessing if arm.preprocessing is not None else spec.preprocessing,
         preprocessing_policy=(arm.preprocessing_policy if arm.preprocessing is not None
                               else spec.preprocessing_policy),

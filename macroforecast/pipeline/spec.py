@@ -80,6 +80,10 @@ class Arm:
     params: Mapping[str, Any] | None = None
     model_selection: Any | None = None
     model_selection_metric: str = "mse"
+    # Optional per-arm window override. When set, this arm runs on its own window
+    # (e.g. the autoregression on a no-validation window) instead of the shared
+    # spec window, so each cell of the pipeline is managed independently.
+    window: Any | None = None
     interpret: InterpretSpec | tuple[str, ...] | None = None
     is_benchmark: bool = False
     # Clark-West is only valid when the benchmark is NESTED within this arm's model
