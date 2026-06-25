@@ -1,11 +1,13 @@
 """At horizon 1, direct and path-average must give identical forecasts.
 
 The forecast object is the same at h1 by construction (path-average over 1 step
-IS the direct 1-step forecast). A plain linear model (ols) already satisfies
-this. The recursive models (far, ar) did NOT: they seed their AR-lag history
-from the policy-specific training target's tail (the h-period-average series for
-direct vs the per-step value series for path), which is not origin-anchored, so
-the two policies diverged even at h1. This regression test pins the invariant.
+IS the direct 1-step forecast). A plain linear model (ols) always satisfied this.
+The information-criterion models (far, ar) did NOT: the direct path selected
+their AR order by BIC/AIC on the full training sample, but the path-average
+per-step block lacked the IC branch and instead ran CV/validation-split
+selection on a truncated sample (the validation block held out), so it picked a
+different order and diverged even at h1. The fix gives the path block the same
+IC branch. This regression test pins the invariant.
 """
 import numpy as np
 import pandas as pd
@@ -44,18 +46,7 @@ def _forecasts(policy, model):
     return run_pipeline(spec).forecasts
 
 
-@pytest.mark.parametrize("model", [
-    "ols",
-    pytest.param("far", marks=pytest.mark.xfail(
-        reason="KNOWN BUG (low impact, ~1% RMSE): series-input models (far/ar) receive "
-        "the policy-specific target SERIES -- 'Y_average_value_h1' (direct) vs "
-        "'Y_value_step1' (path) differ in length and values even at h1, so the "
-        "recursive AR-history seed diverges. Supervised models (ols) use the "
-        "policy-independent feature matrix and already pass. Fix lives in the "
-        "target-series construction for series-input models, not the models.",
-        strict=True)),
-    pytest.param("ar", marks=pytest.mark.xfail(reason="see 'far' above", strict=True)),
-])
+@pytest.mark.parametrize("model", ["ols", "far", "ar"])
 def test_h1_direct_equals_path(model):
     d = _forecasts("direct_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]
     p = _forecasts("path_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]

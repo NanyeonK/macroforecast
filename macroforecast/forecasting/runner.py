@@ -1821,6 +1821,9 @@ def _fit_predict_path_average_origin(
         should_select = selected is not None or (
             use_model_default_selection and bool(model_spec.search_spaces)
         )
+        uses_ic = str(getattr(model_spec, "selection_method", "cv")).lower() in (
+            "bic", "aic", "aicc"
+        )
         predictions_by_step: dict[int, pd.Series] = {}
         stored_by_step: dict[str, Any] = {}
         selection_by_step: dict[str, Any] = {}
@@ -1858,7 +1861,41 @@ def _fit_predict_path_average_origin(
                 f"{item.get('target_key', 'path')}_step{step}",
             )
             selection_metadata: dict[str, Any] | None = None
-            if should_select:
+            if should_select and uses_ic:
+                # Information-criterion models (AR, FM) select their order by
+                # BIC/AIC on the full per-step training sample, exactly as the
+                # direct path does. Routing them through the CV/validation-split
+                # branch below would score the order on a truncated sample (the
+                # validation block is held out) and pick a different order, which
+                # breaks the horizon-1 direct==path invariant.
+                if retune or step_key not in param_cache:
+                    result = select_by_information_criterion(
+                        model_spec,
+                        X_selection_step,
+                        y_selection_aligned,
+                        search=selected,
+                        criterion=str(model_spec.selection_method).lower(),
+                    )
+                    param_cache[step_key] = dict(result.best_params)
+                    selection_metadata = {
+                        **result.to_metadata(),
+                        "policy": selection_policy.to_dict(),
+                        "retuned": True,
+                        "path_step": step,
+                    }
+                    selection_cache[step_key] = selection_metadata
+                    selection_cache[_SELECTION_TUNED_KEY] = True
+                    best_params = dict(param_cache.get(step_key, {}))
+                else:
+                    selection_metadata = selection_cache.get(step_key)
+                    if selection_metadata is not None:
+                        selection_metadata = {
+                            **selection_metadata,
+                            "retuned": False,
+                            "path_step": step,
+                        }
+                    best_params = dict(param_cache.get(step_key, {}))
+            elif should_select:
                 if not selection_splits:
                     best_params, selection_metadata = _resolve_degraded_selection(
                         cache_key=step_key,

@@ -66,20 +66,34 @@ already pairwise and is unchanged. Regression tests in
 full-coverage arms (AR, RF_F-Level, RF_MARX) score on 1980-2017 and their mean
 absolute delta drops from about 0.11 to 0.092 (AR alone to 0.065).
 
-### 2. Horizon-1 direct vs path for series models (low impact) — documented
+### 2. Horizon-1 direct vs path for information-criterion models — FIXED
 
 At horizon 1, direct and path-average must give identical forecasts (path-average
 over one step IS the direct one-step forecast). A supervised model (`ols`)
-satisfies this exactly. The series-input recursive models `far` and `ar` do not:
-they receive the policy-specific target SERIES (`Y_average_value_h1` for direct
-versus `Y_value_step1` for path), which differ in length and values even at
-horizon 1, so the recursive AR-history seed diverges. The impact is small
-(about 1% at the RMSE level, so relRMSE is barely affected and h1 still matches
-the appendix), and the actuals are identical across policies. The fix belongs in
-the target-series construction for series-input models, not the models
-themselves. Guarded by `tests/forecasting/test_h1_direct_path_invariant.py`
-(`ols` passes; `far`/`ar` are `xfail` with the diagnosis until the target-series
-construction is unified).
+satisfied this exactly. The information-criterion models `far` and `ar` did not
+(about 1% at the RMSE level, so relRMSE was barely affected and h1 still matched
+the appendix).
+
+Root cause: order selection. The direct path selects the AR order for IC models
+by BIC/AIC on the full training sample (no validation split needed). The
+path-average per-step selection block lacked that IC branch and instead ran
+CV/validation-split selection (`select_params`), which scores the order on a
+truncated sample (the validation block is held out, ending years before the
+origin). So the two policies selected different orders for the same data (e.g.
+direct chose order 1 while path chose order 4) and diverged even at h1. The
+per-step target series at a given order was identical across policies; the
+divergence was purely the selected order. An earlier diagnosis that blamed the
+target SERIES was mistaken: it captured a validation fit, not the order-selection
+or final fit.
+
+Fix (`macroforecast/forecasting/runner.py`,
+`_fit_predict_path_average_origin`): the path per-step block now takes the same
+IC branch as the direct path, selecting the order by BIC/AIC on the full per-step
+sample. Horizon-1 forecasts are now bit-identical across policies for `ols`,
+`ar`, and `far`; horizons > 1 still differ legitimately (path-average and
+direct-average are genuinely different objects there). Guarded by
+`tests/forecasting/test_h1_direct_path_invariant.py` (all three models assert
+`max|direct - path| < 1e-9` at h1).
 
 ## Divergence attribution
 
@@ -112,8 +126,8 @@ package defect.
 
 ## Bottom line
 
-The pipeline is methodologically faithful to GCLS (2021). One real evaluation bug
-(sample truncation) is fixed and regression-tested. One low-impact series-model
-inconsistency at horizon 1 is documented and guarded. The remaining numerical
-divergence from the appendix is the expected R-versus-scikit-learn random-forest
-difference, not a defect.
+The pipeline is methodologically faithful to GCLS (2021). Two real bugs are fixed
+and regression-tested: the evaluation sample truncation, and the horizon-1
+direct-vs-path order-selection inconsistency for information-criterion models. The
+remaining numerical divergence from the appendix is the expected
+R-versus-scikit-learn random-forest difference, not a defect.
