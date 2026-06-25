@@ -46,7 +46,10 @@ def _forecasts(policy, model):
     return run_pipeline(spec).forecasts
 
 
-@pytest.mark.parametrize("model", ["ols", "far", "ar"])
+# ols: no selection. ar/far: information-criterion (BIC) order selection -- the
+# branch that was broken. elastic_net: CV selection -- guards the complementary
+# branch so a future change cannot reintroduce the asymmetry there.
+@pytest.mark.parametrize("model", ["ols", "far", "ar", "elastic_net"])
 def test_h1_direct_equals_path(model):
     d = _forecasts("direct_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]
     p = _forecasts("path_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]
