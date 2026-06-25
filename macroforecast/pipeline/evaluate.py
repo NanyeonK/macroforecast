@@ -105,34 +105,59 @@ def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
     if not _has_groups(master):
         return pd.DataFrame(columns=_ACCURACY_COLUMNS)
     out: list[dict[str, Any]] = []
+    ragged: list[tuple[Any, Any]] = []
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
-        # Enforce a COMMON sample: every contender is scored on the same origins
-        # (those where all contenders and the realised target are observed), so
-        # relative RMSE / OOS-R2 are not biased by ragged coverage. This matches
-        # the listwise-deletion sample the MCS uses, keeping the three tables
-        # mutually consistent.
+        # Per-contender PAIRWISE sample: each contender is scored against the
+        # benchmark on the origins where BOTH it and the benchmark (and the
+        # realised target) are observed -- NOT the listwise intersection across
+        # ALL contenders. A single short-coverage contender (e.g. an arm whose
+        # feature block starts late) must not silently truncate every other
+        # contender's relRMSE sample and shift the evaluation period. The joint
+        # listwise sample is kept only where a joint sample is genuinely required
+        # (the Model Confidence Set), so ``n_common`` here is per-contender.
         wide = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
         actual = group.groupby("origin")["actual"].first().reindex(wide.index)
-        common = actual.notna() & wide.notna().all(axis=1)
-        wide_c = wide.loc[common]
-        y = actual.loc[common].to_numpy(dtype=float)
-        n_common = int(common.sum())
-        scored = {}
-        for contender in wide_c.columns:
-            err = wide_c[contender].to_numpy(dtype=float) - y
-            scored[contender] = float(np.mean(err ** 2)) if err.size else np.nan
-        bench_present = bench in scored
-        bench_mse = scored.get(bench, np.nan)
-        for contender, mse in scored.items():
+        bench_present = bench in wide.columns
+        bench_obs = wide[bench].notna() if bench_present else pd.Series(False, index=wide.index)
+        coverage = {c: int((actual.notna() & wide[c].notna()).sum()) for c in wide.columns}
+        if bench_present and len(set(coverage.values())) > 1:
+            ragged.append((target, horizon))
+        for contender in wide.columns:
+            mask = actual.notna() & wide[contender].notna()
+            if bench_present:
+                mask = mask & bench_obs
+            n = int(mask.sum())
+            if n:
+                y = actual.loc[mask].to_numpy(dtype=float)
+                mse = float(np.mean((wide.loc[mask, contender].to_numpy(dtype=float) - y) ** 2))
+                bench_mse = (
+                    float(np.mean((wide.loc[mask, bench].to_numpy(dtype=float) - y) ** 2))
+                    if bench_present else np.nan
+                )
+            else:
+                mse = bench_mse = np.nan
+            ok = np.isfinite(mse) and np.isfinite(bench_mse) and bench_mse > 0
             out.append({
                 "target": target, "horizon": horizon, "contender": contender,
                 "rmse": float(np.sqrt(mse)) if np.isfinite(mse) else np.nan,
-                "relative_mse": (mse / bench_mse) if (np.isfinite(mse) and np.isfinite(bench_mse) and bench_mse > 0) else np.nan,
-                "r2_oos": (1.0 - mse / bench_mse) if (np.isfinite(mse) and np.isfinite(bench_mse) and bench_mse > 0) else np.nan,
-                "n_common": n_common,
+                "relative_mse": (mse / bench_mse) if ok else np.nan,
+                "r2_oos": (1.0 - mse / bench_mse) if ok else np.nan,
+                "n_common": n,
                 "is_benchmark": contender == bench,
                 "benchmark_present": bench_present,
             })
+    if ragged:
+        import warnings
+
+        cells = ", ".join(f"{t} h{h}" for t, h in ragged[:5])
+        more = "" if len(ragged) <= 5 else f" (+{len(ragged) - 5} more)"
+        warnings.warn(
+            f"ragged forecast coverage across contenders in {len(ragged)} (target, horizon) "
+            f"cell(s): {cells}{more}. relRMSE/RMSE/R2 use each contender's PAIRWISE sample "
+            f"with the benchmark, so n_common is per-contender; a short-coverage arm no "
+            f"longer truncates the others.",
+            RuntimeWarning, stacklevel=2,
+        )
     return pd.DataFrame(out, columns=_ACCURACY_COLUMNS)
 
 
