@@ -46,9 +46,16 @@ of model, preprocessing, target, target type, and horizon as one cell of a pipel
 
 ## How this document is organised
 
-The build proceeds in eight steps. The detailed appendix numbers that the run must
-reproduce live on a companion page,
-[GCLS 2021 appendix B ground-truth tables](gcls_2021_appendix_ground_truth.md).
+The build proceeds in eight steps. A [verification summary](#verification-summary-and-bugs-found)
+records the honest outcome and the two package bugs the replication surfaced, and
+the detailed appendix numbers the run must reproduce are collected in
+[Appendix B ground-truth tables](#appendix-b-ground-truth-tables) at the foot of
+this page (machine-readable form: `docs/replication/data/clss2021_appendix_ground_truth.csv`).
+
+NOTE: this generator emits the eight methodology steps only. The
+"Verification summary and bugs found" section and the appended "Appendix B
+ground-truth tables" are maintained directly in the Markdown page (the appendix
+was merged in from the retired companion page); preserve them when regenerating.
 
 1. Replication specification
 2. Data construction

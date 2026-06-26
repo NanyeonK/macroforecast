@@ -18,29 +18,12 @@ objects:
 :link: ../replication/gcls_2021_replication
 :link-type: doc
 
-Goulet Coulombe, Leroux, Stevanovic, and Surprenant (2021). Replication of the
-core pseudo-out-of-sample forecasting exercise: factor model (FM), AR benchmark,
-and random forest cases across FRED-MD targets. Covers the leak-free
-pipeline variant and the appendix ground-truth settings.
-:::
-
-:::{grid-item-card} GCLS (2021) --- Appendix ground truth
-:link: ../replication/gcls_2021_appendix_ground_truth
-:link-type: doc
-
-Detailed appendix settings for the GCLS (2021) replication: exact transform
-codes, feature case definitions, evaluation grid, and paper-vs-code comparison
-notes.
-:::
-
-:::{grid-item-card} GCLS (2021) --- Verification findings
-:link: ../replication/gcls_2021_verification_findings
-:link-type: doc
-
-What the GCLS replication tells us about the pipeline: configuration
-faithfulness, the appendix comparison, two package bugs found and fixed (the
-evaluation-sample truncation and the horizon-1 direct-vs-path order-selection
-inconsistency), and the residual R-versus-scikit-learn random-forest divergence.
+Goulet Coulombe, Leroux, Stevanovic, and Surprenant (2021). A single, honest
+page for the replication: a verification summary (configuration faithfulness, the
+two package bugs the run surfaced and fixed, and the residual
+R-versus-scikit-learn random-forest divergence), the eight-step leak-free build
+(FM, AR, and random-forest cases across FRED-MD targets), and the Appendix B
+ground-truth tables the run is measured against.
 :::
 
 ::::
@@ -171,6 +154,4 @@ forecasts = report.forecasts  # full forecast DataFrame
 :maxdepth: 1
 
 /replication/gcls_2021_replication
-/replication/gcls_2021_appendix_ground_truth
-/replication/gcls_2021_verification_findings
 ```

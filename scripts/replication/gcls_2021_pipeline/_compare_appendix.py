@@ -17,7 +17,9 @@ from pathlib import Path
 import pandas as pd
 
 REPO = Path(__file__).resolve().parents[3]
-DOC = REPO / "docs/replication/gcls_2021_appendix_ground_truth.md"
+# The appendix ground-truth tables were merged into the single replication page;
+# the table format the parser scans is unchanged, only the file moved.
+DOC = REPO / "docs/replication/gcls_2021_replication.md"
 RUN = Path("/home/nanyeon99/project/macroforecast_runs/gcls_fullgrid_step8")
 
 TARGETS = ["CONS", "CPI", "EMP", "HOUST", "INCOME", "INDPRO", "M2", "PPI", "RETAIL", "UNRATE"]
