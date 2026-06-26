@@ -61,6 +61,18 @@ class ModelFit:
         }
 
     def __getattr__(self, name: str) -> Any:
+        # Never delegate dunder lookups to the wrapped estimator. On Python 3.10
+        # (where ``object`` has no ``__getstate__`` / ``__setstate__``) delegating
+        # these hijacks pickling: the estimator's ``__getstate__`` /
+        # ``__setstate__`` run instead of the dataclass default, so an unpickled
+        # ModelFit carries the estimator's ``__dict__`` and loses its own fields
+        # (``model``, ``estimator``, ``feature_names`` ...). Python 3.11+ ships a
+        # default ``object.__getstate__`` so the bug is invisible there, but the
+        # delegation is wrong on every version.
+        if name.startswith("__") and name.endswith("__"):
+            raise AttributeError(
+                f"{type(self).__name__!r} object has no attribute {name!r}"
+            )
         estimator = self.__dict__.get("estimator")
         if estimator is not None and hasattr(estimator, name):
             return getattr(estimator, name)
