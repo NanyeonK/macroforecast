@@ -34,7 +34,7 @@ result = mf.model_selection.select_params(
 | --- | --- |
 | Build a search spec | `fixed()`, `grid()`, `random_search()`, `cv_path()`, `bayesian_search()`, `genetic_search()`, `custom_search()`, `search_spec()` |
 | Define stochastic distributions | `uniform()`, `log_uniform()`, `randint()`, `choice()` |
-| Run model selection | `select_params()` |
+| Run model selection | `select_params()`, `select_by_information_criterion()` |
 | Store results | `SearchSpec`, `SearchResult`, `SearchError`, `ParamDistribution` |
 
 ## SearchSpec
@@ -495,6 +495,43 @@ When a `ModelSpec` already carries fixed parameters, `select_params()` keeps
 those fixed during every candidate fit and stores them in
 `SearchResult.metadata["fixed_model_params"]`. The selected `best_params` remain
 the searched candidate parameters.
+
+## select_by_information_criterion
+
+```python
+macroforecast.model_selection.select_by_information_criterion(
+    model,
+    X,
+    y=None,
+    search=None,
+    *,
+    criterion="bic",
+    fixed_params=None,
+    preset=None,
+)
+```
+
+Selects model hyperparameters by an in-sample information criterion instead of
+cross-validation. The candidate with the best criterion on the full training
+sample is chosen, so no validation split is needed. This is how the
+autoregressive models (`ar`) and the factor-augmented autoregression (`far`)
+pick their lag order, and it lets those models run with windows that carry no
+validation block.
+
+Input:
+
+| Argument | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `model` | str, callable, or `ModelSpec` | required | Model whose order/hyperparameters are selected. |
+| `X` | pandas object | required | Predictors, panel, or target series depending on model input kind. |
+| `y` | pandas Series or `None` | `None` | Supervised target when separate from `X`. |
+| `search` | `SearchSpec` or `None` | `None` | Explicit candidate set. If absent, the model-owned search space is used. |
+| `criterion` | str | `"bic"` | `"bic"`, `"aic"`, or `"aicc"`. |
+| `fixed_params` | dict or `None` | `None` | Parameters held fixed across candidates. |
+| `preset` | str or `None` | `None` | Model search-space preset. |
+
+Output: `SearchResult`, with the chosen criterion value recorded in the trial
+table and metadata.
 
 ## Graceful degradation in windowed runs
 
