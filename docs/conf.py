@@ -28,6 +28,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx_copybutton",
     "sphinx_design",
+    "sphinxcontrib.mermaid",
 ]
 
 source_suffix = {
@@ -72,13 +73,22 @@ html_theme_options = {
     "use_edit_page_button": True,
     "show_toc_level": 2,
     "show_nav_level": 1,
-    "header_links_before_dropdown": 5,
+    "header_links_before_dropdown": 7,
     "navigation_with_keys": True,
     "icon_links": [
         {"name": "PyPI", "url": "https://pypi.org/project/macroforecast/", "icon": "fa-brands fa-python"},
     ],
     "footer_start": ["copyright"],
     "footer_end": ["sphinx-version"],
+}
+
+# Leaf top-level pages have no sub-toctree, so the primary (left) sidebar would
+# render empty. Suppress it on those pages; pydata-sphinx-theme then lays them
+# out full-width. In-page section navigation still appears in the right-hand
+# "On this page" panel.
+html_sidebars = {
+    "guide/getting_started": [],
+    "guide/glossary": [],
 }
 
 html_context = {

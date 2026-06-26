@@ -58,6 +58,13 @@ jobs:
           done
           echo "generated reference pages are in sync"
 
+      - name: Model overview drift check
+        run: |
+          # The models-and-features page is source-committed but generated from
+          # the package (mf.list_model_specs() plus the *_step builders). Fail if
+          # the committed pages no longer match the installed package.
+          python tools/gen_model_overview.py --check docs/guide
+
       - name: Build Sphinx HTML (fail on warning)
         run: |
           sphinx-build -W -b html docs docs/_build/html

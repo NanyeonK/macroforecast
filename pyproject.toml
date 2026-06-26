@@ -51,6 +51,7 @@ docs = [
     "sphinx-design>=0.5",
     "myst-parser>=2.0",
     "sphinx-copybutton>=0.5",
+    "sphinxcontrib-mermaid>=0.9",
 ]
 typecheck = ["mypy>=1.13"]
 markdown = ["tabulate>=0.9"]

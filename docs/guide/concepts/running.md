@@ -1,0 +1,97 @@
+# Running
+
+[Back to User Guide](../index.md)
+
+`macroforecast.forecasting.run` is the atomic forecasting function. It accepts
+one model, one data source, and a `WindowSpec`, then iterates over test origins
+and returns a `ForecastResult`. For each origin it: applies preprocessing to the
+estimation-window panel; builds features and targets from those rows; selects
+hyperparameters via the validation window; fits the model; and generates
+predictions for the test horizon.
+
+`macroforecast.pipeline.run_pipeline` wraps `run` into a full POOS evaluation.
+It enumerates every (arm, target, horizon) cell, calls `run` for each, collects
+the master forecast frame, evaluates every contender against the benchmark with
+relative RMSE, DM/CW, and the Model Confidence Set, and returns a
+`PipelineReport`.
+
+## Forecast policies
+
+The `forecast_policy` argument to `run` (and the policy resolved from a
+`TargetSpec` t-code in `run_pipeline`) controls how h-step forecasts are built:
+
+- **direct** (`forecast_policy="direct"`): fit one model for each horizon h
+  separately, using `y[t+h]` as the target. The simplest and most common choice.
+- **direct_average** (`forecast_policy="direct_average"`): the forecast object is
+  the h-period cumulation (average) of the stationary transform, not the raw
+  single-period value. This is the standard convention for growth-rate series
+  (t-codes 2, 3, 5, 6, 7 in FRED-MD/QD) and matches how practitioners report
+  average inflation or average growth over the horizon.
+- **path_average** (`forecast_policy="path_average"`): fit h separate one-step
+  models, forecast each step, then average the step forecasts. This is a
+  multi-step iterated design.
+
+At horizon 1, `direct_average` and `path_average` are the same forecast by
+construction (averaging over a single step is that step), so the two policies
+produce identical predictions there. They diverge only for h greater than 1,
+where the h-period-average target and the averaged one-step path are genuinely
+different objects. This holds across every model, including the
+information-criterion autoregressions (`ar`, `far`), whose order is selected by
+BIC/AIC on the same sample under both policies.
+
+The t-code to policy mapping is documented in the
+[Pipeline reference](../../reference/pipeline.md).
+
+## Key Callables
+
+`mf.forecasting.run` executes one (model, data, window) cell and returns a
+`ForecastResult`.
+
+`mf.pipeline.run_pipeline` executes a full `PipelineSpec` and returns a
+`PipelineReport`.
+
+```python
+import macroforecast as mf
+from macroforecast.pipeline import pipeline_spec, run_pipeline, Arm, EvalSpec, TargetSpec
+
+# Low-level: run one model for one target.
+result = mf.forecasting.run(
+    data_spec,
+    model="ar",
+    window=mf.window.from_cutoffs(test_start="1985-01-01", horizon=1),
+    forecast_policy="direct",
+    target="INDPRO",
+    horizon=1,
+)
+forecasts_df = result.to_frame()
+
+# High-level: run the full pipeline with multiple arms and automatic evaluation.
+spec = pipeline_spec(
+    data=bundle,
+    targets=[TargetSpec(name="INDPRO")],
+    horizons=[1, 3, 6, 12],
+    window=mf.window.from_cutoffs(test_start="1985-01-01"),
+    arms=[
+        Arm(name="AR", model="ar", is_benchmark=True),
+        Arm(name="RF", model="random_forest",
+            preprocessing=mf.preprocessing.preprocess_spec(transform="official"),
+            features=mf.feature_engineering.feature_spec(
+                target="INDPRO",
+                predictors="all",
+                lags=None,
+                feature_steps=[mf.feature_engineering.marx_step(name="MARX_X", max_lag=12)],
+            )),
+    ],
+    evaluation=EvalSpec(benchmark="AR"),
+)
+report = run_pipeline(spec)
+```
+
+For a runnable end-to-end example, see the single-forecast and full-study
+snippets in [Getting Started](../getting_started.md) and the step-by-step
+pipeline in the [Replication Gallery](../gallery.md#a-complete-pipeline-step-by-step).
+
+## Reference
+
+- [Forecasting reference page](../../reference/forecasting.md) — `run`, `ForecastResult`, forecast policy options, and stage policy definitions.
+- [Pipeline reference page](../../reference/pipeline.md) — `run_pipeline`, `pipeline_spec`, `PipelineReport`, `Arm`, `EvalSpec`, and t-code to policy mapping.

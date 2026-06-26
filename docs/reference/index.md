@@ -2,6 +2,8 @@
 
 [Back to documentation home](../index.md)
 
+New here? Start with the [User Guide](../guide/index.md) for concept-level explanations and a getting-started walkthrough.
+
 Current workflow reference for the clean public Python API and callable module
 boundaries. Dataset descriptions live in [FRED Datasets](../datasets/index.md).
 
@@ -32,6 +34,20 @@ want to read.
 | Explanation and Delivery | [Interpretation](interpretation.md), [Dual Interpretation](interpretation_dual.md), [Output](output.md), [Reporting](reporting.md) | Attribution, observation-based dual interpretation, output generation, artifact writing, paper-table presets, and report/table rendering. |
 | Orchestration | [Pipeline](pipeline.md) | Comprehensive POOS engine: arms, t-code target resolution, relative RMSE + DM/CW/MCS, combinations, deferred interpretation, and a single report. |
 | Custom Hooks | [Custom Extensions](custom/index.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
+
+## What To Check First
+
+| If you want to check... | Open first | Then open |
+| --- | --- | --- |
+| Current package structure | [Documentation Map](documentation_map.md) | [Workflow Contract](workflow.md), [Public Python API](public_api.md) |
+| Package-wide defaults | [Meta](meta.md) | [Forecasting](forecasting.md) for runner policy usage. |
+| Whether old runtime features are covered | [Legacy Callable Coverage](legacy_callable_coverage.md) | [Reference Verification](reference_verification.md) |
+| Data and preprocessing behavior | [Data](data.md) | [FRED Datasets](../datasets/index.md), [Preprocessing](preprocessing.md) |
+| Paper replication settings | [Replication Gallery](../guide/gallery.md) | [Reference Verification](reference_verification.md), [Forecasting](forecasting.md) |
+| Forecast runner behavior | [Workflow Contract](workflow.md) | [Window](window.md), [Forecasting](forecasting.md) |
+| Models and parameter search | [Models](models.md) | [Model Selection](model_selection.md) |
+| Evaluation and tests | [Evaluation](evaluation.md) | [Metrics](metrics.md), [Tests](tests.md) |
+| Interpretation, output, and reporting | [Interpretation](interpretation.md) | [Output](output.md), [Reporting](reporting.md) |
 
 ## Orientation
 
