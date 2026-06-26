@@ -87,3 +87,12 @@ macrocast_output/
 # graphify artifacts (large; not source)
 graphify-input/
 graphify-out/
+
+# Replication run output (large; data, not source)
+results_archive_*/
+
+# Local scratch / QA artifacts
+qa/
+
+# Local MCP server config (per-developer)
+.mcp.json

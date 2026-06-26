@@ -261,6 +261,8 @@ def run_target(
     skip_existing: bool,
     smoke: bool,
     core_arms_only: bool = False,
+    arm_filter: list[str] | None = None,
+    horizon_filter: list[int] | None = None,
 ) -> None:
     target = TARGET_MAP[target_alias]
     print(f"macroforecast {mf.__version__}", flush=True)
@@ -297,8 +299,8 @@ def run_target(
         outlier_action="flag_as_nan",
         standardize="none",
     )
-    pp_policy = mf.window.stage_policy("origin_available", update="on_retrain")
-    feat_policy = mf.window.stage_policy("fit_window", update="on_retrain")
+    pp_policy = mf.window.stage_policy("origin_available", update=24)
+    feat_policy = mf.window.stage_policy("fit_window", update=24)
 
     # CONSOLIDATED HORIZONS (performance): build ONE pipeline_spec carrying ALL
     # horizons and call run_pipeline ONCE per (target, policy). The per-origin EM
@@ -308,6 +310,18 @@ def run_target(
     # origin_pos). The old code looped horizons and rebuilt a separate spec per
     # horizon, recomputing the (dominant) EM 6x per origin.
     horizons = (1, 3) if smoke else HORIZONS
+    # --horizons selector: restrict the consolidated spec's horizons (and therefore
+    # the per-horizon output splitting / skip logic) to the requested subset. The
+    # per-origin EM imputation is horizon-independent, so restricting horizons stays
+    # leak-free and resumable. Order follows the canonical HORIZONS sequence.
+    if horizon_filter is not None:
+        requested = set(horizon_filter)
+        horizons = tuple(h for h in horizons if h in requested)
+        if not horizons:
+            raise SystemExit(
+                f"--horizons selected none of the available horizons "
+                f"{list((1, 3) if smoke else HORIZONS)}"
+            )
     test_end = "1981-12" if smoke else "2017-12"
 
     n_estimators = 50 if smoke else 200
@@ -320,6 +334,21 @@ def run_target(
         smoke=smoke,
         core_arms_only=core_arms_only,
     )
+    # --arms selector: restrict the arm set (by Arm.name) to the requested arms,
+    # applied AFTER gcls_arms builds the list. The benchmark arm "FM" is ALWAYS
+    # kept even when not listed, because EvalSpec(benchmark="FM") requires FM to
+    # exist as a contender for relative-MSE evaluation; FM is cheap and its
+    # checkpoints already exist, so it resumes instantly.
+    if arm_filter is not None:
+        keep_names = set(arm_filter) | {"FM"}
+        available = {a.name for a in base_arms}
+        missing = [n for n in arm_filter if n not in available]
+        if missing:
+            raise SystemExit(
+                f"--arms named unknown arm(s) {missing}; available: {sorted(available)}"
+            )
+        base_arms = [a for a in base_arms if a.name in keep_names]
+
     # Attach the feature cadence policy to every arm (mirrors run_full.py).
     arms = [dataclasses.replace(a, feature_policy=feat_policy) for a in base_arms]
 
@@ -334,21 +363,43 @@ def run_target(
         mode="expanding",
         horizon=1,
         embargo=0,
-        retrain_every=24,
+        retrain_every=1, retune_every=24, retune_on_retrain=False, reuse_params=True,
         val_method="last_block",
         val_size=24,
     )
+
+    # Arm names the spec will actually contain (post-filter), used by the skip
+    # logic so we never skip a spec just because the FULL-set parquets exist.
+    requested_arm_names = {a.name for a in arms}
 
     for policy in policies:
         targets = [t for t in gcls_targets(policy) if t.name == target_growth]
         out_dir = out_root / target_alias / policy
 
         # Resume granularity stays per-cell: skip the whole spec only if EVERY
-        # horizon parquet already exists (it is one EM pass anyway), else run it.
+        # requested-horizon parquet exists AND already covers EVERY requested arm.
+        # A per-horizon parquet holds all arms' rows in one file, so when --arms
+        # narrows the set we must confirm the on-disk parquet contains the
+        # requested arms (else a parquet written for a different arm subset would
+        # wrongly trigger a skip). It is one EM pass anyway, so a partial match
+        # re-runs the whole (target, policy) spec.
         stems = {h: f"{target_alias}_{policy}_h{h}" for h in horizons}
-        if skip_existing and all((out_dir / f"{stems[h]}.parquet").exists() for h in horizons):
+
+        def _cell_complete(h: int) -> bool:
+            path = out_dir / f"{stems[h]}.parquet"
+            if not path.exists():
+                return False
+            try:
+                existing = pd.read_parquet(path, columns=["arm"])
+            except Exception:  # noqa: BLE001 -- unreadable/old parquet -> re-run
+                return False
+            present = set(existing["arm"].unique()) if "arm" in existing.columns else set()
+            return requested_arm_names.issubset(present)
+
+        if skip_existing and all(_cell_complete(h) for h in horizons):
             print(
-                f"[skip] {target_alias} {policy} all horizons {list(horizons)} (exist)",
+                f"[skip] {target_alias} {policy} all horizons {list(horizons)} "
+                f"arms {sorted(requested_arm_names)} (exist)",
                 flush=True,
             )
             continue
@@ -405,6 +456,216 @@ def run_target(
             _report_smoke(rep)
 
 
+def run_combined(
+    *,
+    policies: list[str],
+    vintage: str,
+    data_csv: str | None,
+    out_root: Path,
+    skip_existing: bool,
+    smoke: bool,
+    core_arms_only: bool = False,
+    arm_filter: list[str] | None = None,
+    horizon_filter: list[int] | None = None,
+    target_filter: list[str] | None = None,
+) -> None:
+    """COMBINED multi-target spec: ALL 10 targets x arms x horizons in ONE pipeline.
+
+    Builds a single ``pipeline_spec`` over every target's ``YGROWTH__`` column with
+    ``n_jobs="auto"`` so the auto allocator sees ~(targets x arms x horizons) cells
+    and saturates the whole CPU -- the expensive deep-horizon RF cells of DIFFERENT
+    targets run concurrently instead of one process-per-target.
+
+    Re-targeting correctness: the arms are built ONCE (against the first target's
+    YGROWTH__ column). The pipeline re-targets each arm's feature spec to the active
+    target (``run._run_one_arm_target`` rewrites ``features.target`` / clears
+    ``features.targets``), so the target lags follow the active target. The
+    target-derived MARX_y / MAF_y blocks read ``input="target_panel"`` with
+    ``columns=None`` (see ``paper_feature_steps``), which is ALL columns of the
+    re-targeted ``target_panel`` (exactly the active target) -- so they too follow
+    the active target rather than staying pinned to the build-time target column.
+    The PREDICTOR blocks (F/X/MARX_X/MAF_X/Level) use the t-coded predictors, which
+    are target-agnostic and exclude EVERY YGROWTH__ column so the realized target
+    never leaks.
+    """
+    print(f"macroforecast {mf.__version__} (combined all-targets mode)", flush=True)
+    aliases = list(TARGET_MAP.keys())
+    if target_filter is not None:
+        unknown = [a for a in target_filter if a not in TARGET_MAP]
+        if unknown:
+            raise SystemExit(f"--targets named unknown alias(es) {unknown}; available: {aliases}")
+        aliases = [a for a in aliases if a in set(target_filter)]
+    growth_of = {a: ygrowth_column(TARGET_MAP[a]) for a in aliases}
+
+    raw = (
+        mf.data.load_fred_md(local_source=data_csv)
+        if data_csv
+        else mf.data.load_fred_md(vintage=vintage)
+    )
+    bundle = _augmented_bundle(raw)
+
+    # Transformed predictors = all official-transform columns EXCEPT every raw target
+    # column and every engineered YGROWTH__/LEVEL__ column. Excluding ALL targets (not
+    # just one) keeps the predictor set identical across targets so one arm set is
+    # valid for every target under re-targeting.
+    raw_targets = set(TARGET_MAP.values())
+    transformed_predictors = [
+        c
+        for c in raw.panel.columns
+        if c not in raw_targets and not str(c).startswith(YGROWTH_PREFIX)
+    ]
+    level_predictors = _level_predictors(raw)
+
+    pp = mf.preprocessing.preprocess_spec(
+        transform="official", impute="em_factor", outliers="iqr",
+        outlier_action="flag_as_nan", standardize="none",
+    )
+    pp_policy = mf.window.stage_policy("origin_available", update=24)
+    feat_policy = mf.window.stage_policy("fit_window", update=24)
+
+    horizons = (1, 3) if smoke else HORIZONS
+    if horizon_filter is not None:
+        requested = set(horizon_filter)
+        horizons = tuple(h for h in horizons if h in requested)
+        if not horizons:
+            raise SystemExit(
+                f"--horizons selected none of the available horizons "
+                f"{list((1, 3) if smoke else HORIZONS)}"
+            )
+    test_end = "1981-12" if smoke else "2017-12"
+    n_estimators = 50 if smoke else 200
+
+    # Build the arm set ONCE against the first alias' growth column; the pipeline
+    # re-targets it to every target (arms are target-agnostic, see docstring).
+    build_target = growth_of[aliases[0]]
+    base_arms = gcls_arms(
+        build_target, transformed_predictors, level_predictors,
+        n_estimators=n_estimators, smoke=smoke, core_arms_only=core_arms_only,
+    )
+    if arm_filter is not None:
+        keep_names = set(arm_filter) | {"FM"}
+        available = {a.name for a in base_arms}
+        missing = [n for n in arm_filter if n not in available]
+        if missing:
+            raise SystemExit(
+                f"--arms named unknown arm(s) {missing}; available: {sorted(available)}"
+            )
+        base_arms = [a for a in base_arms if a.name in keep_names]
+    arms = [dataclasses.replace(a, feature_policy=feat_policy) for a in base_arms]
+    requested_arm_names = {a.name for a in arms}
+
+    window = mf.window.from_cutoffs(
+        estimation_start="1960-01", test_start="1980-01", test_end=test_end,
+        mode="expanding", horizon=1, embargo=0,
+        retrain_every=1, retune_every=24, retune_on_retrain=False, reuse_params=True,
+        val_method="last_block", val_size=24,
+    )
+
+    for policy in policies:
+        all_targets = gcls_targets(policy)  # one TargetSpec per YGROWTH__ column
+        by_name = {t.name: t for t in all_targets}
+        targets = [by_name[growth_of[a]] for a in aliases]
+
+        # Resume: drop already-complete (target, horizon) cells. A target is complete
+        # only if EVERY requested-horizon parquet exists AND covers the requested arms.
+        def _cell_complete(alias: str, h: int) -> bool:
+            path = out_root / alias / policy / f"{alias}_{policy}_h{h}.parquet"
+            if not path.exists():
+                return False
+            try:
+                existing = pd.read_parquet(path, columns=["arm"])
+            except Exception:  # noqa: BLE001
+                return False
+            present = set(existing["arm"].unique()) if "arm" in existing.columns else set()
+            return requested_arm_names.issubset(present)
+
+        pending_aliases = [
+            a for a in aliases
+            if not (skip_existing and all(_cell_complete(a, h) for h in horizons))
+        ]
+        for a in aliases:
+            if a not in pending_aliases:
+                print(f"[skip] {a} {policy} all horizons {list(horizons)} (exist)", flush=True)
+        if not pending_aliases:
+            continue
+        pending_targets = [by_name[growth_of[a]] for a in pending_aliases]
+
+        spec = pipeline_spec(
+            data=bundle,
+            targets=pending_targets,
+            horizons=list(horizons),
+            window=window,
+            arms=arms,
+            evaluation=EvalSpec(benchmark="FM", tests=["dm", "cw", "mcs"]),
+            preprocessing=pp,
+            preprocessing_policy=pp_policy,
+            save_models=False,
+            checkpoint_dir=str(out_root / "_checkpoints_combined" / policy),
+            n_jobs="auto",  # auto: ~(targets x arms x horizons) cells -> all cores
+        )
+        t0 = time.time()
+        try:
+            rep = run_pipeline(spec)
+        except Exception as exc:  # noqa: BLE001
+            print(
+                f"[fail] combined {policy}: {type(exc).__name__}: {str(exc)[:160]}",
+                flush=True,
+            )
+            if smoke:
+                raise
+            continue
+        dt_spec = time.time() - t0
+
+        for fc in (rep.failed_cells or ()):
+            print(
+                f"[failed-cell] target={fc.get('target')} arm={fc.get('arm')} "
+                f"horizons={fc.get('horizons')} error={fc.get('error')}",
+                flush=True,
+            )
+        for ec in (rep.empty_cells or ()):
+            print(
+                f"[empty-cell] target={ec.get('target')} horizon={ec.get('horizon')} "
+                f"arms={ec.get('arms')} (ran OK, zero rows)",
+                flush=True,
+            )
+
+        # Split the combined report by (target, horizon) into the SAME per-cell
+        # layout as run_target (out_root/<alias>/<policy>/<alias>_<policy>_h<h>.*).
+        for alias in pending_aliases:
+            tname = growth_of[alias]
+            out_dir = out_root / alias / policy
+            for h in horizons:
+                stem = f"{alias}_{policy}_h{h}"
+                fch = rep.forecasts
+                ach = rep.accuracy
+                forecasts_h = fch[(fch["target"] == tname) & (fch["horizon"] == h)] \
+                    if fch is not None and not getattr(fch, "empty", True) else None
+                accuracy_h = ach[(ach["target"] == tname) & (ach["horizon"] == h)] \
+                    if ach is not None and not getattr(ach, "empty", True) else None
+                if forecasts_h is None or forecasts_h.empty or accuracy_h is None or accuracy_h.empty:
+                    print(f"[warn] {alias} {policy} h{h}: no rows in report", flush=True)
+                    continue
+                sig = rep.significance
+                significance_h = sig[(sig["target"] == tname) & (sig["horizon"] == h)] \
+                    if sig is not None and not getattr(sig, "empty", True) and "target" in sig.columns \
+                    else _slice_by_horizon(sig, h)
+                info = _write_cell_outputs(
+                    out_dir, stem, forecasts_h, accuracy_h, significance_h, h
+                )
+                print(
+                    f"[done] {alias} {policy} h{h} "
+                    f"best={info['best']} relRMSE={info['relative_mse']:.3f}",
+                    flush=True,
+                )
+        print(
+            f"[spec] combined {policy} targets={len(pending_aliases)} "
+            f"horizons={list(horizons)} arms={len(arms)} secs={dt_spec:.1f}",
+            flush=True,
+        )
+        if smoke:
+            _report_smoke(rep)
+
+
 def _report_smoke(rep) -> None:
     """Print the accuracy table and leakage audit for the smoke run."""
     print("\n=== SMOKE accuracy table ===", flush=True)
@@ -422,7 +683,20 @@ def _report_smoke(rep) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--target", required=True, choices=list(TARGET_MAP.keys()))
+    parser.add_argument("--target", default=None, choices=list(TARGET_MAP.keys()),
+                        help="Single target (per-target mode). Omit and use --all-targets "
+                             "for the COMBINED multi-target spec.")
+    parser.add_argument(
+        "--all-targets", "--combined", action="store_true", dest="all_targets",
+        help="COMBINED mode: build ONE pipeline_spec over ALL 10 targets x arms x "
+             "horizons with n_jobs='auto' so the whole CPU saturates. Mutually "
+             "exclusive with --target.",
+    )
+    parser.add_argument(
+        "--targets", default=None,
+        help="Comma-separated target aliases restricting the COMBINED set (e.g. "
+             "'INDPRO,CPI'). Only valid with --all-targets; omit for all 10.",
+    )
     parser.add_argument("--policies", default="direct_average,path_average")
     parser.add_argument("--vintage", default="2018-01")
     parser.add_argument("--data-csv", default=None)
@@ -444,12 +718,72 @@ def main() -> None:
             "needed for the appendix growth-target comparison."
         ),
     )
+    parser.add_argument(
+        "--arms",
+        default=None,
+        help=(
+            "Comma-separated arm names (by Arm.name, e.g. 'RF_MARX' or "
+            "'FM,RF_F-Level') restricting the arm set AFTER it is built. The "
+            "benchmark arm FM is ALWAYS included even if not listed, because "
+            "EvalSpec(benchmark='FM') needs it as a contender (FM is cheap and "
+            "resumes from existing checkpoints). Omit for the full arm set "
+            "(subject to --core-arms-only)."
+        ),
+    )
+    parser.add_argument(
+        "--horizons",
+        default=None,
+        help=(
+            "Comma-separated horizons (e.g. '24' or '1,3') restricting the spec's "
+            "horizons and the per-horizon output/splitting. Omit for all six."
+        ),
+    )
     args = parser.parse_args()
 
     policies = [p.strip() for p in args.policies.split(",") if p.strip()]
     for p in policies:
         if p not in {"direct_average", "path_average"}:
             raise SystemExit(f"unknown policy {p!r}")
+
+    arm_filter = (
+        [a.strip() for a in args.arms.split(",") if a.strip()]
+        if args.arms is not None
+        else None
+    )
+
+    horizon_filter: list[int] | None = None
+    if args.horizons is not None:
+        try:
+            horizon_filter = [int(h.strip()) for h in args.horizons.split(",") if h.strip()]
+        except ValueError as exc:
+            raise SystemExit(f"--horizons must be integers, got {args.horizons!r}") from exc
+
+    if args.all_targets:
+        if args.target is not None:
+            raise SystemExit("--target and --all-targets are mutually exclusive")
+        target_filter = (
+            [t.strip() for t in args.targets.split(",") if t.strip()]
+            if args.targets is not None
+            else None
+        )
+        run_combined(
+            policies=policies,
+            vintage=args.vintage,
+            data_csv=args.data_csv,
+            out_root=Path(args.out_root),
+            skip_existing=args.skip_existing,
+            smoke=args.smoke,
+            core_arms_only=args.core_arms_only,
+            arm_filter=arm_filter,
+            horizon_filter=horizon_filter,
+            target_filter=target_filter,
+        )
+        return
+
+    if args.target is None:
+        raise SystemExit("either --target <alias> or --all-targets is required")
+    if args.targets is not None:
+        raise SystemExit("--targets is only valid with --all-targets")
 
     run_target(
         args.target,
@@ -460,6 +794,8 @@ def main() -> None:
         skip_existing=args.skip_existing,
         smoke=args.smoke,
         core_arms_only=args.core_arms_only,
+        arm_filter=arm_filter,
+        horizon_filter=horizon_filter,
     )
 
 

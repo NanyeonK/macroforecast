@@ -6,16 +6,28 @@ cache + feature cadence). Writes per-(target,horizon) accuracy and the forecast
 panel as each cell finishes (resumable via skip-existing), then the pooled Eq.11
 treatment effect. This is a multi-hour compute job (cf. the GCLS INDPRO run ~15h).
 
-Horizon consolidation (performance + correctness)
--------------------------------------------------
-Each target builds ONE ``pipeline_spec`` carrying ALL horizons
-(``horizons=[1, 3, 9, 12, 24]``) and calls ``run_pipeline`` ONCE, mirroring
-``gcls_2021_pipeline/run_pipeline_full.py``. The per-origin EM imputation is
-horizon-independent (it only imputes the panel up to each origin), so the runner
-computes it once per origin and shares it across all horizons (and arms) via the
-cross-arm/cross-horizon preprocessing cache keyed on ``origin_pos``. The
-consolidated report is then split by horizon into per-(target, horizon) lean
-parquet + accuracy CSV so resume granularity stays per cell.
+Combined multi-target consolidation (performance + correctness)
+---------------------------------------------------------------
+The run builds ONE ``pipeline_spec`` over ALL 5 targets x 4 arms x 5 horizons
+(``targets=[5 ResolvedTargets]``, ``horizons=[1, 3, 9, 12, 24]``) and calls
+``run_pipeline`` ONCE with ``n_jobs="auto"``. The auto allocator sees ~100 cells
+and splits the 48 cores across cell workers, so the whole CPU saturates and the
+expensive RFARDI-h24 cells of DIFFERENT targets run CONCURRENTLY instead of
+one-target-at-a-time (the prior per-target loop left ~8 cores idle).
+
+The arms carry a single feature spec; the pipeline re-targets each arm to the
+active YTARGET__ column (``run._run_one_arm_target`` rewrites ``features.target``
+and clears ``features.targets``). The ML-Useful feature steps are TARGET-AGNOSTIC
+(PCA factors over the YTARGET-excluded predictors; the only target-derived block
+is ``target_lags``, which reads ``features.target``), so one arm set is correct
+for every target -- verified by ``_verify_combined.py`` (combined INDPRO forecasts
+== per-target INDPRO forecasts, and INDPRO vs CPI differ at the right scale).
+
+The per-origin EM imputation is horizon-independent (it only imputes the panel up
+to each origin), so the runner shares it across all horizons (and arms) per target
+via the preprocessing cache keyed on ``origin_pos``. The consolidated report is
+then split by (target, horizon) into per-cell lean parquet + accuracy CSV so
+resume granularity stays per cell.
 
 The earlier version looped single horizons (``horizons=[h]``) sharing ONE
 checkpoint directory per (target, arm). Origin positions are horizon-independent,
@@ -172,8 +184,10 @@ def main(data_csv: str) -> None:
                        if not str(c).startswith(YTARGET_PREFIX))
     pp = mf.preprocessing.preprocess_spec(transform="official", impute="em_factor",
                                           outliers="iqr", outlier_action="flag_as_nan", standardize="none")
-    pol = mf.window.stage_policy("origin_available", update="on_retrain")
-    fpol = mf.window.stage_policy("fit_window", update="on_retrain")
+    # EM-factor imputation stays on a 24-origin cadence (its own cost driver);
+    # leak-free (past data only) and ~unchanged values vs every-origin refit.
+    pol = mf.window.stage_policy("origin_available", update=24)
+    fpol = mf.window.stage_policy("fit_window", update=24)
     # Build the arms once against the INDPRO YTARGET column; the pipeline runtime
     # re-targets each arm's feature spec (target lags / target-derived blocks) to the
     # per-target YTARGET__ column, while the PCA-factor predictor block stays fixed.
@@ -194,48 +208,69 @@ def main(data_csv: str) -> None:
     # available selection sample. The runner special-cases random_kfold via
     # ``_allow_non_temporal_selection_splits`` so the non-temporal folds are
     # accepted by ``select_params``.
+    # Coefficients RE-ESTIMATED every origin (retrain_every=1, standard expanding
+    # POOS); expensive HP grid search only every 24 months (retune_every=24,
+    # retune_on_retrain=False, reuse_params=True) per the paper's "re-optimize
+    # hyperparameters every two years" (Sec. 4.3). retrain_every=24 previously froze
+    # the whole fit for 24 months -- the AR benchmark forecasts recursively from its
+    # training tail and ignores X_test, so its forecast went stale for 24 months,
+    # inflating every model's relative RMSPE (acute for the volatile I(0) T10YFFM
+    # level at h=1: AR_RMSE 1.34 frozen vs 0.56 refit each origin).
     window = mf.window.from_cutoffs(
         estimation_start="1960-01", test_start="1980-01", test_end="2017-12",
-        mode="expanding", horizon=1, embargo=0, retrain_every=24,
+        mode="expanding", horizon=1, embargo=0,
+        retrain_every=1, retune_every=24, retune_on_retrain=False, reuse_params=True,
         val_method="random_kfold", val_n_splits=5, val_random_state=0,
     )
 
     acc_rows = []
-    for tspec in ml_useful_targets():
-        # Output filenames key on the RAW column name (strip the YTARGET__ prefix)
-        # so they match the stable per-target convention (forecast_INDPRO_h1.parquet).
-        raw_col = tspec.name[len(YTARGET_PREFIX):] if tspec.name.startswith(YTARGET_PREFIX) else tspec.name
-        # Resume granularity stays per (target, horizon): skip the whole target
-        # only if EVERY horizon parquet already exists (it is one EM pass anyway).
-        stems = {h: f"{raw_col}_h{h}" for h in HORIZONS}
-        if all(os.path.exists(os.path.join(RESULTS, f"forecast_{stems[h]}.parquet")) for h in HORIZONS):
-            print(f"[skip] {tspec.name} all horizons {list(HORIZONS)} (exist)", flush=True)
-            continue
+    # ONE combined multi-TARGET, multi-horizon spec: all 5 targets x 4 arms x 5
+    # horizons = 100 cells in a single pipeline_spec with n_jobs="auto". The auto
+    # allocator (pipeline.spec) sees ~100 cells and splits the 48 cores across cell
+    # workers so the whole CPU saturates -- the expensive RFARDI-h24 cells of
+    # DIFFERENT targets now run CONCURRENTLY instead of one-target-at-a-time. The
+    # pipeline re-targets each arm's feature spec to the active YTARGET__ column
+    # (run._run_one_arm_target rewrites features.target / clears features.targets);
+    # the ML-Useful feature steps are target-AGNOSTIC (PCA factors over the
+    # YTARGET-excluded predictors; the only target-derived block is target_lags,
+    # which reads features.target), so one arm set is correct for every target.
+    tspecs = list(ml_useful_targets())
+    # Per-(target, horizon) output filenames key on the RAW column (strip the
+    # YTARGET__ prefix) -> forecast_INDPRO_h1.parquet, matching the prior layout.
+    def _raw_col(name: str) -> str:
+        return name[len(YTARGET_PREFIX):] if name.startswith(YTARGET_PREFIX) else name
 
-        # ONE consolidated multi-horizon spec per target: the per-origin EM is
-        # computed once and shared across all horizons (and arms) via the
-        # cross-horizon preprocessing cache. ``checkpoint_dir`` namespaces each
-        # horizon's origins under ``<cell>/h<h>`` so horizons never collide.
+    stems = {(t.name, h): f"{_raw_col(t.name)}_h{h}" for t in tspecs for h in HORIZONS}
+    # Resume: drop already-complete (target, horizon) cells from the spec. Skip a
+    # whole TARGET only if every horizon parquet exists; otherwise the target stays
+    # in the combined spec (one EM pass shared across its horizons/arms anyway).
+    pending = [
+        t for t in tspecs
+        if not all(
+            os.path.exists(os.path.join(RESULTS, f"forecast_{stems[(t.name, h)]}.parquet"))
+            for h in HORIZONS
+        )
+    ]
+    for t in tspecs:
+        if t not in pending:
+            print(f"[skip] {t.name} all horizons {list(HORIZONS)} (exist)", flush=True)
+
+    if pending:
         t0 = time.time()
-        try:
-            rep = run_pipeline(pipeline_spec(
-                data=bundle, targets=[tspec], horizons=list(HORIZONS), window=window, arms=arms,
-                evaluation=EvalSpec(benchmark="AR", tests=["dm"]),
-                preprocessing=pp, preprocessing_policy=pol, save_models=False,
-                checkpoint_dir=os.path.join(RESULTS, "_checkpoints"),
-            ))
-        except Exception as exc:  # noqa: BLE001
-            print(f"[fail] {tspec.name} (consolidated): {type(exc).__name__}: {str(exc)[:120]}", flush=True)
-            continue
+        rep = run_pipeline(pipeline_spec(
+            data=bundle, targets=pending, horizons=list(HORIZONS), window=window, arms=arms,
+            evaluation=EvalSpec(benchmark="AR", tests=["dm"]),
+            preprocessing=pp, preprocessing_policy=pol, save_models=False,
+            checkpoint_dir=os.path.join(RESULTS, "_checkpoints"),
+            n_jobs="auto",  # auto: ~100 cells -> all 48 cores; deterministic == n_jobs=1
+        ))
         dt_spec = time.time() - t0
 
-        # Surface failed and zero-row cells so a silently-missing horizon is
-        # visible in the run log (does not change the run numerics). ``failed_cells``
-        # are cells whose run() raised; ``empty_cells`` are (target, horizon) cells
-        # that ran without error but produced ZERO forecast rows (e.g. INDPRO h24).
+        # Surface failed and zero-row cells across ALL targets so a silently-missing
+        # (target, horizon) is visible in the run log (does not change numerics).
         for fc in (rep.failed_cells or ()):
             print(
-                f"[failed-cell] {tspec.name} arm={fc.get('arm')} "
+                f"[failed-cell] target={fc.get('target')} arm={fc.get('arm')} "
                 f"horizons={fc.get('horizons')} error={fc.get('error')}",
                 flush=True,
             )
@@ -246,21 +281,27 @@ def main(data_csv: str) -> None:
                 flush=True,
             )
 
-        # Split the consolidated report into per-(target, horizon) cells.
-        for h in HORIZONS:
-            tag = stems[h]
-            forecasts_h = _slice_by_horizon(rep.forecasts, h)
-            accuracy_h = _slice_by_horizon(rep.accuracy, h)
-            if forecasts_h is None or accuracy_h is None:
-                print(f"[warn] {tag}: no rows in report", flush=True)
-                continue
-            _sanitize_for_parquet(forecasts_h).to_parquet(os.path.join(RESULTS, f"forecast_{tag}.parquet"))
-            acc = accuracy_h.assign(horizon=h)
-            acc.to_csv(os.path.join(RESULTS, f"accuracy_{tag}.csv"), index=False)
-            acc_rows.append(acc)
-            best = acc.sort_values("relative_mse").iloc[0]
-            print(f"[done] {tag} best={best['contender']} relRMSE={best['relative_mse']:.3f}", flush=True)
-        print(f"[spec] {tspec.name} horizons={list(HORIZONS)} arms={len(arms)} secs={dt_spec:.0f}", flush=True)
+        # Split the consolidated report into per-(target, horizon) cells, keyed on
+        # BOTH target and horizon (the report now spans every pending target).
+        for t in pending:
+            for h in HORIZONS:
+                tag = stems[(t.name, h)]
+                fch = rep.forecasts
+                ach = rep.accuracy
+                forecasts_h = fch[(fch["target"] == t.name) & (fch["horizon"] == h)] \
+                    if fch is not None and not getattr(fch, "empty", True) else None
+                accuracy_h = ach[(ach["target"] == t.name) & (ach["horizon"] == h)] \
+                    if ach is not None and not getattr(ach, "empty", True) else None
+                if forecasts_h is None or forecasts_h.empty or accuracy_h is None or accuracy_h.empty:
+                    print(f"[warn] {tag}: no rows in report", flush=True)
+                    continue
+                _sanitize_for_parquet(forecasts_h).to_parquet(os.path.join(RESULTS, f"forecast_{tag}.parquet"))
+                acc = accuracy_h.assign(horizon=h)
+                acc.to_csv(os.path.join(RESULTS, f"accuracy_{tag}.csv"), index=False)
+                acc_rows.append(acc)
+                best = acc.sort_values("relative_mse").iloc[0]
+                print(f"[done] {tag} best={best['contender']} relRMSE={best['relative_mse']:.3f}", flush=True)
+        print(f"[spec] combined targets={len(pending)} horizons={list(HORIZONS)} arms={len(arms)} secs={dt_spec:.0f}", flush=True)
 
     # pooled treatment effect over all completed cells
     panels = [pd.read_parquet(os.path.join(RESULTS, f))

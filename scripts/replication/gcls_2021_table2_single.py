@@ -21,11 +21,11 @@ TARGET_MAP = {
     "INDPRO": "INDPRO",
     "EMP": "PAYEMS",
     "UNRATE": "UNRATE",
-    "INCOME": "W875RX1",
+    "INCOME": "RPI",
     "CONS": "DPCERA3M086SBEA",
     "RETAIL": "RETAILx",
     "HOUST": "HOUST",
-    "M2": "M2SL",
+    "M2": "M2REAL",
     "CPI": "CPIAUCSL",
     "PPI": "WPSFD49207",  # PPI Finished Goods (standard headline PPI); PPICMM=Metals is far more volatile and mismatches the appendix scale
 }
@@ -84,7 +84,13 @@ def paper_feature_steps(
             mf.feature_engineering.marx_step(
                 name="MARX_y",
                 input="target_panel",
-                columns=[target],
+                # columns=None -> ALL columns of ``target_panel``. The target_panel
+                # is built from ``fitted.targets`` (exactly the active target), so
+                # this follows the pipeline's per-target re-targeting (combined
+                # multi-target spec) instead of pinning the original target column.
+                # For a single-target spec target_panel has one column, so this is
+                # numerically identical to the prior columns=[target].
+                columns=None,
                 max_lag=12,
                 scale_lags=False,
                 include=True,
@@ -105,7 +111,10 @@ def paper_feature_steps(
             mf.feature_engineering.maf_step(
                 name="MAF_y",
                 input="target_panel",
-                columns=[target],
+                # columns=None -> ALL columns of ``target_panel`` (the active
+                # re-targeted target). Same target-agnostic rationale as MARX_y;
+                # numerically identical to columns=[target] for a single target.
+                columns=None,
                 max_lag=12,
                 n_components=2,
                 scale=False,
