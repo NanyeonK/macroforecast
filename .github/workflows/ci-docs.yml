@@ -38,25 +38,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
-      - name: Encyclopedia drift check
-        run: |
-          # The encyclopedia tree is source-committed but generated from the
-          # OptionDoc + LayerImplementationSpec registries. Re-emit into a
-          # scratch directory and diff against the committed tree; any
-          # divergence means a contributor edited the schema or OptionDoc
-          # without re-running the renderer.
-          python -m tools.docgen encyclopedia /tmp/encyc_check
-          generated_paths="browse_by_layer.md browse_by_axis.md browse_by_option.md l0 l1 l1_5 l2 l2_5 l3 l3_5 l4 l4_5 l5 l6 l7 l8"
-          for path in $generated_paths; do
-              if ! diff -r "docs/reference/generated/$path" "/tmp/encyc_check/$path" >/dev/null; then
-                  echo "docs/reference/generated/$path is out of sync with the registries."
-                  echo "Run: python -m tools.docgen encyclopedia /tmp/generated-reference; copy checked paths into docs/reference/generated/"
-                  echo "Then commit the resulting changes."
-                  diff -r "docs/reference/generated/$path" "/tmp/encyc_check/$path" | head -80 || true
-                  exit 1
-              fi
-          done
-          echo "generated reference pages are in sync"
+      # NOTE: the former "Encyclopedia drift check" step was removed. It invoked
+      # `tools.docgen encyclopedia`, which imports `macroforecast.core.ops` /
+      # `macroforecast.core.layer_specs` and diffs `docs/reference/generated/`.
+      # None of those exist in this package (it is a forecasting package, not a
+      # layered-ops framework) — the tooling and the generated tree are orphaned
+      # from a different architecture, so the step failed on every push and
+      # blocked the docs deploy. The live docs build does not depend on it.
 
       - name: Model overview drift check
         run: |

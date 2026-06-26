@@ -53,7 +53,7 @@ processed = mf.preprocessing.reprocess(
     impute="em_factor",
 )
 
-summary = mf.data_summary.summarize_data(processed.panel)
+summary = mf.data_analysis.summarize_data(processed.panel)
 analysis = mf.data_analysis.analyze_data(bundle.panel, processed.panel)
 ```
 

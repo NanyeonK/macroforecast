@@ -1,6 +1,7 @@
 """The ADD models are first-class in the registry / forecasting pipeline."""
 from __future__ import annotations
 import numpy as np, pandas as pd
+import pytest
 import macroforecast as mf
 
 NEW = ["arima", "auto_arima", "gjr_garch", "tgarch"]
@@ -21,6 +22,7 @@ def test_arima_fits_via_registry():
     assert np.isfinite(np.asarray(fit.predict(X.iloc[:3])).reshape(-1)).all()
 
 def test_gjr_garch_fits_via_registry_like_egarch():
+    pytest.importorskip("arch")  # GARCH-family models require the optional 'arch' extra
     r = pd.Series(np.random.default_rng(1).normal(scale=1.5, size=400),
                   index=pd.date_range("2000-01-31", periods=400, freq="ME"))
     X = pd.DataFrame({"ret": r.values}, index=r.index)
