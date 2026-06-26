@@ -15,7 +15,12 @@ from typing import Any, NamedTuple
 
 import pandas as pd
 
-from macroforecast.pipeline.spec import Arm, PipelineSpec, ResolvedTarget
+from macroforecast.pipeline.spec import (
+    Arm,
+    PipelineSpec,
+    ResolvedTarget,
+    _model_default_name,
+)
 
 
 def _safe_segment(value: str) -> str:
@@ -167,6 +172,73 @@ def _enumerate_cells(spec: PipelineSpec) -> list[_Cell]:
     return cells
 
 
+# Relative per-cell cost weights by model family, used only to ORDER dispatch
+# (longest-processing-time-first). Exact values do not affect results, only the
+# order in which independent cells are submitted to the pool.
+_FAMILY_COST_WEIGHT = {
+    "tree": 8.0,
+    "neural": 8.0,
+    "support_vector": 6.0,
+    "composite": 5.0,
+    "nonparametric": 4.0,
+    "mixed_frequency": 3.0,
+    "assemblage": 2.5,
+    "factor": 2.0,
+    "volatility": 2.0,
+    "spline": 2.0,
+    "linear": 1.5,
+    "timeseries": 1.0,
+}
+_DEFAULT_COST_WEIGHT = 2.0
+_MODEL_FAMILY_CACHE: dict[str, str] = {}
+
+
+def _model_family(name: str | None) -> str | None:
+    """Look up a model's family from the registry, cached. Best-effort."""
+    if not name:
+        return None
+    if not _MODEL_FAMILY_CACHE:
+        try:
+            from macroforecast import list_model_specs
+
+            df = list_model_specs()
+            for record_name, family in zip(df["name"], df["family"]):
+                _MODEL_FAMILY_CACHE[str(record_name)] = str(family)
+        except Exception:
+            # Leave the cache empty; callers fall back to the default weight.
+            _MODEL_FAMILY_CACHE["__unavailable__"] = ""
+    return _MODEL_FAMILY_CACHE.get(name)
+
+
+def _cell_cost(spec: PipelineSpec, cell: _Cell) -> float:
+    """A cheap proxy for how long a cell takes, for dispatch ordering only.
+
+    Within one ``run_pipeline`` call every cell shares the forecast policy, so the
+    cost ordering is driven by model family (tree ensembles and nets dominate) and
+    the longest horizon (more iterated steps and a larger training tail). The proxy
+    never affects numerical results -- it only decides submission order so the
+    heaviest cells start first and are not stranded alone at the tail.
+    """
+    arm = spec.arms[cell.arm_idx]
+    try:
+        name = _model_default_name(arm.model)
+    except Exception:
+        name = None
+    weight = _FAMILY_COST_WEIGHT.get(_model_family(name), _DEFAULT_COST_WEIGHT)
+    horizon = max(cell.horizons) if cell.horizons else 1
+    return weight * float(horizon)
+
+
+def _lpt_dispatch_order(spec: PipelineSpec, cells: list[_Cell]) -> list[_Cell]:
+    """Order cells by descending cost (longest-processing-time-first).
+
+    Ties keep the canonical enumeration order (stable sort), so the schedule is
+    deterministic. Reassembly still iterates the canonical ``cells`` list, so this
+    ordering changes only the wall-clock makespan, never the output.
+    """
+    return sorted(cells, key=lambda c: _cell_cost(spec, c), reverse=True)
+
+
 def _execute_cell(
     spec: PipelineSpec, cell: _Cell, *, preprocessing_cache=None
 ) -> pd.DataFrame:
@@ -295,9 +367,13 @@ def _run_cells(
         from concurrent.futures import ProcessPoolExecutor
 
         max_workers = min(spec.n_jobs, len(cells))
+        # Dispatch heaviest-first (LPT) so a heavy cell is never stranded alone at
+        # the tail while cores sit idle. Results are keyed by cell and reassembled
+        # in the canonical order below, so this changes makespan only, not output.
+        dispatch = _lpt_dispatch_order(spec, cells)
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             for cell, frame, error in executor.map(
-                _parallel_cell_worker, [(spec, c) for c in cells]
+                _parallel_cell_worker, [(spec, c) for c in dispatch]
             ):
                 if error is not None:
                     failed.append(_cell_failure(spec, cell, error))
