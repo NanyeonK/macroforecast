@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -255,7 +255,7 @@ class _NaiveForecaster:
             # preserves gaps from dropped/missing observations), so a ragged edge or
             # an interior gap does not shift the seasons.
             positions = _absolute_season_positions(series.index, len(values))
-            by_slot = np.full(m, np.nan, dtype=float)
+            by_slot: np.ndarray = np.full(m, np.nan, dtype=float)
             for pos, value in zip(positions, values):
                 if np.isfinite(value):
                     by_slot[int(pos) % m] = value
@@ -917,7 +917,7 @@ def var_roots(fit: ModelFit) -> dict[str, Any]:
     if k == 0 or coef.ndim != 2 or coef.shape[1] < k * p:
         raise ValueError("var_roots could not read the lag-coefficient block")
     lag_block = coef[:, : k * p]
-    companion = np.zeros((k * p, k * p), dtype=float)
+    companion: np.ndarray = np.zeros((k * p, k * p), dtype=float)
     companion[:k, :] = lag_block
     if p > 1:
         companion[k:, : k * (p - 1)] = np.eye(k * (p - 1), dtype=float)
@@ -1420,7 +1420,7 @@ def dfm_unrestricted_midas(
     lag_values = _normalize_model_lags(lags)
     factor_lag_values = _normalize_model_lags(factor_lags)
     lag_column_values = tuple(str(column) for column in lag_columns or ())
-    dfm_params = {
+    dfm_params: dict[str, Any] = {
         "n_factors": int(n_factors),
         "factor_order": int(factor_order),
         "idiosyncratic_ar1": bool(idiosyncratic_ar1),
@@ -1820,7 +1820,7 @@ class _RestrictedMIDASRegressor:
         return raw
 
     def _predict_array(self, frame: pd.DataFrame, params: np.ndarray) -> np.ndarray:
-        values = np.full(len(frame), float(params[0]) if self.fit_intercept else 0.0, dtype=float)
+        values: np.ndarray = np.full(len(frame), float(params[0]) if self.fit_intercept else 0.0, dtype=float)
         for group, members in self.groups_.items():
             start, end = self.group_param_slices_[group]
             weights = _restricted_midas_weights(
@@ -2733,7 +2733,8 @@ def _prior_scale_matrix(value: float | Sequence[Sequence[float]] | None, k: int)
     if np.isscalar(value):
         # A scalar s0 denotes an isotropic inverse-Wishart scale s0*I. The old
         # np.full((k,k), s0) produced a rank-1 (singular) matrix for k>1.
-        return float(value) * np.eye(k, dtype=float)
+        # np.isscalar narrowed value to a scalar but mypy cannot follow it.
+        return float(cast(Any, value)) * np.eye(k, dtype=float)
     arr = np.asarray(value, dtype=float)
     if arr.shape != (k, k):
         raise ValueError(f"s0 must be scalar or a {k}x{k} matrix")
@@ -2765,7 +2766,8 @@ def _positive_definite(matrix: np.ndarray, *, floor: float = 1e-8) -> np.ndarray
 
 def _jsonable_prior_matrix(value: float | Sequence[Sequence[float]] | None) -> Any:
     if value is None or np.isscalar(value):
-        return None if value is None else float(value)
+        # np.isscalar narrowed value to a scalar but mypy cannot follow it.
+        return None if value is None else float(cast(Any, value))
     return np.asarray(value, dtype=float).tolist()
 
 
@@ -2868,7 +2870,8 @@ def _favar_loading_draws(
     if b0_arg is None:
         precision = 4.0 * np.eye(fy.shape[1], dtype=float)
     elif np.isscalar(b0_arg):
-        precision = float(b0_arg) * np.eye(fy.shape[1], dtype=float)
+        # np.isscalar narrowed b0_arg to a scalar but mypy cannot follow it.
+        precision = float(cast(Any, b0_arg)) * np.eye(fy.shape[1], dtype=float)
     else:
         precision = np.asarray(b0_arg, dtype=float)
     c0 = float(factorprior.get("c0", 0.01))
@@ -2906,7 +2909,7 @@ def _parse_favar_varprior(prior: Mapping[str, Any]) -> dict[str, Any]:
             "vb0": 0.0,
             "nu0": float(prior.get("nu0", 0.0)),
             "s0": prior.get("s0", 0.0),
-            "kappa0": float(mn.get("kappa0")),
+            "kappa0": float(cast(Any, mn.get("kappa0"))),
             "kappa1": float(mn.get("kappa1", 0.5)),
         }
     return {
@@ -3393,7 +3396,7 @@ def _restricted_midas_weights(
     lags: list[int],
     *,
     weighting: str,
-    params: Sequence[float],
+    params: Sequence[float] | np.ndarray,
     polynomial_order: int,
     n_steps: int,
     step_bounds: tuple[int, ...] | None,
@@ -3405,8 +3408,8 @@ def _restricted_midas_weights(
     if weighting == "almon":
         if len(p) != 1 + polynomial_order:
             raise ValueError("almon restricted MIDAS parameters must be scale plus polynomial_order shape values")
-        positions = np.arange(1, n + 1, dtype=float)
-        raw = np.zeros(n, dtype=float)
+        positions: np.ndarray = np.arange(1, n + 1, dtype=float)
+        raw: np.ndarray = np.zeros(n, dtype=float)
         for power, value in enumerate(p[1:], start=1):
             raw += float(value) * np.power(positions, power)
         exp_raw = np.exp(raw - raw.max())
@@ -3492,7 +3495,7 @@ def _midas_weights(
         raise ValueError("n_steps must be positive")
     if weighting == "almon":
         theta_values = theta or tuple(0.0 for _ in range(polynomial_order))
-        positions = np.arange(1, n + 1, dtype=float)
+        positions: np.ndarray = np.arange(1, n + 1, dtype=float)
         raw: np.ndarray = np.zeros(n, dtype=float)
         for power, value in enumerate(theta_values, start=1):
             raw += float(value) * np.power(positions, power)
@@ -3511,7 +3514,7 @@ def _midas_weights(
     elif weighting == "step":
         if step_bounds is None:
             buckets = np.array_split(np.arange(n), max(1, min(n_steps, n)))
-            heights = np.ones(len(buckets), dtype=float)
+            heights: np.ndarray = np.ones(len(buckets), dtype=float)
         else:
             if step_bounds[-1] >= n:
                 raise ValueError("step_bounds must be interior cut points smaller than the number of lag columns")

@@ -785,7 +785,7 @@ def friedman_h_interaction(
         # delegating to R iml/hstats.
         left_grid = _grid_values(frame[left], int(grid_size))
         right_grid = _grid_values(frame[right], int(grid_size))
-        joint = np.empty((len(left_grid), len(right_grid)), dtype=float)
+        joint: np.ndarray = np.empty((len(left_grid), len(right_grid)), dtype=float)
         for i, left_value in enumerate(left_grid):
             for j, right_value in enumerate(right_grid):
                 replaced = frame.copy()
@@ -2384,8 +2384,8 @@ def accumulated_local_effect_2d(
     k1, k2 = len(e1) - 1, len(e2) - 1
     a1 = np.clip(np.searchsorted(e1[1:-1], x1, side="right"), 0, k1 - 1)
     a2 = np.clip(np.searchsorted(e2[1:-1], x2, side="right"), 0, k2 - 1)
-    delta = np.zeros((k1, k2), dtype=float)
-    counts = np.zeros((k1, k2), dtype=float)
+    delta: np.ndarray = np.zeros((k1, k2), dtype=float)
+    counts: np.ndarray = np.zeros((k1, k2), dtype=float)
     for i in range(k1):
         for l in range(k2):
             mask = (a1 == i) & (a2 == l)
@@ -3539,12 +3539,12 @@ def _pipeline_value_contribution(
         return utility
     if method == "leave_one_out_pipeline":
         full = float(np.mean(utility))
-        out = np.zeros(n_items, dtype=float)
+        out: np.ndarray = np.zeros(n_items, dtype=float)
         for idx in range(n_items):
-            without = np.delete(utility, idx)
+            without: np.ndarray = np.delete(utility, idx)
             out[idx] = float(full - np.mean(without)) if len(without) else 0.0
         return out
-    shapley = np.zeros(n_items, dtype=float)
+    shapley: np.ndarray = np.zeros(n_items, dtype=float)
     indices = list(range(n_items))
     for size in range(n_items):
         for subset in combinations(indices, size):
@@ -3665,15 +3665,15 @@ class _InternalVARResults:
             return np.repeat(np.eye(k, dtype=float)[None, :, :], int(maxn) + 1, axis=0)
         k = len(self.names)
         p = int(getattr(self._estimator, "n_lag", 1))
-        lag_coef = np.zeros((p, k, k), dtype=float)
+        lag_coef: np.ndarray = np.zeros((p, k, k), dtype=float)
         for lag in range(p):
             left = lag * k
             right = left + k
             lag_coef[lag] = coef[:, left:right]
-        ma = np.zeros((int(maxn) + 1, k, k), dtype=float)
+        ma: np.ndarray = np.zeros((int(maxn) + 1, k, k), dtype=float)
         ma[0] = np.eye(k, dtype=float)
         for horizon in range(1, int(maxn) + 1):
-            total = np.zeros((k, k), dtype=float)
+            total: np.ndarray = np.zeros((k, k), dtype=float)
             for lag in range(1, min(p, horizon) + 1):
                 total += lag_coef[lag - 1] @ ma[horizon - lag]
             ma[horizon] = total
@@ -4227,7 +4227,7 @@ def _point_loss_shapley(
             loss=loss,
         ), {"shapley_mode": "exact", "effective_permutations": None}
     effective = int(n_permutations or max(128, min(4096, 16 * n_features)))
-    out = np.zeros(n_features, dtype=float)
+    out: np.ndarray = np.zeros(n_features, dtype=float)
     for _ in range(effective):
         current_prediction = float(base_prediction)
         current_loss = _point_loss(actual, current_prediction, loss=loss)
@@ -4252,7 +4252,7 @@ def _exact_point_loss_shapley(
 ) -> np.ndarray:
     values = np.asarray(contributions, dtype=float).reshape(-1)
     n_features = int(len(values))
-    out = np.zeros(n_features, dtype=float)
+    out: np.ndarray = np.zeros(n_features, dtype=float)
     feature_positions = tuple(range(n_features))
     for feature_pos in feature_positions:
         others = tuple(pos for pos in feature_positions if pos != feature_pos)

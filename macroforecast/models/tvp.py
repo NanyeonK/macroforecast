@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, SupportsFloat, cast
 
 import numpy as np
 import pandas as pd
@@ -577,7 +577,7 @@ def _cv_kfold_core(
     n_time = int((z.shape[1] - dim_x) / nf + 1)
     rng = np.random.default_rng(int(random_state))
     fold_index = rng.integers(1, k + 1, size=n_obs)
-    pmse = np.full((k, len(lambdas)), np.nan, dtype=float)
+    pmse: np.ndarray = np.full((k, len(lambdas)), np.nan, dtype=float)
     pmse_het = np.full((k, len(lambdas), n_targets), np.nan, dtype=float)
 
     sw = _as_positive_weights(sweights, nf)
@@ -828,8 +828,9 @@ def _full_coef_path_frame(
 
 
 def _as_positive_weights(values: Any, length: int) -> np.ndarray:
+    raw: np.ndarray
     if np.isscalar(values):
-        raw = np.repeat(float(values), length)
+        raw = np.repeat(float(cast("SupportsFloat", values)), length)
     else:
         raw = np.asarray(values, dtype=float).reshape(-1)
         if raw.size == 1:

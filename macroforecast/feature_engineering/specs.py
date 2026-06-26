@@ -2841,8 +2841,8 @@ def _marx_from_lag_matrix(
     lag_values: tuple[int, ...],
 ) -> pd.DataFrame:
     if lag_values == tuple(range(1, max(lag_values, default=0) + 1)):
-        data: dict[str, np.ndarray] = {}
-        denominators = np.arange(1, len(lag_values) + 1, dtype=float)
+        data: dict[str, np.ndarray | pd.Series] = {}
+        denominators: np.ndarray = np.arange(1, len(lag_values) + 1, dtype=float)
         for column in columns:
             lag_columns = [f"{column}_lag{lag_value}" for lag_value in lag_values]
             values = lag_matrix.loc[:, lag_columns].to_numpy(dtype=float, copy=False)
@@ -2858,7 +2858,7 @@ def _marx_from_lag_matrix(
         result.index.name = "date"
         return result
 
-    data: dict[str, pd.Series] = {}
+    data = {}
     for column in columns:
         for lag_order in lag_values:
             lag_columns = [f"{column}_lag{step}" for step in range(1, lag_order + 1)]

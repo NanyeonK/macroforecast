@@ -1680,10 +1680,10 @@ def random_kfold_split(
     if splits > n:
         raise ValueError("n_splits must be smaller than or equal to n_samples")
     rng = np.random.default_rng(random_state)
-    shuffled = np.arange(n, dtype=int)
+    shuffled: np.ndarray = np.arange(n, dtype=int)
     rng.shuffle(shuffled)
     folds = np.array_split(shuffled, splits)
-    all_idx = np.arange(n, dtype=int)
+    all_idx: np.ndarray = np.arange(n, dtype=int)
     for fold in folds:
         val_idx = np.sort(fold.astype(int, copy=False))
         if len(val_idx) == 0:

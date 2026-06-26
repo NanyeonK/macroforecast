@@ -2540,7 +2540,8 @@ def _mean_hac_test_statistic(
         if alternative == "greater":
             p_value = _normal_one_sided_upper_p(statistic)
         elif alternative == "less":
-            p_value = None if statistic is None else 1.0 - _normal_one_sided_upper_p(statistic)
+            _upper = _normal_one_sided_upper_p(statistic)
+            p_value = None if _upper is None else 1.0 - _upper
         else:
             p_value = _normal_two_sided_p(statistic)
         return statistic, p_value
@@ -3172,10 +3173,10 @@ def _dynamic_quantile_statistic(
     hit = np.where(truth < var_values, 1.0 - alpha, -alpha)
     hit_ahead = hit[lag_hit:]
     var_ahead = var_values[lag_var:]
-    hit_lag = np.zeros((n - lag_hit, lag_hit), dtype=float)
+    hit_lag: np.ndarray = np.zeros((n - lag_hit, lag_hit), dtype=float)
     for col in range(lag_hit):
         hit_lag[:, col] = hit[col : n - (lag_hit - col)]
-    y_lag = truth[lag - 1 : n - 1] ** 2
+    y_lag: np.ndarray = truth[lag - 1 : n - 1] ** 2
     min_len = min(len(hit_ahead), len(var_ahead), hit_lag.shape[0], len(y_lag))
     if min_len <= 0:
         return None, None, None, 0
@@ -3495,7 +3496,7 @@ def _residual_test_statistic(
     key = str(test_name).lower().replace("-", "_")
     values = residuals.astype(float).dropna()
     lag_used = min(int(lag), max(len(values) - 1, 0))
-    base = {
+    base: dict[str, Any] = {
         "test": key,
         "statistic": None,
         "p_value": None,

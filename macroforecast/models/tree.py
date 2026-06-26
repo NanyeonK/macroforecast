@@ -3,7 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, cast
 import warnings
 
 import numpy as np
@@ -442,10 +442,10 @@ class LGBPlusRegressor:
         }
 
         self.ensemble_: list[dict[str, Any]] = []
-        self.step_type_counts_ = np.zeros((self.n_ensemble, 2), dtype=int)
-        self.linear_feature_counts_ = np.zeros(self.n_features_, dtype=int)
-        self.feature_importances_ = np.zeros(self.n_features_, dtype=float)
-        self.linear_abs_contribution_ = np.zeros(self.n_features_, dtype=float)
+        self.step_type_counts_: np.ndarray = np.zeros((self.n_ensemble, 2), dtype=int)
+        self.linear_feature_counts_: np.ndarray = np.zeros(self.n_features_, dtype=int)
+        self.feature_importances_: np.ndarray = np.zeros(self.n_features_, dtype=float)
+        self.linear_abs_contribution_: np.ndarray = np.zeros(self.n_features_, dtype=float)
         self.training_history_: dict[str, Any] = {
             "source_reference": "philgoucou/lgbplus python/lgb_plus.py and R/lgb_plus.R",
             "selection_method": self.selection_method,
@@ -541,11 +541,13 @@ class LGBPlusRegressor:
 
         init_pred = float(np.mean(y))
         pred = np.full(n_samples, init_pred, dtype=float)
-        pred_val = (
-            None if X_val is None else np.full(len(y_val), init_pred, dtype=float)
+        pred_val: np.ndarray | None = (
+            None
+            if X_val is None
+            else np.full(len(cast("np.ndarray", y_val)), init_pred, dtype=float)
         )
         steps: list[dict[str, Any]] = []
-        step_type_counts = np.zeros(2, dtype=int)
+        step_type_counts: np.ndarray = np.zeros(2, dtype=int)
         linear_feature_counts = np.zeros(n_features, dtype=int)
         linear_abs_contribution = np.zeros(n_features, dtype=float)
         feature_importances = np.zeros(n_features, dtype=float)
@@ -888,9 +890,11 @@ class LGBAPlusRegressor:
         self.feature_names_ = names
         self.n_features_ = int(X_arr.shape[1])
         self.runs_: list[dict[str, Any]] = []
-        self.feature_importances_ = np.zeros(self.n_features_, dtype=float)
-        self.linear_feature_counts_ = np.zeros(self.n_features_, dtype=int)
-        self.linear_abs_contribution_ = np.zeros(self.n_features_, dtype=float)
+        self.feature_importances_: np.ndarray = np.zeros(self.n_features_, dtype=float)
+        self.linear_feature_counts_: np.ndarray = np.zeros(self.n_features_, dtype=int)
+        self.linear_abs_contribution_: np.ndarray = np.zeros(
+            self.n_features_, dtype=float
+        )
         self.training_history_: dict[str, Any] = {
             "source_reference": "philgoucou/lgbplus python/lgb_plus_A.py and R/lgb_plus_A.R",
             "n_runs": self.n_runs,
@@ -958,7 +962,7 @@ class LGBAPlusRegressor:
             params.setdefault("bagging_seed", run_seed)
 
         init = float(np.mean(y))
-        pred = np.full(len(y), init, dtype=float)
+        pred: np.ndarray = np.full(len(y), init, dtype=float)
         trees: list[Any] = []
         linear_steps: list[dict[str, Any]] = []
         feature_importances = np.zeros(n_features, dtype=float)

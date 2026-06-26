@@ -142,7 +142,7 @@ def recent_weight_share(weights: Any, *, mode: str = "one_sided") -> pd.DataFram
     positions = np.arange(len(matrix.index))
     for col_idx, column in enumerate(matrix.columns):
         values = matrix.iloc[:, col_idx].to_numpy(dtype=float)
-        relative = positions - col_idx
+        relative: np.ndarray = positions - col_idx
         if mode_value == "one_sided":
             rows.append(
                 {

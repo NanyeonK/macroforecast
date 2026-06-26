@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
 import gzip
 import hashlib
 from importlib.metadata import PackageNotFoundError, version
@@ -56,7 +56,7 @@ class ArtifactManifest:
     artifacts: dict[str, str] = field(default_factory=dict)
     records: list[ArtifactRecord] = field(default_factory=list)
     provenance: dict[str, Any] = field(default_factory=dict)
-    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     metadata_schema: dict[str, Any] = field(
         default_factory=lambda: {"kind": "artifact_manifest", "version": 1}
     )
@@ -269,6 +269,7 @@ def interpretation_table(value: Any) -> pd.DataFrame:
 def metadata_table(value: Any, *, prefix: str = "") -> pd.DataFrame:
     """Flatten metadata from a result, report, bundle, mapping, or object."""
 
+    metadata: Mapping[str, Any]
     if isinstance(value, ForecastResult):
         metadata = value.metadata
     elif isinstance(value, OutputBundle):
@@ -301,7 +302,7 @@ def run_summary(
 
     out: dict[str, Any] = {
         "metadata_schema": {"kind": "run_summary", "version": 1},
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
     if result is not None:
         forecasts = forecast_table(result)

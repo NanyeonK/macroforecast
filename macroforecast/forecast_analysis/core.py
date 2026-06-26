@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import json
 from pathlib import Path
 from statistics import NormalDist
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -1684,9 +1684,9 @@ def _combination_weights_for_row(
     if method == "mean":
         return {model: 1.0 / len(models) for model in models}
     if method in {"inverse_mspe", "dmspe"}:
-        return _inverse_mspe_weights(base, combined_row, group, spec)
+        return cast("dict[str, float | None]", _inverse_mspe_weights(base, combined_row, group, spec))
     if method == "best_n":
-        return _best_n_weights(base, combined_row, group, spec)
+        return cast("dict[str, float | None]", _best_n_weights(base, combined_row, group, spec))
     if unsupported == "raise":
         raise ValueError(f"combination method {method!r} does not have identifiable weights")
     if unsupported == "nan":

@@ -725,7 +725,7 @@ def _chow_lin_design(
         positions = np.flatnonzero(x_periods == period)
         if len(positions) == 0 or not np.isfinite(value):
             continue
-        row = np.zeros(len(x_high), dtype=float)
+        row: np.ndarray = np.zeros(len(x_high), dtype=float)
         row[positions] = 1.0 if aggregation == "sum" else 1.0 / len(positions)
         rows.append(row)
         y_values.append(float(value))

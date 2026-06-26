@@ -235,7 +235,7 @@ class BaggingRegressor:
             size = min(size, n)
         self._models = []
         self.member_indices_ = []
-        member_pred = np.full((n, self.n_estimators), np.nan, dtype=float)
+        member_pred: np.ndarray = np.full((n, self.n_estimators), np.nan, dtype=float)
         member_rows = []
         feature_rows = []
         for i in range(self.n_estimators):
@@ -249,7 +249,7 @@ class BaggingRegressor:
             model.fit(X.loc[:, list(columns)].iloc[idx].fillna(0.0), y.iloc[idx])
             self._models.append((model, columns))
             self.member_indices_.append(idx.copy())
-            used = np.zeros(n, dtype=bool)
+            used: np.ndarray = np.zeros(n, dtype=bool)
             used[np.unique(idx)] = True
             oob_idx = np.flatnonzero(~used)
             member_rows.append(
@@ -292,7 +292,7 @@ class BaggingRegressor:
             self.oob_metrics_ = None
             return
         sums = np.nansum(member_pred, axis=1)
-        pred = np.full(len(y), np.nan, dtype=float)
+        pred: np.ndarray = np.full(len(y), np.nan, dtype=float)
         pred[has_oob] = sums[has_oob] / counts[has_oob]
         self.oob_predictions_ = pd.Series(pred, index=y.index, name="oob_prediction")
         residual = y.astype(float) - self.oob_predictions_
@@ -601,7 +601,7 @@ class StackingRegressor:
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "StackingRegressor":
         self.feature_names_in_ = tuple(str(column) for column in X.columns)
         frame = X.fillna(0.0)
-        oof = np.full((len(frame), len(self.models)), np.nan, dtype=float)
+        oof: np.ndarray = np.full((len(frame), len(self.models)), np.nan, dtype=float)
         folds = _folds(len(frame), self.n_splits, self.splitter)
         self.folds_ = _fold_metadata(folds, frame.index)
         for train_idx, val_idx in folds:
@@ -743,7 +743,7 @@ class SuperLearnerRegressor:
 
         self.feature_names_in_ = tuple(str(column) for column in X.columns)
         frame = X.fillna(0.0)
-        oof = np.full((len(frame), len(self.models)), np.nan, dtype=float)
+        oof: np.ndarray = np.full((len(frame), len(self.models)), np.nan, dtype=float)
         folds = _folds(len(frame), self.n_splits, self.splitter)
         self.folds_ = _fold_metadata(folds, frame.index)
         for train_idx, val_idx in folds:
@@ -763,7 +763,7 @@ class SuperLearnerRegressor:
         target = y.iloc[np.flatnonzero(valid)].to_numpy(dtype=float)
         losses = np.mean((library - target[:, None]) ** 2, axis=0)
         if self.weight_method == "equal":
-            weights = np.full(len(self.models), 1.0 / len(self.models), dtype=float)
+            weights: np.ndarray = np.full(len(self.models), 1.0 / len(self.models), dtype=float)
         elif self.weight_method == "best":
             weights = np.zeros(len(self.models), dtype=float)
             weights[int(np.argmin(losses))] = 1.0

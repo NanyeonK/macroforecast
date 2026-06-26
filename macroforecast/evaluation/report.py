@@ -542,8 +542,8 @@ def _resolve_rank_metric(
     for metric in preferred:
         if metric in scores.columns:
             return metric
-    for metric in metrics:
-        label = _metric_label(metric)
+    for metric_like in metrics:
+        label = _metric_label(metric_like)
         if label in scores.columns:
             return label
     return None

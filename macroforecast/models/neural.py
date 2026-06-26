@@ -1506,7 +1506,7 @@ def _time_series_block_bootstrap_indices(
     if n_obs <= 0:
         return np.array([], dtype=int), np.array([], dtype=int)
     block_size = max(1, int(block_size))
-    blocks = [
+    blocks: list[np.ndarray] = [
         np.arange(start, min(start + block_size, n_obs), dtype=int)
         for start in range(0, n_obs, block_size)
     ]

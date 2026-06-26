@@ -741,7 +741,7 @@ def edge_ratio(
         if len(models) < 2:
             continue
         for idx, row in group.reset_index(drop=True).iterrows():
-            other_losses = np.delete(losses, idx)
+            other_losses: np.ndarray = np.delete(losses, idx)
             other_min = float(np.min(other_losses))
             edge = other_min - float(row["_macroforecast_loss"])
             out_row = {

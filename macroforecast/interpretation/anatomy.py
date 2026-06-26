@@ -570,7 +570,7 @@ def _contiguous_slice(indices: Any, *, name: str) -> slice:
     positions = np.asarray(indices, dtype=int).reshape(-1)
     if positions.size == 0:
         raise ValueError(f"{name} must not be empty")
-    expected = np.arange(int(positions[0]), int(positions[-1]) + 1, dtype=int)
+    expected: np.ndarray = np.arange(int(positions[0]), int(positions[-1]) + 1, dtype=int)
     if not np.array_equal(positions, expected):
         raise ValueError(f"{name} must be contiguous for anatomy subsets")
     return slice(int(positions[0]), int(positions[-1]) + 1)

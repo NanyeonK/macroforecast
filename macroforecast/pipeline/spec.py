@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 
 # t-code (FRED-MD/QD integration order) -> (forecast_policy, target_transform).
@@ -245,7 +245,7 @@ def resolve_target(
     code = tcode if tcode is not None else _tcode_for(data, spec.name)
     mapping = dict(TCODE_TARGET_MAP)
     if tcode_map is not None:
-        mapping.update({int(k): tuple(v) for k, v in tcode_map.items()})
+        mapping.update({int(k): cast("tuple[str, str]", tuple(v)) for k, v in tcode_map.items()})
 
     if spec.transform is not None:
         transform = str(spec.transform)
@@ -537,6 +537,10 @@ def pipeline_spec(
 
         n_cells = len(resolved) * len(arms) * len(horizon_tuple)
         n_jobs, model_threads = auto_parallelism(n_cells)
+
+    # By here n_jobs is a resolved int: either int(n_jobs) above or the int
+    # returned by auto_parallelism when auto_jobs was set.
+    assert isinstance(n_jobs, int)
 
     # benchmark must resolve to an existing contender (an arm name, since a
     # contender IS an arm, or a combination contender name)

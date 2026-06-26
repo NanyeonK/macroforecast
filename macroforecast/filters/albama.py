@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -67,9 +67,9 @@ def albama(
     values = series.to_numpy(dtype=float)
     index = series.index
     finite = np.isfinite(values)
-    positions = np.arange(len(series), dtype=float).reshape(-1, 1)
-    smoothed = np.full(len(series), np.nan, dtype=float)
-    weights = np.zeros((len(series), len(series)), dtype=float)
+    positions: np.ndarray = np.arange(len(series), dtype=float).reshape(-1, 1)
+    smoothed: np.ndarray = np.full(len(series), np.nan, dtype=float)
+    weights: np.ndarray = np.zeros((len(series), len(series)), dtype=float)
 
     if mode_value == "two_sided":
         train_positions = np.flatnonzero(finite)
@@ -79,8 +79,8 @@ def albama(
                 values=values,
                 train_positions=train_positions,
                 target_positions=np.arange(len(series)),
-                n_estimators=params["n_estimators"],
-                min_samples_leaf=params["min_samples_leaf"],
+                n_estimators=cast(int, params["n_estimators"]),
+                min_samples_leaf=cast(int, params["min_samples_leaf"]),
                 sample_fraction=params["sample_fraction"],
                 random_state=random_state,
                 replace=replace,
@@ -102,8 +102,8 @@ def albama(
                     values=values,
                     train_positions=train_positions,
                     target_positions=np.array([target_pos]),
-                    n_estimators=params["n_estimators"],
-                    min_samples_leaf=params["min_samples_leaf"],
+                    n_estimators=cast(int, params["n_estimators"]),
+                    min_samples_leaf=cast(int, params["min_samples_leaf"]),
                     sample_fraction=params["sample_fraction"],
                     random_state=random_state,
                     replace=replace,
@@ -229,9 +229,10 @@ def _fit_tree_average(
     n_train = len(train_positions)
     rng = np.random.default_rng(random_state)
     sample_size = max(1, min(n_train, int(np.floor(sample_fraction * n_train))))
-    prediction_sum = np.zeros(len(target_positions), dtype=float)
-    weight_matrix = np.zeros((len(values), len(target_positions)), dtype=float)
+    prediction_sum: np.ndarray = np.zeros(len(target_positions), dtype=float)
+    weight_matrix: np.ndarray = np.zeros((len(values), len(target_positions)), dtype=float)
     train_position_set = set(int(pos) for pos in train_positions)
+    col: int | np.signedinteger[Any]
 
     for _tree_idx in range(n_estimators):
         sampled = rng.choice(n_train, size=sample_size, replace=replace)

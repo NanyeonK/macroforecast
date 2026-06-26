@@ -1279,6 +1279,9 @@ def _resolve_glmboost_candidate_count(
         if raw < 1:
             raise ValueError("candidate_count must be at least 1")
     else:
+        # candidate_count is None here, so the earlier both-None guard ensures
+        # candidate_fraction is not None.
+        assert candidate_fraction is not None
         fraction = float(candidate_fraction)
         if not 0 < fraction <= 1:
             raise ValueError("candidate_fraction must be in (0, 1]")

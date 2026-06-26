@@ -224,7 +224,12 @@ def _cell_cost(spec: PipelineSpec, cell: _Cell) -> float:
         name = _model_default_name(arm.model)
     except Exception:
         name = None
-    weight = _FAMILY_COST_WEIGHT.get(_model_family(name), _DEFAULT_COST_WEIGHT)
+    family = _model_family(name)
+    weight = (
+        _FAMILY_COST_WEIGHT.get(family, _DEFAULT_COST_WEIGHT)
+        if family is not None
+        else _DEFAULT_COST_WEIGHT
+    )
     horizon = max(cell.horizons) if cell.horizons else 1
     return weight * float(horizon)
 
@@ -383,7 +388,7 @@ def _run_cells(
         # One shared preprocessing cache per target: arms of the same target reuse
         # the per-origin FittedPreprocessor (spec-level preprocessing only -- arm
         # overrides opt out by getting their own cache). Removes per-arm EM redundancy.
-        target_caches = (
+        target_caches: dict[str, dict[Any, Any]] = (
             {t.name: {} for t in spec.targets} if spec.preprocessing is not None else {}
         )
         for cell in cells:

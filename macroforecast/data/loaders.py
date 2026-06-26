@@ -481,14 +481,15 @@ def load_fred_sd(
     reports = dict(panel.attrs.get("macrocast_reports", {}))
     reports["fred_sd_series_metadata"] = report
     panel.attrs["macrocast_reports"] = reports
+    series_rows = cast(list[dict[str, object]], report["series"])
     native_frequency_by_column = {
         str(row["column"]): str(row["native_frequency"])
-        for row in report["series"]
+        for row in series_rows
         if isinstance(row, Mapping)
     }
     date_anchor_by_column = {
         str(row["column"]): str(row["date_anchor"])
-        for row in report["series"]
+        for row in series_rows
         if isinstance(row, Mapping)
     }
     return _official_bundle(
@@ -991,8 +992,18 @@ def _write_official_fred_vintage_csv(
             error = RawDownloadError(
                 f"failed to obtain official {dataset} vintage={vintage!r} from historical zip or direct URL"
             )
-            error.add_note(f"historical zip failure: {historical_exc!r}")
-            error.add_note(f"direct URL failure: {direct_exc!r}")
+            # BaseException.add_note is Python 3.11+; attach the sub-failures
+            # when available and fall back to the message on 3.10 so the package
+            # stays importable and raises cleanly there too.
+            notes = (
+                f"historical zip failure: {historical_exc!r}",
+                f"direct URL failure: {direct_exc!r}",
+            )
+            if hasattr(error, "add_note"):
+                for note in notes:
+                    cast(Any, error).add_note(note)
+            else:  # Python 3.10
+                error = RawDownloadError("\n".join((str(error), *notes)))
             raise error from direct_exc
 
 

@@ -1,7 +1,8 @@
 """Pipeline evaluation: accuracy, DM/CW significance, MCS, cross-arm combinations (Stage 2)."""
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -43,7 +44,7 @@ def _combine(method: str, frame: pd.DataFrame, y_true: pd.Series, *, horizon: in
         "mean": F.combine_mean, "median": F.combine_median,
         "trimmed_mean": F.combine_trimmed_mean, "winsorized_mean": F.combine_winsorized_mean,
     }
-    estimated = {
+    estimated: dict[str, Callable[..., pd.Series]] = {
         "inverse_mspe": F.combine_inverse_mspe, "dmspe": F.combine_dmspe,
         "best_n": F.combine_best_n, "bates_granger": F.combine_bates_granger,
         "granger_ramanathan": F.combine_granger_ramanathan, "constrained_ls": F.combine_constrained_ls,
@@ -196,14 +197,14 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             row: dict[str, Any] = {"target": target, "horizon": horizon, "contender": contender}
             try:
                 dm = dm_test(loss_c, loss_b, horizon=int(horizon), input_type="loss")
-                row["dm_stat"] = float(dm.statistic); row["dm_p"] = float(dm.p_value)
+                row["dm_stat"] = float(cast(float, dm.statistic)); row["dm_p"] = float(cast(float, dm.p_value))
             except Exception:
                 row["dm_stat"] = np.nan; row["dm_p"] = np.nan
             if use_cw and contender in nested:
                 try:
                     cw = clark_west_test(loss_b, loss_c, fb[common].to_numpy(float),
                                          fc[common].to_numpy(float), horizon=int(horizon))
-                    row["cw_stat"] = float(cw.statistic); row["cw_p"] = float(cw.p_value)
+                    row["cw_stat"] = float(cast(float, cw.statistic)); row["cw_p"] = float(cast(float, cw.p_value))
                 except Exception:
                     row["cw_stat"] = np.nan; row["cw_p"] = np.nan
             out.append(row)

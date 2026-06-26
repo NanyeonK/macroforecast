@@ -622,7 +622,7 @@ def _reference_weight_series(
     names = tuple(str(column) for column in columns)
     if weights is None:
         if default == "uniform":
-            values = np.full(len(names), 1.0 / max(len(names), 1), dtype=float)
+            values: np.ndarray = np.full(len(names), 1.0 / max(len(names), 1), dtype=float)
         else:
             values = np.zeros(len(names), dtype=float)
         return pd.Series(values, index=names, name="reference_weight")

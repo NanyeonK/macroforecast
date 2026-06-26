@@ -20,6 +20,7 @@ from macroforecast.data import (
     validate_panel,
 )
 from macroforecast.feature_engineering import FeatureSet, FeatureSpec, feature_spec
+from macroforecast.feature_engineering.shared import TargetMode, TargetTransform
 from macroforecast.meta import get_config
 from macroforecast.model_ensemble import get_model_ensemble
 from macroforecast.models import ModelSpec, get_model, save_fit
@@ -32,6 +33,7 @@ from macroforecast.model_selection import (
 from macroforecast.window import (
     Split,
     StagePolicy,
+    ValWindow,
     WindowSpec,
     make_splitter,
     resolve_stage_policy,
@@ -149,7 +151,7 @@ def run(
     | None = None,
     save_models: bool = True,
     model_store: str | Path = "trained_model",
-    preprocessing_cache: dict[Any, FittedPreprocessor] | None = None,
+    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
     checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:
     """Run a windowed macro forecasting experiment.
@@ -361,7 +363,7 @@ def run(
 
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
-    selection_cache: dict[str, dict[str, Any] | None] = {}
+    selection_cache: dict[str, Any] = {}
     stage_records: list[dict[str, Any]] = []
     preprocessing_state = _StageUpdateState()
     feature_state = _StageUpdateState()
@@ -654,7 +656,7 @@ def _run_multiple_horizons(
     | None,
     save_models: bool,
     model_store: str | Path,
-    preprocessing_cache: dict[Any, FittedPreprocessor] | None = None,
+    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
     checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:
     # The per-origin EM/factor fit is horizon-independent (it uses only the
@@ -734,7 +736,9 @@ def _resolve_runner_horizons(
     elif isinstance(horizons, (int, np.integer)) and not isinstance(horizons, bool):
         raw_values = (int(horizons),)
     else:
-        raw_values = tuple(int(value) for value in horizons)
+        # horizons is a Sequence[int] here; the bool case is handled above.
+        horizon_seq = cast("Sequence[int]", horizons)
+        raw_values = tuple(int(value) for value in horizon_seq)
     values = tuple(int(value) for value in raw_values)
     if not values:
         raise ValueError("horizons must contain at least one horizon")
@@ -808,12 +812,17 @@ def _feature_spec_for_policy(
     future_feature_policy: FutureFeaturePolicy | None,
     target_transform: str | None,
 ) -> FeatureSpec:
-    transform = _target_transform_for_policy(
-        forecast_policy,
-        feature_transform=None if features is None else features.target_transform,
-        explicit=target_transform,
+    # _target_transform_for_policy returns plain str but only ever yields valid
+    # TargetTransform literals; likewise target_mode is a TargetMode literal.
+    transform = cast(
+        TargetTransform,
+        _target_transform_for_policy(
+            forecast_policy,
+            feature_transform=None if features is None else features.target_transform,
+            explicit=target_transform,
+        ),
     )
-    target_mode = "path" if forecast_policy == "path_average" else "direct"
+    target_mode: TargetMode = "path" if forecast_policy == "path_average" else "direct"
     if features is None:
         if target is None:
             raise ValueError("target is required when data is not a FeatureSet")
@@ -1025,7 +1034,7 @@ def _run_feature_set(
     _validate_runner_window(window_spec, X_all.index)
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
-    selection_cache: dict[str, dict[str, Any] | None] = {}
+    selection_cache: dict[str, Any] = {}
     for item in window_spec.iter_slices(X_all, y_all):
         selection_labels = stage_index(X_all.index, item, selection_policy)
         X_selection, y_selection = _align_feature_xy(
@@ -1353,7 +1362,7 @@ def _fit_predict_origin(
     selection_metric: str | Callable[..., float],
     maximize_selection: bool,
     param_cache: dict[str, dict[str, Any]],
-    selection_cache: dict[str, dict[str, Any] | None],
+    selection_cache: dict[str, Any],
     selection_random_state: int | None,
     save_models: bool,
     model_store: str | Path,
@@ -1584,7 +1593,7 @@ def _fit_predict_recursive_origin(
     selection_metric: str | Callable[..., float],
     maximize_selection: bool,
     param_cache: dict[str, dict[str, Any]],
-    selection_cache: dict[str, dict[str, Any] | None],
+    selection_cache: dict[str, Any],
     selection_random_state: int | None,
     save_models: bool,
     model_store: str | Path,
@@ -1770,7 +1779,7 @@ def _fit_predict_path_average_origin(
     selection_metric: str | Callable[..., float],
     maximize_selection: bool,
     param_cache: dict[str, dict[str, Any]],
-    selection_cache: dict[str, dict[str, Any] | None],
+    selection_cache: dict[str, Any],
     selection_random_state: int | None,
     save_models: bool,
     model_store: str | Path,
@@ -2045,7 +2054,7 @@ def _prepare_origin_panel(
     item: dict[str, Any],
     include_target_pos: bool = True,
     fitted_preprocessing: FittedPreprocessor | None = None,
-    preprocessing_cache: dict[Any, FittedPreprocessor] | None = None,
+    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
     cache_key: Any | None = None,
 ) -> _PreparedStage:
     if preprocessing is None or preprocessing_policy is None:
@@ -2069,7 +2078,11 @@ def _prepare_origin_panel(
         if (preprocessing_cache is not None and cache_key is not None)
         else None
     )
-    if prepared_key is not None and prepared_key in preprocessing_cache:
+    if (
+        prepared_key is not None
+        and preprocessing_cache is not None
+        and prepared_key in preprocessing_cache
+    ):
         cached = preprocessing_cache[prepared_key]
         if isinstance(cached, _PreparedStage):
             return cached
@@ -2144,7 +2157,7 @@ def _prepare_origin_panel(
         metadata=fitted.to_metadata(),
         panel_metadata=panel_metadata,
     )
-    if prepared_key is not None:
+    if prepared_key is not None and preprocessing_cache is not None:
         preprocessing_cache[prepared_key] = stage
     return stage
 
@@ -2319,7 +2332,7 @@ def _resolve_degraded_selection(
     target_step: int,
     origin_label: Any,
     param_cache: dict[str, dict[str, Any]],
-    selection_cache: dict[str, dict[str, Any] | None],
+    selection_cache: dict[str, Any],
     selection_policy: StagePolicy,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     """Degrade gracefully when no target-availability-safe split exists.
@@ -2360,7 +2373,7 @@ def _resolve_degraded_selection(
 
 
 def _assert_selection_was_possible(
-    selection_cache: dict[str, dict[str, Any] | None],
+    selection_cache: dict[str, Any],
     *,
     target_step: int,
 ) -> None:
