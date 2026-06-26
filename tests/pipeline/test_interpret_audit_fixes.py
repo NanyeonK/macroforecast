@@ -8,6 +8,12 @@ from macroforecast.pipeline import (
     Arm, EvalSpec, InterpretSpec, interpret_pipeline, pipeline_spec, run_pipeline,
 )
 
+# Every test here drives SHAP interpretation end to end. Without the optional
+# 'interpretation' extra (shap), interpret_pipeline returns a graceful error
+# table instead of importances, so skip the module — matching the [ci] install
+# and the importorskip convention used by the other optional-dependency tests.
+pytest.importorskip("shap")
+
 
 def _bundle(n=120):
     idx = pd.date_range("2000-01-31", periods=n, freq="ME", name="date")
