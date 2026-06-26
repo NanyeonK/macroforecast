@@ -31,7 +31,11 @@ jobs:
 
       - name: Run tests (core, no deep)
         run: |
-          pytest tests/ -x -q -m 'not deep and not slow'
+          # No -x: report every failure in one run instead of stopping at the
+          # first, so a single push surfaces the full failure set. A fail-fast
+          # run once masked Python-3.10-only and optional-dependency failures
+          # behind an earlier error.
+          pytest tests/ -q -m 'not deep and not slow'
 
       - name: Check seed hardcoding absent (Phase 0)
         run: |

@@ -5,6 +5,29 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+## [0.9.5] -- 2026-06-27 -- "Replication robustness, Python 3.10 compatibility, type-clean"
+
+**Correctness and compatibility:**
+
+- `pipeline`: relative-RMSE / OOS-R2 are scored on each contender's PAIRWISE common
+  sample with the benchmark, and `n_common` is per-contender. The previous single
+  all-contender listwise sample let one short-coverage arm silently truncate every
+  arm's evaluation window; ragged coverage now emits a `RuntimeWarning`. The joint
+  sample is kept only for the Model Confidence Set.
+- `forecasting`: information-criterion models (`ar`, `far`) select their AR order by the
+  same BIC/AIC branch under both the direct and path-average policies, so horizon-1
+  direct and path forecasts are identical by construction again.
+- Python 3.10: fixed three 3.11+ APIs that broke on 3.10 -- `datetime.UTC` in
+  `output/core.py` (now `timezone.utc`), `BaseException.add_note` in `data/loaders.py`
+  (guarded), and `ModelFit.__getattr__` delegating dunder lookups to the estimator,
+  which corrupted pickling of saved models on 3.10.
+- `pipeline`: longest-processing-time-first cell scheduling (heaviest cells dispatched
+  first) removes the tail bottleneck; bit-exact and result-invariant.
+- typing: the package is mypy-clean (0 errors) and ships `py.typed`.
+- docs: the GCLS (2021) replication is a single honest page (verification summary,
+  eight-step build, and the Appendix B ground-truth tables); the user guide is a flat
+  concept hub.
+
 **Phase 3g-bis cascade complete**: 10 PRs (#360–#367 + #K). Legacy `core/layers/lN.py` and
 `core/ops/lN_ops.py` fully removed. Circular import workaround eliminated.
 `interpretation/` and `recipes/` converted to backward-compatible shims.
@@ -35,8 +58,10 @@ guarded by regression tests):
 - `feature_engineering`: MARX fit drops predictor columns with no observation over the
   fit window (mirroring the PCA pattern), so an all-NaN series no longer empties the
   whole feature matrix under leak-free preprocessing.
-- `pipeline`: the accuracy table uses a common sample across contenders (removes
-  survivorship bias); the leakage audit validates every horizon and surfaces a crashed
+- `pipeline`: the accuracy table scores each contender on its pairwise sample with the
+  benchmark, so one short-coverage arm no longer truncates the others (see 0.9.5 above;
+  the earlier all-contender common sample is kept only for the Model Confidence Set);
+  the leakage audit validates every horizon and surfaces a crashed
   validation; Clark-West is emitted only for arms declaring `nested_in_benchmark`
   (Diebold-Mariano otherwise); a benchmark missing from a `(target, horizon)` slice is
   surfaced via `benchmark_present`; interpretation aggregation no longer averages

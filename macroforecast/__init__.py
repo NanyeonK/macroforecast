@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-__version__ = "0.9.5a1"
+__version__ = "0.9.5"
 
 _LAZY_EXPORTS = {
     "DEFAULT_RANDOM_SEED": ".meta",
