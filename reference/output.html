@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Understanding Recipe Output &#8212; macroforecast</title>
+    <title>macroforecast.output &#8212; macroforecast</title>
   
   
   
@@ -27,8 +27,8 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=0790524f97105ba85085" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -36,12 +36,12 @@
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=dfd5ba7c"></script>
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,11 +51,11 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="FRED Datasets in Recipes" href="fred_datasets.html" />
-    <link rel="prev" title="Runtime Support Matrix" href="runtime_support.html" />
+    <link rel="next" title="macroforecast.reporting" href="reporting.html" />
+    <link rel="prev" title="macroforecast.interpretation.dual" href="interpretation_dual.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.9.5a0" />
+  <meta name="docsearch:version" content="0.9.5a1" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -138,15 +138,36 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../tutorial/index.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../how_to/index.html">
-    How-to guides
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
   </a>
 </li>
 
@@ -159,15 +180,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../explanation/index.html">
-    Explanation
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../help.html">
-    Help
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -278,15 +292,36 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../tutorial/index.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../how_to/index.html">
-    How-to guides
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
   </a>
 </li>
 
@@ -299,15 +334,8 @@
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../explanation/index.html">
-    Explanation
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../help.html">
-    Help
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
   </a>
 </li>
 
@@ -378,229 +406,67 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="gallery.html">Recipe Gallery</a></li>
-<li class="toctree-l1"><a class="reference internal" href="layer_contract.html">Recipe Layer Contract</a></li>
-<li class="toctree-l1"><a class="reference internal" href="meta.html">Meta</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data_policies.html">Data Policies</a></li>
-<li class="toctree-l1"><a class="reference internal" href="defaults.html">Recipe Defaults</a></li>
-<li class="toctree-l1"><a class="reference internal" href="runtime_support.html">Runtime Support Matrix</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Understanding Recipe Output</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fred_datasets.html">FRED Datasets in Recipes</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Orientation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="documentation_map.html">Documentation Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_callable_coverage.html">Legacy Callable Coverage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="standalone_functions/index.html">Standalone functions - namespace overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="navigator/tree_navigator.html">Tree Navigator</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="generated/index.html">Generated Encyclopedia</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="generated/browse_by_layer.html">Browse by layer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/browse_by_axis.html">Browse by axis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/browse_by_option.html">Browse by option</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l0/index.html">Layer L0  –  Study Setup</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l0/axes/failure_policy.html"><code class="docutils literal notranslate"><span class="pre">failure_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l0/axes/reproducibility_policy.html"><code class="docutils literal notranslate"><span class="pre">reproducibility_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l0/axes/compute_policy.html"><code class="docutils literal notranslate"><span class="pre">compute_policy</span></code></a></li>
 </ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l1/index.html">Layer L1  –  Data</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/panel_composition.html"><code class="docutils literal notranslate"><span class="pre">panel_composition</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/dataset.html"><code class="docutils literal notranslate"><span class="pre">dataset</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/frequency.html"><code class="docutils literal notranslate"><span class="pre">frequency</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/information_set_type.html"><code class="docutils literal notranslate"><span class="pre">information_set_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/vintage_policy.html"><code class="docutils literal notranslate"><span class="pre">vintage_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/fred_sd_frequency_policy.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_frequency_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/target_structure.html"><code class="docutils literal notranslate"><span class="pre">target_structure</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/variable_universe.html"><code class="docutils literal notranslate"><span class="pre">variable_universe</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/missing_availability.html"><code class="docutils literal notranslate"><span class="pre">missing_availability</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/release_lag_rule.html"><code class="docutils literal notranslate"><span class="pre">release_lag_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/contemporaneous_x_rule.html"><code class="docutils literal notranslate"><span class="pre">contemporaneous_x_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/target_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">target_geography_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/predictor_geography_policy.html"><code class="docutils literal notranslate"><span class="pre">predictor_geography_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/fred_sd_state_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_state_group</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/state_selection.html"><code class="docutils literal notranslate"><span class="pre">state_selection</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/fred_sd_variable_group.html"><code class="docutils literal notranslate"><span class="pre">fred_sd_variable_group</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/sd_variable_selection.html"><code class="docutils literal notranslate"><span class="pre">sd_variable_selection</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/sample_start_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_start_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/sample_end_rule.html"><code class="docutils literal notranslate"><span class="pre">sample_end_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/horizon_set.html"><code class="docutils literal notranslate"><span class="pre">horizon_set</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/regime_definition.html"><code class="docutils literal notranslate"><span class="pre">regime_definition</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1/axes/regime_estimation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">regime_estimation_temporal_rule</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l1_5/index.html">Layer L1.5  –  Data summary</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/coverage_view.html"><code class="docutils literal notranslate"><span class="pre">coverage_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/summary_metrics.html"><code class="docutils literal notranslate"><span class="pre">summary_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/summary_split.html"><code class="docutils literal notranslate"><span class="pre">summary_split</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/stationarity_test.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/stationarity_test_scope.html"><code class="docutils literal notranslate"><span class="pre">stationarity_test_scope</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/missing_view.html"><code class="docutils literal notranslate"><span class="pre">missing_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/outlier_view.html"><code class="docutils literal notranslate"><span class="pre">outlier_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l1_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l2/index.html">Layer L2  –  Preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/sd_series_frequency_filter.html"><code class="docutils literal notranslate"><span class="pre">sd_series_frequency_filter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/mixed_frequency_representation.html"><code class="docutils literal notranslate"><span class="pre">mixed_frequency_representation</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/quarterly_to_monthly_policy.html"><code class="docutils literal notranslate"><span class="pre">quarterly_to_monthly_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/monthly_to_quarterly_policy.html"><code class="docutils literal notranslate"><span class="pre">monthly_to_quarterly_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/transform_policy.html"><code class="docutils literal notranslate"><span class="pre">transform_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/sd_tcode_policy.html"><code class="docutils literal notranslate"><span class="pre">sd_tcode_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/outlier_policy.html"><code class="docutils literal notranslate"><span class="pre">outlier_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/outlier_action.html"><code class="docutils literal notranslate"><span class="pre">outlier_action</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/imputation_policy.html"><code class="docutils literal notranslate"><span class="pre">imputation_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/imputation_temporal_rule.html"><code class="docutils literal notranslate"><span class="pre">imputation_temporal_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2/axes/frame_edge_policy.html"><code class="docutils literal notranslate"><span class="pre">frame_edge_policy</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l2_5/index.html">Layer L2.5  –  Pre vs post preprocessing</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/comparison_pair.html"><code class="docutils literal notranslate"><span class="pre">comparison_pair</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/distribution_metric.html"><code class="docutils literal notranslate"><span class="pre">distribution_metric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/distribution_view.html"><code class="docutils literal notranslate"><span class="pre">distribution_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/correlation_shift.html"><code class="docutils literal notranslate"><span class="pre">correlation_shift</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/cleaning_summary_view.html"><code class="docutils literal notranslate"><span class="pre">cleaning_summary_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/t_code_application_log.html"><code class="docutils literal notranslate"><span class="pre">t_code_application_log</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l2_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l3/index.html">Layer L3  –  Feature engineering</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l3_5/index.html">Layer L3.5  –  Feature diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/comparison_stages.html"><code class="docutils literal notranslate"><span class="pre">comparison_stages</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/comparison_output_form.html"><code class="docutils literal notranslate"><span class="pre">comparison_output_form</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/factor_view.html"><code class="docutils literal notranslate"><span class="pre">factor_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/dfm_diagnostics.html"><code class="docutils literal notranslate"><span class="pre">dfm_diagnostics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/feature_correlation.html"><code class="docutils literal notranslate"><span class="pre">feature_correlation</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/correlation_method.html"><code class="docutils literal notranslate"><span class="pre">correlation_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/correlation_view.html"><code class="docutils literal notranslate"><span class="pre">correlation_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/lag_view.html"><code class="docutils literal notranslate"><span class="pre">lag_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/marx_view.html"><code class="docutils literal notranslate"><span class="pre">marx_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/selection_view.html"><code class="docutils literal notranslate"><span class="pre">selection_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/stability_metric.html"><code class="docutils literal notranslate"><span class="pre">stability_metric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l3_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l4/index.html">Layer L4  –  Forecasting model</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/model.html"><code class="docutils literal notranslate"><span class="pre">model</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/forecast_policy.html"><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/training_start_rule.html"><code class="docutils literal notranslate"><span class="pre">training_start_rule</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/refit_policy.html"><code class="docutils literal notranslate"><span class="pre">refit_policy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/search_algorithm.html"><code class="docutils literal notranslate"><span class="pre">search_algorithm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4/axes/pi_correction.html"><code class="docutils literal notranslate"><span class="pre">pi_correction</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l4_5/index.html">Layer L4.5  –  Generator diagnostics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/fit_view.html"><code class="docutils literal notranslate"><span class="pre">fit_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/fit_per_origin.html"><code class="docutils literal notranslate"><span class="pre">fit_per_origin</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/forecast_scale_view.html"><code class="docutils literal notranslate"><span class="pre">forecast_scale_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/back_transform_method.html"><code class="docutils literal notranslate"><span class="pre">back_transform_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/window_view.html"><code class="docutils literal notranslate"><span class="pre">window_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/coef_view_models.html"><code class="docutils literal notranslate"><span class="pre">coef_view_models</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/tuning_view.html"><code class="docutils literal notranslate"><span class="pre">tuning_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/ensemble_view.html"><code class="docutils literal notranslate"><span class="pre">ensemble_view</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/weights_over_time_method.html"><code class="docutils literal notranslate"><span class="pre">weights_over_time_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/diagnostic_format.html"><code class="docutils literal notranslate"><span class="pre">diagnostic_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/attach_to_manifest.html"><code class="docutils literal notranslate"><span class="pre">attach_to_manifest</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l4_5/axes/latex_export.html"><code class="docutils literal notranslate"><span class="pre">latex_export</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l5/index.html">Layer L5  –  Evaluation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/primary_metric.html"><code class="docutils literal notranslate"><span class="pre">primary_metric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/point_metrics.html"><code class="docutils literal notranslate"><span class="pre">point_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/density_metrics.html"><code class="docutils literal notranslate"><span class="pre">density_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/direction_metrics.html"><code class="docutils literal notranslate"><span class="pre">direction_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/relative_metrics.html"><code class="docutils literal notranslate"><span class="pre">relative_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/benchmark_window.html"><code class="docutils literal notranslate"><span class="pre">benchmark_window</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/benchmark_scope.html"><code class="docutils literal notranslate"><span class="pre">benchmark_scope</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_time.html"><code class="docutils literal notranslate"><span class="pre">agg_time</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_horizon.html"><code class="docutils literal notranslate"><span class="pre">agg_horizon</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_target.html"><code class="docutils literal notranslate"><span class="pre">agg_target</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/agg_state.html"><code class="docutils literal notranslate"><span class="pre">agg_state</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/oos_period.html"><code class="docutils literal notranslate"><span class="pre">oos_period</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/regime_use.html"><code class="docutils literal notranslate"><span class="pre">regime_use</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/regime_metrics.html"><code class="docutils literal notranslate"><span class="pre">regime_metrics</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/decomposition_target.html"><code class="docutils literal notranslate"><span class="pre">decomposition_target</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/decomposition_order.html"><code class="docutils literal notranslate"><span class="pre">decomposition_order</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/ranking.html"><code class="docutils literal notranslate"><span class="pre">ranking</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l5/axes/report_style.html"><code class="docutils literal notranslate"><span class="pre">report_style</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l6/index.html">Layer L6  –  Statistical tests</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/equal_predictive_test.html"><code class="docutils literal notranslate"><span class="pre">equal_predictive_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/loss_function.html"><code class="docutils literal notranslate"><span class="pre">loss_function</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/model_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">model_pair_strategy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/hln_correction.html"><code class="docutils literal notranslate"><span class="pre">hln_correction</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/nested_test.html"><code class="docutils literal notranslate"><span class="pre">nested_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/nested_pair_strategy.html"><code class="docutils literal notranslate"><span class="pre">nested_pair_strategy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cw_adjustment.html"><code class="docutils literal notranslate"><span class="pre">cw_adjustment</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/enc_test_one_sided.html"><code class="docutils literal notranslate"><span class="pre">enc_test_one_sided</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_test.html"><code class="docutils literal notranslate"><span class="pre">cpa_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_window_type.html"><code class="docutils literal notranslate"><span class="pre">cpa_window_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_conditioning_info.html"><code class="docutils literal notranslate"><span class="pre">cpa_conditioning_info</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/cpa_critical_value_method.html"><code class="docutils literal notranslate"><span class="pre">cpa_critical_value_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/multiple_model_test.html"><code class="docutils literal notranslate"><span class="pre">multiple_model_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/mcs_alpha.html"><code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/mmt_loss_function.html"><code class="docutils literal notranslate"><span class="pre">mmt_loss_function</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/bootstrap_method.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/bootstrap_n_replications.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_n_replications</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/bootstrap_block_length.html"><code class="docutils literal notranslate"><span class="pre">bootstrap_block_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/mcs_t_statistic.html"><code class="docutils literal notranslate"><span class="pre">mcs_t_statistic</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/spa_studentization.html"><code class="docutils literal notranslate"><span class="pre">spa_studentization</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/stepm_alpha.html"><code class="docutils literal notranslate"><span class="pre">stepm_alpha</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/density_test.html"><code class="docutils literal notranslate"><span class="pre">density_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/interval_test.html"><code class="docutils literal notranslate"><span class="pre">interval_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/coverage_levels.html"><code class="docutils literal notranslate"><span class="pre">coverage_levels</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/pit_n_bins.html"><code class="docutils literal notranslate"><span class="pre">pit_n_bins</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/pit_test_horizon_dependence.html"><code class="docutils literal notranslate"><span class="pre">pit_test_horizon_dependence</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/direction_test.html"><code class="docutils literal notranslate"><span class="pre">direction_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/direction_threshold.html"><code class="docutils literal notranslate"><span class="pre">direction_threshold</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/direction_alpha.html"><code class="docutils literal notranslate"><span class="pre">direction_alpha</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_test.html"><code class="docutils literal notranslate"><span class="pre">residual_test</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_lag_count.html"><code class="docutils literal notranslate"><span class="pre">residual_lag_count</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_test_scope.html"><code class="docutils literal notranslate"><span class="pre">residual_test_scope</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l6/axes/residual_alpha.html"><code class="docutils literal notranslate"><span class="pre">residual_alpha</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l7/index.html">Layer L7  –  Interpretation / importance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/output_table_format.html"><code class="docutils literal notranslate"><span class="pre">output_table_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/figure_type.html"><code class="docutils literal notranslate"><span class="pre">figure_type</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/top_k_features_to_show.html"><code class="docutils literal notranslate"><span class="pre">top_k_features_to_show</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/precision_digits.html"><code class="docutils literal notranslate"><span class="pre">precision_digits</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/figure_dpi.html"><code class="docutils literal notranslate"><span class="pre">figure_dpi</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/figure_format.html"><code class="docutils literal notranslate"><span class="pre">figure_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/latex_table_export.html"><code class="docutils literal notranslate"><span class="pre">latex_table_export</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/markdown_table_export.html"><code class="docutils literal notranslate"><span class="pre">markdown_table_export</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l7/axes/op.html"><code class="docutils literal notranslate"><span class="pre">op</span></code></a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="generated/l8/index.html">Layer L8  –  Output / provenance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/export_format.html"><code class="docutils literal notranslate"><span class="pre">export_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/compression.html"><code class="docutils literal notranslate"><span class="pre">compression</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/saved_objects.html"><code class="docutils literal notranslate"><span class="pre">saved_objects</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/model_artifacts_format.html"><code class="docutils literal notranslate"><span class="pre">model_artifacts_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/provenance_fields.html"><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/manifest_format.html"><code class="docutils literal notranslate"><span class="pre">manifest_format</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/artifact_granularity.html"><code class="docutils literal notranslate"><span class="pre">artifact_granularity</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/l8/axes/naming_convention.html"><code class="docutils literal notranslate"><span class="pre">naming_convention</span></code></a></li>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
 </ul>
 </details></li>
 </ul>
-</details></li>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="data.html">macroforecast.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">macroforecast.preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_analysis.html">macroforecast.data_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Feature Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="filters.html">macroforecast.filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_engineering.html">macroforecast.feature_engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_analysis.html">macroforecast.feature_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Forecast Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="window.html">macroforecast.window</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
 </ul>
 </div>
 </nav></div>
@@ -644,7 +510,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Understanding Recipe Output</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.output</span></li>
   </ul>
 </nav>
 </div>
@@ -661,32 +527,924 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="understanding-recipe-output">
-<h1>Understanding Recipe Output<a class="headerlink" href="#understanding-recipe-output" title="Link to this heading">#</a></h1>
-<p>L8 writes the run directory. The default L8 output directory is <code class="docutils literal notranslate"><span class="pre">./macrocast_output/default_recipe/timestamp/</span></code> unless <code class="docutils literal notranslate"><span class="pre">8_output.leaf_config.output_directory</span></code> overrides it.</p>
-<p>Common files:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;output_directory&gt;/
-  manifest.json
-  recipe.json
-  summary/
-    metrics_all_cells.csv
-    ranking.csv
-  cell_001/
-    forecasts.csv
-    feature_metadata.json
-    clean_panel.csv
-    raw_panel.csv
-    figures/
-      *.pdf
-  diagnostics/
-    *_diagnostic_v1.json
-  tests_summary.json
-  importance_summary.json
-  report.html
+  <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-output">
+<h1>macroforecast.output<a class="headerlink" href="#macroforecast-output" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code> writes callable-stage artifacts and a schema-aware
+provenance manifest. It replaces the old output stage with direct Python
+functions. It does not decide which models, windows, metrics, or tests belong
+in a study.</p>
+<p>Call these functions through the namespace, for example
+<code class="docutils literal notranslate"><span class="pre">mf.output.write_artifacts(...)</span></code>. Output helpers are not exported as
+top-level shortcuts.</p>
+<p>The output API is split into two parts:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Part</p></th>
+<th class="head"><p>Functions</p></th>
+<th class="head"><p>Role</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Output generation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forecast_table</span></code>, <code class="docutils literal notranslate"><span class="pre">metric_table</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking_table</span></code>, <code class="docutils literal notranslate"><span class="pre">test_table</span></code>, <code class="docutils literal notranslate"><span class="pre">model_table</span></code>, <code class="docutils literal notranslate"><span class="pre">model_selection_table</span></code>, <code class="docutils literal notranslate"><span class="pre">interpretation_table</span></code>, <code class="docutils literal notranslate"><span class="pre">interpretation_outputs</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_shapley_tables</span></code>, <code class="docutils literal notranslate"><span class="pre">anatomy_tables</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata_table</span></code>, <code class="docutils literal notranslate"><span class="pre">run_summary</span></code>, <code class="docutils literal notranslate"><span class="pre">bundle_outputs</span></code>, <code class="docutils literal notranslate"><span class="pre">select_outputs</span></code>, <code class="docutils literal notranslate"><span class="pre">name_outputs</span></code>, <code class="docutils literal notranslate"><span class="pre">artifact_index</span></code></p></td>
+<td><p>Convert package objects into named pandas/JSON outputs. No files are written.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Artifact writing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">write_artifacts</span></code>, <code class="docutils literal notranslate"><span class="pre">collect_provenance</span></code>, <code class="docutils literal notranslate"><span class="pre">ArtifactManifest</span></code>, <code class="docutils literal notranslate"><span class="pre">ArtifactRecord</span></code>, <code class="docutils literal notranslate"><span class="pre">ArtifactLayout</span></code></p></td>
+<td><p>Write selected outputs to disk and record file metadata.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>This means a workflow can first build all candidate outputs, inspect or rename
+them, then write only the objects needed for a paper, replication package, or
+notebook appendix.</p>
+<section id="output-generation">
+<h2>Output generation<a class="headerlink" href="#output-generation" title="Link to this heading">#</a></h2>
+<section id="forecast-table">
+<h3>forecast_table<a class="headerlink" href="#forecast-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">forecast_table</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>Files appear only when the corresponding layer ran and the object is saved. Core saved objects include <code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">ranking</span></code>, <code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">importance</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">clean_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">raw_panel</span></code>, and <code class="docutils literal notranslate"><span class="pre">diagnostics_all</span></code>.</p>
-<p>Use metric names exactly as emitted by L5: <code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">rmse</span></code>, <code class="docutils literal notranslate"><span class="pre">mae</span></code>, <code class="docutils literal notranslate"><span class="pre">medae</span></code>, <code class="docutils literal notranslate"><span class="pre">theil_u1</span></code>, <code class="docutils literal notranslate"><span class="pre">theil_u2</span></code>, <code class="docutils literal notranslate"><span class="pre">success_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">pesaran_timmermann_metric</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mae</span></code>, <code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code>, <code class="docutils literal notranslate"><span class="pre">log_score</span></code>, <code class="docutils literal notranslate"><span class="pre">crps</span></code>, <code class="docutils literal notranslate"><span class="pre">interval_score</span></code>, <code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">result</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> or <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Forecast runner output or an already materialized forecast table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with
+<code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_metadata_schema&quot;][&quot;kind&quot;]</span> <span class="pre">==</span> <span class="pre">&quot;forecast_table&quot;</span></code>.
+Function-specific source metadata is stored separately in
+<code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_metadata&quot;]</span></code>.</p>
+</section>
+<section id="metric-table">
+<h3>metric_table<a class="headerlink" href="#metric-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">metric_table</span><span class="p">(</span><span class="n">report</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">report</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code>, <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, or <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Evaluation report, forecast result to evaluate with defaults, or metric table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns the main metric score table. For <code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code>, this is
+<code class="docutils literal notranslate"><span class="pre">report.scores</span></code>.</p>
+</section>
+<section id="ranking-table">
+<h3>ranking_table<a class="headerlink" href="#ranking-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">ranking_table</span><span class="p">(</span><span class="n">report</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">report</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code> or <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Evaluation report or a ranking table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns the model ranking table. For <code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code>, this is
+<code class="docutils literal notranslate"><span class="pre">report.ranking</span></code>.</p>
+</section>
+<section id="test-table">
+<h3>test_table<a class="headerlink" href="#test-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">test_table</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">results</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TestResult</span></code>, mapping, sequence, or <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>One or more forecast-comparison test outputs.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns a flat raw table with <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">statistic</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code>,
+<code class="docutils literal notranslate"><span class="pre">alternative</span></code>, <code class="docutils literal notranslate"><span class="pre">correction_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata</span></code>, and any promoted
+test metadata fields such as <code class="docutils literal notranslate"><span class="pre">statistic_type</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value_status</span></code>,
+<code class="docutils literal notranslate"><span class="pre">p_value_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">null_hypothesis</span></code>, <code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">r_alignment</span></code>.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">macroforecast.reporting.test_report_table(...)</span></code> for a compact paper table
+and <code class="docutils literal notranslate"><span class="pre">macroforecast.reporting.test_provenance_table(...)</span></code> for the source
+alignment appendix table.</p>
+</section>
+<section id="model-table">
+<h3>model_table<a class="headerlink" href="#model-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">model_table</span><span class="p">(</span><span class="n">models</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">models</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code>, mapping, sequence, or object</p></td>
+<td><p>Fitted model metadata or forecast rows containing model columns.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For forecast results, returns one row per model/model-spec group with forecast
+counts, horizon counts, and stored-model counts. For <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> objects, returns
+compact fit metadata without serializing the estimator.</p>
+</section>
+<section id="model-selection-table">
+<h3>model_selection_table<a class="headerlink" href="#model-selection-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">model_selection_table</span><span class="p">(</span><span class="n">model_selection</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_selection</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SearchResult</span></code>, search-like object, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, or mapping</p></td>
+<td><p>Model-selection result or trial table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns the model-selection trial table when available. Best parameter metadata is
+stored in the DataFrame attrs.</p>
+</section>
+<section id="interpretation-table">
+<h3>interpretation_table<a class="headerlink" href="#interpretation-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">interpretation_table</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">value</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or mapping</p></td>
+<td><p>Interpretation output such as importances, SHAP summaries, attribution tables, or custom mappings.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns a schema-tagged interpretation table.</p>
+</section>
+<section id="interpretation-outputs">
+<h3>interpretation_outputs<a class="headerlink" href="#interpretation-outputs" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">interpretation_outputs</span><span class="p">(</span>
+    <span class="n">interpretation</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;interpretation&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OutputBundle</span>
+</pre></div>
+</div>
+<p>Use this when several interpretation results belong to the same run. It keeps
+prediction output separate from interpretation output while preserving a single
+manifest later.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interpretation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, mapping, <code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code>, or <code class="docutils literal notranslate"><span class="pre">ForecastShapleyResult</span></code></p></td>
+<td><p>One interpretation table, named interpretation tables, a dual interpretation result, or an oShapley/PBSV sidecar.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prefix</span></code></p></td>
+<td><p>str</p></td>
+<td><p>Prefix applied to generated artifact names.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">interpretation</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">interpretation_outputs</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;shap&quot;</span><span class="p">:</span> <span class="n">shap_importance</span><span class="p">,</span>
+        <span class="s2">&quot;dual&quot;</span><span class="p">:</span> <span class="n">dual_result</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;postpandemic&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">manifest</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span>
+    <span class="n">interpretation</span><span class="p">,</span>
+    <span class="s2">&quot;results/interpretation_only&quot;</span><span class="p">,</span>
+    <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;grouped&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>If a value is a <code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code>, the helper expands it into
+observation-weight, observation-contribution, forecast-diagnostic,
+top-observation, group-observation-weight, and metadata tables. If a value is
+an oShapley/PBSV result, the helper expands it into forecast Shapley
+explanation, variable-importance, PBSV/loss, and metadata tables. For ordinary
+<code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> objects it attaches the standard <code class="docutils literal notranslate"><span class="pre">interpretation_table</span></code> schema.</p>
+</section>
+<section id="forecast-shapley-tables-anatomy-tables">
+<h3>forecast_shapley_tables / anatomy_tables<a class="headerlink" href="#forecast-shapley-tables-anatomy-tables" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">forecast_shapley_tables</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;oshapley&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+<span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">anatomy_tables</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;anatomy&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">value</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ForecastShapleyResult</span></code></p></td>
+<td><p>oShapley/PBSV sidecar from <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prefix</span></code></p></td>
+<td><p>str</p></td>
+<td><p>Prefix for generated output names.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns named tables for raw forecast Shapley explanations, oShapley-VI,
+PBSV/loss tables, and metadata. <code class="docutils literal notranslate"><span class="pre">anatomy_tables(...)</span></code> is the backend alias;
+prefer <code class="docutils literal notranslate"><span class="pre">forecast_shapley_tables(...)</span></code> in user code.</p>
+</section>
+<section id="metadata-table">
+<h3>metadata_table<a class="headerlink" href="#metadata-table" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">metadata_table</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">value</span></code></p></td>
+<td><p>result/report/bundle/manifest/mapping/object</p></td>
+<td><p>required</p></td>
+<td><p>Object whose metadata should be flattened.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prefix</span></code></p></td>
+<td><p>str</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p></td>
+<td><p>Optional path prefix.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returns a long table with <code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, and <code class="docutils literal notranslate"><span class="pre">type</span></code>. Nested dictionaries use
+dot paths such as <code class="docutils literal notranslate"><span class="pre">data.source</span></code>; sequences use indexed paths such as
+<code class="docutils literal notranslate"><span class="pre">stages[0]</span></code>.</p>
+</section>
+<section id="run-summary">
+<h3>run_summary<a class="headerlink" href="#run-summary" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">run_summary</span><span class="p">(</span>
+    <span class="n">result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tests</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Returns a JSON-ready summary with <code class="docutils literal notranslate"><span class="pre">metadata_schema.kind</span> <span class="pre">==</span> <span class="pre">&quot;run_summary&quot;</span></code>.
+It records row counts, forecast models, horizons, evaluation rows, test rows,
+model-selection best-score fields, model rows, and user metadata when supplied.</p>
+</section>
+<section id="outputbundle">
+<h3>OutputBundle<a class="headerlink" href="#outputbundle" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bundle</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">bundle_outputs</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tests</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">interpretation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">extra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">OutputBundle</span></code> is a named in-memory artifact collection. It is the preferred
+object to pass from the runner/evaluation/interpretation stages into output
+writing.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></td>
+<td><p>Mapping from output name to <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, or JSON-ready object.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p>Bundle-level metadata such as artifact count and selected objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_schema</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;kind&quot;:</span> <span class="pre">&quot;output_bundle&quot;,</span> <span class="pre">&quot;version&quot;:</span> <span class="pre">1}</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Methods:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_artifacts()</span></code></p></td>
+<td><p>Shallow artifact mapping suitable for <code class="docutils literal notranslate"><span class="pre">write_artifacts</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">select(objects)</span></code></p></td>
+<td><p>New <code class="docutils literal notranslate"><span class="pre">OutputBundle</span></code> with only selected artifact names.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_dict()</span></code></p></td>
+<td><p>JSON-ready bundle description, not the full DataFrame data.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="select-outputs">
+<h3>select_outputs<a class="headerlink" href="#select-outputs" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">select_outputs</span><span class="p">(</span><span class="n">bundle</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">objects</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;forecasts&quot;</span><span class="p">,</span> <span class="s2">&quot;metrics&quot;</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">OutputBundle</span>
+</pre></div>
+</div>
+<p>Selects named outputs from an <code class="docutils literal notranslate"><span class="pre">OutputBundle</span></code> or mapping. Missing names raise
+<code class="docutils literal notranslate"><span class="pre">KeyError</span></code>. This is how a workflow can generate many outputs and save only the
+tables required by a paper section.</p>
+</section>
+<section id="name-outputs">
+<h3>name_outputs<a class="headerlink" href="#name-outputs" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">name_outputs</span><span class="p">(</span>
+    <span class="n">bundle</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">convention</span><span class="o">=</span><span class="s2">&quot;descriptive&quot;</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OutputBundle</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">convention</span></code></p></th>
+<th class="head"><p>Name rule</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;identity&quot;</span></code></p></td>
+<td><p>Keep the original artifact names.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;descriptive&quot;</span></code></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">&lt;object_kind&gt;_&lt;original_name&gt;</span></code>, optionally prefixed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;kind&quot;</span></code></p></td>
+<td><p>Use the object kind only, with suffixes added for uniqueness.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;prefixed&quot;</span></code></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;_&lt;original_name&gt;</span></code>, or <code class="docutils literal notranslate"><span class="pre">output_&lt;original_name&gt;</span></code> when no prefix is given.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="artifact-index">
+<h3>artifact_index<a class="headerlink" href="#artifact-index" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">artifact_index</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Accepts an <code class="docutils literal notranslate"><span class="pre">ArtifactManifest</span></code>, <code class="docutils literal notranslate"><span class="pre">OutputBundle</span></code>, or artifact mapping. Returns one
+row per artifact with name, kind, object type, and metadata schema.</p>
+</section>
+<section id="example-generate-then-write">
+<h3>Example: generate then write<a class="headerlink" href="#example-generate-then-write" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate_report</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">bundle_outputs</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;study&quot;</span><span class="p">:</span> <span class="s2">&quot;baseline&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">paper_outputs</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">select_outputs</span><span class="p">(</span>
+    <span class="n">bundle</span><span class="p">,</span>
+    <span class="n">objects</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;forecasts&quot;</span><span class="p">,</span> <span class="s2">&quot;metrics&quot;</span><span class="p">,</span> <span class="s2">&quot;ranking&quot;</span><span class="p">,</span> <span class="s2">&quot;summary&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">paper_outputs</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">name_outputs</span><span class="p">(</span>
+    <span class="n">paper_outputs</span><span class="p">,</span>
+    <span class="n">convention</span><span class="o">=</span><span class="s2">&quot;prefixed&quot;</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;baseline&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">manifest</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span><span class="n">paper_outputs</span><span class="p">,</span> <span class="s2">&quot;results/baseline&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="write-artifacts">
+<h2>write_artifacts<a class="headerlink" href="#write-artifacts" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span>
+    <span class="n">artifacts</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">formats</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">),</span>
+    <span class="n">manifest_format</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span>
+    <span class="n">include_provenance</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">provenance_fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">compression</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;flat&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArtifactManifest</span>
+</pre></div>
+</div>
+<section id="input">
+<h3>Input<a class="headerlink" href="#input" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OutputBundle</span></code>, <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, or mapping</p></td>
+<td><p>required</p></td>
+<td><p>Object or named objects to write.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">output_dir</span></code></p></td>
+<td><p>path-like</p></td>
+<td><p>required</p></td>
+<td><p>Output directory. Created if missing.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">formats</span></code></p></td>
+<td><p>tuple</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;json&quot;,</span> <span class="pre">&quot;csv&quot;)</span></code></p></td>
+<td><p>DataFrame export formats: <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;csv&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;parquet&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;markdown&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">manifest_format</span></code></p></td>
+<td><p>str</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code></p></td>
+<td><p>Manifest format: <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;csv&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;parquet&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include_provenance</span></code></p></td>
+<td><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Include package, Python, platform, and git provenance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">provenance_fields</span></code></p></td>
+<td><p>tuple or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Optional top-level provenance keys to keep, e.g. <code class="docutils literal notranslate"><span class="pre">(&quot;macroforecast_version&quot;,</span> <span class="pre">&quot;git&quot;)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">compression</span></code></p></td>
+<td><p>str</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code></p></td>
+<td><p>Artifact compression: <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gzip&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;zip&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">layout</span></code></p></td>
+<td><p>str</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;flat&quot;</span></code></p></td>
+<td><p>Artifact layout: <code class="docutils literal notranslate"><span class="pre">&quot;flat&quot;</span></code> writes all artifacts in <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;grouped&quot;</span></code> writes files under logical subdirectories.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h3>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">ArtifactManifest(output_dir,</span> <span class="pre">artifacts,</span> <span class="pre">records,</span> <span class="pre">provenance)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ArtifactManifest.to_dict()</span></code> returns:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_schema</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{&quot;kind&quot;:</span> <span class="pre">&quot;artifact_manifest&quot;,</span> <span class="pre">&quot;version&quot;:</span> <span class="pre">1}</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">created_at</span></code></p></td>
+<td><p>UTC ISO timestamp for the write operation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">output_dir</span></code></p></td>
+<td><p>Directory where artifacts were written.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">artifacts</span></code></p></td>
+<td><p>Backward-compatible mapping from file name to path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">records</span></code></p></td>
+<td><p>List of <code class="docutils literal notranslate"><span class="pre">ArtifactRecord</span></code> dictionaries, one per written study artifact.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">provenance</span></code></p></td>
+<td><p>Package, Python, platform, git, and package-version provenance.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">ArtifactRecord</span></code> has:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p>File name, such as <code class="docutils literal notranslate"><span class="pre">metrics.csv</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">path</span></code></p></td>
+<td><p>Written path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kind</span></code></p></td>
+<td><p>Logical artifact kind: <code class="docutils literal notranslate"><span class="pre">forecast_result</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_table</span></code>, <code class="docutils literal notranslate"><span class="pre">dataframe</span></code>, or <code class="docutils literal notranslate"><span class="pre">json</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">format</span></code></p></td>
+<td><p>Physical format: <code class="docutils literal notranslate"><span class="pre">json</span></code>, <code class="docutils literal notranslate"><span class="pre">csv</span></code>, <code class="docutils literal notranslate"><span class="pre">parquet</span></code>, or <code class="docutils literal notranslate"><span class="pre">markdown</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source</span></code></p></td>
+<td><p>Input mapping key that produced the file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p>Shape, columns, object type, metadata schema, file size, SHA-256 hash, path existence, and compression.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">ArtifactLayout</span></code> is the public type alias for <code class="docutils literal notranslate"><span class="pre">&quot;flat&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;grouped&quot;</span></code>.</p>
+</section>
+<section id="grouped-layout">
+<h3>Grouped layout<a class="headerlink" href="#grouped-layout" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">layout=&quot;grouped&quot;</span></code> when one run has many outputs: prediction tables,
+metric tables, forecast tests, stored models, oShapley/PBSV outputs, dual
+data-portfolio interpretation, and metadata. The manifest remains at the root,
+but artifacts are written into logical folders:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Folder</p></th>
+<th class="head"><p>Typical artifacts</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts/</span></code></p></td>
+<td><p>ForecastResult JSON and forecast table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation/</span></code></p></td>
+<td><p>Metric, ranking, benchmark, regime, and decomposition tables.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/</span></code></p></td>
+<td><p>Forecast-comparison test tables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">models/</span></code></p></td>
+<td><p>Model table, model-selection table, and stored-model records.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interpretation/</span></code></p></td>
+<td><p>SHAP, PDP/ICE/ALE, and general interpretation outputs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interpretation/dual/</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code> tables: observation weights, observation contributions, forecast diagnostics, top observations, group observation weights, and metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interpretation/oshapley/</span></code></p></td>
+<td><p>oShapley/PBSV/anatomy sidecar tables.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata/</span></code></p></td>
+<td><p>Run summary and metadata tables.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">other/</span></code></p></td>
+<td><p>Custom objects that do not match a known group.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate_report</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="n">interpretation</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">interpretation_outputs</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;shap&quot;</span><span class="p">:</span> <span class="n">shap_importance</span><span class="p">,</span>
+        <span class="s2">&quot;dual&quot;</span><span class="p">:</span> <span class="n">dual_result</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;inflation&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">bundle_outputs</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
+    <span class="n">interpretation</span><span class="o">=</span><span class="n">interpretation</span><span class="o">.</span><span class="n">artifacts</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;study&quot;</span><span class="p">:</span> <span class="s2">&quot;inflation_dual_interpretation&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">manifest</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span>
+    <span class="n">bundle</span><span class="p">,</span>
+    <span class="s2">&quot;results/inflation_run&quot;</span><span class="p">,</span>
+    <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;grouped&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">dual_result</span></code> is a <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.DualInterpretationResult</span></code>,
+<code class="docutils literal notranslate"><span class="pre">interpretation_outputs(...)</span></code> expands it through <code class="docutils literal notranslate"><span class="pre">dual_result.to_tables(...)</span></code>.
+With grouped output, these files are written below <code class="docutils literal notranslate"><span class="pre">interpretation/dual/</span></code>.</p>
+<p>The manifest records both the physical path and the logical group. Each record
+metadata includes <code class="docutils literal notranslate"><span class="pre">layout</span></code>, <code class="docutils literal notranslate"><span class="pre">group</span></code>, and <code class="docutils literal notranslate"><span class="pre">relative_path</span></code>, so a notebook,
+replication package, or paper-output script can select all interpretation
+files without guessing file names.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> writes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_result.json</span></code></p></td>
+<td><p>Forecast rows and runner metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_result_forecasts.csv</span></code></p></td>
+<td><p>Forecast table.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">manifest.json</span></code></p></td>
+<td><p>Artifact paths and provenance.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>If a <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> has runtime sidecars, <code class="docutils literal notranslate"><span class="pre">write_artifacts()</span></code> writes those
+sidecars as additional artifacts. For a dual interpretation sidecar, grouped
+layout writes files under <code class="docutils literal notranslate"><span class="pre">interpretation/dual/</span></code>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Sidecar artifact</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_dual_summary.json</span></code></p></td>
+<td><p>JSON-ready dual sidecar metadata and table summaries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_dual_observation_weights.*</span></code></p></td>
+<td><p>Observation/data-portfolio weight table.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_dual_observation_contributions.*</span></code></p></td>
+<td><p>Observation contribution table when requested.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_dual_forecast_diagnostics.*</span></code></p></td>
+<td><p>Concentration, short-position, leverage, gross-leverage, and turnover table.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_dual_top_observations.*</span></code></p></td>
+<td><p>Top historical observations per forecast row.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_dual_group_observation_weights.*</span></code></p></td>
+<td><p>Grouped observation weights/contributions when groups are supplied.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_dual_metadata.*</span></code></p></td>
+<td><p>Flattened dual metadata table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For an anatomy sidecar, the writer emits:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Sidecar artifact</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_anatomy_&lt;name&gt;_summary.json</span></code></p></td>
+<td><p>JSON-ready anatomy sidecar metadata and table records.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_anatomy_&lt;name&gt;_explanation_forecast.*</span></code></p></td>
+<td><p>Raw forecast anatomy explanations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_anatomy_&lt;name&gt;_variable_importance.*</span></code></p></td>
+<td><p>oShapley-VI table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_anatomy_&lt;name&gt;_performance_&lt;loss&gt;.*</span></code></p></td>
+<td><p>PBSV/loss decomposition table.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&lt;result&gt;_anatomy_&lt;name&gt;_metadata.*</span></code></p></td>
+<td><p>Flattened anatomy metadata table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>If the forecast table contains runner-created <code class="docutils literal notranslate"><span class="pre">stored_model</span></code> dictionaries,
+<code class="docutils literal notranslate"><span class="pre">write_artifacts()</span></code> also records those model artifacts in the manifest. It does
+not copy or rewrite the model files. It records the existing paths so the
+forecast table, model pickle, and model sidecar can be audited together.
+Stored model files are not gzip-rewritten even when <code class="docutils literal notranslate"><span class="pre">compression=&quot;gzip&quot;</span></code>;
+the manifest records their existing paths and hashes.</p>
+<p>Stored-model records use:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">kind</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">format</span></code></p></th>
+<th class="head"><p>Path source</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stored_model_pickle</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pickle</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stored_model[&quot;model_path&quot;]</span></code> when present.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stored_model_metadata</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">json</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stored_model[&quot;metadata_path&quot;]</span></code> when present.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The record metadata includes the model alias, model spec, origin, horizon,
+<code class="docutils literal notranslate"><span class="pre">save_error</span></code>, the original <code class="docutils literal notranslate"><span class="pre">stored_model</span></code> dictionary, and <code class="docutils literal notranslate"><span class="pre">path_exists</span></code>.</p>
+</section>
+<section id="hashing-and-compression">
+<h3>Hashing and compression<a class="headerlink" href="#hashing-and-compression" title="Link to this heading">#</a></h3>
+<p>Every written artifact record includes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Metadata field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">path_exists</span></code></p></td>
+<td><p>Whether the file existed when the manifest record was created.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">size_bytes</span></code></p></td>
+<td><p>File size in bytes, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when missing.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sha256</span></code></p></td>
+<td><p>SHA-256 hash of the recorded file, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when missing.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compression</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gzip&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;zip&quot;</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">CompressionFormat</span></code> is the public type for supported compression choices:
+<code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gzip&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;zip&quot;</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">compression=&quot;gzip&quot;</span></code> rewrites each newly written study artifact as
+<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.&lt;ext&gt;.gz</span></code> and records the compressed path. Existing stored-model
+sidecars are not modified.</p>
+<p><code class="docutils literal notranslate"><span class="pre">compression=&quot;zip&quot;</span></code> leaves individual artifacts in place and adds
+<code class="docutils literal notranslate"><span class="pre">artifact_bundle.zip</span></code> to the manifest. The manifest itself is kept outside the
+zip so it remains directly inspectable.</p>
+<p>For a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, JSON export is not a bare list of records. It preserves
+metadata:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;metadata_schema&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;dataframe_artifact&quot;</span><span class="p">,</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">n_columns</span><span class="p">],</span>
+    <span class="s2">&quot;columns&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
+    <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span>
+    <span class="s2">&quot;attrs&quot;</span><span class="p">:</span> <span class="n">frame</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span>
+    <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This is important for outputs from <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">interpretation</span></code>. <code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_metadata_schema&quot;]</span></code> records table
+structure and schema version; <code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_metadata&quot;]</span></code> records source
+and function-specific metadata. CSV and markdown are human-readable views; the
+manifest still records the DataFrame attrs so metadata is not lost silently.</p>
+</section>
+<section id="custom-artifacts">
+<h3>Custom artifacts<a class="headerlink" href="#custom-artifacts" title="Link to this heading">#</a></h3>
+<p>Custom outputs do not need a separate registry. Pass a mapping of names to
+objects:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;forecast_result&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span>
+        <span class="s2">&quot;custom_diagnostic&quot;</span><span class="p">:</span> <span class="n">diagnostic_table</span><span class="p">,</span>
+        <span class="s2">&quot;run_notes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;design&quot;</span><span class="p">:</span> <span class="s2">&quot;local robustness check&quot;</span><span class="p">,</span> <span class="s2">&quot;accepted&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;results/my_run&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input object</p></th>
+<th class="head"><p>Written as</p></th>
+<th class="head"><p>Metadata behavior</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>One file per requested <code class="docutils literal notranslate"><span class="pre">formats</span></code> entry.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">attrs</span></code> are stored in JSON and in the manifest record.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p></td>
+<td><p>Forecast JSON plus forecast CSV.</p></td>
+<td><p>Runner metadata and stored-model sidecars are recorded.</p></td>
+</tr>
+<tr class="row-even"><td><p>Mapping/list/scalar</p></td>
+<td><p>JSON.</p></td>
+<td><p>Manifest records object type, mapping keys, or sequence length.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>This is the preferred path for project-local custom diagnostics,
+interpretation tables, robustness notes, and manually curated metadata that do
+not belong in a model, feature, or evaluation contract.</p>
+</section>
+</section>
+<section id="collect-provenance">
+<h2>collect_provenance<a class="headerlink" href="#collect-provenance" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">collect_provenance</span><span class="p">(</span><span class="n">cwd</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Returns a dictionary containing <code class="docutils literal notranslate"><span class="pre">macroforecast_version</span></code>, Python version,
+Python executable, current working directory, platform string,
+git commit/branch/dirty flag, and core package versions.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">fields=(...)</span></code> to keep only selected top-level fields:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">collect_provenance</span><span class="p">(</span>
+    <span class="n">fields</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;macroforecast_version&quot;</span><span class="p">,</span> <span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;packages&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="artifactmanifest">
+<h2>ArtifactManifest<a class="headerlink" href="#artifactmanifest" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">manifest</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+<span class="n">manifest</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+<span class="n">manifest</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">to_frame()</span></code> when reviewing output in a notebook and <code class="docutils literal notranslate"><span class="pre">to_json()</span></code> when
+persisting a manifest object produced elsewhere.</p>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">)</span>
+<span class="n">manifest</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;results/ridge_run&quot;</span><span class="p">)</span>
+
+<span class="n">metrics</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">])</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">&quot;forecasts&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span> <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">},</span>
+    <span class="s2">&quot;results/ridge_run&quot;</span><span class="p">,</span>
+    <span class="n">formats</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="s2">&quot;csv&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -700,20 +1458,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="runtime_support.html"
+       href="interpretation_dual.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Runtime Support Matrix</p>
+        <p class="prev-next-title">macroforecast.interpretation.dual</p>
       </div>
     </a>
     <a class="right-next"
-       href="fred_datasets.html"
+       href="reporting.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">FRED Datasets in Recipes</p>
+        <p class="prev-next-title">macroforecast.reporting</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -727,6 +1485,47 @@
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-generation">Output generation</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-table">forecast_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#metric-table">metric_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ranking-table">ranking_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-table">test_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-table">model_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-selection-table">model_selection_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpretation-table">interpretation_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpretation-outputs">interpretation_outputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-shapley-tables-anatomy-tables">forecast_shapley_tables / anatomy_tables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#metadata-table">metadata_table</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-summary">run_summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outputbundle">OutputBundle</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#select-outputs">select_outputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#name-outputs">name_outputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#artifact-index">artifact_index</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-generate-then-write">Example: generate then write</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#write-artifacts">write_artifacts</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#input">Input</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grouped-layout">Grouped layout</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hashing-and-compression">Hashing and compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-artifacts">Custom artifacts</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#collect-provenance">collect_provenance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#artifactmanifest">ArtifactManifest</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+  </nav></div>
 
   <div class="sidebar-secondary-item">
 
@@ -766,8 +1565,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=0790524f97105ba85085"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=0790524f97105ba85085"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">

@@ -1,0 +1,2004 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>macroforecast.forecasting &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/forecasting';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="macroforecast.forecast_analysis" href="forecast_analysis.html" />
+    <link rel="prev" title="macroforecast.model_selection" href="model_selection.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Orientation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="documentation_map.html">Documentation Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_callable_coverage.html">Legacy Callable Coverage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="data.html">macroforecast.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">macroforecast.preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_analysis.html">macroforecast.data_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Feature Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="filters.html">macroforecast.filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_engineering.html">macroforecast.feature_engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_analysis.html">macroforecast.feature_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Forecast Pipeline</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="window.html">macroforecast.window</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.forecasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.forecasting</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-forecasting">
+<h1>macroforecast.forecasting<a class="headerlink" href="#macroforecast-forecasting" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code> is the workflow composition module. It connects
+<code class="docutils literal notranslate"><span class="pre">window</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code>, <code class="docutils literal notranslate"><span class="pre">model_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">models</span></code>,
+<code class="docutils literal notranslate"><span class="pre">model_ensemble</span></code>, and <code class="docutils literal notranslate"><span class="pre">metrics</span></code>/<code class="docutils literal notranslate"><span class="pre">tests</span></code>.</p>
+<section id="run">
+<h2>run<a class="headerlink" href="#run" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">run_forecast</span></code> is an alias for <code class="docutils literal notranslate"><span class="pre">run</span></code>. New code can call <code class="docutils literal notranslate"><span class="pre">run(...)</span></code>; use
+<code class="docutils literal notranslate"><span class="pre">run_forecast(...)</span></code> only when the longer name makes a script clearer.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">preprocessing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">preprocessing_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">feature_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_selection_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_selection_metric</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span>
+    <span class="n">maximize_model_selection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">preset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">forecast_policy</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span>
+    <span class="n">future_feature_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">combination</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_models</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">model_store</span><span class="o">=</span><span class="s2">&quot;trained_model&quot;</span><span class="p">,</span>
+    <span class="n">checkpoint_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Input</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code>, <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>, <code class="docutils literal notranslate"><span class="pre">DataSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">(panel,</span> <span class="pre">metadata)</span></code>, or pandas-like panel</p></td>
+<td><p>required</p></td>
+<td><p>Prebuilt model matrix or canonical panel. <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code> metadata, including native frequencies, is preserved.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
+<td><p>str, callable, or <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code></p></td>
+<td><p>required</p></td>
+<td><p>A SINGLE model (or fit-time model-ensemble) spec to fit at each origin. <code class="docutils literal notranslate"><span class="pre">run</span></code> is atomic: exactly one model per call. To compare or combine models, run each model in its own call (or use the pipeline with one <code class="docutils literal notranslate"><span class="pre">Arm</span></code> per model). Passing a list or mapping of models raises <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">window</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code>, str, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Forecast experiment design: estimation mode, validation, test origins, retrain and retune cadence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocessing</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PreprocessSpec</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Callable preprocessing operations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code>, str, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">origin_available</span></code> when preprocessing is supplied</p></td>
+<td><p>Where preprocessing may fit and apply: <code class="docutils literal notranslate"><span class="pre">full_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">origin_available</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_window</span></code>, or <code class="docutils literal notranslate"><span class="pre">fixed_reference</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Feature and target construction operations. For panel-input models such as <code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>, leave this as <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code>, str, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fit_window</span></code></p></td>
+<td><p>Where stateful feature engineering such as PCA may fit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_selection</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code>, model-keyed mapping, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Hyperparameter candidate generation and search method. <code class="docutils literal notranslate"><span class="pre">None</span></code> uses each model’s owned default search space; a model-keyed value of <code class="docutils literal notranslate"><span class="pre">None</span></code> disables model selection for that model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_selection_policy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code>, str, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fit_window</span></code></p></td>
+<td><p>Which feature rows are supplied to model selection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_selection_metric</span></code></p></td>
+<td><p>str or callable</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mse&quot;</span></code></p></td>
+<td><p>Objective used during model selection.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maximize_model_selection</span></code></p></td>
+<td><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Whether larger selection scores are better.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preset</span></code></p></td>
+<td><p>str, mapping, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Model-owned search-space preset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">params</span></code></p></td>
+<td><p>mapping or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Fixed model parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
+<td><p>str or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Required for raw panel input when <code class="docutils literal notranslate"><span class="pre">features</span></code> is omitted, and required for panel-input models unless every model spec sets the same <code class="docutils literal notranslate"><span class="pre">target</span></code> parameter.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
+<td><p>positive int</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Target horizon when <code class="docutils literal notranslate"><span class="pre">features</span></code> is omitted.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">horizons</span></code></p></td>
+<td><p>positive int, sequence, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Multiple target horizons. Provide either <code class="docutils literal notranslate"><span class="pre">horizon</span></code> or <code class="docutils literal notranslate"><span class="pre">horizons</span></code>, not both.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></p></td>
+<td><p>str</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code></p></td>
+<td><p>Target/forecast construction policy: <code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;direct_average&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;path_average&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;recursive&quot;</span></code>, or alias <code class="docutils literal notranslate"><span class="pre">&quot;iterated&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">future_feature_policy</span></code></p></td>
+<td><p>str or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Used only for recursive forecasting. <code class="docutils literal notranslate"><span class="pre">None</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;target_lags&quot;</span></code>. Use <code class="docutils literal notranslate"><span class="pre">&quot;observed_future&quot;</span></code> only for explicit oracle/scenario paths where future predictors are known or supplied.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_transform</span></code></p></td>
+<td><p>str or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Optional target transform override. For <code class="docutils literal notranslate"><span class="pre">direct_average</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;growth&quot;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;average_growth&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> becomes <code class="docutils literal notranslate"><span class="pre">&quot;average_value&quot;</span></code>; for <code class="docutils literal notranslate"><span class="pre">path_average</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;growth&quot;</span></code> means average step growth forecasts and <code class="docutils literal notranslate"><span class="pre">&quot;value&quot;</span></code> means step forecasts of an already transformed one-period target; for <code class="docutils literal notranslate"><span class="pre">recursive</span></code>, allowed values are <code class="docutils literal notranslate"><span class="pre">level</span></code>, <code class="docutils literal notranslate"><span class="pre">change</span></code>, <code class="docutils literal notranslate"><span class="pre">growth</span></code>, and <code class="docutils literal notranslate"><span class="pre">log_growth</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combination</span></code></p></td>
+<td><p>str, <code class="docutils literal notranslate"><span class="pre">CombinationSpec</span></code>, sequence, mapping, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Optional forecast-combination requests. Combined forecasts are appended as additional model rows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_models</span></code></p></td>
+<td><p>bool</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Save each fitted origin/model object and its metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_store</span></code></p></td>
+<td><p>str or path-like</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;trained_model&quot;</span></code></p></td>
+<td><p>Root directory for saved fitted models.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">checkpoint_path</span></code></p></td>
+<td><p>str, path-like, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Optional incremental-checkpoint directory. When set, each origin’s lean forecast records are persisted as soon as the origin completes, and a restarted run skips origins already on disk. <code class="docutils literal notranslate"><span class="pre">None</span></code> keeps the prior behavior with no checkpoint writes.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Output: <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> methods:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Output</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_frame()</span></code></p></td>
+<td><p>none</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Copy of forecast table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate(**kwargs)</span></code></p></td>
+<td><p>arguments forwarded to <code class="docutils literal notranslate"><span class="pre">mf.metrics.evaluate_forecasts</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Forecast-score table.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">with_sidecar(name,</span> <span class="pre">value)</span></code></p></td>
+<td><p>sidecar name and runtime object</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p></td>
+<td><p>Copy with a named sidecar recorded in metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_sidecar(name,</span> <span class="pre">default=None)</span></code></p></td>
+<td><p>sidecar name</p></td>
+<td><p>object</p></td>
+<td><p>Return an attached sidecar.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sidecar_names()</span></code></p></td>
+<td><p>none</p></td>
+<td><p>tuple</p></td>
+<td><p>Names of attached sidecars.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">with_oshapley(X,</span> <span class="pre">y,</span> <span class="pre">models,</span> <span class="pre">window=...,</span> <span class="pre">...)</span></code></p></td>
+<td><p>explicit aligned oShapley/PBSV inputs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p></td>
+<td><p>Build and attach an oShapley/PBSV sidecar through <code class="docutils literal notranslate"><span class="pre">mf.interpretation.oshapley_from_forecast_result(...)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">with_anatomy(X,</span> <span class="pre">y,</span> <span class="pre">models,</span> <span class="pre">window=...,</span> <span class="pre">...)</span></code></p></td>
+<td><p>explicit aligned backend inputs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p></td>
+<td><p>Backend alias for <code class="docutils literal notranslate"><span class="pre">with_oshapley(...)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">with_dual(model,</span> <span class="pre">X_train,</span> <span class="pre">y_train,</span> <span class="pre">X_test=None,</span> <span class="pre">...)</span></code></p></td>
+<td><p>fitted model and explicit train/test design</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p></td>
+<td><p>Build and attach a DualML observation-weight sidecar through <code class="docutils literal notranslate"><span class="pre">mf.interpretation.dual_from_forecast_result(...)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">anatomy_explain(anatomy,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>precomputed <code class="docutils literal notranslate"><span class="pre">anatomy.Anatomy</span></code> object or saved path</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Convenience call to <code class="docutils literal notranslate"><span class="pre">mf.interpretation.anatomy_explain(...)</span></code>, with forecast-result metadata attached.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pbsv(anatomy,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>precomputed backend object or saved path</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Convenience call to <code class="docutils literal notranslate"><span class="pre">mf.interpretation.pbsv(...)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">oshapley_vi(anatomy,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>precomputed backend object or saved path</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Convenience call to <code class="docutils literal notranslate"><span class="pre">mf.interpretation.oshapley_vi(...)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">anatomy_pbsv(anatomy,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>precomputed backend object or saved path</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Backend alias for <code class="docutils literal notranslate"><span class="pre">pbsv(...)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">anatomy_oshapley_vi(anatomy,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>precomputed backend object or saved path</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
+<td><p>Backend alias for <code class="docutils literal notranslate"><span class="pre">oshapley_vi(...)</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">pbsv(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">oshapley_vi(...)</span></code> do not create the backend object. Use
+<code class="docutils literal notranslate"><span class="pre">with_oshapley(...)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">mf.interpretation.oshapley_from_forecast_result(...)</span></code> when the sidecar should
+be built from explicit <code class="docutils literal notranslate"><span class="pre">X/y</span></code>, model specs, and <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code>.</p>
+<p>Dual interpretation is also attached after the runner. <code class="docutils literal notranslate"><span class="pre">forecasting.run()</span></code>
+does not infer observation weights automatically because the forecast table
+does not contain the exact fitted estimator, training feature matrix, training
+target, and forecast-row feature matrix. Use <code class="docutils literal notranslate"><span class="pre">with_dual(...)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">mf.interpretation.dual_from_forecast_result(...)</span></code> with those objects
+explicitly.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">preprocess_spec</span><span class="p">(</span>
+    <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">outliers</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+    <span class="n">impute</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+    <span class="n">standardize</span><span class="o">=</span><span class="s2">&quot;zscore&quot;</span><span class="p">,</span>
+    <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;keep&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="n">lags</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">pca_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span>
+    <span class="n">estimation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_expanding</span><span class="p">(</span><span class="n">min_size</span><span class="o">=</span><span class="mi">120</span><span class="p">),</span>
+    <span class="n">val</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_last_block</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">),</span>
+    <span class="n">test</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span><span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">preprocessing</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
+    <span class="n">preprocessing_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;origin_available&quot;</span><span class="p">),</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">feature_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;fit_window&quot;</span><span class="p">),</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">search_spec</span><span class="p">(</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">preset</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">),</span>
+    <span class="n">model_selection_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;fit_window&quot;</span><span class="p">),</span>
+    <span class="n">preset</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">model_selection=None</span></code> means “use registered model defaults” when a model has a
+search space. To run fixed parameters with no tuning, pass a model-keyed
+mapping such as <code class="docutils literal notranslate"><span class="pre">model_selection={&quot;ridge&quot;:</span> <span class="pre">None}</span></code>. To evaluate a single explicit
+candidate through the model-selection ledger, pass <code class="docutils literal notranslate"><span class="pre">model_selection={&quot;ridge&quot;:</span> <span class="pre">mf.model_selection.fixed({&quot;alpha&quot;:</span> <span class="pre">0.1})}</span></code>.</p>
+<section id="forecast-policies">
+<h3>Forecast Policies<a class="headerlink" href="#forecast-policies" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code> decides how the target is constructed and how forecasts are
+written to the forecast table.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Policy</p></th>
+<th class="head"><p>Target construction</p></th>
+<th class="head"><p>Model fit</p></th>
+<th class="head"><p>Forecast row</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">y[t+h]</span></code> or a direct transform such as growth/change.</p></td>
+<td><p>One model per requested horizon.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">date</span></code> is the target date <code class="docutils literal notranslate"><span class="pre">t+h</span></code>; <code class="docutils literal notranslate"><span class="pre">horizon</span></code> is <code class="docutils literal notranslate"><span class="pre">h</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;direct_average&quot;</span></code></p></td>
+<td><p>Direct average target, such as average change or average growth over steps <code class="docutils literal notranslate"><span class="pre">1..h</span></code>.</p></td>
+<td><p>One model per requested horizon.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code> and <code class="docutils literal notranslate"><span class="pre">actual</span></code> are horizon-average objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;path_average&quot;</span></code></p></td>
+<td><p>Step-level targets for steps <code class="docutils literal notranslate"><span class="pre">1..h</span></code>.</p></td>
+<td><p>One model per future step, then average the step forecasts.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code> and <code class="docutils literal notranslate"><span class="pre">actual</span></code> are averages of the step forecasts/outcomes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;recursive&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;iterated&quot;</span></code></p></td>
+<td><p>One-step target <code class="docutils literal notranslate"><span class="pre">y[t+1]</span></code>.</p></td>
+<td><p>Fit one one-step model at each origin, then feed predicted target values back into the feature panel for steps <code class="docutils literal notranslate"><span class="pre">2..h</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code> and <code class="docutils literal notranslate"><span class="pre">actual</span></code> are expressed at the requested horizon <code class="docutils literal notranslate"><span class="pre">h</span></code> under the selected <code class="docutils literal notranslate"><span class="pre">target_transform</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fit separate direct models for h=1, 3, and 12.</span>
+<span class="n">direct</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ridge&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="c1"># Direct average growth target over the next 12 months.</span>
+<span class="n">direct_avg</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">forecast_policy</span><span class="o">=</span><span class="s2">&quot;direct_average&quot;</span><span class="p">,</span>
+    <span class="n">target_transform</span><span class="o">=</span><span class="s2">&quot;growth&quot;</span><span class="p">,</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ridge&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="c1"># Fit step 1..12 models and average the step growth forecasts.</span>
+<span class="n">path_avg</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">forecast_policy</span><span class="o">=</span><span class="s2">&quot;path_average&quot;</span><span class="p">,</span>
+    <span class="n">target_transform</span><span class="o">=</span><span class="s2">&quot;growth&quot;</span><span class="p">,</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ridge&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="c1"># Recursive / iterated forecast: fit one-step AR-style model and iterate to h=12.</span>
+<span class="n">recursive</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">forecast_policy</span><span class="o">=</span><span class="s2">&quot;recursive&quot;</span><span class="p">,</span>
+    <span class="n">target_transform</span><span class="o">=</span><span class="s2">&quot;level&quot;</span><span class="p">,</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ridge&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple myst">
+<dt>Target availability rule:</dt><dd><p>for feature-matrix direct and direct-average forecasts, a training row <code class="docutils literal notranslate"><span class="pre">u</span></code> is
+used only when <code class="docutils literal notranslate"><span class="pre">u</span> <span class="pre">+</span> <span class="pre">h</span> <span class="pre">&lt;=</span> <span class="pre">origin</span></code>. For path-average forecasts, each step model
+uses only rows satisfying <code class="docutils literal notranslate"><span class="pre">u</span> <span class="pre">+</span> <span class="pre">step</span> <span class="pre">&lt;=</span> <span class="pre">origin</span></code>. Hyperparameter validation splits
+are rebuilt under the same rule. Forecast rows expose
+<code class="docutils literal notranslate"><span class="pre">window[&quot;target_availability_end&quot;]</span></code>, <code class="docutils literal notranslate"><span class="pre">window[&quot;target_availability_end_pos&quot;]</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">window[&quot;target_availability_lag&quot;]</span></code> so users can audit the effective fit
+sample. Path-average rows also expose
+<code class="docutils literal notranslate"><span class="pre">window[&quot;target_availability_by_step&quot;]</span></code>. This can be earlier than the generic
+<code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code> <code class="docutils literal notranslate"><span class="pre">fit_end</span></code>, because <code class="docutils literal notranslate"><span class="pre">fit_end</span></code> is an information-window boundary
+while h-step target labels realize later.</p>
+</dd>
+<dt>Test-origin rule:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">window.test.first_origin</span></code> and <code class="docutils literal notranslate"><span class="pre">window.test.last_origin</span></code> are origin dates.
+<code class="docutils literal notranslate"><span class="pre">step=1</span></code> means every emitted row in the input index, so overlapping h-step
+macro forecasts are supported. The runner writes a scored row only when the
+realized target date is available. With <code class="docutils literal notranslate"><span class="pre">drop_incomplete=True</span></code>, an h-step
+origin <code class="docutils literal notranslate"><span class="pre">t</span></code> is kept for scoring only if <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">+</span> <span class="pre">h</span></code> is inside the panel. For a
+monthly panel ending in <code class="docutils literal notranslate"><span class="pre">2017-12</span></code>, h=24 origins after <code class="docutils literal notranslate"><span class="pre">2015-12</span></code> are not
+evaluable even though the origin dates themselves exist. If an entire final
+calendar block has no evaluable origins, <code class="docutils literal notranslate"><span class="pre">WindowSpec.validate(...)</span></code> reports
+no test origins; replication scripts should skip that tail block rather than
+count it as a forecast error.</p>
+</dd>
+</dl>
+<p>For FRED-MD-style replications where preprocessing has already produced the
+one-period target object, use <code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;direct_average&quot;,</span> <span class="pre">target_transform=&quot;value&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">target_transform=&quot;average_value&quot;</span></code> for direct
+average targets, and use <code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;path_average&quot;,</span> <span class="pre">target_transform=&quot;value&quot;</span></code> for path-average step targets.</p>
+<p>Recursive forecasting has an explicit future-feature contract:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">future_feature_policy</span></code></p></th>
+<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Use when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;target_lags&quot;</span></code></p></td>
+<td><p>Default. The runner builds or requires target-lag features only, then updates the target path with its own predictions. It does not invent future exogenous predictors.</p></td>
+<td><p>Real-time recursive or iterated forecasting.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;observed_future&quot;</span></code></p></td>
+<td><p>The runner uses future non-target predictor values already present in the panel while recursively updating only the target. This is an oracle/scenario path.</p></td>
+<td><p>Scenario analysis, controlled simulations, or cases where future predictor paths are genuinely known.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">features=None</span></code> and <code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;recursive&quot;</span></code>, the runner creates
+<code class="docutils literal notranslate"><span class="pre">feature_spec(target=target,</span> <span class="pre">predictors=[],</span> <span class="pre">lags=None,</span> <span class="pre">target_lags=(0,</span> <span class="pre">1),</span> <span class="pre">horizon=1)</span></code>. In row-date convention, <code class="docutils literal notranslate"><span class="pre">target_lags=(0,</span> <span class="pre">1)</span></code> means the current
+target value at the one-step information date and its previous value. For
+supplied <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> with <code class="docutils literal notranslate"><span class="pre">future_feature_policy=&quot;target_lags&quot;</span></code>, regular
+<code class="docutils literal notranslate"><span class="pre">predictors</span></code> must be empty and <code class="docutils literal notranslate"><span class="pre">target_lags</span></code> must be declared with lag <code class="docutils literal notranslate"><span class="pre">0</span></code>
+included, because predicted target values are written into the next row before
+the next one-step forecast is formed. For supplied <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> with
+<code class="docutils literal notranslate"><span class="pre">future_feature_policy=&quot;observed_future&quot;</span></code>, regular predictors are allowed, but
+the user is responsible for the future predictor path.</p>
+<p>For feature-matrix models, the runner uses the requested horizon to restrict
+test origins to dates where <code class="docutils literal notranslate"><span class="pre">t+h</span></code> is observable, but it fits/predicts one
+origin row per forecast origin. This keeps <code class="docutils literal notranslate"><span class="pre">origin</span></code> as the information date and
+<code class="docutils literal notranslate"><span class="pre">date</span></code> as the realized target date.</p>
+<p>Panel-input models consume the canonical panel directly instead of an
+engineered <code class="docutils literal notranslate"><span class="pre">X,</span> <span class="pre">y</span></code> matrix. They cannot be mixed with feature-matrix models in one
+runner call. Currently <code class="docutils literal notranslate"><span class="pre">forecasting.run(...,</span> <span class="pre">features=None)</span></code> supports
+<code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code> and <code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code> as native
+mixed-frequency panel models. It keeps <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code> metadata such as
+<code class="docutils literal notranslate"><span class="pre">native_frequency_by_column</span></code> so the model can separate monthly and quarterly
+columns inside each fit window. Panel-input runner calls currently fit fixed
+model parameters; pass <code class="docutils literal notranslate"><span class="pre">model_selection={model_name:</span> <span class="pre">None}</span></code> for these models.</p>
+<p>For standard MIDAS regressions, build the mixed-frequency lag matrix explicitly
+and pass it as a <code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code>. This keeps calendar anchoring in
+<code class="docutils literal notranslate"><span class="pre">mixed_frequency_lags()</span></code> and model weighting in <code class="docutils literal notranslate"><span class="pre">midas_almon()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">midas_beta()</span></code>, <code class="docutils literal notranslate"><span class="pre">midas_step()</span></code>, or <code class="docutils literal notranslate"><span class="pre">unrestricted_midas()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">X_midas</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">mixed_frequency_lags</span><span class="p">(</span>
+    <span class="n">mixed</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;PAYEMS&quot;</span><span class="p">,</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">],</span>
+    <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+    <span class="n">target_frequency</span><span class="o">=</span><span class="s2">&quot;quarterly&quot;</span><span class="p">,</span>
+    <span class="n">anchor_position</span><span class="o">=</span><span class="s2">&quot;period_end&quot;</span><span class="p">,</span>
+    <span class="n">drop_missing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">mixed</span><span class="o">.</span><span class="n">panel</span><span class="p">[</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">X_midas</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+<span class="n">features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">FeatureSet</span><span class="p">(</span>
+    <span class="n">X</span><span class="o">=</span><span class="n">X_midas</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;feature_engineering&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;mixed_frequency_lags&quot;</span><span class="p">}},</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,),</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span>
+    <span class="n">predictors</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">X_midas</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">features</span><span class="p">,</span>
+    <span class="s2">&quot;midas_beta&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span>
+        <span class="n">estimation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_expanding</span><span class="p">(</span><span class="n">min_size</span><span class="o">=</span><span class="mi">40</span><span class="p">),</span>
+        <span class="n">val</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_last_block</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">),</span>
+        <span class="n">test</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span><span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;midas_beta&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;beta_params&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}},</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;midas_beta&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>If the analysis intentionally follows the common full-sample empirical
+workflow, preprocess first and pass the processed panel to <code class="docutils literal notranslate"><span class="pre">run(...,</span> <span class="pre">preprocessing=None)</span></code>. If the analysis is a real-time forecasting exercise, pass
+<code class="docutils literal notranslate"><span class="pre">preprocess_spec(...)</span></code> plus an explicit <code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code>.</p>
+<p>Stage policies are intentionally shared across preprocessing, feature
+engineering, and model selection:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Scope</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">full_panel</span></code></p></td>
+<td><p>Fit the stage once on the full panel. Useful for retrospective replication designs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">origin_available</span></code></p></td>
+<td><p>Fit using observations available up to each origin. This supports common macro cleaning designs, including EM imputation on variables observed by that origin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fit_window</span></code></p></td>
+<td><p>Fit only on the model fit window and apply that fitted state to validation/test rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fixed_reference</span></code></p></td>
+<td><p>Fit on a named reference period, then keep that state fixed. Useful for fixed PCA loadings or fixed standardization windows.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code> also has an <code class="docutils literal notranslate"><span class="pre">update</span></code> cadence. For preprocessing and feature
+engineering, <code class="docutils literal notranslate"><span class="pre">run()</span></code> refits or reuses the fitted state according to
+<code class="docutils literal notranslate"><span class="pre">&quot;every_origin&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;on_retrain&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;never&quot;</span></code>, a positive integer cadence, or a
+pandas date offset such as <code class="docutils literal notranslate"><span class="pre">&quot;12ME&quot;</span></code>. This lets the same runner express both
+full re-estimation designs and fixed-reference designs such as “fit PCA
+loadings once, then keep the loadings fixed while origins roll forward.”</p>
+<p>The runner metadata records the window, each stage policy, preprocessing
+options, feature-engineering options, model-selection spec, model specs, and origin
+stage records. Each origin stage record includes an <code class="docutils literal notranslate"><span class="pre">updated</span></code> flag showing
+whether that stage fitted new state at that origin.</p>
+<p>Before any origin is fitted, <code class="docutils literal notranslate"><span class="pre">run()</span></code> validates the resolved <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code> against
+the input index. Window validation errors, such as invalid inner validation
+splits or <code class="docutils literal notranslate"><span class="pre">reuse_params=False</span></code> with skipped retune origins, stop the run with
+<code class="docutils literal notranslate"><span class="pre">window</span> <span class="pre">validation</span> <span class="pre">failed:</span> <span class="pre">...</span></code>.</p>
+</section>
+</section>
+<section id="execution-order">
+<h2>Execution Order<a class="headerlink" href="#execution-order" title="Link to this heading">#</a></h2>
+<p>For raw panel input, <code class="docutils literal notranslate"><span class="pre">run()</span></code> executes one test origin at a time:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Step</p></th>
+<th class="head"><p>Owner</p></th>
+<th class="head"><p>What happens</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">meta</span></code></p></td>
+<td><p>Read package defaults such as random seed and default stage scopes.</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">window</span></code></p></td>
+<td><p>Resolve estimation, validation, test, retrain, and retune rows.</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">preprocessing</span></code></p></td>
+<td><p>Fit or reuse the preprocessing state according to <code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code>; transform the rows needed by the origin.</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code></p></td>
+<td><p>Fit or reuse the feature builder according to <code class="docutils literal notranslate"><span class="pre">feature_policy</span></code>; create <code class="docutils literal notranslate"><span class="pre">X_fit</span></code>, <code class="docutils literal notranslate"><span class="pre">y_fit</span></code>, <code class="docutils literal notranslate"><span class="pre">X_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">y_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">X_test</span></code>, and <code class="docutils literal notranslate"><span class="pre">y_test</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>5</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_selection</span></code></p></td>
+<td><p>If enabled, evaluate model parameter candidates on validation splits supplied by the window.</p></td>
+</tr>
+<tr class="row-odd"><td><p>6</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">models</span></code> or <code class="docutils literal notranslate"><span class="pre">model_ensemble</span></code></p></td>
+<td><p>Fit the model or fit-time ensemble on the origin fit window with selected or fixed parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p>7</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">models</span></code></p></td>
+<td><p>Save the fitted object and JSON sidecar when <code class="docutils literal notranslate"><span class="pre">save_models=True</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>8</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forecasting</span></code></p></td>
+<td><p>Collect point, variance, and quantile forecasts.</p></td>
+</tr>
+<tr class="row-even"><td><p>9</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forecasting</span></code></p></td>
+<td><p>Append requested forecast-combination rows and write the run metadata ledger.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">data</span></code> is already a <code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code>, preprocessing and feature construction are
+skipped. The runner slices the supplied <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> by the window plan and then
+runs model selection, model fitting, prediction, and optional model storage.</p>
+<p>If every selected model has <code class="docutils literal notranslate"><span class="pre">input_kind=&quot;panel&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">features=None</span></code>, the runner
+uses the window plan to slice the panel directly into fit and test panels. This
+is the path used by mixed-frequency DFM models. Runner-level preprocessing can
+run on this path with <code class="docutils literal notranslate"><span class="pre">preprocess_spec(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code>; feature
+engineering is skipped because panel-input models consume native panel columns.</p>
+<p>The result metadata records which execution path was used:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">run.input_path</span></code></p></th>
+<th class="head"><p>Input</p></th>
+<th class="head"><p>Stages run inside <code class="docutils literal notranslate"><span class="pre">run()</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">panel_to_features</span></code></p></td>
+<td><p>Raw canonical panel, <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>, <code class="docutils literal notranslate"><span class="pre">DataSpec</span></code>, or <code class="docutils literal notranslate"><span class="pre">(panel,</span> <span class="pre">metadata)</span></code> with feature-matrix models</p></td>
+<td><p>Optional preprocessing, feature engineering, model selection, model fitting, optional combination.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_set</span></code></p></td>
+<td><p>Prebuilt <code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code></p></td>
+<td><p>Model selection, model fitting, optional combination. Preprocessing and feature construction are assumed to have already happened.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">panel_model</span></code></p></td>
+<td><p>Canonical panel with panel-input models such as mixed-frequency DFM</p></td>
+<td><p>Optional preprocessing, panel slicing, panel-model fitting, optional combination. Feature engineering is skipped.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="forecast-table">
+<h2>Forecast Table<a class="headerlink" href="#forecast-table" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ForecastResult.to_frame()</span></code> returns one row per <code class="docutils literal notranslate"><span class="pre">(origin,</span> <span class="pre">test</span> <span class="pre">date,</span> <span class="pre">model)</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">date</span></code></p></td>
+<td><p>Test target date.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">origin</span></code></p></td>
+<td><p>Forecast origin from the window row.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">origin_pos</span></code></p></td>
+<td><p>Integer position of the origin in the input index.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
+<td><p>Forecast horizon for the row.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></p></td>
+<td><p>Policy used to construct the row: <code class="docutils literal notranslate"><span class="pre">direct</span></code>, <code class="docutils literal notranslate"><span class="pre">direct_average</span></code>, <code class="docutils literal notranslate"><span class="pre">path_average</span></code>, or <code class="docutils literal notranslate"><span class="pre">recursive</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
+<td><p>Source target variable.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
+<td><p>Runner alias, such as <code class="docutils literal notranslate"><span class="pre">ridge</span></code> or a key from a model mapping.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_spec</span></code></p></td>
+<td><p>Canonical registered model name.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code></p></td>
+<td><p>Point forecast.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code></p></td>
+<td><p>Forecast variance when the fitted model exposes <code class="docutils literal notranslate"><span class="pre">predict_variance(...)</span></code>; otherwise <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code></p></td>
+<td><p>Per-row quantile dictionary when the fitted model exposes <code class="docutils literal notranslate"><span class="pre">predict_quantiles(X)</span></code>; otherwise <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">actual</span></code></p></td>
+<td><p>Realized target value when available.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">params</span></code></p></td>
+<td><p>Actual fixed-plus-selected parameters used for the origin fit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_selection</span></code></p></td>
+<td><p>Model-selection ledger for the origin/model, including <code class="docutils literal notranslate"><span class="pre">retuned</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stored_model</span></code></p></td>
+<td><p>Model and metadata sidecar paths when <code class="docutils literal notranslate"><span class="pre">save_models=True</span></code>; otherwise <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">window</span></code></p></td>
+<td><p>Full window row used for the origin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">preprocessed</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when runner-level preprocessing was active for the row; otherwise <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combined</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> for runner-created combination rows; <code class="docutils literal notranslate"><span class="pre">False</span></code> for base model rows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combination</span></code></p></td>
+<td><p>Combination spec dictionary for combined rows; otherwise <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="metadata-structure">
+<h2>Metadata Structure<a class="headerlink" href="#metadata-structure" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ForecastResult.metadata</span></code> is JSON-ready and contains:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_schema</span></code></p></td>
+<td><p>Stable metadata contract: <code class="docutils literal notranslate"><span class="pre">kind=&quot;forecast_result&quot;</span></code>, schema version, execution path, forecast-table columns, and stage-record columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run</span></code></p></td>
+<td><p>Forecast count, model count, execution path, forecast policy, horizons, meta config, metadata level, and model storage settings.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p>Input panel summary from <code class="docutils literal notranslate"><span class="pre">macroforecast.data.panel_info(...)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">window</span></code></p></td>
+<td><p>Complete <code class="docutils literal notranslate"><span class="pre">WindowSpec.to_dict()</span></code> output.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stage_policies</span></code></p></td>
+<td><p>Resolved preprocessing, feature-engineering, and model-selection policies.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocessing</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PreprocessSpec.to_dict()</span></code> output, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></p></td>
+<td><p>Policy metadata including method, horizons, <code class="docutils literal notranslate"><span class="pre">future_feature_policy</span></code>, and whether observed future predictors were used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">FeatureSpec.to_dict()</span></code> output or supplied <code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code> metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_selection</span></code></p></td>
+<td><p>Search spec metadata, model-keyed search metadata, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combination</span></code></p></td>
+<td><p>List of resolved forecast-combination specs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">models</span></code></p></td>
+<td><p>Runner aliases plus model spec metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stages</span></code></p></td>
+<td><p>Origin-level preprocessing and feature-engineering fit records unless <code class="docutils literal notranslate"><span class="pre">metadata_level=&quot;minimal&quot;</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">metadata_schema.version</span></code> is currently <code class="docutils literal notranslate"><span class="pre">1</span></code>. Code that consumes runner outputs
+should check this value before assuming column or metadata shape. The
+<code class="docutils literal notranslate"><span class="pre">forecast_table_columns</span></code> entry lists the stable row fields emitted by the
+runner. <code class="docutils literal notranslate"><span class="pre">stage_record_columns</span></code> lists the ledger fields used when a stateful
+stage is fitted or reused at an origin.</p>
+</section>
+<section id="runner-examples">
+<h2>Runner Examples<a class="headerlink" href="#runner-examples" title="Link to this heading">#</a></h2>
+<section id="full-sample-empirical-preprocessing">
+<h3>Full-Sample Empirical Preprocessing<a class="headerlink" href="#full-sample-empirical-preprocessing" title="Link to this heading">#</a></h3>
+<p>This pattern matches many retrospective empirical designs: clean the panel once,
+then run the forecasting experiment on the processed panel.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">processed</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;official&quot;</span><span class="p">,</span>
+    <span class="n">outliers</span><span class="o">=</span><span class="s2">&quot;iqr&quot;</span><span class="p">,</span>
+    <span class="n">outlier_action</span><span class="o">=</span><span class="s2">&quot;flag_as_nan&quot;</span><span class="p">,</span>
+    <span class="n">impute</span><span class="o">=</span><span class="s2">&quot;em_factor&quot;</span><span class="p">,</span>
+    <span class="n">standardize</span><span class="o">=</span><span class="s2">&quot;zscore&quot;</span><span class="p">,</span>
+    <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;keep&quot;</span><span class="p">,</span>
+<span class="p">)</span><span class="o">.</span><span class="n">panel</span>
+
+<span class="n">features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="n">lags</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">processed</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">preprocessing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">preset</span><span class="o">=</span><span class="s2">&quot;small&quot;</span><span class="p">,</span>
+    <span class="n">save_models</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="window-local-preprocessing">
+<h3>Window-Local Preprocessing<a class="headerlink" href="#window-local-preprocessing" title="Link to this heading">#</a></h3>
+<p>This pattern is stricter for real-time forecasting. Preprocessing state is fit
+inside each origin’s fit window and then applied to validation/test rows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">preprocess_spec</span><span class="p">(</span>
+    <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;official&quot;</span><span class="p">,</span>
+    <span class="n">outliers</span><span class="o">=</span><span class="s2">&quot;iqr&quot;</span><span class="p">,</span>
+    <span class="n">impute</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+    <span class="n">standardize</span><span class="o">=</span><span class="s2">&quot;zscore&quot;</span><span class="p">,</span>
+    <span class="n">standardize_columns</span><span class="o">=</span><span class="s2">&quot;predictors&quot;</span><span class="p">,</span>
+    <span class="n">frame</span><span class="o">=</span><span class="s2">&quot;keep&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">preprocessing</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
+    <span class="n">preprocessing_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;fit_window&quot;</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="s2">&quot;every_origin&quot;</span><span class="p">),</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">feature_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;fit_window&quot;</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="s2">&quot;on_retrain&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="fixed-standardization-reference">
+<h3>Fixed Standardization Reference<a class="headerlink" href="#fixed-standardization-reference" title="Link to this heading">#</a></h3>
+<p>Use a fixed preprocessing reference when scaling or imputation state should come
+from a named historical period rather than from every rolling origin.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">preprocessing</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
+    <span class="n">preprocessing_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span>
+        <span class="s2">&quot;fixed_reference&quot;</span><span class="p">,</span>
+        <span class="n">reference_start</span><span class="o">=</span><span class="s2">&quot;1985-01-31&quot;</span><span class="p">,</span>
+        <span class="n">reference_end</span><span class="o">=</span><span class="s2">&quot;2004-12-31&quot;</span><span class="p">,</span>
+        <span class="n">update</span><span class="o">=</span><span class="s2">&quot;never&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="fixed-pca-loadings">
+<h3>Fixed PCA Loadings<a class="headerlink" href="#fixed-pca-loadings" title="Link to this heading">#</a></h3>
+<p>Use a fixed feature reference when factor loadings should be estimated once and
+held fixed while forecast origins move forward.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pca_features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="n">lags</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">pca_components</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ols&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">preprocessing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">pca_features</span><span class="p">,</span>
+    <span class="n">feature_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span>
+        <span class="s2">&quot;fixed_reference&quot;</span><span class="p">,</span>
+        <span class="n">reference_start</span><span class="o">=</span><span class="s2">&quot;1985-01-31&quot;</span><span class="p">,</span>
+        <span class="n">reference_end</span><span class="o">=</span><span class="s2">&quot;2004-12-31&quot;</span><span class="p">,</span>
+        <span class="n">update</span><span class="o">=</span><span class="s2">&quot;never&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">feature_policy</span></code> is <code class="docutils literal notranslate"><span class="pre">full_panel</span></code> or <code class="docutils literal notranslate"><span class="pre">fixed_reference</span></code>, runner-level
+preprocessing must be absent or <code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code> must be <code class="docutils literal notranslate"><span class="pre">full_panel</span></code>.
+This keeps fixed feature state fitted on one well-defined processed panel.</p>
+</section>
+<section id="multiple-models-with-model-keyed-model-selection">
+<h3>Multiple Models with Model-Keyed Model Selection<a class="headerlink" href="#multiple-models-with-model-keyed-model-selection" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">model_selection</span></code> can be one shared <code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code> or a model-keyed mapping. A
+model-keyed <code class="docutils literal notranslate"><span class="pre">None</span></code> disables model selection for that model. Mapping keys can be
+the output alias, such as <code class="docutils literal notranslate"><span class="pre">linear</span></code>, or the registered spec name, such as <code class="docutils literal notranslate"><span class="pre">ridge</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="p">{</span><span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;sparse&quot;</span><span class="p">:</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;tree&quot;</span><span class="p">:</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">},</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">grid</span><span class="p">({</span><span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]}),</span>
+        <span class="s2">&quot;sparse&quot;</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">cv_path</span><span class="p">(</span>
+            <span class="n">param</span><span class="o">=</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;tree&quot;</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">random_search</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span>
+                <span class="s2">&quot;max_depth&quot;</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span>
+            <span class="p">},</span>
+            <span class="n">n_iter</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">model_selection_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;fit_window&quot;</span><span class="p">),</span>
+    <span class="n">model_selection_metric</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">params</span></code> and <code class="docutils literal notranslate"><span class="pre">preset</span></code> follow the same alias-or-spec-key rule. Unknown keys raise
+an error instead of being silently ignored. For a single model, direct parameter
+names are also accepted, including dict-valued parameters such as
+<code class="docutils literal notranslate"><span class="pre">params={&quot;base_params&quot;:</span> <span class="pre">{&quot;alpha&quot;:</span> <span class="pre">0.1}}</span></code> for a fit-time ensemble spec.
+This is also how model-local preprocessing options are expressed. For example,
+Elastic Net can standardize predictors inside each fit window while a tree model
+uses the raw feature matrix:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;elastic_net&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;elastic_net&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;standardize&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+        <span class="s2">&quot;random_forest&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;max_features&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This differs from <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.standardize_panel()</span></code>, which is a
+panel preprocessing step. If that preprocessing is run on the full panel outside
+the runner, it uses full-sample moments. If leakage-safe scaling is needed for
+all models, use runner preprocessing specs and window policies. If only selected
+models need scaling, use model-local options such as <code class="docutils literal notranslate"><span class="pre">standardize=True</span></code>.</p>
+<p>Forecast rows record the actual fixed-plus-selected parameter set in the
+<code class="docutils literal notranslate"><span class="pre">params</span></code> column. For example, if <code class="docutils literal notranslate"><span class="pre">params={&quot;ridge&quot;:</span> <span class="pre">{&quot;fit_intercept&quot;:</span> <span class="pre">False}}</span></code>
+and model selection picks <code class="docutils literal notranslate"><span class="pre">{&quot;alpha&quot;:</span> <span class="pre">0.1}</span></code>, the row records both values.</p>
+</section>
+<section id="forecast-combination-across-models">
+<h3>Forecast Combination Across Models<a class="headerlink" href="#forecast-combination-across-models" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">run</span></code> is atomic: it fits exactly one model per call, so a combination across
+several models is built by running each model in its own call and combining the
+resulting forecast tables. The combination primitives in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code> operate on a forecast frame that already contains the
+base model rows. <code class="docutils literal notranslate"><span class="pre">apply_combinations</span></code> appends combined rows that use the same
+<code class="docutils literal notranslate"><span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">origin</span></code>, <code class="docutils literal notranslate"><span class="pre">origin_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon</span></code>, and <code class="docutils literal notranslate"><span class="pre">actual</span></code> fields as the base rows,
+with <code class="docutils literal notranslate"><span class="pre">model</span></code> set to the combination name.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">models=</span></code> filter inside a combination spec refers to the output <code class="docutils literal notranslate"><span class="pre">model</span></code>
+column, not the registry <code class="docutils literal notranslate"><span class="pre">model_spec</span></code>. If an arm was run under the alias
+<code class="docutils literal notranslate"><span class="pre">&quot;bagged&quot;</span></code>, use <code class="docutils literal notranslate"><span class="pre">models=[&quot;bagged&quot;]</span></code> when selecting it for a forecast combination.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.forecasting.combination</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_combinations</span><span class="p">,</span> <span class="n">resolve_combinations</span>
+
+<span class="n">tables</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="n">master</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">records</span> <span class="o">=</span> <span class="n">apply_combinations</span><span class="p">(</span><span class="n">master</span><span class="p">,</span> <span class="n">resolve_combinations</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">))</span>
+<span class="n">combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>  <span class="c1"># model == &quot;combined_mean&quot;</span>
+</pre></div>
+</div>
+<p>Multiple combinations can be requested together by passing a mapping to
+<code class="docutils literal notranslate"><span class="pre">resolve_combinations</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">records</span> <span class="o">=</span> <span class="n">apply_combinations</span><span class="p">(</span>
+    <span class="n">master</span><span class="p">,</span>
+    <span class="n">resolve_combinations</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;avg&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dmspe&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;dmspe&quot;</span><span class="p">,</span> <span class="s2">&quot;models&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">],</span> <span class="s2">&quot;discount&quot;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">},</span>
+            <span class="s2">&quot;best_two&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;best_n&quot;</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+        <span class="p">}</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For a managed comparison the pipeline applies the same combination methods across
+arms via <code class="docutils literal notranslate"><span class="pre">CombinationContender</span></code> (see the pipeline reference), so combinations
+become additional contenders in the master frame without manual table assembly.</p>
+<p><code class="docutils literal notranslate"><span class="pre">inverse_mspe</span></code>, <code class="docutils literal notranslate"><span class="pre">dmspe</span></code>, and <code class="docutils literal notranslate"><span class="pre">best_n</span></code> use only historical forecast errors when
+forming the current combined forecast. The current row’s realized value is used
+only after that row’s weight or best-model decision has already been made.</p>
+<p>Custom forecast combinations use the same primitive:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">blend</span><span class="p">(</span><span class="n">forecasts</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">forecasts</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">weight</span><span class="p">)</span> <span class="o">*</span> <span class="n">forecasts</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">records</span> <span class="o">=</span> <span class="n">apply_combinations</span><span class="p">(</span>
+    <span class="n">master</span><span class="p">,</span>
+    <span class="p">[</span><span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">custom_combination</span><span class="p">(</span><span class="s2">&quot;ridge_lasso_blend&quot;</span><span class="p">,</span> <span class="n">blend</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">],</span> <span class="n">weight</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The callable receives a wide forecast matrix indexed by
+<code class="docutils literal notranslate"><span class="pre">(date,</span> <span class="pre">origin,</span> <span class="pre">origin_pos,</span> <span class="pre">horizon)</span></code> and an <code class="docutils literal notranslate"><span class="pre">actual</span></code> series aligned to the same
+index:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">func</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">actual</span><span class="p">:</span> <span class="n">pandas</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It must return a <code class="docutils literal notranslate"><span class="pre">Series</span></code> or one-dimensional array-like object with the same
+length. The runner appends the output as rows with <code class="docutils literal notranslate"><span class="pre">combined=True</span></code> and records
+the callable name in <code class="docutils literal notranslate"><span class="pre">metadata[&quot;combination&quot;]</span></code>.</p>
+</section>
+<section id="mixed-frequency-dfm-in-the-runner">
+<h3>Mixed-Frequency DFM In The Runner<a class="headerlink" href="#mixed-frequency-dfm-in-the-runner" title="Link to this heading">#</a></h3>
+<p>Use the panel-input path for native monthly/quarterly state-space models. The
+input should be a <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code> whose metadata records column-level native
+frequencies.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mixed</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">monthly_bundle</span><span class="p">,</span> <span class="n">quarterly_bundle</span><span class="p">,</span> <span class="n">frequency</span><span class="o">=</span><span class="s2">&quot;native&quot;</span><span class="p">)</span>
+
+<span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span>
+    <span class="n">estimation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_expanding</span><span class="p">(</span><span class="n">min_size</span><span class="o">=</span><span class="mi">120</span><span class="p">),</span>
+    <span class="n">val</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_last_block</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">),</span>
+    <span class="n">test</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span><span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">mixed</span><span class="p">,</span>
+    <span class="s2">&quot;dfm_mixed_mariano_murasawa&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;GDPC1&quot;</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;dfm_mixed_mariano_murasawa&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;n_factors&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;factor_order&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dfm_mixed_mariano_murasawa&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+    <span class="n">features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The result metadata records <code class="docutils literal notranslate"><span class="pre">run.panel_model_runner=True</span></code> and keeps
+<code class="docutils literal notranslate"><span class="pre">data.native_frequency_counts</span></code>, <code class="docutils literal notranslate"><span class="pre">data.output_frequency_counts</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">data.frequency=&quot;mixed&quot;</span></code> when those fields are present on the input bundle.
+The requested <code class="docutils literal notranslate"><span class="pre">target</span></code> must be present in the panel before fitting begins; a
+missing target raises a direct error before any model backend is called.</p>
+<p>For all runner paths, fitted model <code class="docutils literal notranslate"><span class="pre">predict(X_test)</span></code> output is validated before
+records are appended. Array-like predictions are positional. A pandas <code class="docutils literal notranslate"><span class="pre">Series</span></code>
+or single-column <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> must either use <code class="docutils literal notranslate"><span class="pre">X_test.index</span></code> or the default
+<code class="docutils literal notranslate"><span class="pre">RangeIndex(len(X_test))</span></code>; any other index is rejected to avoid silently
+writing NaN forecasts. <code class="docutils literal notranslate"><span class="pre">predict_quantiles(X_test)</span></code> follows the same DataFrame
+index rule when it returns a DataFrame.</p>
+</section>
+<section id="quantile-and-variance-outputs">
+<h3>Quantile and Variance Outputs<a class="headerlink" href="#quantile-and-variance-outputs" title="Link to this heading">#</a></h3>
+<p>Models that expose variance or quantile prediction methods fill extra forecast
+columns automatically. The runner first tries <code class="docutils literal notranslate"><span class="pre">predict_variance(X_test)</span></code> for
+models such as <code class="docutils literal notranslate"><span class="pre">hemisphere_nn</span></code>, then falls back to
+<code class="docutils literal notranslate"><span class="pre">predict_variance(horizon=len(X_test))</span></code> for volatility models.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">quantile_result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;quantile_regression_forest&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;quantile_regression_forest&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;n_estimators&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span>
+            <span class="s2">&quot;quantile_levels&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
+            <span class="s2">&quot;random_state&quot;</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;quantile_regression_forest&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">quantile_result</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()[[</span><span class="s2">&quot;prediction&quot;</span><span class="p">,</span> <span class="s2">&quot;quantile_predictions&quot;</span><span class="p">]]</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">variance_result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;garch11&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;garch11&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">variance_result</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()[[</span><span class="s2">&quot;prediction&quot;</span><span class="p">,</span> <span class="s2">&quot;variance_prediction&quot;</span><span class="p">]]</span>
+</pre></div>
+</div>
+</section>
+<section id="model-storage">
+<h3>Model Storage<a class="headerlink" href="#model-storage" title="Link to this heading">#</a></h3>
+<p>Model storage is on by default. Use a custom root when the run should keep its
+fitted objects separate from other experiments.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">stored</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">model_store</span><span class="o">=</span><span class="s2">&quot;trained_model/monthly_baseline&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">stored</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()[[</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;stored_model&quot;</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>Disable storage for fast exploratory runs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">preview</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">save_models</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="trained-model-storage">
+<h2>Trained Model Storage<a class="headerlink" href="#trained-model-storage" title="Link to this heading">#</a></h2>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">run()</span></code> saves the fitted model object produced at each forecast
+origin. The runner decides which object to save: after model selection, it refits the
+model on the origin fit window with the selected best parameters, then delegates
+the actual pickle and JSON write to <code class="docutils literal notranslate"><span class="pre">macroforecast.models.save_fit()</span></code>.</p>
+<p>The default root is relative to the current working directory:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>trained_model/{model_name}/origin_{origin_pos}_h{horizon}_{origin}.pkl
+trained_model/{model_name}/origin_{origin_pos}_h{horizon}_{origin}.json
+</pre></div>
+</div>
+<p>Model selection remains a runner responsibility because it depends on the window,
+validation split, model-selection policy, and model-owned search space. Model
+persistence remains a model-module utility because it only knows how to save a
+fitted object and a metadata sidecar.</p>
+<p>The forecast table includes a <code class="docutils literal notranslate"><span class="pre">stored_model</span></code> dictionary for each row:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_path</span></code></p></td>
+<td><p>Pickle path for the fitted model, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when the object cannot be pickled.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_path</span></code></p></td>
+<td><p>JSON metadata path written for the fitted model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_error</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code> on success, otherwise the pickle error string.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The sidecar JSON records the model alias, canonical model spec, fit metadata,
+fit diagnostics, selected parameters, model-selection ledger, and window row used for
+the fit. For custom/local callables that cannot be pickled, the runner still
+writes the JSON sidecar and records <code class="docutils literal notranslate"><span class="pre">save_error</span></code>; forecasting continues.</p>
+<p>When a <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> is passed to <code class="docutils literal notranslate"><span class="pre">mf.output.write_artifacts(...)</span></code>, the
+artifact manifest also records the <code class="docutils literal notranslate"><span class="pre">stored_model</span></code> pickle and sidecar paths. The
+output writer does not copy those model files; it links the already-written
+runner artifacts into the manifest with <code class="docutils literal notranslate"><span class="pre">stored_model_pickle</span></code> and
+<code class="docutils literal notranslate"><span class="pre">stored_model_metadata</span></code> records.</p>
+<p>To disable storage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">save_models</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="benchmark-forecasts">
+<h2>Benchmark Forecasts<a class="headerlink" href="#benchmark-forecasts" title="Link to this heading">#</a></h2>
+<p>Benchmark-relative metrics are evaluated after <code class="docutils literal notranslate"><span class="pre">run()</span></code>, but the benchmark
+forecast should normally be generated at the forecasting stage. Include the
+benchmark model in the same runner call so it uses the same preprocessing,
+feature policy, window, validation split, forecast origin, horizon, and target
+support as the candidate models.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="p">[</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;ols&quot;</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">scores</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
+    <span class="n">benchmark_model</span><span class="o">=</span><span class="s2">&quot;ols&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>External benchmark forecasts are also allowed when they come from a published
+system or an existing CSV. Append those rows to the forecast table first, using
+the same <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">date</span></code> or origin, <code class="docutils literal notranslate"><span class="pre">horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">prediction</span></code> contract. <code class="docutils literal notranslate"><span class="pre">macroforecast.metrics.evaluate_forecasts()</span></code> then
+checks that candidate and benchmark supports match before computing relative
+metrics.</p>
+</section>
+<section id="forecastresult">
+<h2>ForecastResult<a class="headerlink" href="#forecastresult" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">ForecastResult</span><span class="p">(</span><span class="n">forecasts</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">{})</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p>pandas DataFrame</p></td>
+<td><p>One row per emitted forecast.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p>dict</p></td>
+<td><p>Window, preprocessing, feature, model, and model-selection metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sidecars</span></code></p></td>
+<td><p>dict</p></td>
+<td><p>Runtime objects attached after forecasting, such as a <code class="docutils literal notranslate"><span class="pre">ForecastShapleyResult</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The forecast table always includes <code class="docutils literal notranslate"><span class="pre">prediction</span></code>. If the fitted model exposes
+<code class="docutils literal notranslate"><span class="pre">predict_variance(X_test)</span></code> or <code class="docutils literal notranslate"><span class="pre">predict_variance(horizon=...)</span></code>, the runner also
+fills <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code>; otherwise that column is <code class="docutils literal notranslate"><span class="pre">None</span></code>. If the fitted model
+exposes <code class="docutils literal notranslate"><span class="pre">predict_quantiles(X)</span></code>, the runner also fills
+<code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code> with a per-row dictionary such as
+<code class="docutils literal notranslate"><span class="pre">{&quot;0.1&quot;:</span> <span class="pre">value,</span> <span class="pre">&quot;0.5&quot;:</span> <span class="pre">value,</span> <span class="pre">&quot;0.9&quot;:</span> <span class="pre">value}</span></code>; otherwise that column is
+<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Methods:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_frame()</span></code></p></td>
+<td><p>Forecast table copy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate(**kwargs)</span></code></p></td>
+<td><p>Calls <code class="docutils literal notranslate"><span class="pre">macroforecast.metrics.evaluate_forecasts()</span></code> on this result.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">with_sidecar(name,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Returns a copy with a named runtime sidecar.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">with_oshapley(X,</span> <span class="pre">y,</span> <span class="pre">models,</span> <span class="pre">window=...,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>Builds and attaches an oShapley/PBSV sidecar.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">with_anatomy(X,</span> <span class="pre">y,</span> <span class="pre">models,</span> <span class="pre">window=...,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>Backend alias for <code class="docutils literal notranslate"><span class="pre">with_oshapley(...)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">with_dual(model,</span> <span class="pre">X_train,</span> <span class="pre">y_train,</span> <span class="pre">X_test=None,</span> <span class="pre">**kwargs)</span></code></p></td>
+<td><p>Builds and attaches a dual interpretation sidecar.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_sidecar(name,</span> <span class="pre">default=None)</span></code></p></td>
+<td><p>Retrieves one sidecar.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sidecar_names()</span></code></p></td>
+<td><p>Lists attached sidecars.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_dict()</span></code></p></td>
+<td><p>JSON-ready dictionary.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">to_json(path=None)</span></code></p></td>
+<td><p>JSON text and optional file write.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="incremental-checkpointing">
+<h2>Incremental Checkpointing<a class="headerlink" href="#incremental-checkpointing" title="Link to this heading">#</a></h2>
+<p>Long pseudo-out-of-sample runs can persist progress per origin so a crash does
+not discard hours of compute. Pass <code class="docutils literal notranslate"><span class="pre">checkpoint_path=&lt;dir&gt;</span></code> to <code class="docutils literal notranslate"><span class="pre">run()</span></code> (or set
+<code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> on a <code class="docutils literal notranslate"><span class="pre">PipelineSpec</span></code>). Each origin writes one
+<code class="docutils literal notranslate"><span class="pre">origin_&lt;pos&gt;.parquet</span></code> file holding only the lean, scalar columns that are a
+sufficient statistic for every metric and test (<code class="docutils literal notranslate"><span class="pre">prediction</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>,
+plus the keys). One file per origin makes each write atomic, so a crash mid-write
+corrupts at most one origin’s file, which is simply ignored on resume. A
+restarted run lists the directory, skips origins already on disk, and returns the
+complete frame across all origins.</p>
+<p>The checkpoint covers the feature-matrix single-horizon execution path
+(<code class="docutils literal notranslate"><span class="pre">direct</span></code>, <code class="docutils literal notranslate"><span class="pre">direct_average</span></code>, <code class="docutils literal notranslate"><span class="pre">path_average</span></code>, <code class="docutils literal notranslate"><span class="pre">recursive</span></code>), which is the path the
+replications use. For a multi-horizon <code class="docutils literal notranslate"><span class="pre">run(...,</span> <span class="pre">horizons=[...])</span></code>, each horizon is
+written under an <code class="docutils literal notranslate"><span class="pre">h&lt;h&gt;</span></code> subdirectory. The panel-input and prebuilt-<code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code>
+paths are not checkpointed.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LEAN_FORECAST_COLUMNS</span></code></p></td>
+<td><p>The scalar lean schema persisted per origin: <code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">origin</span></code>, <code class="docutils literal notranslate"><span class="pre">origin_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">prediction</span></code>, <code class="docutils literal notranslate"><span class="pre">actual</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">target_transform</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load_checkpoint_frame(checkpoint_path)</span></code></p></td>
+<td><p>Load all persisted lean records under a checkpoint directory into a single frame (empty if none).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="direct-forecast-combination-functions">
+<h2>Direct Forecast Combination Functions<a class="headerlink" href="#direct-forecast-combination-functions" title="Link to this heading">#</a></h2>
+<p>Forecast combination lives in <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code> because it combines
+forecast outputs, not model fits. Fit-time member-model composition lives in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_mean(forecasts)</span></code></p></td>
+<td><p>Equal-weight average.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_median(forecasts)</span></code></p></td>
+<td><p>Cross-model median.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_trimmed_mean(forecasts,</span> <span class="pre">trim=0.1)</span></code></p></td>
+<td><p>Trim extremes before averaging.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_winsorized_mean(forecasts,</span> <span class="pre">limits=(0.1,</span> <span class="pre">0.1))</span></code></p></td>
+<td><p>Winsorize extremes before averaging.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_inverse_mspe(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">discount=1.0)</span></code></p></td>
+<td><p>Inverse discounted MSPE weights.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_dmspe(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">discount=1.0)</span></code></p></td>
+<td><p>Alias for inverse discounted MSPE.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_best_n(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">n=3)</span></code></p></td>
+<td><p>Average historically best <code class="docutils literal notranslate"><span class="pre">n</span></code> models.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_bates_granger(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Minimum error-variance weights (full covariance, 1969).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_granger_ramanathan(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">variant=...)</span></code></p></td>
+<td><p>Regression combination (ols/no_intercept/constrained).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_constrained_ls(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Non-negative weights summing to one.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_eigenvector(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Principal-component (Hsiao-Wan) combination.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_regularized(forecasts,</span> <span class="pre">y_true,</span> <span class="pre">penalty=...)</span></code></p></td>
+<td><p>Ridge/Lasso-penalised regression weights.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_linear_pool(means,</span> <span class="pre">sds,</span> <span class="pre">weights=None)</span></code></p></td>
+<td><p>Linear opinion pool of Gaussian densities.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_log_pool(means,</span> <span class="pre">sds,</span> <span class="pre">weights=None)</span></code></p></td>
+<td><p>Logarithmic opinion pool of Gaussian densities.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combination_spec(method,</span> <span class="pre">name=None,</span> <span class="pre">models=None,</span> <span class="pre">**params)</span></code></p></td>
+<td><p>Build a reusable runner combination spec.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_combination(name,</span> <span class="pre">func,</span> <span class="pre">models=None,</span> <span class="pre">**params)</span></code></p></td>
+<td><p>Build a runner combination spec from a user callable.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="model_selection.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">macroforecast.model_selection</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="forecast_analysis.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">macroforecast.forecast_analysis</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run">run</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-policies">Forecast Policies</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-order">Execution Order</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-table">Forecast Table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#metadata-structure">Metadata Structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runner-examples">Runner Examples</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#full-sample-empirical-preprocessing">Full-Sample Empirical Preprocessing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#window-local-preprocessing">Window-Local Preprocessing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixed-standardization-reference">Fixed Standardization Reference</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fixed-pca-loadings">Fixed PCA Loadings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-models-with-model-keyed-model-selection">Multiple Models with Model-Keyed Model Selection</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-combination-across-models">Forecast Combination Across Models</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-frequency-dfm-in-the-runner">Mixed-Frequency DFM In The Runner</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantile-and-variance-outputs">Quantile and Variance Outputs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-storage">Model Storage</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trained-model-storage">Trained Model Storage</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-forecasts">Benchmark Forecasts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecastresult">ForecastResult</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#incremental-checkpointing">Incremental Checkpointing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-forecast-combination-functions">Direct Forecast Combination Functions</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/reference/forecasting.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/reference/forecasting.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

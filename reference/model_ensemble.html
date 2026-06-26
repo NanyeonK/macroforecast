@@ -1,0 +1,1723 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>macroforecast.model_ensemble &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/model_ensemble';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="macroforecast.model_selection" href="model_selection.html" />
+    <link rel="prev" title="macroforecast.models" href="models.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Orientation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="documentation_map.html">Documentation Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_callable_coverage.html">Legacy Callable Coverage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="data.html">macroforecast.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">macroforecast.preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_analysis.html">macroforecast.data_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Feature Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="filters.html">macroforecast.filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_engineering.html">macroforecast.feature_engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_analysis.html">macroforecast.feature_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Forecast Pipeline</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="window.html">macroforecast.window</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.model_ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.model_ensemble</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-model-ensemble">
+<h1>macroforecast.model_ensemble<a class="headerlink" href="#macroforecast-model-ensemble" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code> owns <strong>fit-time model composition</strong>. These
+callables receive one aligned <code class="docutils literal notranslate"><span class="pre">X,</span> <span class="pre">y</span></code> training sample, fit multiple member models
+inside that training window, and return one <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> whose <code class="docutils literal notranslate"><span class="pre">predict(X_new)</span></code>
+returns one forecast series. This is different from
+<code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination</span></code>, which combines already-produced
+forecast rows after models have been fitted.</p>
+<section id="public-surface">
+<h2>Public Surface<a class="headerlink" href="#public-surface" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bagging</span></code></p></td>
+<td><p>fit function</p></td>
+<td><p>Bootstrap or block-bootstrap member fits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subagging</span></code></p></td>
+<td><p>fit function</p></td>
+<td><p>Sampling-without-replacement member fits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_subspace</span></code></p></td>
+<td><p>fit function</p></td>
+<td><p>Member fits on random feature subsets.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stacking</span></code></p></td>
+<td><p>fit function</p></td>
+<td><p>Out-of-fold base predictions plus a meta learner.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">super_learner</span></code></p></td>
+<td><p>fit function</p></td>
+<td><p>SuperLearner-style OOF convex weighted average.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">booging</span></code></p></td>
+<td><p>fit function</p></td>
+<td><p>Bagged overfit stochastic boosting with feature perturbation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BaggingRegressor</span></code></p></td>
+<td><p>estimator class</p></td>
+<td><p>Backend for <code class="docutils literal notranslate"><span class="pre">bagging</span></code> and <code class="docutils literal notranslate"><span class="pre">subagging</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RandomSubspaceRegressor</span></code></p></td>
+<td><p>estimator class</p></td>
+<td><p>Backend for <code class="docutils literal notranslate"><span class="pre">random_subspace</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StackingRegressor</span></code></p></td>
+<td><p>estimator class</p></td>
+<td><p>Backend for <code class="docutils literal notranslate"><span class="pre">stacking</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SuperLearnerRegressor</span></code></p></td>
+<td><p>estimator class</p></td>
+<td><p>Backend for <code class="docutils literal notranslate"><span class="pre">super_learner</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BoogingRegressor</span></code></p></td>
+<td><p>estimator class</p></td>
+<td><p>Backend for <code class="docutils literal notranslate"><span class="pre">booging</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_BASE_ESTIMATORS</span></code></p></td>
+<td><p>registry</p></td>
+<td><p>Supported inner estimators for <code class="docutils literal notranslate"><span class="pre">base</span></code>, <code class="docutils literal notranslate"><span class="pre">models</span></code>, and <code class="docutils literal notranslate"><span class="pre">meta_model</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_SPECS</span></code></p></td>
+<td><p>registry</p></td>
+<td><p>Registered fit-time ensemble specs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_model_ensemble_bases</span></code></p></td>
+<td><p>helper</p></td>
+<td><p>Return supported inner estimators and backend names.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_model_ensemble</span></code></p></td>
+<td><p>spec helper</p></td>
+<td><p>Resolve a name, callable, or spec.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_model_ensemble_specs</span></code></p></td>
+<td><p>spec helper</p></td>
+<td><p>Return a registry table.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">describe_model_ensemble</span></code></p></td>
+<td><p>spec helper</p></td>
+<td><p>Return parameter/default/search-space documentation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_ensemble_search_space</span></code></p></td>
+<td><p>spec helper</p></td>
+<td><p>Return a preset search space.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_model_ensemble</span></code></p></td>
+<td><p>extension helper</p></td>
+<td><p>Build a user-owned <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code> with <code class="docutils literal notranslate"><span class="pre">family=&quot;model_ensemble&quot;</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="boundary">
+<h2>Boundary<a class="headerlink" href="#boundary" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Question</p></th>
+<th class="head"><p>Use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Fit several member models inside one training window and expose one predictor?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Fit independent models and combine their OOS forecast rows?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Use tree boosting as one estimator, such as XGBoost or LightGBM?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="common-contract">
+<h2>Common Contract<a class="headerlink" href="#common-contract" title="Link to this heading">#</a></h2>
+<p>All public fit functions in this namespace use the same callable shape:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Contract</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Input <code class="docutils literal notranslate"><span class="pre">X</span></code></p></td>
+<td><p>pandas-like predictor matrix. Index is preserved in fitted diagnostics. Missing values are aligned with <code class="docutils literal notranslate"><span class="pre">y</span></code> and filled with <code class="docutils literal notranslate"><span class="pre">0.0</span></code> inside member estimators after row alignment.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Input <code class="docutils literal notranslate"><span class="pre">y</span></code></p></td>
+<td><p>pandas-like target series. Required unless <code class="docutils literal notranslate"><span class="pre">X</span></code> is a <code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Output</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models.ModelFit</span></code>. <code class="docutils literal notranslate"><span class="pre">fit.model</span></code> is the callable name, such as <code class="docutils literal notranslate"><span class="pre">subagging</span></code>, and <code class="docutils literal notranslate"><span class="pre">fit.predict(X_new)</span></code> returns one prediction series.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Metadata</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fit.metadata</span></code> stores the resolved training count, ensemble parameters, base-model choices, seeds, and implementation note.</p></td>
+</tr>
+<tr class="row-even"><td><p>Diagnostics</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fit.diagnostics[&quot;model_ensemble&quot;]</span></code> stores member/fold diagnostics when available. Point fitted values and residual metrics are also stored by the shared model wrapper.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Common diagnostics:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Produced by</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_members</span></code></p></td>
+<td><p>all estimator-backed ensembles</p></td>
+<td><p>Number of fitted member models stored in the ensemble.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">member_samples</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bagging</span></code>, <code class="docutils literal notranslate"><span class="pre">subagging</span></code>, <code class="docutils literal notranslate"><span class="pre">booging</span></code></p></td>
+<td><p>Compact row-sampling ledger for each member.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">member_features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random_subspace</span></code>, <code class="docutils literal notranslate"><span class="pre">booging</span></code></p></td>
+<td><p>Feature subset ledger for each member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">oob_predictions</span></code>, <code class="docutils literal notranslate"><span class="pre">oob_residuals</span></code>, <code class="docutils literal notranslate"><span class="pre">oob_metrics</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bagging</span></code>, <code class="docutils literal notranslate"><span class="pre">subagging</span></code> when OOB rows exist</p></td>
+<td><p>Out-of-bag diagnostics from member fits that did not use a row.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">folds</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stacking</span></code>, <code class="docutils literal notranslate"><span class="pre">super_learner</span></code></p></td>
+<td><p>Fold ledger used to create out-of-fold predictions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">oof_predictions</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stacking</span></code>, <code class="docutils literal notranslate"><span class="pre">super_learner</span></code></p></td>
+<td><p>Out-of-fold library matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">oof_risk</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">super_learner</span></code></p></td>
+<td><p>Convex library weights and OOF MSE by learner.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fit</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">subagging</span><span class="p">(</span>
+    <span class="n">X_train</span><span class="p">,</span>
+    <span class="n">y_train</span><span class="p">,</span>
+    <span class="n">base</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">max_samples</span><span class="o">=</span><span class="mf">0.632</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">pred</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Runner usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;super_learner&quot;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+        <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">lags</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">params</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;super_learner&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;models&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;n_splits&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="s2">&quot;weight_method&quot;</span><span class="p">:</span> <span class="s2">&quot;nnls&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>When a model ensemble is passed through a runner alias, downstream forecast
+combination selects the alias, not the registry name:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="p">{</span><span class="s2">&quot;bagged&quot;</span><span class="p">:</span> <span class="s2">&quot;bagging&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="s2">&quot;ridge&quot;</span><span class="p">},</span>
+    <span class="n">combination</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;linear_plus_bagged&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;models&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;bagged&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="r-and-paper-alignment">
+<h2>R And Paper Alignment<a class="headerlink" href="#r-and-paper-alignment" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>macroforecast callable</p></th>
+<th class="head"><p>R / paper reference</p></th>
+<th class="head"><p>Alignment</p></th>
+<th class="head"><p>Difference</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bagging</span></code></p></td>
+<td><p><a class="reference external" href="https://search.r-project.org/CRAN/refmans/ipred/html/bagging.html"><code class="docutils literal notranslate"><span class="pre">ipred::bagging</span></code> / <code class="docutils literal notranslate"><span class="pre">ipredbagg</span></code></a></p></td>
+<td><p>Multiple resampled training sets, one member model per draw, average predictions.</p></td>
+<td><p>R default is tree-focused; macroforecast allows several sklearn-compatible base regressors.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subagging</span></code></p></td>
+<td><p><a class="reference external" href="https://search.r-project.org/CRAN/refmans/ipred/html/bagging.html"><code class="docutils literal notranslate"><span class="pre">ipredbagg(ns</span> <span class="pre">&lt;</span> <span class="pre">n)</span></code></a></p></td>
+<td><p>Samples fewer than <code class="docutils literal notranslate"><span class="pre">n</span></code> observations without replacement.</p></td>
+<td><p>Exposed as a separate callable for clarity.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_subspace</span></code></p></td>
+<td><p><a class="reference external" href="https://search.r-project.org/CRAN/refmans/regRSM/html/regRSM.html"><code class="docutils literal notranslate"><span class="pre">regRSM::regRSM</span></code></a> and random-forest <code class="docutils literal notranslate"><span class="pre">mtry</span></code> logic</p></td>
+<td><p>Repeated random predictor-subspace fits.</p></td>
+<td><p>General member-level feature bagging, not tree split-level <code class="docutils literal notranslate"><span class="pre">mtry</span></code> and not regRSM’s variable-importance final-model selection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stacking</span></code></p></td>
+<td><p><a class="reference external" href="https://search.r-project.org/CRAN/refmans/caretEnsemble/html/caretStack.html"><code class="docutils literal notranslate"><span class="pre">caretEnsemble::caretStack</span></code></a></p></td>
+<td><p>Fits a meta model on out-of-fold base predictions.</p></td>
+<td><p>Adds <code class="docutils literal notranslate"><span class="pre">splitter=&quot;forward&quot;</span></code> for macro time ordering; R caret examples often use generic CV.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">super_learner</span></code></p></td>
+<td><p><a class="reference external" href="https://search.r-project.org/CRAN/refmans/SuperLearner/html/SuperLearner.html"><code class="docutils literal notranslate"><span class="pre">SuperLearner::SuperLearner</span></code></a></p></td>
+<td><p>Uses OOF library predictions and nonnegative weights that sum to one.</p></td>
+<td><p>Regression-only callable; supports <code class="docutils literal notranslate"><span class="pre">nnls</span></code>, <code class="docutils literal notranslate"><span class="pre">best</span></code>, and <code class="docutils literal notranslate"><span class="pre">equal</span></code> weights, not every R family/loss/plugin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">booging</span></code></p></td>
+<td><p><a class="reference external" href="https://arxiv.org/abs/2008.07063">Goulet Coulombe, <em>To Bag is to Prune</em></a> and the <code class="docutils literal notranslate"><span class="pre">bagofprunes</span></code> R source <code class="docutils literal notranslate"><span class="pre">Booging(y,</span> <span class="pre">X,</span> <span class="pre">X.new,</span> <span class="pre">...)</span></code></p></td>
+<td><p>Samples rows with <code class="docutils literal notranslate"><span class="pre">sampling_rate</span></code>, samples features with <code class="docutils literal notranslate"><span class="pre">mtry</span></code>, optionally appends two perturbed fake feature copies, fits intentionally overfit stochastic boosting members, and averages member predictions.</p></td>
+<td><p>Uses sklearn <code class="docutils literal notranslate"><span class="pre">GradientBoostingRegressor</span></code> as the boosting backend. Continuous scaling is train-only for leakage-safe estimator semantics, while the R script scales train and <code class="docutils literal notranslate"><span class="pre">X.new</span></code> jointly inside one prediction call.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The added functions beyond the old <code class="docutils literal notranslate"><span class="pre">bagging</span></code>/<code class="docutils literal notranslate"><span class="pre">booging</span></code> pair are <code class="docutils literal notranslate"><span class="pre">subagging</span></code>,
+<code class="docutils literal notranslate"><span class="pre">random_subspace</span></code>, <code class="docutils literal notranslate"><span class="pre">stacking</span></code>, and <code class="docutils literal notranslate"><span class="pre">super_learner</span></code>. They cover the main
+fit-time ensemble families that are useful before producing forecast rows:
+row-resampling ensembles, feature-subspace ensembles, OOF meta-learner
+ensembles, and convex-weight OOF library ensembles.</p>
+<p>Not every R ensemble feature is copied. <code class="docutils literal notranslate"><span class="pre">ipred</span></code> double-bagging/bundling is a
+classification-oriented extension that passes extra learner predictions into
+trees; in macroforecast, cross-model forecast combinations belong in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination</span></code>. <code class="docutils literal notranslate"><span class="pre">regRSM</span></code> variable-importance final
+model selection belongs closer to feature selection and is not bundled into this
+fit-time ensemble callable.</p>
+</section>
+<section id="paper-citation-and-scope">
+<h2>Paper Citation And Scope<a class="headerlink" href="#paper-citation-and-scope" title="Link to this heading">#</a></h2>
+<p>The Booging implementation is based on:</p>
+<blockquote>
+<div><p>Philippe Goulet Coulombe. 2024. <em>To Bag is to Prune</em>. arXiv:2008.07063v5.</p>
+</div></blockquote>
+<p>The method code is cross-checked against the author’s public <code class="docutils literal notranslate"><span class="pre">bagofprunes</span></code> R
+source, especially <code class="docutils literal notranslate"><span class="pre">Booging(y,</span> <span class="pre">X,</span> <span class="pre">X.new,</span> <span class="pre">...)</span></code> in
+<code class="docutils literal notranslate"><span class="pre">PGC_Bag_of_Prunes_v200829.R</span></code>. The package treats the paper as a method port,
+not as a full empirical replication. The goal is to make the randomized
+greedy-ensemble mechanism callable inside the macroforecast workflow.</p>
+<p>The review-mapped mechanism is:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Paper idea</p></th>
+<th class="head"><p>Meaning for macroforecast</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Random Forest has a large in-sample versus out-of-sample R-squared wedge</p></td>
+<td><p>The model can overfit member trees without necessarily damaging the ensemble forecast.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bagging plus perturbation performs implicit pruning</p></td>
+<td><p>Averaging many randomized greedy paths cancels unstable noise-fitting steps while preserving stable signal-fitting steps.</p></td>
+</tr>
+<tr class="row-even"><td><p>Greedy separability</p></td>
+<td><p>Early greedy steps are not re-optimized after later overfit steps, so useful structure can survive overfitting.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Perfectly random forest null argument</p></td>
+<td><p>Under pure noise, averaging many random predictions tends toward a sample-mean-like forecast, matching the optimal pruning intuition.</p></td>
+</tr>
+<tr class="row-even"><td><p>LASSO contrast</p></td>
+<td><p>Global re-optimization along a regularization path weakens the same mechanism; setting the penalty to zero collapses to OLS rather than randomized implicit pruning.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Booging</p></td>
+<td><p>Applies bagging and perturbation to boosted trees, so the stopping point is regularized by averaging randomized overfit boosting paths.</p></td>
+</tr>
+<tr class="row-even"><td><p>MARSquake</p></td>
+<td><p>Applies the same outer idea to MARS through randomized predictor admission in the forward pass.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>This package currently implements Booging. MARSquake is documented as a related
+paper method but is not exposed as a first-class callable yet, because exact
+alignment requires either a stable Python analogue of R <code class="docutils literal notranslate"><span class="pre">earth::earth</span></code> with the
+custom <code class="docutils literal notranslate"><span class="pre">allowed</span></code> callback or a package-native MARS forward-pass implementation.
+The plain MARS model remains available under <code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code>; that is not
+the same as MARSquake.</p>
+<p>The paper’s empirical evidence spans simulated DGPs, many non-macro benchmark
+datasets, and six US macro forecasting tasks covering GDP, unemployment, and
+inflation horizons. For macroforecast, the relevant takeaway is operational:
+Booging is useful when small noisy macro samples make the exact boosting stopping
+point unstable, and the user wants randomized overfitting plus averaging as an
+alternative regularization route.</p>
+</section>
+<section id="bagging-random-forest-and-booging">
+<h2>Bagging, Random Forest, And Booging<a class="headerlink" href="#bagging-random-forest-and-booging" title="Link to this heading">#</a></h2>
+<p>These functions expose a common decomposition:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Row sampling</p></th>
+<th class="head"><p>Feature perturbation</p></th>
+<th class="head"><p>Base learner</p></th>
+<th class="head"><p>macroforecast location</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Bagging</p></td>
+<td><p>bootstrap or block bootstrap</p></td>
+<td><p>optional member-level <code class="docutils literal notranslate"><span class="pre">max_features</span></code></p></td>
+<td><p>any registered inner base learner</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.bagging</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Random-subspace bagging</p></td>
+<td><p>bootstrap/subsampling</p></td>
+<td><p>member-level <code class="docutils literal notranslate"><span class="pre">max_features</span></code></p></td>
+<td><p>any registered inner base learner</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bagging(...,</span> <span class="pre">max_features=...)</span></code> or <code class="docutils literal notranslate"><span class="pre">random_subspace(...)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Random forest</p></td>
+<td><p>bootstrap plus split-level feature search</p></td>
+<td><p>split-level tree <code class="docutils literal notranslate"><span class="pre">mtry</span></code></p></td>
+<td><p>CART trees</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models.random_forest</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Booging</p></td>
+<td><p>row subsampling</p></td>
+<td><p>member-level <code class="docutils literal notranslate"><span class="pre">mtry</span></code>, optional fake feature copies</p></td>
+<td><p>overfit boosted trees</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.booging</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The distinction matters. <code class="docutils literal notranslate"><span class="pre">bagging(base=&quot;decision_tree&quot;,</span> <span class="pre">max_features=&quot;sqrt&quot;)</span></code>
+is a random-subspace tree ensemble, not an exact random forest, because the
+feature subset is drawn once per member rather than at each tree split. Use
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models.random_forest</span></code> when the exact random-forest backend is the
+target. Use <code class="docutils literal notranslate"><span class="pre">booging</span></code> when the target is Goulet Coulombe’s randomized
+greedy-boosting ensemble.</p>
+</section>
+<section id="registered-specs">
+<h2>Registered Specs<a class="headerlink" href="#registered-specs" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_SPECS</span></code> mirrors the model registry but is intentionally separate
+from <code class="docutils literal notranslate"><span class="pre">macroforecast.models.MODEL_SPECS</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">list_model_ensemble_specs</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Default search</p></th>
+<th class="head"><p>Presets</p></th>
+<th class="head"><p>Backend</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bagging</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">small</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">wide</span></code></p></td>
+<td><p>internal member resampling + sklearn-compatible base estimators</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">subagging</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">small</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">wide</span></code></p></td>
+<td><p>internal subagging + sklearn-compatible base estimators</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_subspace</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">small</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">wide</span></code></p></td>
+<td><p>internal random subspace + sklearn-compatible base estimators</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stacking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">small</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">wide</span></code></p></td>
+<td><p>internal OOF stacking + sklearn-compatible base/meta estimators</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">super_learner</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">small</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">wide</span></code></p></td>
+<td><p>internal SuperLearner-style OOF NNLS/equal/best weighting</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">booging</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">small</span></code>, <code class="docutils literal notranslate"><span class="pre">standard</span></code>, <code class="docutils literal notranslate"><span class="pre">wide</span></code></p></td>
+<td><p>internal augmentation/bagging + sklearn.ensemble.GradientBoostingRegressor</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The forecasting runner and <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.search_spec()</span></code> both
+resolve these names, so <code class="docutils literal notranslate"><span class="pre">model=&quot;bagging&quot;</span></code> now means the fit-time ensemble spec,
+not a base model spec.</p>
+</section>
+<section id="inner-base-estimators">
+<h2>Inner Base Estimators<a class="headerlink" href="#inner-base-estimators" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bagging</span></code>, <code class="docutils literal notranslate"><span class="pre">subagging</span></code>, and <code class="docutils literal notranslate"><span class="pre">random_subspace</span></code> use <code class="docutils literal notranslate"><span class="pre">base=...</span></code>.
+<code class="docutils literal notranslate"><span class="pre">stacking</span></code> and <code class="docutils literal notranslate"><span class="pre">super_learner</span></code> use <code class="docutils literal notranslate"><span class="pre">models=(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">stacking</span></code> also uses
+<code class="docutils literal notranslate"><span class="pre">meta_model=...</span></code>. These names are intentionally narrower than
+<code class="docutils literal notranslate"><span class="pre">macroforecast.models.MODEL_SPECS</span></code>: they are inner sklearn-compatible
+estimators used inside a fit-time ensemble.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">list_model_ensemble_bases</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Backend</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ols</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.linear_model.LinearRegression</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ridge</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.linear_model.Ridge</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lasso</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.linear_model.Lasso</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.linear_model.ElasticNet</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.tree.DecisionTreeRegressor</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.ensemble.RandomForestRegressor</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.ensemble.ExtraTreesRegressor</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.ensemble.GradientBoostingRegressor</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">knn</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.neighbors.KNeighborsRegressor</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">svr</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sklearn.svm.SVR</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="bagging">
+<h2>bagging<a class="headerlink" href="#bagging" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">bagging</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">base</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">max_samples</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">base_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">max_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Input:</strong> <code class="docutils literal notranslate"><span class="pre">X</span></code> is a pandas-like predictor matrix and <code class="docutils literal notranslate"><span class="pre">y</span></code> is a target series.
+<strong>Output:</strong> <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> wrapping <code class="docutils literal notranslate"><span class="pre">BaggingRegressor</span></code>. <code class="docutils literal notranslate"><span class="pre">predict(X_new)</span></code> returns the
+mean across member predictions. <code class="docutils literal notranslate"><span class="pre">predict_quantiles(X_new,</span> <span class="pre">levels=...)</span></code> returns
+empirical quantiles across members.</p>
+<p>The fitted object stores out-of-bag diagnostics when any observation is left out
+by at least one member: <code class="docutils literal notranslate"><span class="pre">fit.diagnostics[&quot;model_ensemble&quot;][&quot;oob_predictions&quot;]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">oob_residuals</span></code>, <code class="docutils literal notranslate"><span class="pre">oob_metrics</span></code>, and <code class="docutils literal notranslate"><span class="pre">n_members</span></code>. It also stores
+<code class="docutils literal notranslate"><span class="pre">member_features</span></code>, even when <code class="docutils literal notranslate"><span class="pre">max_features=None</span></code>; this makes generic bagging,
+random-subspace bagging, and CART-like tree bagging inspectable with the same
+metadata contract.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">base</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ridge&quot;</span></code></p></td>
+<td><p>Base estimator name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_estimators</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+<td><p>Number of member fits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_samples</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.8</span></code></p></td>
+<td><p>Row sample fraction per member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Resampling seed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">base_params</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Parameters passed to the base estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">strategy</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">standard</span></code> row draws or moving <code class="docutils literal notranslate"><span class="pre">block</span></code> draws.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">block_length</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">4</span></code></p></td>
+<td><p>Moving-block length when <code class="docutils literal notranslate"><span class="pre">strategy=&quot;block&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">replace</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Whether rows are sampled with replacement.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Optional member-level feature-subspace size. Accepts <code class="docutils literal notranslate"><span class="pre">None</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>, a fraction, an integer count, <code class="docutils literal notranslate"><span class="pre">&quot;sqrt&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;log2&quot;</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="subagging">
+<h2>subagging<a class="headerlink" href="#subagging" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">subagging</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">base</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">max_samples</span><span class="o">=</span><span class="mf">0.632</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">base_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">max_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">subagging</span></code> is <code class="docutils literal notranslate"><span class="pre">bagging(...,</span> <span class="pre">replace=False,</span> <span class="pre">strategy=&quot;standard&quot;)</span></code>. It follows
+the <code class="docutils literal notranslate"><span class="pre">ipredbagg(ns</span> <span class="pre">&lt;</span> <span class="pre">n)</span></code> distinction where sampling fewer than <code class="docutils literal notranslate"><span class="pre">n</span></code> rows without
+replacement creates subagging rather than bootstrap bagging.</p>
+<p><strong>Input:</strong> <code class="docutils literal notranslate"><span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> as above.
+<strong>Output:</strong> <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> wrapping <code class="docutils literal notranslate"><span class="pre">BaggingRegressor</span></code> with <code class="docutils literal notranslate"><span class="pre">fit.model</span> <span class="pre">==</span> <span class="pre">&quot;subagging&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">predict(X_new)</span></code> averages member predictions.</p>
+<p>Diagnostics store <code class="docutils literal notranslate"><span class="pre">member_samples</span></code>, OOB diagnostics when available, and
+<code class="docutils literal notranslate"><span class="pre">n_members</span></code>. <code class="docutils literal notranslate"><span class="pre">fit.metadata[&quot;replace&quot;]</span></code> is always <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">base</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ridge&quot;</span></code></p></td>
+<td><p>Base estimator name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_estimators</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+<td><p>Number of subsampled member fits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_samples</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.632</span></code></p></td>
+<td><p>Row sample fraction per member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Resampling seed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">base_params</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Parameters passed to the base estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Optional member-level feature-subspace size, with the same accepted values as <code class="docutils literal notranslate"><span class="pre">bagging</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="random-subspace">
+<h2>random_subspace<a class="headerlink" href="#random-subspace" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">random_subspace</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">base</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">max_features</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">max_samples</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">base_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Each member model sees a random subset of columns. <code class="docutils literal notranslate"><span class="pre">max_features</span></code> can be a
+fraction of columns, an integer count, <code class="docutils literal notranslate"><span class="pre">&quot;sqrt&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;log2&quot;</span></code>. This is useful
+when <code class="docutils literal notranslate"><span class="pre">p</span></code> is large and the package user wants a fit-time model ensemble distinct
+from random-forest split-level <code class="docutils literal notranslate"><span class="pre">mtry</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">predict_quantiles(X_new,</span> <span class="pre">levels=...)</span></code> returns empirical quantiles across random
+subspace members. The fitted diagnostics include <code class="docutils literal notranslate"><span class="pre">member_features</span></code>, which records
+which columns each member saw.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">base</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ridge&quot;</span></code></p></td>
+<td><p>Base estimator name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_estimators</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p>Number of random feature-subspace fits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_features</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+<td><p>Fraction, integer count, <code class="docutils literal notranslate"><span class="pre">&quot;sqrt&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;log2&quot;</span></code> column count per member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_samples</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+<td><p>Row subsample fraction per member.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Feature and row sampling seed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">base_params</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Parameters passed to the base estimator.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="stacking">
+<h2>stacking<a class="headerlink" href="#stacking" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">stacking</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">),</span>
+    <span class="n">meta_model</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">splitter</span><span class="o">=</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">model_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">meta_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">passthrough</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">stacking</span></code> creates out-of-fold base predictions, fits <code class="docutils literal notranslate"><span class="pre">meta_model</span></code> on those
+predictions, then refits every base model on the full training sample. For macro
+forecasting, the default <code class="docutils literal notranslate"><span class="pre">splitter=&quot;forward&quot;</span></code> only validates on later blocks
+after earlier training data. <code class="docutils literal notranslate"><span class="pre">splitter=&quot;blocked&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">splitter=&quot;kfold&quot;</span></code> are
+available when the user wants R-style generic cross-validation behavior.</p>
+<p><code class="docutils literal notranslate"><span class="pre">models</span></code> must contain unique names because <code class="docutils literal notranslate"><span class="pre">model_params</span></code> is keyed by model
+name. The fitted diagnostics include the OOF prediction matrix.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">models</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;ridge&quot;,</span> <span class="pre">&quot;lasso&quot;,</span> <span class="pre">&quot;random_forest&quot;)</span></code></p></td>
+<td><p>Base model library. Names must be unique.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">meta_model</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;ridge&quot;</span></code></p></td>
+<td><p>Meta learner fit on OOF predictions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_splits</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>Number of OOF validation folds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">splitter</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;forward&quot;</span></code></p></td>
+<td><p>OOF splitter: <code class="docutils literal notranslate"><span class="pre">forward</span></code>, <code class="docutils literal notranslate"><span class="pre">blocked</span></code>, or <code class="docutils literal notranslate"><span class="pre">kfold</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Base/meta seed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_params</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Per-base model parameter dictionary keyed by model name.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">meta_params</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Meta-model parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">passthrough</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Whether the meta learner also receives original <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Output:</strong> <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> wrapping <code class="docutils literal notranslate"><span class="pre">StackingRegressor</span></code>. Diagnostics include
+<code class="docutils literal notranslate"><span class="pre">folds</span></code> and <code class="docutils literal notranslate"><span class="pre">oof_predictions</span></code>.</p>
+</section>
+<section id="super-learner">
+<h2>super_learner<a class="headerlink" href="#super-learner" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">super_learner</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="s2">&quot;random_forest&quot;</span><span class="p">),</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">splitter</span><span class="o">=</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span>
+    <span class="n">weight_method</span><span class="o">=</span><span class="s2">&quot;nnls&quot;</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">model_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">super_learner</span></code> uses the same OOF library matrix as stacking but fits a convex
+weighted average instead of a general meta model. <code class="docutils literal notranslate"><span class="pre">weight_method=&quot;nnls&quot;</span></code> uses
+nonnegative least squares and normalizes weights to sum to one. <code class="docutils literal notranslate"><span class="pre">best</span></code> gives all
+weight to the lowest OOF-MSE learner, matching the discrete Super Learner idea.
+<code class="docutils literal notranslate"><span class="pre">equal</span></code> uses equal weights.</p>
+<p>The fitted estimator exposes <code class="docutils literal notranslate"><span class="pre">weights_</span></code> and <code class="docutils literal notranslate"><span class="pre">oof_predictions_</span></code>.
+<code class="docutils literal notranslate"><span class="pre">models</span></code> must contain unique names because weights and <code class="docutils literal notranslate"><span class="pre">model_params</span></code> are keyed
+by model name. <code class="docutils literal notranslate"><span class="pre">fit.diagnostics[&quot;model_ensemble&quot;]</span></code> stores <code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">oof_risk</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">oof_predictions</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">models</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;ridge&quot;,</span> <span class="pre">&quot;lasso&quot;,</span> <span class="pre">&quot;random_forest&quot;)</span></code></p></td>
+<td><p>Base learner library. Names must be unique.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_splits</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>Number of OOF validation folds.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">splitter</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;forward&quot;</span></code></p></td>
+<td><p>OOF splitter: <code class="docutils literal notranslate"><span class="pre">forward</span></code>, <code class="docutils literal notranslate"><span class="pre">blocked</span></code>, or <code class="docutils literal notranslate"><span class="pre">kfold</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">weight_method</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;nnls&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">nnls</span></code>, <code class="docutils literal notranslate"><span class="pre">best</span></code>, or <code class="docutils literal notranslate"><span class="pre">equal</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Base learner seed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_params</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Per-base learner parameters keyed by model name.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Output:</strong> <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> wrapping <code class="docutils literal notranslate"><span class="pre">SuperLearnerRegressor</span></code>. Diagnostics include
+<code class="docutils literal notranslate"><span class="pre">folds</span></code>, <code class="docutils literal notranslate"><span class="pre">oof_predictions</span></code>, <code class="docutils literal notranslate"><span class="pre">oof_risk</span></code>, and <code class="docutils literal notranslate"><span class="pre">weights</span></code>.</p>
+</section>
+<section id="booging">
+<h2>booging<a class="headerlink" href="#booging" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">booging</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">B</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">sampling_rate</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">mtry</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">data_aug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">noise_level</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="n">shuffle_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">n_trees</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">tree_depth</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">nu</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="n">bf</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">n_augmented_copies</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">scale_continuous</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fix_seeds</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">booging</span></code> fits many intentionally overfit stochastic gradient-boosting members.
+It is the boosted-tree analogue of the randomized greedy ensemble logic behind
+random forests: draw rows, draw features, fit an overfit boosted-tree path, and
+average over many perturbed paths.</p>
+<p>The callable accepts the paper/R-code names directly:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>R code name</p></th>
+<th class="head"><p>macroforecast name</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
+<td><p>Number of overfit boosting members.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sampling.rate</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sampling_rate</span></code></p></td>
+<td><p>Row fraction sampled without replacement per member.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mtry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mtry</span></code></p></td>
+<td><p>Feature-subspace size per member. Accepts fractions, integer counts, <code class="docutils literal notranslate"><span class="pre">&quot;sqrt&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;log2&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data.aug</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data_aug</span></code></p></td>
+<td><p>Whether to append fake perturbed feature copies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">noise.level</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">noise_level</span></code></p></td>
+<td><p>Gaussian noise scale for continuous fake copies after standardization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">shuffle.rate</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">shuffle_rate</span></code></p></td>
+<td><p>Share of rows shuffled inside binary fake copies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bf</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bf</span></code></p></td>
+<td><p>Stochastic boosting subsample share inside each boosted member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n.trees</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n_trees</span></code></p></td>
+<td><p>Boosting stages inside each member.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tree.depth</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tree_depth</span></code></p></td>
+<td><p>Inner boosting tree depth.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">nu</span></code></p></td>
+<td><p>Inner boosting learning rate.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Backward-compatible names are still accepted: <code class="docutils literal notranslate"><span class="pre">sample_frac</span></code>,
+<code class="docutils literal notranslate"><span class="pre">inner_n_estimators</span></code>, <code class="docutils literal notranslate"><span class="pre">inner_learning_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">inner_max_depth</span></code>,
+<code class="docutils literal notranslate"><span class="pre">inner_subsample</span></code>, <code class="docutils literal notranslate"><span class="pre">max_features</span></code>, <code class="docutils literal notranslate"><span class="pre">da_noise_frac</span></code>, and <code class="docutils literal notranslate"><span class="pre">da_drop_rate</span></code>.</p>
+<p>Backend parameter mapping:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>R <code class="docutils literal notranslate"><span class="pre">gbm</span></code> / Booging parameter</p></th>
+<th class="head"><p>sklearn / macroforecast target</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gbm::gbm(n.trees=...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">GradientBoostingRegressor(n_estimators=...)</span></code> through <code class="docutils literal notranslate"><span class="pre">n_trees</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gbm::gbm(shrinkage=...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">GradientBoostingRegressor(learning_rate=...)</span></code> through <code class="docutils literal notranslate"><span class="pre">nu</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gbm::gbm(interaction.depth=...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">GradientBoostingRegressor(max_depth=...)</span></code> through <code class="docutils literal notranslate"><span class="pre">tree_depth</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gbm::gbm(bag.fraction=...)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">GradientBoostingRegressor(subsample=...)</span></code> through <code class="docutils literal notranslate"><span class="pre">bf</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Booging(...,</span> <span class="pre">sampling.rate=...)</span></code></p></td>
+<td><p>outer row subsampling before each boosted member</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Booging(...,</span> <span class="pre">mtry=...)</span></code></p></td>
+<td><p>outer member-level feature subsampling before each boosted member</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>When <code class="docutils literal notranslate"><span class="pre">data_aug=True</span></code>, macroforecast follows the R algorithm’s fake-column
+structure. Continuous variables are standardized and then copied with Gaussian
+noise. Binary variables are copied after shuffling a <code class="docutils literal notranslate"><span class="pre">shuffle_rate</span></code> share of
+rows. Two fake copies are used by default, matching the R source’s <code class="docutils literal notranslate"><span class="pre">fake1_</span></code> and
+<code class="docutils literal notranslate"><span class="pre">fake2_</span></code> construction. Prediction uses deterministic fake copies of <code class="docutils literal notranslate"><span class="pre">X_new</span></code>, so
+calling <code class="docutils literal notranslate"><span class="pre">predict()</span></code> does not draw new perturbations.</p>
+<p>Algorithm:</p>
+<ol class="arabic simple">
+<li><p>Align <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> under the standard <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> contract.</p></li>
+<li><p>Detect binary predictors as columns with exactly two finite unique values.</p></li>
+<li><p>Standardize continuous predictors using the training sample.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">data_aug=True</span></code>, append <code class="docutils literal notranslate"><span class="pre">n_augmented_copies</span></code> fake copies:
+continuous fake columns receive Gaussian perturbations, and binary fake
+columns receive row-shuffle perturbations.</p></li>
+<li><p>For each member <code class="docutils literal notranslate"><span class="pre">b</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">...,</span> <span class="pre">B</span></code>, draw rows at <code class="docutils literal notranslate"><span class="pre">sampling_rate</span></code>, draw columns at
+<code class="docutils literal notranslate"><span class="pre">mtry</span></code>, fit an overfit stochastic gradient-boosting member, and store the row
+and feature ledgers.</p></li>
+<li><p>Predict by averaging member predictions. Quantile forecasts use empirical
+quantiles across member predictions.</p></li>
+</ol>
+<p><strong>Input:</strong> <code class="docutils literal notranslate"><span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> as above.
+<strong>Output:</strong> <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> wrapping <code class="docutils literal notranslate"><span class="pre">BoogingRegressor</span></code>. <code class="docutils literal notranslate"><span class="pre">predict(X_new)</span></code> averages
+overfit boosting members, and <code class="docutils literal notranslate"><span class="pre">predict_quantiles(X_new,</span> <span class="pre">levels=...)</span></code> returns
+member-forecast empirical quantiles.</p>
+<p>Diagnostics include <code class="docutils literal notranslate"><span class="pre">member_samples</span></code>, <code class="docutils literal notranslate"><span class="pre">member_features</span></code>, <code class="docutils literal notranslate"><span class="pre">augmentation_summary</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">n_members</span></code>. <code class="docutils literal notranslate"><span class="pre">member_features</span></code> names original and fake columns; the
+augmentation summary reports the number of binary and continuous features, the
+number of fake copies, and the leakage boundary for continuous scaling.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p>Number of overfit boosting members.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sampling_rate</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.75</span></code></p></td>
+<td><p>Row sample fraction per member.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mtry</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.8</span></code></p></td>
+<td><p>Feature-subspace size per member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data_aug</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Whether to append perturbed fake feature copies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">noise_level</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.3</span></code></p></td>
+<td><p>Gaussian noise scale for continuous fake copies.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">shuffle_rate</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.2</span></code></p></td>
+<td><p>Binary-feature row-shuffle share for fake copies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_trees</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1000</span></code></p></td>
+<td><p>Boosting stages inside each member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tree_depth</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Inner boosting tree depth.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nu</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.3</span></code></p></td>
+<td><p>Inner boosting learning rate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bf</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+<td><p>Stochastic gradient boosting subsample share. For samples below 100 rows, this is floored at <code class="docutils literal notranslate"><span class="pre">0.4</span></code>, matching the R code.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_augmented_copies</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2</span></code></p></td>
+<td><p>Number of fake feature copies when <code class="docutils literal notranslate"><span class="pre">data_aug=True</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scale_continuous</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Standardize continuous variables before fake-copy perturbation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fix_seeds</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Use deterministic member seeds analogous to the R source’s <code class="docutils literal notranslate"><span class="pre">set.seed(2020+b)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Member, row, column, and augmentation seed.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Important implementation note: the R script scales continuous <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">X.new</span></code>
+jointly because it receives the training and new matrices in the same function
+call. The macroforecast estimator uses train-only scaling, because a standard
+fit/predict object must not use future <code class="docutils literal notranslate"><span class="pre">X_new</span></code> information during <code class="docutils literal notranslate"><span class="pre">fit()</span></code>. This
+is the deliberate leakage-safe difference; the member sampling, fake-copy
+perturbation, boosting backend role, and averaging logic follow the R algorithm.</p>
+</section>
+<section id="custom-extensions">
+<h2>Custom Extensions<a class="headerlink" href="#custom-extensions" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">custom_model_ensemble()</span></code> when the user wants a fit-time ensemble that
+behaves like a model spec:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">custom_model_ensemble</span><span class="p">(</span>
+    <span class="s2">&quot;my_ensemble&quot;</span><span class="p">,</span>
+    <span class="n">my_fit_function</span><span class="p">,</span>
+    <span class="n">default_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.custom_combination()</span></code> instead when the custom
+logic combines forecast rows after runner execution.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="models.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">macroforecast.models</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="model_selection.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">macroforecast.model_selection</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-surface">Public Surface</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boundary">Boundary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-contract">Common Contract</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#r-and-paper-alignment">R And Paper Alignment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#paper-citation-and-scope">Paper Citation And Scope</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bagging-random-forest-and-booging">Bagging, Random Forest, And Booging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#registered-specs">Registered Specs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inner-base-estimators">Inner Base Estimators</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bagging">bagging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subagging">subagging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-subspace">random_subspace</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stacking">stacking</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#super-learner">super_learner</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#booging">booging</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-extensions">Custom Extensions</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/reference/model_ensemble.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/reference/model_ensemble.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

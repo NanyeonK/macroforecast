@@ -1,0 +1,2191 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>macroforecast.tests &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/tests';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="macroforecast.evaluation" href="evaluation.html" />
+    <link rel="prev" title="macroforecast.metrics" href="metrics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Orientation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="documentation_map.html">Documentation Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_callable_coverage.html">Legacy Callable Coverage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="data.html">macroforecast.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">macroforecast.preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_analysis.html">macroforecast.data_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Feature Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="filters.html">macroforecast.filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_engineering.html">macroforecast.feature_engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_analysis.html">macroforecast.feature_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Forecast Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="window.html">macroforecast.window</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.tests</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-tests">
+<h1>macroforecast.tests<a class="headerlink" href="#macroforecast-tests" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code> owns forecast-comparison tests and residual diagnostics.
+It does not compute general scoring tables, fit models, or choose windows.</p>
+<p>Use the namespace form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">mf</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">dm_test</span><span class="p">(</span><span class="n">loss_a</span><span class="p">,</span> <span class="n">loss_b</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Top-level shortcuts such as <code class="docutils literal notranslate"><span class="pre">mf.dm_test(...)</span></code> are intentionally not exported.</p>
+<section id="testresult">
+<h2>TestResult<a class="headerlink" href="#testresult" title="Link to this heading">#</a></h2>
+<p>Most pairwise forecast-comparison tests return <code class="docutils literal notranslate"><span class="pre">TestResult</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">TestResult</span><span class="p">(</span>
+    <span class="n">statistic</span><span class="p">,</span>
+    <span class="n">p_value</span><span class="p">,</span>
+    <span class="n">decision</span><span class="p">,</span>
+    <span class="n">alternative</span><span class="p">,</span>
+    <span class="n">correction_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_obs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="p">{},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">statistic</span></code></p></td>
+<td><p>Test statistic, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when the sample is too small or degenerate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">p_value</span></code></p></td>
+<td><p>P-value, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when unavailable.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when the null is rejected at the supplied <code class="docutils literal notranslate"><span class="pre">alpha</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">alternative</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">two_sided</span></code> or <code class="docutils literal notranslate"><span class="pre">one_sided</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">correction_policy</span></code></p></td>
+<td><p>HAC or small-sample correction label.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_obs</span></code></p></td>
+<td><p>Number of aligned observations used.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p>Test-specific details.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Methods:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_dict()</span></code></p></td>
+<td><p>JSON-ready dictionary with <code class="docutils literal notranslate"><span class="pre">metadata_schema.kind=&quot;forecast_test_result&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">to_json(path=None)</span></code></p></td>
+<td><p>JSON text and optional file write.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">summary()</span></code></p></td>
+<td><p>Compact string summary.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="custom-tests">
+<h2>Custom Tests<a class="headerlink" href="#custom-tests" title="Link to this heading">#</a></h2>
+<section id="custom-test">
+<h3>custom_test<a class="headerlink" href="#custom-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">custom_test</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">,</span>
+    <span class="n">func</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="n">alternative</span><span class="o">=</span><span class="s2">&quot;two_sided&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">correction_policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">params</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span>
+</pre></div>
+</div>
+<p>Runs a user-supplied forecast test and coerces the result to <code class="docutils literal notranslate"><span class="pre">TestResult</span></code>.</p>
+<p>The callable receives <code class="docutils literal notranslate"><span class="pre">*args</span></code> and <code class="docutils literal notranslate"><span class="pre">**params</span></code>. It may return:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TestResult</span></code></p></td>
+<td><p>Used directly, with custom metadata merged.</p></td>
+</tr>
+<tr class="row-odd"><td><p>mapping</p></td>
+<td><p>Must contain <code class="docutils literal notranslate"><span class="pre">statistic</span></code> or <code class="docutils literal notranslate"><span class="pre">stat</span></code>, and may contain <code class="docutils literal notranslate"><span class="pre">p_value</span></code>/<code class="docutils literal notranslate"><span class="pre">pvalue</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code>, <code class="docutils literal notranslate"><span class="pre">alternative</span></code>, <code class="docutils literal notranslate"><span class="pre">correction_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, and <code class="docutils literal notranslate"><span class="pre">metadata</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">(statistic,</span> <span class="pre">p_value)</span></code></p></td>
+<td><p>Decision is <code class="docutils literal notranslate"><span class="pre">p_value</span> <span class="pre">&lt;</span> <span class="pre">alpha</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">(statistic,</span> <span class="pre">p_value,</span> <span class="pre">n_obs)</span></code></p></td>
+<td><p>Same as above plus sample size.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">sign_test_stat</span><span class="p">(</span><span class="n">loss_a</span><span class="p">,</span> <span class="n">loss_b</span><span class="p">):</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">loss_a</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">loss_b</span><span class="p">))</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;statistic&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">((</span><span class="n">diff</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span>
+        <span class="s2">&quot;p_value&quot;</span><span class="p">:</span> <span class="mf">0.04</span><span class="p">,</span>
+        <span class="s2">&quot;n_obs&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">diff</span><span class="p">),</span>
+    <span class="p">}</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">custom_test</span><span class="p">(</span>
+    <span class="s2">&quot;sign_loss_test&quot;</span><span class="p">,</span>
+    <span class="n">sign_test_stat</span><span class="p">,</span>
+    <span class="n">loss_a</span><span class="p">,</span>
+    <span class="n">loss_b</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">custom_test()</span></code> records the callable name, parameters, <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">custom=True</span></code> in <code class="docutils literal notranslate"><span class="pre">result.metadata</span></code>.</p>
+</section>
+</section>
+<section id="equal-predictive-accuracy">
+<h2>Equal Predictive Accuracy<a class="headerlink" href="#equal-predictive-accuracy" title="Link to this heading">#</a></h2>
+<section id="dm-test">
+<h3>dm_test<a class="headerlink" href="#dm-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">dm_test</span><span class="p">(</span>
+    <span class="n">loss_a</span><span class="p">,</span>
+    <span class="n">loss_b</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;hln&quot;</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;acf&quot;</span><span class="p">,</span>
+    <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+    <span class="n">power</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">alternative</span><span class="o">=</span><span class="s2">&quot;two_sided&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: two aligned loss series by default. Set <code class="docutils literal notranslate"><span class="pre">input_type=&quot;error&quot;</span></code> to match
+<code class="docutils literal notranslate"><span class="pre">forecast::dm.test(e1,</span> <span class="pre">e2,</span> <span class="pre">h,</span> <span class="pre">power,</span> <span class="pre">varestimator)</span></code> from the R <code class="docutils literal notranslate"><span class="pre">forecast</span></code>
+package: the function then computes <code class="docutils literal notranslate"><span class="pre">abs(e1)^power</span> <span class="pre">-</span> <span class="pre">abs(e2)^power</span></code> internally.
+Output: <code class="docutils literal notranslate"><span class="pre">TestResult</span></code> for the Diebold-Mariano equal predictive accuracy test.
+<code class="docutils literal notranslate"><span class="pre">correction=&quot;hln&quot;</span></code> applies the Harvey-Leybourne-Newbold small-sample
+correction. P-values use a Student-t reference distribution with <code class="docutils literal notranslate"><span class="pre">df=n-1</span></code>,
+matching <code class="docutils literal notranslate"><span class="pre">forecast/R/DM2.R::dm.test</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kernel=&quot;acf&quot;</span></code> matches the R <code class="docutils literal notranslate"><span class="pre">varestimator=&quot;acf&quot;</span></code> autocovariance estimator.
+<code class="docutils literal notranslate"><span class="pre">kernel=&quot;bartlett&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;newey_west&quot;</span></code> uses the Bartlett-weighted estimator,
+matching the R <code class="docutils literal notranslate"><span class="pre">varestimator=&quot;bartlett&quot;</span></code> option.</p>
+<p>R/source alignment:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Alignment</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">input_type=&quot;error&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">correction=&quot;hln&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel=&quot;acf&quot;</span></code></p></td>
+<td><p>Same statistic and Student-t p-value as <code class="docutils literal notranslate"><span class="pre">forecast/R/DM2.R::dm.test(varestimator=&quot;acf&quot;)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">input_type=&quot;error&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">correction=&quot;hln&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel=&quot;bartlett&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;newey_west&quot;</span></code></p></td>
+<td><p>Same statistic and Student-t p-value as <code class="docutils literal notranslate"><span class="pre">forecast/R/DM2.R::dm.test(varestimator=&quot;bartlett&quot;)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">input_type=&quot;loss&quot;</span></code></p></td>
+<td><p>Uses the same DM statistic after accepting precomputed losses. This is convenient for custom losses, but it is not a direct call-equivalent to R <code class="docutils literal notranslate"><span class="pre">forecast::dm.test(e1,</span> <span class="pre">e2)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">correction=&quot;none&quot;</span></code></p></td>
+<td><p>Omits the Harvey-Leybourne-Newbold small-sample factor used by <code class="docutils literal notranslate"><span class="pre">forecast::dm.test</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kernel=&quot;parzen&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;andrews&quot;</span></code></p></td>
+<td><p>Macroforecast extension. These HAC estimators are not options in R <code class="docutils literal notranslate"><span class="pre">forecast::dm.test</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Returned metadata includes <code class="docutils literal notranslate"><span class="pre">statistic_type=&quot;t&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">null_hypothesis=&quot;equal</span> <span class="pre">predictive</span> <span class="pre">accuracy&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value_status</span></code>,
+<code class="docutils literal notranslate"><span class="pre">p_value_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">r_argument_mapping</span></code>.</p>
+</section>
+<section id="gw-test">
+<h3>gw_test<a class="headerlink" href="#gw-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">gw_test</span><span class="p">(</span>
+    <span class="n">loss_a</span><span class="p">,</span>
+    <span class="n">loss_b</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;hln&quot;</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;acf&quot;</span><span class="p">,</span>
+    <span class="n">input_type</span><span class="o">=</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span>
+    <span class="n">power</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">alternative</span><span class="o">=</span><span class="s2">&quot;two_sided&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: two aligned loss series. Output: <code class="docutils literal notranslate"><span class="pre">TestResult</span></code> using the package’s
+Giacomini-White-compatible loss differential surface. This callable uses the
+same aligned DM-style loss-differential statistic; conditional predictive
+ability with time-varying fluctuation paths is exposed separately through
+<code class="docutils literal notranslate"><span class="pre">conditional_predictive_ability_test(...)</span></code>.</p>
+<p>Source boundary: <code class="docutils literal notranslate"><span class="pre">gw_test()</span></code> does not claim exact R-package alignment. It
+preserves the legacy callable surface by reusing the DM/HLN loss-differential
+statistic on aligned inputs. For the package’s time-varying conditional
+predictive-ability path, use <code class="docutils literal notranslate"><span class="pre">conditional_predictive_ability_test(...)</span></code>.</p>
+</section>
+<section id="dmp-test">
+<h3>dmp_test<a class="headerlink" href="#dmp-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">dmp_test</span><span class="p">(</span>
+    <span class="n">loss_differences</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;newey_west&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: one loss-difference series or a sequence of loss-difference series.
+Output: <code class="docutils literal notranslate"><span class="pre">TestResult</span></code> for a stacked Diebold-Mariano-Pesaran-style joint test.</p>
+<p>The test stacks finite loss-difference values, computes a HAC standard error
+for the stacked mean, and reports a two-sided standard-normal p-value. No exact
+R-package comparator is claimed in the checked R sources. Metadata records
+<code class="docutils literal notranslate"><span class="pre">statistic_type=&quot;z&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">null_hypothesis</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value_status</span></code>,
+<code class="docutils literal notranslate"><span class="pre">p_value_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, and <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code>.</p>
+</section>
+<section id="equal-predictive-tests">
+<h3>equal_predictive_tests<a class="headerlink" href="#equal-predictive-tests" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">equal_predictive_tests</span><span class="p">(</span>
+    <span class="n">loss_a</span><span class="p">,</span>
+    <span class="n">loss_b</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;gw&quot;</span><span class="p">,</span> <span class="s2">&quot;dmp&quot;</span><span class="p">),</span>
+    <span class="n">error_a</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">error_b</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">correction</span><span class="o">=</span><span class="s2">&quot;hln&quot;</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;acf&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Runs multiple equal-predictive-ability tests and stacks one row per test.
+Supported names are <code class="docutils literal notranslate"><span class="pre">dm</span></code>, <code class="docutils literal notranslate"><span class="pre">gw</span></code>, <code class="docutils literal notranslate"><span class="pre">dmp</span></code>, and <code class="docutils literal notranslate"><span class="pre">hn</span></code>. <code class="docutils literal notranslate"><span class="pre">hn</span></code> requires <code class="docutils literal notranslate"><span class="pre">error_a</span></code> and
+<code class="docutils literal notranslate"><span class="pre">error_b</span></code> because Harvey-Newbold is an encompassing test on forecast errors.</p>
+<p>Output: a <code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code> with one row per requested test. The table keeps
+the full component metadata in the <code class="docutils literal notranslate"><span class="pre">metadata</span></code> column and also promotes the
+paper-facing fields below to top-level columns.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p>Requested key and display name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">statistic_type</span></code>, <code class="docutils literal notranslate"><span class="pre">statistic</span></code></p></td>
+<td><p>Reference family (<code class="docutils literal notranslate"><span class="pre">t</span></code> or <code class="docutils literal notranslate"><span class="pre">z</span></code>) and test statistic.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">p_value</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value_status</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value_reference</span></code></p></td>
+<td><p>P-value, availability flag, and reference distribution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">decision</span></code>, <code class="docutils literal notranslate"><span class="pre">alternative</span></code>, <code class="docutils literal notranslate"><span class="pre">null_hypothesis</span></code></p></td>
+<td><p>Rejection flag, alternative direction, and null statement.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">correction_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">n_obs</span></code></p></td>
+<td><p>Small-sample/HAC policy and aligned observation count.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">external_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code></p></td>
+<td><p>Provenance and source-comparison fields.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p>Full <code class="docutils literal notranslate"><span class="pre">TestResult.metadata</span></code> dictionary for the component test.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Current source alignment by row:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Test</p></th>
+<th class="head"><p>R/source status</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dm</span></code></p></td>
+<td><p>Exact <code class="docutils literal notranslate"><span class="pre">forecast::dm.test</span></code> alignment only under the settings listed in <code class="docutils literal notranslate"><span class="pre">dm_test</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gw</span></code></p></td>
+<td><p>Legacy GW-compatible DM-style surface; no exact R comparator claimed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dmp</span></code></p></td>
+<td><p>Macroforecast stacked HAC screen; no exact R comparator claimed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hn</span></code></p></td>
+<td><p>Legacy encompassing covariance approximation; not <code class="docutils literal notranslate"><span class="pre">forecast::dm.test</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For paper output, pass this table to
+<code class="docutils literal notranslate"><span class="pre">macroforecast.reporting.test_report_table(...)</span></code>. For an appendix/audit table
+that spells out source and R alignment, use
+<code class="docutils literal notranslate"><span class="pre">macroforecast.reporting.test_provenance_table(...)</span></code>.</p>
+</section>
+<section id="harvey-newbold-test">
+<h3>harvey_newbold_test<a class="headerlink" href="#harvey-newbold-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">harvey_newbold_test</span><span class="p">(</span>
+    <span class="n">error_a</span><span class="p">,</span>
+    <span class="n">error_b</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;newey_west&quot;</span><span class="p">,</span>
+    <span class="n">small_sample</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: two forecast-error series. Output: one-sided <code class="docutils literal notranslate"><span class="pre">TestResult</span></code> for the legacy
+forecast-error covariance approximation.</p>
+<p>Source note: this is not <code class="docutils literal notranslate"><span class="pre">forecast::dm.test</span></code>. The R <code class="docutils literal notranslate"><span class="pre">forecast</span></code> package function
+implements Harvey-Leybourne-Newbold Diebold-Mariano equal-accuracy testing.
+<code class="docutils literal notranslate"><span class="pre">harvey_newbold_test()</span></code> remains a callable encompassing-style covariance
+approximation and records that distinction in <code class="docutils literal notranslate"><span class="pre">result.metadata</span></code>.</p>
+<p>The callable forms <code class="docutils literal notranslate"><span class="pre">d_t</span> <span class="pre">=</span> <span class="pre">e_a,t</span> <span class="pre">*</span> <span class="pre">(e_a,t</span> <span class="pre">-</span> <span class="pre">e_b,t)</span></code>, computes a HAC standard
+error, optionally applies an HLN-style small-sample factor, and reports a
+one-sided Student-t upper-tail p-value. Metadata records
+<code class="docutils literal notranslate"><span class="pre">statistic_type=&quot;t&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value_status</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value_reference</span></code>,
+<code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_reference=None</span></code>, and <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code>.</p>
+<p>Alias: <code class="docutils literal notranslate"><span class="pre">hn_test</span></code>.</p>
+</section>
+</section>
+<section id="nested-and-encompassing-tests">
+<h2>Nested And Encompassing Tests<a class="headerlink" href="#nested-and-encompassing-tests" title="Link to this heading">#</a></h2>
+<section id="clark-west-test">
+<h3>clark_west_test<a class="headerlink" href="#clark-west-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">clark_west_test</span><span class="p">(</span>
+    <span class="n">loss_small</span><span class="p">,</span>
+    <span class="n">loss_large</span><span class="p">,</span>
+    <span class="n">forecast_small</span><span class="p">,</span>
+    <span class="n">forecast_large</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">cw_adjustment</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;newey_west&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: small-model loss, large-model loss, and both forecast series. Output:
+one-sided <code class="docutils literal notranslate"><span class="pre">TestResult</span></code> for the Clark-West nested forecast comparison.</p>
+<p>Statistic:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>q_t = e_r,t^2 - e_u,t^2 + (f_r,t - f_u,t)^2
+z = mean(q_t) / sqrt(LRV(q_t) / n)
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">r</span></code> is the restricted/small model and <code class="docutils literal notranslate"><span class="pre">u</span></code> is the unrestricted/large model.
+The implementation follows the standard adjusted MSPE differential used by
+Clark-West references such as GAUSS <code class="docutils literal notranslate"><span class="pre">cwTest</span></code> and HypothesisTests.jl
+<code class="docutils literal notranslate"><span class="pre">ClarkWestTest</span></code>. Archived R examples can differ by sign convention, so this
+page treats the formula above as the package contract.</p>
+<p>Alias: <code class="docutils literal notranslate"><span class="pre">cw_test</span></code>.</p>
+</section>
+<section id="enc-new-test">
+<h3>enc_new_test<a class="headerlink" href="#enc-new-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">enc_new_test</span><span class="p">(</span>
+    <span class="n">error_small</span><span class="p">,</span>
+    <span class="n">error_large</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">critical_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: restricted/small-model forecast errors and unrestricted/large-model
+forecast errors. Output: one-sided <code class="docutils literal notranslate"><span class="pre">TestResult</span></code>.</p>
+<p>Statistic:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>c_t = e_r,t * (e_r,t - e_u,t)
+ENC-NEW = n * mean(c_t) / mean(e_u,t^2)
+</pre></div>
+</div>
+<p>Default <code class="docutils literal notranslate"><span class="pre">p_value</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> because Clark-McCracken nested forecast
+encompassing tests have nonstandard distributions. Pass a design-appropriate
+<code class="docutils literal notranslate"><span class="pre">critical_value</span></code> to get a boolean decision.</p>
+</section>
+<section id="enc-t-test">
+<h3>enc_t_test<a class="headerlink" href="#enc-t-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">enc_t_test</span><span class="p">(</span>
+    <span class="n">error_small</span><span class="p">,</span>
+    <span class="n">error_large</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;newey_west&quot;</span><span class="p">,</span>
+    <span class="n">critical_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">normal_approximation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: restricted/small-model forecast errors and unrestricted/large-model
+forecast errors. Output: one-sided <code class="docutils literal notranslate"><span class="pre">TestResult</span></code>.</p>
+<p>Statistic:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>c_t = e_r,t * (e_r,t - e_u,t)
+ENC-T = mean(c_t) / sqrt(LRV(c_t) / n)
+</pre></div>
+</div>
+<p>Default <code class="docutils literal notranslate"><span class="pre">p_value</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>. Set <code class="docutils literal notranslate"><span class="pre">normal_approximation=True</span></code> only for
+diagnostic screening, or pass <code class="docutils literal notranslate"><span class="pre">critical_value</span></code> for a design-specific decision.</p>
+</section>
+<section id="nested-tests">
+<h3>nested_tests<a class="headerlink" href="#nested-tests" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">nested_tests</span><span class="p">(</span>
+    <span class="n">loss_small</span><span class="p">,</span>
+    <span class="n">loss_large</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">forecast_small</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">forecast_large</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">error_small</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">error_large</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;clark_west&quot;</span><span class="p">,</span> <span class="s2">&quot;enc_new&quot;</span><span class="p">,</span> <span class="s2">&quot;enc_t&quot;</span><span class="p">),</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;newey_west&quot;</span><span class="p">,</span>
+    <span class="n">enc_critical_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">enc_normal_approximation</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Runs multiple nested-model tests and stacks one row per test. Clark-West
+requires <code class="docutils literal notranslate"><span class="pre">forecast_small</span></code> and <code class="docutils literal notranslate"><span class="pre">forecast_large</span></code>; <code class="docutils literal notranslate"><span class="pre">enc_new</span></code> and <code class="docutils literal notranslate"><span class="pre">enc_t</span></code> require
+<code class="docutils literal notranslate"><span class="pre">error_small</span></code> and <code class="docutils literal notranslate"><span class="pre">error_large</span></code>. This separation is intentional because
+Clark-West is an adjusted MSPE differential while ENC-NEW and ENC-T are
+forecast-error encompassing covariance statistics.</p>
+</section>
+</section>
+<section id="directional-accuracy-tests">
+<h2>Directional Accuracy Tests<a class="headerlink" href="#directional-accuracy-tests" title="Link to this heading">#</a></h2>
+<section id="directional-accuracy-test">
+<h3>directional_accuracy_test<a class="headerlink" href="#directional-accuracy-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">directional_accuracy_test</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">,</span>
+    <span class="n">y_pred</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;pesaran_timmermann&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: realized values and forecasts. Output: <code class="docutils literal notranslate"><span class="pre">TestResult</span></code>. Supported methods
+are <code class="docutils literal notranslate"><span class="pre">pesaran_timmermann</span></code>, <code class="docutils literal notranslate"><span class="pre">anatolyev_gerko</span></code>, and <code class="docutils literal notranslate"><span class="pre">henriksson_merton</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">pesaran_timmermann</span></code> and <code class="docutils literal notranslate"><span class="pre">anatolyev_gerko</span></code> branches are aligned with
+R <code class="docutils literal notranslate"><span class="pre">tstests/R/dac.R::dac_test</span></code> and <code class="docutils literal notranslate"><span class="pre">rugarch/R/rugarch-tests.R::DACTest</span></code>. The
+p-value is a one-sided upper-tail normal p-value, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">Phi(statistic)</span></code>.
+Forecasts that are constant after subtracting <code class="docutils literal notranslate"><span class="pre">threshold</span></code> are rejected because
+the directional tests are undefined for a constant sign forecast.</p>
+<p>Options:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Choices</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
+<td><p>numeric</p></td>
+<td><p>Values above this threshold are positive-direction observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;pesaran_timmermann&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;pesaran_timmermann&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;anatolyev_gerko&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;henriksson_merton&quot;</span></code></p></td>
+<td><p>Directional statistic to compute.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p>probability in <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code></p></td>
+<td><p>Rejection level.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Method notes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Null</p></th>
+<th class="head"><p>Statistic input</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pesaran_timmermann</span></code></p></td>
+<td><p>No sign predictability.</p></td>
+<td><p>Exact R alignment with <code class="docutils literal notranslate"><span class="pre">.pt_test</span></code> / <code class="docutils literal notranslate"><span class="pre">DACTest(test=&quot;PT&quot;)</span></code>: sign hit rate versus independence-implied sign hit rate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">anatolyev_gerko</span></code></p></td>
+<td><p>No excess profitability.</p></td>
+<td><p>Exact R alignment with <code class="docutils literal notranslate"><span class="pre">.ag_test</span></code> / <code class="docutils literal notranslate"><span class="pre">DACTest(test=&quot;AG&quot;)</span></code>: <code class="docutils literal notranslate"><span class="pre">sign(forecast)</span> <span class="pre">*</span> <span class="pre">actual</span></code> excess profitability, using raw actual and forecast values after threshold subtraction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">henriksson_merton</span></code></p></td>
+<td><p>No market-timing skill.</p></td>
+<td><p>Macroforecast extension. No exact comparator in <code class="docutils literal notranslate"><span class="pre">tstests::dac_test</span></code> or <code class="docutils literal notranslate"><span class="pre">rugarch::DACTest</span></code>; statistic is based on up/down conditional hit rates.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>R/source alignment:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Branch</p></th>
+<th class="head"><p>R comparator</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pesaran_timmermann</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tstests/R/dac.R::.pt_test</span></code>; <code class="docutils literal notranslate"><span class="pre">rugarch/R/rugarch-tests.R::DACTest(test=&quot;PT&quot;)</span></code></p></td>
+<td><p>Uses <code class="docutils literal notranslate"><span class="pre">x_t=1{actual&gt;0}</span></code>, <code class="docutils literal notranslate"><span class="pre">y_t=1{forecast&gt;0}</span></code>, <code class="docutils literal notranslate"><span class="pre">z_t=1{forecast*actual&gt;0}</span></code>, and <code class="docutils literal notranslate"><span class="pre">p.value=1-pnorm(statistic)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">anatolyev_gerko</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tstests/R/dac.R::.ag_test</span></code>; <code class="docutils literal notranslate"><span class="pre">rugarch/R/rugarch-tests.R::DACTest(test=&quot;AG&quot;)</span></code></p></td>
+<td><p>Uses <code class="docutils literal notranslate"><span class="pre">r_t=sign(forecast)*actual</span></code>, excess-profitability variance <code class="docutils literal notranslate"><span class="pre">V_EP</span></code>, and <code class="docutils literal notranslate"><span class="pre">p.value=1-pnorm(statistic)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">henriksson_merton</span></code></p></td>
+<td><p>None</p></td>
+<td><p>Kept as a callable screening diagnostic, not claimed as an R-package-aligned DAC branch.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Zero rule: R uses strict positivity, <code class="docutils literal notranslate"><span class="pre">actual</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">forecast</span> <span class="pre">&gt;</span> <span class="pre">0</span></code>.
+<code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> applies the same strict rule after subtracting <code class="docutils literal notranslate"><span class="pre">threshold</span></code>, so
+values equal to <code class="docutils literal notranslate"><span class="pre">threshold</span></code> are treated as non-positive.</p>
+<p>Aliases:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Alias</p></th>
+<th class="head"><p>Equivalent call</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pesaran_timmermann_test(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">directional_accuracy_test(...,</span> <span class="pre">method=&quot;pesaran_timmermann&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">anatolyev_gerko_test(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">directional_accuracy_test(...,</span> <span class="pre">method=&quot;anatolyev_gerko&quot;)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">henriksson_merton_test(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">directional_accuracy_test(...,</span> <span class="pre">method=&quot;henriksson_merton&quot;)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="density-and-interval-diagnostics">
+<h2>Density And Interval Diagnostics<a class="headerlink" href="#density-and-interval-diagnostics" title="Link to this heading">#</a></h2>
+<section id="density-interval-tests">
+<h3>density_interval_tests<a class="headerlink" href="#density-interval-tests" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">density_interval_tests</span><span class="p">(</span>
+    <span class="n">pit</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">pit_lag</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: probability integral transform values in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>. Output: JSON-ready
+dictionary with <code class="docutils literal notranslate"><span class="pre">metadata_schema.kind=&quot;density_interval_tests&quot;</span></code> plus
+Berkowitz, KS, Kupiec POF, Christoffersen independence, Engle-Manganelli DQ,
+Du-Escanciano shortfall, PIT histogram, and PIT autocorrelation diagnostics.</p>
+<p>Options:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p>Tail probability for VaR/shortfall-style hit tests.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_bins</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+<td><p>Number of PIT histogram bins.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pit_lag</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Lag used for PIT autocorrelation, Berkowitz AR lag, and Du-Escanciano conditional shortfall lag.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Output keys:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">berkowitz</span></code></p></td>
+<td><p>Berkowitz density LR test plus Jarque-Bera normality check after normal score transform.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ks</span></code></p></td>
+<td><p>Kolmogorov-Smirnov test against uniform PIT.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kupiec_pof</span></code></p></td>
+<td><p>Unconditional hit-rate test at <code class="docutils literal notranslate"><span class="pre">alpha</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">christoffersen_independence</span></code></p></td>
+<td><p>Markov independence test for hits.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">engle_manganelli_dq</span></code></p></td>
+<td><p>PIT hit-only DQ proxy. Use <code class="docutils literal notranslate"><span class="pre">dynamic_quantile_test(...)</span></code> for the full Engle-Manganelli VaR DQ test.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">du_escanciano_shortfall</span></code></p></td>
+<td><p>Du-Escanciano unconditional and conditional shortfall tests.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pit_histogram</span></code></p></td>
+<td><p>One record per histogram bin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pit_autocorrelation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TestResult</span></code> dictionary for serial PIT dependence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code></p></td>
+<td><p>Composite provenance metadata. Component-level diagnostics also carry their own R/source metadata.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>R/source alignment:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Diagnostic</p></th>
+<th class="head"><p>Reference</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Berkowitz</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tstests/R/berkowitz.R::berkowitz_test</span></code>: PIT to normal scores, ARIMA(<code class="docutils literal notranslate"><span class="pre">pit_lag</span></code>,0,0) unrestricted likelihood versus Normal(0,1); LR df is <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">+</span> <span class="pre">pit_lag</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Du-Escanciano shortfall</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tstests/R/shortfall_de.R::shortfall_de_test</span></code>: cumulative tail shortfall mean test and portmanteau test on centered tail shortfall autocorrelations.</p></td>
+</tr>
+<tr class="row-even"><td><p>Kupiec/Christoffersen</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tstests/R/var_cp.R::var_cp_test</span></code> and <code class="docutils literal notranslate"><span class="pre">rugarch/R/rugarch-tests.R</span></code>: Bernoulli/transition likelihood-ratio construction.</p></td>
+</tr>
+<tr class="row-odd"><td><p>PIT hit-only DQ proxy</p></td>
+<td><p>No direct R comparator. It is a PIT-hit lag diagnostic inside this composite wrapper, not the full Engle-Manganelli VaR DQ test.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Boundary handling: values outside <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> raise. Boundary PIT values <code class="docutils literal notranslate"><span class="pre">0</span></code> and
+<code class="docutils literal notranslate"><span class="pre">1</span></code> are accepted as PIT values but clipped internally for the normal-score
+Berkowitz transform to avoid infinite ARIMA inputs.</p>
+</section>
+<section id="shortfall-de-test">
+<h3>shortfall_de_test<a class="headerlink" href="#shortfall-de-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">shortfall_de_test</span><span class="p">(</span>
+    <span class="n">pit</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">lags</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">boot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Input: PIT values in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>. Output: JSON-ready dictionary with
+<code class="docutils literal notranslate"><span class="pre">metadata_schema.kind=&quot;shortfall_de_test&quot;</span></code>.</p>
+<p>The unconditional statistic is the sample mean of cumulative tail shortfall,
+<code class="docutils literal notranslate"><span class="pre">mean((alpha</span> <span class="pre">-</span> <span class="pre">pit)</span> <span class="pre">*</span> <span class="pre">1{pit</span> <span class="pre">&lt;=</span> <span class="pre">alpha}</span> <span class="pre">/</span> <span class="pre">alpha)</span></code>. The conditional statistic is
+a portmanteau statistic on autocorrelations of that series centered by
+<code class="docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">/</span> <span class="pre">2</span></code>. With <code class="docutils literal notranslate"><span class="pre">boot=False</span></code>, the unconditional p-value uses the
+Du-Escanciano normal approximation and the conditional p-value uses
+<code class="docutils literal notranslate"><span class="pre">Chi-squared(lags)</span></code>. With <code class="docutils literal notranslate"><span class="pre">boot=True</span></code>, both p-values use simulated uniform PIT
+draws with the same sample size.</p>
+</section>
+<section id="dynamic-quantile-test">
+<h3>dynamic_quantile_test<a class="headerlink" href="#dynamic-quantile-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">dynamic_quantile_test</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">,</span>
+    <span class="n">var</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">lag</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">lag_hit</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">lag_var</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span>
+</pre></div>
+</div>
+<p>Input: realized values and one-step-ahead lower-tail VaR forecasts. Output:
+<code class="docutils literal notranslate"><span class="pre">TestResult</span></code> for the Engle-Manganelli dynamic quantile test.</p>
+<p>This is the full VaR DQ callable. It is separate from
+<code class="docutils literal notranslate"><span class="pre">density_interval_tests(...)</span></code> because the exact DQ statistic needs realized
+values and VaR forecasts, not PIT values alone.</p>
+<p>R/source alignment: <code class="docutils literal notranslate"><span class="pre">segMGarch/R/DQtest.R::DQtest</span></code>. The hit series is
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">alpha</span></code> when <code class="docutils literal notranslate"><span class="pre">y_true</span> <span class="pre">&lt;</span> <span class="pre">var</span></code> and <code class="docutils literal notranslate"><span class="pre">-alpha</span></code> otherwise. The regressor matrix
+contains a constant, lag-aligned VaR forecasts, <code class="docutils literal notranslate"><span class="pre">lag_hit</span></code> lagged hit columns,
+and lagged squared realized values. The statistic is
+<code class="docutils literal notranslate"><span class="pre">Hit'</span> <span class="pre">X</span> <span class="pre">(X'X)^(-1)</span> <span class="pre">X'</span> <span class="pre">Hit</span> <span class="pre">/</span> <span class="pre">(alpha</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">alpha))</span></code>, with a chi-squared
+reference distribution using the number of columns of <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p>
+<p>R argument mapping: <code class="docutils literal notranslate"><span class="pre">segMGarch::DQtest</span></code> names the VaR probability
+<code class="docutils literal notranslate"><span class="pre">VaR_level</span></code> and converts it internally to the lower-tail probability
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">VaR_level</span></code>. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> accepts the lower-tail probability directly
+as <code class="docutils literal notranslate"><span class="pre">alpha</span></code>; therefore a 5% lower-tail VaR is <code class="docutils literal notranslate"><span class="pre">alpha=0.05</span></code>, corresponding to
+<code class="docutils literal notranslate"><span class="pre">VaR_level=0.95</span></code> in the R function.</p>
+<p>Source: https://rdrr.io/cran/segMGarch/src/R/DQtest.R</p>
+<p>Options:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p>Lower-tail probability. A 5% VaR uses <code class="docutils literal notranslate"><span class="pre">alpha=0.05</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Lag used for squared realized values.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lag_hit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Number of lagged hit columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag_var</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Lag alignment for VaR forecasts.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="pit-histogram">
+<h3>pit_histogram<a class="headerlink" href="#pit-histogram" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">pit_histogram</span><span class="p">(</span><span class="n">pit</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Returns one row per PIT histogram bin with observed count, expected count under
+uniformity, and deviation.</p>
+</section>
+<section id="pit-autocorrelation-test">
+<h3>pit_autocorrelation_test<a class="headerlink" href="#pit-autocorrelation-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">pit_autocorrelation_test</span><span class="p">(</span>
+    <span class="n">pit</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">lag</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span>
+</pre></div>
+</div>
+<p>Runs a normal-approximation test for serial dependence in PIT values.</p>
+</section>
+<section id="interval-coverage-test">
+<h3>interval_coverage_test<a class="headerlink" href="#interval-coverage-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">interval_coverage_test</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">,</span>
+    <span class="n">lower</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Runs Kupiec POF, Christoffersen independence, combined conditional coverage,
+and Christoffersen-Pelletier duration diagnostics for forecast intervals.
+<code class="docutils literal notranslate"><span class="pre">alpha</span></code> is the expected non-coverage rate, so a 90% interval uses
+<code class="docutils literal notranslate"><span class="pre">alpha=0.10</span></code>.</p>
+<p>Boundary cases follow the likelihood-ratio convention used by R
+<code class="docutils literal notranslate"><span class="pre">tstests::var_cp_test</span></code> and <code class="docutils literal notranslate"><span class="pre">rugarch::VaRTest</span></code>: zero violations do not
+automatically imply a passing Kupiec statistic; the restricted Bernoulli
+likelihood is compared with the boundary unrestricted likelihood.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">christoffersen_pelletier_duration</span></code> output follows the duration-test
+logic in <code class="docutils literal notranslate"><span class="pre">tstests/R/var_cp.R::.duration_test</span></code>: durations between interval
+misses are modeled with a Weibull likelihood, and the no-memory exponential
+restriction is tested by setting the Weibull shape parameter to <code class="docutils literal notranslate"><span class="pre">1</span></code>. The
+duration statistic is unavailable when there is one or fewer misses.</p>
+<p>Coverage output:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kupiec_pof</span></code></p></td>
+<td><p>Unconditional coverage LR. Carries <code class="docutils literal notranslate"><span class="pre">tstests</span></code> and <code class="docutils literal notranslate"><span class="pre">rugarch</span></code> references.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">christoffersen_independence</span></code></p></td>
+<td><p>First-order Markov independence LR plus transition counts <code class="docutils literal notranslate"><span class="pre">n00</span></code>, <code class="docutils literal notranslate"><span class="pre">n01</span></code>, <code class="docutils literal notranslate"><span class="pre">n10</span></code>, <code class="docutils literal notranslate"><span class="pre">n11</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">christoffersen_conditional_coverage</span></code></p></td>
+<td><p>Sum of Kupiec and independence LR statistics with chi-squared df 2.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">christoffersen_pelletier_duration</span></code></p></td>
+<td><p>Weibull duration LR for the exponential no-memory restriction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">rugarch_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code></p></td>
+<td><p>Package-level provenance.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Duration likelihood note: the duration construction is the same in
+<code class="docutils literal notranslate"><span class="pre">tstests</span></code> and <code class="docutils literal notranslate"><span class="pre">rugarch</span></code>. The implemented density/survival likelihood follows
+<code class="docutils literal notranslate"><span class="pre">rugarch/R/rugarch-tests.R::VaRDurTest</span></code>, which is the internally consistent
+Christoffersen-Pelletier Weibull likelihood form.</p>
+</section>
+</section>
+<section id="conditional-predictive-ability">
+<h2>Conditional Predictive Ability<a class="headerlink" href="#conditional-predictive-ability" title="Link to this heading">#</a></h2>
+<section id="conditional-predictive-ability-test">
+<h3>conditional_predictive_ability_test<a class="headerlink" href="#conditional-predictive-ability-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">conditional_predictive_ability_test</span><span class="p">(</span>
+    <span class="n">loss_a</span><span class="p">,</span>
+    <span class="n">loss_b</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;giacomini_rossi&quot;</span><span class="p">,</span>
+    <span class="n">window_ratio</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">dmv_fullsample</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">lag_truncate</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: two aligned loss series. Output: JSON-ready dictionary with
+<code class="docutils literal notranslate"><span class="pre">metadata_schema.kind=&quot;conditional_predictive_ability&quot;</span></code>, a fluctuation
+statistic, critical value, decision, time path, window size, loss-difference
+orientation, and source-alignment metadata.</p>
+<p>Supported methods: <code class="docutils literal notranslate"><span class="pre">giacomini_rossi</span></code>, <code class="docutils literal notranslate"><span class="pre">recursive_fluctuation</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">giacomini_rossi</span></code> branch is aligned with
+<code class="docutils literal notranslate"><span class="pre">murphydiagram/R/procs.R::fluctuation_test</span></code>, which implements Proposition 1 of
+Giacomini and Rossi (2010). It computes rolling-window Diebold-Mariano-type
+statistics for the loss difference <code class="docutils literal notranslate"><span class="pre">loss_a</span> <span class="pre">-</span> <span class="pre">loss_b</span></code>, uses Bartlett HAC
+variance, and compares the supremum absolute statistic with the tabulated
+critical values from Giacomini-Rossi Table 1. Positive path values mean
+<code class="docutils literal notranslate"><span class="pre">loss_a</span></code> is larger than <code class="docutils literal notranslate"><span class="pre">loss_b</span></code> over that window, so the final statistic is
+two-sided because it uses the supremum absolute path.</p>
+<p>R alignment:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>R package / function</p></th>
+<th class="head"><p>macroforecast branch</p></th>
+<th class="head"><p>Alignment</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">murphydiagram/R/procs.R::fluctuation_test</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">method=&quot;giacomini_rossi&quot;</span></code></p></td>
+<td><p>Same <code class="docutils literal notranslate"><span class="pre">ld</span> <span class="pre">&lt;-</span> <span class="pre">loss1</span> <span class="pre">-</span> <span class="pre">loss2</span></code>, same <code class="docutils literal notranslate"><span class="pre">mu</span></code> grid, same Table 1 critical values, same <code class="docutils literal notranslate"><span class="pre">lag_truncate</span> <span class="pre">in</span> <span class="pre">0:5</span></code>, same Bartlett HAC convention, same <code class="docutils literal notranslate"><span class="pre">dmv_fullsample</span></code> and rolling-denominator branches.</p></td>
+</tr>
+<tr class="row-odd"><td><p>None</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">method=&quot;recursive_fluctuation&quot;</span></code></p></td>
+<td><p>Package extension over expanding-prefix loss windows. It reuses the same Bartlett HAC helper but does not claim to implement a named R-package test.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Options:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Choices</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;giacomini_rossi&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;giacomini_rossi&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;recursive_fluctuation&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">giacomini_rossi</span></code> is R-aligned; <code class="docutils literal notranslate"><span class="pre">recursive_fluctuation</span></code> is a package extension over expanding loss windows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">window_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.1</span></code>, <code class="docutils literal notranslate"><span class="pre">0.2</span></code>, …, <code class="docutils literal notranslate"><span class="pre">0.9</span></code> for <code class="docutils literal notranslate"><span class="pre">giacomini_rossi</span></code></p></td>
+<td><p>Rolling window size as a fraction of the evaluation sample.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dmv_fullsample</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, estimate HAC variance on the full loss-difference sample, matching the R default. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, use each rolling window’s HAC variance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag_truncate</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">5</span></code></p></td>
+<td><p>Bartlett HAC truncation lag, matching the R package’s allowed range.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code>, <code class="docutils literal notranslate"><span class="pre">0.10</span></code> for <code class="docutils literal notranslate"><span class="pre">giacomini_rossi</span></code></p></td>
+<td><p>Test size used to select the tabulated critical value.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Output fields:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">statistic</span></code></p></td>
+<td><p>Supremum absolute value of the fluctuation path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_path</span></code></p></td>
+<td><p>Rolling or recursive fluctuation path before the supremum is taken.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">critical_value</span></code>, <code class="docutils literal notranslate"><span class="pre">critical_band</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code></p></td>
+<td><p>Tabulated Giacomini-Rossi comparison when available; <code class="docutils literal notranslate"><span class="pre">None</span></code> for the recursive extension.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variance_scope</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_sample&quot;</span></code> when <code class="docutils literal notranslate"><span class="pre">dmv_fullsample=True</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;rolling_window&quot;</span></code> otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">loss_difference_orientation</span></code></p></td>
+<td><p>Always <code class="docutils literal notranslate"><span class="pre">loss_a</span> <span class="pre">-</span> <span class="pre">loss_b</span></code>; positive path values mean <code class="docutils literal notranslate"><span class="pre">loss_a</span></code> has larger loss.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">external_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code></p></td>
+<td><p>Source and R-package comparison metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">requested_method</span></code>, <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">alias_warning</span></code></p></td>
+<td><p>The user-supplied method, normalized method, and any alias caveat.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">method=&quot;rossi_sekhposyan&quot;</span></code> remains accepted as a legacy alias for
+<code class="docutils literal notranslate"><span class="pre">recursive_fluctuation</span></code>, but Rossi-Sekhposyan forecast rationality is a
+different test family and is not represented by this loss-comparison callable.</p>
+</section>
+</section>
+<section id="multiple-model-tests">
+<h2>Multiple-Model Tests<a class="headerlink" href="#multiple-model-tests" title="Link to this heading">#</a></h2>
+<section id="blocked-oob-reality-check">
+<h3>blocked_oob_reality_check<a class="headerlink" href="#blocked-oob-reality-check" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">blocked_oob_reality_check</span><span class="p">(</span>
+    <span class="n">loss_panel</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">bootstrap_method</span><span class="o">=</span><span class="s2">&quot;fixed_block_bootstrap&quot;</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span>
+    <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model_id&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Block-bootstrap one-sided benchmark-superiority screen against a named
+benchmark model. This is the direct callable replacement for the legacy
+<code class="docutils literal notranslate"><span class="pre">blocked_oob_reality_check</span></code> operation. It is intentionally documented as a
+legacy screen, not as the exact White Reality Check.</p>
+<p>Inputs:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Form</p></th>
+<th class="head"><p>Required columns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Long panel</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">origin</span></code>, <code class="docutils literal notranslate"><span class="pre">model_id</span></code>, <code class="docutils literal notranslate"><span class="pre">squared_error</span></code>; optional <code class="docutils literal notranslate"><span class="pre">target</span></code> and <code class="docutils literal notranslate"><span class="pre">horizon</span></code>. Column names are configurable.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Wide matrix</p></td>
+<td><p>One column per model, including the <code class="docutils literal notranslate"><span class="pre">benchmark</span></code> column. The index is treated as origin order.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Long-panel input must have one row per target/horizon/origin/model key. If the
+loss table contains duplicate rows for that key, aggregate them explicitly
+before calling; the test helpers do not average duplicates silently.</p>
+<p>Output: one row per candidate model and target/horizon group.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
+<td><p>Group labels. Wide input uses <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code> for both.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
+<td><p>Candidate model tested against the benchmark.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark</span></code></p></td>
+<td><p>Benchmark model name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mean_diff</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">benchmark_loss</span> <span class="pre">-</span> <span class="pre">candidate_loss</span></code>; positive means candidate has lower loss.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">statistic</span></code></p></td>
+<td><p>Mean loss differential scaled by bootstrap standard error.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">p_value</span></code></p></td>
+<td><p>Pairwise one-sided block-bootstrap p-value for no improvement over benchmark.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when <code class="docutils literal notranslate"><span class="pre">p_value</span> <span class="pre">&lt;</span> <span class="pre">alpha</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">familywise_p_value</span></code></p></td>
+<td><p>Max-bootstrap p-value adjusted across all candidate models in the same target/horizon group.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">familywise_decision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> when <code class="docutils literal notranslate"><span class="pre">familywise_p_value</span> <span class="pre">&lt;</span> <span class="pre">alpha</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">familywise_n_obs</span></code></p></td>
+<td><p>Complete-case origins used for the family-wise adjustment.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_obs</span></code></p></td>
+<td><p>Number of aligned origins.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">block_length</span></code>, <code class="docutils literal notranslate"><span class="pre">n_boot</span></code>, <code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></p></td>
+<td><p>Bootstrap settings used.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code></p></td>
+<td><p>Provenance metadata. <code class="docutils literal notranslate"><span class="pre">r_reference</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> because this legacy screen has no exact R-package comparator.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The returned table carries
+<code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_metadata_schema&quot;][&quot;kind&quot;]</span> <span class="pre">=</span> <span class="pre">&quot;blocked_oob_reality_check&quot;</span></code>.</p>
+<p>R/source comparison:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Status</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">blocked_oob_reality_check(...)</span></code></p></td>
+<td><p>No exact R-package comparator. It computes pairwise and family-wise max-centered block bootstrap p-values from precomputed benchmark/candidate loss differences.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ttrTests/R/dataSnoop.R::dataSnoop(test=&quot;RC&quot;</span> <span class="pre">or</span> <span class="pre">&quot;SPA&quot;)</span></code></p></td>
+<td><p>Strategy-specific data-snooping code. It rebuilds technical-trading parameter-grid performance on each bootstrapped price sample, so it is not the same API contract.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reality_check_test(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">superior_predictive_ability_test(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">stepm_test(...)</span></code></p></td>
+<td><p>Exact multiple-comparison callable family for White RC, Hansen SPA, and Romano-Wolf StepM using the optional <code class="docutils literal notranslate"><span class="pre">arch.bootstrap</span></code> backend.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="superior-predictive-ability-test">
+<h3>superior_predictive_ability_test<a class="headerlink" href="#superior-predictive-ability-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">superior_predictive_ability_test</span><span class="p">(</span>
+    <span class="n">loss_panel</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">bootstrap_method</span><span class="o">=</span><span class="s2">&quot;stationary_bootstrap&quot;</span><span class="p">,</span>
+    <span class="n">p_value_type</span><span class="o">=</span><span class="s2">&quot;consistent&quot;</span><span class="p">,</span>
+    <span class="n">studentize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">nested</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span>
+    <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model_id&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Input: long or wide loss panel with a named benchmark model. Output:
+JSON-ready dictionary with one record per target/horizon group. The record
+contains <code class="docutils literal notranslate"><span class="pre">p_values</span></code> for <code class="docutils literal notranslate"><span class="pre">lower</span></code>, <code class="docutils literal notranslate"><span class="pre">consistent</span></code>, and <code class="docutils literal notranslate"><span class="pre">upper</span></code> SPA p-value
+variants, <code class="docutils literal notranslate"><span class="pre">critical_values</span></code>, selected <code class="docutils literal notranslate"><span class="pre">p_value</span></code>, <code class="docutils literal notranslate"><span class="pre">superior_models</span></code>, and
+backend metadata.</p>
+<p>Backend alignment: delegates to <code class="docutils literal notranslate"><span class="pre">arch.bootstrap.SPA</span></code>. The backend takes
+benchmark losses and candidate losses, forms loss differentials internally as
+<code class="docutils literal notranslate"><span class="pre">benchmark_loss</span> <span class="pre">-</span> <span class="pre">candidate_loss</span></code>, and reports <code class="docutils literal notranslate"><span class="pre">lower</span></code>, <code class="docutils literal notranslate"><span class="pre">consistent</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">upper</span></code> p-values from Hansen’s recentering choices. Positive
+<code class="docutils literal notranslate"><span class="pre">mean_loss_difference</span></code> in the output means the candidate has lower average loss
+than the benchmark.</p>
+<p>R/source comparison: archived R <code class="docutils literal notranslate"><span class="pre">ttrTests/R/dataSnoop.R::dataSnoop(test=&quot;SPA&quot;)</span></code>
+implements Hansen SPA for technical-trading rule parameter grids. It recomputes
+strategy performance on each bootstrapped price sample, so it is not a direct
+general loss-matrix API. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> keeps the general forecast-evaluation
+contract and records this as conceptual R alignment in each output record.</p>
+<p>Options:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Choices</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;stationary_bootstrap&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;stationary_bootstrap&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fixed_block_bootstrap&quot;</span></code></p></td>
+<td><p>Bootstrap family. Fixed-block inputs are mapped to <code class="docutils literal notranslate"><span class="pre">arch</span></code>’s moving-block backend.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">p_value_type</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;consistent&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;lower&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;consistent&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;upper&quot;</span></code></p></td>
+<td><p>Which SPA p-value variant to use for <code class="docutils literal notranslate"><span class="pre">p_value</span></code> and <code class="docutils literal notranslate"><span class="pre">decision</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">studentize</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p>Passed to <code class="docutils literal notranslate"><span class="pre">arch.bootstrap.SPA</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nested</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p>Passed to <code class="docutils literal notranslate"><span class="pre">arch.bootstrap.SPA</span></code> for nested model sets.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="reality-check-test">
+<h3>reality_check_test<a class="headerlink" href="#reality-check-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">reality_check_test</span><span class="p">(</span>
+    <span class="n">loss_panel</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">bootstrap_method</span><span class="o">=</span><span class="s2">&quot;stationary_bootstrap&quot;</span><span class="p">,</span>
+    <span class="n">p_value_type</span><span class="o">=</span><span class="s2">&quot;consistent&quot;</span><span class="p">,</span>
+    <span class="n">studentize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">nested</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span>
+    <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model_id&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Input and output follow <code class="docutils literal notranslate"><span class="pre">superior_predictive_ability_test(...)</span></code>. Backend:
+<code class="docutils literal notranslate"><span class="pre">arch.bootstrap.RealityCheck</span></code>. In the current <code class="docutils literal notranslate"><span class="pre">arch</span></code> backend this class is a
+Reality Check alias over the same SPA machinery, with the same p-value fields.
+Use this when the research design calls for the White Reality Check against a
+benchmark model.</p>
+<p>R/source comparison: archived R <code class="docutils literal notranslate"><span class="pre">ttrTests/R/dataSnoop.R::dataSnoop(test=&quot;RC&quot;)</span></code>
+implements White’s Reality Check for technical-trading rule grids. As with SPA,
+the R function is strategy-generator specific; <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> uses
+precomputed benchmark and candidate forecast-loss series.</p>
+</section>
+<section id="stepm-test">
+<h3>stepm_test<a class="headerlink" href="#stepm-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">stepm_test</span><span class="p">(</span>
+    <span class="n">loss_panel</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">bootstrap_method</span><span class="o">=</span><span class="s2">&quot;stationary_bootstrap&quot;</span><span class="p">,</span>
+    <span class="n">studentize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">nested</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span>
+    <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model_id&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Input: long or wide loss panel with a named benchmark model. Output:
+JSON-ready dictionary with <code class="docutils literal notranslate"><span class="pre">superior_models</span></code> for each target/horizon group.
+Backend: <code class="docutils literal notranslate"><span class="pre">arch.bootstrap.StepM</span></code>.</p>
+<p>R/source comparison: <code class="docutils literal notranslate"><span class="pre">oosanalysis-R-library/R/stepm.R::stepm</span></code> implements a
+generic Romano-Wolf stepdown loop from supplied test statistics and bootstrap
+test-statistic draws. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> delegates to <code class="docutils literal notranslate"><span class="pre">arch.bootstrap.StepM</span></code>, which
+constructs the benchmark-vs-candidate loss-difference statistics using the SPA
+backend and then applies the stepdown procedure. The objective is aligned, but
+the inputs are higher level in <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code>: forecast-loss panel in,
+superior model names out.</p>
+</section>
+<section id="model-confidence-set">
+<h3>model_confidence_set<a class="headerlink" href="#model-confidence-set" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">model_confidence_set</span><span class="p">(</span>
+    <span class="n">loss_panel</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">bootstrap_method</span><span class="o">=</span><span class="s2">&quot;mcs_fixed_block&quot;</span><span class="p">,</span>
+    <span class="n">statistic</span><span class="o">=</span><span class="s2">&quot;max&quot;</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span>
+    <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model_id&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</pre></div>
+</div>
+<p>Exact Hansen-Lunde-Nason model confidence set callable aligned with the R
+<code class="docutils literal notranslate"><span class="pre">MCS</span></code> package’s <code class="docutils literal notranslate"><span class="pre">MCSprocedure</span></code>. It constructs pairwise loss-difference
+statistics, bootstraps those loss-difference means, removes one model per step,
+tracks cumulative MCS p-values, and records included and rejected model sets by
+target/horizon group.</p>
+<p>Inputs:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Form</p></th>
+<th class="head"><p>Required columns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Long panel</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">origin</span></code>, <code class="docutils literal notranslate"><span class="pre">model_id</span></code>, and the selected loss column. <code class="docutils literal notranslate"><span class="pre">target</span></code> and <code class="docutils literal notranslate"><span class="pre">horizon</span></code> are optional grouping columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Wide matrix</p></td>
+<td><p>Numeric model-loss columns. The target/horizon labels are set to <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Long-panel input must have one row per target/horizon/origin/model key. Duplicate
+loss rows are rejected instead of being averaged inside the pivot step.</p>
+<p>Options:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Choices</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">statistic</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;range&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;max&quot;</span></code> maps to R <code class="docutils literal notranslate"><span class="pre">statistic=&quot;Tmax&quot;</span></code> over <code class="docutils literal notranslate"><span class="pre">d_i.</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;range&quot;</span></code> maps to R <code class="docutils literal notranslate"><span class="pre">statistic=&quot;TR&quot;</span></code> over pairwise <code class="docutils literal notranslate"><span class="pre">d_ij</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bootstrap_method</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mcs_fixed_block&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;mcs_fixed_block&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;stationary_bootstrap&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fixed_block_bootstrap&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mcs_fixed_block</span></code> follows R <code class="docutils literal notranslate"><span class="pre">MCS/R/internalFunctions.R::GetIndices</span></code>; the other choices are package extensions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">block_length</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></td>
+<td><p>positive int or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></td>
+<td><p>Block length. <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> follows the R rule conceptually: selected AR order across loss columns, with a minimum of 3.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Output: JSON-ready dictionary with
+<code class="docutils literal notranslate"><span class="pre">metadata_schema.kind=&quot;model_confidence_set&quot;</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mcs_inclusion</span></code></p></td>
+<td><p>Included model records by target, horizon, and alpha after the iterative procedure stops.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mcs_rejections</span></code></p></td>
+<td><p>Eliminated model records by target, horizon, and alpha.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">p_values</span></code></p></td>
+<td><p>Final stopping-test p-value by target and horizon.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">iteration_path</span></code></p></td>
+<td><p>One record per removal step, including active models, statistic, p-value, cumulative MCS p-value, removed model, rejected model if any, and mean losses.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">block_lengths_used</span></code></p></td>
+<td><p>Block length used by target and horizon.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>R/source alignment:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>R source</p></th>
+<th class="head"><p>Python contract</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MCS/R/MCSprocedure.R::MCSprocedure</span></code></p></td>
+<td><p>Sequential elimination until one model remains; included/excluded sets are determined by <code class="docutils literal notranslate"><span class="pre">p-Value</span> <span class="pre">for</span> <span class="pre">H_{0,M_k}</span></code> relative to <code class="docutils literal notranslate"><span class="pre">alpha</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MCS/R/internalFunctions.R::GetD</span></code></p></td>
+<td><p>Pairwise loss differences <code class="docutils literal notranslate"><span class="pre">d_ij</span></code> and model-average differences <code class="docutils literal notranslate"><span class="pre">d_i.</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MCS/R/internalFunctions.R::GetIndices</span></code></p></td>
+<td><p>Default <code class="docutils literal notranslate"><span class="pre">bootstrap_method=&quot;mcs_fixed_block&quot;</span></code> samples consecutive fixed blocks and truncates to sample length.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">block_length=&quot;auto&quot;</span></code> follows the same rule conceptually as R <code class="docutils literal notranslate"><span class="pre">k=NULL</span></code>: choose
+the maximum selected AR order across loss columns and enforce a minimum of 3.
+For bit-level reproducibility across software stacks, pass an explicit integer
+<code class="docutils literal notranslate"><span class="pre">block_length</span></code>.</p>
+</section>
+<section id="iterative-model-confidence-set">
+<h3>iterative_model_confidence_set<a class="headerlink" href="#iterative-model-confidence-set" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">iterative_model_confidence_set</span><span class="p">(</span>
+    <span class="n">loss_panel</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">bootstrap_method</span><span class="o">=</span><span class="s2">&quot;mcs_fixed_block&quot;</span><span class="p">,</span>
+    <span class="n">statistic</span><span class="o">=</span><span class="s2">&quot;max&quot;</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span>
+    <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;model_id&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Descriptive alias for <code class="docutils literal notranslate"><span class="pre">model_confidence_set(...)</span></code>. It calls the same exact MCS
+engine and returns the same fields, with
+<code class="docutils literal notranslate"><span class="pre">metadata_schema.kind=&quot;iterative_model_confidence_set&quot;</span></code> so older code can trace
+which callable produced the result.</p>
+</section>
+</section>
+<section id="residual-diagnostics">
+<h2>Residual Diagnostics<a class="headerlink" href="#residual-diagnostics" title="Link to this heading">#</a></h2>
+<section id="id1">
+<h3>residual_diagnostics<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">residual_diagnostics</span><span class="p">(</span>
+    <span class="n">residuals</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">&quot;ljung_box_q&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;arch_lm&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;jarque_bera_normality&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;durbin_watson&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">lag</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">model_df</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">exog</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">demean_arch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: residual series. Output: one-row-per-test pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> with
+<code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">statistic</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value</span></code>, <code class="docutils literal notranslate"><span class="pre">decision</span></code>, <code class="docutils literal notranslate"><span class="pre">lag_used</span></code>, <code class="docutils literal notranslate"><span class="pre">df</span></code>, <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>,
+<code class="docutils literal notranslate"><span class="pre">source_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_reference</span></code>, <code class="docutils literal notranslate"><span class="pre">r_alignment</span></code>, and <code class="docutils literal notranslate"><span class="pre">status</span></code>. The result carries
+<code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_metadata_schema&quot;]</span> <span class="pre">=</span> <span class="pre">{&quot;kind&quot;:</span> <span class="pre">&quot;residual_diagnostics&quot;,</span> <span class="pre">&quot;version&quot;:</span> <span class="pre">1,</span> <span class="pre">...}</span></code>.</p>
+<p>Supported tests:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ljung_box_q</span></code></p></td>
+<td><p>Ljung-Box serial-correlation diagnostic, aligned with <code class="docutils literal notranslate"><span class="pre">stats::Box.test(type=&quot;Ljung-Box&quot;)</span></code>; <code class="docutils literal notranslate"><span class="pre">model_df</span></code> maps to R <code class="docutils literal notranslate"><span class="pre">fitdf</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">breusch_godfrey_serial_correlation</span></code></p></td>
+<td><p>Breusch-Godfrey Chisq LM diagnostic under the residual-series contract; default is equivalent to testing <code class="docutils literal notranslate"><span class="pre">residuals</span> <span class="pre">~</span> <span class="pre">1</span></code>, and <code class="docutils literal notranslate"><span class="pre">exog</span></code> supplies additional original-regression design columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">arch_lm</span></code></p></td>
+<td><p>Engle ARCH LM diagnostic, aligned with <code class="docutils literal notranslate"><span class="pre">FinTS::ArchTest</span></code>; <code class="docutils literal notranslate"><span class="pre">demean_arch=True</span></code> matches its <code class="docutils literal notranslate"><span class="pre">demean=TRUE</span></code> option.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">jarque_bera_normality</span></code></p></td>
+<td><p>Jarque-Bera normality diagnostic using the same population-moment formula as <code class="docutils literal notranslate"><span class="pre">tseries::jarque.bera.test</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">durbin_watson</span></code></p></td>
+<td><p>Durbin-Watson statistic aligned with the statistic in <code class="docutils literal notranslate"><span class="pre">lmtest::dwtest</span></code>; p-value is not supplied because <code class="docutils literal notranslate"><span class="pre">lmtest</span></code>’s exact p-value uses a model-design distribution not available from residuals alone.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Options:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lag</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+<td><p>Maximum lag for Ljung-Box, ARCH-LM, and Breusch-Godfrey.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+<td><p>Rejection level used for <code class="docutils literal notranslate"><span class="pre">decision</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_df</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Degrees of freedom consumed by the fitted model. Used in Ljung-Box p-values and ARCH-LM degrees-of-freedom adjustment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">exog</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Optional design matrix for the Breusch-Godfrey auxiliary regression. If omitted, an intercept-only design is used.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">demean_arch</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Demean residuals before ARCH-LM, matching <code class="docutils literal notranslate"><span class="pre">FinTS::ArchTest(demean=TRUE)</span></code> when enabled.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Source-alignment notes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Diagnostic</p></th>
+<th class="head"><p>Source logic</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Ljung-Box</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stats::Box.test(type=&quot;Ljung-Box&quot;)</span></code>: <code class="docutils literal notranslate"><span class="pre">Q</span> <span class="pre">=</span> <span class="pre">n(n+2)</span> <span class="pre">sum</span> <span class="pre">rho_k^2/(n-k)</span></code>, chi-squared df <code class="docutils literal notranslate"><span class="pre">lag</span> <span class="pre">-</span> <span class="pre">model_df</span></code>; <code class="docutils literal notranslate"><span class="pre">model_df</span></code> is R <code class="docutils literal notranslate"><span class="pre">fitdf</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>ARCH-LM</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">FinTS/R/ArchTest.R::ArchTest</span></code>: optionally demean residuals, embed <code class="docutils literal notranslate"><span class="pre">x^2</span></code>, regress current squared residuals on lagged squared residuals, statistic is effective sample size times auxiliary <code class="docutils literal notranslate"><span class="pre">R^2</span></code>. <code class="docutils literal notranslate"><span class="pre">model_df</span></code> is a statsmodels degrees-of-freedom adjustment beyond the R API.</p></td>
+</tr>
+<tr class="row-even"><td><p>Jarque-Bera</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tseries/R/test.R::jarque.bera.test</span></code>: population central moments, <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">skewness^2</span> <span class="pre">/</span> <span class="pre">6</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">(kurtosis</span> <span class="pre">-</span> <span class="pre">3)^2</span> <span class="pre">/</span> <span class="pre">24</span></code>, chi-squared df <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Breusch-Godfrey</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lmtest/R/bgtest.R::bgtest</span></code>: R takes a fitted model or formula. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> takes residuals and optional <code class="docutils literal notranslate"><span class="pre">exog</span></code>, then applies the same Chisq LM auxiliary formula with fill-zero lagged residual columns under that residual-series contract.</p></td>
+</tr>
+<tr class="row-even"><td><p>Durbin-Watson</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lmtest/R/dwtest.R::dwtest</span></code>: statistic <code class="docutils literal notranslate"><span class="pre">sum(diff(residuals)^2)</span> <span class="pre">/</span> <span class="pre">sum(residuals^2)</span></code>. P-values are omitted because R’s exact/asymptotic p-value depends on the original regression design matrix.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">jarque_bera_test</span></code> – Jarque-Bera normality test (single series, chi2 df=2; tseries::jarque.bera.test convention).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">granger_causality</span></code> – Granger causality test in a VAR (vars::causality; F or Wald).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">instantaneous_causality</span></code> – instantaneous (contemporaneous) causality test in a VAR.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">giacomini_white_test</span></code> – Giacomini-White (2006) CONDITIONAL predictive ability Wald test (chi2, HAC), instrument [1, dL_{t-h}].</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var_serial_test</span></code> – multivariate residual serial-correlation (Portmanteau/LM) test for a VAR (vars::serial.test).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var_normality_test</span></code> – multivariate normality (Doornik-Hansen/Lutkepohl JB) test for VAR residuals (vars::normality.test).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">var_arch_test</span></code> – multivariate ARCH-LM test for VAR residuals (vars::arch.test, Lutkepohl).</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="metrics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">macroforecast.metrics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="evaluation.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">macroforecast.evaluation</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testresult">TestResult</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-tests">Custom Tests</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-test">custom_test</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#equal-predictive-accuracy">Equal Predictive Accuracy</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dm-test">dm_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gw-test">gw_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dmp-test">dmp_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#equal-predictive-tests">equal_predictive_tests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#harvey-newbold-test">harvey_newbold_test</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#nested-and-encompassing-tests">Nested And Encompassing Tests</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#clark-west-test">clark_west_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enc-new-test">enc_new_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enc-t-test">enc_t_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#nested-tests">nested_tests</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#directional-accuracy-tests">Directional Accuracy Tests</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#directional-accuracy-test">directional_accuracy_test</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#density-and-interval-diagnostics">Density And Interval Diagnostics</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#density-interval-tests">density_interval_tests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#shortfall-de-test">shortfall_de_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dynamic-quantile-test">dynamic_quantile_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pit-histogram">pit_histogram</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pit-autocorrelation-test">pit_autocorrelation_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interval-coverage-test">interval_coverage_test</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-predictive-ability">Conditional Predictive Ability</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-predictive-ability-test">conditional_predictive_ability_test</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-model-tests">Multiple-Model Tests</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#blocked-oob-reality-check">blocked_oob_reality_check</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#superior-predictive-ability-test">superior_predictive_ability_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reality-check-test">reality_check_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stepm-test">stepm_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-confidence-set">model_confidence_set</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iterative-model-confidence-set">iterative_model_confidence_set</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#residual-diagnostics">Residual Diagnostics</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">residual_diagnostics</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/reference/tests.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/reference/tests.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

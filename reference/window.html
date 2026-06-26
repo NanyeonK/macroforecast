@@ -1,0 +1,1813 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>macroforecast.window &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/window';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="macroforecast.models" href="models.html" />
+    <link rel="prev" title="macroforecast.feature_analysis" href="feature_analysis.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Orientation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="documentation_map.html">Documentation Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_callable_coverage.html">Legacy Callable Coverage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="data.html">macroforecast.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">macroforecast.preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_analysis.html">macroforecast.data_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Feature Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="filters.html">macroforecast.filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_engineering.html">macroforecast.feature_engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_analysis.html">macroforecast.feature_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Forecast Pipeline</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.window</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.window</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-window">
+<h1>macroforecast.window<a class="headerlink" href="#macroforecast-window" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code> defines the estimation/val/test time frame. It is the object
+passed between data, feature engineering, model selection, models, and evaluation to
+answer five questions:</p>
+<ul class="simple">
+<li><p>how the pre-test estimation sample expands or rolls</p></li>
+<li><p>how validation splits are created inside the estimation sample for model selection</p></li>
+<li><p>where the final test origins start and end</p></li>
+<li><p>how far each test target horizon runs</p></li>
+<li><p>when the model is retrained versus reused</p></li>
+<li><p>where each runner stage may fit stateful operations</p></li>
+</ul>
+<p>The public unit is one <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code>. Internally it is composed in this order:
+<code class="docutils literal notranslate"><span class="pre">EstimationWindow</span></code>, <code class="docutils literal notranslate"><span class="pre">ValWindow</span></code>, <code class="docutils literal notranslate"><span class="pre">TestWindow</span></code>, then <code class="docutils literal notranslate"><span class="pre">AlignmentWindow</span></code>.</p>
+<section id="configuration-axes">
+<h2>Configuration Axes<a class="headerlink" href="#configuration-axes" title="Link to this heading">#</a></h2>
+<p>All major macro-forecasting time-frame choices are explicit:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Question</p></th>
+<th class="head"><p>Setting</p></th>
+<th class="head"><p>Where</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Should the pre-test estimation sample expand, roll, or stay fixed?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">estimation_expanding()</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_rolling()</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_fixed()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>How long is a rolling estimation sample?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">estimation_rolling(size=...)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>What is the minimum estimation sample before a test origin is allowed?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">min_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">estimation_expanding(min_size=...)</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_rolling(min_size=...)</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_fixed(min_size=...)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>How often does the final test origin move?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">step</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_origins(step=...)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Is test-origin movement row-count based or calendar based?</p></td>
+<td><p>positive integer or pandas offset</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_origins(step=1)</span></code>, <code class="docutils literal notranslate"><span class="pre">test_origins(step=&quot;1ME&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">test_origins(step=pd.offsets.MonthEnd(3))</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>How far does each final test target run?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_origins(horizon=...)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Which inner validation design is used for model selection?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_last_block()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_poos()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_expanding()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_rolling_blocks()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_blocked_kfold()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_random_kfold()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>How many time blocks are used for tail-block validation?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n_blocks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_rolling_blocks(n_blocks=...)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>How large is each time block?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">block_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_rolling_blocks(block_size=...)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>How many chronological CV folds are used?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n_splits</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_blocked_kfold(n_splits=...)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>How many randomly assigned CV folds are used?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">n_splits</span></code> and <code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_random_kfold(n_splits=...,</span> <span class="pre">random_state=...)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>How often is the model refit?</p></td>
+<td><p>positive integer or pandas offset</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">estimation_*</span> <span class="pre">(retrain_every=12)</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_*</span> <span class="pre">(retrain_every=&quot;12ME&quot;)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>How often are hyperparameters reselected?</p></td>
+<td><p>positive integer or pandas offset</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_*</span> <span class="pre">(retune_every=12)</span></code>, <code class="docutils literal notranslate"><span class="pre">val_*</span> <span class="pre">(retune_every=&quot;12ME&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Should retuning happen only when the model is refit?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">retune_on_retrain</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_*</span> <span class="pre">(retune_on_retrain=True/False)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Can skipped retune origins reuse the previous selected parameters?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">reuse_params</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_*</span> <span class="pre">(reuse_params=True/False)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Where may preprocessing, feature engineering, or model selection fit state?</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scope</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stage_policy(&quot;full_panel&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">stage_policy(&quot;origin_available&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">stage_policy(&quot;fit_window&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">stage_policy(&quot;fixed_reference&quot;)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Validation choices have explicit time-order semantics:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Design</p></th>
+<th class="head"><p>Typical use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_last_block(size=...)</span></code></p></td>
+<td><p>One final holdout block inside the estimation sample.</p></td>
+<td><p>Simple holdout model selection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val_poos(size=...)</span></code></p></td>
+<td><p>Pseudo-out-of-sample one-step tail splits.</p></td>
+<td><p>Recursive historical model selection with many tail origins.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_expanding(min_train_size=...,</span> <span class="pre">step=...,</span> <span class="pre">horizon=...)</span></code></p></td>
+<td><p>Expanding inner training sample and forward validation blocks.</p></td>
+<td><p>Walk-forward validation inside each estimation window.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val_rolling_blocks(n_blocks=...,</span> <span class="pre">block_size=...)</span></code></p></td>
+<td><p>Several consecutive tail time blocks.</p></td>
+<td><p>Time-block model selection over recent history.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_blocked_kfold(n_splits=...)</span></code></p></td>
+<td><p>Chronological blocked folds with only past data used for training.</p></td>
+<td><p>Time-aware CV. This is not random iid k-fold.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val_random_kfold(n_splits=...,</span> <span class="pre">random_state=...)</span></code></p></td>
+<td><p>Randomly assigned iid-style folds over the estimation sample.</p></td>
+<td><p>Paper replication when the original study explicitly used random folds. This is not time-safe validation.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span>
+    <span class="n">estimation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_rolling</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+        <span class="n">embargo</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">retrain_every</span><span class="o">=</span><span class="s2">&quot;12ME&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">val</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_expanding</span><span class="p">(</span>
+        <span class="n">min_train_size</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+        <span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+        <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">retune_every</span><span class="o">=</span><span class="s2">&quot;12ME&quot;</span><span class="p">,</span>
+        <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">test</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span>
+        <span class="n">first_origin</span><span class="o">=</span><span class="s2">&quot;2000-01-31&quot;</span><span class="p">,</span>
+        <span class="n">last_origin</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+        <span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+        <span class="n">step</span><span class="o">=</span><span class="s2">&quot;1ME&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">alignment</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">alignment_drop_incomplete</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Rolling estimation with time-block validation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span>
+    <span class="n">estimation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_rolling</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+        <span class="n">min_size</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+        <span class="n">embargo</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">retrain_every</span><span class="o">=</span><span class="s2">&quot;12ME&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">val</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_rolling_blocks</span><span class="p">(</span>
+        <span class="n">n_blocks</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">block_size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+        <span class="n">embargo</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">retune_every</span><span class="o">=</span><span class="s2">&quot;12ME&quot;</span><span class="p">,</span>
+        <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">test</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span>
+        <span class="n">first_origin</span><span class="o">=</span><span class="s2">&quot;2000-01-31&quot;</span><span class="p">,</span>
+        <span class="n">last_origin</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+        <span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+        <span class="n">step</span><span class="o">=</span><span class="s2">&quot;1ME&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Expanding estimation with chronological blocked CV:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span>
+    <span class="n">estimation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_expanding</span><span class="p">(</span>
+        <span class="n">min_size</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+        <span class="n">embargo</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">val</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_blocked_kfold</span><span class="p">(</span>
+        <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">embargo</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">test</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span>
+        <span class="n">first_origin</span><span class="o">=</span><span class="s2">&quot;2000-01-31&quot;</span><span class="p">,</span>
+        <span class="n">last_origin</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+        <span class="n">horizon</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">step</span><span class="o">=</span><span class="s2">&quot;1QE&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="public-functions">
+<h2>Public Functions<a class="headerlink" href="#public-functions" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Task</p></th>
+<th class="head"><p>Functions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Compose full window</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">spec()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Build from common cutoffs</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">from_cutoffs()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Configure estimation</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">estimation_expanding()</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_rolling()</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_fixed()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Configure val</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">val_last_block()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_poos()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_expanding()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_rolling_blocks()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_blocked_kfold()</span></code>, <code class="docutils literal notranslate"><span class="pre">val_random_kfold()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Configure test</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_origins()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Configure alignment</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">alignment_drop_incomplete()</span></code>, <code class="docutils literal notranslate"><span class="pre">alignment_keep_missing()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Configure runner stage timing</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stage_policy()</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_stage_policy()</span></code>, <code class="docutils literal notranslate"><span class="pre">stage_index()</span></code>, <code class="docutils literal notranslate"><span class="pre">stage_panel()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Shortcut windows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">last_block()</span></code>, <code class="docutils literal notranslate"><span class="pre">poos()</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding()</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_blocks()</span></code>, <code class="docutils literal notranslate"><span class="pre">blocked_kfold()</span></code>, <code class="docutils literal notranslate"><span class="pre">random_kfold()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Inspect windows</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WindowSpec.plan()</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowSpec.origins()</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowSpec.test_mask()</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowSpec.align()</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowSpec.to_table()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Runner handoff</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">WindowSpec.val_splits_for_origin()</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowSpec.iter_origins()</span></code>, <code class="docutils literal notranslate"><span class="pre">WindowSpec.iter_slices()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Low-level split generators</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">make_splitter()</span></code>, <code class="docutils literal notranslate"><span class="pre">last_block_split()</span></code>, <code class="docutils literal notranslate"><span class="pre">poos_split()</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding_split()</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_blocks_split()</span></code>, <code class="docutils literal notranslate"><span class="pre">blocked_kfold_split()</span></code>, <code class="docutils literal notranslate"><span class="pre">random_kfold_split()</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="stagepolicy">
+<h2>StagePolicy<a class="headerlink" href="#stagepolicy" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span>
+    <span class="n">scope</span><span class="o">=</span><span class="s2">&quot;fit_window&quot;</span><span class="p">,</span>
+    <span class="n">update</span><span class="o">=</span><span class="s2">&quot;every_origin&quot;</span><span class="p">,</span>
+    <span class="n">reference_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reference_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">apply_to</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;fit&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">),</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code> is the runner-facing timing rule for stateful stages. It is used
+as <code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_policy</span></code>, and <code class="docutils literal notranslate"><span class="pre">selection_policy</span></code> in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.run(...)</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Scope</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">full_panel</span></code></p></td>
+<td><p>Fit the stage on the complete panel once.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">origin_available</span></code></p></td>
+<td><p>Fit the stage on rows available by each origin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fit_window</span></code></p></td>
+<td><p>Fit the stage only on the model fit window.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fixed_reference</span></code></p></td>
+<td><p>Fit the stage on a fixed reference period and reuse that state.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom</span></code></p></td>
+<td><p>Use a user selector callable to choose the allowed labels. Build this with <code class="docutils literal notranslate"><span class="pre">custom_stage_policy(...)</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">update</span></code> controls how often a runner refits stateful preprocessing or feature
+engineering stages. Current accepted values are:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Update</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;every_origin&quot;</span></code></p></td>
+<td><p>Refit the stage at every test origin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;on_retrain&quot;</span></code></p></td>
+<td><p>Refit when the window row has <code class="docutils literal notranslate"><span class="pre">retrain=True</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;never&quot;</span></code></p></td>
+<td><p>Fit once at the first origin and reuse the fitted state.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Positive integer</p></td>
+<td><p>Refit every N origins.</p></td>
+</tr>
+<tr class="row-even"><td><p>Pandas date offset string, such as <code class="docutils literal notranslate"><span class="pre">&quot;12ME&quot;</span></code></p></td>
+<td><p>Refit when the current origin is at least the offset after the last update.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Selection retuning follows the validation window’s <code class="docutils literal notranslate"><span class="pre">retune_every</span></code> setting. The
+stage <code class="docutils literal notranslate"><span class="pre">update</span></code> field is mainly for fitted preprocessing state, fixed PCA
+loadings, and other feature-engineering states.</p>
+<p><code class="docutils literal notranslate"><span class="pre">stage_index(index,</span> <span class="pre">item,</span> <span class="pre">policy)</span></code> and <code class="docutils literal notranslate"><span class="pre">stage_panel(panel,</span> <span class="pre">item,</span> <span class="pre">policy)</span></code> are
+the low-level handoff helpers used by runners. They resolve the exact rows
+allowed by a policy for an origin item returned by <code class="docutils literal notranslate"><span class="pre">WindowSpec.iter_origins()</span></code>.
+This keeps policy-to-index logic in <code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code>, not in
+preprocessing, feature engineering, model, or model selection code.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">feature_policy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span>
+    <span class="s2">&quot;fixed_reference&quot;</span><span class="p">,</span>
+    <span class="n">reference_start</span><span class="o">=</span><span class="s2">&quot;2000-01-31&quot;</span><span class="p">,</span>
+    <span class="n">reference_end</span><span class="o">=</span><span class="s2">&quot;2019-12-31&quot;</span><span class="p">,</span>
+    <span class="n">update</span><span class="o">=</span><span class="s2">&quot;never&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="custom-stage-policy">
+<h3>custom_stage_policy<a class="headerlink" href="#custom-stage-policy" title="Link to this heading">#</a></h3>
+<p>Build a <code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code> whose rows are selected by user code.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">custom_stage_policy</span><span class="p">(</span>
+    <span class="n">selector</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">update</span><span class="o">=</span><span class="s2">&quot;every_origin&quot;</span><span class="p">,</span>
+    <span class="n">apply_to</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;fit&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">),</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StagePolicy</span>
+</pre></div>
+</div>
+<p>The selector receives the full index and the current origin item:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">selector</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">pandas</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">StagePolicy</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It may return:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return type</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code> or boolean <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+<td><p>Mask over the full index.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">slice</span></code></p></td>
+<td><p>Positional slice into the full index.</p></td>
+</tr>
+<tr class="row-even"><td><p>Integer positions</p></td>
+<td><p>Positional labels from the full index.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Index labels</p></td>
+<td><p>Labels to keep. Every requested label must exist in the supplied index. Duplicate requested labels raise.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The selected labels must not be empty. Missing labels and duplicate label
+requests raise instead of being silently dropped. The runner stores the policy under
+<code class="docutils literal notranslate"><span class="pre">ForecastResult.metadata[&quot;stage_policies&quot;]</span></code>; the callable itself is recorded by
+name in metadata.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">last_half_of_fit</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">policy</span><span class="p">):</span>
+    <span class="n">fit_idx</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;fit_idx&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">fit_idx</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">fit_idx</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+    <span class="n">panel</span><span class="p">,</span>
+    <span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+    <span class="n">model_selection_policy</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">custom_stage_policy</span><span class="p">(</span><span class="n">last_half_of_fit</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="windowspec">
+<h2>WindowSpec<a class="headerlink" href="#windowspec" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">WindowSpec</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+    <span class="n">estimation</span><span class="o">=</span><span class="n">EstimationWindow</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">val</span><span class="o">=</span><span class="n">ValWindow</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">test</span><span class="o">=</span><span class="n">TestWindow</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">alignment</span><span class="o">=</span><span class="n">AlignmentWindow</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">validation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">min_train_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The explicit component fields are the preferred API. The scalar validation
+fields remain to preserve the older model-selection split behavior.</p>
+<p>Output methods:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Output</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">split(n_samples)</span></code></p></td>
+<td><p>list of inner train/val integer positions</p></td>
+<td><p>Validation splits for model-parameter selection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">to_table(n_samples,</span> <span class="pre">index=None)</span></code></p></td>
+<td><p>DataFrame</p></td>
+<td><p>Inspectable inner train/val split ranges.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">plan(index)</span></code></p></td>
+<td><p>DataFrame</p></td>
+<td><p>Combined estimation/val/test execution plan.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">origins(index)</span></code></p></td>
+<td><p>DataFrame</p></td>
+<td><p>Test-origin rows with estimation, fit, and test ranges.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_splits_for_origin(index,</span> <span class="pre">origin)</span></code></p></td>
+<td><p>list of train/val positions</p></td>
+<td><p>Absolute-position inner validation splits for one test origin.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">iter_origins(index)</span></code></p></td>
+<td><p>iterator of dicts</p></td>
+<td><p>Origin metadata plus absolute <code class="docutils literal notranslate"><span class="pre">estimation_idx</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_idx</span></code>, <code class="docutils literal notranslate"><span class="pre">test_idx</span></code>, and retune-time <code class="docutils literal notranslate"><span class="pre">val_splits</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iter_slices(X,</span> <span class="pre">y=None)</span></code></p></td>
+<td><p>iterator of dicts</p></td>
+<td><p>Same origin metadata plus sliced <code class="docutils literal notranslate"><span class="pre">X_estimation</span></code>, <code class="docutils literal notranslate"><span class="pre">X_fit</span></code>, <code class="docutils literal notranslate"><span class="pre">X_test</span></code>, <code class="docutils literal notranslate"><span class="pre">y_estimation</span></code>, <code class="docutils literal notranslate"><span class="pre">y_fit</span></code>, and <code class="docutils literal notranslate"><span class="pre">y_test</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validate(index)</span></code></p></td>
+<td><p>dict</p></td>
+<td><p>User-facing validation report with <code class="docutils literal notranslate"><span class="pre">ok</span></code>, counts, errors, and warnings.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">test_mask(index)</span></code></p></td>
+<td><p>Series[bool]</p></td>
+<td><p>Dates included in the final test region.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">align(X,</span> <span class="pre">y=None)</span></code></p></td>
+<td><p>DataFrame or <code class="docutils literal notranslate"><span class="pre">(X,</span> <span class="pre">y)</span></code></p></td>
+<td><p>Feature/target index alignment.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_dict()</span></code></p></td>
+<td><p>dict</p></td>
+<td><p>JSON-ready metadata.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">origins(index)</span></code> returns:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">origin</span></code>, <code class="docutils literal notranslate"><span class="pre">origin_pos</span></code></p></td>
+<td><p>Test origin label and position.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">estimation_start</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_end</span></code></p></td>
+<td><p>Full pre-test sample available at that origin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fit_start</span></code>, <code class="docutils literal notranslate"><span class="pre">fit_end</span></code></p></td>
+<td><p>Sample actually used by the current fitted model. This can lag <code class="docutils literal notranslate"><span class="pre">estimation_*</span></code> when <code class="docutils literal notranslate"><span class="pre">retrain_every</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">test_start</span></code>, <code class="docutils literal notranslate"><span class="pre">test_end</span></code></p></td>
+<td><p>Test label range produced at the origin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">*_pos</span></code></p></td>
+<td><p>Integer positions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code>, <code class="docutils literal notranslate"><span class="pre">test_step</span></code>, <code class="docutils literal notranslate"><span class="pre">n_estimation</span></code>, <code class="docutils literal notranslate"><span class="pre">n_fit</span></code>, <code class="docutils literal notranslate"><span class="pre">n_test</span></code></p></td>
+<td><p>Window sizes and test-origin movement metadata.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">retrain</span></code>, <code class="docutils literal notranslate"><span class="pre">retrain_group</span></code></p></td>
+<td><p>Whether this origin refits the model and the refit group id.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">retrain_cadence</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_mode</span></code></p></td>
+<td><p>Refit cadence metadata and estimation-window mode.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">plan(index)</span></code> adds:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_method</span></code></p></td>
+<td><p>Inner validation splitter used when retuning.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">retune</span></code>, <code class="docutils literal notranslate"><span class="pre">retune_group</span></code></p></td>
+<td><p>Whether hyperparameters are retuned at this origin and the retune group id.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">retune_cadence</span></code></p></td>
+<td><p>Hyperparameter retuning cadence metadata.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">retune_on_retrain</span></code></p></td>
+<td><p>Whether scheduled retunes are allowed only at retrain origins.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reuse_params</span></code></p></td>
+<td><p>Whether non-retune origins may reuse the last selected parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">selection_start</span></code>, <code class="docutils literal notranslate"><span class="pre">selection_end</span></code></p></td>
+<td><p>Label range of the estimation sample used for the active model-parameter selection run. Non-retune origins reuse the previous range.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">selection_start_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">selection_end_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">n_selection</span></code></p></td>
+<td><p>Integer positions and length for the active model-selection sample.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_val_splits</span></code></p></td>
+<td><p>Number of inner train/val splits evaluated at this origin. Zero when <code class="docutils literal notranslate"><span class="pre">retune=False</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_start</span></code>, <code class="docutils literal notranslate"><span class="pre">val_end</span></code></p></td>
+<td><p>Label range covered by the validation folds at retune origins.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val_start_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">val_end_pos</span></code></p></td>
+<td><p>Integer positions for the validation-fold label range.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>All methods that consume an index require unique, monotonic increasing labels.
+This keeps time order explicit and avoids silent reordering.</p>
+<p><code class="docutils literal notranslate"><span class="pre">retrain_every</span></code> and <code class="docutils literal notranslate"><span class="pre">retune_every</span></code> are separate cadences:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">retrain_every</span></code> controls when model coefficients are refit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">retune_every</span></code> controls when hyperparameters are reselected.</p></li>
+<li><p>Positive integers count emitted test origins. <code class="docutils literal notranslate"><span class="pre">retrain_every=12</span></code> means every
+twelfth emitted origin, regardless of the calendar distance between labels.</p></li>
+<li><p>Pandas offsets use calendar time. <code class="docutils literal notranslate"><span class="pre">retrain_every=&quot;12ME&quot;</span></code> means the first
+emitted origin retrains, then the next origin on or after last retrain date
+plus 12 month ends retrains.</p></li>
+<li><p>Calendar <code class="docutils literal notranslate"><span class="pre">retrain_every</span></code> and <code class="docutils literal notranslate"><span class="pre">retune_every</span></code> require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">retune_on_retrain=True</span></code>, retuning is allowed only at origins that also retrain.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">reuse_params=True</span></code>, skipped retune origins reuse the last selected parameters.</p></li>
+<li><p>With <code class="docutils literal notranslate"><span class="pre">reuse_params=False</span></code>, <code class="docutils literal notranslate"><span class="pre">validate(index)</span></code> requires every emitted origin to retune.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">TestWindow.step</span></code> can be either row-count based or calendar based:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">step=1</span></code> means every emitted observation in the supplied index.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step=3</span></code> means every third emitted observation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step=&quot;1ME&quot;</span></code> means one month-end calendar move between test origins.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step=&quot;1QE&quot;</span></code> means one quarter-end calendar move.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step=pd.DateOffset(months=3)</span></code> or a pandas offset object such as
+<code class="docutils literal notranslate"><span class="pre">pd.offsets.MonthEnd(3)</span></code> is also accepted.</p></li>
+</ul>
+<p>Calendar/date-offset steps require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>. If the offset lands
+between two available labels, the next available label is used. For example, on
+an irregular monthly panel, a target date of May 29 moves to the first available
+index label on or after May 29. This calendar option applies to final test
+origins only; <code class="docutils literal notranslate"><span class="pre">ValWindow.step</span></code> and the low-level validation splitters remain
+row-count based because they operate inside an already selected estimation
+sample.</p>
+<p>Current row-count-only settings:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TestWindow.horizon</span></code></p></td>
+<td><p>Number of rows in the final test horizon.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EstimationWindow.embargo</span></code></p></td>
+<td><p>Number of rows between estimation end and test origin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ValWindow.step</span></code></p></td>
+<td><p>Row-count movement between inner validation splits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ValWindow.horizon</span></code></p></td>
+<td><p>Row-count length of each inner validation target block.</p></td>
+</tr>
+<tr class="row-even"><td><p>Low-level splitters</p></td>
+<td><p>All low-level splitters operate on integer positions.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Irregular calendar example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2000-01-31&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;ME&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">([</span><span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">14</span><span class="p">])</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">idx</span><span class="p">))},</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
+
+<span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">spec</span><span class="p">(</span>
+    <span class="n">estimation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_expanding</span><span class="p">(</span>
+        <span class="n">min_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">retrain_every</span><span class="o">=</span><span class="s2">&quot;6ME&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">val</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_last_block</span><span class="p">(</span>
+        <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">retune_every</span><span class="o">=</span><span class="s2">&quot;3ME&quot;</span><span class="p">,</span>
+        <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">test</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span>
+        <span class="n">first_origin</span><span class="o">=</span><span class="n">idx</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+        <span class="n">last_origin</span><span class="o">=</span><span class="n">idx</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">step</span><span class="o">=</span><span class="s2">&quot;3ME&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">plan</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">plan</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">plan</span><span class="p">[[</span>
+    <span class="s2">&quot;origin&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;test_step&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;retrain&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;retrain_cadence&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;retune&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;retune_cadence&quot;</span><span class="p">,</span>
+<span class="p">]]</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">idx[4]</span> <span class="pre">+</span> <span class="pre">3ME</span></code> lands on a missing label, the next available index label is
+used. The cadence metadata columns make the effective runner plan auditable
+without reopening the original <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">plan</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">plan</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">origin</span> <span class="ow">in</span> <span class="n">window</span><span class="o">.</span><span class="n">iter_slices</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">X_fit</span> <span class="o">=</span> <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;X_fit&quot;</span><span class="p">]</span>
+    <span class="n">y_fit</span> <span class="o">=</span> <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;y_fit&quot;</span><span class="p">]</span>
+    <span class="n">X_test</span> <span class="o">=</span> <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;X_test&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;row&quot;</span><span class="p">][</span><span class="s2">&quot;retune&quot;</span><span class="p">]:</span>
+        <span class="n">inner_splits</span> <span class="o">=</span> <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;val_splits&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Minimal runner loop:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">selected_params</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">fit</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">for</span> <span class="n">origin</span> <span class="ow">in</span> <span class="n">window</span><span class="o">.</span><span class="n">iter_slices</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;row&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;retune&quot;</span><span class="p">]:</span>
+        <span class="n">selected_params</span> <span class="o">=</span> <span class="n">your_selection_function</span><span class="p">(</span>
+            <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;X_fit&quot;</span><span class="p">],</span>
+            <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;y_fit&quot;</span><span class="p">],</span>
+            <span class="n">val_splits</span><span class="o">=</span><span class="n">origin</span><span class="p">[</span><span class="s2">&quot;val_splits&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;retrain&quot;</span><span class="p">]:</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">your_model_function</span><span class="p">(</span><span class="n">origin</span><span class="p">[</span><span class="s2">&quot;X_fit&quot;</span><span class="p">],</span> <span class="n">origin</span><span class="p">[</span><span class="s2">&quot;y_fit&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">selected_params</span><span class="p">)</span>
+    <span class="n">prediction</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">origin</span><span class="p">[</span><span class="s2">&quot;X_test&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="from-cutoffs">
+<h2>from_cutoffs<a class="headerlink" href="#from-cutoffs" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span>
+    <span class="n">test_start</span><span class="p">,</span>
+    <span class="n">test_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">estimation_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+    <span class="n">estimation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">estimation_min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;last_block&quot;</span><span class="p">,</span>
+    <span class="n">val_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">val_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">val_min_train_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">val_n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">val_random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">val_horizon</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">val_step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">val_embargo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This helper builds the same <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code> from common cutoff choices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span>
+    <span class="n">estimation_start</span><span class="o">=</span><span class="s2">&quot;1960-01-31&quot;</span><span class="p">,</span>
+    <span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;2000-01-31&quot;</span><span class="p">,</span>
+    <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rolling&quot;</span><span class="p">,</span>
+    <span class="n">estimation_size</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+    <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;last_block&quot;</span><span class="p">,</span>
+    <span class="n">val_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+    <span class="n">retrain_every</span><span class="o">=</span><span class="s2">&quot;12ME&quot;</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="s2">&quot;12ME&quot;</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="s2">&quot;1ME&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="components">
+<h2>Components<a class="headerlink" href="#components" title="Link to this heading">#</a></h2>
+<section id="estimationwindow">
+<h3>EstimationWindow<a class="headerlink" href="#estimationwindow" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">EstimationWindow</span><span class="p">(</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+    <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Builders:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_expanding</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_rolling</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+    <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">estimation_fixed</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mode</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling</span></code>, or <code class="docutils literal notranslate"><span class="pre">fixed</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start</span></code></p></td>
+<td><p>First allowed estimation label or integer position.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">end</span></code></p></td>
+<td><p>Last allowed estimation label or integer position for fixed bounds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_size</span></code></p></td>
+<td><p>Minimum estimation observations required before an origin is emitted.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">size</span></code></p></td>
+<td><p>Rolling estimation length. Required for <code class="docutils literal notranslate"><span class="pre">estimation_rolling()</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">embargo</span></code></p></td>
+<td><p>Gap between the last estimation observation and the test origin.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">retrain_every</span></code></p></td>
+<td><p>Refit cadence. Positive integers count emitted test origins; pandas offset strings or <code class="docutils literal notranslate"><span class="pre">DateOffset</span></code> objects use calendar time and require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="valwindow">
+<h3>ValWindow<a class="headerlink" href="#valwindow" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">ValWindow</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+    <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">min_train_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Builders:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_last_block</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_poos</span><span class="p">(</span>
+    <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ratio</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_expanding</span><span class="p">(</span>
+    <span class="n">min_train_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_rolling_blocks</span><span class="p">(</span>
+    <span class="n">n_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">block_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_blocked_kfold</span><span class="p">(</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">val_random_kfold</span><span class="p">(</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>Validation splitter: <code class="docutils literal notranslate"><span class="pre">last_block</span></code>, <code class="docutils literal notranslate"><span class="pre">poos</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">blocked_kfold</span></code>, or <code class="docutils literal notranslate"><span class="pre">random_kfold</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">size</span></code></p></td>
+<td><p>Explicit validation size for holdout-style splitters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ratio</span></code></p></td>
+<td><p>Validation ratio when <code class="docutils literal notranslate"><span class="pre">size</span></code> is absent.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_train_size</span></code></p></td>
+<td><p>Minimum inner training size for expanding validation inside the estimation window.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_splits</span></code></p></td>
+<td><p>Number of validation folds or blocks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p>Seed for <code class="docutils literal notranslate"><span class="pre">random_kfold</span></code> fold assignment. Ignored by temporal splitters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
+<td><p>Validation target length. Defaults to one-step validation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">step</span></code></p></td>
+<td><p>Validation split movement.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">embargo</span></code></p></td>
+<td><p>Validation-specific embargo. If absent, estimation embargo is used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">retune_every</span></code></p></td>
+<td><p>Hyperparameter retuning cadence. Positive integers count emitted test origins; pandas offset strings or <code class="docutils literal notranslate"><span class="pre">DateOffset</span></code> objects use calendar time and require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">retune_on_retrain</span></code></p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, a scheduled retune happens only when the same origin retrains the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reuse_params</span></code></p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, skipped retune origins reuse the most recent selected parameters. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, validation fails unless every origin retunes.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="testwindow">
+<h3>TestWindow<a class="headerlink" href="#testwindow" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">TestWindow</span><span class="p">(</span>
+    <span class="n">first_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">last_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">drop_incomplete</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Builder:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">test_origins</span><span class="p">(</span>
+    <span class="n">first_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">last_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">drop_incomplete</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">first_origin</span></code></p></td>
+<td><p>First final-test origin label or integer position.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">last_origin</span></code></p></td>
+<td><p>Last final-test origin label or integer position.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">horizon</span></code></p></td>
+<td><p>Test horizon length in rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">step</span></code></p></td>
+<td><p>Origin movement. Positive integers move by row count. Pandas offset strings or <code class="docutils literal notranslate"><span class="pre">DateOffset</span></code> objects move by calendar time and require a <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">drop_incomplete</span></code></p></td>
+<td><p>Drop origins whose full horizon exceeds the available index.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">exclude</span></code></p></td>
+<td><p>Sequence of <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">end)</span></code> windows removed from the test mask.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">first_origin</span></code> and <code class="docutils literal notranslate"><span class="pre">last_origin</span></code> are forecast-origin labels, not realized
+target-date labels. With a monthly index and <code class="docutils literal notranslate"><span class="pre">step=1</span></code>, the test origin moves one
+row at a time, so h-step forecasts overlap in the usual macro-forecasting
+sense. The horizon still controls target availability: an origin <code class="docutils literal notranslate"><span class="pre">t</span></code> is
+evaluable only when <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">+</span> <span class="pre">horizon</span></code> is in the supplied index. If the panel ends at
+<code class="docutils literal notranslate"><span class="pre">2017-12</span></code> and <code class="docutils literal notranslate"><span class="pre">horizon=24</span></code>, the last evaluable origin is <code class="docutils literal notranslate"><span class="pre">2015-12</span></code>; origins in
+<code class="docutils literal notranslate"><span class="pre">2016</span></code> and <code class="docutils literal notranslate"><span class="pre">2017</span></code> have no realized 24-month-ahead actual.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">drop_incomplete=True</span></code>, those tail origins are removed before the runner
+fits/evaluates them. A calendar block can therefore be empty for long horizons
+even when <code class="docutils literal notranslate"><span class="pre">step=1</span></code>; this is normal for evaluation runs and prevents RMSE/MAE
+from using forecasts without realized actuals. For future-only forecasting,
+build a forecast-only/scenario panel separately instead of scoring those tail
+origins.</p>
+</section>
+<section id="alignmentwindow">
+<h3>AlignmentWindow<a class="headerlink" href="#alignmentwindow" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">AlignmentWindow</span><span class="p">(</span>
+    <span class="n">join</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">,</span>
+    <span class="n">drop_missing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">require_full_horizon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Builders:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">alignment_drop_incomplete</span><span class="p">(</span><span class="n">join</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">,</span> <span class="n">require_full_horizon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">alignment_keep_missing</span><span class="p">(</span><span class="n">join</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">,</span> <span class="n">require_full_horizon</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">alignment_drop_incomplete()</span></code> removes rows with missing features or missing
+targets. <code class="docutils literal notranslate"><span class="pre">alignment_keep_missing()</span></code> keeps missing feature rows after index
+alignment, but with <code class="docutils literal notranslate"><span class="pre">require_full_horizon=True</span></code> it still drops rows whose target
+horizon is incomplete.</p>
+</section>
+</section>
+<section id="shortcuts">
+<h2>Shortcuts<a class="headerlink" href="#shortcuts" title="Link to this heading">#</a></h2>
+<p>Shortcuts create a full <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code> and still support model-selection-style use.</p>
+<section id="last-block">
+<h3>last_block<a class="headerlink" href="#last-block" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">last_block</span><span class="p">(</span><span class="n">validation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>One final validation block.</p>
+</section>
+<section id="poos">
+<h3>poos<a class="headerlink" href="#poos" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">poos</span><span class="p">(</span><span class="n">validation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_ratio</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Pseudo-out-of-sample one-step tail validation splits.</p>
+</section>
+<section id="expanding">
+<h3>expanding<a class="headerlink" href="#expanding" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">expanding</span><span class="p">(</span><span class="n">min_train_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Expanding inner-train window with forward validation blocks.</p>
+</section>
+<section id="rolling-blocks">
+<h3>rolling_blocks<a class="headerlink" href="#rolling-blocks" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">rolling_blocks</span><span class="p">(</span><span class="n">n_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Consecutive validation blocks over the sample tail.</p>
+</section>
+<section id="blocked-kfold">
+<h3>blocked_kfold<a class="headerlink" href="#blocked-kfold" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">blocked_kfold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Chronological blocked folds with past-only training.</p>
+</section>
+<section id="random-kfold">
+<h3>random_kfold<a class="headerlink" href="#random-kfold" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">random_kfold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Randomly assigned iid-style folds. Each fold trains on all non-validation rows,
+so the training set can contain rows later than validation rows. Use this only
+to reproduce studies whose appendix or code explicitly used random folds. For
+ordinary macro forecasting, prefer <code class="docutils literal notranslate"><span class="pre">blocked_kfold</span></code>, <code class="docutils literal notranslate"><span class="pre">poos</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding</span></code>, or
+other time-aware validation designs.</p>
+</section>
+</section>
+<section id="low-level-splitters">
+<h2>Low-Level Splitters<a class="headerlink" href="#low-level-splitters" title="Link to this heading">#</a></h2>
+<p>Low-level splitters return iterators of <code class="docutils literal notranslate"><span class="pre">(train_idx,</span> <span class="pre">val_idx)</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">last_block_split</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">validation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">poos_split</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">validation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validation_ratio</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">expanding_split</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">min_train_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">rolling_blocks_split</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_blocks</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">blocked_kfold_split</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">random_kfold_split</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="split-table">
+<h2>split_table<a class="headerlink" href="#split-table" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">split_table</span><span class="p">(</span>
+    <span class="n">window</span><span class="p">,</span>
+    <span class="n">n_samples</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_ratio</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+    <span class="n">min_train_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">embargo</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Output columns:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">split</span></code></p></td>
+<td><p>Split id.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_train</span></code>, <code class="docutils literal notranslate"><span class="pre">n_validation</span></code></p></td>
+<td><p>Split sizes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train_start</span></code>, <code class="docutils literal notranslate"><span class="pre">train_end</span></code></p></td>
+<td><p>Labels for the training range.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validation_start</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_end</span></code></p></td>
+<td><p>Labels for the validation range.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">*_pos</span></code></p></td>
+<td><p>Integer positions for the same ranges.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="aliases">
+<h2>Aliases<a class="headerlink" href="#aliases" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">normalize_window_name()</span></code> and <code class="docutils literal notranslate"><span class="pre">resolve_window()</span></code> accept these aliases.
+<code class="docutils literal notranslate"><span class="pre">resolve_stage_policy()</span></code> applies the same normalization idea to stage policies,
+accepting a <code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code>, string scope, mapping, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Alias</p></th>
+<th class="head"><p>Canonical</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">last</span></code>, <code class="docutils literal notranslate"><span class="pre">holdout</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">last_block</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">poos</span></code>, <code class="docutils literal notranslate"><span class="pre">pseudo_out_of_sample</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">poos</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding_walk_forward</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">expanding</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_series_split</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">expanding</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_walk_forward</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rolling_blocks</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">blocked_kfold</span></code>, <code class="docutils literal notranslate"><span class="pre">block_cv</span></code>, <code class="docutils literal notranslate"><span class="pre">kfold</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">blocked_kfold</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_kfold</span></code>, <code class="docutils literal notranslate"><span class="pre">iid_kfold</span></code>, <code class="docutils literal notranslate"><span class="pre">random_cv</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">random_kfold</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="feature_analysis.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">macroforecast.feature_analysis</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="models.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">macroforecast.models</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-axes">Configuration Axes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-functions">Public Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stagepolicy">StagePolicy</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-stage-policy">custom_stage_policy</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#windowspec">WindowSpec</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#from-cutoffs">from_cutoffs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#components">Components</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#estimationwindow">EstimationWindow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#valwindow">ValWindow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testwindow">TestWindow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alignmentwindow">AlignmentWindow</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shortcuts">Shortcuts</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#last-block">last_block</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#poos">poos</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expanding">expanding</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rolling-blocks">rolling_blocks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#blocked-kfold">blocked_kfold</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-kfold">random_kfold</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#low-level-splitters">Low-Level Splitters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#split-table">split_table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aliases">Aliases</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/reference/window.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/reference/window.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

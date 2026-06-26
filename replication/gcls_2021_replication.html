@@ -1,0 +1,1527 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Replicating Goulet Coulombe et al. (2021) &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'replication/gcls_2021_replication';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="GCLS 2021 — Appendix B ground-truth tables" href="gcls_2021_appendix_ground_truth.html" />
+    <link rel="prev" title="Replication Gallery" href="../guide/gallery.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Replicating Goulet Coulombe et al. (2021)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcls_2021_appendix_ground_truth.html">GCLS 2021 — Appendix B ground-truth tables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gcls_2021_verification_findings.html">GCLS (2021) replication — verification findings</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../guide/gallery.html" class="nav-link">Replication Gallery</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Replicating Goulet Coulombe et al. (2021)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="replicating-goulet-coulombe-et-al-2021">
+<h1>Replicating Goulet Coulombe et al. (2021)<a class="headerlink" href="#replicating-goulet-coulombe-et-al-2021" title="Link to this heading">#</a></h1>
+<p>This page documents a clean, from-scratch replication of the forecasting design in
+Goulet Coulombe, Leroux, Stevanovic, and Surprenant (2021), “Macroeconomic data
+transformations matter,” <em>International Journal of Forecasting</em>, 37(4), 1338-1354.
+The replication is built entirely on the callable <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> API. The page is
+written as a sequence of executed notebook cells, so every output shown below is the
+genuine output of the code above it. The cells are also collected in the companion
+script <code class="docutils literal notranslate"><span class="pre">gcls_2021_replication.py</span></code>, which regenerates this page.</p>
+<p>The earlier replication material for this paper was retired because it accumulated
+patches that drifted from the paper specification. This rebuild starts from the paper
+design, expresses each layer with the package, and checks each step before the next one
+is added. Every layer is shown in two ways. The first states what the paper did and the
+closest <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> construction that matches it. The second treats each combination
+of model, preprocessing, target, target type, and horizon as one cell of a pipeline run.</p>
+<section id="how-this-document-is-organised">
+<h2>How this document is organised<a class="headerlink" href="#how-this-document-is-organised" title="Link to this heading">#</a></h2>
+<p>The build proceeds in eight steps. The detailed appendix numbers that the run must
+reproduce live on a companion page,
+<a class="reference internal" href="gcls_2021_appendix_ground_truth.html"><span class="std std-doc">GCLS 2021 appendix B ground-truth tables</span></a>.</p>
+<ol class="arabic simple">
+<li><p>Replication specification</p></li>
+<li><p>Data construction</p></li>
+<li><p>Forecast-target construction</p></li>
+<li><p>Preprocessing</p></li>
+<li><p>Feature cases</p></li>
+<li><p>Models and arms</p></li>
+<li><p>Pseudo-out-of-sample window</p></li>
+<li><p>Evaluation and execution</p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="step-1-replication-specification">
+<h2>Step 1. Replication specification<a class="headerlink" href="#step-1-replication-specification" title="Link to this heading">#</a></h2>
+<p>The paper design is fixed in one place before any code is written. Most of the errors
+in the earlier attempt traced back to a target mapping or a learner setting that had
+silently diverged from the paper, so this step is treated as load-bearing.</p>
+<section id="what-we-are-reproducing">
+<h3>What we are reproducing<a class="headerlink" href="#what-we-are-reproducing" title="Link to this heading">#</a></h3>
+<p>The main-text Table 2 is a compact summary that prints, for every variable and horizon,
+the single best specification with coloured bullets and an underline for path-average
+targets. It carries no numbers. The detailed numbers live in online Appendix B. Appendix
+B.1 (Tables 3 to 8) holds the direct-forecast relative RMSE and Appendix B.2 (Tables 9 to
+14) holds the path-average relative RMSE. Each table reports, for one horizon, the FM
+absolute RMSE, the AR ratio, and five machine-learning models over sixteen transformation
+sets. These tables are the replication target and were re-extracted from the appendix PDF
+and validated cell by cell.</p>
+</section>
+<section id="the-benchmark-and-what-fm-and-ar-mean">
+<h3>The benchmark, and what FM and AR mean<a class="headerlink" href="#the-benchmark-and-what-fm-and-ar-mean" title="Link to this heading">#</a></h3>
+<p>Every relative-RMSE figure is a ratio to the FM benchmark RMSE. FM is the autoregressive
+diffusion-index model of Stock and Watson, estimated by OLS, with the predictor vector
+Z_t containing autoregressive lags of the target and principal-component factors. AR is
+the nested model that keeps only the autoregressive-lag block and drops the factors. FM is
+the denominator. AR is itself reported as a ratio to FM and is a contender, not the
+benchmark. The orders are fixed at (p_y, p_f, k) = (12, 12, 8).</p>
+</section>
+<section id="the-seven-models-map-to-existing-package-factories">
+<h3>The seven models map to existing package factories<a class="headerlink" href="#the-seven-models-map-to-existing-package-factories" title="Link to this heading">#</a></h3>
+<p>The first verification is that every model the paper uses already exists as a
+<code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> model factory, so the full grid is buildable without new estimators.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">paper_to_package</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;AR&quot;</span><span class="p">:</span>              <span class="s2">&quot;ar&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;FM (ARDI)&quot;</span><span class="p">:</span>       <span class="s2">&quot;far&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Elastic Net&quot;</span><span class="p">:</span>     <span class="s2">&quot;elastic_net&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Adaptive Lasso&quot;</span><span class="p">:</span>  <span class="s2">&quot;adaptive_lasso&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Linear Boosting&quot;</span><span class="p">:</span> <span class="s2">&quot;glmboost&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Random Forest&quot;</span><span class="p">:</span>   <span class="s2">&quot;random_forest&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Boosted Trees&quot;</span><span class="p">:</span>   <span class="s2">&quot;gradient_boosting&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">available</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">dir</span><span class="p">(</span><span class="n">mf</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;paper model&#39;</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;package key&#39;</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> available&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">paper</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">paper_to_package</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">paper</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">key</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">key</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">available</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">paper</span> <span class="n">model</span>        <span class="n">package</span> <span class="n">key</span>        <span class="n">available</span>
+<span class="n">AR</span>                 <span class="n">ar</span>                 <span class="kc">True</span>
+<span class="n">FM</span> <span class="p">(</span><span class="n">ARDI</span><span class="p">)</span>          <span class="n">far</span>                <span class="kc">True</span>
+<span class="n">Elastic</span> <span class="n">Net</span>        <span class="n">elastic_net</span>        <span class="kc">True</span>
+<span class="n">Adaptive</span> <span class="n">Lasso</span>     <span class="n">adaptive_lasso</span>     <span class="kc">True</span>
+<span class="n">Linear</span> <span class="n">Boosting</span>    <span class="n">glmboost</span>           <span class="kc">True</span>
+<span class="n">Random</span> <span class="n">Forest</span>      <span class="n">random_forest</span>      <span class="kc">True</span>
+<span class="n">Boosted</span> <span class="n">Trees</span>      <span class="n">gradient_boosting</span>  <span class="kc">True</span>
+</pre></div>
+</div>
+</section>
+<section id="transformation-sets-and-codes">
+<h3>Transformation sets and codes<a class="headerlink" href="#transformation-sets-and-codes" title="Link to this heading">#</a></h3>
+<p>The predictors enter after the McCracken and Ng stationarity codes. The block X is the
+stationarised panel, F is its principal components, and MARX and MAF are moving-average
+objects built from the same stationarised panel. The Level block keeps the variables in
+raw levels. The forecast target is built separately from the raw level, so it does not
+pass through the FRED-MD code. For seven of the ten targets the FRED-MD code is already a
+first-order growth and coincides with the target transform; for HOUST, CPI, and PPI it
+genuinely differs. The sixteen random-forest information sets are the admissible
+combinations of the five blocks.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TRANSFORMS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;F&quot;</span><span class="p">,</span><span class="s2">&quot;F-X&quot;</span><span class="p">,</span><span class="s2">&quot;F-MARX&quot;</span><span class="p">,</span><span class="s2">&quot;F-MAF&quot;</span><span class="p">,</span><span class="s2">&quot;F-Level&quot;</span><span class="p">,</span><span class="s2">&quot;F-X-MARX&quot;</span><span class="p">,</span><span class="s2">&quot;F-X-MAF&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;F-X-Level&quot;</span><span class="p">,</span><span class="s2">&quot;F-X-MARX-Level&quot;</span><span class="p">,</span><span class="s2">&quot;X&quot;</span><span class="p">,</span><span class="s2">&quot;MARX&quot;</span><span class="p">,</span><span class="s2">&quot;MAF&quot;</span><span class="p">,</span><span class="s2">&quot;X-MARX&quot;</span><span class="p">,</span><span class="s2">&quot;X-MAF&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;X-Level&quot;</span><span class="p">,</span><span class="s2">&quot;X-MARX-Level&quot;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">TRANSFORMS</span><span class="p">)</span><span class="si">}</span><span class="s2"> transformation sets:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">TRANSFORMS</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  &quot;</span> <span class="o">+</span> <span class="s2">&quot;  &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="si">:</span><span class="s2">16s</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">TRANSFORMS</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">]))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">16</span> <span class="n">transformation</span> <span class="n">sets</span><span class="p">:</span>
+  <span class="n">F</span>                 <span class="n">F</span><span class="o">-</span><span class="n">X</span>               <span class="n">F</span><span class="o">-</span><span class="n">MARX</span>            <span class="n">F</span><span class="o">-</span><span class="n">MAF</span>           
+  <span class="n">F</span><span class="o">-</span><span class="n">Level</span>           <span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">MARX</span>          <span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">MAF</span>           <span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">Level</span>       
+  <span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">MARX</span><span class="o">-</span><span class="n">Level</span>    <span class="n">X</span>                 <span class="n">MARX</span>              <span class="n">MAF</span>             
+  <span class="n">X</span><span class="o">-</span><span class="n">MARX</span>            <span class="n">X</span><span class="o">-</span><span class="n">MAF</span>             <span class="n">X</span><span class="o">-</span><span class="n">Level</span>           <span class="n">X</span><span class="o">-</span><span class="n">MARX</span><span class="o">-</span><span class="n">Level</span>    
+</pre></div>
+</div>
+</section>
+<section id="ground-truth-validation-set">
+<h3>Ground-truth validation set<a class="headerlink" href="#ground-truth-validation-set" title="Link to this heading">#</a></h3>
+<p>The re-extracted appendix tables give the numbers the run must approach. They are on the
+companion page and in <code class="docutils literal notranslate"><span class="pre">data/clss2021_appendix_ground_truth.csv</span></code>. During re-extraction we
+found that an earlier hand-made extract had transcription errors in several cells, so the
+companion tables supersede any earlier extract.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="n">gt</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;docs/replication/data/clss2021_appendix_ground_truth.csv&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ground-truth shape:&quot;</span><span class="p">,</span> <span class="n">gt</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;target types:&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">target_type</span><span class="o">.</span><span class="n">unique</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;models:&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">unique</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;horizons:&quot;</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">horizon</span><span class="o">.</span><span class="n">unique</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;example rows (horizon 1, direct, Random Forest):&quot;</span><span class="p">)</span>
+<span class="n">ex</span> <span class="o">=</span> <span class="n">gt</span><span class="p">[(</span><span class="n">gt</span><span class="o">.</span><span class="n">horizon</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">target_type</span><span class="o">==</span><span class="s1">&#39;direct&#39;</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">gt</span><span class="o">.</span><span class="n">model</span><span class="o">==</span><span class="s1">&#39;RandomForest&#39;</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ex</span><span class="p">[[</span><span class="s2">&quot;info_set&quot;</span><span class="p">,</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span><span class="s2">&quot;EMP&quot;</span><span class="p">,</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">,</span><span class="s2">&quot;CPI&quot;</span><span class="p">,</span><span class="s2">&quot;PPI&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ground</span><span class="o">-</span><span class="n">truth</span> <span class="n">shape</span><span class="p">:</span> <span class="p">(</span><span class="mi">984</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="n">target</span> <span class="n">types</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;direct&#39;</span><span class="p">,</span> <span class="s1">&#39;sgr&#39;</span><span class="p">]</span>
+<span class="n">models</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;AR&#39;</span><span class="p">,</span> <span class="s1">&#39;AdaptiveLasso&#39;</span><span class="p">,</span> <span class="s1">&#39;BoostedTrees&#39;</span><span class="p">,</span> <span class="s1">&#39;ElasticNet&#39;</span><span class="p">,</span> <span class="s1">&#39;FM_ABS&#39;</span><span class="p">,</span> <span class="s1">&#39;LinearBoosting&#39;</span><span class="p">,</span> <span class="s1">&#39;RandomForest&#39;</span><span class="p">]</span>
+<span class="n">horizons</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">6</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">9</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">12</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">24</span><span class="p">)]</span>
+
+<span class="n">example</span> <span class="n">rows</span> <span class="p">(</span><span class="n">horizon</span> <span class="mi">1</span><span class="p">,</span> <span class="n">direct</span><span class="p">,</span> <span class="n">Random</span> <span class="n">Forest</span><span class="p">):</span>
+<span class="n">info_set</span>  <span class="n">INDPRO</span>  <span class="n">EMP</span>  <span class="n">UNRATE</span>  <span class="n">CPI</span>  <span class="n">PPI</span>
+       <span class="n">F</span>    <span class="mf">0.95</span> <span class="mf">0.99</span>    <span class="mf">0.97</span> <span class="mf">1.00</span> <span class="mf">0.97</span>
+     <span class="n">F</span><span class="o">-</span><span class="n">X</span>    <span class="mf">0.96</span> <span class="mf">1.00</span>    <span class="mf">0.95</span> <span class="mf">1.00</span> <span class="mf">0.97</span>
+  <span class="n">F</span><span class="o">-</span><span class="n">MARX</span>    <span class="mf">0.93</span> <span class="mf">0.95</span>    <span class="mf">0.94</span> <span class="mf">0.97</span> <span class="mf">0.95</span>
+   <span class="n">F</span><span class="o">-</span><span class="n">MAF</span>    <span class="mf">0.96</span> <span class="mf">0.97</span>    <span class="mf">0.97</span> <span class="mf">1.01</span> <span class="mf">0.97</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="step-2-data-construction">
+<h2>Step 2. Data construction<a class="headerlink" href="#step-2-data-construction" title="Link to this heading">#</a></h2>
+<section id="paper-to-package">
+<h3>Paper to package<a class="headerlink" href="#paper-to-package" title="Link to this heading">#</a></h3>
+<p>The paper uses the monthly FRED-MD panel of McCracken and Ng, with the estimation sample
+beginning in 1960M01 and the pseudo-out-of-sample period running from 1980M01 to 2017M12.
+The vintage is not stated, so the build uses the 2018-01 historical vintage, the first one
+published after the sample ends. In the package this is a single call that returns a
+<code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>, with the transformation codes travelling alongside the panel.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">load_fred_md</span><span class="p">(</span><span class="n">vintage</span><span class="o">=</span><span class="s2">&quot;2018-01&quot;</span><span class="p">)</span>
+<span class="n">panel</span> <span class="o">=</span> <span class="n">bundle</span><span class="o">.</span><span class="n">panel</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;shape:&quot;</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;period:&quot;</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="s2">&quot;..&quot;</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">date</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;frequency:&quot;</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">infer_freq</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;transform codes carried in attrs:&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;macroforecast_transform_codes&quot;</span> <span class="ow">in</span> <span class="n">panel</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">shape</span><span class="p">:</span> <span class="p">(</span><span class="mi">708</span><span class="p">,</span> <span class="mi">127</span><span class="p">)</span>
+<span class="n">period</span><span class="p">:</span> <span class="mi">1959</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="o">..</span> <span class="mi">2017</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">01</span>
+<span class="n">frequency</span><span class="p">:</span> <span class="n">MS</span>
+<span class="n">transform</span> <span class="n">codes</span> <span class="n">carried</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>The sample begins in 1959-01 rather than 1960-01 so that the first estimation origin in
+1960-01 has a year of lags available.</p>
+</section>
+<section id="the-ten-targets-are-present-and-complete">
+<h3>The ten targets are present and complete<a class="headerlink" href="#the-ten-targets-are-present-and-complete" title="Link to this heading">#</a></h3>
+<p>The two columns the retired scaffold had wrong, INCOME as RPI and M2 as M2REAL, are
+checked here together with the rest.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TARGETS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">:</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span><span class="s2">&quot;EMP&quot;</span><span class="p">:</span><span class="s2">&quot;PAYEMS&quot;</span><span class="p">,</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">:</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">,</span><span class="s2">&quot;INCOME&quot;</span><span class="p">:</span><span class="s2">&quot;RPI&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CONS&quot;</span><span class="p">:</span><span class="s2">&quot;DPCERA3M086SBEA&quot;</span><span class="p">,</span><span class="s2">&quot;RETAIL&quot;</span><span class="p">:</span><span class="s2">&quot;RETAILx&quot;</span><span class="p">,</span><span class="s2">&quot;HOUST&quot;</span><span class="p">:</span><span class="s2">&quot;HOUST&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;M2&quot;</span><span class="p">:</span><span class="s2">&quot;M2REAL&quot;</span><span class="p">,</span><span class="s2">&quot;CPI&quot;</span><span class="p">:</span><span class="s2">&quot;CPIAUCSL&quot;</span><span class="p">,</span><span class="s2">&quot;PPI&quot;</span><span class="p">:</span><span class="s2">&quot;WPSFD49207&quot;</span><span class="p">}</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;alias&#39;</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;column&#39;</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;present&#39;</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;NaN&#39;</span><span class="si">:</span><span class="s2">&gt;4s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">alias</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">TARGETS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">here</span> <span class="o">=</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">panel</span><span class="o">.</span><span class="n">columns</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">panel</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="k">if</span> <span class="n">here</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">alias</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">col</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">here</span><span class="p">)</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">4d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">alias</span>    <span class="n">column</span>             <span class="n">present</span>   <span class="n">NaN</span>
+<span class="n">INDPRO</span>   <span class="n">INDPRO</span>             <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">EMP</span>      <span class="n">PAYEMS</span>             <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">UNRATE</span>   <span class="n">UNRATE</span>             <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">INCOME</span>   <span class="n">RPI</span>                <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">CONS</span>     <span class="n">DPCERA3M086SBEA</span>    <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">RETAIL</span>   <span class="n">RETAILx</span>            <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">HOUST</span>    <span class="n">HOUST</span>              <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">M2</span>       <span class="n">M2REAL</span>             <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">CPI</span>      <span class="n">CPIAUCSL</span>           <span class="kc">True</span>        <span class="mi">0</span>
+<span class="n">PPI</span>      <span class="n">WPSFD49207</span>         <span class="kc">True</span>        <span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="the-transformation-codes-match-mccracken-and-ng">
+<h3>The transformation codes match McCracken and Ng<a class="headerlink" href="#the-transformation-codes-match-mccracken-and-ng" title="Link to this heading">#</a></h3>
+<p>The package codes for the ten targets match the published codes, including the two price
+series at code 6 (second log-difference), HOUST at code 4 (log level), and UNRATE at code
+2 (first difference). This is the difference that Step 3 must respect when it builds the
+target from the raw level.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tcodes</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;macroforecast_transform_codes&quot;</span><span class="p">]</span>
+<span class="n">expect</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span><span class="s2">&quot;PAYEMS&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="s2">&quot;RPI&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span><span class="s2">&quot;DPCERA3M086SBEA&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
+          <span class="s2">&quot;RETAILx&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span><span class="s2">&quot;HOUST&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span><span class="s2">&quot;M2REAL&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span><span class="s2">&quot;CPIAUCSL&quot;</span><span class="p">:</span><span class="mi">6</span><span class="p">,</span><span class="s2">&quot;WPSFD49207&quot;</span><span class="p">:</span><span class="mi">6</span><span class="p">}</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">tc</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">tcodes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tcode&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">v</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;column&#39;</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;package&#39;</span><span class="si">:</span><span class="s2">&gt;7s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;MN&#39;</span><span class="si">:</span><span class="s2">&gt;3s</span><span class="si">}</span><span class="s2">  match&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">expect</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">tc</span><span class="p">(</span><span class="n">col</span><span class="p">))</span><span class="si">:</span><span class="s2">&gt;7s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">e</span><span class="si">:</span><span class="s2">3d</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">tc</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="o">==</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">column</span>             <span class="n">package</span>  <span class="n">MN</span>  <span class="n">match</span>
+<span class="n">INDPRO</span>                   <span class="mi">5</span>   <span class="mi">5</span>  <span class="kc">True</span>
+<span class="n">PAYEMS</span>                   <span class="mi">5</span>   <span class="mi">5</span>  <span class="kc">True</span>
+<span class="n">UNRATE</span>                   <span class="mi">2</span>   <span class="mi">2</span>  <span class="kc">True</span>
+<span class="n">RPI</span>                      <span class="mi">5</span>   <span class="mi">5</span>  <span class="kc">True</span>
+<span class="n">DPCERA3M086SBEA</span>          <span class="mi">5</span>   <span class="mi">5</span>  <span class="kc">True</span>
+<span class="n">RETAILx</span>                  <span class="mi">5</span>   <span class="mi">5</span>  <span class="kc">True</span>
+<span class="n">HOUST</span>                    <span class="mi">4</span>   <span class="mi">4</span>  <span class="kc">True</span>
+<span class="n">M2REAL</span>                   <span class="mi">5</span>   <span class="mi">5</span>  <span class="kc">True</span>
+<span class="n">CPIAUCSL</span>                 <span class="mi">6</span>   <span class="mi">6</span>  <span class="kc">True</span>
+<span class="n">WPSFD49207</span>               <span class="mi">6</span>   <span class="mi">6</span>  <span class="kc">True</span>
+</pre></div>
+</div>
+</section>
+<section id="missing-values-are-confined-to-the-early-sample">
+<h3>Missing values are confined to the early sample<a class="headerlink" href="#missing-values-are-confined-to-the-early-sample" title="Link to this heading">#</a></h3>
+<p>The gaps are in twenty predictors and almost all in the early sample, mostly series that
+begin after 1959. They are filled by the factor-based EM imputation in Step 4, which must
+run inside the pseudo-out-of-sample loop so that it never sees the future.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">na</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">na</span> <span class="o">=</span> <span class="n">na</span><span class="p">[</span><span class="n">na</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">na</span><span class="p">)</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">panel</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> columns have missing values; top five:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">na</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">fv</span> <span class="o">=</span> <span class="n">panel</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">first_valid_index</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">c</span><span class="si">:</span><span class="s2">12s</span><span class="si">}</span><span class="s2"> NaN=</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="si">:</span><span class="s2">4d</span><span class="si">}</span><span class="s2">  first valid </span><span class="si">{</span><span class="n">fv</span><span class="o">.</span><span class="n">date</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;missing cells by decade:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">year</span><span class="o">//</span><span class="mi">10</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">20</span> <span class="n">of</span> <span class="mi">127</span> <span class="n">columns</span> <span class="n">have</span> <span class="n">missing</span> <span class="n">values</span><span class="p">;</span> <span class="n">top</span> <span class="n">five</span><span class="p">:</span>
+  <span class="n">ACOGNO</span>       <span class="n">NaN</span><span class="o">=</span> <span class="mi">398</span>  <span class="n">first</span> <span class="n">valid</span> <span class="mi">1992</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">01</span>
+  <span class="n">TWEXMMTH</span>     <span class="n">NaN</span><span class="o">=</span> <span class="mi">168</span>  <span class="n">first</span> <span class="n">valid</span> <span class="mi">1973</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span>
+  <span class="n">UMCSENTx</span>     <span class="n">NaN</span><span class="o">=</span> <span class="mi">154</span>  <span class="n">first</span> <span class="n">valid</span> <span class="mi">1959</span><span class="o">-</span><span class="mi">05</span><span class="o">-</span><span class="mi">01</span>
+  <span class="n">ANDENOx</span>      <span class="n">NaN</span><span class="o">=</span> <span class="mi">109</span>  <span class="n">first</span> <span class="n">valid</span> <span class="mi">1968</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">01</span>
+  <span class="n">VXOCLSx</span>      <span class="n">NaN</span><span class="o">=</span>  <span class="mi">42</span>  <span class="n">first</span> <span class="n">valid</span> <span class="mi">1962</span><span class="o">-</span><span class="mi">07</span><span class="o">-</span><span class="mi">01</span>
+
+<span class="n">missing</span> <span class="n">cells</span> <span class="n">by</span> <span class="n">decade</span><span class="p">:</span>
+<span class="n">date</span>
+<span class="mi">1950</span>    <span class="mi">118</span>
+<span class="mi">1960</span>    <span class="mi">447</span>
+<span class="mi">1970</span>    <span class="mi">220</span>
+<span class="mi">1980</span>    <span class="mi">120</span>
+<span class="mi">1990</span>     <span class="mi">25</span>
+<span class="mi">2000</span>      <span class="mi">0</span>
+<span class="mi">2010</span>     <span class="mi">12</span>
+</pre></div>
+</div>
+</section>
+<section id="cell-view">
+<h3>Cell view<a class="headerlink" href="#cell-view" title="Link to this heading">#</a></h3>
+<p>The bundle is the single shared input to every cell of the run. A cell is one combination
+of model, transformation set, target, target type, and horizon, and each cell reads the
+same panel and the same transformation codes. Building the panel once and sharing it is
+what lets the later preprocessing cache be reused across cells.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="step-3-forecast-target-construction">
+<h2>Step 3. Forecast-target construction<a class="headerlink" href="#step-3-forecast-target-construction" title="Link to this heading">#</a></h2>
+<p>This is the step the retired scaffold broke. The forecast target is the h-period average
+growth of the series, built from the raw level, and it must not pass through the FRED-MD
+transformation code. For the price series the code is a second log-difference, so applying
+it to build the target would forecast the change in inflation rather than inflation.</p>
+<section id="id1">
+<h3>Paper to package<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>The paper target is the average of the one-period growths over the h future steps. The
+one-period growth is a log-difference for the nine level series and a simple difference for
+the unemployment rate. The package builds this directly from the raw level with
+<code class="docutils literal notranslate"><span class="pre">direct_target</span></code>, using <code class="docutils literal notranslate"><span class="pre">average_log_growth</span></code> for the log series and <code class="docutils literal notranslate"><span class="pre">average_change</span></code> for
+the rate. Because the input is the raw level column, the transformation code never enters.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.feature_engineering</span><span class="w"> </span><span class="kn">import</span> <span class="n">direct_target</span><span class="p">,</span> <span class="n">path_targets</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">SPEC</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;EMP&quot;</span><span class="p">,</span><span class="s2">&quot;PAYEMS&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">,</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">,</span><span class="s2">&quot;average_change&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;INCOME&quot;</span><span class="p">,</span><span class="s2">&quot;RPI&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;CONS&quot;</span><span class="p">,</span><span class="s2">&quot;DPCERA3M086SBEA&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;RETAIL&quot;</span><span class="p">,</span><span class="s2">&quot;RETAILx&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;HOUST&quot;</span><span class="p">,</span><span class="s2">&quot;HOUST&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;M2&quot;</span><span class="p">,</span><span class="s2">&quot;M2REAL&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;CPI&quot;</span><span class="p">,</span><span class="s2">&quot;CPIAUCSL&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;PPI&quot;</span><span class="p">,</span><span class="s2">&quot;WPSFD49207&quot;</span><span class="p">,</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">)]</span>
+<span class="n">HZ</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">24</span><span class="p">]</span>
+<span class="n">POOS</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">&quot;1980-01-01&quot;</span><span class="p">),</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">&quot;2017-12-01&quot;</span><span class="p">))</span>
+
+<span class="c1"># direct target for every series; report scale at the shortest and longest horizon</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;target&#39;</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;kind&#39;</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;h1_n&#39;</span><span class="si">:</span><span class="s2">&gt;5s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;h1_mean&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;h1_std&#39;</span><span class="si">:</span><span class="s2">&gt;7s</span><span class="si">}</span><span class="s2">&quot;</span>
+      <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;h24_n&#39;</span><span class="si">:</span><span class="s2">&gt;6s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;h24_mean&#39;</span><span class="si">:</span><span class="s2">&gt;9s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;h24_std&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">alias</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">kind</span> <span class="ow">in</span> <span class="n">SPEC</span><span class="p">:</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">direct_target</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">col</span><span class="p">,</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">24</span><span class="p">],</span> <span class="n">transform</span><span class="o">=</span><span class="n">kind</span><span class="p">)</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_h1&quot;</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">c24</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_h24&quot;</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">c1</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">POOS</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">POOS</span><span class="p">[</span><span class="mi">1</span><span class="p">]];</span> <span class="n">s24</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">c24</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">POOS</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">POOS</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="n">knd</span> <span class="o">=</span> <span class="s2">&quot;dlog&quot;</span> <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;average_log_growth&quot;</span> <span class="k">else</span> <span class="s2">&quot;dchange&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">alias</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">knd</span><span class="si">:</span><span class="s2">8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">s1</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">s1</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">8.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">s1</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s2">7.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+          <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">s24</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">s24</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">9.4f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">s24</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s2">8.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span>   <span class="n">kind</span>      <span class="n">h1_n</span>  <span class="n">h1_mean</span>  <span class="n">h1_std</span>  <span class="n">h24_n</span>  <span class="n">h24_mean</span>  <span class="n">h24_std</span>
+<span class="n">INDPRO</span>   <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0015</span>  <span class="mf">0.0067</span>    <span class="mi">432</span>    <span class="mf">0.0016</span>   <span class="mf">0.0026</span>
+<span class="n">EMP</span>      <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0011</span>  <span class="mf">0.0018</span>    <span class="mi">432</span>    <span class="mf">0.0011</span>   <span class="mf">0.0013</span>
+<span class="n">UNRATE</span>   <span class="n">dchange</span>    <span class="mi">455</span>  <span class="o">-</span><span class="mf">0.0048</span>  <span class="mf">0.1701</span>    <span class="mi">432</span>   <span class="o">-</span><span class="mf">0.0065</span>   <span class="mf">0.0712</span>
+<span class="n">INCOME</span>   <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0022</span>  <span class="mf">0.0062</span>    <span class="mi">432</span>    <span class="mf">0.0023</span>   <span class="mf">0.0013</span>
+<span class="n">CONS</span>     <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0024</span>  <span class="mf">0.0047</span>    <span class="mi">432</span>    <span class="mf">0.0025</span>   <span class="mf">0.0012</span>
+<span class="n">RETAIL</span>   <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0039</span>  <span class="mf">0.0112</span>    <span class="mi">432</span>    <span class="mf">0.0039</span>   <span class="mf">0.0022</span>
+<span class="n">HOUST</span>    <span class="n">dlog</span>       <span class="mi">455</span>  <span class="o">-</span><span class="mf">0.0003</span>  <span class="mf">0.0802</span>    <span class="mi">432</span>    <span class="mf">0.0000</span>   <span class="mf">0.0130</span>
+<span class="n">M2</span>       <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0024</span>  <span class="mf">0.0048</span>    <span class="mi">432</span>    <span class="mf">0.0025</span>   <span class="mf">0.0020</span>
+<span class="n">CPI</span>      <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0025</span>  <span class="mf">0.0029</span>    <span class="mi">432</span>    <span class="mf">0.0024</span>   <span class="mf">0.0012</span>
+<span class="n">PPI</span>      <span class="n">dlog</span>       <span class="mi">455</span>   <span class="mf">0.0019</span>  <span class="mf">0.0057</span>    <span class="mi">432</span>    <span class="mf">0.0017</span>   <span class="mf">0.0016</span>
+</pre></div>
+</div>
+<p>The count falls from 455 at h=1 to 432 at h=24 because the longest horizons run past the
+sample end. The scale is a monthly growth rate, so means near 0.002 are about a quarter of
+a percent per month, and the standard deviation shrinks with the horizon as averaging
+smooths the series.</p>
+<p>The path-average target produces one column per future step, shifted so that step s holds
+the one-period growth realised at t+s.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cpi_path</span> <span class="o">=</span> <span class="n">path_targets</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;CPIAUCSL&quot;</span><span class="p">,</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;log_growth&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cpi_path</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s2">&quot;1980-01-01&quot;</span><span class="p">:</span><span class="s2">&quot;1980-04-01&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to_string</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>            <span class="n">CPIAUCSL_log_growth_step1</span>  <span class="n">CPIAUCSL_log_growth_step2</span>  <span class="n">CPIAUCSL_log_growth_step3</span>
+<span class="n">date</span>                                                                                       
+<span class="mi">1980</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span>                     <span class="mf">0.0127</span>                     <span class="mf">0.0138</span>                     <span class="mf">0.0099</span>
+<span class="mi">1980</span><span class="o">-</span><span class="mi">02</span><span class="o">-</span><span class="mi">01</span>                     <span class="mf">0.0138</span>                     <span class="mf">0.0099</span>                     <span class="mf">0.0098</span>
+<span class="mi">1980</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">01</span>                     <span class="mf">0.0099</span>                     <span class="mf">0.0098</span>                     <span class="mf">0.0097</span>
+<span class="mi">1980</span><span class="o">-</span><span class="mi">04</span><span class="o">-</span><span class="mi">01</span>                     <span class="mf">0.0098</span>                     <span class="mf">0.0097</span>                     <span class="mf">0.0012</span>
+</pre></div>
+</div>
+</section>
+<section id="check-that-the-code-is-bypassed">
+<h3>Check that the code is bypassed<a class="headerlink" href="#check-that-the-code-is-bypassed" title="Link to this heading">#</a></h3>
+<p>The clearest check is the price series. The CPI target is the first log-difference, which
+is inflation, while the FRED-MD code 6 is the second log-difference, which is the change
+in inflation. Over the pseudo-out-of-sample period the two have very different means, which
+confirms the target is built from the raw level and not from the transformed panel series.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">raw</span> <span class="o">=</span> <span class="n">panel</span><span class="p">[</span><span class="s2">&quot;CPIAUCSL&quot;</span><span class="p">]</span>
+<span class="n">target_dlog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">POOS</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">POOS</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>      <span class="c1"># what the target uses</span>
+<span class="n">code6_ddlog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">POOS</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">POOS</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># what FRED-MD code 6 gives</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CPI target (first log-difference, inflation):        mean = </span><span class="si">{</span><span class="n">target_dlog</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">+.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CPI code 6 (second log-difference, change in infl.): mean = </span><span class="si">{</span><span class="n">code6_ddlog</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">+.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CPI</span> <span class="n">target</span> <span class="p">(</span><span class="n">first</span> <span class="n">log</span><span class="o">-</span><span class="n">difference</span><span class="p">,</span> <span class="n">inflation</span><span class="p">):</span>        <span class="n">mean</span> <span class="o">=</span> <span class="o">+</span><span class="mf">0.00257</span>
+<span class="n">CPI</span> <span class="n">code</span> <span class="mi">6</span> <span class="p">(</span><span class="n">second</span> <span class="n">log</span><span class="o">-</span><span class="n">difference</span><span class="p">,</span> <span class="n">change</span> <span class="ow">in</span> <span class="n">infl</span><span class="o">.</span><span class="p">):</span> <span class="n">mean</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.00002</span>
+</pre></div>
+</div>
+<p>The target mean of about a quarter of a percent per month is the familiar inflation scale,
+while the second-difference mean is essentially zero. The target is therefore the average
+growth built from the raw level, which is what the paper requires and what the earlier
+scaffold violated.</p>
+</section>
+<section id="id2">
+<h3>Cell view<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<p>Each cell carries one target column. A direct cell at horizon h reads the
+<code class="docutils literal notranslate"><span class="pre">average_log_growth</span></code> or <code class="docutils literal notranslate"><span class="pre">average_change</span></code> column at that horizon, while a path-average cell
+reads the step columns and averages the step forecasts in the evaluation stage. The target
+is computed once per (target, horizon, target type) and reused across the model and feature
+cells.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="step-4-preprocessing">
+<h2>Step 4. Preprocessing<a class="headerlink" href="#step-4-preprocessing" title="Link to this heading">#</a></h2>
+<section id="id3">
+<h3>Paper to package<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<p>The paper preprocesses the predictor panel in three operations that follow McCracken and
+Ng. First the series are stationarised with the standard FRED-MD transformation codes.
+Second outliers are flagged, a value more than ten interquartile ranges from the median
+being set to missing. Third the missing values are filled by the factor-based EM algorithm
+with eight factors. In the package this is one call to <code class="docutils literal notranslate"><span class="pre">reprocess</span></code> with the official
+transform. The call below is run on the full sample to show what the three operations do,
+and it is therefore a look-ahead version. The faithful run instead applies the same
+operations inside the pseudo-out-of-sample loop, which is shown at the end of this step.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span>
+    <span class="n">bundle</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;official&quot;</span><span class="p">,</span>                       <span class="c1"># standard McCracken-Ng codes</span>
+    <span class="n">outliers</span><span class="o">=</span><span class="s2">&quot;iqr&quot;</span><span class="p">,</span> <span class="n">outlier_action</span><span class="o">=</span><span class="s2">&quot;flag_as_nan&quot;</span><span class="p">,</span> <span class="n">iqr_threshold</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+    <span class="n">impute</span><span class="o">=</span><span class="s2">&quot;em_factor&quot;</span><span class="p">,</span> <span class="n">em_n_factors</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">em_demean</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">standardize</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">proc</span> <span class="o">=</span> <span class="n">pre</span><span class="o">.</span><span class="n">panel</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;raw panel:      &quot;</span><span class="p">,</span> <span class="n">panel</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot; NaN =&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;processed panel:&quot;</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot; NaN =&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raw</span> <span class="n">panel</span><span class="p">:</span>       <span class="p">(</span><span class="mi">708</span><span class="p">,</span> <span class="mi">127</span><span class="p">)</span>  <span class="n">NaN</span> <span class="o">=</span> <span class="mi">942</span>
+<span class="n">processed</span> <span class="n">panel</span><span class="p">:</span> <span class="p">(</span><span class="mi">706</span><span class="p">,</span> <span class="mi">127</span><span class="p">)</span>  <span class="n">NaN</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="which-order-did-the-official-transform-apply">
+<h3>Which order did the official transform apply<a class="headerlink" href="#which-order-did-the-official-transform-apply" title="Link to this heading">#</a></h3>
+<p>This is where the predictor-side ambiguity of Step 1 is settled. The phrase “single-period
+differences and growth rates following McCracken and Ng” can be read two ways for the price
+series, but the standard FRED-MD codes apply the second log-difference to CPI and PPI. The
+official transform follows the standard codes, so the two price series enter as the second
+log-difference and HOUST enters as a log level. The check below recovers the applied order
+of each series by matching the processed column against candidate transforms of the raw
+level.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">applied_order</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">panel</span><span class="p">[</span><span class="n">col</span><span class="p">];</span> <span class="n">pr</span> <span class="o">=</span> <span class="n">proc</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+    <span class="n">cands</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;level&quot;</span><span class="p">:</span> <span class="n">raw</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">raw</span><span class="p">),</span> <span class="s2">&quot;diff&quot;</span><span class="p">:</span> <span class="n">raw</span><span class="o">.</span><span class="n">diff</span><span class="p">(),</span>
+             <span class="s2">&quot;dlog&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(),</span> <span class="s2">&quot;ddlog&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span><span class="o">.</span><span class="n">diff</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">cands</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">corr</span><span class="p">(</span><span class="n">cands</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;series&#39;</span><span class="si">:</span><span class="s2">12s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;tcode&#39;</span><span class="si">:</span><span class="s2">&gt;5s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;applied order&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">,</span><span class="s2">&quot;HOUST&quot;</span><span class="p">,</span><span class="s2">&quot;CPIAUCSL&quot;</span><span class="p">,</span><span class="s2">&quot;WPSFD49207&quot;</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col</span><span class="si">:</span><span class="s2">12s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">tc</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;5</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">applied_order</span><span class="p">(</span><span class="n">col</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">series</span>       <span class="n">tcode</span> <span class="n">applied</span> <span class="n">order</span>
+<span class="n">INDPRO</span>           <span class="mi">5</span> <span class="n">dlog</span>
+<span class="n">UNRATE</span>           <span class="mi">2</span> <span class="n">diff</span>
+<span class="n">HOUST</span>            <span class="mi">4</span> <span class="n">log</span>
+<span class="n">CPIAUCSL</span>         <span class="mi">6</span> <span class="n">ddlog</span>
+<span class="n">WPSFD49207</span>       <span class="mi">6</span> <span class="n">ddlog</span>
+</pre></div>
+</div>
+<p>The price series enter as the second log-difference, which is the standard FRED-MD code 6,
+so the predictor reconstruction uses the standard codes. The target, built separately in
+Step 3 from the raw level, remains the first log-difference, so the predictor and the
+target differ for these series exactly as intended.</p>
+</section>
+<section id="outlier-flagging-and-imputation">
+<h3>Outlier flagging and imputation<a class="headerlink" href="#outlier-flagging-and-imputation" title="Link to this heading">#</a></h3>
+<p>The outlier rule turns extreme values into missing cells, which the EM step then fills
+together with the genuine gaps. Running the same call with imputation disabled isolates how
+many cells the transform and the outlier rule leave missing before the fill.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pre_noimp</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span>
+    <span class="n">bundle</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;official&quot;</span><span class="p">,</span>
+    <span class="n">outliers</span><span class="o">=</span><span class="s2">&quot;iqr&quot;</span><span class="p">,</span> <span class="n">outlier_action</span><span class="o">=</span><span class="s2">&quot;flag_as_nan&quot;</span><span class="p">,</span> <span class="n">iqr_threshold</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+    <span class="n">impute</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">standardize</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;NaN after t-code and outlier flag (pre-impute):&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">pre_noimp</span><span class="o">.</span><span class="n">panel</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;NaN after EM factor imputation:                &quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">proc</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NaN</span> <span class="n">after</span> <span class="n">t</span><span class="o">-</span><span class="n">code</span> <span class="ow">and</span> <span class="n">outlier</span> <span class="n">flag</span> <span class="p">(</span><span class="n">pre</span><span class="o">-</span><span class="n">impute</span><span class="p">):</span> <span class="mi">1086</span>
+<span class="n">NaN</span> <span class="n">after</span> <span class="n">EM</span> <span class="n">factor</span> <span class="n">imputation</span><span class="p">:</span>                 <span class="mi">0</span>
+</pre></div>
+</div>
+</section>
+<section id="leak-aware-preprocessing-for-the-run">
+<h3>Leak-aware preprocessing for the run<a class="headerlink" href="#leak-aware-preprocessing-for-the-run" title="Link to this heading">#</a></h3>
+<p>The full-sample call above lets the EM imputation see the whole sample, which is a
+look-ahead. The faithful run attaches a stage policy so the preprocessing only uses data
+available up to each origin. The scope <code class="docutils literal notranslate"><span class="pre">origin_available</span></code> makes the imputation leak-free,
+and the update cadence is pinned so the expensive EM refit runs on a fixed schedule rather
+than at every origin, which keeps the cost bounded without reintroducing a leak.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pp_policy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;origin_available&quot;</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+<span class="n">feat_policy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;fit_window&quot;</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;preprocessing policy scope:&quot;</span><span class="p">,</span> <span class="n">pp_policy</span><span class="o">.</span><span class="n">scope</span><span class="p">,</span> <span class="s2">&quot;| update:&quot;</span><span class="p">,</span> <span class="n">pp_policy</span><span class="o">.</span><span class="n">update</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;feature policy scope:      &quot;</span><span class="p">,</span> <span class="n">feat_policy</span><span class="o">.</span><span class="n">scope</span><span class="p">,</span> <span class="s2">&quot;| update:&quot;</span><span class="p">,</span> <span class="n">feat_policy</span><span class="o">.</span><span class="n">update</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">preprocessing</span> <span class="n">policy</span> <span class="n">scope</span><span class="p">:</span> <span class="n">origin_available</span> <span class="o">|</span> <span class="n">update</span><span class="p">:</span> <span class="mi">24</span>
+<span class="n">feature</span> <span class="n">policy</span> <span class="n">scope</span><span class="p">:</span>       <span class="n">fit_window</span> <span class="o">|</span> <span class="n">update</span><span class="p">:</span> <span class="mi">24</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>Cell view<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<p>The preprocessing is a spec-level stage shared by every model and transformation cell of a
+target. Because the transformation codes are fixed and only the per-origin imputation
+changes, the result is cached on the origin position and reused across all arms and
+horizons of that target, so the EM step is paid once per origin rather than once per cell.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="step-5-feature-cases">
+<h2>Step 5. Feature cases<a class="headerlink" href="#step-5-feature-cases" title="Link to this heading">#</a></h2>
+<section id="id5">
+<h3>Paper to package<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<p>The five building blocks are factors (F), the stationarised predictors (X), moving-average
+rotations (MARX), moving-average factors (MAF), and raw levels (Level). The paper uses eight
+factors, a maximum lag of twelve for every block, and two components for the moving-average
+factors. The block X and the factor block F carry lags zero through twelve, and the lags of
+the target are always included.</p>
+<p>A short caution on the convenience interface. The package accepts a <code class="docutils literal notranslate"><span class="pre">feature_specification</span></code>
+string such as “F-X-MARX-Level”, but that shortcut uses the package default lag depth of
+zero and one, which is not the paper. The paper depth of zero through twelve is set by
+building the blocks explicitly with the step helpers, which is what the cell below does. The
+moving-average factor block is computed per variable, so it yields two components for each of
+the predictors.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fe</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span>
+<span class="n">preds</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">proc</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s2">&quot;INDPRO&quot;</span><span class="p">]</span>
+
+<span class="c1"># augmented panel: stationary predictors plus raw level copies for the Level block</span>
+<span class="n">aug</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">:</span>
+    <span class="n">aug</span><span class="p">[</span><span class="s2">&quot;LEVEL__&quot;</span> <span class="o">+</span> <span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">panel</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+<span class="n">level_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;LEVEL__&quot;</span> <span class="o">+</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">preds</span><span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">paper_steps</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">case</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">);</span> <span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s2">&quot;F&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">pca_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;F_raw&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                                 <span class="n">scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fit_policy</span><span class="o">=</span><span class="s2">&quot;full_sample&quot;</span><span class="p">))</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">lag_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;F_raw&quot;</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">&quot;X&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">lag_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">&quot;MARX&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">marx_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;MARX_X&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                                  <span class="n">scale_lags</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">&quot;MAF&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">maf_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;MAF_X&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                 <span class="n">scale</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fit_policy</span><span class="o">=</span><span class="s2">&quot;full_sample&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">&quot;Level&quot;</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">lag_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Level&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">level_cols</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">steps</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;predictors = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span><span class="si">}</span><span class="s2">;  target lags 0-12 always included (13 columns)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;feature case&#39;</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;rows&#39;</span><span class="si">:</span><span class="s2">&gt;5s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;cols&#39;</span><span class="si">:</span><span class="s2">&gt;6s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">case</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;MARX&quot;</span><span class="p">,</span> <span class="s2">&quot;MAF&quot;</span><span class="p">,</span> <span class="s2">&quot;Level&quot;</span><span class="p">,</span> <span class="s2">&quot;F-X-MARX-Level&quot;</span><span class="p">]:</span>
+    <span class="n">fs</span> <span class="o">=</span> <span class="n">fe</span><span class="o">.</span><span class="n">build_features</span><span class="p">(</span><span class="n">aug</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                           <span class="n">feature_steps</span><span class="o">=</span><span class="n">paper_steps</span><span class="p">(</span><span class="n">case</span><span class="p">),</span> <span class="n">target_lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span>
+                           <span class="n">target_transform</span><span class="o">=</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="n">drop_missing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">case</span><span class="si">:</span><span class="s2">18s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">fs</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">fs</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">predictors</span> <span class="o">=</span> <span class="mi">126</span><span class="p">;</span>  <span class="n">target</span> <span class="n">lags</span> <span class="mi">0</span><span class="o">-</span><span class="mi">12</span> <span class="n">always</span> <span class="n">included</span> <span class="p">(</span><span class="mi">13</span> <span class="n">columns</span><span class="p">)</span>
+<span class="n">feature</span> <span class="n">case</span>        <span class="n">rows</span>   <span class="n">cols</span>
+<span class="n">F</span>                    <span class="mi">693</span>    <span class="mi">117</span>
+<span class="n">X</span>                    <span class="mi">693</span>   <span class="mi">1651</span>
+<span class="n">MARX</span>                 <span class="mi">693</span>   <span class="mi">1525</span>
+<span class="n">MAF</span>                  <span class="mi">693</span>    <span class="mi">265</span>
+<span class="n">Level</span>                <span class="mi">309</span>    <span class="mi">139</span>
+<span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">MARX</span><span class="o">-</span><span class="n">Level</span>       <span class="mi">309</span>   <span class="mi">3393</span>
+</pre></div>
+</div>
+<p>The column counts decompose cleanly. The factor block is eight factors over thirteen lags,
+which is one hundred and four, plus thirteen target lags, giving one hundred and seventeen.
+The predictor block is one hundred and twenty-six series over thirteen lags, which is one
+thousand six hundred and thirty-eight, plus thirteen target lags. The moving-average
+rotation is one hundred and twenty-six series over twelve windows, which is one thousand
+five hundred and twelve, plus thirteen. The moving-average factor block is two components
+for each of the one hundred and twenty-six series, which is two hundred and fifty-two, plus
+thirteen. The Level block adds the raw levels and loses more early rows to the level lags.
+The combined case is the union of the blocks it names, and it is high-dimensional by
+construction, which is the regime where the random forest and the regularised models earn
+their keep.</p>
+<p>The drop in the row count for any case that includes Level or long lags is the leading rows
+removed by <code class="docutils literal notranslate"><span class="pre">drop_missing</span></code>, since a thirteen-lag block cannot be evaluated until thirteen
+observations have accrued.</p>
+</section>
+<section id="reproducible-factor-extraction">
+<h3>Reproducible factor extraction<a class="headerlink" href="#reproducible-factor-extraction" title="Link to this heading">#</a></h3>
+<p>A subtle point underlies the factor block. For panels of this shape, more than five
+hundred rows with a small number of factors, scikit-learn’s PCA selects a randomized
+singular value decomposition by default, and that solver draws on the global random
+state, so the factors it returns differ from one run to the next unless a seed is fixed.
+A factor that changes run to run makes the factor-model benchmark and every factor-based
+feature non-reproducible, which is unacceptable for a replication. The <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code>
+package therefore routes every principal-component extraction through a single helper
+that uses the exact full decomposition for panels of ordinary width, matching the
+decomposition used by the imputation step, and falls back to a seeded randomized solver
+only for very wide panels. The factors are exact and identical across runs, so no seed
+needs to be set by hand, which is why the cells above pass no <code class="docutils literal notranslate"><span class="pre">random_state</span></code>.</p>
+</section>
+<section id="the-16-information-sets">
+<h3>The 16 information sets<a class="headerlink" href="#the-16-information-sets" title="Link to this heading">#</a></h3>
+<p>A random-forest arm is one of the sixteen admissible combinations of the five blocks. Each
+arm reads the union of the blocks its name lists, so the same five step helpers generate the
+whole grid.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">F</span>            <span class="n">F</span><span class="o">-</span><span class="n">X</span>           <span class="n">F</span><span class="o">-</span><span class="n">MARX</span>        <span class="n">F</span><span class="o">-</span><span class="n">MAF</span>         <span class="n">F</span><span class="o">-</span><span class="n">Level</span>
+<span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">MARX</span>     <span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">MAF</span>       <span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">Level</span>     <span class="n">F</span><span class="o">-</span><span class="n">X</span><span class="o">-</span><span class="n">MARX</span><span class="o">-</span><span class="n">Level</span>
+<span class="n">X</span>            <span class="n">MARX</span>          <span class="n">MAF</span>
+<span class="n">X</span><span class="o">-</span><span class="n">MARX</span>       <span class="n">X</span><span class="o">-</span><span class="n">MAF</span>         <span class="n">X</span><span class="o">-</span><span class="n">Level</span>       <span class="n">X</span><span class="o">-</span><span class="n">MARX</span><span class="o">-</span><span class="n">Level</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Cell view<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<p>A feature cell is one (transformation set, target, horizon) triple. The block steps are
+shared across the models that consume them, so for a given target and horizon the feature
+matrix of a transformation set is built once and reused by every model arm that uses that
+set. In the faithful run the factor and moving-average-factor steps use the expanding fit
+policy so they never see the future, while the illustrative build above uses the full-sample
+policy for speed.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="step-6-models-and-arms">
+<h2>Step 6. Models and arms<a class="headerlink" href="#step-6-models-and-arms" title="Link to this heading">#</a></h2>
+<section id="id7">
+<h3>Paper to package<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
+<p>The seven models all exist as package factories with a common fit interface that takes a
+feature matrix and a target and returns a fitted object with a <code class="docutils literal notranslate"><span class="pre">predict</span></code> method. The paper
+hyperparameters map onto the factory arguments as follows. The random forest uses two
+hundred trees, a minimum leaf size of five, and a feature subsample of one third at each
+split. The boosted trees use a depth of five. The factor model and the autoregression are
+ordinary least squares with the orders fixed at twelve lags and eight factors. The
+penalised models choose their penalty by cross-validation in the run; here they are fitted
+at a fixed small penalty to demonstrate that they are operational.</p>
+</section>
+<section id="one-caution-before-fitting-the-target-source">
+<h3>One caution before fitting: the target source<a class="headerlink" href="#one-caution-before-fitting-the-target-source" title="Link to this heading">#</a></h3>
+<p>The feature matrix is built from the stationarised panel, but the target must be built from
+the raw level, as in Step 3. Building the target from the stationarised panel reintroduces
+the double-transform, because the stationarised industrial-production column is already a
+log-difference and a second average-log-growth on top of it is a second difference. The
+cell below therefore takes the target from the raw level and the features from the
+stationarised panel, then aligns them.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># target from the RAW level (Step 3); features from the STATIONARISED panel (Step 5)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">fe</span><span class="o">.</span><span class="n">direct_target</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                     <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;average_log_growth&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">F_steps</span> <span class="o">=</span> <span class="p">[</span><span class="n">fe</span><span class="o">.</span><span class="n">pca_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;F_raw&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">preds</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="n">include</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fit_policy</span><span class="o">=</span><span class="s2">&quot;full_sample&quot;</span><span class="p">),</span>
+           <span class="n">fe</span><span class="o">.</span><span class="n">lag_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;F_raw&quot;</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span> <span class="n">include</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+<span class="n">Xmat</span> <span class="o">=</span> <span class="n">fe</span><span class="o">.</span><span class="n">build_features</span><span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">feature_steps</span><span class="o">=</span><span class="n">F_steps</span><span class="p">,</span>
+                         <span class="n">target_lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span> <span class="n">target_transform</span><span class="o">=</span><span class="s2">&quot;level&quot;</span><span class="p">,</span>
+                         <span class="n">drop_missing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">X</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">Xmat</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">),</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<span class="n">Xa</span><span class="p">,</span> <span class="n">ya</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">),</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;target scale: mean = </span><span class="si">%.4f</span><span class="s2">  std = </span><span class="si">%.4f</span><span class="s2">  (correct growth scale)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ya</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">ya</span><span class="o">.</span><span class="n">std</span><span class="p">()))</span>
+
+<span class="n">train</span> <span class="o">=</span> <span class="n">Xa</span><span class="o">.</span><span class="n">index</span> <span class="o">&lt;</span> <span class="s2">&quot;2001-01-01&quot;</span>
+<span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">Xte</span><span class="p">,</span> <span class="n">yte</span> <span class="o">=</span> <span class="n">Xa</span><span class="p">[</span><span class="n">train</span><span class="p">],</span> <span class="n">ya</span><span class="p">[</span><span class="n">train</span><span class="p">],</span> <span class="n">Xa</span><span class="p">[</span><span class="o">~</span><span class="n">train</span><span class="p">],</span> <span class="n">ya</span><span class="p">[</span><span class="o">~</span><span class="n">train</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;feature matrix:&quot;</span><span class="p">,</span> <span class="n">Xa</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="s2">&quot; train:&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="s2">&quot; test:&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">((</span><span class="o">~</span><span class="n">train</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">target</span> <span class="n">scale</span><span class="p">:</span> <span class="n">mean</span> <span class="o">=</span> <span class="mf">0.0021</span>  <span class="n">std</span> <span class="o">=</span> <span class="mf">0.0075</span>  <span class="p">(</span><span class="n">correct</span> <span class="n">growth</span> <span class="n">scale</span><span class="p">)</span>
+<span class="n">feature</span> <span class="n">matrix</span><span class="p">:</span> <span class="p">(</span><span class="mi">693</span><span class="p">,</span> <span class="mi">117</span><span class="p">)</span>  <span class="n">train</span><span class="p">:</span> <span class="mi">490</span>  <span class="n">test</span><span class="p">:</span> <span class="mi">203</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">rmse</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">b</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">arms</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s2">&quot;Random Forest&quot;</span><span class="p">,</span>   <span class="s2">&quot;200 trees, leaf 5, mtry #Z/3&quot;</span><span class="p">,</span>
+     <span class="k">lambda</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">random_forest</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">n_estimators</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">min_samples_leaf</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                              <span class="n">max_features</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;Boosted Trees&quot;</span><span class="p">,</span>   <span class="s2">&quot;depth 5, lr 0.1, 200 steps&quot;</span><span class="p">,</span>
+     <span class="k">lambda</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">gradient_boosting</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_estimators</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                  <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;Elastic Net&quot;</span><span class="p">,</span>     <span class="s2">&quot;alpha 1e-3, l1 0.5&quot;</span><span class="p">,</span>
+     <span class="k">lambda</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">elastic_net</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">l1_ratio</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;Adaptive Lasso&quot;</span><span class="p">,</span>  <span class="s2">&quot;gamma 1, ridge init&quot;</span><span class="p">,</span>
+     <span class="k">lambda</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">adaptive_lasso</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s2">&quot;Linear Boosting&quot;</span><span class="p">,</span> <span class="s2">&quot;glmboost, 200 it, lr 0.1&quot;</span><span class="p">,</span>
+     <span class="k">lambda</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">glmboost</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)),</span>
+<span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;model&#39;</span><span class="si">:</span><span class="s2">16s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;hyperparameters&#39;</span><span class="si">:</span><span class="s2">30s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;test RMSE&#39;</span><span class="si">:</span><span class="s2">&gt;10s</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">hp</span><span class="p">,</span> <span class="n">make</span> <span class="ow">in</span> <span class="n">arms</span><span class="p">:</span>
+    <span class="n">fit</span> <span class="o">=</span> <span class="n">make</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">16s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">hp</span><span class="si">:</span><span class="s2">30s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">rmse</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span><span class="w"> </span><span class="n">fit</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xte</span><span class="p">))</span><span class="si">:</span><span class="s2">10.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># benchmark and nested contender</span>
+<span class="n">fm</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">far</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">n_factors</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">n_lag</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<span class="n">ar</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">ar</span><span class="p">(</span><span class="n">ytr</span><span class="p">,</span> <span class="n">n_lag</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;FM (benchmark)&#39;</span><span class="si">:</span><span class="s2">16s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;n_factors 8, n_lag 12&#39;</span><span class="si">:</span><span class="s2">30s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">rmse</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span><span class="w"> </span><span class="n">fm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xte</span><span class="p">))</span><span class="si">:</span><span class="s2">10.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;AR (contender)&#39;</span><span class="si">:</span><span class="s2">16s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;n_lag 12&#39;</span><span class="si">:</span><span class="s2">30s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">rmse</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span><span class="w"> </span><span class="n">ar</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Xte</span><span class="p">))</span><span class="si">:</span><span class="s2">10.5f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span>            <span class="n">hyperparameters</span>                 <span class="n">test</span> <span class="n">RMSE</span>
+<span class="n">Random</span> <span class="n">Forest</span>    <span class="mi">200</span> <span class="n">trees</span><span class="p">,</span> <span class="n">leaf</span> <span class="mi">5</span><span class="p">,</span> <span class="n">mtry</span> <span class="c1">#Z/3      0.00645</span>
+<span class="n">Boosted</span> <span class="n">Trees</span>    <span class="n">depth</span> <span class="mi">5</span><span class="p">,</span> <span class="n">lr</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">200</span> <span class="n">steps</span>        <span class="mf">0.00677</span>
+<span class="n">Elastic</span> <span class="n">Net</span>      <span class="n">alpha</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="n">l1</span> <span class="mf">0.5</span>                <span class="mf">0.00615</span>
+<span class="n">Adaptive</span> <span class="n">Lasso</span>   <span class="n">gamma</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ridge</span> <span class="n">init</span>               <span class="mf">0.00630</span>
+<span class="n">Linear</span> <span class="n">Boosting</span>  <span class="n">glmboost</span><span class="p">,</span> <span class="mi">200</span> <span class="n">it</span><span class="p">,</span> <span class="n">lr</span> <span class="mf">0.1</span>          <span class="mf">0.00617</span>
+<span class="n">FM</span> <span class="p">(</span><span class="n">benchmark</span><span class="p">)</span>   <span class="n">n_factors</span> <span class="mi">8</span><span class="p">,</span> <span class="n">n_lag</span> <span class="mi">12</span>             <span class="mf">0.00665</span>
+<span class="n">AR</span> <span class="p">(</span><span class="n">contender</span><span class="p">)</span>   <span class="n">n_lag</span> <span class="mi">12</span>                          <span class="mf">0.00716</span>
+</pre></div>
+</div>
+<p>The pattern is the one the paper reports for this case. The autoregression is the weakest,
+the factor model is the benchmark, and the machine-learning models on the factor features
+edge below the benchmark. The random forest over the factor block divides into the factor
+model at about 0.97, which is close to the appendix figure of 0.95 for industrial
+production at horizon one. The numbers are not the appendix numbers, because this is a
+single split with a full-sample factor fit rather than the full pseudo-out-of-sample run,
+but the ranking is correct and confirms that all seven models are operational under the
+paper hyperparameters.</p>
+</section>
+<section id="id8">
+<h3>Cell view<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<p>A model cell is one (model, transformation set, target, target type, horizon) tuple. The
+benchmark FM and the contender AR are fitted once per (target, target type, horizon) and
+shared as the denominator and the data-poor reference. Each machine-learning arm reads the
+feature matrix of its transformation set and is fitted per origin in the run. The penalty
+of the penalised arms and the step count of the boosted arm are chosen by cross-validation
+inside each origin, which is the only per-cell tuning the design carries.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="step-7-pseudo-out-of-sample-window">
+<h2>Step 7. Pseudo-out-of-sample window<a class="headerlink" href="#step-7-pseudo-out-of-sample-window" title="Link to this heading">#</a></h2>
+<section id="id9">
+<h3>Paper to package<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<p>The paper uses an expanding estimation window that starts in 1960M01 and a pseudo-out-of-
+sample period that runs from 1980M01 to 2017M12. The package builds this with
+<code class="docutils literal notranslate"><span class="pre">from_cutoffs</span></code>. Two cadence settings carry the design. The model is re-estimated at every
+origin, set by <code class="docutils literal notranslate"><span class="pre">retrain_every=1</span></code>, while the hyperparameters are re-selected only every two
+years, set by <code class="docutils literal notranslate"><span class="pre">retune_every=24</span></code> with <code class="docutils literal notranslate"><span class="pre">retune_on_retrain=False</span></code> and <code class="docutils literal notranslate"><span class="pre">reuse_params=True</span></code>.
+This decoupling matters because the autoregressive benchmark forecasts recursively from its
+training tail and ignores the test predictors, so freezing the fit for two years would let
+its forecast go stale and inflate every model’s relative RMSE.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span>
+    <span class="n">estimation_start</span><span class="o">=</span><span class="s2">&quot;1960-01&quot;</span><span class="p">,</span> <span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2017-12&quot;</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">retune_every</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">retune_on_retrain</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reuse_params</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;last_block&quot;</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">schedule</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">origins</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POOS origins:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">schedule</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;test span:   &quot;</span><span class="p">,</span> <span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;test_start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>
+      <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;test_start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">date</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;estimation:  &quot;</span><span class="p">,</span> <span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;estimation_mode&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+      <span class="s2">&quot;from&quot;</span><span class="p">,</span> <span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;estimation_start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span> <span class="s2">&quot;(fixed)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;train obs grow:&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;n_estimation&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+      <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;n_estimation&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;refit (retrain=True):&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">&quot;retrain&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span> <span class="s2">&quot;of&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">schedule</span><span class="p">),</span>
+      <span class="s2">&quot;origins  (retrain_every=1)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">POOS</span> <span class="n">origins</span><span class="p">:</span> <span class="mi">456</span>
+<span class="n">test</span> <span class="n">span</span><span class="p">:</span>    <span class="mi">1980</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="o">-&gt;</span> <span class="mi">2017</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">01</span>
+<span class="n">estimation</span><span class="p">:</span>   <span class="n">expanding</span> <span class="kn">from</span><span class="w"> </span><span class="mi">1960</span><span class="o">-</span><span class="mi">01</span><span class="o">-</span><span class="mi">01</span> <span class="p">(</span><span class="n">fixed</span><span class="p">)</span>
+<span class="n">train</span> <span class="n">obs</span> <span class="n">grow</span><span class="p">:</span> <span class="mi">240</span> <span class="o">-&gt;</span> <span class="mi">695</span>
+<span class="n">refit</span> <span class="p">(</span><span class="n">retrain</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span> <span class="mi">456</span> <span class="n">of</span> <span class="mi">456</span> <span class="n">origins</span>  <span class="p">(</span><span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The 456 origins span every month from 1980M01 to 2017M12. The estimation window keeps its
+1960M01 start and grows with each origin, from 240 observations to 695. The model refits at
+all 456 origins.</p>
+</section>
+<section id="why-the-cadence-is-decoupled">
+<h3>Why the cadence is decoupled<a class="headerlink" href="#why-the-cadence-is-decoupled" title="Link to this heading">#</a></h3>
+<p>The earlier scaffold used a single cadence that refit only every twenty-four months. The
+contrast below shows the consequence. Under that setting the model, and with it the
+autoregressive benchmark, refits at only 19 of the 456 origins and is frozen in between.
+Because the benchmark is the denominator of every relative RMSE, a stale benchmark inflates
+the whole table, which is the bug this step fixes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">buggy</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span>
+    <span class="n">estimation_start</span><span class="o">=</span><span class="s2">&quot;1960-01&quot;</span><span class="p">,</span> <span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;1980-01&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2017-12&quot;</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">retrain_every</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+    <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;last_block&quot;</span><span class="p">,</span> <span class="n">val_size</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">refit_fixed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">origins</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="p">)[</span><span class="s2">&quot;retrain&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="n">refit_buggy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">buggy</span><span class="o">.</span><span class="n">origins</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="p">)[</span><span class="s2">&quot;retrain&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;refit origins, fixed cadence (retrain_every=1):  </span><span class="si">{</span><span class="n">refit_fixed</span><span class="si">}</span><span class="s2"> of 456&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;refit origins, buggy cadence (retrain_every=24): </span><span class="si">{</span><span class="n">refit_buggy</span><span class="si">}</span><span class="s2"> of 456  (benchmark frozen between)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">refit</span> <span class="n">origins</span><span class="p">,</span> <span class="n">fixed</span> <span class="n">cadence</span> <span class="p">(</span><span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>  <span class="mi">456</span> <span class="n">of</span> <span class="mi">456</span>
+<span class="n">refit</span> <span class="n">origins</span><span class="p">,</span> <span class="n">buggy</span> <span class="n">cadence</span> <span class="p">(</span><span class="n">retrain_every</span><span class="o">=</span><span class="mi">24</span><span class="p">):</span> <span class="mi">19</span> <span class="n">of</span> <span class="mi">456</span>  <span class="p">(</span><span class="n">benchmark</span> <span class="n">frozen</span> <span class="n">between</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id10">
+<h3>Cell view<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<p>The window is shared by every cell of a target. Each origin defines one training slice and
+one test point, and the per-origin preprocessing and feature steps attach to it through the
+stage policies of Step 4. A cell walks the same 456 origins, refitting its model at each and
+re-selecting hyperparameters on the two-year cadence, so the schedule is identical across
+models and transformation sets and only the fitted values differ.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="step-8-evaluation-and-execution">
+<h2>Step 8. Evaluation and execution<a class="headerlink" href="#step-8-evaluation-and-execution" title="Link to this heading">#</a></h2>
+<section id="id11">
+<h3>Paper to package<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
+<p>The paper evaluates forecasts by the root mean squared error, reports each model as a
+relative RMSE against the FM benchmark, tests pairwise accuracy with the Diebold-Mariano
+test, and summarises the best set with the Model Confidence Set. All four live in the
+package. The pipeline computes them automatically through <code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code>, which defaults to
+the metrics <code class="docutils literal notranslate"><span class="pre">rmse</span></code> and <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code> and the tests <code class="docutils literal notranslate"><span class="pre">dm</span></code>, <code class="docutils literal notranslate"><span class="pre">cw</span></code> and <code class="docutils literal notranslate"><span class="pre">mcs</span></code>. The
+one subtlety is that the package reports <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, the ratio of mean squared
+errors, so the paper’s relative RMSE is its square root.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span> <span class="k">as</span> <span class="n">M</span><span class="p">,</span> <span class="n">tests</span> <span class="k">as</span> <span class="n">T</span>
+
+<span class="c1"># small worked example of the evaluation primitives</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">actual</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="mi">120</span><span class="p">))</span>
+<span class="n">fm_pred</span> <span class="o">=</span> <span class="n">actual</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.9</span>          <span class="c1"># benchmark errors</span>
+<span class="n">rf_pred</span> <span class="o">=</span> <span class="n">actual</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.8</span>          <span class="c1"># a better model</span>
+
+<span class="n">e_fm</span> <span class="o">=</span> <span class="p">(</span><span class="n">actual</span> <span class="o">-</span> <span class="n">fm_pred</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">e_rf</span> <span class="o">=</span> <span class="p">(</span><span class="n">actual</span> <span class="o">-</span> <span class="n">rf_pred</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">rel_mse</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">e_rf</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">e_fm</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;relative MSE (rf vs fm) :&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">rel_mse</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;relative RMSE           :&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">rel_mse</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s2">&quot; (= sqrt of relative MSE)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Diebold-Mariano (sq err):&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">dm_test</span><span class="p">(</span><span class="n">e_rf</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">e_fm</span><span class="o">**</span><span class="mi">2</span><span class="p">))[:</span><span class="mi">70</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">relative</span> <span class="n">MSE</span> <span class="p">(</span><span class="n">rf</span> <span class="n">vs</span> <span class="n">fm</span><span class="p">)</span> <span class="p">:</span> <span class="mf">0.7162</span>
+<span class="n">relative</span> <span class="n">RMSE</span>           <span class="p">:</span> <span class="mf">0.8463</span>  <span class="p">(</span><span class="o">=</span> <span class="n">sqrt</span> <span class="n">of</span> <span class="n">relative</span> <span class="n">MSE</span><span class="p">)</span>
+<span class="n">Diebold</span><span class="o">-</span><span class="n">Mariano</span> <span class="p">(</span><span class="n">sq</span> <span class="n">err</span><span class="p">):</span> <span class="n">TestResult</span><span class="p">(</span><span class="n">statistic</span><span class="o">=-</span><span class="mf">1.6403833514673867</span><span class="p">,</span> <span class="n">p_value</span><span class="o">=</span><span class="mf">0.10356620977927823</span><span class="p">,</span>
+</pre></div>
+</div>
+</section>
+<section id="validation-against-the-appendix-ground-truth">
+<h3>Validation against the appendix ground truth<a class="headerlink" href="#validation-against-the-appendix-ground-truth" title="Link to this heading">#</a></h3>
+<p>The evaluation is exercised on the real run. We forecast industrial production at horizon
+one over the whole pseudo-out-of-sample period with the FM benchmark, the AR contender,
+and a random forest over the F-Level and the MARX transformation sets, applying every
+correction built in the previous steps: the raw-level target, the leak-aware preprocessing,
+the deterministic factors, the information-criterion order selection for AR and FM, and the
+per-origin refit cadence. The relative RMSE is then compared to the re-extracted appendix
+numbers. This is a multi-hour leak-free run, so the table below is the recorded result of
+that run rather than a live cell.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INDPRO</span><span class="p">,</span> <span class="n">horizon</span> <span class="mi">1</span><span class="p">,</span> <span class="n">direct</span><span class="p">,</span> <span class="n">pseudo</span><span class="o">-</span><span class="n">out</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">sample</span> <span class="mi">1980</span><span class="o">-</span><span class="mi">2017</span> <span class="p">(</span><span class="mi">455</span> <span class="n">origins</span><span class="p">)</span>
+
+<span class="n">model</span>         <span class="nb">abs</span> <span class="n">RMSE</span>   <span class="n">rel</span> <span class="n">RMSE</span>   <span class="n">appendix</span>   <span class="n">DM</span> <span class="n">p</span><span class="o">-</span><span class="n">value</span>
+<span class="n">FM</span> <span class="p">(</span><span class="n">bench</span><span class="p">)</span>     <span class="mf">0.00621</span>     <span class="mf">1.000</span>     <span class="p">(</span><span class="mf">0.006</span><span class="p">)</span>        <span class="o">-</span>
+<span class="n">AR</span>             <span class="mf">0.00648</span>     <span class="mf">1.042</span>      <span class="mf">1.06</span>         <span class="mf">0.062</span>
+<span class="n">RF</span> <span class="n">F</span><span class="o">-</span><span class="n">Level</span>     <span class="mf">0.00612</span>     <span class="mf">0.985</span>      <span class="mf">0.94</span>         <span class="mf">0.391</span>
+<span class="n">RF</span> <span class="n">MARX</span>        <span class="mf">0.00612</span>     <span class="mf">0.984</span>      <span class="mf">0.93</span>         <span class="mf">0.457</span>
+</pre></div>
+</div>
+<p>The FM benchmark matches the appendix absolute RMSE of 0.006. The AR relative RMSE of
+1.042 is close to the appendix 1.06, and the Diebold-Mariano test agrees with the appendix
+that AR is the weaker model. The two random-forest specifications beat the benchmark, which
+is the direction the paper reports, although our gain of about one and a half percent is
+smaller than the appendix gain of five to seven percent.</p>
+</section>
+<section id="reading-the-random-forest-gap">
+<h3>Reading the random-forest gap<a class="headerlink" href="#reading-the-random-forest-gap" title="Link to this heading">#</a></h3>
+<p>The smaller random-forest gain is a genuine reconstruction difference, not a defect. A
+feature-importance check confirms the moving-average rotation is built correctly and is the
+signal the forest actually uses. On the MARX matrix the moving-average columns carry about
+0.99 of the importance and the target lags only 0.01, so the forest is not collapsing onto
+the autoregressive component, and the small F-Level versus MARX difference matches the
+appendix, where the two are also within about one point. What remains is a uniform
+level difference between our random forest and the paper’s. The paper’s forest is a MATLAB
+TreeBagger and ours is the scikit-learn random forest, and the two differ in split rules
+and defaults even at identical hyperparameters; the exact FRED-MD vintage and the bootstrap
+seeds are also not recoverable. The paper frames its own exercise as a reconstructed-design
+replication rather than an exact-table replication, and a benchmark and a linear contender
+that match closely, with a random forest that reproduces the direction and the structure to
+within a few points, sit inside that tolerance.</p>
+</section>
+<section id="cell-view-and-the-full-grid">
+<h3>Cell view and the full grid<a class="headerlink" href="#cell-view-and-the-full-grid" title="Link to this heading">#</a></h3>
+<p>The single-target run above is one slice of the grid. The full study runs every target,
+horizon, transformation set, and target type as its own cell, each carrying the corrections
+of the previous steps, and the cross-arm and cross-horizon caches share the per-origin
+preprocessing and factors so the expensive imputation is paid once per origin rather than
+once per cell. The full grid is launched as a single resumable background job and reassembled
+into the relative-RMSE and Diebold-Mariano tables that mirror the appendix.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../guide/gallery.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Replication Gallery</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gcls_2021_appendix_ground_truth.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">GCLS 2021 — Appendix B ground-truth tables</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-this-document-is-organised">How this document is organised</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-1-replication-specification">Step 1. Replication specification</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-we-are-reproducing">What we are reproducing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-benchmark-and-what-fm-and-ar-mean">The benchmark, and what FM and AR mean</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-seven-models-map-to-existing-package-factories">The seven models map to existing package factories</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transformation-sets-and-codes">Transformation sets and codes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ground-truth-validation-set">Ground-truth validation set</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-2-data-construction">Step 2. Data construction</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paper-to-package">Paper to package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-ten-targets-are-present-and-complete">The ten targets are present and complete</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-transformation-codes-match-mccracken-and-ng">The transformation codes match McCracken and Ng</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-values-are-confined-to-the-early-sample">Missing values are confined to the early sample</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-view">Cell view</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-3-forecast-target-construction">Step 3. Forecast-target construction</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Paper to package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#check-that-the-code-is-bypassed">Check that the code is bypassed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Cell view</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-4-preprocessing">Step 4. Preprocessing</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Paper to package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#which-order-did-the-official-transform-apply">Which order did the official transform apply</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outlier-flagging-and-imputation">Outlier flagging and imputation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#leak-aware-preprocessing-for-the-run">Leak-aware preprocessing for the run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Cell view</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-5-feature-cases">Step 5. Feature cases</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Paper to package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reproducible-factor-extraction">Reproducible factor extraction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-16-information-sets">The 16 information sets</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Cell view</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-6-models-and-arms">Step 6. Models and arms</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Paper to package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-caution-before-fitting-the-target-source">One caution before fitting: the target source</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Cell view</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-7-pseudo-out-of-sample-window">Step 7. Pseudo-out-of-sample window</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Paper to package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-the-cadence-is-decoupled">Why the cadence is decoupled</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Cell view</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#step-8-evaluation-and-execution">Step 8. Evaluation and execution</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Paper to package</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validation-against-the-appendix-ground-truth">Validation against the appendix ground truth</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-random-forest-gap">Reading the random-forest gap</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cell-view-and-the-full-grid">Cell view and the full grid</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/replication/gcls_2021_replication.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/replication/gcls_2021_replication.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

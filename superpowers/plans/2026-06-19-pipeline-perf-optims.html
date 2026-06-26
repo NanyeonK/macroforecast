@@ -1,0 +1,1192 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Pipeline Performance Optimizations Implementation Plan &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'superpowers/plans/2026-06-19-pipeline-perf-optims';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Pipeline Performance Optimizations Implementation Plan</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="pipeline-performance-optimizations-implementation-plan">
+<h1>Pipeline Performance Optimizations Implementation Plan<a class="headerlink" href="#pipeline-performance-optimizations-implementation-plan" title="Link to this heading">#</a></h1>
+<blockquote>
+<div><p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code class="docutils literal notranslate"><span class="pre">-</span> <span class="pre">[</span> <span class="pre">]</span></code>) syntax for tracking.</p>
+</div></blockquote>
+<p><strong>Goal:</strong> Make <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> faster (same forecasts, byte-identical) and more reproducible by adding selectable model persistence and mandatory run metadata/logs.</p>
+<p><strong>Architecture:</strong> Four independent improvements on the forecast runner and pipeline backend. (A) path_average fits one set of step-models per origin and derives every horizon by prefix-mean instead of refitting per horizon. (B) the per-origin preprocessing fit is shared across cells that use identical preprocessing via a content-addressed on-disk cache, recovering the in-process sharing that the parallel backend discards. (D) model persistence becomes a three-way choice — save the full fitted model, save only the selected best hyperparameters as a log, or save neither. (E) every run unconditionally writes a manifest of its resolved spec plus a run log, independent of any flag.</p>
+<p>Parts A and B are performance; D and E are persistence/observability. They are independent and may be implemented and merged in any order.</p>
+<p><strong>Tech Stack:</strong> Python 3.10+, pandas, numpy, pytest, uv. No new runtime dependencies.</p>
+<hr class="docutils" />
+<section id="invariants-apply-to-every-task">
+<h2>Invariants (apply to every task)<a class="headerlink" href="#invariants-apply-to-every-task" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Numerical identity is the acceptance gate.</strong> Every optimization must produce forecasts identical (to floating-point tolerance <code class="docutils literal notranslate"><span class="pre">1e-10</span></code>) to the current code on the same spec and seed. Each part has a “golden” regression test that compares optimized vs current output.</p></li>
+<li><p><strong>Leak-safety unchanged.</strong> Only horizon-independent and arm-independent computations are shared. A step-<code class="docutils literal notranslate"><span class="pre">s</span></code> model uses only <code class="docutils literal notranslate"><span class="pre">origin_available</span></code> rows and depends on <code class="docutils literal notranslate"><span class="pre">s</span></code> alone; a <code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code> at origin <code class="docutils literal notranslate"><span class="pre">O</span></code> uses only rows up to <code class="docutils literal notranslate"><span class="pre">O</span></code>. Neither depends on the forecast horizon or the model. No future row ever enters a shared artifact.</p></li>
+<li><p><strong>Per-model preprocessing is respected.</strong> Models differ in required preprocessing (<code class="docutils literal notranslate"><span class="pre">requires_scaling</span></code>, <code class="docutils literal notranslate"><span class="pre">recommended_preprocessing</span></code> in <code class="docutils literal notranslate"><span class="pre">mf.list_model_specs()</span></code>). The preprocessing cache key includes a hash of the exact <code class="docutils literal notranslate"><span class="pre">PreprocessSpec</span></code> used, so two arms share a fit only when their preprocessing is identical. Arms that set <code class="docutils literal notranslate"><span class="pre">Arm(preprocessing=...)</span></code> get their own spec hash and never collide with the shared one.</p></li>
+<li><p><strong>Do not run heavy tests while the GCLS grid is live.</strong> All tests in this plan use tiny synthetic panels, short windows, cheap imputation (<code class="docutils literal notranslate"><span class="pre">impute=&quot;none&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;median&quot;</span></code>, never <code class="docutils literal notranslate"><span class="pre">&quot;em_factor&quot;</span></code>), and single-process execution (<code class="docutils literal notranslate"><span class="pre">n_jobs=1</span></code>) unless a task explicitly tests the parallel backend with a 2-cell toy spec. Never launch a full grid.</p></li>
+<li><p><strong>Test against the worktree code, not the editable install.</strong> Run every test with <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> pointing at the worktree root so the edited package shadows the main-checkout editable install:
+<code class="docutils literal notranslate"><span class="pre">PYTHONPATH=/home/nanyeon99/project/macroforecast/.claude/worktrees/perf-pipeline-optims</span> <span class="pre">/home/nanyeon99/project/macroforecast/.venv/bin/python</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">...</span></code></p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="file-structure">
+<h2>File Structure<a class="headerlink" href="#file-structure" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Responsibility</p></th>
+<th class="head"><p>Part</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/runner.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_fit_predict_path_average_origin</span></code> (generalize to a horizon list), <code class="docutils literal notranslate"><span class="pre">_run_multiple_horizons</span></code> (path_average branch)</p></td>
+<td><p>A</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests/forecasting/test_path_average_fastpath.py</span></code></p></td>
+<td><p>New. Golden-identity + fit-count + prefix-mean tests for A</p></td>
+<td><p>A</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast/preprocessing/cache.py</span></code></p></td>
+<td><p>New. Content-addressed on-disk <code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code> store, spec-hash keying</p></td>
+<td><p>B</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/runner.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_preprocessing_cache_key</span></code> (extend key with spec hash + target), prepare path reads/writes the disk store</p></td>
+<td><p>B</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast/pipeline/run.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_parallel_cell_worker</span></code> and <code class="docutils literal notranslate"><span class="pre">_run_cells</span></code> wire the disk cache dir; <code class="docutils literal notranslate"><span class="pre">_enumerate_cells</span></code> groups horizons per cell in parallel</p></td>
+<td><p>B</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_preprocessing_share.py</span></code></p></td>
+<td><p>New. Compute-count + golden-identity + per-model-isolation tests for B</p></td>
+<td><p>B</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/runner.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">_store_model_fit</span></code> split into model vs params writers; dispatch honors <code class="docutils literal notranslate"><span class="pre">model_persistence</span></code></p></td>
+<td><p>D</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast/pipeline/spec.py</span></code> + <code class="docutils literal notranslate"><span class="pre">pipeline/run.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_persistence</span></code> field on the spec/run; <code class="docutils literal notranslate"><span class="pre">save_models</span></code> back-compat alias</p></td>
+<td><p>D</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/forecasting/test_model_persistence.py</span></code></p></td>
+<td><p>New. model/params/none mode tests, non-tuned graceful, back-compat</p></td>
+<td><p>D</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast/pipeline/run.py</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> always writes <code class="docutils literal notranslate"><span class="pre">run_manifest.json</span></code> + <code class="docutils literal notranslate"><span class="pre">run.log</span></code> to the run output dir</p></td>
+<td><p>E</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_run_manifest.py</span></code></p></td>
+<td><p>New. Manifest always written, required keys, log captures failures, not disableable</p></td>
+<td><p>E</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<hr class="docutils" />
+<section id="part-a-path-average-fast-path">
+<h2>Part A — path_average fast-path<a class="headerlink" href="#part-a-path-average-fast-path" title="Link to this heading">#</a></h2>
+<p><strong>Current behavior (verified):</strong> <code class="docutils literal notranslate"><span class="pre">_run_multiple_horizons</span></code> (runner.py:630) calls <code class="docutils literal notranslate"><span class="pre">run()</span></code> once per horizon (<code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">horizon_value</span> <span class="pre">in</span> <span class="pre">horizons</span></code>, line 697). For path_average each call enters <code class="docutils literal notranslate"><span class="pre">_fit_predict_path_average_origin</span></code> (runner.py:1764) which loops <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">step</span> <span class="pre">in</span> <span class="pre">range(1,</span> <span class="pre">horizon+1)</span></code> fitting a fresh model per step (line 1908). Horizon <code class="docutils literal notranslate"><span class="pre">h</span></code>’s forecast is <code class="docutils literal notranslate"><span class="pre">mean(step</span> <span class="pre">predictions</span> <span class="pre">1..h)</span></code> (line ~1937). Across horizons <code class="docutils literal notranslate"><span class="pre">{1,3,6,9,12,24}</span></code> this is <code class="docutils literal notranslate"><span class="pre">1+3+6+9+12+24</span> <span class="pre">=</span> <span class="pre">55</span></code> step-fits per origin where only 24 are unique.</p>
+<p><strong>Target behavior:</strong> per origin, fit step-models <code class="docutils literal notranslate"><span class="pre">1..max(horizons)</span></code> once, then emit each requested horizon <code class="docutils literal notranslate"><span class="pre">h</span></code> as <code class="docutils literal notranslate"><span class="pre">mean(predictions[1..h])</span></code>.</p>
+<section id="task-a1-pin-the-golden-baseline-for-path-average">
+<h3>Task A1: Pin the golden baseline for path_average<a class="headerlink" href="#task-a1-pin-the-golden-baseline-for-path-average" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Test: <code class="docutils literal notranslate"><span class="pre">tests/forecasting/test_path_average_fastpath.py</span></code> (create)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Write a golden-output fixture test (captures CURRENT behavior)</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arm</span><span class="p">,</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">TargetSpec</span><span class="p">,</span> <span class="n">pipeline_spec</span><span class="p">,</span> <span class="n">run_pipeline</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_toy_spec</span><span class="p">(</span><span class="n">horizons</span><span class="p">):</span>
+    <span class="c1"># Deterministic synthetic monthly panel, cheap (no EM, no factors).</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;1990-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">panel</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="p">{</span><span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">180</span><span class="p">)),</span> <span class="s2">&quot;X1&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">180</span><span class="p">),</span>
+         <span class="s2">&quot;X2&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">180</span><span class="p">)},</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span>
+    <span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_dataset</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">tcodes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;X1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;X2&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span>
+        <span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;2000-01-01&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2004-12-01&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+        <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;last_block&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">pipeline_spec</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
+        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;path_average&quot;</span><span class="p">)],</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">horizons</span><span class="p">),</span>
+        <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+        <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;OLS&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ols&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+        <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;OLS&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,)),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_path_average_golden_baseline</span><span class="p">():</span>
+    <span class="c1"># Snapshot current forecasts; this test MUST pass before and after the change.</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_toy_spec</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
+    <span class="n">fc</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">forecasts</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Persist the snapshot on first run; compare on later runs.</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span><span class="o">,</span><span class="w"> </span><span class="nn">json</span>
+    <span class="n">snap</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.golden.json&quot;</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">fc</span><span class="p">[[</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;prediction&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span>
+        <span class="n">date</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">snap</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">snap</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+    <span class="k">assert</span> <span class="n">payload</span> <span class="o">==</span> <span class="n">expected</span>
+</pre></div>
+</div>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Verify the API used by the fixture is real</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-c</span> <span class="pre">&quot;import</span> <span class="pre">macroforecast</span> <span class="pre">as</span> <span class="pre">mf;</span> <span class="pre">print(hasattr(mf.data,'custom_dataset'),</span> <span class="pre">'tcodes-arg-check')&quot;</span></code>
+Expected: confirm <code class="docutils literal notranslate"><span class="pre">custom_dataset</span></code> signature accepts a tcode mapping. If the arg name differs (e.g. <code class="docutils literal notranslate"><span class="pre">transform_codes</span></code>/<code class="docutils literal notranslate"><span class="pre">tcode_map</span></code>), fix the fixture to match before proceeding. (<code class="docutils literal notranslate"><span class="pre">$WT</span></code> = worktree root, <code class="docutils literal notranslate"><span class="pre">$PY</span></code> = <code class="docutils literal notranslate"><span class="pre">.venv/bin/python</span></code>.)</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Run the baseline test to generate the snapshot</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/forecasting/test_path_average_fastpath.py::test_path_average_golden_baseline</span> <span class="pre">-v</span></code>
+Expected: PASS (snapshot written first run, compared thereafter).</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Commit the baseline</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>tests/forecasting/test_path_average_fastpath.py<span class="w"> </span>tests/forecasting/test_path_average_fastpath.golden.json
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;test(path_average): pin golden baseline before fast-path&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="task-a2-add-fit-count-and-prefix-mean-behavioral-tests">
+<h3>Task A2: Add fit-count and prefix-mean behavioral tests<a class="headerlink" href="#task-a2-add-fit-count-and-prefix-mean-behavioral-tests" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Test: <code class="docutils literal notranslate"><span class="pre">tests/forecasting/test_path_average_fastpath.py</span></code> (modify)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Write a test asserting step-models are fit once per origin (not per horizon)</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_path_average_fits_each_step_once_per_origin</span><span class="p">(</span><span class="n">monkeypatch</span><span class="p">):</span>
+    <span class="c1"># Count model fits via a spy on the ols model spec callable.</span>
+    <span class="n">calls</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast.models</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">models</span>
+    <span class="n">real_ols</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ols</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">spy_ols</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">calls</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">real_ols</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+    <span class="n">monkeypatch</span><span class="o">.</span><span class="n">setattr</span><span class="p">(</span><span class="n">models</span><span class="p">,</span> <span class="s2">&quot;ols&quot;</span><span class="p">,</span> <span class="n">spy_ols</span><span class="p">,</span> <span class="n">raising</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Also patch the registry resolution path if model strings bypass the module attr.</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_toy_spec</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">]))</span>
+    <span class="c1"># max horizon = 6 =&gt; 6 unique step-models per origin. With ~60 test origins and</span>
+    <span class="c1"># retrain_every=1, fits == 6 * n_origins. BEFORE the fix it is (1+3+6)=10 * n_origins.</span>
+    <span class="c1"># Assert the optimized count equals 6 * n_origins (computed from the window).</span>
+    <span class="n">n_origins</span> <span class="o">=</span> <span class="mi">60</span>  <span class="c1"># 2000-01..2004-12 monthly, expanding, h up to 6 (drop_incomplete)</span>
+    <span class="k">assert</span> <span class="n">calls</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">n_origins</span>  <span class="c1"># fast-path target; current code would exceed this</span>
+</pre></div>
+</div>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Write a test asserting horizon h == prefix-mean of step predictions</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_path_average_is_prefix_mean</span><span class="p">():</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_toy_spec</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
+    <span class="n">fc</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">forecasts</span>
+    <span class="c1"># For a shared origin/date, the h=3 path-average prediction must equal the mean</span>
+    <span class="c1"># of the underlying steps 1..3, and h=2 the mean of steps 1..2. We assert the</span>
+    <span class="c1"># cross-horizon monotone-consistency the prefix-mean implies on this DGP.</span>
+    <span class="n">piv</span> <span class="o">=</span> <span class="n">fc</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s2">&quot;prediction&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">piv</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Run both tests against CURRENT code</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/forecasting/test_path_average_fastpath.py</span> <span class="pre">-v</span></code>
+Expected: <code class="docutils literal notranslate"><span class="pre">test_path_average_fits_each_step_once_per_origin</span></code> FAILS on current code (current count = 10<em>n_origins &gt; 6</em>n_origins). The other two PASS. This proves the test discriminates.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Commit the failing discriminator</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>tests/forecasting/test_path_average_fastpath.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;test(path_average): add fit-count discriminator (currently failing)&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="task-a3-generalize-fit-predict-path-average-origin-to-a-horizon-list">
+<h3>Task A3: Generalize <code class="docutils literal notranslate"><span class="pre">_fit_predict_path_average_origin</span></code> to a horizon list<a class="headerlink" href="#task-a3-generalize-fit-predict-path-average-origin-to-a-horizon-list" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Modify: <code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/runner.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_fit_predict_path_average_origin</span></code>, ~1764-1965)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Read the function end-to-end and the caller</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">sed</span> <span class="pre">-n</span> <span class="pre">'1764,1965p'</span> <span class="pre">macroforecast/forecasting/runner.py</span></code> and <code class="docutils literal notranslate"><span class="pre">sed</span> <span class="pre">-n</span> <span class="pre">'630,721p'</span> <span class="pre">macroforecast/forecasting/runner.py</span></code>.
+Determine: how <code class="docutils literal notranslate"><span class="pre">item[&quot;forecast_horizon&quot;]</span></code>, <code class="docutils literal notranslate"><span class="pre">step_columns</span></code>, <code class="docutils literal notranslate"><span class="pre">predictions_by_step</span></code>, <code class="docutils literal notranslate"><span class="pre">prediction_frame</span></code>, <code class="docutils literal notranslate"><span class="pre">target_dates</span></code>, and the per-step <code class="docutils literal notranslate"><span class="pre">target_availability_by_step</span></code> are built, and how records are emitted (the <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">origin_label,</span> <span class="pre">path_values</span> <span class="pre">in</span> <span class="pre">prediction_frame.iterrows()</span></code> loop).</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Change the fitting loop to use <code class="docutils literal notranslate"><span class="pre">max_horizon</span></code> and keep all step predictions</strong></p></li>
+</ul>
+<p>Implementation approach (show the concrete edit in the PR): accept <code class="docutils literal notranslate"><span class="pre">horizons:</span> <span class="pre">list[int]</span></code> on the item (<code class="docutils literal notranslate"><span class="pre">item[&quot;forecast_horizons&quot;]</span></code>); set <code class="docutils literal notranslate"><span class="pre">max_h</span> <span class="pre">=</span> <span class="pre">max(horizons)</span></code>; build <code class="docutils literal notranslate"><span class="pre">step_columns</span></code> for <code class="docutils literal notranslate"><span class="pre">1..max_h</span></code>; the existing <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">step</span> <span class="pre">in</span> <span class="pre">range(1,</span> <span class="pre">max_h+1)</span></code> loop already populates <code class="docutils literal notranslate"><span class="pre">predictions_by_step</span></code>. Do not change the per-step fit, selection, or availability logic — only the upper bound.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Emit one record set per requested horizon via prefix-mean</strong></p></li>
+</ul>
+<p>For each <code class="docutils literal notranslate"><span class="pre">h</span> <span class="pre">in</span> <span class="pre">horizons</span></code>, the prediction at an origin is <code class="docutils literal notranslate"><span class="pre">mean(predictions_by_step[s]</span> <span class="pre">for</span> <span class="pre">s</span> <span class="pre">in</span> <span class="pre">1..h)</span></code>, the target date is <code class="docutils literal notranslate"><span class="pre">_forecast_target_dates(...,</span> <span class="pre">horizon=h)</span></code>, and the per-origin emission must respect horizon <code class="docutils literal notranslate"><span class="pre">h</span></code>’s own availability (use <code class="docutils literal notranslate"><span class="pre">target_availability_by_step[str(h)]</span></code> / the existing per-step availability so a shorter horizon keeps origins a longer one drops). Reuse the existing record-construction block, parameterized by <code class="docutils literal notranslate"><span class="pre">h</span></code>.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Run the fit-count + golden tests</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/forecasting/test_path_average_fastpath.py</span> <span class="pre">-v</span></code>
+Expected: ALL pass, including the fit-count discriminator (now <code class="docutils literal notranslate"><span class="pre">==</span> <span class="pre">6*n_origins</span></code>) and the golden snapshot (byte-identical forecasts).</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 5: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>macroforecast/forecasting/runner.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;perf(path_average): fit step-models once per origin, derive horizons by prefix-mean&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="task-a4-route-run-multiple-horizons-through-the-grouped-path">
+<h3>Task A4: Route <code class="docutils literal notranslate"><span class="pre">_run_multiple_horizons</span></code> through the grouped path<a class="headerlink" href="#task-a4-route-run-multiple-horizons-through-the-grouped-path" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Modify: <code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/runner.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_run_multiple_horizons</span></code>, 630-721)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Add a path_average branch that calls the grouped origin computation once</strong></p></li>
+</ul>
+<p>Approach: when <code class="docutils literal notranslate"><span class="pre">forecast_policy</span> <span class="pre">==</span> <span class="pre">&quot;path_average&quot;</span></code>, instead of <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">horizon_value</span> <span class="pre">in</span> <span class="pre">horizons:</span> <span class="pre">run(horizon=horizon_value)</span></code>, perform a single origin sweep that builds items carrying <code class="docutils literal notranslate"><span class="pre">forecast_horizons=list(horizons)</span></code> and dispatches <code class="docutils literal notranslate"><span class="pre">_fit_predict_path_average_origin</span></code> once per origin, then assembles the per-horizon records. Reuse the existing <code class="docutils literal notranslate"><span class="pre">preprocessing_cache</span></code> so EM stays shared per origin. Keep <code class="docutils literal notranslate"><span class="pre">direct</span></code>/<code class="docutils literal notranslate"><span class="pre">direct_average</span></code>/<code class="docutils literal notranslate"><span class="pre">recursive</span></code> on the existing per-horizon loop unchanged.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Preserve per-horizon checkpoint layout</strong></p></li>
+</ul>
+<p>The current per-horizon <code class="docutils literal notranslate"><span class="pre">run()</span></code> namespaces each horizon’s checkpoint under <code class="docutils literal notranslate"><span class="pre">h&lt;h&gt;/</span></code>. The grouped path must write the same <code class="docutils literal notranslate"><span class="pre">h&lt;h&gt;/origin_*.parquet</span></code> files from the single computation so resume and downstream readers are unaffected. Write each horizon’s parquet after computing its prefix-mean, and treat an origin as done only when all its horizons are written.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Run the full Part-A test file plus a checkpoint-resume test</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/forecasting/test_path_average_fastpath.py</span> <span class="pre">-v</span></code>
+Add and run a resume test that runs the toy spec to a temp <code class="docutils literal notranslate"><span class="pre">checkpoint_path</span></code>, kills it mid-way (run half the origins), reruns, and asserts the final forecasts equal the golden snapshot.
+Expected: PASS.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>macroforecast/forecasting/runner.py<span class="w"> </span>tests/forecasting/test_path_average_fastpath.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;perf(path_average): single grouped origin sweep across horizons in _run_multiple_horizons&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="part-b-shared-preprocessing-cache-across-cells">
+<h2>Part B — shared preprocessing cache across cells<a class="headerlink" href="#part-b-shared-preprocessing-cache-across-cells" title="Link to this heading">#</a></h2>
+<p><strong>Current behavior (verified):</strong> <code class="docutils literal notranslate"><span class="pre">_enumerate_cells</span></code> (run.py:152-167) splits one horizon per cell when <code class="docutils literal notranslate"><span class="pre">n_jobs&gt;1</span></code>; the parallel worker (<code class="docutils literal notranslate"><span class="pre">_parallel_cell_worker</span></code>, run.py:208-209) passes <code class="docutils literal notranslate"><span class="pre">preprocessing_cache=None</span></code> (“No shared cache across processes”). Serial mode shares a per-target in-memory cache across arms (run.py:307-319). <code class="docutils literal notranslate"><span class="pre">_preprocessing_cache_key</span></code> (runner.py:1981) keys on <code class="docutils literal notranslate"><span class="pre">origin_pos</span></code> alone. Result: in parallel mode the horizon- and arm-independent EM fit is recomputed for every <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon)</span></code> cell — up to <code class="docutils literal notranslate"><span class="pre">arms</span> <span class="pre">×</span> <span class="pre">horizons</span></code> redundant.</p>
+<p><strong>Target behavior:</strong> the per-<code class="docutils literal notranslate"><span class="pre">(prep-spec,</span> <span class="pre">target,</span> <span class="pre">origin)</span></code> <code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code> is computed once and reused by every cell that uses identical preprocessing, across processes, while keeping fine-grained parallelism.</p>
+<section id="task-b1-design-pin-the-golden-baseline-for-pipeline-output">
+<h3>Task B1: Design + pin the golden baseline for pipeline output<a class="headerlink" href="#task-b1-design-pin-the-golden-baseline-for-pipeline-output" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Test: <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_preprocessing_share.py</span></code> (create)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Write a golden test over a 2-arm, 2-horizon toy spec in parallel mode</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arm</span><span class="p">,</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">TargetSpec</span><span class="p">,</span> <span class="n">pipeline_spec</span><span class="p">,</span> <span class="n">run_pipeline</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_toy</span><span class="p">(</span><span class="n">n_jobs</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;1990-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;S</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">160</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)}</span>
+    <span class="n">cols</span><span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">160</span><span class="p">))</span>
+    <span class="n">panel</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">);</span> <span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span>
+    <span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_dataset</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">tcodes</span><span class="o">=</span><span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">panel</span><span class="o">.</span><span class="n">columns</span><span class="p">})</span>
+    <span class="n">prep</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">preprocess_spec</span><span class="p">(</span><span class="n">transform</span><span class="o">=</span><span class="s2">&quot;official&quot;</span><span class="p">,</span> <span class="n">impute</span><span class="o">=</span><span class="s2">&quot;median&quot;</span><span class="p">,</span> <span class="n">standardize</span><span class="o">=</span><span class="s2">&quot;zscore&quot;</span><span class="p">)</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span><span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;2002-01-01&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2005-12-01&quot;</span><span class="p">,</span>
+                                 <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;last_block&quot;</span><span class="p">,</span> <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">feats</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pipeline_spec</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)],</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">window</span><span class="o">=</span><span class="n">win</span><span class="p">,</span>
+        <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;RIDGE&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">preprocessing</span><span class="o">=</span><span class="n">prep</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+              <span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;LASSO&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="n">preprocessing</span><span class="o">=</span><span class="n">prep</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">)],</span>
+        <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;RIDGE&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,)),</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_pipeline_golden_serial_equals_parallel</span><span class="p">():</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_toy</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">forecasts</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;arm&quot;</span><span class="p">,</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span><span class="s2">&quot;date&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_toy</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">forecasts</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;arm&quot;</span><span class="p">,</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span><span class="s2">&quot;date&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_frame_equal</span><span class="p">(</span><span class="n">a</span><span class="p">[[</span><span class="s2">&quot;arm&quot;</span><span class="p">,</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span><span class="s2">&quot;date&quot;</span><span class="p">,</span><span class="s2">&quot;prediction&quot;</span><span class="p">]],</span>
+                                  <span class="n">b</span><span class="p">[[</span><span class="s2">&quot;arm&quot;</span><span class="p">,</span><span class="s2">&quot;horizon&quot;</span><span class="p">,</span><span class="s2">&quot;date&quot;</span><span class="p">,</span><span class="s2">&quot;prediction&quot;</span><span class="p">]],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Run it on current code</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/pipeline/test_preprocessing_share.py::test_pipeline_golden_serial_equals_parallel</span> <span class="pre">-v</span></code>
+Expected: PASS (serial and parallel already produce identical numbers; this guards the optimization).</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>tests/pipeline/test_preprocessing_share.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;test(pipeline): pin serial==parallel golden before preprocessing cache&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="task-b2-content-addressed-on-disk-fittedpreprocessor-store">
+<h3>Task B2: Content-addressed on-disk FittedPreprocessor store<a class="headerlink" href="#task-b2-content-addressed-on-disk-fittedpreprocessor-store" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Create: <code class="docutils literal notranslate"><span class="pre">macroforecast/preprocessing/cache.py</span></code></p></li>
+<li><p>Test: <code class="docutils literal notranslate"><span class="pre">tests/preprocessing/test_fitted_cache.py</span></code> (create)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Write tests for the store (put/get, spec-hash isolation, corrupt-entry safety)</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_store_put_get_roundtrip</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span> <span class="o">...</span>        <span class="c1"># store.get(key) is None, then put, then equals</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_store_distinguishes_spec_hash</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span> <span class="o">...</span>  <span class="c1"># different PreprocessSpec -&gt; different key -&gt; no collision</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_store_atomic_write</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span> <span class="o">...</span>             <span class="c1"># interrupted write leaves no half-file readable as valid</span>
+</pre></div>
+</div>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Implement <code class="docutils literal notranslate"><span class="pre">PreprocessorStore</span></code></strong></p></li>
+</ul>
+<p>Design: a directory store. <code class="docutils literal notranslate"><span class="pre">key(prep_spec,</span> <span class="pre">target,</span> <span class="pre">origin_pos)</span> <span class="pre">-&gt;</span> <span class="pre">str</span></code> is <code class="docutils literal notranslate"><span class="pre">sha256</span></code> over a canonical serialization of the <code class="docutils literal notranslate"><span class="pre">PreprocessSpec</span></code> (its <code class="docutils literal notranslate"><span class="pre">to_dict()</span></code>), the target name, and <code class="docutils literal notranslate"><span class="pre">origin_pos</span></code>. <code class="docutils literal notranslate"><span class="pre">get(key)</span></code> loads a pickled <code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code> or returns <code class="docutils literal notranslate"><span class="pre">None</span></code>. <code class="docutils literal notranslate"><span class="pre">put(key,</span> <span class="pre">fitted)</span></code> writes to a temp file then <code class="docutils literal notranslate"><span class="pre">os.replace</span></code> (atomic) so concurrent processes never read a partial file. Reads are lock-free; duplicate concurrent writes of the same key are harmless (idempotent content).</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Run the store tests</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/preprocessing/test_fitted_cache.py</span> <span class="pre">-v</span></code>
+Expected: PASS.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>macroforecast/preprocessing/cache.py<span class="w"> </span>tests/preprocessing/test_fitted_cache.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(preprocessing): content-addressed on-disk FittedPreprocessor store&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="task-b3-key-the-runner-cache-by-spec-hash-target-origin-and-consult-the-disk-store">
+<h3>Task B3: Key the runner cache by (spec-hash, target, origin) and consult the disk store<a class="headerlink" href="#task-b3-key-the-runner-cache-by-spec-hash-target-origin-and-consult-the-disk-store" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Modify: <code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/runner.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_preprocessing_cache_key</span></code> ~1981; the prepare path ~430-440 and ~1150-1172)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Read the prepare path to find where the FittedPreprocessor is built and cached</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">sed</span> <span class="pre">-n</span> <span class="pre">'420,445p;1145,1175p;1981,2010p'</span> <span class="pre">macroforecast/forecasting/runner.py</span></code>.
+Determine the object holding <code class="docutils literal notranslate"><span class="pre">fitted_preprocessing</span></code> and how the in-memory <code class="docutils literal notranslate"><span class="pre">preprocessing_cache</span></code> dict is consulted.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Extend the cache to a two-tier lookup</strong></p></li>
+</ul>
+<p>Approach: extend <code class="docutils literal notranslate"><span class="pre">_preprocessing_cache_key</span></code> to incorporate a <code class="docutils literal notranslate"><span class="pre">PreprocessSpec</span></code> hash and the target name (not just <code class="docutils literal notranslate"><span class="pre">origin_pos</span></code>), so the key is safe to share across cells and never collides across different preprocessing (per-model isolation, Invariant 3). On a miss in the in-memory dict, consult the on-disk <code class="docutils literal notranslate"><span class="pre">PreprocessorStore</span></code> (get); on a store miss, compute as today and <code class="docutils literal notranslate"><span class="pre">put</span></code> it. Guard with a feature flag/env so the disk store is opt-in until validated.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Run B1 golden + a compute-count test</strong></p></li>
+</ul>
+<p>Add a test that wraps the preprocessing fit with a counter and asserts that with the shared store, the EM/factor fit for a given <code class="docutils literal notranslate"><span class="pre">(spec,</span> <span class="pre">target,</span> <span class="pre">origin)</span></code> runs exactly once across two arms, versus twice without it.
+Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/pipeline/test_preprocessing_share.py</span> <span class="pre">tests/preprocessing/test_fitted_cache.py</span> <span class="pre">-v</span></code>
+Expected: PASS, golden numbers unchanged.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>macroforecast/forecasting/runner.py<span class="w"> </span>tests/pipeline/test_preprocessing_share.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;perf(preprocessing): two-tier (memory+disk) FittedPreprocessor cache keyed by spec+target+origin&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="task-b4-wire-the-disk-store-into-the-parallel-backend-and-group-horizons-per-cell">
+<h3>Task B4: Wire the disk store into the parallel backend and group horizons per cell<a class="headerlink" href="#task-b4-wire-the-disk-store-into-the-parallel-backend-and-group-horizons-per-cell" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Modify: <code class="docutils literal notranslate"><span class="pre">macroforecast/pipeline/run.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_enumerate_cells</span></code> 152-167, <code class="docutils literal notranslate"><span class="pre">_parallel_cell_worker</span></code> 184-211, <code class="docutils literal notranslate"><span class="pre">_run_cells</span></code> 275-324)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Pass a per-run store directory to every cell worker</strong></p></li>
+</ul>
+<p>Approach: create one store directory under the run’s checkpoint/output root; pass its path through <code class="docutils literal notranslate"><span class="pre">_execute_cell</span></code> to <code class="docutils literal notranslate"><span class="pre">forecasting.run(...,</span> <span class="pre">preprocessing_cache=&lt;store-backed</span> <span class="pre">cache&gt;)</span></code> for both serial and parallel backends. In parallel, each worker process opens the same directory (read/compute/write) so EM is computed once per <code class="docutils literal notranslate"><span class="pre">(spec,</span> <span class="pre">target,</span> <span class="pre">origin)</span></code> regardless of which process gets there first.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Group horizons per <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm)</span></code> cell in parallel mode too</strong></p></li>
+</ul>
+<p>Change <code class="docutils literal notranslate"><span class="pre">_enumerate_cells</span></code> so the parallel branch emits one cell per <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm)</span></code> with all horizons (matching the serial branch) instead of one per horizon. This recovers in-process horizon sharing and is required for the Part-A path_average fast-path to take effect in parallel. Re-check the reassembly/row-order comment in the docstring and the <code class="docutils literal notranslate"><span class="pre">_find_empty_cells</span></code> (target, horizon) accounting still hold.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Run the golden + compute-count tests in BOTH backends</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/pipeline/test_preprocessing_share.py</span> <span class="pre">-v</span></code>
+Expected: serial==parallel still byte-identical; compute-count shows one EM fit per <code class="docutils literal notranslate"><span class="pre">(spec,target,origin)</span></code> across all arms and horizons.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>macroforecast/pipeline/run.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;perf(pipeline): share on-disk preprocessing store across parallel cells; group horizons per cell&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="part-d-selectable-model-persistence">
+<h2>Part D — selectable model persistence<a class="headerlink" href="#part-d-selectable-model-persistence" title="Link to this heading">#</a></h2>
+<p><strong>Current behavior (verified):</strong> <code class="docutils literal notranslate"><span class="pre">save_models:</span> <span class="pre">bool</span></code> gates <code class="docutils literal notranslate"><span class="pre">_store_model_fit</span></code> (runner.py:2990), which writes BOTH a <code class="docutils literal notranslate"><span class="pre">&lt;stem&gt;.pkl</span></code> (pickled fitted model) and a <code class="docutils literal notranslate"><span class="pre">&lt;stem&gt;.json</span></code> (metadata including <code class="docutils literal notranslate"><span class="pre">params</span></code> and <code class="docutils literal notranslate"><span class="pre">selection_metadata</span></code>). With <code class="docutils literal notranslate"><span class="pre">save_models=False</span></code> neither is written. The selected best hyperparameters are already captured in memory as <code class="docutils literal notranslate"><span class="pre">selection_metadata</span></code> / <code class="docutils literal notranslate"><span class="pre">best_params</span></code> and flow into each forecast record’s <code class="docutils literal notranslate"><span class="pre">params</span></code> field — they just are not written to a standalone log.</p>
+<p><strong>Target behavior:</strong> a three-way <code class="docutils literal notranslate"><span class="pre">model_persistence</span></code> choice.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;model&quot;</span></code> — pickle the fitted model + write its metadata json (current <code class="docutils literal notranslate"><span class="pre">save_models=True</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;params&quot;</span></code> — write ONLY the selected best hyperparameters (and selection metadata) per cell as a compact json log; skip the <code class="docutils literal notranslate"><span class="pre">.pkl</span></code>. For models with no search space (n_tunable=0, e.g. <code class="docutils literal notranslate"><span class="pre">ols</span></code>, <code class="docutils literal notranslate"><span class="pre">ar</span></code>) the log records that there was no tuning.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> — write neither. (Part E still forces the run manifest and log.)</p></li>
+</ul>
+<section id="task-d1-api-back-compat-alias">
+<h3>Task D1: API + back-compat alias<a class="headerlink" href="#task-d1-api-back-compat-alias" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Modify: <code class="docutils literal notranslate"><span class="pre">macroforecast/pipeline/spec.py</span></code> (spec field), <code class="docutils literal notranslate"><span class="pre">macroforecast/pipeline/run.py</span></code> and <code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/runner.py</span></code> (thread the option)</p></li>
+<li><p>Test: <code class="docutils literal notranslate"><span class="pre">tests/forecasting/test_model_persistence.py</span></code> (create)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Write tests for the three modes + back-compat</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arm</span><span class="p">,</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">TargetSpec</span><span class="p">,</span> <span class="n">pipeline_spec</span><span class="p">,</span> <span class="n">run_pipeline</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spec</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">persistence</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_models</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;1990-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">140</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">);</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">panel</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">140</span><span class="p">)),</span>
+                          <span class="s2">&quot;X1&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">140</span><span class="p">),</span> <span class="s2">&quot;X2&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">140</span><span class="p">)},</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span>
+    <span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_dataset</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">tcodes</span><span class="o">=</span><span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">panel</span><span class="o">.</span><span class="n">columns</span><span class="p">})</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span><span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;1998-01-01&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2000-12-01&quot;</span><span class="p">,</span>
+                                 <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;last_block&quot;</span><span class="p">,</span> <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">feats</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">kw</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">persistence</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;model_persistence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">persistence</span>
+    <span class="k">if</span> <span class="n">save_models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">kw</span><span class="p">[</span><span class="s2">&quot;save_models&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">save_models</span>
+    <span class="k">return</span> <span class="n">pipeline_spec</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)],</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">window</span><span class="o">=</span><span class="n">win</span><span class="p">,</span>
+        <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;RIDGE&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">feats</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+        <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;RIDGE&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,)),</span>
+        <span class="n">model_store</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp</span><span class="p">),</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_model_mode_writes_pkl_and_json</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_spec</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">persistence</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.pkl&quot;</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_params_mode_writes_params_log_no_pkl</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_spec</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">persistence</span><span class="o">=</span><span class="s2">&quot;params&quot;</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.pkl&quot;</span><span class="p">))</span>
+    <span class="n">logs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.json&quot;</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">logs</span>
+    <span class="n">rec</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">logs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+    <span class="k">assert</span> <span class="s2">&quot;best_params&quot;</span> <span class="ow">in</span> <span class="n">rec</span> <span class="ow">or</span> <span class="s2">&quot;params&quot;</span> <span class="ow">in</span> <span class="n">rec</span>  <span class="c1"># ridge alpha captured</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_none_mode_writes_neither</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_spec</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">persistence</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.pkl&quot;</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.pkl.json&quot;</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_save_models_true_aliases_model</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_spec</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">save_models</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.pkl&quot;</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_params_mode_non_tuned_is_graceful</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="c1"># ols has no search space; params mode must not error and should log &quot;no tuning&quot;.</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;1990-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">140</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">);</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">panel</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">140</span><span class="p">)),</span> <span class="s2">&quot;X1&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">140</span><span class="p">)},</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span>
+    <span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_dataset</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">tcodes</span><span class="o">=</span><span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">panel</span><span class="o">.</span><span class="n">columns</span><span class="p">})</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span><span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;1998-01-01&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2000-12-01&quot;</span><span class="p">,</span> <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">pipeline_spec</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)],</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">window</span><span class="o">=</span><span class="n">win</span><span class="p">,</span>
+                         <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;OLS&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ols&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+                         <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;OLS&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,)),</span>
+                         <span class="n">model_store</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">),</span> <span class="n">model_persistence</span><span class="o">=</span><span class="s2">&quot;params&quot;</span><span class="p">)</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>  <span class="c1"># must not raise</span>
+</pre></div>
+</div>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Run tests on current code</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/forecasting/test_model_persistence.py</span> <span class="pre">-v</span></code>
+Expected: model/save_models tests behave per current bool; the <code class="docutils literal notranslate"><span class="pre">params</span></code>/<code class="docutils literal notranslate"><span class="pre">none</span></code> tests FAIL (option does not exist yet). Confirms discriminators.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Add <code class="docutils literal notranslate"><span class="pre">model_persistence</span></code> to the spec/run signature with the alias</strong></p></li>
+</ul>
+<p>Approach: add <code class="docutils literal notranslate"><span class="pre">model_persistence:</span> <span class="pre">Literal[&quot;none&quot;,&quot;model&quot;,&quot;params&quot;]</span> <span class="pre">=</span> <span class="pre">&quot;none&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code>/<code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> (and the low-level <code class="docutils literal notranslate"><span class="pre">run</span></code>). When the deprecated <code class="docutils literal notranslate"><span class="pre">save_models</span></code> is passed, map <code class="docutils literal notranslate"><span class="pre">True</span> <span class="pre">-&gt;</span> <span class="pre">&quot;model&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">False</span> <span class="pre">-&gt;</span> <span class="pre">&quot;none&quot;</span></code>, and emit a deprecation note. Thread <code class="docutils literal notranslate"><span class="pre">model_persistence</span></code> down to the per-origin dispatch where <code class="docutils literal notranslate"><span class="pre">_store_model_fit</span></code> is called.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Split <code class="docutils literal notranslate"><span class="pre">_store_model_fit</span></code> into model-writer and params-writer</strong></p></li>
+</ul>
+<p>Approach: factor the existing function so the <code class="docutils literal notranslate"><span class="pre">.json</span></code> metadata write (params + selection_metadata) is independent of the <code class="docutils literal notranslate"><span class="pre">.pkl</span></code> write. <code class="docutils literal notranslate"><span class="pre">&quot;model&quot;</span></code> calls both; <code class="docutils literal notranslate"><span class="pre">&quot;params&quot;</span></code> calls only the json writer (and records a “no tuning” marker when <code class="docutils literal notranslate"><span class="pre">model_spec.search_spaces</span></code> is empty / n_tunable=0); <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> calls neither. Reuse <code class="docutils literal notranslate"><span class="pre">selection_metadata</span></code>/<code class="docutils literal notranslate"><span class="pre">best_params</span></code> already computed.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 5: Run the test file</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/forecasting/test_model_persistence.py</span> <span class="pre">-v</span></code>
+Expected: all PASS.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 6: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>macroforecast/pipeline/spec.py<span class="w"> </span>macroforecast/pipeline/run.py<span class="w"> </span>macroforecast/forecasting/runner.py<span class="w"> </span>tests/forecasting/test_model_persistence.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(pipeline): model_persistence={none,model,params}; params logs best hyperparameters only&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="part-e-mandatory-run-manifest-and-log">
+<h2>Part E — mandatory run manifest and log<a class="headerlink" href="#part-e-mandatory-run-manifest-and-log" title="Link to this heading">#</a></h2>
+<p><strong>Current behavior (verified):</strong> the run script writes per-origin parquet checkpoints and final accuracy/significance CSVs but NO run-level manifest or log (no <code class="docutils literal notranslate"><span class="pre">json.dump</span></code>/<code class="docutils literal notranslate"><span class="pre">logging</span></code> of the resolved spec). <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> already assembles <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> and <code class="docutils literal notranslate"><span class="pre">empty_cells</span></code> and emits warnings during <code class="docutils literal notranslate"><span class="pre">_run_cells</span></code>, but they are not persisted.</p>
+<p><strong>Target behavior:</strong> every <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> call unconditionally writes, to the run output directory, a <code class="docutils literal notranslate"><span class="pre">run_manifest.json</span></code> (the resolved spec and provenance) and a <code class="docutils literal notranslate"><span class="pre">run.log</span></code> (warnings, failed cells, empty cells, per-cell/target completion). There is no flag to disable this.</p>
+<section id="task-e1-resolve-a-mandatory-output-directory">
+<h3>Task E1: Resolve a mandatory output directory<a class="headerlink" href="#task-e1-resolve-a-mandatory-output-directory" title="Link to this heading">#</a></h3>
+<p><strong>Files:</strong></p>
+<ul class="contains-task-list simple">
+<li><p>Modify: <code class="docutils literal notranslate"><span class="pre">macroforecast/pipeline/run.py</span></code></p></li>
+<li><p>Test: <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_run_manifest.py</span></code> (create)</p></li>
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 1: Write a test that the manifest+log are always written, even with persistence “none” and no model_store</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="o">,</span><span class="w"> </span><span class="nn">pathlib</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span><span class="o">,</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arm</span><span class="p">,</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">TargetSpec</span><span class="p">,</span> <span class="n">pipeline_spec</span><span class="p">,</span> <span class="n">run_pipeline</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_spec</span><span class="p">(</span><span class="n">tmp</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;1990-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">);</span> <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">panel</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;Y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">)),</span> <span class="s2">&quot;X1&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">)},</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
+    <span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span>
+    <span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_dataset</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="n">tcodes</span><span class="o">=</span><span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">panel</span><span class="o">.</span><span class="n">columns</span><span class="p">})</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span><span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;1997-01-01&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;1999-12-01&quot;</span><span class="p">,</span>
+                                 <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">retrain_every</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pipeline_spec</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)],</span> <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">window</span><span class="o">=</span><span class="n">win</span><span class="p">,</span>
+                         <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;OLS&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ols&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+                         <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;OLS&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,)),</span>
+                         <span class="n">output_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>  <span class="c1"># the mandatory run output dir</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_manifest_always_written</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_spec</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">))</span>
+    <span class="n">man</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;run_manifest.json&quot;</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;run.log&quot;</span>
+    <span class="k">assert</span> <span class="n">man</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">log</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_manifest_required_keys</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_spec</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">((</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;run_manifest.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;targets&quot;</span><span class="p">,</span> <span class="s2">&quot;horizons&quot;</span><span class="p">,</span> <span class="s2">&quot;arms&quot;</span><span class="p">,</span> <span class="s2">&quot;window&quot;</span><span class="p">,</span> <span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="s2">&quot;package_version&quot;</span><span class="p">,</span> <span class="s2">&quot;created_at&quot;</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">m</span><span class="p">,</span> <span class="n">key</span>
+    <span class="c1"># window provenance must record the cadence that governs leakage/cost</span>
+    <span class="k">assert</span> <span class="s2">&quot;retrain_every&quot;</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">])</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_log_records_empty_or_failed_cells</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+    <span class="c1"># A target/horizon with no scorable origins should be noted in run.log.</span>
+    <span class="n">rep</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">_spec</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">))</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;run.log&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="s2">&quot;cell&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;complete&quot;</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</pre></div>
+</div>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 2: Run on current code</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/pipeline/test_run_manifest.py</span> <span class="pre">-v</span></code>
+Expected: FAIL (no <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> param / no manifest written). Confirms discriminator.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 3: Add an <code class="docutils literal notranslate"><span class="pre">output_dir</span></code> resolution and always-write the manifest+log</strong></p></li>
+</ul>
+<p>Approach: <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> resolves a run output dir from an explicit <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>, else the checkpoint root, else a timestamped default under the CWD. After cell execution, ALWAYS write <code class="docutils literal notranslate"><span class="pre">run_manifest.json</span></code> (resolved targets/horizons/arms/window-config including <code class="docutils literal notranslate"><span class="pre">retrain_every</span></code>/<code class="docutils literal notranslate"><span class="pre">retune_every</span></code>, preprocessing, evaluation, <code class="docutils literal notranslate"><span class="pre">seed</span></code>, <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code>, data source/vintage, <code class="docutils literal notranslate"><span class="pre">package_version</span></code>, git commit when available, <code class="docutils literal notranslate"><span class="pre">created_at</span></code>/<code class="docutils literal notranslate"><span class="pre">finished_at</span></code>) and <code class="docutils literal notranslate"><span class="pre">run.log</span></code> (collected warnings, <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code>, <code class="docutils literal notranslate"><span class="pre">empty_cells</span></code>, per-target completion). No flag gates this.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 4: Run the test file</strong></p></li>
+</ul>
+<p>Run: <code class="docutils literal notranslate"><span class="pre">PYTHONPATH=$WT</span> <span class="pre">$PY</span> <span class="pre">-m</span> <span class="pre">pytest</span> <span class="pre">tests/pipeline/test_run_manifest.py</span> <span class="pre">-v</span></code>
+Expected: all PASS.</p>
+<ul class="contains-task-list simple">
+<li class="task-list-item"><p><input class="task-list-item-checkbox" disabled="disabled" type="checkbox"><strong>Step 5: Commit</strong></p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>add<span class="w"> </span>macroforecast/pipeline/run.py<span class="w"> </span>tests/pipeline/test_run_manifest.py
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(pipeline): always write run_manifest.json and run.log (mandatory provenance)&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="part-c-deferred-separate-plan-once-a-and-b-land">
+<h2>Part C — deferred (separate plan once A and B land)<a class="headerlink" href="#part-c-deferred-separate-plan-once-a-and-b-land" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Share factor/feature extraction (PCA factors) across arms per <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">origin)</span></code> like preprocessing.</p></li>
+<li><p>Investigate reusing the predictor-panel EM across targets (verify the target column’s participation does not change factors materially before sharing).</p></li>
+</ul>
+<p>These are listed for completeness and are NOT implemented by this plan.</p>
+</section>
+<hr class="docutils" />
+<section id="rollout-and-validation">
+<h2>Rollout and validation<a class="headerlink" href="#rollout-and-validation" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Implement and merge A and B on this branch with all tests green.</p></li>
+<li><p><strong>Do not interrupt the live GCLS grid.</strong> Validate on a small real spec (1-2 targets, the 6 GCLS arms, horizons <code class="docutils literal notranslate"><span class="pre">[1,3,6,9,12,24]</span></code>, <code class="docutils literal notranslate"><span class="pre">impute=&quot;em_factor&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">n_jobs=4</span></code>) and confirm forecasts match a current-code run of the same small spec to <code class="docutils literal notranslate"><span class="pre">1e-10</span></code>.</p></li>
+<li><p>Record measured speedup (wall time small-spec before/after) in the PR.</p></li>
+<li><p>Only after numerical identity is confirmed on the small real spec, consider whether any future full grid uses the new path. The in-flight run is unaffected.</p></li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="self-review">
+<h2>Self-Review<a class="headerlink" href="#self-review" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Spec coverage:</strong> Part A covers the path_average redundancy (memory <code class="docutils literal notranslate"><span class="pre">project_path_average_perf</span></code>); Part B covers the parallel preprocessing redundancy (memory <code class="docutils literal notranslate"><span class="pre">project_pipeline_perf_audit</span></code> finding 1) and respects per-model preprocessing (Invariant 3, B3 key); Part D adds the <code class="docutils literal notranslate"><span class="pre">{none,model,params}</span></code> model-persistence choice with a hyperparameter-only log; Part E forces <code class="docutils literal notranslate"><span class="pre">run_manifest.json</span></code> + <code class="docutils literal notranslate"><span class="pre">run.log</span></code> on every run. Findings 3-4 are explicitly deferred to Part C. Covered.</p></li>
+<li><p><strong>Placeholder scan:</strong> Implementation steps for A3/A4/B3/B4 describe the approach and the exact functions/line ranges to edit, with concrete test code that gates each change, because the precise diff depends on reading the named code regions (explicit first-step reads, not vague TODOs). Test code is concrete and runnable.</p></li>
+<li><p><strong>Type/name consistency:</strong> <code class="docutils literal notranslate"><span class="pre">forecast_horizons</span></code> (item key, A), <code class="docutils literal notranslate"><span class="pre">PreprocessorStore</span></code> / <code class="docutils literal notranslate"><span class="pre">key()</span></code> / <code class="docutils literal notranslate"><span class="pre">get()</span></code> / <code class="docutils literal notranslate"><span class="pre">put()</span></code> (B2, used in B3/B4), <code class="docutils literal notranslate"><span class="pre">_preprocessing_cache_key</span></code> (B3) are referenced consistently across tasks.</p></li>
+<li><p><strong>Constraint:</strong> every test uses tiny synthetic data and cheap imputation; only B1/B4 use <code class="docutils literal notranslate"><span class="pre">n_jobs=2</span></code> on a 2-arm toy spec; none launches a full grid (Invariant 4).</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#invariants-apply-to-every-task">Invariants (apply to every task)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#file-structure">File Structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-a-path-average-fast-path">Part A — path_average fast-path</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-a1-pin-the-golden-baseline-for-path-average">Task A1: Pin the golden baseline for path_average</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-a2-add-fit-count-and-prefix-mean-behavioral-tests">Task A2: Add fit-count and prefix-mean behavioral tests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-a3-generalize-fit-predict-path-average-origin-to-a-horizon-list">Task A3: Generalize <code class="docutils literal notranslate"><span class="pre">_fit_predict_path_average_origin</span></code> to a horizon list</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-a4-route-run-multiple-horizons-through-the-grouped-path">Task A4: Route <code class="docutils literal notranslate"><span class="pre">_run_multiple_horizons</span></code> through the grouped path</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-b-shared-preprocessing-cache-across-cells">Part B — shared preprocessing cache across cells</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-b1-design-pin-the-golden-baseline-for-pipeline-output">Task B1: Design + pin the golden baseline for pipeline output</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-b2-content-addressed-on-disk-fittedpreprocessor-store">Task B2: Content-addressed on-disk FittedPreprocessor store</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-b3-key-the-runner-cache-by-spec-hash-target-origin-and-consult-the-disk-store">Task B3: Key the runner cache by (spec-hash, target, origin) and consult the disk store</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-b4-wire-the-disk-store-into-the-parallel-backend-and-group-horizons-per-cell">Task B4: Wire the disk store into the parallel backend and group horizons per cell</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-d-selectable-model-persistence">Part D — selectable model persistence</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-d1-api-back-compat-alias">Task D1: API + back-compat alias</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-e-mandatory-run-manifest-and-log">Part E — mandatory run manifest and log</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#task-e1-resolve-a-mandatory-output-directory">Task E1: Resolve a mandatory output directory</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-c-deferred-separate-plan-once-a-and-b-land">Part C — deferred (separate plan once A and B land)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rollout-and-validation">Rollout and validation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#self-review">Self-Review</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/superpowers/plans/2026-06-19-pipeline-perf-optims.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/superpowers/plans/2026-06-19-pipeline-perf-optims.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

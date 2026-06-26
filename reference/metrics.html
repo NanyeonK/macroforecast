@@ -1,0 +1,1382 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>macroforecast.metrics &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/metrics';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="macroforecast.tests" href="tests.html" />
+    <link rel="prev" title="macroforecast.forecast_analysis" href="forecast_analysis.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Orientation</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="documentation_map.html">Documentation Map</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow Contract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="legacy_callable_coverage.html">Legacy Callable Coverage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Data Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="data.html">macroforecast.data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">macroforecast.preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_analysis.html">macroforecast.data_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Feature Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="filters.html">macroforecast.filters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_engineering.html">macroforecast.feature_engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="feature_analysis.html">macroforecast.feature_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Forecast Pipeline</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="window.html">macroforecast.window</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.metrics</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-metrics">
+<h1>macroforecast.metrics<a class="headerlink" href="#macroforecast-metrics" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code> owns forecast scoring only. It does not choose windows,
+fit models, run statistical comparison tests, or write artifacts.</p>
+<p>Use the namespace form:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">mf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">rmse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Top-level shortcuts such as <code class="docutils literal notranslate"><span class="pre">mf.rmse(...)</span></code> are intentionally not exported.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MetricLike</span></code> is the public input type used by metric resolvers: a metric can
+be a registered metric name or a callable with the expected scoring signature.</p>
+<section id="risk-return-forecast-evaluation">
+<h2>Risk-Return Forecast Evaluation<a class="headerlink" href="#risk-return-forecast-evaluation" title="Link to this heading">#</a></h2>
+<section id="paper-citation-and-scope">
+<h3>Paper Citation And Scope<a class="headerlink" href="#paper-citation-and-scope" title="Link to this heading">#</a></h3>
+<p>This section implements the evaluation framework from:</p>
+<blockquote>
+<div><p>Goulet Coulombe, Philippe. 2026. “Quantifying the Risk-Return Tradeoff in
+Forecasting.” arXiv:2605.09712v1, submitted May 10, 2026.
+arXiv page: <a class="reference external" href="https://arxiv.org/abs/2605.09712">https://arxiv.org/abs/2605.09712</a>.</p>
+</div></blockquote>
+<p>This is not a portfolio-construction module. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> does not treat
+macroeconomic forecasts as traded assets here. The word “return” means a
+date-level <strong>loss differential</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>forecast_return_t(model | benchmark)
+    = loss_t(benchmark) - loss_t(model)
+</pre></div>
+</div>
+<p>Positive values mean the candidate model reduced forecast loss relative to the
+benchmark on that date. Negative values mean it underperformed. The financial
+language is useful because it gives precise names for stability of gains:
+volatility, downside risk, upside/downside balance, and drawdown. The object
+being evaluated remains a macro forecast panel.</p>
+<p>These functions live in <code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code> because they score forecasts.
+They do not explain fitted models, so they do not belong in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code>. They also do not run hypothesis tests, so they
+do not belong in <code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code>. Higher-level report integration can
+later call these functions from <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code>.</p>
+</section>
+<section id="paper-motivation">
+<h3>Paper Motivation<a class="headerlink" href="#paper-motivation" title="Link to this heading">#</a></h3>
+<p>Standard forecast evaluation usually asks whether a model has lower average
+loss than a benchmark. The risk-return view asks whether those gains are stable
+enough to trust. A model can have lower RMSE on average while generating large
+negative episodes in recessions, inflation spikes, post-COVID periods, or other
+macroeconomic regimes where forecast failures are costly.</p>
+<p>The paper’s primitive object is therefore not an aggregated RMSE table. It is a
+date-level sequence of benchmark-relative loss improvements. This is why the
+functions below operate on forecast panels and return paths rather than only on
+already-aggregated metric tables.</p>
+</section>
+<section id="compute-point-loss">
+<h3>compute_point_loss<a class="headerlink" href="#compute-point-loss" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">compute_point_loss</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">,</span>
+    <span class="n">y_pred</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">eps</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">Series</span>
+</pre></div>
+</div>
+<p>Input: aligned realized values and forecasts.</p>
+<p>Output: one observation-level loss per aligned row, where lower is better.</p>
+<p>Supported losses:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">loss</span></code></p></th>
+<th class="head"><p>Required inputs</p></th>
+<th class="head"><p>Formula or meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;squared_error&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;msfe&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">y_true</span></code>, <code class="docutils literal notranslate"><span class="pre">y_pred</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(y_true</span> <span class="pre">-</span> <span class="pre">y_pred)^2</span></code> at each date.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;absolute_error&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mae&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">y_true</span></code>, <code class="docutils literal notranslate"><span class="pre">y_pred</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">abs(y_true</span> <span class="pre">-</span> <span class="pre">y_pred)</span></code> at each date.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;pinball_loss&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">y_true</span></code>, <code class="docutils literal notranslate"><span class="pre">y_pred</span></code>, <code class="docutils literal notranslate"><span class="pre">quantile</span></code></p></td>
+<td><p>Quantile loss for one requested quantile.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;negative_log_score&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gaussian_nll&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;log_score&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">y_true</span></code>, <code class="docutils literal notranslate"><span class="pre">y_pred</span></code>, <code class="docutils literal notranslate"><span class="pre">variance</span></code></p></td>
+<td><p>Gaussian negative log score.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;qlike&quot;</span></code></p></td>
+<td><p>realized variance in <code class="docutils literal notranslate"><span class="pre">y_true</span></code>, forecast variance in <code class="docutils literal notranslate"><span class="pre">y_pred</span></code></p></td>
+<td><p>QLIKE volatility loss.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="forecast-returns">
+<h3>forecast_returns<a class="headerlink" href="#forecast-returns" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">forecast_returns</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="p">,</span>
+    <span class="n">group_cols</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">model_col</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">,</span>
+    <span class="n">actual</span><span class="o">=</span><span class="s2">&quot;actual&quot;</span><span class="p">,</span>
+    <span class="n">prediction</span><span class="o">=</span><span class="s2">&quot;prediction&quot;</span><span class="p">,</span>
+    <span class="n">variance_prediction</span><span class="o">=</span><span class="s2">&quot;variance_prediction&quot;</span><span class="p">,</span>
+    <span class="n">support_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_benchmark</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Input: a <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, forecast table, or pandas-like table with candidate
+and benchmark rows. The benchmark must already exist in the same forecast
+panel. The function does not create a benchmark forecast.</p>
+<p>Required columns:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_col</span></code></p></td>
+<td><p>Candidate and benchmark model identifiers. Default: <code class="docutils literal notranslate"><span class="pre">model</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">actual</span></code></p></td>
+<td><p>Realized value. Default: <code class="docutils literal notranslate"><span class="pre">actual</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code></p></td>
+<td><p>Point forecast. Default: <code class="docutils literal notranslate"><span class="pre">prediction</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">origin</span></code>, or <code class="docutils literal notranslate"><span class="pre">origin_pos</span></code></p></td>
+<td><p>Support identity. At least one is required unless supplied through <code class="docutils literal notranslate"><span class="pre">support_cols</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">group_cols</span></code></p></td>
+<td><p>Alignment groups such as <code class="docutils literal notranslate"><span class="pre">target</span></code> and <code class="docutils literal notranslate"><span class="pre">horizon</span></code>; all requested columns must exist.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Output columns:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_loss</span></code></p></td>
+<td><p>Candidate date-level loss.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_loss</span></code></p></td>
+<td><p>Benchmark date-level loss on the same support row.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_return</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">benchmark_loss</span> <span class="pre">-</span> <span class="pre">model_loss</span></code>; positive favors candidate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">return_sign</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;positive&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;negative&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;zero&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cumulative_return</span></code></p></td>
+<td><p>Cumulative sum of <code class="docutils literal notranslate"><span class="pre">forecast_return</span></code> within model/benchmark/group/loss path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">drawdown</span></code></p></td>
+<td><p>Cumulative return minus running peak.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">loss_name</span></code></p></td>
+<td><p>Canonical loss label.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_id</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_id</span></code></p></td>
+<td><p>Stable model labels for downstream grouping.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Validation is intentionally strict. Candidate and benchmark support must match
+exactly within every group, and realized values must match after alignment.
+This prevents a benchmark with a different window, horizon, target, or missing
+date pattern from being treated as a fair comparator.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">returns</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">forecast_returns</span><span class="p">(</span>
+    <span class="n">forecast_result</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span>
+    <span class="n">group_cols</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="sharpe-ratio">
+<h3>sharpe_ratio<a class="headerlink" href="#sharpe-ratio" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">sharpe_ratio</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">hac_lags</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+</pre></div>
+</div>
+<p>Computes mean forecast return divided by return volatility. With
+<code class="docutils literal notranslate"><span class="pre">hac_lags=None</span></code>, the denominator is the ordinary sample standard deviation of
+the return sequence. With <code class="docutils literal notranslate"><span class="pre">hac_lags=&quot;auto&quot;</span></code> or a nonnegative integer, the
+denominator is a Newey-West/Bartlett long-run standard deviation. This is a
+path-stability score, not a trading Sharpe ratio.</p>
+</section>
+<section id="sortino-ratio">
+<h3>sortino_ratio<a class="headerlink" href="#sortino-ratio" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">sortino_ratio</span><span class="p">(</span>
+    <span class="n">returns</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_return</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+</pre></div>
+</div>
+<p>Computes mean excess forecast return divided by downside semideviation:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>downside_t = min(return_t - target_return, 0)
+</pre></div>
+</div>
+<p>If all nonzero returns are above the target, the denominator is zero and the
+ratio is <code class="docutils literal notranslate"><span class="pre">inf</span></code>. If numerator and denominator are both zero, the ratio is <code class="docutils literal notranslate"><span class="pre">nan</span></code>.</p>
+</section>
+<section id="omega-ratio">
+<h3>omega_ratio<a class="headerlink" href="#omega-ratio" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">omega_ratio</span><span class="p">(</span>
+    <span class="n">returns</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+</pre></div>
+</div>
+<p>Computes total upside divided by total downside around a threshold:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>omega = sum(max(return_t - threshold, 0))
+        / sum(max(threshold - return_t, 0))
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">inf</span></code> means there is upside and no downside; <code class="docutils literal notranslate"><span class="pre">nan</span></code> means there is neither
+upside nor downside.</p>
+</section>
+<section id="drawdown-series-and-max-drawdown">
+<h3>drawdown_series and max_drawdown<a class="headerlink" href="#drawdown-series-and-max-drawdown" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">drawdown_series</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">Series</span>
+<span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">max_drawdown</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+</pre></div>
+</div>
+<p>Drawdown is computed from cumulative forecast returns:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>cumulative_t = sum_{s &lt;= t} return_s
+drawdown_t = cumulative_t - max_{s &lt;= t}(cumulative_s)
+</pre></div>
+</div>
+<p>For example, returns <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">-3,</span> <span class="pre">1]</span></code> have cumulative returns
+<code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">-1,</span> <span class="pre">0]</span></code>, drawdowns <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">-3,</span> <span class="pre">-2]</span></code>, and maximum drawdown <code class="docutils literal notranslate"><span class="pre">-3</span></code>.</p>
+</section>
+<section id="risk-adjusted-forecast-metrics">
+<h3>risk_adjusted_forecast_metrics<a class="headerlink" href="#risk-adjusted-forecast-metrics" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">risk_adjusted_forecast_metrics</span><span class="p">(</span>
+    <span class="n">returns</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">group_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_col</span><span class="o">=</span><span class="s2">&quot;forecast_return&quot;</span><span class="p">,</span>
+    <span class="n">hac_lags</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">target_return</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">omega_threshold</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Input: the date-level output of <code class="docutils literal notranslate"><span class="pre">forecast_returns(...)</span></code>, or any DataFrame with
+a return column.</p>
+<p>Output: one row per group with:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_obs</span></code></p></td>
+<td><p>Number of finite return observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mean_return</span></code></p></td>
+<td><p>Average benchmark-relative loss reduction.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">return_sd</span></code></p></td>
+<td><p>Sample standard deviation of returns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hac_return_sd</span></code></p></td>
+<td><p>HAC long-run standard deviation when requested.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sharpe</span></code>, <code class="docutils literal notranslate"><span class="pre">hac_sharpe</span></code></p></td>
+<td><p>Mean return divided by ordinary or HAC volatility.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sortino</span></code></p></td>
+<td><p>Downside-risk-adjusted return.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">omega</span></code></p></td>
+<td><p>Upside/downside ratio.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_drawdown</span></code></p></td>
+<td><p>Worst cumulative-return drawdown.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">final_cumulative_return</span></code></p></td>
+<td><p>Sum of returns over the evaluated path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">win_rate</span></code></p></td>
+<td><p>Share of dates with positive forecast return.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Default grouping uses available columns such as <code class="docutils literal notranslate"><span class="pre">model_id</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_id</span></code>,
+<code class="docutils literal notranslate"><span class="pre">target</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">sample</span></code>, <code class="docutils literal notranslate"><span class="pre">regime</span></code>, and <code class="docutils literal notranslate"><span class="pre">loss_name</span></code>.</p>
+</section>
+<section id="edge-ratio">
+<h3>edge_ratio<a class="headerlink" href="#edge-ratio" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">edge_ratio</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">group_cols</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
+    <span class="n">loss</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
+    <span class="n">model_col</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">,</span>
+    <span class="n">actual</span><span class="o">=</span><span class="s2">&quot;actual&quot;</span><span class="p">,</span>
+    <span class="n">prediction</span><span class="o">=</span><span class="s2">&quot;prediction&quot;</span><span class="p">,</span>
+    <span class="n">variance_prediction</span><span class="o">=</span><span class="s2">&quot;variance_prediction&quot;</span><span class="p">,</span>
+    <span class="n">support_cols</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">quantile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+<p>Edge Ratio asks whether a model delivers unique gains relative to the model
+pool, not only relative to one benchmark. For each date and model:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>edge_t(model) = min_loss_t(all other models) - loss_t(model)
+</pre></div>
+</div>
+<p>Therefore:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Edge sign</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">edge</span> <span class="pre">&gt;</span> <span class="pre">0</span></code></p></td>
+<td><p>The model is strictly better than every alternative on that date.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">edge</span> <span class="pre">=</span> <span class="pre">0</span></code></p></td>
+<td><p>The model ties the best alternative.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">edge</span> <span class="pre">&lt;</span> <span class="pre">0</span></code></p></td>
+<td><p>At least one alternative is better.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Aggregated Edge Ratio is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>edge_ratio
+    = (sum(max(edge_t, 0)) / sum(max(-edge_t, 0)))
+      * (number_of_models - 1)
+</pre></div>
+</div>
+<p>If a model has positive edge wins and no edge regrets, the ratio is <code class="docutils literal notranslate"><span class="pre">inf</span></code>. If a
+model never has edge wins, the ratio is <code class="docutils literal notranslate"><span class="pre">0</span></code>. The result also carries the
+date-level edge path in <code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_edge_path&quot;]</span></code> for inspection.</p>
+</section>
+</section>
+<section id="forecast-table-helpers">
+<h2>Forecast Table Helpers<a class="headerlink" href="#forecast-table-helpers" title="Link to this heading">#</a></h2>
+<section id="evaluate-forecasts">
+<h3>evaluate_forecasts<a class="headerlink" href="#evaluate-forecasts" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">evaluate_forecasts</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">),</span>
+    <span class="n">actual</span><span class="o">=</span><span class="s2">&quot;actual&quot;</span><span class="p">,</span>
+    <span class="n">prediction</span><span class="o">=</span><span class="s2">&quot;prediction&quot;</span><span class="p">,</span>
+    <span class="n">variance_prediction</span><span class="o">=</span><span class="s2">&quot;variance_prediction&quot;</span><span class="p">,</span>
+    <span class="n">volatility_actual</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">quantile_predictions</span><span class="o">=</span><span class="s2">&quot;quantile_predictions&quot;</span><span class="p">,</span>
+    <span class="n">previous_actual</span><span class="o">=</span><span class="s2">&quot;previous_actual&quot;</span><span class="p">,</span>
+    <span class="n">benchmark_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_column</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: a <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, forecast table, or pandas-like table with realized
+values and forecast columns.</p>
+<p>Output: a pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, one row per <code class="docutils literal notranslate"><span class="pre">by</span></code> group. The result carries
+<code class="docutils literal notranslate"><span class="pre">attrs[&quot;macroforecast_metadata_schema&quot;]</span> <span class="pre">=</span> <span class="pre">{&quot;kind&quot;:</span> <span class="pre">&quot;forecast_metrics&quot;,</span> <span class="pre">&quot;version&quot;:</span> <span class="pre">1,</span> <span class="pre">...}</span></code>.
+The metadata schema also records <code class="docutils literal notranslate"><span class="pre">by</span></code>, <code class="docutils literal notranslate"><span class="pre">requested_metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code>,
+<code class="docutils literal notranslate"><span class="pre">relative_support_columns</span></code>, input columns, and automatically added metric
+groups.</p>
+<p>Validation: every requested <code class="docutils literal notranslate"><span class="pre">by</span></code> column must exist in the forecast table.
+<code class="docutils literal notranslate"><span class="pre">evaluate_forecasts()</span></code> fails loudly instead of dropping unavailable grouping
+dimensions. Relative metrics such as <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mae</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code>, and <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code> require <code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code>, and the benchmark must
+have matching rows for every scored non-benchmark group. The grouping must
+include <code class="docutils literal notranslate"><span class="pre">model_column</span></code> because relative metrics compare each candidate model
+against a named benchmark model.</p>
+<p><code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code> does not create benchmark forecasts. It selects existing rows
+from the forecast table. For a fair comparison, generate the benchmark in the
+same forecasting run with the same window/origin/horizon/target contract, or
+append an external benchmark CSV only after validating that it has the same
+forecast-table schema and the same evaluation support. Relative metrics fail
+when candidate and benchmark supports differ. Forecast-table relative metrics
+require at least one support identity column: <code class="docutils literal notranslate"><span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">origin</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">origin_pos</span></code>. For matching support rows, candidate and benchmark <code class="docutils literal notranslate"><span class="pre">actual</span></code>
+values must also match; otherwise the forecast table is treated as inconsistent.</p>
+<p>Forecast-table behavior:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Available input</p></th>
+<th class="head"><p>Added scores</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">actual</span></code>, <code class="docutils literal notranslate"><span class="pre">prediction</span></code></p></td>
+<td><p>Requested point metrics such as <code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">rmse</span></code>, <code class="docutils literal notranslate"><span class="pre">mae</span></code>, <code class="docutils literal notranslate"><span class="pre">bias</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code> plus benchmark rows</p></td>
+<td><p>Relative metrics such as <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mae</span></code>, <code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code>, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">previous_actual</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code> and <code class="docutils literal notranslate"><span class="pre">success_ratio</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_nll</span></code>, <code class="docutils literal notranslate"><span class="pre">crps</span></code>, and requested <code class="docutils literal notranslate"><span class="pre">qlike</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">volatility_actual</span></code> plus <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">qlike</span></code> against an explicit realized-variance column. If omitted, <code class="docutils literal notranslate"><span class="pre">actual</span></code> is used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code> dictionaries</p></td>
+<td><p>Pinball loss by quantile and interval coverage/width/score for matched lower-upper pairs.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Malformed probabilistic inputs fail validation. Quantile forecasts must be
+per-row dictionaries mapping levels strictly inside <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code> to finite numeric
+predictions. Invalid variance, volatility, interval, or quantile values are not
+silently clipped or skipped.</p>
+<p>Requested specialized metrics fail loudly when their required support columns
+are absent:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Requested metric group</p></th>
+<th class="head"><p>Required forecast-table column</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gaussian_nll</span></code>, <code class="docutils literal notranslate"><span class="pre">negative_log_score</span></code>, <code class="docutils literal notranslate"><span class="pre">log_score</span></code>, <code class="docutils literal notranslate"><span class="pre">crps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qlike</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code>; use <code class="docutils literal notranslate"><span class="pre">volatility_actual</span></code> when realized variance is not in <code class="docutils literal notranslate"><span class="pre">actual</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code>, <code class="docutils literal notranslate"><span class="pre">success_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">previous_actual</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pinball_loss</span></code>, <code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">interval_width</span></code>, <code class="docutils literal notranslate"><span class="pre">interval_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">scores</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">evaluate_forecasts</span><span class="p">(</span>
+    <span class="n">result</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
+    <span class="n">benchmark_model</span><span class="o">=</span><span class="s2">&quot;ols&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="rank-forecasts">
+<h3>rank_forecasts<a class="headerlink" href="#rank-forecasts" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">rank_forecasts</span><span class="p">(</span>
+    <span class="n">evaluation</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span>
+    <span class="n">by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;horizon&quot;</span><span class="p">,),</span>
+    <span class="n">ascending</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">rank_column</span><span class="o">=</span><span class="s2">&quot;rank&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: an evaluation table from <code class="docutils literal notranslate"><span class="pre">evaluate_forecasts(...)</span></code> or an equivalent
+pandas table.</p>
+<p>Output: the same rows with a rank column. If <code class="docutils literal notranslate"><span class="pre">ascending=None</span></code>, lower is better
+for recognized loss metrics and higher is better for recognized gain metrics
+such as <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>, <code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code>, <code class="docutils literal notranslate"><span class="pre">success_ratio</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">pesaran_timmermann_metric</span></code>. Every requested <code class="docutils literal notranslate"><span class="pre">by</span></code> column must exist in the
+evaluation table. Signed <code class="docutils literal notranslate"><span class="pre">bias</span></code>, coverage metrics, and custom metrics require
+an explicit <code class="docutils literal notranslate"><span class="pre">ascending=True</span></code> or <code class="docutils literal notranslate"><span class="pre">ascending=False</span></code>. Coverage is intentionally
+not treated as automatically higher-is-better because interval coverage should
+usually be assessed against a nominal level, not maximized.</p>
+</section>
+<section id="get-metric">
+<h3>get_metric<a class="headerlink" href="#get-metric" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">get_metric</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: a metric name or callable.</p>
+<p>Output: the resolved callable. Name aliases include <code class="docutils literal notranslate"><span class="pre">msfe</span> <span class="pre">-&gt;</span> <span class="pre">mse</span></code>,
+<code class="docutils literal notranslate"><span class="pre">validation_mse</span> <span class="pre">-&gt;</span> <span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">validation_rmse</span> <span class="pre">-&gt;</span> <span class="pre">rmse</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mean_error</span> <span class="pre">-&gt;</span> <span class="pre">bias</span></code>, and <code class="docutils literal notranslate"><span class="pre">negative_log_score</span> <span class="pre">-&gt;</span> <span class="pre">gaussian_nll</span></code>.</p>
+<p>Custom metrics do not need registration. Pass a callable directly anywhere a
+metric is accepted:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">mean_bias</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_true</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+<span class="n">scores</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">evaluate_forecasts</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">mean_bias</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The metric callable should accept <code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_pred)</span></code> and return one scalar
+<code class="docutils literal notranslate"><span class="pre">float</span></code>. In evaluation tables, the output column name is the callable’s
+<code class="docutils literal notranslate"><span class="pre">__name__</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;callable_metric&quot;</span></code> when no name is available. Metrics requiring
+benchmark forecasts, variances, intervals, or previous actuals need one of the
+specialized built-in metric names because <code class="docutils literal notranslate"><span class="pre">evaluate_forecasts()</span></code> must know
+which forecast-table columns to pass.</p>
+</section>
+</section>
+<section id="point-metrics">
+<h2>Point Metrics<a class="headerlink" href="#point-metrics" title="Link to this heading">#</a></h2>
+<p>All point metrics align inputs as pandas Series, drop missing paired
+observations, and return a single <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Signature</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mse</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mse(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p>Mean squared error.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rmse</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">rmse(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p>Root mean squared error.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mae</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mae(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p>Mean absolute error.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bias</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bias(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p>Mean residual <code class="docutils literal notranslate"><span class="pre">actual</span> <span class="pre">-</span> <span class="pre">prediction</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">medae</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">medae(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p>Median absolute error.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mape</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mape(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">*,</span> <span class="pre">eps=1e-10)</span></code></p></td>
+<td><p>Mean absolute percentage error on the 0-100 scale.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">smape</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">smape(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">*,</span> <span class="pre">eps=1e-10)</span></code></p></td>
+<td><p>Symmetric MAPE on the 0-100 scale.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">theil_u1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">theil_u1(y_true,</span> <span class="pre">y_pred)</span></code></p></td>
+<td><p>Theil U1 inequality coefficient.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">theil_u2(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">y_prev)</span></code></p></td>
+<td><p>Theil U2 relative to a no-change forecast.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="benchmark-relative-metrics">
+<h2>Benchmark-Relative Metrics<a class="headerlink" href="#benchmark-relative-metrics" title="Link to this heading">#</a></h2>
+<p>These functions require realized values, candidate forecasts, and benchmark
+forecasts aligned on the same index.</p>
+<p>The direct functions and <code class="docutils literal notranslate"><span class="pre">evaluate_forecasts(...)</span></code> require candidate and
+benchmark support to match exactly. They do not silently score only the
+intersection of two forecast histories. Forecast-table evaluation also checks
+that candidate and benchmark rows carry the same realized value for each support
+point.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Signature</p></th>
+<th class="head"><p>Interpretation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">relative_mse</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">relative_mse(y_true,</span> <span class="pre">y_model,</span> <span class="pre">y_benchmark)</span></code></p></td>
+<td><p>Candidate MSE divided by benchmark MSE. Below 1 favors candidate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">relative_mae</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">relative_mae(y_true,</span> <span class="pre">y_model,</span> <span class="pre">y_benchmark)</span></code></p></td>
+<td><p>Candidate MAE divided by benchmark MAE. Below 1 favors candidate.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mse_reduction(y_true,</span> <span class="pre">y_model,</span> <span class="pre">y_benchmark)</span></code></p></td>
+<td><p>Benchmark MSE minus candidate MSE. Positive favors candidate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">r2_oos</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">r2_oos(y_true,</span> <span class="pre">y_model,</span> <span class="pre">y_benchmark)</span></code></p></td>
+<td><p>Out-of-sample <code class="docutils literal notranslate"><span class="pre">R^2</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">relative_mse</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="density-interval-and-volatility-metrics">
+<h2>Density, Interval, And Volatility Metrics<a class="headerlink" href="#density-interval-and-volatility-metrics" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Signature</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pinball_loss</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pinball_loss(y_true,</span> <span class="pre">y_quantile,</span> <span class="pre">*,</span> <span class="pre">quantile)</span></code></p></td>
+<td><p>Mean quantile pinball loss.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gaussian_nll</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gaussian_nll(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">variance)</span></code></p></td>
+<td><p>Gaussian negative log likelihood.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">negative_log_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">negative_log_score(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">variance)</span></code></p></td>
+<td><p>Gaussian negative log score.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">log_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">log_score(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">variance)</span></code></p></td>
+<td><p>Backward-compatible alias for <code class="docutils literal notranslate"><span class="pre">negative_log_score</span></code>; lower is better.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">crps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">crps(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">variance)</span></code></p></td>
+<td><p>Gaussian continuous ranked probability score.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">qlike</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">qlike(y_true,</span> <span class="pre">variance,</span> <span class="pre">*,</span> <span class="pre">eps=1e-12)</span></code></p></td>
+<td><p>QLIKE volatility loss using realized variance or squared realization.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">coverage_rate(y_true,</span> <span class="pre">lower,</span> <span class="pre">upper)</span></code></p></td>
+<td><p>Share of observations inside the interval.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interval_width</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">interval_width(lower,</span> <span class="pre">upper)</span></code></p></td>
+<td><p>Mean interval width.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interval_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">interval_score(y_true,</span> <span class="pre">lower,</span> <span class="pre">upper,</span> <span class="pre">*,</span> <span class="pre">alpha=0.05)</span></code></p></td>
+<td><p>Winkler interval score.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">evaluate_forecasts(...)</span></code> uses <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code> for <code class="docutils literal notranslate"><span class="pre">gaussian_nll</span></code>,
+<code class="docutils literal notranslate"><span class="pre">negative_log_score</span></code>, <code class="docutils literal notranslate"><span class="pre">log_score</span></code>, and <code class="docutils literal notranslate"><span class="pre">crps</span></code>. <code class="docutils literal notranslate"><span class="pre">qlike</span></code> should be evaluated
+against realized variance or squared realization. Pass <code class="docutils literal notranslate"><span class="pre">volatility_actual</span></code> when
+that column differs from <code class="docutils literal notranslate"><span class="pre">actual</span></code>. It uses <code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code> dictionaries
+for pinball and interval metrics.</p>
+<p>Variance inputs must be finite and strictly positive. QLIKE realized variance
+must be finite and nonnegative, while the forecast variance must be strictly
+positive. Interval metrics require <code class="docutils literal notranslate"><span class="pre">upper</span> <span class="pre">&gt;=</span> <span class="pre">lower</span></code> for every evaluated row.
+Quantile levels must be strictly inside <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code>, and quantile predictions must
+be finite.</p>
+</section>
+<section id="direction-metrics">
+<h2>Direction Metrics<a class="headerlink" href="#direction-metrics" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Signature</p></th>
+<th class="head"><p>Output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">success_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">success_ratio(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">y_prev)</span></code></p></td>
+<td><p>Directional hit rate relative to the previous realized value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pesaran_timmermann_metric</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pesaran_timmermann_metric(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">*,</span> <span class="pre">threshold=0.0)</span></code></p></td>
+<td><p>Pesaran-Timmermann directional accuracy statistic.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mase</span></code> – Mean Absolute Scaled Error (Hyndman-Koehler), out-of-sample MAE scaled by the in-sample (seasonal-)naive MAE.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">seasonal_naive_mae</span></code> – in-sample (seasonal-)naive MAE <code class="docutils literal notranslate"><span class="pre">mean(|y[t]-y[t-m]|)</span></code>, the MASE scaling denominator.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">acf1</span></code> – lag-1 autocorrelation (e.g. of forecast residuals), the ACF1 reported by <code class="docutils literal notranslate"><span class="pre">forecast::accuracy</span></code>.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="forecast_analysis.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">macroforecast.forecast_analysis</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tests.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">macroforecast.tests</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#risk-return-forecast-evaluation">Risk-Return Forecast Evaluation</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paper-citation-and-scope">Paper Citation And Scope</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paper-motivation">Paper Motivation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-point-loss">compute_point_loss</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-returns">forecast_returns</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sharpe-ratio">sharpe_ratio</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sortino-ratio">sortino_ratio</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#omega-ratio">omega_ratio</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#drawdown-series-and-max-drawdown">drawdown_series and max_drawdown</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#risk-adjusted-forecast-metrics">risk_adjusted_forecast_metrics</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#edge-ratio">edge_ratio</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-table-helpers">Forecast Table Helpers</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-forecasts">evaluate_forecasts</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rank-forecasts">rank_forecasts</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-metric">get_metric</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#point-metrics">Point Metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-relative-metrics">Benchmark-Relative Metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#density-interval-and-volatility-metrics">Density, Interval, And Volatility Metrics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#direction-metrics">Direction Metrics</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/reference/metrics.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/reference/metrics.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

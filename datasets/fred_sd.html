@@ -1,0 +1,1799 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>FRED-SD &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=7695ce1a"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'datasets/fred_sd';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FRED-MD + FRED-SD" href="fred_md_sd.html" />
+    <link rel="prev" title="FRED-QD" href="fred_qd.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5a1" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">FRED Datasets</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="fred_md.html">FRED-MD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_qd.html">FRED-QD</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">FRED-SD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_md_sd.html">FRED-MD + FRED-SD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fred_qd_sd.html">FRED-QD + FRED-SD</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">FRED Datasets</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">FRED-SD</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="fred-sd">
+<h1>FRED-SD<a class="headerlink" href="#fred-sd" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to FRED Datasets</span></a></p>
+<p>FRED-SD is the package’s state-level macroeconomic data source. In
+<code class="docutils literal notranslate"><span class="pre">macroforecast</span></code>, it is loaded through <code class="docutils literal notranslate"><span class="pre">mf.data.load_fred_sd()</span></code> and returned as a
+canonical <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>.</p>
+<p>The official source is the St. Louis Fed FRED-SD page:
+<a class="reference external" href="https://www.stlouisfed.org/research/economists/owyang/fred-sd">https://www.stlouisfed.org/research/economists/owyang/fred-sd</a>.</p>
+<section id="what-fred-sd-contains">
+<h2>What FRED-SD Contains<a class="headerlink" href="#what-fred-sd-contains" title="Link to this heading">#</a></h2>
+<p>FRED-SD is state-level and mixed-frequency. The official FRED-SD page describes
+the database as state-level monthly and quarterly observations. The package
+loads the official Data by Series workbook and infers each column’s native
+frequency from its observed dates.</p>
+<p>This page is intentionally kept separate from the national FRED-MD/FRED-QD
+pages. FRED-SD needs its own audit because state-series frequencies and edge
+cases can differ by variable and state, including weekly or otherwise
+non-monthly/non-quarterly observed spacing in raw files.</p>
+</section>
+<section id="current-snapshot-checked-for-this-page">
+<h2>Current Snapshot Checked For This Page<a class="headerlink" href="#current-snapshot-checked-for-this-page" title="Link to this heading">#</a></h2>
+<p>This page was checked against the St. Louis Fed FRED-SD page and the latest
+official Data by Series workbook on 2026-06-01.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Checked value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Latest workbook label</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">series-2026-04.xlsx</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Latest workbook URL</p></td>
+<td><p><a class="reference external" href="https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-04.xlsx">https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-04.xlsx</a></p></td>
+</tr>
+<tr class="row-even"><td><p>Panel shape after package load</p></td>
+<td><p>1133 rows x 1428 state-series columns</p></td>
+</tr>
+<tr class="row-odd"><td><p>State count</p></td>
+<td><p>51</p></td>
+</tr>
+<tr class="row-even"><td><p>FRED-SD variable count</p></td>
+<td><p>28</p></td>
+</tr>
+<tr class="row-odd"><td><p>Last date present in panel</p></td>
+<td><p>2026-04</p></td>
+</tr>
+<tr class="row-even"><td><p>Official page</p></td>
+<td><p><a class="reference external" href="https://www.stlouisfed.org/research/economists/owyang/fred-sd">https://www.stlouisfed.org/research/economists/owyang/fred-sd</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The latest workbook has these native frequency counts:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Native frequency</p></th>
+<th class="head text-right"><p>Number of state-series columns</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>monthly</p></td>
+<td class="text-right"><p>861</p></td>
+</tr>
+<tr class="row-odd"><td><p>quarterly</p></td>
+<td class="text-right"><p>546</p></td>
+</tr>
+<tr class="row-even"><td><p>unknown</p></td>
+<td class="text-right"><p>21</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>These are aggregate counts across all state-series columns. Because FRED-SD is
+state-level, the state axis must also be checked. The latest workbook has 28
+state-series columns for every state/DC, but the monthly/quarterly/unknown mix
+differs by state when some state-variable cells have too few observations for
+reliable frequency inference.</p>
+<p>The latest workbook has these date-anchor counts:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Date anchor</p></th>
+<th class="head text-right"><p>Number of state-series columns</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">month_start</span></code></p></td>
+<td class="text-right"><p>810</p></td>
+<td><p>Monthly observations dated on the first day of the month.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">monthly_weekday_anchor</span></code></p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>Monthly observations dated on a repeated weekday pattern rather than month start. In the latest workbook this is <code class="docutils literal notranslate"><span class="pre">ICLAIMS</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quarter_start</span></code></p></td>
+<td class="text-right"><p>546</p></td>
+<td><p>Quarterly observations dated on the first day of the quarter.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td class="text-right"><p>21</p></td>
+<td><p>Too few non-missing observations to infer an anchor.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">unknown</span></code> frequency category appears when a state-series has too few
+observed points to infer a reliable date spacing. <code class="docutils literal notranslate"><span class="pre">ICLAIMS</span></code> is a special case:
+its dates look weekly because they fall on Saturdays, but each state has one
+observation per month in the latest workbook, so the package records
+<code class="docutils literal notranslate"><span class="pre">native_frequency=&quot;monthly&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">date_anchor=&quot;monthly_weekday_anchor&quot;</span></code>.</p>
+</section>
+<section id="loader">
+<h2>Loader<a class="headerlink" href="#loader" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">load_fred_sd</span><span class="p">(</span>
+    <span class="n">vintage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">cache_root</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">local_source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">variables</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataBundle</span>
+</pre></div>
+</div>
+</section>
+<section id="input">
+<h2>Input<a class="headerlink" href="#input" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">vintage</span></code></p></td>
+<td><p><code>str | None</code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Vintage label in <code class="docutils literal notranslate"><span class="pre">YYYY-MM</span></code> form. <code class="docutils literal notranslate"><span class="pre">None</span></code> loads the current official workbook.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">force</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Re-download or re-copy the raw file even if it already exists in cache.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cache_root</span></code></p></td>
+<td><p>path-like or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Root directory for raw-file cache and manifest.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">local_source</span></code></p></td>
+<td><p>path-like or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Local FRED-SD workbook or CSV source.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">states</span></code></p></td>
+<td><p><code>list[str] | None</code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>State subset. Example: <code class="docutils literal notranslate"><span class="pre">[&quot;CA&quot;,</span> <span class="pre">&quot;TX&quot;]</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variables</span></code></p></td>
+<td><p><code>list[str] | None</code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>FRED-SD variable subset. Example: <code class="docutils literal notranslate"><span class="pre">[&quot;UR&quot;,</span> <span class="pre">&quot;ICLAIMS&quot;]</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For current data, the loader reads the official FRED-SD landing page and uses
+the latest by-series workbook link. For vintage data, the loader first tries
+the official <code class="docutils literal notranslate"><span class="pre">series-YYYY-MM.xlsx</span></code> workbook URL. If that direct workbook is not
+available, it downloads the official by-series zip for that year or two-year
+archive and extracts the workbook matching the requested vintage. This differs
+from FRED-MD/FRED-QD because FRED-SD distributes state data as Excel workbooks,
+not CSV files with t-code rows.</p>
+</section>
+<section id="output">
+<h2>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">load_fred_sd()</span></code> returns a <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.panel</span></code></p></td>
+<td><p>Wide state-level panel with columns such as <code class="docutils literal notranslate"><span class="pre">UR_CA</span></code> or <code class="docutils literal notranslate"><span class="pre">NQGSP_TX</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;dataset&quot;]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fred_sd&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;frequency&quot;]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;monthly&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;quarterly&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;weekly&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;annual&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mixed&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;unknown&quot;</span></code> depending on loaded columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;native_frequency_by_column&quot;]</span></code></p></td>
+<td><p>Per-column native frequency map.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;native_frequency_counts&quot;]</span></code></p></td>
+<td><p>Per-column native frequency counts.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;date_anchor_by_column&quot;]</span></code></p></td>
+<td><p>Per-column date-anchor map.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;date_anchor_counts&quot;]</span></code></p></td>
+<td><p>Per-column date-anchor counts.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;state_summary&quot;]</span></code></p></td>
+<td><p>Per-state coverage, frequency counts, date-anchor counts, observed span, and unknown variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bundle.metadata[&quot;transform_codes&quot;]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">{}</span></code> because FRED-SD has no official t-code map.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>FRED-SD series metadata is stored in:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bundle</span><span class="o">.</span><span class="n">panel</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;macrocast_reports&quot;</span><span class="p">][</span><span class="s2">&quot;fred_sd_series_metadata&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>That report contains:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">series_count</span></code></p></td>
+<td><p>Number of loaded state-series columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">state_count</span></code></p></td>
+<td><p>Number of states represented in the loaded panel.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sd_variable_count</span></code></p></td>
+<td><p>Number of FRED-SD variable groups represented.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">native_frequency_counts</span></code></p></td>
+<td><p>Count of monthly, quarterly, weekly, annual, irregular, unknown, or other inferred frequencies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">date_anchor_counts</span></code></p></td>
+<td><p>Count of date-anchor patterns such as <code class="docutils literal notranslate"><span class="pre">month_start</span></code>, <code class="docutils literal notranslate"><span class="pre">quarter_start</span></code>, or <code class="docutils literal notranslate"><span class="pre">monthly_weekday_anchor</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">state_summary</span></code></p></td>
+<td><p>State-level coverage summary with frequency and date-anchor counts by state.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">series</span></code></p></td>
+<td><p>Row-level metadata for each state-series column.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">series</span></code> row contains <code class="docutils literal notranslate"><span class="pre">column</span></code>, <code class="docutils literal notranslate"><span class="pre">sd_variable</span></code>, <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">source_sheet</span></code>,
+<code class="docutils literal notranslate"><span class="pre">native_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">date_anchor</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_start</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_end</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">non_missing_observation_count</span></code>.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">state_summary</span></code> row contains <code class="docutils literal notranslate"><span class="pre">state</span></code>, <code class="docutils literal notranslate"><span class="pre">series_count</span></code>, <code class="docutils literal notranslate"><span class="pre">sd_variable_count</span></code>,
+<code class="docutils literal notranslate"><span class="pre">native_frequency_counts</span></code>, <code class="docutils literal notranslate"><span class="pre">date_anchor_counts</span></code>, <code class="docutils literal notranslate"><span class="pre">observed_start</span></code>,
+<code class="docutils literal notranslate"><span class="pre">observed_end</span></code>, and <code class="docutils literal notranslate"><span class="pre">unknown_variables</span></code>.</p>
+</section>
+<section id="state-coverage-in-latest-workbook">
+<h2>State Coverage In Latest Workbook<a class="headerlink" href="#state-coverage-in-latest-workbook" title="Link to this heading">#</a></h2>
+<p>This table is computed from <code class="docutils literal notranslate"><span class="pre">series-2026-04.xlsx</span></code>. The key audit surface is not
+only the aggregate FRED-SD panel shape, but also whether each state/DC has the
+same number of columns and which state-variable pairs fall into <code class="docutils literal notranslate"><span class="pre">unknown</span></code>
+frequency.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>State</p></th>
+<th class="head text-right"><p>State-series columns</p></th>
+<th class="head text-right"><p>Monthly</p></th>
+<th class="head text-right"><p>Quarterly</p></th>
+<th class="head text-right"><p>Unknown</p></th>
+<th class="head"><p>Date-anchor pattern</p></th>
+<th class="head"><p>Earliest obs.</p></th>
+<th class="head"><p>Latest obs.</p></th>
+<th class="head"><p>Unknown variables</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AK</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1950-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>NATURNQGSP</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AL</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AR</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AZ</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CO</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CT</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>NATURNQGSP</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DC</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>16</p></td>
+<td class="text-right"><p>8</p></td>
+<td class="text-right"><p>4</p></td>
+<td><p>month_start: 15, monthly_weekday_anchor: 1, none: 4, quarter_start: 8</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>CONSTNQGSP, MANNQGSP, MINNG, NATURNQGSP</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DE</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>16</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>2</p></td>
+<td><p>month_start: 15, monthly_weekday_anchor: 1, none: 2, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>MINNG, NATURNQGSP</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FL</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HI</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>16</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>2</p></td>
+<td><p>month_start: 15, monthly_weekday_anchor: 1, none: 2, quarter_start: 10</p></td>
+<td><p>1950-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>MINNG, NATURNQGSP</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ID</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>NATURNQGSP</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">IL</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IN</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>NATURNQGSP</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">KS</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">KY</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MD</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ME</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>NATURNQGSP</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MI</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MN</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MO</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MS</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MT</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NC</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ND</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NE</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NH</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NJ</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NM</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>16</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 15, monthly_weekday_anchor: 1, none: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>RENTS</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NV</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NY</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OH</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OK</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OR</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RI</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>16</p></td>
+<td class="text-right"><p>9</p></td>
+<td class="text-right"><p>3</p></td>
+<td><p>month_start: 15, monthly_weekday_anchor: 1, none: 3, quarter_start: 9</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>CONSTNQGSP, NATURNQGSP, RENTS</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SC</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SD</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>16</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 15, monthly_weekday_anchor: 1, none: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>RENTS</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TN</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TX</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">UT</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VT</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>NATURNQGSP</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WA</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WI</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>NATURNQGSP</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WV</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>11</p></td>
+<td class="text-right"><p>0</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, quarter_start: 11</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WY</span></code></p></td>
+<td class="text-right"><p>28</p></td>
+<td class="text-right"><p>17</p></td>
+<td class="text-right"><p>10</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>month_start: 16, monthly_weekday_anchor: 1, none: 1, quarter_start: 10</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2026-04-04</p></td>
+<td><p>MANNQGSP</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="variable-coverage-in-latest-workbook">
+<h2>Variable Coverage In Latest Workbook<a class="headerlink" href="#variable-coverage-in-latest-workbook" title="Link to this heading">#</a></h2>
+<p>This table is computed from <code class="docutils literal notranslate"><span class="pre">series-2026-04.xlsx</span></code>. Frequency and date-anchor
+patterns are column counts across states. Start/end dates are the widest
+observed range across states for that variable. <code class="docutils literal notranslate"><span class="pre">Unknown</span> <span class="pre">states</span></code> lists states
+whose state-series has too few observations for reliable frequency inference.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Native frequency pattern</p></th>
+<th class="head"><p>Date-anchor pattern</p></th>
+<th class="head text-right"><p>States</p></th>
+<th class="head"><p>Earliest obs.</p></th>
+<th class="head"><p>Latest obs.</p></th>
+<th class="head text-right"><p>Non-missing obs.</p></th>
+<th class="head"><p>Unknown states</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BPPRIVSA</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1988-01-01</p></td>
+<td><p>2025-08-01</p></td>
+<td class="text-right"><p>23052</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CONS</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2026-02-01</p></td>
+<td class="text-right"><p>22034</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CONSTNQGSP</span></code></p></td>
+<td><p>quarterly: 49, unknown: 2</p></td>
+<td><p>none: 2, quarter_start: 49</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4112</p></td>
+<td><p>DC, RI</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EXPORTS</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1995-08-01</p></td>
+<td><p>2026-02-01</p></td>
+<td class="text-right"><p>18717</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FIRE</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>22032</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FIRENQGSP</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4284</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GOVNQGSP</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4284</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GOVT</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>22032</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ICLAIMS</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>monthly_weekday_anchor: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1985-09-28</p></td>
+<td><p>2026-04-04</p></td>
+<td class="text-right"><p>24662</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IMPORTS</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2008-01-01</p></td>
+<td><p>2026-02-01</p></td>
+<td class="text-right"><p>11118</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">INFO</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>22032</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">INFONQGSP</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4244</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LF</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1976-01-01</p></td>
+<td><p>2025-08-01</p></td>
+<td class="text-right"><p>30396</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MANNQGSP</span></code></p></td>
+<td><p>quarterly: 49, unknown: 2</p></td>
+<td><p>none: 2, quarter_start: 49</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4100</p></td>
+<td><p>DC, WY</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MFG</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>22032</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MFGHRS</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2007-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>11628</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MINNG</span></code></p></td>
+<td><p>monthly: 48, unknown: 3</p></td>
+<td><p>month_start: 48, none: 3</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>20364</p></td>
+<td><p>DC, DE, HI</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NA</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2026-02-01</p></td>
+<td class="text-right"><p>22048</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NATURNQGSP</span></code></p></td>
+<td><p>quarterly: 40, unknown: 11</p></td>
+<td><p>none: 11, quarter_start: 40</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>3340</p></td>
+<td><p>AK, CT, DC, DE, HI, ID, IN, ME, RI, VT, WI</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NQGSP</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4284</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OTOT</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1948-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>15896</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PARTRATE</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1976-01-01</p></td>
+<td><p>2025-08-01</p></td>
+<td class="text-right"><p>30396</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PSERV</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>22032</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PSERVNQGSP</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4284</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RENTS</span></code></p></td>
+<td><p>monthly: 48, unknown: 3</p></td>
+<td><p>month_start: 48, none: 3</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1990-01-01</p></td>
+<td><p>2025-12-01</p></td>
+<td class="text-right"><p>20736</p></td>
+<td><p>NM, RI, SD</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">STHPI</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1975-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>10404</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">UR</span></code></p></td>
+<td><p>monthly: 51</p></td>
+<td><p>month_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>1976-01-01</p></td>
+<td><p>2025-08-01</p></td>
+<td class="text-right"><p>30396</p></td>
+<td><p>-</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UTILNQGSP</span></code></p></td>
+<td><p>quarterly: 51</p></td>
+<td><p>quarter_start: 51</p></td>
+<td class="text-right"><p>51</p></td>
+<td><p>2005-01-01</p></td>
+<td><p>2025-10-01</p></td>
+<td class="text-right"><p>4268</p></td>
+<td><p>-</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The official FRED-SD page includes a correction noting that <code class="docutils literal notranslate"><span class="pre">OTOT</span></code> and <code class="docutils literal notranslate"><span class="pre">STHPI</span></code>
+were previously described as monthly, but are quarterly. The latest workbook
+confirms both as quarterly in all 51 states.</p>
+</section>
+<section id="no-official-t-codes">
+<h2>No Official T-Codes<a class="headerlink" href="#no-official-t-codes" title="Link to this heading">#</a></h2>
+<p>FRED-SD does not provide official stationarity transformation codes. Therefore:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span><span class="n">fred_sd_bundle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>raises unless the user explicitly chooses <code class="docutils literal notranslate"><span class="pre">transform=&quot;none&quot;</span></code> or supplies custom
+codes.</p>
+<p>Recommended explicit paths:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">processed</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span><span class="n">fred_sd_bundle</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">codes</span><span class="p">,</span> <span class="n">provenance</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">fred_sd_transform_codes</span><span class="p">(</span>
+    <span class="n">fred_sd_bundle</span><span class="p">,</span>
+    <span class="n">variable_codes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;UR&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;ICLAIMS&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+    <span class="n">return_table</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">processed</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span>
+    <span class="n">fred_sd_bundle</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+    <span class="n">transform_codes</span><span class="o">=</span><span class="n">codes</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">fred_sd_transform_codes()</span></code> can use user choices and package suggestions based
+on national FRED-MD/FRED-QD analogs. These are suggestions, not official
+metadata. The provenance table uses <code class="docutils literal notranslate"><span class="pre">suggestion_confidence</span></code> to distinguish:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">user</span></code></p></td>
+<td><p>The code was supplied by the user.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">high</span></code></p></td>
+<td><p>Built-in national-analog suggestion with close variable match.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">medium</span></code></p></td>
+<td><p>Built-in national-analog suggestion with weaker match.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>No t-code was assigned.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="related-combined-loaders">
+<h2>Related Combined Loaders<a class="headerlink" href="#related-combined-loaders" title="Link to this heading">#</a></h2>
+<p>Use FRED-SD alone when the analysis only needs state-level variables. Combined
+national/state loaders are documented separately:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="fred_md_sd.html"><span class="std std-doc">FRED-MD + FRED-SD</span></a> for monthly state analysis with national controls.</p></li>
+<li><p><a class="reference internal" href="fred_qd_sd.html"><span class="std std-doc">FRED-QD + FRED-SD</span></a> for quarterly state analysis with national controls.</p></li>
+</ul>
+<p>FRED-SD state series can have different observed frequencies and date anchors.
+The current loader records that explicitly:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">native_frequency_by_column</span></code> records whether each state column is monthly,
+quarterly, weekly, or unknown before any combination.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">date_anchor_by_column</span></code> records whether dates are first-of-month,
+first-of-quarter, monthly weekday/Saturday-style anchors, or missing.</p></li>
+<li><p>combined loaders preserve those maps and raise/record conversion warnings
+when selected FRED-SD columns are aligned to the MD or QD output frequency.</p></li>
+</ul>
+<p>Use the combined pages for the default monthly and quarterly policies. Use
+<code class="docutils literal notranslate"><span class="pre">frequency=&quot;native&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">mf.data.align_frequency()</span></code> when you need to inspect or
+manually govern unusual state-series timing.</p>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">sd</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">load_fred_sd</span><span class="p">(</span><span class="n">states</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;CA&quot;</span><span class="p">,</span> <span class="s2">&quot;TX&quot;</span><span class="p">],</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;UR&quot;</span><span class="p">,</span> <span class="s2">&quot;ICLAIMS&quot;</span><span class="p">])</span>
+<span class="n">codes</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">fred_sd_transform_codes</span><span class="p">(</span>
+    <span class="n">sd</span><span class="p">,</span>
+    <span class="n">variable_codes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;UR&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;ICLAIMS&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">processed</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span>
+    <span class="n">sd</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+    <span class="n">transform_codes</span><span class="o">=</span><span class="n">codes</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="official-urls">
+<h2>Official URLs<a class="headerlink" href="#official-urls" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Source</p></th>
+<th class="head"><p>URL</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>FRED-SD official page</p></td>
+<td><p><a class="reference external" href="https://www.stlouisfed.org/research/economists/owyang/fred-sd">https://www.stlouisfed.org/research/economists/owyang/fred-sd</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Latest Data by Series workbook checked here</p></td>
+<td><p><a class="reference external" href="https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-04.xlsx">https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-sd/series/series-2026-04.xlsx</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="fred_qd.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">FRED-QD</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fred_md_sd.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">FRED-MD + FRED-SD</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-fred-sd-contains">What FRED-SD Contains</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#current-snapshot-checked-for-this-page">Current Snapshot Checked For This Page</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loader">Loader</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#input">Input</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#state-coverage-in-latest-workbook">State Coverage In Latest Workbook</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variable-coverage-in-latest-workbook">Variable Coverage In Latest Workbook</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#no-official-t-codes">No Official T-Codes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-combined-loaders">Related Combined Loaders</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#official-urls">Official URLs</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/datasets/fred_sd.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/datasets/fred_sd.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

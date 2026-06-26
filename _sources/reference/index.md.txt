@@ -1,62 +1,141 @@
 # Reference
 
-Lookup pages for the public Python surface, recipe YAML contract, and generated option dictionary. These pages are for exact lookup; tutorials and design narrative live elsewhere.
+[Back to documentation home](../index.md)
 
-> **Looking for design rationale?** Use [Architecture](../explanation/architecture/index.md). Reference pages define names, keys, options, and import surfaces; architecture pages explain why the packages are separated and how they interact.
+New here? Start with the [User Guide](../guide/index.md) for concept-level explanations and a getting-started walkthrough.
 
-## Recipe API
+Current workflow reference for the clean public Python API and callable module
+boundaries. Dataset descriptions live in [FRED Datasets](../datasets/index.md).
 
-- [Recipe gallery](gallery.md): runnable examples.
-- [Recipe contract](layer_contract.md): recipe keys, step shape, and complete recipe form.
-- [Meta](meta.md): study setup, failure policy, reproducibility, and compute policy.
-- [Data](data.md): source, target, horizon, and geography choices.
-- [Preprocessing](preprocessing.md): frequency alignment, transforms, outlier handling, imputation, and frame-edge rules.
-- [Data policies](data_policies.md): missingness, outliers, release lags, and same-period predictors.
-- [Defaults](defaults.md): package-level default profiles.
-- [Runtime support](runtime_support.md): what executes today.
-- [Output](output.md): artifact directory and manifest layout.
-- [FRED datasets](fred_datasets.md): FRED-MD, FRED-QD, and FRED-SD reference status.
+Start with [Documentation Map](documentation_map.md) if you are deciding what
+to inspect. Use this page when you already know the part of the workflow you
+want to read.
 
-## Python Surface
+## First Review Path
 
-- [Public Python API](public_api.md): top-level imports and semantic package map.
-- [Standalone functions](standalone_functions/index.md): direct `mf.functions.*` callables.
-- [Navigator](navigator/tree_navigator.md): generated topology navigator details.
+| Order | Page | Why it comes first |
+| --- | --- | --- |
+| 1 | [Documentation Map](documentation_map.md) | Shows which page answers which question. |
+| 2 | [Workflow Contract](workflow.md) | Defines module ownership and runner composition. |
+| 3 | [Legacy Callable Coverage](legacy_callable_coverage.md) | Confirms what old runtime functionality is covered, removed, or deferred. |
+| 4 | [Public Python API](public_api.md) | Lists importable public symbols. |
+| 5 | [Reference Verification](reference_verification.md) | Shows formula/reference anchors and future verification expansion. |
 
-## Generated Encyclopedia
+## Workflow Groups
 
-Generated from the live implementation registry plus the `OPTION_DOCS` registry
-under `tools/docgen/option_docs/`. These pages are useful for exact option
-lookup, but they are not the primary user narrative.
+| Group | Pages | Owns |
+| --- | --- | --- |
+| Orientation | [Documentation Map](documentation_map.md), [Workflow](workflow.md), [Legacy Coverage](legacy_callable_coverage.md), [Reference Verification](reference_verification.md), [Public API](public_api.md) | How the package is organized and what is currently covered. |
+| Package Configuration | [Meta](meta.md) | Package-wide defaults used only when a direct function or runner policy does not pass a more specific value. |
+| Data Pipeline | [Data](data.md), [Preprocessing](preprocessing.md), [Data Analysis](data_analysis.md) | Data loading, metadata, cleaning, summaries, and before/after checks. See [FRED Datasets](../datasets/index.md) for dataset pages. |
+| Feature Pipeline | [Filters](filters.md), [Feature Engineering](feature_engineering.md), [Feature Analysis](feature_analysis.md) | One-series filters/smoothers, targets, predictors, transforms, factor/selection tools, and feature diagnostics. |
+| Forecast Pipeline | [Window](window.md), [Models](models.md), [Model Ensemble](model_ensemble.md), [Model Selection](model_selection.md), [Forecasting](forecasting.md), [Forecast Analysis](forecast_analysis.md) | Timing, model fits, fit-time model composition, parameter search, runner execution, and forecast diagnostics. |
+| Evaluation and Testing | [Metrics](metrics.md), [Tests](tests.md), [Evaluation](evaluation.md) | Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports. |
+| Explanation and Delivery | [Interpretation](interpretation.md), [Dual Interpretation](interpretation_dual.md), [Output](output.md), [Reporting](reporting.md) | Attribution, observation-based dual interpretation, output generation, artifact writing, paper-table presets, and report/table rendering. |
+| Orchestration | [Pipeline](pipeline.md) | Comprehensive POOS engine: arms, t-code target resolution, relative RMSE + DM/CW/MCS, combinations, deferred interpretation, and a single report. |
+| Custom Hooks | [Custom Extensions](custom/index.md) | User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts. |
 
-- Numbered groups: 13
-- Subgroups: 62
-- Axes (operational + future): 164
-- Option values: 600
-- OptionDoc entries: 600
+## What To Check First
 
-- [Generated encyclopedia](generated/index.md)
-- [Browse by group](generated/browse_by_layer.md)
-- [Browse by axis](generated/browse_by_axis.md)
-- [Browse by option](generated/browse_by_option.md)
+| If you want to check... | Open first | Then open |
+| --- | --- | --- |
+| Current package structure | [Documentation Map](documentation_map.md) | [Workflow Contract](workflow.md), [Public Python API](public_api.md) |
+| Package-wide defaults | [Meta](meta.md) | [Forecasting](forecasting.md) for runner policy usage. |
+| Whether old runtime features are covered | [Legacy Callable Coverage](legacy_callable_coverage.md) | [Reference Verification](reference_verification.md) |
+| Data and preprocessing behavior | [Data](data.md) | [FRED Datasets](../datasets/index.md), [Preprocessing](preprocessing.md) |
+| Paper replication settings | [Replication Gallery](../guide/gallery.md) | [Reference Verification](reference_verification.md), [Forecasting](forecasting.md) |
+| Forecast runner behavior | [Workflow Contract](workflow.md) | [Window](window.md), [Forecasting](forecasting.md) |
+| Models and parameter search | [Models](models.md) | [Model Selection](model_selection.md) |
+| Evaluation and tests | [Evaluation](evaluation.md) | [Metrics](metrics.md), [Tests](tests.md) |
+| Interpretation, output, and reporting | [Interpretation](interpretation.md) | [Output](output.md), [Reporting](reporting.md) |
 
-## Pages
+## Orientation
 
 ```{toctree}
 :maxdepth: 1
+:caption: Orientation
 
-gallery
-layer_contract
+documentation_map
+workflow
+legacy_callable_coverage
+reference_verification
+public_api
+```
+
+## Custom Hooks
+
+```{toctree}
+:maxdepth: 1
+:caption: Custom Hooks
+
+custom/index
+```
+
+## Package Configuration
+
+```{toctree}
+:maxdepth: 1
+:caption: Package Configuration
+
 meta
+```
+
+## Data Pipeline
+
+```{toctree}
+:maxdepth: 1
+:caption: Data Pipeline
+
 data
 preprocessing
-data_policies
-defaults
-runtime_support
+data_analysis
+```
+
+## Feature Pipeline
+
+```{toctree}
+:maxdepth: 1
+:caption: Feature Pipeline
+
+filters
+feature_engineering
+feature_analysis
+```
+
+## Forecast Pipeline
+
+```{toctree}
+:maxdepth: 1
+:caption: Forecast Pipeline
+
+window
+models
+model_ensemble
+model_selection
+forecasting
+forecast_analysis
+```
+
+## Evaluation and Testing
+
+```{toctree}
+:maxdepth: 1
+:caption: Evaluation and Testing
+
+metrics
+tests
+evaluation
+```
+
+## Explanation and Delivery
+
+```{toctree}
+:maxdepth: 1
+:caption: Explanation and Delivery
+
+interpretation
+interpretation_dual
 output
-fred_datasets
-public_api
-standalone_functions/index
-navigator/tree_navigator
-generated/index
+reporting
+pipeline
 ```
