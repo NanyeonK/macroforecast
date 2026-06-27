@@ -3915,8 +3915,12 @@ def _mcs_bootstrap_indices(
         return rng.integers(0, n, size=n)
     # R alignment: MCS/R/internalFunctions.R::GetIndices samples block starts
     # and concatenates fixed consecutive blocks, truncating the result to T.
+    # GetIndices draws from 1..(T - block + 1), i.e. 0..(n - block_length)
+    # inclusive. numpy's upper bound is exclusive, so it needs the + 1; without
+    # it the last valid start (n - block_length) is never drawn and the final
+    # observation never appears in any resample, biasing MCS p-values.
     n_blocks = int(np.ceil(n / block_length))
-    starts = rng.integers(0, n - block_length, size=n_blocks)
+    starts = rng.integers(0, n - block_length + 1, size=n_blocks)
     indices = np.concatenate([start + np.arange(block_length) for start in starts])
     return indices[:n].astype(np.int64)
 
