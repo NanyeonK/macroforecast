@@ -41,7 +41,10 @@ def parse_appendix() -> dict:
     policy = horizon = None
     targets_order: list[str] = []
     model = None
-    sec = re.compile(r"^### Horizon (\d+) \((direct|path-average)\)")
+    # Match any heading level: the appendix tables were merged into the single
+    # replication page and demoted from "### Horizon" to "#### Horizon", which
+    # silently broke this regex and left every key as (None, None, ...).
+    sec = re.compile(r"^#+ Horizon (\d+) \((direct|path-average)\)")
     for line in text:
         m = sec.match(line)
         if m:
