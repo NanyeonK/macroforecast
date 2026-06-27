@@ -1751,7 +1751,11 @@ def _hac_long_run_sd(values: np.ndarray, *, hac_lags: int | str | None) -> float
     long_run_var = gamma0
     for lag in range(1, min(lags, values.size - 1) + 1):
         weight = 1.0 - lag / (lags + 1.0)
-        gamma = float(np.mean(demeaned[lag:] * demeaned[:-lag]))
+        # Normalise the lag-k autocovariance by n (the full sample), not by the
+        # overlap length n - k. np.mean over the length-(n-k) product divides by
+        # n - k, which overweights higher lags relative to gamma0 (1/n) and the
+        # standard Newey-West definition. This matches tests._long_run_variance.
+        gamma = float(np.dot(demeaned[lag:], demeaned[:-lag]) / demeaned.size)
         long_run_var += 2.0 * weight * gamma
     return float(np.sqrt(max(long_run_var, 0.0)))
 
