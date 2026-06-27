@@ -599,8 +599,14 @@ class WindowSpec:
             step=self.val.step,
             horizon=self.val.horizon,
             random_state=self.val.random_state,
+            # Same three-level embargo fallback as split()/to_table(): the
+            # WindowSpec-level embargo must not be skipped, or per-origin
+            # validation splits disagree with the planned/reported splits when
+            # WindowSpec(embargo=X, estimation=EstimationWindow(embargo=0)).
             embargo=self.val.embargo
             if self.val.embargo is not None
+            else self.embargo
+            if self.embargo != 0
             else self.estimation.embargo,
         )
         return [(train_idx + start, val_idx + start) for train_idx, val_idx in relative]
