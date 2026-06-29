@@ -3193,7 +3193,11 @@ def _panel_prediction_horizon(
     positions = origin_index.get_indexer(pd.Index([origin, date]))
     if (positions < 0).any():
         return int(default)
-    return max(1, int(positions[1] - positions[0] + 1))
+    # Horizon is the number of steps from the origin to the target date, i.e.
+    # positions[1] - positions[0]. The previous "+ 1" overstated every panel
+    # prediction's horizon by one, so horizon-keyed evaluation selected the
+    # wrong rows.
+    return max(1, int(positions[1] - positions[0]))
 
 
 def _safe_path_part(value: Any) -> str:
