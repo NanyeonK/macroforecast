@@ -41,11 +41,14 @@ implements the published methodology, not reproducing an R-based paper bit for
 bit. The configuration is faithful (the eight steps below show each layer) and
 the pipeline is leak-free. At horizon 1 the replicated relative-RMSE matches the
 appendix within about 0.02, and a plain `ols` reproduces the direct and
-path-average object exactly. Agreement loosens at longer horizons. After fixing
-the two bugs below, the residual divergence is dominated by the difference
-between R's `randomForest` and scikit-learn's `RandomForestRegressor` (the same
+path-average object exactly. Agreement loosens at longer horizons. After the
+evaluation fix below, much of the residual is the expected difference between R's
+`randomForest` and scikit-learn's `RandomForestRegressor` (the same
 hyperparameters but a different engine and RNG), which is not reducible without
-matching the exact R implementation.
+matching the exact R implementation. One residual is not explained by that: the
+path-average forecasts of a few volatile real-activity series (HOUST, RETAIL) at
+long horizons diverge for the linear `ar` benchmark too, and that loose end is
+described under Divergence attribution.
 
 ### Configuration faithfulness (verified)
 
@@ -60,9 +63,13 @@ matching the exact R implementation.
 
 `scripts/replication/gcls_2021_pipeline/_compare_appendix.py` scores every cell
 (10 targets x 6 horizons x {AR, FM, RF F-Level/X-Level/MARX/F-X-MARX-Level} x
-{direct, path-average}) against the appendix tables below. Horizon 1 mean
-absolute delta is about 0.03 (RF within ~0.02); divergence grows with horizon
-(about 0.16 at h24 for full-coverage arms).
+{direct, path-average}) against the appendix tables below. The full-grid run
+predates the evaluation fix in the next section, so the figures here come from
+re-scoring the saved per-origin forecasts with the corrected pairwise
+`accuracy_table`, not from re-fitting. Overall mean absolute delta is about 0.10
+(direct 0.09, path-average 0.11). It is about 0.03 at horizon 1 and grows to
+about 0.16 at horizon 24. AR, which is engine-independent, sits at about 0.065
+once it is scored on its full 1980-2017 sample.
 
 ### Bug 1. Evaluation sample truncation (critical) — FIXED
 
@@ -78,9 +85,12 @@ benchmark on their PAIRWISE common sample; `n_common` is per-contender; ragged
 coverage emits a `RuntimeWarning`; the joint listwise sample is kept only for the
 Model Confidence Set, which genuinely needs it. The Diebold-Mariano table was
 already pairwise and is unchanged. Regression tests in
-`tests/pipeline/test_accuracy_pairwise_sample.py`. After the fix the
-full-coverage arms (AR, RF_F-Level, RF_MARX) score on 1980-2017 and their mean
-absolute delta drops from about 0.11 to 0.092 (AR alone to 0.065).
+`tests/pipeline/test_accuracy_pairwise_sample.py`. Because the run predates this
+fix, the corrected figures come from re-scoring the saved forecasts, not a
+re-run. Re-scoring moves the full-coverage arms (AR, RF_F-Level, RF_MARX) back
+onto 1980-2017 and their mean absolute delta against the appendix falls from
+about 0.11 to 0.092 (AR alone to 0.065); the short-coverage X-block arms keep
+their own 1992-2017 window.
 
 ### Bug 2. Horizon-1 direct vs path for information-criterion models — FIXED
 
@@ -108,15 +118,26 @@ horizons > 1 still differ legitimately. Guarded by
 
 ### Divergence attribution
 
-After fix 1, the residual long-horizon gap is structural, not random. It appears
-for `ar` (a pure linear autoregression with no forest), so it is not an RF engine
-artifact alone; it is one-directional within a series and series-specific
-(real-activity series diverge most), the signature of finite-sample
-direct-vs-path behaviour and implementation differences rather than RNG. The
-dominant component is R `randomForest` versus scikit-learn
-`RandomForestRegressor`: identical hyperparameters, different bootstrap RNG and
-split implementation, amplified at long horizons where the effective sample is
-small. This is the known irreducible R-versus-Python gap, not a package defect.
+After the evaluation fix the residual long-horizon gap is structural, not random,
+and it has more than one source. For the random-forest arms part of it is the
+expected R `randomForest` versus scikit-learn `RandomForestRegressor` difference,
+the same hyperparameters but a different bootstrap RNG and split rule, amplified
+at long horizons where the effective sample is small. That is the known
+irreducible R-versus-Python gap, not a package defect.
+
+That does not explain everything. The largest residuals are in the path-average
+forecasts of volatile real-activity series (HOUST and RETAIL) at long horizons,
+and they appear for `ar` too, which is a pure linear autoregression with no
+forest. Re-scoring on the full 1980-2017 sample does not remove them (HOUST
+path-average AR at horizon 24 is about 0.89 against the appendix 1.48), so they
+are not the evaluation truncation. Re-running the horizon-24 path-average FM
+benchmark with the corrected order selection lowers its RMSE by only about 10
+percent, so they are not the order-selection bug either. What remains is that our
+per-step path-average FM benchmark forecasts these series worse than the paper's
+at long horizons, which inflates the denominator and pushes the relative RMSE of
+every contender below the appendix. The cause of that benchmark gap is still open
+and is tracked as a loose end. It is specific to the path-average FM construction
+on a handful of volatile series, not a general defect.
 
 ### Hypotheses raised and retracted (for the record)
 
