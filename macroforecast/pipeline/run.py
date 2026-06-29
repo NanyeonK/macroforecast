@@ -46,6 +46,7 @@ def _run_one_arm_target(
     arm: Arm,
     target: ResolvedTarget,
     preprocessing_cache=None,
+    preprocessing_store=None,
     horizons: "Sequence[int] | None" = None,
 ) -> pd.DataFrame:
     """Execute one cell: a single arm applied to a single resolved target.
@@ -101,6 +102,7 @@ def _run_one_arm_target(
         save_models=spec.save_models,
         model_store=spec.model_store,
         preprocessing_cache=preprocessing_cache,
+        preprocessing_store=preprocessing_store,
         checkpoint_path=_cell_checkpoint_path(spec, arm, target),
     )
     frame = result.to_frame().copy()
@@ -247,12 +249,31 @@ def _lpt_dispatch_order(spec: PipelineSpec, cells: list[_Cell]) -> list[_Cell]:
 def _execute_cell(
     spec: PipelineSpec, cell: _Cell, *, preprocessing_cache=None
 ) -> pd.DataFrame:
-    """Run ONE cell as a single (multi- or single-horizon) ``run()`` call."""
+    """Run ONE cell as a single (multi- or single-horizon) ``run()`` call.
+
+    When ``spec.preprocessing_cache_dir`` is set, construct a shared on-disk
+    ``PreprocessorStore`` rooted there and thread it into ``run()``. Both backends
+    call this function, so each parallel worker (which receives the pickled ``spec``,
+    carrying ``preprocessing_cache_dir``) independently constructs a store pointing
+    at the SAME directory and shares the persisted per-origin fits via the
+    filesystem. The store is a thin, content-addressed path wrapper, so there is no
+    need to pickle the store object itself across processes.
+    """
     arm = spec.arms[cell.arm_idx]
     target = spec.targets[cell.target_idx]
+    store = None
+    if spec.preprocessing_cache_dir:
+        from macroforecast.preprocessing.cache import PreprocessorStore
+
+        # Passed to every arm, including arms with a per-arm ``preprocessing``
+        # override: the store key hashes the per-arm resolved spec, so an override
+        # arm's distinct spec yields a distinct key and never collides with the
+        # shared-spec arms.
+        store = PreprocessorStore(spec.preprocessing_cache_dir)
     return _run_one_arm_target(
         spec, arm, target,
         preprocessing_cache=preprocessing_cache,
+        preprocessing_store=store,
         horizons=list(cell.horizons),
     )
 

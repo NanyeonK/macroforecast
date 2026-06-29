@@ -168,6 +168,13 @@ class PipelineSpec:
     # any explicit-int n_jobs leave each worker single-threaded internally, the
     # prior behavior). Only changes thread COUNT, never the numerical result.
     model_threads: int = 1
+    # When set, a shared on-disk ``PreprocessorStore`` rooted at this directory lets
+    # parallel cells reuse each per-(spec, target, origin) FittedPreprocessor instead
+    # of recomputing it. Both backends construct a store pointing at this directory;
+    # in parallel mode every worker process points at the SAME directory and shares
+    # the persisted fits through the filesystem (the ~36x EM dedup). Default None =
+    # current behavior, no disk store (byte-for-byte unchanged).
+    preprocessing_cache_dir: str | None = None
     seed: int | None = 42
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
@@ -475,6 +482,7 @@ def pipeline_spec(
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
     n_jobs: int | str = 1,
+    preprocessing_cache_dir: str | None = None,
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
 ) -> PipelineSpec:
@@ -569,6 +577,9 @@ def pipeline_spec(
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
         n_jobs=n_jobs,
         model_threads=int(model_threads),
+        preprocessing_cache_dir=(
+            str(preprocessing_cache_dir) if preprocessing_cache_dir is not None else None
+        ),
         seed=seed,
         provenance=notes,
     )
