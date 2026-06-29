@@ -41,11 +41,15 @@ implements the published methodology, not reproducing an R-based paper bit for
 bit. The configuration is faithful (the eight steps below show each layer) and
 the pipeline is leak-free. At horizon 1 the replicated relative-RMSE matches the
 appendix within about 0.02, and a plain `ols` reproduces the direct and
-path-average object exactly. Agreement loosens at longer horizons. After fixing
-the two bugs below, the residual divergence is dominated by the difference
-between R's `randomForest` and scikit-learn's `RandomForestRegressor` (the same
+path-average object exactly. Agreement loosens at longer horizons. After the
+evaluation fix below, much of the residual is the expected difference between R's
+`randomForest` and scikit-learn's `RandomForestRegressor` (the same
 hyperparameters but a different engine and RNG), which is not reducible without
-matching the exact R implementation.
+matching the exact R implementation. The other difference is the benchmark
+denominator: the appendix scores both the direct and the path-average tables
+against one FM benchmark, the direct FM, while our pipeline scored each policy
+against its own FM. Matching the paper's convention removes the systematic
+path-average gap, as Divergence attribution explains.
 
 ### Configuration faithfulness (verified)
 
@@ -60,9 +64,15 @@ matching the exact R implementation.
 
 `scripts/replication/gcls_2021_pipeline/_compare_appendix.py` scores every cell
 (10 targets x 6 horizons x {AR, FM, RF F-Level/X-Level/MARX/F-X-MARX-Level} x
-{direct, path-average}) against the appendix tables below. Horizon 1 mean
-absolute delta is about 0.03 (RF within ~0.02); divergence grows with horizon
-(about 0.16 at h24 for full-coverage arms).
+{direct, path-average}) against the appendix tables below. The full-grid run
+predates the evaluation fix in the next section, so the figures here come from
+re-scoring the saved per-origin forecasts, not from re-fitting. They also adopt
+the appendix's FM-benchmark convention, the direct FM as the denominator for both
+tables (see Divergence attribution). Overall mean absolute delta is about 0.09
+(direct 0.09, path-average 0.10). It is about 0.03 at horizon 1 and grows to
+about 0.17 at horizon 24. AR, which is engine-independent, sits at about 0.05 for
+the direct table and about 0.10 for path-average, scored on its full 1980-2017
+sample.
 
 ### Bug 1. Evaluation sample truncation (critical) — FIXED
 
@@ -78,9 +88,12 @@ benchmark on their PAIRWISE common sample; `n_common` is per-contender; ragged
 coverage emits a `RuntimeWarning`; the joint listwise sample is kept only for the
 Model Confidence Set, which genuinely needs it. The Diebold-Mariano table was
 already pairwise and is unchanged. Regression tests in
-`tests/pipeline/test_accuracy_pairwise_sample.py`. After the fix the
-full-coverage arms (AR, RF_F-Level, RF_MARX) score on 1980-2017 and their mean
-absolute delta drops from about 0.11 to 0.092 (AR alone to 0.065).
+`tests/pipeline/test_accuracy_pairwise_sample.py`. Because the run predates this
+fix, the corrected figures come from re-scoring the saved forecasts, not a
+re-run. Re-scoring moves the full-coverage arms (AR, RF_F-Level, RF_MARX) back
+onto 1980-2017 and their mean absolute delta against the appendix falls from
+about 0.11 to 0.092 (AR alone to 0.065); the short-coverage X-block arms keep
+their own 1992-2017 window.
 
 ### Bug 2. Horizon-1 direct vs path for information-criterion models — FIXED
 
@@ -108,15 +121,33 @@ horizons > 1 still differ legitimately. Guarded by
 
 ### Divergence attribution
 
-After fix 1, the residual long-horizon gap is structural, not random. It appears
-for `ar` (a pure linear autoregression with no forest), so it is not an RF engine
-artifact alone; it is one-directional within a series and series-specific
-(real-activity series diverge most), the signature of finite-sample
-direct-vs-path behaviour and implementation differences rather than RNG. The
-dominant component is R `randomForest` versus scikit-learn
-`RandomForestRegressor`: identical hyperparameters, different bootstrap RNG and
-split implementation, amplified at long horizons where the effective sample is
-small. This is the known irreducible R-versus-Python gap, not a package defect.
+After the evaluation fix the residual long-horizon gap is structural, not random,
+and it has more than one source. For the random-forest arms part of it is the
+expected R `randomForest` versus scikit-learn `RandomForestRegressor` difference,
+the same hyperparameters but a different bootstrap RNG and split rule, amplified
+at long horizons where the effective sample is small. That is the known
+irreducible R-versus-Python gap, not a package defect.
+
+That is not the whole story for the path-average table, whose largest residuals
+were the volatile real-activity series (HOUST, RETAIL) at long horizons and
+appeared for `ar` too, a pure linear autoregression with no forest. The cause is
+the benchmark DENOMINATOR convention. The appendix prints the same FM absolute
+RMSE above the direct table (Tables 3 to 8) and the path-average table (Tables 9
+to 14) at every horizon, so the paper uses one FM benchmark, the direct FM, as
+the denominator for both. Our pipeline instead scored each policy against its
+own-policy FM, and for these series the per-step path-average FM is much worse
+than the direct FM, which inflated the path denominator and pushed every path
+relative RMSE below the appendix. Scoring the path table against the direct FM,
+as the paper does, removes the systematic gap. HOUST path-average AR at horizon
+24 moves from about 0.89 to about 1.57 against the appendix 1.48, and the
+path-average mean absolute delta falls from 0.114 to 0.096.
+`_compare_appendix.py` now uses the direct FM as the denominator for both tables.
+
+This is an evaluation-convention difference, not a forecasting defect: the
+per-step path-average forecasts themselves match the paper's construction. What
+remains after the convention is matched is the random-forest engine gap above
+plus ordinary finite-sample noise at the longest horizons, where a 24-month
+average target leaves only about a dozen independent observations.
 
 ### Hypotheses raised and retracted (for the record)
 
