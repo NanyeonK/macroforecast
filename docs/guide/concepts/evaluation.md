@@ -68,6 +68,24 @@ that arm's realised forecast error.
 evaluation = mf.pipeline.EvalSpec(benchmark="AR")   # any arm name
 ```
 
+Because an arm is just a model with its preprocessing and features, the benchmark
+can be the same model as the contenders under a different configuration. A common
+design is a base model as the benchmark and enhanced variants as the contenders,
+for example a plain random forest on the base features scored against random
+forests that add feature blocks (MARX, factors). User-defined models built with
+`mf.custom_model` are arms too, so a custom model works as a contender and as the
+benchmark.
+
+```python
+arms = [
+    mf.pipeline.Arm("RF_base", model="random_forest", features=base_features, is_benchmark=True),
+    mf.pipeline.Arm("RF_MARX", model="random_forest", features=marx_features),
+    mf.pipeline.Arm("RF_factors", model="random_forest", features=factor_features),
+    mf.pipeline.Arm("my_model", model=mf.custom_model("my_model", my_fit_func)),
+]
+evaluation = mf.pipeline.EvalSpec(benchmark="RF_base")   # every arm scored vs base RF
+```
+
 The benchmark is matched by contender name within each `(target, horizon)` cell,
 which is enough when the benchmark shares the forecast policy of the contenders.
 
