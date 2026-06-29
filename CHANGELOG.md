@@ -5,6 +5,18 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline`/`forecasting`: opt-in shared on-disk preprocessing cache. Set
+  `pipeline_spec(..., preprocessing_cache_dir=...)` (or pass `preprocessing_store=`
+  to `forecasting.run`) and each per-`(PreprocessSpec, target, origin)`
+  `FittedPreprocessor` is computed once and reused across cells AND worker
+  processes, instead of every parallel cell recomputing the dominant-cost EM/factor
+  imputation. New `macroforecast/preprocessing/cache.py::PreprocessorStore`
+  (content-addressed, atomic writes, lock-free reads). Default (dir unset) is
+  byte-for-byte the prior behavior; a regression test pins serial==parallel and
+  store-off==store-on at 1e-10. The cache key encodes `(spec, target, origin_pos)`
+  only, so do not share one store directory across runs that differ in
+  `preprocessing_policy.scope` for the same spec.
+
 ## [0.9.5] -- 2026-06-27 -- "Replication robustness, Python 3.10 compatibility, type-clean"
 
 **Correctness and compatibility:**

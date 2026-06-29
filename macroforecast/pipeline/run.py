@@ -139,8 +139,11 @@ def _empty_arm_warning(arm_name: str, target_name: str) -> str:
 #     state is shared across horizons (the byte-for-byte prior behavior).
 #   * parallel (n_jobs > 1): one cell per ``(target, arm, horizon)`` -- a single
 #     horizon per ``run()`` -- so independent processes each compute just their
-#     cell. No shared cache across processes (each recomputes its own EM); the
-#     forecasts are numerically identical to the serial path.
+#     cell. The in-memory cache is not shared across processes; by default each
+#     recomputes its own EM. When ``spec.preprocessing_cache_dir`` is set, workers
+#     additionally share each per-(spec, target, origin) fit through an on-disk
+#     ``PreprocessorStore`` at that directory, so the EM is computed once overall.
+#     Either way the forecasts are numerically identical to the serial path.
 #
 # Per cell: respect the per-(target, arm, horizon) checkpoint dirs; if a cell
 # raises, record the failure (cell identity + error) and CONTINUE the rest of the
@@ -303,7 +306,10 @@ def _parallel_cell_worker(
 
     mf.meta.configure(n_jobs=int(spec.model_threads))
     try:
-        # No shared cache across processes: each cell recomputes its own preprocessing.
+        # No in-memory cache across processes (preprocessing_cache=None); each cell
+        # recomputes its own preprocessing unless spec.preprocessing_cache_dir is set,
+        # in which case _execute_cell builds an on-disk PreprocessorStore the workers
+        # share so each per-(spec, target, origin) fit is computed once overall.
         return cell, _execute_cell(spec, cell, preprocessing_cache=None), None
     except Exception as exc:  # isolate the failure; the parent records it
         return cell, None, f"{type(exc).__name__}: {exc}"
