@@ -45,10 +45,11 @@ path-average object exactly. Agreement loosens at longer horizons. After the
 evaluation fix below, much of the residual is the expected difference between R's
 `randomForest` and scikit-learn's `RandomForestRegressor` (the same
 hyperparameters but a different engine and RNG), which is not reducible without
-matching the exact R implementation. One residual is not explained by that: the
-path-average forecasts of a few volatile real-activity series (HOUST, RETAIL) at
-long horizons diverge for the linear `ar` benchmark too, and that loose end is
-described under Divergence attribution.
+matching the exact R implementation. The other difference is the benchmark
+denominator: the appendix scores both the direct and the path-average tables
+against one FM benchmark, the direct FM, while our pipeline scored each policy
+against its own FM. Matching the paper's convention removes the systematic
+path-average gap, as Divergence attribution explains.
 
 ### Configuration faithfulness (verified)
 
@@ -65,11 +66,13 @@ described under Divergence attribution.
 (10 targets x 6 horizons x {AR, FM, RF F-Level/X-Level/MARX/F-X-MARX-Level} x
 {direct, path-average}) against the appendix tables below. The full-grid run
 predates the evaluation fix in the next section, so the figures here come from
-re-scoring the saved per-origin forecasts with the corrected pairwise
-`accuracy_table`, not from re-fitting. Overall mean absolute delta is about 0.10
-(direct 0.09, path-average 0.11). It is about 0.03 at horizon 1 and grows to
-about 0.16 at horizon 24. AR, which is engine-independent, sits at about 0.065
-once it is scored on its full 1980-2017 sample.
+re-scoring the saved per-origin forecasts, not from re-fitting. They also adopt
+the appendix's FM-benchmark convention, the direct FM as the denominator for both
+tables (see Divergence attribution). Overall mean absolute delta is about 0.09
+(direct 0.09, path-average 0.10). It is about 0.03 at horizon 1 and grows to
+about 0.17 at horizon 24. AR, which is engine-independent, sits at about 0.05 for
+the direct table and about 0.10 for path-average, scored on its full 1980-2017
+sample.
 
 ### Bug 1. Evaluation sample truncation (critical) — FIXED
 
@@ -125,19 +128,26 @@ the same hyperparameters but a different bootstrap RNG and split rule, amplified
 at long horizons where the effective sample is small. That is the known
 irreducible R-versus-Python gap, not a package defect.
 
-That does not explain everything. The largest residuals are in the path-average
-forecasts of volatile real-activity series (HOUST and RETAIL) at long horizons,
-and they appear for `ar` too, which is a pure linear autoregression with no
-forest. Re-scoring on the full 1980-2017 sample does not remove them (HOUST
-path-average AR at horizon 24 is about 0.89 against the appendix 1.48), so they
-are not the evaluation truncation. Re-running the horizon-24 path-average FM
-benchmark with the corrected order selection lowers its RMSE by only about 10
-percent, so they are not the order-selection bug either. What remains is that our
-per-step path-average FM benchmark forecasts these series worse than the paper's
-at long horizons, which inflates the denominator and pushes the relative RMSE of
-every contender below the appendix. The cause of that benchmark gap is still open
-and is tracked as a loose end. It is specific to the path-average FM construction
-on a handful of volatile series, not a general defect.
+That is not the whole story for the path-average table, whose largest residuals
+were the volatile real-activity series (HOUST, RETAIL) at long horizons and
+appeared for `ar` too, a pure linear autoregression with no forest. The cause is
+the benchmark DENOMINATOR convention. The appendix prints the same FM absolute
+RMSE above the direct table (Tables 3 to 8) and the path-average table (Tables 9
+to 14) at every horizon, so the paper uses one FM benchmark, the direct FM, as
+the denominator for both. Our pipeline instead scored each policy against its
+own-policy FM, and for these series the per-step path-average FM is much worse
+than the direct FM, which inflated the path denominator and pushed every path
+relative RMSE below the appendix. Scoring the path table against the direct FM,
+as the paper does, removes the systematic gap. HOUST path-average AR at horizon
+24 moves from about 0.89 to about 1.57 against the appendix 1.48, and the
+path-average mean absolute delta falls from 0.114 to 0.096.
+`_compare_appendix.py` now uses the direct FM as the denominator for both tables.
+
+This is an evaluation-convention difference, not a forecasting defect: the
+per-step path-average forecasts themselves match the paper's construction. What
+remains after the convention is matched is the random-forest engine gap above
+plus ordinary finite-sample noise at the longest horizons, where a 24-month
+average target leaves only about a dozen independent observations.
 
 ### Hypotheses raised and retracted (for the record)
 

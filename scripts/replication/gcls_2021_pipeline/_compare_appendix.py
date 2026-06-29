@@ -41,7 +41,9 @@ def parse_appendix() -> dict:
     policy = horizon = None
     targets_order: list[str] = []
     model = None
-    sec = re.compile(r"^### Horizon (\d+) \((direct|path-average)\)")
+    # Match any heading level (the appendix tables were merged into the single
+    # replication page and demoted from "### Horizon" to "#### Horizon").
+    sec = re.compile(r"^#+ Horizon (\d+) \((direct|path-average)\)")
     for line in text:
         m = sec.match(line)
         if m:
@@ -72,25 +74,54 @@ def parse_appendix() -> dict:
     return paper
 
 
+def _contender_series(df: pd.DataFrame, contender: str) -> pd.DataFrame:
+    key = "contender" if "contender" in df.columns else "arm"
+    s = df[df[key] == contender].dropna(subset=["prediction", "actual"])
+    return s.set_index("origin")[["prediction", "actual"]]
+
+
+def _pairwise_relmse(con: pd.DataFrame, fm: pd.DataFrame) -> float:
+    """relative MSE of a contender vs the FM benchmark on their common origins."""
+    co = con.index.intersection(fm.index)
+    if len(co) < 8:
+        return float("nan")
+    mse_c = float(((con.loc[co, "prediction"] - con.loc[co, "actual"]) ** 2).mean())
+    mse_f = float(((fm.loc[co, "prediction"] - fm.loc[co, "actual"]) ** 2).mean())
+    return mse_c / mse_f if mse_f > 0 else float("nan")
+
+
 def load_ours() -> pd.DataFrame:
+    """Re-score the saved forecasts against the appendix's FM-benchmark convention.
+
+    The appendix prints the SAME FM absolute RMSE above the direct (Tables 3-8)
+    and the path-average (Tables 9-14) tables, so the paper uses a single FM
+    benchmark -- the DIRECT FM -- as the denominator for both. Our pipeline
+    instead scores each policy against its own-policy FM, which for volatile
+    real-activity series makes the path-average denominator much larger than the
+    paper's and pushes every path relRMSE below the appendix. Here the direct FM
+    is the denominator for BOTH tables, matching the paper. Re-computing from the
+    per-origin parquets also restores the leak-free 1980-2017 pairwise sample
+    that the run's own accuracy CSVs lost to the evaluation-truncation bug.
+    """
     rows = []
     for tgt in TARGETS:
-        for pol_dir, pol in (("direct_average", "direct"), ("path_average", "path-average")):
-            for h in HORIZONS:
-                f = RUN / tgt / pol_dir / f"{tgt}_{pol_dir}_h{h}_accuracy.csv"
-                if not f.exists():
-                    continue
-                df = pd.read_csv(f)
-                for _, r in df.iterrows():
-                    c = r["contender"]
-                    if c not in ARM_MAP:
-                        continue
-                    model, set_ = ARM_MAP[c]
-                    rel = float(r["relative_mse"])
+        for h in HORIZONS:
+            fpd = RUN / tgt / "direct_average" / f"{tgt}_direct_average_h{h}.parquet"
+            fpp = RUN / tgt / "path_average" / f"{tgt}_path_average_h{h}.parquet"
+            if not fpd.exists():
+                continue
+            dd = pd.read_parquet(fpd)
+            fm_direct = _contender_series(dd, "FM")  # the single benchmark
+            sources = [("direct", dd)]
+            if fpp.exists():
+                sources.append(("path-average", pd.read_parquet(fpp)))
+            for pol, frame in sources:
+                for arm, (model, set_) in ARM_MAP.items():
+                    rel = _pairwise_relmse(_contender_series(frame, arm), fm_direct)
                     rows.append({
                         "policy": pol, "horizon": h, "target": tgt,
-                        "model": model, "set": set_, "arm": c,
-                        "ours": math.sqrt(rel) if rel >= 0 else float("nan"),
+                        "model": model, "set": set_, "arm": arm,
+                        "ours": math.sqrt(rel) if rel == rel and rel >= 0 else float("nan"),
                     })
     return pd.DataFrame(rows)
 
