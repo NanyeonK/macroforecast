@@ -536,6 +536,78 @@ statistically distinguished from the best model at a given significance level
 (<code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code>). Uses the iterative elimination algorithm by default.</p></li>
 </ul>
 </section>
+<section id="choosing-the-benchmark">
+<h2>Choosing the benchmark<a class="headerlink" href="#choosing-the-benchmark" title="Link to this heading">#</a></h2>
+<p>The relative metrics (<code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>) and the comparison tests score
+every contender against one benchmark, named by <code class="docutils literal notranslate"><span class="pre">EvalSpec(benchmark=...)</span></code>. The
+benchmark is itself an arm, so it is fit and forecast like any other contender,
+and you can point it at whichever arm you want. The relative metrics divide by
+that arm’s realised forecast error.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">evaluation</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">)</span>   <span class="c1"># any arm name</span>
+</pre></div>
+</div>
+<p>Because an arm is just a model with its preprocessing and features, the benchmark
+can be the same model as the contenders under a different configuration. A common
+design is a base model as the benchmark and enhanced variants as the contenders,
+for example a plain random forest on the base features scored against random
+forests that add feature blocks (MARX, factors). User-defined models built with
+<code class="docutils literal notranslate"><span class="pre">mf.custom_model</span></code> are arms too, so a custom model works as a contender and as the
+benchmark.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">arms</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;RF_base&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">base_features</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;RF_MARX&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">marx_features</span><span class="p">),</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;RF_factors&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">factor_features</span><span class="p">),</span>
+    <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">,</span> <span class="n">my_fit_func</span><span class="p">)),</span>
+<span class="p">]</span>
+<span class="n">evaluation</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;RF_base&quot;</span><span class="p">)</span>   <span class="c1"># every arm scored vs base RF</span>
+</pre></div>
+</div>
+<p>The benchmark is matched by contender name within each <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon)</span></code> cell,
+which is enough when the benchmark shares the forecast policy of the contenders.</p>
+<section id="a-benchmark-from-another-policy-or-any-fixed-benchmark">
+<h3>A benchmark from another policy (or any fixed benchmark)<a class="headerlink" href="#a-benchmark-from-another-policy-or-any-fixed-benchmark" title="Link to this heading">#</a></h3>
+<p>Sometimes the benchmark you want is produced under a different forecast policy
+than the contenders. The GCLS (2021) appendix, for instance, scores both its
+direct and its path-average tables against a single FM benchmark, the direct FM.
+Because the benchmark is only a name, this works as long as the benchmark and the
+contenders end up in one forecasts frame under distinct names. <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>
+accepts several policies for one target in a single spec, so run them together,
+qualify the contender names by <code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code>, and score with the cross-policy
+benchmark:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNamespace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">accuracy_table</span>
+
+<span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">run_pipeline</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">pipeline_spec</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">TargetSpec</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;direct_average&quot;</span><span class="p">),</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">TargetSpec</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;path_average&quot;</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">fm_arm</span><span class="p">,</span> <span class="n">rf_arm</span><span class="p">,</span> <span class="n">ar_arm</span><span class="p">],</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">24</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;FM&quot;</span><span class="p">),</span>
+<span class="p">))</span>
+
+<span class="n">forecasts</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">forecasts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="c1"># make each (arm, policy) a distinct contender so the direct FM is its own name</span>
+<span class="n">forecasts</span><span class="p">[</span><span class="s2">&quot;contender&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">forecasts</span><span class="p">[</span><span class="s2">&quot;arm&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">forecasts</span><span class="p">[</span><span class="s2">&quot;forecast_policy&quot;</span><span class="p">]</span>
+
+<span class="c1"># every contender, direct and path, scored against the DIRECT FM</span>
+<span class="n">acc</span> <span class="o">=</span> <span class="n">accuracy_table</span><span class="p">(</span>
+    <span class="n">forecasts</span><span class="p">,</span>
+    <span class="n">SimpleNamespace</span><span class="p">(</span><span class="n">evaluation</span><span class="o">=</span><span class="n">SimpleNamespace</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;FM_direct_average&quot;</span><span class="p">)),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This is also the safety note for multi-policy specs. <code class="docutils literal notranslate"><span class="pre">accuracy_table</span></code> keys the
+relative metrics on contender name within a <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon)</span></code> cell and does not
+split on policy. If you run more than one policy for a target in a single spec
+and do not qualify the names, the two policies’ rows for the same arm are pooled
+and the relative metrics mix them. Qualify the contender by <code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code>
+first, as above.</p>
+</section>
+</section>
 <section id="key-callable">
 <h2>Key Callable<a class="headerlink" href="#key-callable" title="Link to this heading">#</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> declares the benchmark arm, which metrics and tests to compute, and
@@ -618,6 +690,10 @@ context.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#accuracy-metrics">Accuracy metrics</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluation-sample">Evaluation sample</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-comparison-tests">Forecast comparison tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-the-benchmark">Choosing the benchmark</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-benchmark-from-another-policy-or-any-fixed-benchmark">A benchmark from another policy (or any fixed benchmark)</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callable">Key Callable</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
 </ul>
