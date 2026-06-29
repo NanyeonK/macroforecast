@@ -2195,7 +2195,9 @@ def _prepare_origin_panel(
             preprocessing_cache[cache_key] = fitted
         # Persist the freshly computed fit to the on-disk store so other
         # processes / later run() calls reuse it instead of recomputing.
-        if store_key is not None:
+        # (store_key is only set when preprocessing_store is not None; the explicit
+        # check also narrows the Optional for the type checker.)
+        if store_key is not None and preprocessing_store is not None:
             preprocessing_store.put(store_key, fitted)
     else:
         fitted = fitted_preprocessing
