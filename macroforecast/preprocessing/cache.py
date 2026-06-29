@@ -83,6 +83,14 @@ class PreprocessorStore:
         standardize / transform / outliers options) carry no anonymous
         callables and are unaffected.
 
+        Second caveat: the key does NOT encode the ``fit_policy``
+        (``origin_available`` vs ``fit_window``) used when calling
+        ``PreprocessSpec.fit``. Within a single run/pipeline the scope is
+        constant, so reuse is safe. Never share one store directory across runs
+        that differ in ``preprocessing_policy.scope`` for the same spec -- a
+        fit_window fit would be served where an origin_available fit is expected
+        (or vice versa), silently producing wrong transforms.
+
         Parameters
         ----------
         prep_spec:

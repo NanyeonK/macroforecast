@@ -25,6 +25,7 @@ from macroforecast.meta import get_config
 from macroforecast.model_ensemble import get_model_ensemble
 from macroforecast.models import ModelSpec, get_model, save_fit
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
+from macroforecast.preprocessing.cache import PreprocessorStore
 from macroforecast.model_selection import (
     SearchSpec,
     select_by_information_criterion,
@@ -152,6 +153,7 @@ def run(
     save_models: bool = True,
     model_store: str | Path = "trained_model",
     preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
+    preprocessing_store: PreprocessorStore | None = None,
     checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:
     """Run a windowed macro forecasting experiment.
@@ -210,6 +212,7 @@ def run(
             save_models=save_models,
             model_store=model_store,
             preprocessing_cache=preprocessing_cache,
+            preprocessing_store=preprocessing_store,
             checkpoint_path=checkpoint_path,
         )
     config = get_config()
@@ -259,6 +262,9 @@ def run(
                 "the runner can build direct-average, path-average, or recursive targets."
             )
         _validate_feature_model_runs(model_runs)
+        # preprocessing_store is intentionally not forwarded here: the FeatureSet
+        # path bypasses _prepare_origin_panel (input is already preprocessed), so
+        # there is no per-origin FittedPreprocessor to share.
         return _run_feature_set(
             data,
             model_runs=model_runs,
@@ -288,6 +294,9 @@ def run(
                 "panel-input models consume the panel directly; pass features=None"
             )
         panel_target = _panel_runner_target(target, model_runs)
+        # preprocessing_store is intentionally not forwarded here: panel-input
+        # models bypass _prepare_origin_panel, so there is no per-origin
+        # FittedPreprocessor to share via the disk store.
         return _run_panel_models(
             panel,
             target=panel_target,
@@ -436,7 +445,11 @@ def run(
                 else fitted_preprocessing_cache,
                 preprocessing_cache=preprocessing_cache,
                 cache_key=_preprocessing_cache_key(item)
-                if preprocessing_cache is not None else None,
+                if (preprocessing_cache is not None
+                    or preprocessing_store is not None)
+                else None,
+                preprocessing_store=preprocessing_store,
+                target=target,
             )
             if preprocessing_updated:
                 fitted_preprocessing_cache = prepared.fitted_preprocessing
@@ -657,6 +670,7 @@ def _run_multiple_horizons(
     save_models: bool,
     model_store: str | Path,
     preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
+    preprocessing_store: PreprocessorStore | None = None,
     checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:
     # The per-origin EM/factor fit is horizon-independent (it uses only the
@@ -689,6 +703,11 @@ def _run_multiple_horizons(
             save_models=save_models,
             model_store=model_store,
             preprocessing_cache=preprocessing_cache,
+            # Forward the SAME disk store to every horizon so the per-origin
+            # FittedPreprocessor (horizon-independent) is computed once and
+            # reused across horizons -- and across worker processes -- exactly
+            # like the in-memory cache above, just durable across run() calls.
+            preprocessing_store=preprocessing_store,
             # Each horizon is a distinct forecast cell; the single-horizon run()
             # gives it its own ``h<h>`` checkpoint subdirectory (keyed on the
             # resolved horizon), so origins of different horizons never collide.
@@ -2045,6 +2064,34 @@ def _preprocessing_cache_key(item: Mapping[str, Any]) -> Any:
     return ("origin_pos", item.get("origin_pos"))
 
 
+def _origin_pos_for_store_key(cache_key: Any, item: Mapping[str, Any]) -> int | None:
+    """Resolve the integer ``origin_pos`` used in the on-disk store key.
+
+    The on-disk store keys on the EXACT ``(spec, target, origin_pos)`` triple, so
+    it needs a stable integer origin position. We take it from the same source the
+    in-memory key uses -- the origin row's ``origin_pos`` (preferred) -- so the two
+    tiers agree on what "the same origin" means. If no integer origin position is
+    available (only the ``estimation_span``/``empty`` fallback cache keys), we
+    return ``None`` and the caller skips the disk tier entirely, falling back to a
+    plain (correct) recompute rather than risk an ambiguous key.
+    """
+
+    row = item.get("row")
+    if isinstance(row, Mapping):
+        pos = row.get("origin_pos")
+        if pos is not None:
+            return int(pos)
+    # Mirror the in-memory key's primary form: ("origin_pos", N).
+    if (
+        isinstance(cache_key, tuple)
+        and len(cache_key) == 2
+        and cache_key[0] == "origin_pos"
+        and cache_key[1] is not None
+    ):
+        return int(cache_key[1])
+    return None
+
+
 def _prepare_origin_panel(
     panel: pd.DataFrame,
     *,
@@ -2056,6 +2103,8 @@ def _prepare_origin_panel(
     fitted_preprocessing: FittedPreprocessor | None = None,
     preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
     cache_key: Any | None = None,
+    preprocessing_store: PreprocessorStore | None = None,
+    target: str | None = None,
 ) -> _PreparedStage:
     if preprocessing is None or preprocessing_policy is None:
         return _PreparedStage(
@@ -2099,6 +2148,38 @@ def _prepare_origin_panel(
         candidate = preprocessing_cache[cache_key]
         if isinstance(candidate, FittedPreprocessor):
             fitted_preprocessing = candidate
+    # Second cache tier: the on-disk content-addressed store. Consulted ONLY on an
+    # in-memory miss, and ONLY when a store was passed (store is None -> this whole
+    # block is skipped and behaviour is byte-identical to the no-store path). The
+    # store key is the EXACT (PreprocessSpec, target, origin_pos) triple that
+    # identifies this fit, so a loaded preprocessor is reused only for an identical
+    # spec+target+origin -- never served for a different one. A store hit is also
+    # written back into the in-memory dict so later same-process lookups stay fast.
+    # NOTE: the store key encodes (PreprocessSpec, target, origin_pos) but NOT
+    # ``preprocessing_policy.scope`` (origin_available vs fit_window). Within a
+    # single run() the scope is constant, so reuse is safe; do NOT share one store
+    # directory across runs that use a different scope for the same spec (a
+    # fit_window fit would be served where an origin_available fit is expected).
+    store_key: str | None = None
+    store_origin_pos: int | None = None
+    if (
+        fitted_preprocessing is None
+        and preprocessing_store is not None
+        and cache_key is not None
+        and target is not None
+    ):
+        store_origin_pos = _origin_pos_for_store_key(cache_key, item)
+        if store_origin_pos is not None:
+            store_key = preprocessing_store.key(
+                preprocessing,
+                target=str(target),
+                origin_pos=store_origin_pos,
+            )
+            loaded = preprocessing_store.get(store_key)
+            if isinstance(loaded, FittedPreprocessor):
+                fitted_preprocessing = loaded
+                if preprocessing_cache is not None:
+                    preprocessing_cache[cache_key] = loaded
     if fitted_preprocessing is None:
         fit_panel = stage_panel(panel, item, preprocessing_policy)
         fit_policy = (
@@ -2112,6 +2193,10 @@ def _prepare_origin_panel(
         )
         if preprocessing_cache is not None and cache_key is not None:
             preprocessing_cache[cache_key] = fitted
+        # Persist the freshly computed fit to the on-disk store so other
+        # processes / later run() calls reuse it instead of recomputing.
+        if store_key is not None:
+            preprocessing_store.put(store_key, fitted)
     else:
         fitted = fitted_preprocessing
     apply_labels = _origin_apply_labels(
