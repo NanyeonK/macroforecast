@@ -46,14 +46,21 @@ def _forecasts(policy, model):
     return run_pipeline(spec).forecasts
 
 
-# ols: no selection. ar/far: information-criterion (BIC) order selection -- the
-# branch that was broken. elastic_net: CV selection -- guards the complementary
-# branch so a future change cannot reintroduce the asymmetry there.
-@pytest.mark.parametrize("model", ["ols", "far", "ar", "elastic_net"])
-def test_h1_direct_equals_path(model):
+# Single-shot regressors (ols, elastic_net) are policy-agnostic, so h1 direct and
+# path are BYTE-identical. The autoregressive models (ar, far) now use a DIRECT
+# projection under the direct policy (regress the h-ahead target on the n most recent
+# observed lags) versus the iterated per-step model under path; at h1 these coincide
+# mathematically but only approximately in finite samples (one PCA over the whole
+# sample vs per-step PCA, and direct-vs-iterated order selection), so they agree
+# closely rather than bit-for-bit. The pre-fix bug made them diverge GROSSLY (a
+# stale-persistence forecast, relRMSE off by O(1)); this pins the agreement back to
+# a small numerical tolerance.
+@pytest.mark.parametrize("model,tol", [("ols", 1e-9), ("elastic_net", 1e-9),
+                                       ("far", 5e-3), ("ar", 5e-3)])
+def test_h1_direct_equals_path(model, tol):
     d = _forecasts("direct_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]
     p = _forecasts("path_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]
     common = d.index.intersection(p.index)
     assert len(common) > 0
     max_abs = float(np.abs(d.loc[common] - p.loc[common]).max())
-    assert max_abs < 1e-9, f"{model}: h1 direct != path (max abs diff {max_abs:.2e})"
+    assert max_abs < tol, f"{model}: h1 direct != path (max abs diff {max_abs:.2e})"

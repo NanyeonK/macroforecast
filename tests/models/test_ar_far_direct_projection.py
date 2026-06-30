@@ -23,18 +23,19 @@ def _lag_frame(values, n_lags):
     return pd.DataFrame(cols, index=s.index)
 
 
-def test_direct_ar_is_per_row_ols_on_fresh_lags_excluding_lag0():
+def test_direct_ar_is_per_row_ols_on_the_n_most_recent_lags():
     rng = np.random.default_rng(0)
     n = 200
     series = np.cumsum(rng.normal(size=n))          # near-unit-root level
     target = pd.Series(series, name="target")        # stand-in h-ahead target
-    X = _lag_frame(series, n_lags=3)
+    X = _lag_frame(series, n_lags=4)
 
     fit = _AR(n_lag=3, direct=True).fit(X, target)
 
-    # Reference: OLS of target on Y_lag1..Y_lag3 ONLY (lag0 excluded), on the rows
-    # where all those lags are observed.
-    use_cols = ["Y_lag1", "Y_lag2", "Y_lag3"]
+    # Reference: OLS of target on the 3 MOST RECENT observed lags Y_lag0..Y_lag2
+    # (lag 0 is observed at the origin, not look-ahead), on the rows where all those
+    # lags are observed.
+    use_cols = ["Y_lag0", "Y_lag1", "Y_lag2"]
     design = X[use_cols]
     mask = design.notna().all(axis=1) & target.notna()
     ref = LinearRegression().fit(design[mask].to_numpy(), target[mask].to_numpy())
@@ -50,7 +51,7 @@ def test_direct_ar_is_per_row_ols_on_fresh_lags_excluding_lag0():
 
     # IC plumbing preserved.
     assert fit.ssr_ is not None and fit.nobs_ is not None
-    assert fit.n_params_ == len(use_cols) + 1  # 3 lags + intercept, lag0 excluded
+    assert fit.n_params_ == len(use_cols) + 1  # 3 lags (0,1,2) + intercept
 
 
 def test_direct_ar_does_not_persist_stale_value():

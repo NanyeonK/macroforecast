@@ -2378,7 +2378,11 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "timeseries",
         ar,
         default_params={"n_lag": 1, "direct": False},
-        parameters=(_p("n_lag", 1, "int", "Autoregressive lag order."),),
+        parameters=(
+            _p("n_lag", 1, "int", "Autoregressive lag order."),
+            _p("direct", False, "bool",
+               "Direct multi-step projection onto fresh lags (set by the forecast policy).", False),
+        ),
         spaces=_AR_SPACES,
         input_kind="supervised",
         description="Univariate autoregression.",
@@ -3111,6 +3115,8 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             _p("n_factors", 3, "int", "Number of PCA factors."),
             _p("n_lag", 1, "int", "Autoregressive lag order."),
             _p("random_state", 0, "int", "PCA random seed.", False),
+            _p("direct", False, "bool",
+               "Direct multi-step projection onto fresh lags (set by the forecast policy).", False),
         ),
         spaces={
             key: {**space, **_AR_SPACES[key]} for key, space in _FACTOR_SPACES.items()

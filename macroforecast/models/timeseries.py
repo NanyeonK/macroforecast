@@ -16,19 +16,40 @@ from macroforecast.models.utils import as_frame, as_series, fit_estimator, resol
 _LAG_COL_RE = re.compile(r"_lag(\d+)$")
 
 
-def _select_lag_columns(X: Any, n_lag: int) -> list[str]:
-    """Lag feature columns ``*_lag1..*_lag{n_lag}`` in ascending lag order.
+def _select_lag_columns(X: Any, n_lag: int, target_name: Any = None) -> list[str]:
+    """The TARGET's own lag columns ``{base}_lag0..{base}_lag{n_lag-1}``, in lag order.
 
-    Excludes ``*_lag0`` (the contemporaneous value), which is look-ahead under a
-    direct forecast. Used by the direct-projection mode of ``_AR``/``_FAR``.
+    Uses the ``n_lag`` MOST RECENT observed one-period values, i.e. lags ``0..n_lag-1``.
+    Lag 0 is the value AT the origin (the decision time), which is observed and is NOT
+    look-ahead for a future target; it is the most informative predictor, and the
+    iterated AR used by the recursive/path policies seeds from exactly these
+    ``Y_lag0..Y_lag{n_lag-1}`` values, so including lag 0 makes the direct projection
+    match them at horizon 1. When ``target_name`` is given, only the lags whose base
+    names the target are kept (an autoregression uses the target's OWN lags, not
+    predictor lags such as ``x0_lag1``); the base is matched exactly or as the longest
+    prefix of the target name (e.g. base ``Y`` for target ``Y_average_value_h6``).
+    Without a ``target_name`` (or no base matches) every ``*_lag`` column in range is
+    used, which is correct when the spec carries only target lags (``predictors=[]``).
     """
-    pairs: list[tuple[int, str]] = []
+    triples: list[tuple[int, str, str]] = []
     for col in pd.DataFrame(X).columns:
         match = _LAG_COL_RE.search(str(col))
-        if match is not None and 1 <= int(match.group(1)) <= int(n_lag):
-            pairs.append((int(match.group(1)), str(col)))
-    pairs.sort()
-    return [col for _, col in pairs]
+        if match is not None and 0 <= int(match.group(1)) <= int(n_lag) - 1:
+            base = str(col)[: match.start()]
+            triples.append((int(match.group(1)), base, str(col)))
+    if target_name is not None:
+        bases = {base for _, base, _ in triples}
+        chosen: str | None = None
+        if str(target_name) in bases:
+            chosen = str(target_name)
+        else:
+            prefixes = [b for b in bases if b and str(target_name).startswith(b)]
+            if prefixes:
+                chosen = max(prefixes, key=len)
+        if chosen is not None:
+            triples = [t for t in triples if t[1] == chosen]
+    triples.sort()
+    return [col for _, _, col in triples]
 
 
 def _ols_with_intercept(design: np.ndarray, response: np.ndarray) -> np.ndarray:
@@ -86,7 +107,7 @@ class _AR:
         Xdf = pd.DataFrame(X)
         target = pd.Series(y).astype(float)
         self._fallback = float(target.dropna().mean()) if not target.dropna().empty else 0.0
-        self._direct_cols = _select_lag_columns(Xdf, self.n_lag)
+        self._direct_cols = _select_lag_columns(Xdf, self.n_lag, target_name=getattr(target, "name", None))
         if not self._direct_cols:
             # No usable lag features (e.g. a feature spec without target_lags); fall
             # back to the unconditional mean rather than a stale-persistence forecast.
@@ -144,12 +165,10 @@ def ar(X: Any, y: Any | None = None, *, n_lag: int = 1, direct: bool = False) ->
     if bool(direct):
         # direct projection needs the real feature matrix (the *_lag columns).
         features = as_frame(X)
-    elif y is not None:
-        # non-direct ignores the feature matrix (it autoregresses the target); pass
-        # the supplied X through unchanged.
-        features = X
     else:
-        # bare-series univariate call: no feature matrix available.
+        # non-direct autoregresses the target and IGNORES the feature matrix; supply
+        # a 1-column dummy so fit_estimator accepts it (univariate behavior, and it
+        # works whether X was a real feature matrix, an empty frame, or a bare series).
         features = pd.DataFrame(
             {"__origin__": np.arange(len(target), dtype=float)}, index=target.index
         )
@@ -909,7 +928,7 @@ class _FAR:
         Xdf = pd.DataFrame(X)
         target = pd.Series(y).astype(float)
         self._fallback = float(target.dropna().mean()) if not target.dropna().empty else 0.0
-        self._direct_lag_cols = _select_lag_columns(Xdf, self.n_lag)
+        self._direct_lag_cols = _select_lag_columns(Xdf, self.n_lag, target_name=getattr(target, "name", None))
         lag_set = set(self._direct_lag_cols) | {
             c for c in map(str, Xdf.columns) if _LAG_COL_RE.search(c) is not None
         }
