@@ -569,15 +569,11 @@ which is enough when the benchmark shares the forecast policy of the contenders.
 <p>Sometimes the benchmark you want is produced under a different forecast policy
 than the contenders. The GCLS (2021) appendix, for instance, scores both its
 direct and its path-average tables against a single FM benchmark, the direct FM.
-Because the benchmark is only a name, this works as long as the benchmark and the
-contenders end up in one forecasts frame under distinct names. <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>
-accepts several policies for one target in a single spec, so run them together,
-qualify the contender names by <code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code>, and score with the cross-policy
-benchmark:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimpleNamespace</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">accuracy_table</span>
-
-<span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">run_pipeline</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">pipeline_spec</span><span class="p">(</span>
+<code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> accepts several policies for one target in a single spec, so run
+them together and score with <code class="docutils literal notranslate"><span class="pre">evaluate_cross_policy</span></code>, which makes each
+<code class="docutils literal notranslate"><span class="pre">(arm,</span> <span class="pre">forecast_policy)</span></code> its own contender and scores all of them against the one
+benchmark policy you name:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">run_pipeline</span><span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">pipeline_spec</span><span class="p">(</span>
     <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span>
         <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">TargetSpec</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;direct_average&quot;</span><span class="p">),</span>
@@ -589,23 +585,21 @@ benchmark:</p>
     <span class="n">evaluation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;FM&quot;</span><span class="p">),</span>
 <span class="p">))</span>
 
-<span class="n">forecasts</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">forecasts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="c1"># make each (arm, policy) a distinct contender so the direct FM is its own name</span>
-<span class="n">forecasts</span><span class="p">[</span><span class="s2">&quot;contender&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">forecasts</span><span class="p">[</span><span class="s2">&quot;arm&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">forecasts</span><span class="p">[</span><span class="s2">&quot;forecast_policy&quot;</span><span class="p">]</span>
-
 <span class="c1"># every contender, direct and path, scored against the DIRECT FM</span>
-<span class="n">acc</span> <span class="o">=</span> <span class="n">accuracy_table</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="p">,</span>
-    <span class="n">SimpleNamespace</span><span class="p">(</span><span class="n">evaluation</span><span class="o">=</span><span class="n">SimpleNamespace</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;FM_direct_average&quot;</span><span class="p">)),</span>
+<span class="n">acc</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">evaluate_cross_policy</span><span class="p">(</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">forecasts</span><span class="p">,</span> <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;FM&quot;</span><span class="p">,</span> <span class="n">benchmark_policy</span><span class="o">=</span><span class="s2">&quot;direct_average&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>The returned table has one row per <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">arm,</span> <span class="pre">forecast_policy)</span></code> with
+<code class="docutils literal notranslate"><span class="pre">relative_mse</span></code> / <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code> / <code class="docutils literal notranslate"><span class="pre">rmse</span></code> computed against the fixed benchmark, and keeps
+<code class="docutils literal notranslate"><span class="pre">arm</span></code> and <code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code> as their own columns.</p>
 <p>This is also the safety note for multi-policy specs. <code class="docutils literal notranslate"><span class="pre">accuracy_table</span></code> keys the
 relative metrics on contender name within a <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon)</span></code> cell and does not
-split on policy. If you run more than one policy for a target in a single spec
-and do not qualify the names, the two policies’ rows for the same arm are pooled
-and the relative metrics mix them. Qualify the contender by <code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code>
-first, as above.</p>
+split on policy. If you run more than one policy for a target in a single spec and
+score with the plain accuracy table, the two policies’ rows for the same arm are
+pooled and the relative metrics mix them. <code class="docutils literal notranslate"><span class="pre">evaluate_cross_policy</span></code> qualifies the
+contender by <code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code> for you and is the recommended path.</p>
 </section>
 </section>
 <section id="key-callable">
