@@ -46,6 +46,7 @@ def _run_one_arm_target(
     arm: Arm,
     target: ResolvedTarget,
     preprocessing_cache=None,
+    preprocessing_store=None,
     horizons: "Sequence[int] | None" = None,
 ) -> pd.DataFrame:
     """Execute one cell: a single arm applied to a single resolved target.
@@ -101,6 +102,7 @@ def _run_one_arm_target(
         save_models=spec.save_models,
         model_store=spec.model_store,
         preprocessing_cache=preprocessing_cache,
+        preprocessing_store=preprocessing_store,
         checkpoint_path=_cell_checkpoint_path(spec, arm, target),
     )
     frame = result.to_frame().copy()
@@ -137,8 +139,11 @@ def _empty_arm_warning(arm_name: str, target_name: str) -> str:
 #     state is shared across horizons (the byte-for-byte prior behavior).
 #   * parallel (n_jobs > 1): one cell per ``(target, arm, horizon)`` -- a single
 #     horizon per ``run()`` -- so independent processes each compute just their
-#     cell. No shared cache across processes (each recomputes its own EM); the
-#     forecasts are numerically identical to the serial path.
+#     cell. The in-memory cache is not shared across processes; by default each
+#     recomputes its own EM. When ``spec.preprocessing_cache_dir`` is set, workers
+#     additionally share each per-(spec, target, origin) fit through an on-disk
+#     ``PreprocessorStore`` at that directory, so the EM is computed once overall.
+#     Either way the forecasts are numerically identical to the serial path.
 #
 # Per cell: respect the per-(target, arm, horizon) checkpoint dirs; if a cell
 # raises, record the failure (cell identity + error) and CONTINUE the rest of the
@@ -247,12 +252,31 @@ def _lpt_dispatch_order(spec: PipelineSpec, cells: list[_Cell]) -> list[_Cell]:
 def _execute_cell(
     spec: PipelineSpec, cell: _Cell, *, preprocessing_cache=None
 ) -> pd.DataFrame:
-    """Run ONE cell as a single (multi- or single-horizon) ``run()`` call."""
+    """Run ONE cell as a single (multi- or single-horizon) ``run()`` call.
+
+    When ``spec.preprocessing_cache_dir`` is set, construct a shared on-disk
+    ``PreprocessorStore`` rooted there and thread it into ``run()``. Both backends
+    call this function, so each parallel worker (which receives the pickled ``spec``,
+    carrying ``preprocessing_cache_dir``) independently constructs a store pointing
+    at the SAME directory and shares the persisted per-origin fits via the
+    filesystem. The store is a thin, content-addressed path wrapper, so there is no
+    need to pickle the store object itself across processes.
+    """
     arm = spec.arms[cell.arm_idx]
     target = spec.targets[cell.target_idx]
+    store = None
+    if spec.preprocessing_cache_dir:
+        from macroforecast.preprocessing.cache import PreprocessorStore
+
+        # Passed to every arm, including arms with a per-arm ``preprocessing``
+        # override: the store key hashes the per-arm resolved spec, so an override
+        # arm's distinct spec yields a distinct key and never collides with the
+        # shared-spec arms.
+        store = PreprocessorStore(spec.preprocessing_cache_dir)
     return _run_one_arm_target(
         spec, arm, target,
         preprocessing_cache=preprocessing_cache,
+        preprocessing_store=store,
         horizons=list(cell.horizons),
     )
 
@@ -282,7 +306,10 @@ def _parallel_cell_worker(
 
     mf.meta.configure(n_jobs=int(spec.model_threads))
     try:
-        # No shared cache across processes: each cell recomputes its own preprocessing.
+        # No in-memory cache across processes (preprocessing_cache=None); each cell
+        # recomputes its own preprocessing unless spec.preprocessing_cache_dir is set,
+        # in which case _execute_cell builds an on-disk PreprocessorStore the workers
+        # share so each per-(spec, target, origin) fit is computed once overall.
         return cell, _execute_cell(spec, cell, preprocessing_cache=None), None
     except Exception as exc:  # isolate the failure; the parent records it
         return cell, None, f"{type(exc).__name__}: {exc}"
