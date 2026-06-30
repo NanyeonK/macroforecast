@@ -102,7 +102,16 @@ def apply_combinations(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
 
 def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
     """RMSE, relative-MSE (vs benchmark) and OOS-R2 per (target, horizon, contender)."""
-    bench = spec.evaluation.benchmark
+    return _accuracy_against(master, spec.evaluation.benchmark)
+
+
+def _accuracy_against(master: pd.DataFrame, bench: str) -> pd.DataFrame:
+    """The accuracy table scored against the named benchmark contender.
+
+    Split out of :func:`accuracy_table` so callers that score the same forecasts
+    against a benchmark that is not ``spec.evaluation.benchmark`` (e.g. the
+    cross-policy common denominator) do not have to fabricate a spec.
+    """
     if not _has_groups(master):
         return pd.DataFrame(columns=_ACCURACY_COLUMNS)
     out: list[dict[str, Any]] = []
@@ -249,6 +258,91 @@ def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) ->
                 "in_mcs": contender in included,
             })
     return pd.DataFrame(out) if out else pd.DataFrame(columns=_MCS_COLUMNS)
+
+
+def evaluate_cross_policy(
+    forecasts: pd.DataFrame,
+    *,
+    benchmark: str,
+    benchmark_policy: str,
+    policy_column: str = "forecast_policy",
+    separator: str = "::",
+) -> pd.DataFrame:
+    """Score every ``(arm, forecast_policy)`` contender against ONE benchmark fixed
+    to a single policy -- the common-denominator convention.
+
+    Use this when the benchmark you want lives under a different forecast policy
+    than the contenders. The GCLS (2021) appendix, for instance, scores both its
+    direct and its path-average tables against a single FM benchmark, the direct
+    FM. Running several policies for one target in a single spec pools the
+    policies' rows for the same arm, because :func:`accuracy_table` keys the
+    relative metrics on contender name within a ``(target, horizon)`` cell and
+    does not split on policy. This helper does the qualification for you: it makes
+    each ``(arm, forecast_policy)`` a distinct contender, scores all of them
+    against the single ``(benchmark, benchmark_policy)`` arm, and returns a tidy
+    accuracy table that keeps ``arm`` and ``forecast_policy`` as their own columns.
+
+    Parameters
+    ----------
+    forecasts:
+        The master forecast frame (``report.forecasts``). Must carry the columns
+        ``target, horizon, origin, prediction, actual, contender`` and
+        ``policy_column``.
+    benchmark:
+        The arm name of the benchmark (e.g. ``"FM"``).
+    benchmark_policy:
+        The forecast policy whose copy of ``benchmark`` is THE denominator for
+        every contender (e.g. ``"direct_average"`` for the direct FM).
+    policy_column:
+        Column holding the per-row forecast policy. Default ``"forecast_policy"``.
+    separator:
+        Joins arm and policy into the qualified contender key, then splits them
+        back out. Must not appear in any arm name or policy value; the default
+        ``"::"`` is safe for the underscore-bearing policy names
+        (``direct_average``, ``path_average``).
+
+    Returns
+    -------
+    The accuracy table with one row per ``(target, horizon, arm, forecast_policy)``
+    -- ``relative_mse`` / ``r2_oos`` / ``rmse`` computed pairwise against the fixed
+    benchmark -- plus ``arm`` and ``forecast_policy`` columns.
+    """
+    required = {"target", "horizon", "origin", "prediction", "actual",
+                "contender", policy_column}
+    missing = required - set(forecasts.columns)
+    if missing:
+        raise ValueError(
+            f"evaluate_cross_policy: forecasts frame is missing column(s) "
+            f"{sorted(missing)}; a master forecast frame from run_pipeline carries them."
+        )
+    arm = forecasts["contender"].astype(str)
+    policy = forecasts[policy_column].astype(str)
+    if arm.str.contains(separator, regex=False).any() or policy.str.contains(separator, regex=False).any():
+        raise ValueError(
+            f"evaluate_cross_policy: separator {separator!r} appears inside an arm "
+            f"name or a {policy_column} value; pass a separator that does not."
+        )
+    qualified = forecasts.copy()
+    qualified["contender"] = arm + separator + policy
+
+    bench_name = f"{benchmark}{separator}{benchmark_policy}"
+    present = set(qualified["contender"].unique())
+    if bench_name not in present:
+        raise ValueError(
+            f"evaluate_cross_policy: benchmark arm {benchmark!r} under policy "
+            f"{benchmark_policy!r} (contender {bench_name!r}) is not present in the "
+            f"forecasts; available contenders are {sorted(present)}."
+        )
+
+    acc = _accuracy_against(qualified, bench_name)
+    # split the synthetic contender back into tidy arm / policy columns
+    split = acc["contender"].str.rsplit(separator, n=1, expand=True)
+    acc = acc.assign(arm=split[0].to_numpy(), **{policy_column: split[1].to_numpy()})
+    ordered = [
+        "target", "horizon", "contender", "arm", policy_column,
+        "rmse", "relative_mse", "r2_oos", "n_common", "is_benchmark", "benchmark_present",
+    ]
+    return acc[ordered]
 
 
 def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame]:

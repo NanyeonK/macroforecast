@@ -16,6 +16,14 @@ full per-version honesty-pass history embedded in repo documentation.
   store-off==store-on at 1e-10. The cache key encodes `(spec, target, origin_pos)`
   only, so do not share one store directory across runs that differ in
   `preprocessing_policy.scope` for the same spec.
+- `pipeline`: new `evaluate_cross_policy(forecasts, benchmark=, benchmark_policy=)`
+  helper scores every `(arm, forecast_policy)` contender against one benchmark fixed
+  to a single policy (the common-denominator convention, e.g. the GCLS direct FM as
+  the denominator for both the direct and the path-average tables). It qualifies the
+  contender names by policy and returns a tidy table with `arm` and `forecast_policy`
+  as their own columns, replacing the previous hand-built `SimpleNamespace` recipe.
+  `accuracy_table` is refactored over an internal `_accuracy_against(master, bench)`;
+  behaviour is unchanged.
 
 ## [0.9.5] -- 2026-06-27 -- "Replication robustness, Python 3.10 compatibility, type-clean"
 

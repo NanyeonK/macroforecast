@@ -94,16 +94,12 @@ which is enough when the benchmark shares the forecast policy of the contenders.
 Sometimes the benchmark you want is produced under a different forecast policy
 than the contenders. The GCLS (2021) appendix, for instance, scores both its
 direct and its path-average tables against a single FM benchmark, the direct FM.
-Because the benchmark is only a name, this works as long as the benchmark and the
-contenders end up in one forecasts frame under distinct names. `run_pipeline`
-accepts several policies for one target in a single spec, so run them together,
-qualify the contender names by `forecast_policy`, and score with the cross-policy
-benchmark:
+`run_pipeline` accepts several policies for one target in a single spec, so run
+them together and score with `evaluate_cross_policy`, which makes each
+`(arm, forecast_policy)` its own contender and scores all of them against the one
+benchmark policy you name:
 
 ```python
-from types import SimpleNamespace
-from macroforecast.pipeline.evaluate import accuracy_table
-
 report = mf.pipeline.run_pipeline(mf.pipeline.pipeline_spec(
     data=bundle,
     targets=[
@@ -116,23 +112,22 @@ report = mf.pipeline.run_pipeline(mf.pipeline.pipeline_spec(
     evaluation=mf.pipeline.EvalSpec(benchmark="FM"),
 ))
 
-forecasts = report.forecasts.copy()
-# make each (arm, policy) a distinct contender so the direct FM is its own name
-forecasts["contender"] = forecasts["arm"] + "_" + forecasts["forecast_policy"]
-
 # every contender, direct and path, scored against the DIRECT FM
-acc = accuracy_table(
-    forecasts,
-    SimpleNamespace(evaluation=SimpleNamespace(benchmark="FM_direct_average")),
+acc = mf.pipeline.evaluate_cross_policy(
+    report.forecasts, benchmark="FM", benchmark_policy="direct_average",
 )
 ```
 
+The returned table has one row per `(target, horizon, arm, forecast_policy)` with
+`relative_mse` / `r2_oos` / `rmse` computed against the fixed benchmark, and keeps
+`arm` and `forecast_policy` as their own columns.
+
 This is also the safety note for multi-policy specs. `accuracy_table` keys the
 relative metrics on contender name within a `(target, horizon)` cell and does not
-split on policy. If you run more than one policy for a target in a single spec
-and do not qualify the names, the two policies' rows for the same arm are pooled
-and the relative metrics mix them. Qualify the contender by `forecast_policy`
-first, as above.
+split on policy. If you run more than one policy for a target in a single spec and
+score with the plain accuracy table, the two policies' rows for the same arm are
+pooled and the relative metrics mix them. `evaluate_cross_policy` qualifies the
+contender by `forecast_policy` for you and is the recommended path.
 
 ## Key Callable
 

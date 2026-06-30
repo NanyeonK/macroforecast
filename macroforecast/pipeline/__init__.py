@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .interpret import interpret_pipeline
-from .evaluate import apply_combinations, evaluate
+from .evaluate import apply_combinations, evaluate, evaluate_cross_policy
 from .parallelism import auto_parallelism
 from .run import run_arms, run_pipeline
 from .spec import (
@@ -29,6 +29,7 @@ __all__ = [
     "interpret_pipeline",
     "PipelineReport",
     "evaluate",
+    "evaluate_cross_policy",
     "apply_combinations",
     "Arm",
     "CombinationContender",
