@@ -1460,6 +1460,14 @@ def _fit_predict_origin(
     retune = bool(row.get("retune", True))
     for model_run in model_runs:
         model_spec = model_run.spec
+        # This branch handles the direct / direct_average policies only (recursive and
+        # path_average are dispatched earlier). Direct-capable iterated models (ar, far)
+        # declare a ``direct`` flag in their default params; set it so they do a one-shot
+        # projection onto the fresh one-period lag features instead of a roll-forward
+        # that would persist a stale origin-h value. IC order selection uses the same
+        # flag so n_lag is chosen for the direct projection, not the autoregression.
+        direct_capable = "direct" in getattr(model_spec, "default_params", {})
+        ic_fixed_params = {"direct": True} if direct_capable else None
         selected, use_model_default_selection = _selection_for_model(
             selection, model_run
         )
@@ -1483,6 +1491,7 @@ def _fit_predict_origin(
                     y_selection,
                     search=selected,
                     criterion=str(model_spec.selection_method).lower(),
+                    fixed_params=ic_fixed_params,
                 )
                 param_cache[cache_key] = dict(result.best_params)
                 selection_metadata = {
@@ -1537,8 +1546,9 @@ def _fit_predict_origin(
                 best_params = dict(param_cache.get(cache_key, {}))
         else:
             best_params = {}
-        fit_params = _actual_model_params(model_spec, best_params)
-        fit = model_spec(X_fit, y_fit, **best_params)
+        call_params = {**best_params, "direct": True} if direct_capable else best_params
+        fit_params = _actual_model_params(model_spec, call_params)
+        fit = model_spec(X_fit, y_fit, **call_params)
         stored_model = (
             _store_model_fit(
                 fit,
