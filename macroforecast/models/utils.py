@@ -11,6 +11,13 @@ from macroforecast.models.types import ModelFit
 
 
 def as_frame(X: Any, *, name_prefix: str = "x") -> pd.DataFrame:
+    # Unwrap a DataBundle-like object (carries a ``.panel`` DataFrame). The runner's
+    # panel branch fits panel-input models by passing a DataBundle; models that reach
+    # for a frame via ``as_frame`` (e.g. the VAR family) must see the panel, not the
+    # wrapper. Duck-typed to avoid importing DataBundle (circular import).
+    panel = getattr(X, "panel", None)
+    if isinstance(panel, pd.DataFrame):
+        X = panel
     if isinstance(X, pd.DataFrame):
         frame = X.copy()
     else:
