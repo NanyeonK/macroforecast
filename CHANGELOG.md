@@ -5,6 +5,22 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting`/`models` (CRITICAL correctness fix): under the `direct`/`direct_average`
+  policy, the autoregressive models `ar` and `far` produced degenerate long-horizon
+  forecasts. They rolled forward from the target's own history, and because the h-ahead
+  target's freshest leak-free lag is origin-h stale (and the h-period average is
+  near-unit-root) they persisted a stale value — forecasts worse than the unconditional
+  mean (RMSE ≈ √2·target std, ≈ uncorrelated with the realised future). Since `far` is
+  the usual factor benchmark, this distorted every direct relative metric and grew with
+  the horizon. `ar`/`far` now have a direct-projection mode: under the direct policy they
+  regress the h-ahead target on the fresh one-period lags (the `n_lag` most recent
+  observed lags, leak-free) and predict per origin, with IC order selection in the same
+  mode; `recursive`/`path_average` keep the (correct) iterated behaviour. Validated on the
+  GCLS (2021) replication: UNRATE direct FM absolute RMSE at horizon 24 went from 0.1016
+  (49% above the paper) to 0.0726 (~7%). The 11 other iterated/state-space models (VAR
+  family, `favar`, statsmodels forecasters, mixed-frequency DFM, naive baselines) share
+  the defect under the direct policy and are a documented follow-up.
+
 - `pipeline`/`forecasting`: opt-in shared on-disk preprocessing cache. Set
   `pipeline_spec(..., preprocessing_cache_dir=...)` (or pass `preprocessing_store=`
   to `forecasting.run`) and each per-`(PreprocessSpec, target, origin)`
