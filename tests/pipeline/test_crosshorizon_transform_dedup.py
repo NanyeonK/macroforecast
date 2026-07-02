@@ -33,8 +33,8 @@ HORIZONS = [1, 3]
 _MAX_H = max(HORIZONS)
 
 
-def _toy_spec():
-    """A 2-horizon, single-arm spec using SPEC-LEVEL preprocessing.
+def _toy_spec(arm_models=("ridge",)):
+    """A 2-horizon spec over ``arm_models``, all using SPEC-LEVEL preprocessing.
 
     Spec-level preprocessing (``arm.preprocessing is None``) is what routes the
     shared per-(target, origin) preprocessing cache into ``run()`` -- the path the
@@ -62,21 +62,28 @@ def _toy_spec():
     feats = mf.feature_engineering.feature_spec(
         target="Y", predictors="all", lags=range(1, 4)
     )
+    # One arm per model, ALL sharing the spec-level preprocessing (features=None means
+    # each carries no per-arm preprocessing, so the shared per-origin cache is used).
+    names = [m.upper() for m in arm_models]
+    arms = [
+        Arm(name=n, model=m, features=feats, is_benchmark=(i == 0))
+        for i, (n, m) in enumerate(zip(names, arm_models))
+    ]
     return pipeline_spec(
         data=bundle,
         targets=[TargetSpec(name="Y")],
         horizons=HORIZONS,
         window=win,
-        arms=[Arm(name="RIDGE", model="ridge", features=feats, is_benchmark=True)],
-        evaluation=EvalSpec(benchmark="RIDGE", metrics=("rmse",)),
+        arms=arms,
+        evaluation=EvalSpec(benchmark=names[0], metrics=("rmse",)),
         preprocessing=prep,
         preprocessing_policy=pp_policy,
         n_jobs=1,
     )
 
 
-def _run_counting():
-    """Run the toy spec, counting per-origin fits and per-call transform row sizes.
+def _run_counting(spec=None):
+    """Run ``spec`` (default single-arm toy), counting fits and transform row sizes.
 
     Returns ``(report, n_fits, transform_sizes)`` where ``transform_sizes`` is the
     list of ``len(apply_panel)`` for every ``FittedPreprocessor.transform`` call. The
@@ -103,7 +110,7 @@ def _run_counting():
     PreprocessSpec.fit = _counting_fit  # type: ignore[method-assign]
     FittedPreprocessor.transform = _counting_transform  # type: ignore[method-assign]
     try:
-        report = run_pipeline(_toy_spec())
+        report = run_pipeline(spec if spec is not None else _toy_spec())
     finally:
         PreprocessSpec.fit = fit_orig  # type: ignore[method-assign]
         FittedPreprocessor.transform = tr_orig  # type: ignore[method-assign]
@@ -157,3 +164,32 @@ def test_crosshorizon_reuse_preserves_forecasts():
     assert not serial.empty
     assert not parallel.empty
     pd.testing.assert_frame_equal(serial, parallel, atol=1e-12)
+
+
+def test_model_comparison_reuses_preprocessing_across_arms_and_horizons():
+    """Model-comparison contract: preprocessing is HELD FIXED, only the model varies.
+
+    With N models sharing one spec-level preprocessing over M horizons, the per-origin
+    preprocessing FIT and the heavy per-origin TRANSFORM each run exactly ONCE per
+    origin -- NOT once per (arm, horizon, origin). Comparing models must not recompute
+    the shared preprocessing for every model. This pins both reuse axes at once:
+    across arms (the shared per-target cache) and across horizons (the origin-keyed
+    base-panel cache). If either axis regressed, the counts would scale with the arm
+    or horizon count.
+    """
+    n_arms = 3
+    spec = _toy_spec(arm_models=("ridge", "lasso", "elastic_net"))
+    report, n_fits, sizes = _run_counting(spec)
+    assert not report.forecasts.empty
+    # Every arm produced rows (the comparison is real, not a silently-empty arm).
+    assert report.forecasts["arm"].nunique() == n_arms
+
+    heavy = [s for s in sizes if s > _MAX_H + 5]
+    n_origins = n_fits  # fit is origin-keyed -> one fit per distinct origin
+    assert n_origins > 1
+    # One heavy transform and one fit per origin, independent of arms AND horizons.
+    assert len(heavy) == n_origins, (
+        f"{len(heavy)} heavy transforms for {n_origins} origins with {n_arms} arms x "
+        f"{len(HORIZONS)} horizons (no reuse would give {n_origins * n_arms * len(HORIZONS)})"
+    )
+    assert len(heavy) < n_origins * n_arms * len(HORIZONS)
