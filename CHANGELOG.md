@@ -41,6 +41,22 @@ full per-version honesty-pass history embedded in repo documentation.
   `accuracy_table` is refactored over an internal `_accuracy_against(master, bench)`;
   behaviour is unchanged.
 
+- `forecasting` (performance, numerically transparent): the per-origin spec-level
+  preprocessing TRANSFORM (the dominant-cost EM imputation + factor projection) is now
+  reused across horizons. `_prepare_origin_panel` previously keyed its prepared-panel
+  cache on `(origin_pos, horizon)` (the appended target row is horizon-dependent), so a
+  multi-horizon `run()` re-ran the whole-window transform once per horizon even though
+  the rows observable at the origin (`<= origin_pos`) transform identically for every
+  horizon. The transform is now split: the horizon-independent base panel (rows
+  `<= origin_pos`) is transformed once and cached under an origin-keyed
+  `("prepared_base", origin_pos)` key, and only the tiny forward/target rows
+  (`> origin_pos`) are transformed per horizon. On the GCLS grid (≈456 origins × 6
+  horizons × 2 arms per target) this removes the ~6× per-horizon transform redundancy.
+  The split is only taken on the shared-cache (serial spec-level) path; the parallel
+  backend keeps the un-split whole-window transform, and a serial==parallel golden pins
+  byte-identical forecasts. Cross-arm reuse (per-`(origin, horizon)` prepared stage) is
+  unchanged.
+
 ## [0.9.5] -- 2026-06-27 -- "Replication robustness, Python 3.10 compatibility, type-clean"
 
 **Correctness and compatibility:**
