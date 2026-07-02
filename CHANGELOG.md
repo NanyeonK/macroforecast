@@ -21,6 +21,17 @@ full per-version honesty-pass history embedded in repo documentation.
   family, `favar`, statsmodels forecasters, mixed-frequency DFM, naive baselines) share
   the defect under the direct policy and are a documented follow-up.
 
+- `models` (correctness follow-up to the above): under the `direct`/`direct_average`
+  policy `far` silently dropped its factors and collapsed to plain `ar`. In direct mode
+  every feature reaches the model lag-named (`predictor_lag1`, ...), and `_FAR`'s
+  factor-block selector excluded every `*_lag*` column, so the predictor block was empty
+  and no factors were fit. On the GCLS replication this made the direct FM benchmark
+  byte-identical to AR (AR/FM = 1.000 for every target/horizon), disagreeing with the
+  paper where AR = 1.04–1.11 × FM. `_FAR` now excludes only the target's OWN lag columns
+  from the factor block; the predictor lags remain and drive the PCA. Recursive/path
+  `far` was already correct and is unchanged. The direct FM benchmark and every direct
+  relative-RMSE must be re-scored after this fix.
+
 - `pipeline`/`forecasting`: opt-in shared on-disk preprocessing cache. Set
   `pipeline_spec(..., preprocessing_cache_dir=...)` (or pass `preprocessing_store=`
   to `forecasting.run`) and each per-`(PreprocessSpec, target, origin)`
