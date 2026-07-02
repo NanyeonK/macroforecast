@@ -929,8 +929,17 @@ class _FAR:
         target = pd.Series(y).astype(float)
         self._fallback = float(target.dropna().mean()) if not target.dropna().empty else 0.0
         self._direct_lag_cols = _select_lag_columns(Xdf, self.n_lag, target_name=getattr(target, "name", None))
+        # Factors are built from the PREDICTOR block. Under the direct policy every
+        # feature -- target lags AND predictor lags -- is named ``*_lag<k>``, so
+        # excluding every ``*_lag*`` column (the previous behaviour) dropped the entire
+        # lag-named predictor block and collapsed FAR to plain AR. Exclude only the
+        # target's OWN lag columns (the autoregressive regressors, identified by the
+        # base name of the selected lags); the predictor lags remain and drive the PCA.
+        target_bases = {_LAG_COL_RE.sub("", c) for c in self._direct_lag_cols}
         lag_set = set(self._direct_lag_cols) | {
-            c for c in map(str, Xdf.columns) if _LAG_COL_RE.search(c) is not None
+            c
+            for c in map(str, Xdf.columns)
+            if (m := _LAG_COL_RE.search(c)) is not None and c[: m.start()] in target_bases
         }
         self._direct_pred_cols = [c for c in map(str, Xdf.columns) if c not in lag_set]
         # Fit PCA on the predictor block over the rows where the target is observed.
