@@ -5,6 +5,22 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `tests` (trust-gap audit follow-up): closed the independent-reference gaps for the
+  direct/path forecasting core. (1) New `tests/forecasting/test_path_average_multistep_oracle.py`
+  anchors MULTI-STEP (h>=2) path-average against external oracles for the first time:
+  a noiseless-AR(2) ground-truth (forecast == realised future mean), a byte-exact
+  clean-room reproduction of the per-step direct OLS on noisy data, and a path!=direct
+  discrimination guard so a future collapse cannot pass silently. (2) New
+  `test_crosshorizon_em_factor_split_equals_whole` proves the cross-horizon base/forward
+  transform split is byte-identical to the whole-window transform under `em_factor`
+  imputation (the prior identity test only covered row-independent `mean`). (3) The h1
+  direct==path invariant tolerance for `ar`/`far` is tightened 5e-3 -> 1e-3 with a
+  corrected rationale: the ~1.2e-4 gap is a finite-sample edge effect of the two design
+  constructions (direct projection on pipeline lag features vs iterated AR on the raw
+  series), verified INDEPENDENT of `n_lag` (not order selection) and identical for far
+  and ar (not PCA). (4) Doc-only: the `ar`/`far` direct-mode lag-0 descriptions now
+  match the code -- `*_lag0` is the observed origin value (Stock-Watson direct
+  regressor), NOT look-ahead; the previous prose claimed the opposite in five places.
 - `forecasting`/`models` (CRITICAL correctness fix): under the `direct`/`direct_average`
   policy, the autoregressive models `ar` and `far` produced degenerate long-horizon
   forecasts. They rolled forward from the target's own history, and because the h-ahead

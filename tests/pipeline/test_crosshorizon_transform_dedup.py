@@ -82,6 +82,71 @@ def _toy_spec(arm_models=("ridge",)):
     )
 
 
+def _em_spec():
+    """Like ``_toy_spec`` but with ``em_factor`` imputation over a RAGGED panel.
+
+    ``em_factor`` is the default (and dominant-cost) imputer, and unlike mean
+    imputation its transform is the one whose cross-row behaviour actually matters
+    for the base/forward split. Missing values are injected so EM genuinely imputes
+    from factors rather than trivially passing the panel through.
+    """
+    idx = pd.date_range("1990-01-01", periods=140, freq="MS")
+    rng = np.random.default_rng(11)
+    cols = {f"S{i}": rng.normal(size=140) for i in range(8)}
+    cols["Y"] = np.cumsum(rng.normal(size=140))
+    panel = pd.DataFrame(cols, index=idx)
+    panel.index.name = "date"
+    # Scatter missing entries across predictor columns so EM-factor imputation is
+    # actually exercised (ragged-edge and interior gaps), leaving Y complete.
+    miss = rng.random(panel.shape) < 0.08
+    miss[:, panel.columns.get_loc("Y")] = False
+    panel = panel.mask(miss)
+    bundle = mf.data.custom_dataset(panel, transform_codes={c: 1 for c in panel.columns})
+    prep = mf.preprocessing.preprocess_spec(
+        transform="official", impute="em_factor", standardize="zscore"
+    )
+    pp_policy = mf.window.stage_policy("origin_available", update=1)
+    win = mf.window.from_cutoffs(
+        test_start="2001-01-01", test_end="2001-10-01",
+        mode="expanding", val_method="last_block", retrain_every=1,
+    )
+    feats = mf.feature_engineering.feature_spec(
+        target="Y", predictors="all", lags=range(1, 4)
+    )
+    arms = [Arm(name="RIDGE", model="ridge", features=feats, is_benchmark=True)]
+    return pipeline_spec(
+        data=bundle,
+        targets=[TargetSpec(name="Y")],
+        horizons=HORIZONS,
+        window=win,
+        arms=arms,
+        evaluation=EvalSpec(benchmark="RIDGE", metrics=("rmse",)),
+        preprocessing=prep,
+        preprocessing_policy=pp_policy,
+        n_jobs=1,
+    )
+
+
+def test_crosshorizon_em_factor_split_equals_whole():
+    """The base(<=origin)+forward(>origin) split must equal the whole-window transform
+    UNDER em_factor imputation, not just mean.
+
+    The serial backend threads the cross-horizon cache and reconstructs each origin's
+    transformed panel from a cached base block plus the tiny forward block; the
+    parallel backend passes ``preprocessing_cache=None`` and transforms every panel
+    whole. Mean imputation is row-independent, so its split==whole identity is nearly
+    tautological; em_factor's transform can couple across the applied rows, so this is
+    the case that actually exercises the split. Byte-identity here is the real proof.
+    """
+    serial = _sorted(run_pipeline(_em_spec()))
+    import dataclasses
+
+    parallel = _sorted(run_pipeline(dataclasses.replace(_em_spec(), n_jobs=2)))
+    assert not serial.empty
+    assert not parallel.empty
+    pd.testing.assert_frame_equal(serial, parallel, atol=1e-12)
+
+
 def _run_counting(spec=None):
     """Run ``spec`` (default single-arm toy), counting fits and transform row sizes.
 

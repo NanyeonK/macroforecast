@@ -1,13 +1,14 @@
-"""Direct-mode AR/FAR: a one-shot projection of the (h-ahead) target onto the
-FRESH one-period lag features, NOT an iterated roll-forward from stale history.
+"""Direct-mode AR/FAR: a one-shot projection of the (h-ahead) target onto the n
+most recent OBSERVED one-period lags, NOT an iterated roll-forward from stale history.
 
 Under the ``direct``/``direct_average`` forecast policy the regression target is a
-pre-built h-ahead object whose only leak-free lag is origin-h stale, so the legacy
-``_AR``/``_FAR`` (which autoregress the target's own lags and iterate forward from
-the last training value) collapse to persistence of a stale value. In ``direct``
-mode the model must instead regress the target on the provided ``Y_lag*`` feature
-columns (EXCLUDING the contemporaneous ``Y_lag0``, which would be look-ahead) and
-predict each test row independently.
+pre-built h-ahead object, so the legacy ``_AR``/``_FAR`` (which autoregress the
+target's own lags and iterate forward from the last training value) collapse to
+persistence of a stale value. In ``direct`` mode the model must instead regress the
+target on the n most recent observed one-period lags ``Y_lag0..Y_lag{n_lag-1}`` and
+predict each test row independently. ``Y_lag0`` is the value AT the origin (the
+decision time), which is observed and is NOT look-ahead for a future target -- it is
+the standard Stock-Watson direct-projection regressor, the most informative one.
 """
 import numpy as np
 import pandas as pd

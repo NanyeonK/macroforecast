@@ -61,8 +61,10 @@ def _ols_with_intercept(design: np.ndarray, response: np.ndarray) -> np.ndarray:
 class _AR:
     def __init__(self, *, n_lag: int = 1, direct: bool = False) -> None:
         self.n_lag = max(1, int(n_lag))
-        # direct=True: a one-shot projection of the (h-ahead) target onto the FRESH
-        # one-period lag features in X (``*_lag1..*_lag{n_lag}``), predicted per row.
+        # direct=True: a one-shot projection of the (h-ahead) target onto the n most
+        # recent OBSERVED one-period lags in X (``*_lag0..*_lag{n_lag-1}``), predicted
+        # per row. ``*_lag0`` is the value AT the origin (the decision time), which is
+        # observed and is NOT look-ahead for a future target; see _select_lag_columns.
         # This is the correct direct multi-step forecast. The legacy roll-forward
         # (direct=False) autoregresses the target's own lags and iterates from the
         # last training value; under a direct policy that value is origin-h stale, so
@@ -154,10 +156,11 @@ def ar(X: Any, y: Any | None = None, *, n_lag: int = 1, direct: bool = False) ->
     By default (``direct=False``) this is a univariate least-squares AR on the
     target series with an explicit intercept (the feature matrix is ignored); it is
     NOT ``stats::ar``. With ``direct=True`` it becomes a DIRECT multi-step
-    projection: the (h-ahead) target is regressed on the fresh one-period lag
-    features ``*_lag1..*_lag{n_lag}`` in ``X`` (the contemporaneous ``*_lag0`` is
-    excluded as look-ahead) and each row is predicted independently. The runner
-    sets ``direct=True`` only for the direct/direct_average policies.
+    projection: the (h-ahead) target is regressed on the n most recent observed
+    one-period lags ``*_lag0..*_lag{n_lag-1}`` in ``X`` and each row is predicted
+    independently. ``*_lag0`` is the value at the origin (the decision time), which
+    is observed and is NOT look-ahead for a future target. The runner sets
+    ``direct=True`` only for the direct/direct_average policies.
     """
 
     # The supervised dispatch calls ar(X, y, ...); a bare-series call is ar(series).
@@ -896,9 +899,10 @@ class _FAR:
         self.n_params_: int | None = None
         self.n_lag = max(1, int(n_lag))
         self.random_state = int(random_state)
-        # direct=True: factors from the (non-lag) predictor block + the FRESH
-        # ``*_lag1..*_lag{n_lag}`` columns, regressed on the h-ahead target and
-        # predicted per row. direct=False is the legacy roll-forward (recursive/path).
+        # direct=True: factors from the (non-lag) predictor block + the target's own
+        # observed ``*_lag0..*_lag{n_lag-1}`` columns (``*_lag0`` = the origin value,
+        # observed, not look-ahead), regressed on the h-ahead target and predicted per
+        # row. direct=False is the legacy roll-forward (recursive/path).
         self.direct = bool(direct)
         self._pca: Any = None
         self._regression: Any = None
@@ -1040,7 +1044,8 @@ def far(
     """Fit factor-augmented autoregression.
 
     ``direct=True`` makes it a DIRECT projection: factors of the non-lag predictor
-    block plus the fresh ``*_lag1..*_lag{n_lag}`` columns are regressed on the
+    block plus the target's own observed ``*_lag0..*_lag{n_lag-1}`` columns
+    (``*_lag0`` = the origin value, observed, not look-ahead) are regressed on the
     (h-ahead) target and predicted per row (no roll-forward). The runner sets
     ``direct=True`` only for the direct/direct_average policies.
     """
