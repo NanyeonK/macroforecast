@@ -72,7 +72,7 @@ date
 
 The output panel is stationary and standardized. The row count drops from 708 to
 694 because the official transforms difference the early observations away, and
-the 942 missing entries are filled to zero remaining by the EM-factor step. This
+the EM-factor step fills the 942 missing entries, leaving none remaining. This
 is the full-sample path for exploration; inside a runner, `preprocess_spec`
 refits these same steps on each origin's estimation rows only.
 

@@ -87,7 +87,6 @@ html_theme_options = {
 # out full-width. In-page section navigation still appears in the right-hand
 # "On this page" panel.
 html_sidebars = {
-    "guide/getting_started": [],
     "guide/glossary": [],
 }
 

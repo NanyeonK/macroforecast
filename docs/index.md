@@ -73,7 +73,6 @@ Definitions of every core abstraction.
 ```{toctree}
 :hidden:
 
-guide/getting_started
 guide/index
 guide/model_overview
 datasets/index

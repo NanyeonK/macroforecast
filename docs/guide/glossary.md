@@ -24,7 +24,7 @@ benchmark
 cell
     The execution unit of the pipeline, one {term}`Arm` applied to one target
     over the window for one horizon group. Each cell is run by a single `run()`
-    call, so arm times target times horizon equals one cell.
+    call, so the total cell count is arms times targets times horizons.
 
 Clark-West test
     A forecast-comparison test that adjusts Diebold-Mariano for the
@@ -234,7 +234,7 @@ TargetSpec
     A declaration of a forecast target and how its forecast object is defined.
     The name identifies the panel column, and the optional transform and policy
     override the defaults derived from the {term}`t-code`. See
-    [Concepts](concepts/index.md).
+    [Running](concepts/running.md).
 
 t-code
     An integer from the McCracken-Ng FRED transformation classification that
