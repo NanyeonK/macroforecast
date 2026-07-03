@@ -1862,6 +1862,15 @@ def _fit_predict_path_average_origin(
         uses_ic = str(getattr(model_spec, "selection_method", "cv")).lower() in (
             "bic", "aic", "aicc"
         )
+        # Each path step forecasts the one-period target s steps ahead, regressed on
+        # the origin-available features -- a DIRECT s-step projection. Direct-capable
+        # iterated models (ar, far) must therefore run with ``direct=True`` per step,
+        # exactly as the direct policy does; otherwise the per-step fit falls back to
+        # the legacy roll-forward and persists a stale value (mild at h1, growing with
+        # the step). IC order selection uses the same flag so n_lag is chosen for the
+        # direct projection.
+        direct_capable = "direct" in getattr(model_spec, "default_params", {})
+        ic_fixed_params = {"direct": True} if direct_capable else None
         predictions_by_step: dict[int, pd.Series] = {}
         stored_by_step: dict[str, Any] = {}
         selection_by_step: dict[str, Any] = {}
@@ -1913,6 +1922,7 @@ def _fit_predict_path_average_origin(
                         y_selection_aligned,
                         search=selected,
                         criterion=str(model_spec.selection_method).lower(),
+                        fixed_params=ic_fixed_params,
                     )
                     param_cache[step_key] = dict(result.best_params)
                     selection_metadata = {
@@ -1979,8 +1989,11 @@ def _fit_predict_path_average_origin(
                     best_params = dict(param_cache.get(step_key, {}))
             else:
                 best_params = {}
-            fit_params = _actual_model_params(model_spec, best_params)
-            fit = model_spec(X_fit_step, y_fit_aligned, **best_params)
+            call_params = (
+                {**best_params, "direct": True} if direct_capable else best_params
+            )
+            fit_params = _actual_model_params(model_spec, call_params)
+            fit = model_spec(X_fit_step, y_fit_aligned, **call_params)
             step_row = {**row, "target_key": f"{row.get('target_key')}_step{step}"}
             stored_by_step[str(step)] = (
                 _store_model_fit(
