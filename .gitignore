@@ -65,6 +65,8 @@ REBOOT_IDEA_AND_PLAN_*.md
 
 # Runtime artifacts
 *.parquet
+# ...except committed golden-master test fixtures
+!tests/**/_golden/*.parquet
 runs/
 trained_model/
 
