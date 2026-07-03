@@ -5,6 +5,26 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
+  policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
+  (`direct=False`) instead of the DIRECT s-step projection, so each path step
+  persisted a stale value -- negligible at h1 (~1.2e-4) but growing to O(1) at h>=2.
+  On a noiseless factor DGP where the direct policy is exact to machine precision,
+  path-average `far` was off by ~0.4. The per-step fit and its IC order selection now
+  set `direct=True` exactly like the direct policy. This restores the h1 direct==path
+  invariant to BYTE-identical for `ar`/`far` (the tolerance is back to 1e-9 from the
+  interim 1e-3), and it supersedes the earlier "finite-sample edge effect" explanation
+  of that gap, which was this bug.
+- `tests` (independent-reference matrix, step a): anchored the two families the
+  coverage audit flagged as unanchored through a policy. New
+  `tests/forecasting/test_far_policy_oracle.py` drives `far`/FM through the direct AND
+  path policies on a rank-4 linear-state DGP and requires recovery of the realised
+  future value to machine precision, plus far>>ar discrimination (far uses predictor
+  factors a 2-lag AR cannot span). New `tests/models/test_adaptive_lasso_reference.py`
+  gives `adaptive_lasso` its first prediction test: a clean-room reimplementation
+  (ridge-init adaptive weights -> weighted lasso -> coefficient back-map) matched to
+  1e-7, sparse-support recovery, and a direct-policy ground-truth recovery that AR
+  cannot achieve.
 - `tests` (trust-gap audit follow-up): closed the independent-reference gaps for the
   direct/path forecasting core. (1) New `tests/forecasting/test_path_average_multistep_oracle.py`
   anchors MULTI-STEP (h>=2) path-average against external oracles for the first time:

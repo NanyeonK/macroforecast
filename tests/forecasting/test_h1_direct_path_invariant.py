@@ -46,22 +46,17 @@ def _forecasts(policy, model):
     return run_pipeline(spec).forecasts
 
 
-# Single-shot regressors (ols, elastic_net) are policy-agnostic, so h1 direct and
-# path are BYTE-identical (1e-9). The autoregressive models (ar, far) differ: under
-# the direct policy they do a DIRECT projection -- OLS of the h-ahead target on the
-# feature-pipeline's lag columns (Y_lag0..) -- whereas under the path policy the
-# per-step model IGNORES X and autoregresses the raw one-period target series with its
-# own internal lag construction. At h1 these are the SAME regression in population, so
-# they must agree closely, but they build their design matrices differently (pipeline
-# lag features vs the estimator's internal lags), which leaves a small, deterministic
-# finite-sample gap at the estimation-window edges. Measured here it is ~1.2e-4 for
-# BOTH ar and far, and -- verified directly -- it is INDEPENDENT of the selected/fixed
-# n_lag, so it is NOT order selection, and it is the same size for far as for ar, so it
-# is NOT the PCA. The tolerance is set at 1e-3 (~8x the measured gap): loose enough to
-# absorb that structural edge difference, tight enough that the pre-fix bug (a
-# stale-persistence forecast, relRMSE off by O(1)) or any new gross divergence fails.
+# At h1 direct and path are the SAME forecast by construction (path-average over one
+# step IS the direct 1-step forecast), so ALL models -- the single-shot regressors
+# (ols, elastic_net) AND the autoregressive ones (ar, far) -- agree BYTE-for-byte. This
+# holds only because both policies now fit ar/far with the DIRECT s-step projection:
+# the direct policy sets direct=True, and the path policy sets direct=True on every
+# per-step fit too. An earlier bug left the path per-step fit on the legacy iterated
+# estimator (direct=False), which persisted a stale value -- mild at h1 (~1.2e-4) but
+# growing to O(1) at h>=2 on data the direct policy nails exactly. This invariant
+# guards against that regression returning; a stale-persistence path fit fails it.
 @pytest.mark.parametrize("model,tol", [("ols", 1e-9), ("elastic_net", 1e-9),
-                                       ("far", 1e-3), ("ar", 1e-3)])
+                                       ("far", 1e-9), ("ar", 1e-9)])
 def test_h1_direct_equals_path(model, tol):
     d = _forecasts("direct_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]
     p = _forecasts("path_average", model).dropna(subset=["prediction"]).set_index("origin")["prediction"]
