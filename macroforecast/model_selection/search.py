@@ -241,7 +241,13 @@ def _resolve_selection_xy(
 ) -> tuple[pd.DataFrame, pd.Series]:
     if model_spec is None:
         return resolve_xy(X, y)
-    if model_spec.input_kind in {"target", "volatility"} and y is None:
+    # Bare-series convenience: ``target``/``volatility`` models take a single series.
+    # The autoregressive models (ar/far) are now ``supervised`` so the direct policy
+    # can feed them lag features, but they still accept a bare series (the legacy
+    # univariate AR usage / information-criterion order selection), in which case the
+    # series IS the target and there are no separate features.
+    autoregressive = "direct" in getattr(model_spec, "default_params", {})
+    if (model_spec.input_kind in {"target", "volatility"} or autoregressive) and y is None:
         target = as_series(X)
         return pd.DataFrame(index=target.index), target
     if model_spec.input_kind == "panel":

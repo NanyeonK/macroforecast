@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import warnings
 
 from collections.abc import Iterable, Mapping, Sequence
@@ -12,17 +13,76 @@ from macroforecast.models.types import ModelFit
 from macroforecast.models.utils import as_frame, as_series, fit_estimator, resolve_xy
 
 
+_LAG_COL_RE = re.compile(r"_lag(\d+)$")
+
+
+def _select_lag_columns(X: Any, n_lag: int, target_name: Any = None) -> list[str]:
+    """The TARGET's own lag columns ``{base}_lag0..{base}_lag{n_lag-1}``, in lag order.
+
+    Uses the ``n_lag`` MOST RECENT observed one-period values, i.e. lags ``0..n_lag-1``.
+    Lag 0 is the value AT the origin (the decision time), which is observed and is NOT
+    look-ahead for a future target; it is the most informative predictor, and the
+    iterated AR used by the recursive/path policies seeds from exactly these
+    ``Y_lag0..Y_lag{n_lag-1}`` values, so including lag 0 makes the direct projection
+    match them at horizon 1. When ``target_name`` is given, only the lags whose base
+    names the target are kept (an autoregression uses the target's OWN lags, not
+    predictor lags such as ``x0_lag1``); the base is matched exactly or as the longest
+    prefix of the target name (e.g. base ``Y`` for target ``Y_average_value_h6``).
+    Without a ``target_name`` (or no base matches) every ``*_lag`` column in range is
+    used, which is correct when the spec carries only target lags (``predictors=[]``).
+    """
+    triples: list[tuple[int, str, str]] = []
+    for col in pd.DataFrame(X).columns:
+        match = _LAG_COL_RE.search(str(col))
+        if match is not None and 0 <= int(match.group(1)) <= int(n_lag) - 1:
+            base = str(col)[: match.start()]
+            triples.append((int(match.group(1)), base, str(col)))
+    if target_name is not None:
+        bases = {base for _, base, _ in triples}
+        chosen: str | None = None
+        if str(target_name) in bases:
+            chosen = str(target_name)
+        else:
+            prefixes = [b for b in bases if b and str(target_name).startswith(b)]
+            if prefixes:
+                chosen = max(prefixes, key=len)
+        if chosen is not None:
+            triples = [t for t in triples if t[1] == chosen]
+    triples.sort()
+    return [col for _, _, col in triples]
+
+
+def _ols_with_intercept(design: np.ndarray, response: np.ndarray) -> np.ndarray:
+    """OLS coefficients for ``[1, design] @ beta = response`` (intercept first)."""
+    full = np.column_stack([np.ones(len(design)), design])
+    return np.linalg.lstsq(full, response, rcond=None)[0]
+
+
 class _AR:
-    def __init__(self, *, n_lag: int = 1) -> None:
+    def __init__(self, *, n_lag: int = 1, direct: bool = False) -> None:
         self.n_lag = max(1, int(n_lag))
+        # direct=True: a one-shot projection of the (h-ahead) target onto the n most
+        # recent OBSERVED one-period lags in X (``*_lag0..*_lag{n_lag-1}``), predicted
+        # per row. ``*_lag0`` is the value AT the origin (the decision time), which is
+        # observed and is NOT look-ahead for a future target; see _select_lag_columns.
+        # This is the correct direct multi-step forecast. The legacy roll-forward
+        # (direct=False) autoregresses the target's own lags and iterates from the
+        # last training value; under a direct policy that value is origin-h stale, so
+        # it persists a stale value. direct=False is kept ONLY for the recursive/path
+        # policies, where the runner iterates externally on the fresh one-period series.
+        self.direct = bool(direct)
         self._coef: np.ndarray | None = None
         self._history: np.ndarray | None = None
         self._fallback: float = 0.0
         self.ssr_: float | None = None
         self.nobs_: int | None = None
         self.n_params_: int | None = None
+        self._direct_cols: list[str] | None = None
+        self._direct_coef: np.ndarray | None = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_AR":
+        if self.direct:
+            return self._fit_direct(X, y)
         series = pd.Series(y).astype(float).dropna()
         self._fallback = float(series.mean()) if not series.empty else 0.0
         if len(series) <= self.n_lag:
@@ -45,7 +105,32 @@ class _AR:
         self._history = values[-self.n_lag :]
         return self
 
+    def _fit_direct(self, X: pd.DataFrame, y: pd.Series) -> "_AR":
+        Xdf = pd.DataFrame(X)
+        target = pd.Series(y).astype(float)
+        self._fallback = float(target.dropna().mean()) if not target.dropna().empty else 0.0
+        self._direct_cols = _select_lag_columns(Xdf, self.n_lag, target_name=getattr(target, "name", None))
+        if not self._direct_cols:
+            # No usable lag features (e.g. a feature spec without target_lags); fall
+            # back to the unconditional mean rather than a stale-persistence forecast.
+            return self
+        design_df = Xdf[self._direct_cols].astype(float)
+        joined = pd.concat([design_df, target.rename("__target__")], axis=1).dropna()
+        if joined.empty:
+            self._direct_cols = None
+            return self
+        design = joined[self._direct_cols].to_numpy(dtype=float)
+        response = joined["__target__"].to_numpy(dtype=float)
+        self._direct_coef = _ols_with_intercept(design, response)
+        resid = response - np.column_stack([np.ones(len(design)), design]) @ self._direct_coef
+        self.ssr_ = float(resid @ resid)
+        self.nobs_ = int(response.shape[0])
+        self.n_params_ = int(self._direct_coef.shape[0])  # n_lag columns + intercept
+        return self
+
     def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.direct:
+            return self._predict_direct(X)
         if self._coef is None or self._history is None or len(self._history) == 0:
             return np.full(len(X), self._fallback, dtype=float)
         history = list(np.asarray(self._history, dtype=float))
@@ -57,18 +142,43 @@ class _AR:
             history.append(pred)
         return np.asarray(preds, dtype=float)
 
+    def _predict_direct(self, X: pd.DataFrame) -> np.ndarray:
+        Xdf = pd.DataFrame(X)
+        if self._direct_coef is None or not self._direct_cols:
+            return np.full(len(Xdf), self._fallback, dtype=float)
+        design = Xdf.reindex(columns=self._direct_cols).astype(float).fillna(0.0).to_numpy()
+        return np.column_stack([np.ones(len(design)), design]) @ self._direct_coef
 
-def ar(y: Any, *, n_lag: int = 1) -> ModelFit:
-    """Fit a fixed-order AR(``n_lag``) by OLS on a single target series.
 
-    This is a fixed-order least-squares AR with an explicit intercept. It is NOT
-    ``stats::ar`` (which defaults to AIC order selection up to floor(10*log10(N))
-    and Yule-Walker estimation); pass ``n_lag`` explicitly or select it upstream.
+def ar(X: Any, y: Any | None = None, *, n_lag: int = 1, direct: bool = False) -> ModelFit:
+    """Fit a fixed-order AR(``n_lag``) by OLS.
+
+    By default (``direct=False``) this is a univariate least-squares AR on the
+    target series with an explicit intercept (the feature matrix is ignored); it is
+    NOT ``stats::ar``. With ``direct=True`` it becomes a DIRECT multi-step
+    projection: the (h-ahead) target is regressed on the n most recent observed
+    one-period lags ``*_lag0..*_lag{n_lag-1}`` in ``X`` and each row is predicted
+    independently. ``*_lag0`` is the value at the origin (the decision time), which
+    is observed and is NOT look-ahead for a future target. The runner sets
+    ``direct=True`` only for the direct/direct_average policies.
     """
 
-    target = as_series(y)
-    dummy = pd.DataFrame({"__origin__": np.arange(len(target), dtype=float)}, index=target.index)
-    return fit_estimator(_AR(n_lag=n_lag), dummy, target, model="ar", metadata={"n_lag": int(n_lag)})
+    # The supervised dispatch calls ar(X, y, ...); a bare-series call is ar(series).
+    target = as_series(y if y is not None else X)
+    if bool(direct):
+        # direct projection needs the real feature matrix (the *_lag columns).
+        features = as_frame(X)
+    else:
+        # non-direct autoregresses the target and IGNORES the feature matrix; supply
+        # a 1-column dummy so fit_estimator accepts it (univariate behavior, and it
+        # works whether X was a real feature matrix, an empty frame, or a bare series).
+        features = pd.DataFrame(
+            {"__origin__": np.arange(len(target), dtype=float)}, index=target.index
+        )
+    return fit_estimator(
+        _AR(n_lag=n_lag, direct=bool(direct)), features, target,
+        model="ar", metadata={"n_lag": int(n_lag), "direct": bool(direct)},
+    )
 
 
 def _infer_seasonal_period(index: Any) -> int | None:
@@ -781,20 +891,96 @@ def bvar_normal_inverse_wishart(
 
 
 class _FAR:
-    def __init__(self, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0) -> None:
+    def __init__(self, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0,
+                 direct: bool = False) -> None:
         self.n_factors = max(1, int(n_factors))
         self.ssr_: float | None = None
         self.nobs_: int | None = None
         self.n_params_: int | None = None
         self.n_lag = max(1, int(n_lag))
         self.random_state = int(random_state)
+        # direct=True: factors from the (non-lag) predictor block + the target's own
+        # observed ``*_lag0..*_lag{n_lag-1}`` columns (``*_lag0`` = the origin value,
+        # observed, not look-ahead), regressed on the h-ahead target and predicted per
+        # row. direct=False is the legacy roll-forward (recursive/path).
+        self.direct = bool(direct)
         self._pca: Any = None
         self._regression: Any = None
         self._x_mean: pd.Series | None = None
         self._y_history: np.ndarray | None = None
         self._fallback: float = 0.0
+        self._direct_pred_cols: list[str] | None = None
+        self._direct_lag_cols: list[str] | None = None
+
+    def _direct_design(self, Xdf: pd.DataFrame) -> np.ndarray:
+        """Stack PCA factors of the predictor block with the explicit lag columns."""
+        parts: list[np.ndarray] = []
+        if self._direct_pred_cols and self._pca is not None and self._x_mean is not None:
+            block = Xdf.reindex(columns=self._direct_pred_cols).astype(float)
+            parts.append(self._pca.transform((block - self._x_mean).fillna(0.0)))
+        if self._direct_lag_cols:
+            parts.append(Xdf.reindex(columns=self._direct_lag_cols).astype(float).fillna(0.0).to_numpy())
+        if not parts:
+            return np.empty((len(Xdf), 0), dtype=float)
+        return np.column_stack(parts)
+
+    def _fit_direct(self, X: pd.DataFrame, y: pd.Series) -> "_FAR":
+        from sklearn.linear_model import LinearRegression
+
+        from macroforecast.feature_engineering.shared import _deterministic_pca
+
+        Xdf = pd.DataFrame(X)
+        target = pd.Series(y).astype(float)
+        self._fallback = float(target.dropna().mean()) if not target.dropna().empty else 0.0
+        self._direct_lag_cols = _select_lag_columns(Xdf, self.n_lag, target_name=getattr(target, "name", None))
+        # Factors are built from the PREDICTOR block. Under the direct policy every
+        # feature -- target lags AND predictor lags -- is named ``*_lag<k>``, so
+        # excluding every ``*_lag*`` column (the previous behaviour) dropped the entire
+        # lag-named predictor block and collapsed FAR to plain AR. Exclude only the
+        # target's OWN lag columns (the autoregressive regressors, identified by the
+        # base name of the selected lags); the predictor lags remain and drive the PCA.
+        target_bases = {_LAG_COL_RE.sub("", c) for c in self._direct_lag_cols}
+        lag_set = set(self._direct_lag_cols) | {
+            c
+            for c in map(str, Xdf.columns)
+            if (m := _LAG_COL_RE.search(c)) is not None and c[: m.start()] in target_bases
+        }
+        self._direct_pred_cols = [c for c in map(str, Xdf.columns) if c not in lag_set]
+        # Fit PCA on the predictor block over the rows where the target is observed.
+        mask = target.reindex(Xdf.index).notna()
+        if self._direct_pred_cols:
+            block = Xdf.loc[mask, self._direct_pred_cols].astype(float)
+            self._x_mean = block.mean(axis=0)
+            n_factors = min(self.n_factors, block.shape[1], max(1, block.shape[0] - 1))
+            centered = (block - self._x_mean).fillna(0.0)
+            self._pca = _deterministic_pca(n_factors, *centered.shape, random_state=self.random_state)
+            self._pca.fit(centered)
+        design_df = pd.DataFrame(self._direct_design(Xdf), index=Xdf.index)
+        joined = pd.concat([design_df, target.rename("__target__")], axis=1).dropna()
+        if joined.empty or design_df.shape[1] == 0:
+            self._direct_pred_cols = self._direct_lag_cols = None
+            return self
+        design = joined.drop(columns="__target__").to_numpy(dtype=float)
+        response = joined["__target__"].to_numpy(dtype=float)
+        self._regression = LinearRegression().fit(design, response)
+        resid = response - self._regression.predict(design)
+        self.ssr_ = float(resid @ resid)
+        self.nobs_ = int(response.shape[0])
+        self.n_params_ = int(np.size(self._regression.coef_) + 1)
+        return self
+
+    def _predict_direct(self, X: pd.DataFrame) -> np.ndarray:
+        Xdf = pd.DataFrame(X)
+        if self._regression is None:
+            return np.full(len(Xdf), self._fallback, dtype=float)
+        design = self._direct_design(Xdf)
+        if design.shape[1] == 0:
+            return np.full(len(Xdf), self._fallback, dtype=float)
+        return np.asarray(self._regression.predict(design), dtype=float)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_FAR":
+        if self.direct:
+            return self._fit_direct(X, y)
         from sklearn.decomposition import PCA
         from sklearn.linear_model import LinearRegression
 
@@ -830,6 +1016,8 @@ class _FAR:
         return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.direct:
+            return self._predict_direct(X)
         if self._pca is None or self._regression is None or self._x_mean is None or self._y_history is None:
             return np.full(len(X), self._fallback, dtype=float)
         frame = X.reindex(columns=self._x_mean.index, fill_value=0.0)
@@ -851,15 +1039,24 @@ def far(
     n_factors: int = 3,
     n_lag: int = 1,
     random_state: int = 0,
+    direct: bool = False,
 ) -> ModelFit:
-    """Fit factor-augmented autoregression."""
+    """Fit factor-augmented autoregression.
+
+    ``direct=True`` makes it a DIRECT projection: factors of the non-lag predictor
+    block plus the target's own observed ``*_lag0..*_lag{n_lag-1}`` columns
+    (``*_lag0`` = the origin value, observed, not look-ahead) are regressed on the
+    (h-ahead) target and predicted per row (no roll-forward). The runner sets
+    ``direct=True`` only for the direct/direct_average policies.
+    """
 
     return fit_estimator(
-        _FAR(n_factors=n_factors, n_lag=n_lag, random_state=random_state),
+        _FAR(n_factors=n_factors, n_lag=n_lag, random_state=random_state, direct=bool(direct)),
         X,
         y,
         model="far",
-        metadata={"n_factors": int(n_factors), "n_lag": int(n_lag), "random_state": int(random_state)},
+        metadata={"n_factors": int(n_factors), "n_lag": int(n_lag),
+                  "random_state": int(random_state), "direct": bool(direct)},
     )
 
 

@@ -5,6 +5,49 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `tests` (trust-gap audit follow-up): closed the independent-reference gaps for the
+  direct/path forecasting core. (1) New `tests/forecasting/test_path_average_multistep_oracle.py`
+  anchors MULTI-STEP (h>=2) path-average against external oracles for the first time:
+  a noiseless-AR(2) ground-truth (forecast == realised future mean), a byte-exact
+  clean-room reproduction of the per-step direct OLS on noisy data, and a path!=direct
+  discrimination guard so a future collapse cannot pass silently. (2) New
+  `test_crosshorizon_em_factor_split_equals_whole` proves the cross-horizon base/forward
+  transform split is byte-identical to the whole-window transform under `em_factor`
+  imputation (the prior identity test only covered row-independent `mean`). (3) The h1
+  direct==path invariant tolerance for `ar`/`far` is tightened 5e-3 -> 1e-3 with a
+  corrected rationale: the ~1.2e-4 gap is a finite-sample edge effect of the two design
+  constructions (direct projection on pipeline lag features vs iterated AR on the raw
+  series), verified INDEPENDENT of `n_lag` (not order selection) and identical for far
+  and ar (not PCA). (4) Doc-only: the `ar`/`far` direct-mode lag-0 descriptions now
+  match the code -- `*_lag0` is the observed origin value (Stock-Watson direct
+  regressor), NOT look-ahead; the previous prose claimed the opposite in five places.
+- `forecasting`/`models` (CRITICAL correctness fix): under the `direct`/`direct_average`
+  policy, the autoregressive models `ar` and `far` produced degenerate long-horizon
+  forecasts. They rolled forward from the target's own history, and because the h-ahead
+  target's freshest leak-free lag is origin-h stale (and the h-period average is
+  near-unit-root) they persisted a stale value — forecasts worse than the unconditional
+  mean (RMSE ≈ √2·target std, ≈ uncorrelated with the realised future). Since `far` is
+  the usual factor benchmark, this distorted every direct relative metric and grew with
+  the horizon. `ar`/`far` now have a direct-projection mode: under the direct policy they
+  regress the h-ahead target on the fresh one-period lags (the `n_lag` most recent
+  observed lags, leak-free) and predict per origin, with IC order selection in the same
+  mode; `recursive`/`path_average` keep the (correct) iterated behaviour. Validated on the
+  GCLS (2021) replication: UNRATE direct FM absolute RMSE at horizon 24 went from 0.1016
+  (49% above the paper) to 0.0726 (~7%). The 11 other iterated/state-space models (VAR
+  family, `favar`, statsmodels forecasters, mixed-frequency DFM, naive baselines) share
+  the defect under the direct policy and are a documented follow-up.
+
+- `models` (correctness follow-up to the above): under the `direct`/`direct_average`
+  policy `far` silently dropped its factors and collapsed to plain `ar`. In direct mode
+  every feature reaches the model lag-named (`predictor_lag1`, ...), and `_FAR`'s
+  factor-block selector excluded every `*_lag*` column, so the predictor block was empty
+  and no factors were fit. On the GCLS replication this made the direct FM benchmark
+  byte-identical to AR (AR/FM = 1.000 for every target/horizon), disagreeing with the
+  paper where AR = 1.04–1.11 × FM. `_FAR` now excludes only the target's OWN lag columns
+  from the factor block; the predictor lags remain and drive the PCA. Recursive/path
+  `far` was already correct and is unchanged. The direct FM benchmark and every direct
+  relative-RMSE must be re-scored after this fix.
+
 - `pipeline`/`forecasting`: opt-in shared on-disk preprocessing cache. Set
   `pipeline_spec(..., preprocessing_cache_dir=...)` (or pass `preprocessing_store=`
   to `forecasting.run`) and each per-`(PreprocessSpec, target, origin)`
@@ -24,6 +67,22 @@ full per-version honesty-pass history embedded in repo documentation.
   as their own columns, replacing the previous hand-built `SimpleNamespace` recipe.
   `accuracy_table` is refactored over an internal `_accuracy_against(master, bench)`;
   behaviour is unchanged.
+
+- `forecasting` (performance, numerically transparent): the per-origin spec-level
+  preprocessing TRANSFORM (the dominant-cost EM imputation + factor projection) is now
+  reused across horizons. `_prepare_origin_panel` previously keyed its prepared-panel
+  cache on `(origin_pos, horizon)` (the appended target row is horizon-dependent), so a
+  multi-horizon `run()` re-ran the whole-window transform once per horizon even though
+  the rows observable at the origin (`<= origin_pos`) transform identically for every
+  horizon. The transform is now split: the horizon-independent base panel (rows
+  `<= origin_pos`) is transformed once and cached under an origin-keyed
+  `("prepared_base", origin_pos)` key, and only the tiny forward/target rows
+  (`> origin_pos`) are transformed per horizon. On the GCLS grid (≈456 origins × 6
+  horizons × 2 arms per target) this removes the ~6× per-horizon transform redundancy.
+  The split is only taken on the shared-cache (serial spec-level) path; the parallel
+  backend keeps the un-split whole-window transform, and a serial==parallel golden pins
+  byte-identical forecasts. Cross-arm reuse (per-`(origin, horizon)` prepared stage) is
+  unchanged.
 
 ## [0.9.5] -- 2026-06-27 -- "Replication robustness, Python 3.10 compatibility, type-clean"
 

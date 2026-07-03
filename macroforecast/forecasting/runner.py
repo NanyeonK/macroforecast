@@ -1460,6 +1460,14 @@ def _fit_predict_origin(
     retune = bool(row.get("retune", True))
     for model_run in model_runs:
         model_spec = model_run.spec
+        # This branch handles the direct / direct_average policies only (recursive and
+        # path_average are dispatched earlier). Direct-capable iterated models (ar, far)
+        # declare a ``direct`` flag in their default params; set it so they do a one-shot
+        # projection onto the fresh one-period lag features instead of a roll-forward
+        # that would persist a stale origin-h value. IC order selection uses the same
+        # flag so n_lag is chosen for the direct projection, not the autoregression.
+        direct_capable = "direct" in getattr(model_spec, "default_params", {})
+        ic_fixed_params = {"direct": True} if direct_capable else None
         selected, use_model_default_selection = _selection_for_model(
             selection, model_run
         )
@@ -1483,6 +1491,7 @@ def _fit_predict_origin(
                     y_selection,
                     search=selected,
                     criterion=str(model_spec.selection_method).lower(),
+                    fixed_params=ic_fixed_params,
                 )
                 param_cache[cache_key] = dict(result.best_params)
                 selection_metadata = {
@@ -1537,8 +1546,9 @@ def _fit_predict_origin(
                 best_params = dict(param_cache.get(cache_key, {}))
         else:
             best_params = {}
-        fit_params = _actual_model_params(model_spec, best_params)
-        fit = model_spec(X_fit, y_fit, **best_params)
+        call_params = {**best_params, "direct": True} if direct_capable else best_params
+        fit_params = _actual_model_params(model_spec, call_params)
+        fit = model_spec(X_fit, y_fit, **call_params)
         stored_model = (
             _store_model_fit(
                 fit,
@@ -2206,8 +2216,9 @@ def _prepare_origin_panel(
         item,
         include_target_pos=include_target_pos,
     )
-    apply_panel = panel.reindex(apply_labels).loc[:, fitted.fit_panel.columns]
+    cols = fitted.fit_panel.columns
     if fitted.preprocessing_scope == "fit_window":
+        apply_panel = panel.reindex(apply_labels).loc[:, cols]
         transformed = fitted.transform(
             apply_panel, history=fitted.fit_panel, policy="fit_window"
         )
@@ -2221,13 +2232,57 @@ def _prepare_origin_panel(
         # rows into the data-dependent preprocessing (EM imputation / outlier
         # statistics) fit and leak the future into training-row features.
         available_labels = _origin_available_labels(panel.index, item)
-        transformed = fitted.transform(
-            apply_panel,
-            history=fitted.fit_panel,
-            policy="origin_available",
-            available=available_labels,
+        # Cross-HORIZON reuse of the (dominant-cost) origin_available transform. The
+        # transform of the rows observable at the origin (<= origin_pos) is
+        # horizon-independent -- it depends only on (fitted, available), never on the
+        # forecast horizon -- so cache that heavy base-panel transform under an
+        # origin-keyed key and reuse it across every horizon at this origin. Only the
+        # tiny horizon-specific forward/target rows (> origin_pos) are transformed per
+        # call; passing history=fit_panel lets their first-difference / lag t-codes see
+        # the origin row exactly as the whole-window transform would. Numerical
+        # identity vs the un-split whole-window path is pinned by the serial==parallel
+        # golden -- the parallel backend (preprocessing_cache=None) keeps that path.
+        base_key = (
+            ("prepared_base",) + tuple(cache_key)
+            if (preprocessing_cache is not None and cache_key is not None)
+            else None
         )
-        prepared_panel = transformed.panel
+        if base_key is None:
+            apply_panel = panel.reindex(apply_labels).loc[:, cols]
+            transformed = fitted.transform(
+                apply_panel,
+                history=fitted.fit_panel,
+                policy="origin_available",
+                available=available_labels,
+            )
+            prepared_panel = transformed.panel
+        else:
+            # base_key is non-None only when preprocessing_cache is non-None (see its
+            # definition above); assert it so the type checker narrows the Optional.
+            assert preprocessing_cache is not None
+            base_panel = preprocessing_cache.get(base_key)
+            if not isinstance(base_panel, pd.DataFrame):
+                base_panel = fitted.transform(
+                    panel.reindex(available_labels).loc[:, cols],
+                    history=fitted.fit_panel,
+                    policy="origin_available",
+                    available=available_labels,
+                ).panel
+                preprocessing_cache[base_key] = base_panel
+            fwd_labels = apply_labels[~apply_labels.isin(available_labels)]
+            if len(fwd_labels):
+                fwd_panel = fitted.transform(
+                    panel.reindex(fwd_labels).loc[:, cols],
+                    history=fitted.fit_panel,
+                    policy="origin_available",
+                    available=available_labels,
+                ).panel
+                prepared_panel = pd.concat([base_panel, fwd_panel]).reindex(apply_labels)
+            else:
+                prepared_panel = base_panel.reindex(apply_labels)
+            # concat/reindex drop the (horizon-independent) preprocessing metadata that
+            # _detach_panel_metadata expects on ``.attrs``; restore it from the base.
+            prepared_panel.attrs = dict(base_panel.attrs)
     # Move the heavy ``macroforecast_metadata`` payload off ``panel.attrs`` and
     # onto the dataclass. The transformed panel below is reindexed/dropna'd/fed to
     # feature fit+transform once per origin AND reused across arms/horizons from
