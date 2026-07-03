@@ -130,6 +130,41 @@ This shares all config, so it is for **pure model comparison**. Comparing featur
 cases (arms differing in `features` or `preprocessing`) still needs explicit
 `Arm` objects built by hand.
 
+### What is held fixed vs varied (the reuse contract)
+
+A controlled comparison changes ONE stage and holds the rest fixed. The pipeline
+reuses the fixed stages instead of recomputing them per variant, and the boundary is
+determined by where the varied stage sits in the `preprocessing -> features -> model`
+chain.
+
+| Comparison | Computed once and REUSED | Recomputed per variant |
+| --- | --- | --- |
+| **Model** (arms differ in `model` only) | data load, window/origin schedule, and the per-origin preprocessing `fit` **and** `transform` (EM/factor imputation) | only the model fit/predict |
+| **Feature** (arms differ in `features`, same `preprocessing`) | data, window/origins, per-origin preprocessing | feature build + model |
+| **Preprocessing** (arms differ in `preprocessing`) | data, window/origin schedule | the preprocessing itself (it is the thing being compared) + everything downstream |
+
+The load-bearing case is **model comparison**: the dominant per-origin cost (the
+`FittedPreprocessor` fit and its EM/factor transform of the panel) is computed once
+per origin and reused across every arm AND every horizon of the same target. So
+comparing `N` models over `M` horizons runs the preprocessing once per origin, not
+`N x M` times. This reuse is real only when the arms **share one spec-level
+preprocessing** -- i.e. `preprocessing=` is set on `pipeline_spec` (or `model_arms`)
+and each `Arm.preprocessing is None`. An arm that carries its OWN `preprocessing`
+opts out and recomputes it (correct for a preprocessing comparison, where each
+variant must differ). The reuse is keyed on `(PreprocessSpec, target, origin_pos)`
+and is horizon-independent, so it never leaks a different origin's or horizon's fit.
+
+For **preprocessing comparison** the preprocessing necessarily differs per arm and is
+recomputed -- that is the comparison. Everything upstream (the same `data` bundle and
+`window`/origin schedule) is shared trivially, and two variants that share an
+identical `(spec, target, origin)` sub-fit can still be deduplicated across processes
+and runs via the on-disk `preprocessing_cache_dir` (`PreprocessorStore`).
+
+These invariants are pinned by `tests/pipeline/test_preprocessing_share.py`
+(cross-arm and on-disk dedup, serial==parallel) and
+`tests/pipeline/test_crosshorizon_transform_dedup.py` (the per-origin fit and heavy
+transform each run exactly once per origin regardless of arm and horizon count).
+
 ## Parallel execution (`n_jobs`)
 
 `pipeline_spec(..., n_jobs=N)` parallelises the pseudo-out-of-sample replication

@@ -41,15 +41,42 @@ implements the published methodology, not reproducing an R-based paper bit for
 bit. The configuration is faithful (the eight steps below show each layer) and
 the pipeline is leak-free. At horizon 1 the replicated relative-RMSE matches the
 appendix within about 0.02, and a plain `ols` reproduces the direct and
-path-average object exactly. Agreement loosens at longer horizons. After the
-evaluation fix below, much of the residual is the expected difference between R's
-`randomForest` and scikit-learn's `RandomForestRegressor` (the same
-hyperparameters but a different engine and RNG), which is not reducible without
-matching the exact R implementation. The other difference is the benchmark
-denominator: the appendix scores both the direct and the path-average tables
-against one FM benchmark, the direct FM, while our pipeline scored each policy
-against its own FM. Matching the paper's convention removes the systematic
-path-average gap, as Divergence attribution explains.
+path-average object exactly.
+
+The main long-horizon divergence was a **forecasting bug in the iterated benchmarks,
+not the random-forest engine**. Under the `direct`/`direct_average` policy the
+autoregressive models (`ar`, and the FM benchmark `far`) forecast by rolling forward
+from the target's own history; because the h-ahead target's freshest leak-free lag is
+origin-h stale and the h-period average is near-unit-root, they collapsed to
+persistence of a stale value, producing forecasts worse than the unconditional mean
+(RMSE ≈ √2·target std, essentially uncorrelated with the realised future). Since the
+FM was the benchmark denominator, this corrupted every direct relative-RMSE and grew
+with the horizon. The fix gives `ar`/`far` a direct-projection mode: under the direct
+policy they regress the h-ahead target on the fresh one-period lags and predict once,
+instead of iterating from stale history (`macroforecast/models/timeseries.py`;
+recursive and path-average keep the iterated behaviour, where it is correct). A second
+defect surfaced once the direct mode was in place: `far`'s direct projection silently
+dropped its factors and collapsed to plain `ar` (Bug 4), because the factor-block
+selector excluded every lag-named column and, under the direct policy, the predictors
+reach the model lag-named. With both fixed the direct FM is a genuine factor model
+again and matches the appendix at all horizons: for UNRATE at horizon 24 the direct FM
+went from 0.1016 (49 percent above the paper) through 0.0726 (the Bug-3-only,
+factor-collapsed value) to 0.0665 (about 2 percent below the paper's 0.068), and the
+horizon-growing divergence flattens to a small, non-growing gap. Across the full grid
+(10 targets x 6 horizons) the direct FM absolute RMSE has a median absolute deviation
+of 11 percent from the appendix (39 of 60 cells within 15 percent), and the AR relative
+RMSE a median absolute deviation of 0.05 (51 of 60 cells within 0.10). The residual IS
+the expected difference between R's `randomForest` / factor code and their Python
+counterparts (same hyperparameters, different engine and RNG), which is not reducible
+without matching the exact R implementation.
+
+A separate, smaller issue is the benchmark denominator convention: the appendix scores
+both the direct and the path-average tables against one FM benchmark, the direct FM,
+while an earlier version of our comparison scored each policy against its own FM.
+Matching the paper's convention removes the residual systematic path-average gap, as
+Divergence attribution explains. The path-average results were correct throughout
+(each per-step model forecasts a stationary one-period change, so it never collapsed
+to stale persistence); the bug was confined to the direct policy.
 
 ### Configuration faithfulness (verified)
 
@@ -64,15 +91,33 @@ path-average gap, as Divergence attribution explains.
 
 `scripts/replication/gcls_2021_pipeline/_compare_appendix.py` scores every cell
 (10 targets x 6 horizons x {AR, FM, RF F-Level/X-Level/MARX/F-X-MARX-Level} x
-{direct, path-average}) against the appendix tables below. The full-grid run
-predates the evaluation fix in the next section, so the figures here come from
-re-scoring the saved per-origin forecasts, not from re-fitting. They also adopt
-the appendix's FM-benchmark convention, the direct FM as the denominator for both
-tables (see Divergence attribution). Overall mean absolute delta is about 0.09
-(direct 0.09, path-average 0.10). It is about 0.03 at horizon 1 and grows to
-about 0.17 at horizon 24. AR, which is engine-independent, sits at about 0.05 for
-the direct table and about 0.10 for path-average, scored on its full 1980-2017
-sample.
+{direct, path-average}) against the appendix tables below. The random-forest and AR
+figures come from re-scoring the saved per-origin forecasts rather than re-fitting; the
+direct FM arm was refit for Bugs 3 and 4 (its saved forecasts were wrong), as the next
+paragraph describes. They also adopt the appendix's FM-benchmark convention, the direct
+FM as the denominator for both tables (see Divergence attribution).
+
+Before the fixes these figures grew with the horizon (overall mean absolute delta about
+0.09, about 0.03 at horizon 1 rising to about 0.17 at horizon 24), driven by the
+direct-policy stale-persistence bug in `ar`/`far` (Bug 3). With Bugs 3 and 4 fixed, the
+full-grid direct-average run (all 10 targets x 6 horizons; FM regenerated with factors,
+AR unchanged) has been re-scored against the appendix. The horizon-growing divergence is
+gone: the direct FM absolute RMSE deviates from the appendix by a median of 11 percent
+(39 of 60 cells within 15 percent), with the larger deviations confined to near-zero
+cells (for example M2 and CPI at long horizons, where the absolute RMSE is 0.001 to
+0.004, so a small difference is a large percentage). The AR relative RMSE — degenerate at
+exactly 1.000 before Bug 4 was fixed, because `far` had collapsed to `ar` — now tracks
+the appendix with a median absolute deviation of 0.05 (51 of 60 cells within 0.10). For
+UNRATE the corrected direct-average table is:
+
+| horizon | FM abs (ours) | FM abs (paper) | AR rel (ours) | AR rel (paper) |
+| --- | --- | --- | --- | --- |
+| 1 | 0.154 | 0.148 | 1.045 | 1.04 |
+| 3 | 0.092 | 0.088 | 1.068 | 1.04 |
+| 6 | 0.083 | 0.077 | 1.008 | 1.09 |
+| 9 | 0.081 | 0.076 | 1.006 | 1.11 |
+| 12 | 0.080 | 0.077 | 1.029 | 1.10 |
+| 24 | 0.067 | 0.068 | 1.091 | 1.08 |
 
 ### Bug 1. Evaluation sample truncation (critical) — FIXED
 
@@ -114,24 +159,92 @@ per-step target series at a given order was identical across policies; the
 divergence was purely the selected order.
 
 Fix (`macroforecast/forecasting/runner.py`, `_fit_predict_path_average_origin`):
-the path per-step block now takes the same IC branch as the direct path. Horizon-1
-forecasts are now bit-identical across policies for `ols`, `ar`, and `far`;
-horizons > 1 still differ legitimately. Guarded by
-`tests/forecasting/test_h1_direct_path_invariant.py`.
+the path per-step block now takes the same IC branch as the direct path. Guarded by
+`tests/forecasting/test_h1_direct_path_invariant.py`. (After Bug 3 below, horizon-1
+`ar`/`far` are close rather than bit-identical across policies, because the direct
+policy now uses a one-shot projection while path-average iterates per step; `ols`
+and other single-shot models remain bit-identical.)
+
+### Bug 3. Direct-policy stale persistence in the iterated benchmarks (critical) — FIXED
+
+Under the `direct`/`direct_average` policy, the autoregressive models (`ar`, and the
+FM benchmark `far`) forecast by rolling forward from the target's own history. The
+h-ahead target is pre-built, and leak-free availability makes its freshest lag
+origin-h stale; the h-period average is near-unit-root, so the models' coefficient
+on that stale lag is near one and they simply persist a value from h months earlier.
+The result is a forecast worse than the unconditional mean: at horizon 24 the
+prediction carried the full target-scale variance but was essentially uncorrelated
+with the realised future (RMSE ≈ √2·target std), and its correlation with the stale
+origin-h value was ≈ 0.998. Because `far` is the benchmark denominator, this threw
+off every direct relative-RMSE and grew with the horizon — it, not the random-forest
+engine, was the main long-horizon divergence. The plain `direct` (single h-step)
+policy had the same defect. `path_average` was correct throughout, because each
+per-step model forecasts a stationary one-period change (which mean-reverts, so it
+shrinks) rather than the near-unit-root average.
+
+Fix (`macroforecast/models/timeseries.py`): `ar`/`far` gain a direct-projection mode.
+Under the direct policy they regress the h-ahead target on the fresh one-period lag
+features (the `n_lag` most recent observed lags, which are available at the origin and
+so leak-free) and predict each origin independently, instead of iterating from stale
+history; information-criterion order selection uses the same mode. The recursive and
+path-average policies keep the iterated behaviour, where iterating a stationary
+one-period series is correct. Validated: on UNRATE the direct FM absolute RMSE at
+horizon 24 moves from 0.1016 (49 percent above the paper) to 0.0726 (this Bug-3-only
+value is still factor-collapsed; Bug 4 below reduces it to 0.0665),
+`ar` at horizon 24 now shrinks to about the target standard deviation instead of
+√2·target std, and the full test suite (models, selection, forecasting, correctness,
+pipeline) stays green and leak-free. Guarded by
+`tests/models/test_ar_far_direct_projection.py`. The 11 other iterated/state-space
+models (VAR family, `favar`, the statsmodels forecasters, the mixed-frequency DFM,
+and the naive baselines) share the same structural defect under the direct policy and
+are a documented follow-up; they are not used in this replication.
+
+### Bug 4. Factor collapse in the direct FM benchmark (critical) — FIXED
+
+With Bug 3's direct-projection mode in place, `far` regressed the h-ahead target on the
+target's own fresh lags plus factors extracted from the predictor block. But the
+factor-block selector kept the columns that do NOT match the lag pattern `*_lag<k>`,
+and under the direct policy every feature — target lags AND predictor lags — reaches the
+model lag-named. So the predictor block was excluded wholesale, no factors were fit, and
+`far` collapsed to plain `ar`. On the replication this made the direct FM benchmark
+byte-identical to AR at every target and horizon (AR relative RMSE exactly 1.000),
+disagreeing with the appendix where AR is 1.04 to 1.11 times FM. Because FM is the
+benchmark denominator, this left every direct relative-RMSE meaningless even though the
+FM absolute RMSE looked plausible (an AR forecast at roughly the paper's AR error level).
+
+Fix (`macroforecast/models/timeseries.py`): `_FAR`'s direct mode excludes only the
+target's OWN lag columns (matched by the base name of the selected lags) from the factor
+block; the predictor lags remain and drive the PCA. Recursive/path `far` (direct=False)
+was already correct and is unchanged. Regenerating the direct FM with factors and
+re-scoring gives a real factor benchmark: UNRATE horizon 24 FM absolute RMSE 0.0726 →
+0.0665, and the AR relative RMSE stops being tautologically 1.000 and tracks the
+appendix (UNRATE: 1.045, 1.068, 1.008, 1.006, 1.029, 1.091 vs the paper's 1.04, 1.04,
+1.09, 1.11, 1.10, 1.08). Guarded by
+`test_direct_far_uses_predictor_factors_when_predictors_are_lag_named` (with lag-named
+informative predictors, `far` must fit substantially better than `ar`, which the
+collapse prevented).
 
 ### Divergence attribution
 
-After the evaluation fix the residual long-horizon gap is structural, not random,
-and it has more than one source. For the random-forest arms part of it is the
-expected R `randomForest` versus scikit-learn `RandomForestRegressor` difference,
-the same hyperparameters but a different bootstrap RNG and split rule, amplified
-at long horizons where the effective sample is small. That is the known
-irreducible R-versus-Python gap, not a package defect.
+The dominant long-horizon divergence in the DIRECT tables was a forecasting bug in
+the iterated benchmarks (`ar`, `far`), not the random-forest engine — see Bug 3
+above. It grew with the horizon and, because `far` is the benchmark denominator,
+distorted every direct relative-RMSE. After the fixes the direct FM absolute RMSE
+matches the appendix across horizons (UNRATE horizon 24: 0.1016 → 0.0726 with Bug 3
+alone → 0.0665 once Bug 4 restores the factors, vs the paper's 0.068), and the
+horizon-growing divergence flattens.
 
-That is not the whole story for the path-average table, whose largest residuals
-were the volatile real-activity series (HOUST, RETAIL) at long horizons and
-appeared for `ar` too, a pure linear autoregression with no forest. The cause is
-the benchmark DENOMINATOR convention. The appendix prints the same FM absolute
+What remains for the random-forest arms is the expected R `randomForest` versus
+scikit-learn `RandomForestRegressor` difference (same hyperparameters, different
+bootstrap RNG and split rule), amplified at long horizons where a 24-month average
+target leaves only about a dozen independent observations. That is the known
+irreducible R-versus-Python gap, not a package defect, and it is a few percent, not
+the O(1) gap the direct-projection bug produced.
+
+A separate issue affected the PATH-AVERAGE table only, whose largest residuals
+were the volatile real-activity series (HOUST, RETAIL) at long horizons. The cause
+there is the benchmark DENOMINATOR convention. The appendix prints the same FM
+absolute
 RMSE above the direct table (Tables 3 to 8) and the path-average table (Tables 9
 to 14) at every horizon, so the paper uses one FM benchmark, the direct FM, as
 the denominator for both. Our pipeline instead scored each policy against its
@@ -157,9 +270,12 @@ average target leaves only about a dozen independent observations.
 2. A path-average "OLS-equivalence bug" — retracted. The paper does not run OLS;
    its own AR row differs between the direct and path tables, so direct != path
    for linear models in finite samples is expected.
-3. The paper uses a single direct-FM denominator for the path table — retracted.
-   Recomputing with the direct-FM denominator made the engine-independent AR
-   row WORSE, so the path-FM denominator (what we use) is correct.
+3. "The path-FM denominator is correct because the direct-FM denominator made the
+   AR row worse" — this earlier reasoning was confounded by Bug 3. The direct AR
+   (and direct FM) were themselves broken (stale persistence), so any comparison
+   that used the direct FM as the denominator inherited that defect. With Bug 3
+   fixed, the appendix convention (one direct-FM denominator for both tables) is the
+   correct one, as the verification summary states.
 
 ---
 

@@ -710,6 +710,55 @@ a bool shared by all, or a set/sequence of arm names that nest the benchmark.</p
 <p>This shares all config, so it is for <strong>pure model comparison</strong>. Comparing feature
 cases (arms differing in <code class="docutils literal notranslate"><span class="pre">features</span></code> or <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>) still needs explicit
 <code class="docutils literal notranslate"><span class="pre">Arm</span></code> objects built by hand.</p>
+<section id="what-is-held-fixed-vs-varied-the-reuse-contract">
+<h3>What is held fixed vs varied (the reuse contract)<a class="headerlink" href="#what-is-held-fixed-vs-varied-the-reuse-contract" title="Link to this heading">#</a></h3>
+<p>A controlled comparison changes ONE stage and holds the rest fixed. The pipeline
+reuses the fixed stages instead of recomputing them per variant, and the boundary is
+determined by where the varied stage sits in the <code class="docutils literal notranslate"><span class="pre">preprocessing</span> <span class="pre">-&gt;</span> <span class="pre">features</span> <span class="pre">-&gt;</span> <span class="pre">model</span></code>
+chain.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Comparison</p></th>
+<th class="head"><p>Computed once and REUSED</p></th>
+<th class="head"><p>Recomputed per variant</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Model</strong> (arms differ in <code class="docutils literal notranslate"><span class="pre">model</span></code> only)</p></td>
+<td><p>data load, window/origin schedule, and the per-origin preprocessing <code class="docutils literal notranslate"><span class="pre">fit</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">transform</span></code> (EM/factor imputation)</p></td>
+<td><p>only the model fit/predict</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Feature</strong> (arms differ in <code class="docutils literal notranslate"><span class="pre">features</span></code>, same <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>)</p></td>
+<td><p>data, window/origins, per-origin preprocessing</p></td>
+<td><p>feature build + model</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Preprocessing</strong> (arms differ in <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>)</p></td>
+<td><p>data, window/origin schedule</p></td>
+<td><p>the preprocessing itself (it is the thing being compared) + everything downstream</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The load-bearing case is <strong>model comparison</strong>: the dominant per-origin cost (the
+<code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code> fit and its EM/factor transform of the panel) is computed once
+per origin and reused across every arm AND every horizon of the same target. So
+comparing <code class="docutils literal notranslate"><span class="pre">N</span></code> models over <code class="docutils literal notranslate"><span class="pre">M</span></code> horizons runs the preprocessing once per origin, not
+<code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">x</span> <span class="pre">M</span></code> times. This reuse is real only when the arms <strong>share one spec-level
+preprocessing</strong> – i.e. <code class="docutils literal notranslate"><span class="pre">preprocessing=</span></code> is set on <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code> (or <code class="docutils literal notranslate"><span class="pre">model_arms</span></code>)
+and each <code class="docutils literal notranslate"><span class="pre">Arm.preprocessing</span> <span class="pre">is</span> <span class="pre">None</span></code>. An arm that carries its OWN <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>
+opts out and recomputes it (correct for a preprocessing comparison, where each
+variant must differ). The reuse is keyed on <code class="docutils literal notranslate"><span class="pre">(PreprocessSpec,</span> <span class="pre">target,</span> <span class="pre">origin_pos)</span></code>
+and is horizon-independent, so it never leaks a different origin’s or horizon’s fit.</p>
+<p>For <strong>preprocessing comparison</strong> the preprocessing necessarily differs per arm and is
+recomputed – that is the comparison. Everything upstream (the same <code class="docutils literal notranslate"><span class="pre">data</span></code> bundle and
+<code class="docutils literal notranslate"><span class="pre">window</span></code>/origin schedule) is shared trivially, and two variants that share an
+identical <code class="docutils literal notranslate"><span class="pre">(spec,</span> <span class="pre">target,</span> <span class="pre">origin)</span></code> sub-fit can still be deduplicated across processes
+and runs via the on-disk <code class="docutils literal notranslate"><span class="pre">preprocessing_cache_dir</span></code> (<code class="docutils literal notranslate"><span class="pre">PreprocessorStore</span></code>).</p>
+<p>These invariants are pinned by <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_preprocessing_share.py</span></code>
+(cross-arm and on-disk dedup, serial==parallel) and
+<code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_crosshorizon_transform_dedup.py</span></code> (the per-origin fit and heavy
+transform each run exactly once per origin regardless of arm and horizon count).</p>
+</section>
 </section>
 <section id="parallel-execution-n-jobs">
 <h2>Parallel execution (<code class="docutils literal notranslate"><span class="pre">n_jobs</span></code>)<a class="headerlink" href="#parallel-execution-n-jobs" title="Link to this heading">#</a></h2>
@@ -828,7 +877,10 @@ nested.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration-objects">Configuration objects</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#t-code-to-target-mapping">t-code to target mapping</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-models-model-arms">Comparing models (<code class="docutils literal notranslate"><span class="pre">model_arms</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-models-model-arms">Comparing models (<code class="docutils literal notranslate"><span class="pre">model_arms</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-held-fixed-vs-varied-the-reuse-contract">What is held fixed vs varied (the reuse contract)</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parallel-execution-n-jobs">Parallel execution (<code class="docutils literal notranslate"><span class="pre">n_jobs</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#n-jobs-auto"><code class="docutils literal notranslate"><span class="pre">n_jobs="auto"</span></code></a></li>
 </ul>
