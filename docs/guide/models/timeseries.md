@@ -8,7 +8,7 @@ Pass any model string below as `Arm(model=...)`. Extra names an optional depende
 
 | Model string | Description | Input | Extra | Scaling | Recommended preprocessing | Tunable |
 | --- | --- | --- | --- | --- | --- | --- |
-| `ar` | Univariate autoregression. | target | none | no | default | 1 |
+| `ar` | Univariate autoregression. | supervised | none | no | default | 1 |
 | `arima` | (Seasonal) ARIMA model. | target | none | no | default | 1 |
 | `auto_arima` | Automatic (seasonal) ARIMA order selection (forecast::auto.arima). | target | none | no | default | 0 |
 | `bvar_minnesota` | FAVAR::BVAR / bvartools Minnesota-prior Bayesian VAR posterior sampler. | panel | none | no | default | 3 |

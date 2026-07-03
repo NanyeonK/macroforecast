@@ -2257,6 +2257,9 @@ def _prepare_origin_panel(
             )
             prepared_panel = transformed.panel
         else:
+            # base_key is non-None only when preprocessing_cache is non-None (see its
+            # definition above); assert it so the type checker narrows the Optional.
+            assert preprocessing_cache is not None
             base_panel = preprocessing_cache.get(base_key)
             if not isinstance(base_panel, pd.DataFrame):
                 base_panel = fitted.transform(
