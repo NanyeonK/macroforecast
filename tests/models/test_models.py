@@ -1093,6 +1093,30 @@ def test_favar_model_fits_and_predicts() -> None:
     assert fit.feature_names == tuple(X.columns)
 
 
+def test_favar_model_fits_with_pure_default_params() -> None:
+    # Regression test: favar must be usable with NO explicit params (the
+    # spec's own default_params dict), which previously defaulted to
+    # fctmethod="BBE" with slowcode=None and raised on every fit/trial.
+    X, y = _xy(80)
+
+    fit = mf.models.favar(X, y, nburn=5, nrep=15)
+    pred = fit.predict(X.iloc[-4:])
+
+    assert fit.metadata["fctmethod"] == "BGM"
+    assert fit.metadata["slowcode"] is None
+    assert len(pred) == 4
+    assert np.isfinite(pred.to_numpy(dtype=float)).all()
+
+
+def test_favar_bbe_without_slowcode_still_raises() -> None:
+    # The BBE + missing-slowcode error must remain intact; only the default
+    # fctmethod changed (BBE -> BGM), not this validation path.
+    X, y = _xy(80)
+
+    with pytest.raises(ValueError, match="slowcode is required when fctmethod='BBE'"):
+        mf.models.favar(X, y, fctmethod="BBE", nburn=5, nrep=15)
+
+
 def test_support_vector_models_fit() -> None:
     X, y = _xy()
 

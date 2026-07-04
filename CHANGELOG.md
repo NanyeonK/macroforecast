@@ -40,6 +40,93 @@ full per-version honesty-pass history embedded in repo documentation.
   models a horizon must land on a date where the target realises (the old
   window "supported" quarterly targets at h=1 only because the mislabeled
   first test row was the quarter-end origin itself). Fixes #423.
+- `models` (favar unusable with defaults): `favar`'s default `fctmethod` was
+  `"BBE"` with `slowcode=None`, but `_FAVAR.fit` hard-requires `slowcode` under
+  BBE, so every trial in the default "standard" search space failed instantly
+  with `SearchError: ... slowcode is required when fctmethod='BBE'`. Default
+  `fctmethod` is now `"BGM"` (needs no `slowcode`); the BBE+missing-slowcode
+  error is unchanged (pinned by a new regression test), and `fctmethod` is
+  still NOT part of the search space (search dimensionality unchanged, as
+  locked). Making the default trial actually run also exposed a second,
+  previously invisible problem: `favar`'s Gibbs/Wishart posterior sampler
+  (`nburn`/`nrep` = 5000/15000) combined with the *shared* `_FACTOR_SPACES`/
+  `_AR_SPACES` "standard" grid (n_factors up to 8, n_lag up to 12 -- cheap for
+  the OLS-based `far`/`ar`/`var` models that also use it, but not for a
+  Bayesian sampler that rebuilds an `O((n_factors + 1) * n_lag)`-square
+  posterior every MCMC draw) made even a single default-preset grid search
+  take many minutes. `favar` now has its own dedicated search space
+  (`_FAVAR_SPACES`, NOT shared with `far`/`ar`/`var`) with the same two tuned
+  dimensions (`n_factors`, `n_lag`) but a much tighter "standard"/"wide" range,
+  and cheapened `nburn`/`nrep` defaults: `5000`->`100` / `15000`->`200`. Old
+  (paper-faithful) values remain reachable by passing them explicitly. Verified
+  with the empirical policy-matrix scan: favar now reports `OK` on all 4
+  policies (previously all 25/25 default-preset trials failed).
+- `models` (dfm_unrestricted_midas prediction NaN): `predict_from_panel`
+  rebuilt the DFM-factor design at prediction time and hard-rejected any NaN
+  in it. With the default `factor_lags=(0,)` and `target_frequency="quarterly"`
+  / `anchor_position="period_end"`, the lag-0 factor lookup date is the
+  anchor's *enclosing quarter-end* month, which can fall several months past
+  the last date the DFM's own predictors cover (e.g. forecasting April with
+  `h=2` projects the anchor to the June quarter-end) -- so
+  `dfm_factor1_lag0` was NaN and `direct`/`direct_average`/`path_average` all
+  failed (`recursive` was, and remains, correctly rejected by the panel-input
+  guard). `_dfm_unrestricted_midas_design` now extends the fitted
+  `DynamicFactorMQ` state forward to the anchor date via the model's own
+  `.extend()` Kalman-filter forecast (all-missing placeholder observations for
+  the gap months) instead of reindexing to NaN -- i.e. it forecasts the
+  factors forward using the fitted state, rather than manufacturing a missing
+  value. Also added a fit-time validation: `target_frequency` must normalize
+  to one of monthly/quarterly/annual, raising a clear `ValueError` instead of
+  silently falling back to a monthly anchor projection. Verified with a
+  regression test reproducing the original failure (monthly toy panel,
+  default params, `direct` policy, `h=2`) and with the empirical policy-matrix
+  scan (`direct`/`direct_average`/`path_average` now `OK`).
+
+- `models` (pathological default costs): six models exceeded 150s on a 140-obs
+  toy policy-matrix scan (`.dev-notes/policy_matrix_scan.py`) with their
+  out-of-the-box defaults, either from the default params themselves or from
+  the "standard" search-space preset that `model_selection=None` still runs
+  (dispatch is out of scope; only per-trial cost changed). Old -> new:
+  - `bvar_minnesota` / `bvar_normal_inverse_wishart`: `iter` `10000`->`300`,
+    `burnin` `5000`->`100`; "standard" preset `n_lag` `(1, 2, 4)`->`(1, 2)`
+    (own dedicated spaces dict, not shared with other models). With the
+    original `iter=10000`/`burnin=5000` defaults, a single fit did not finish
+    within 280s even at `n_lag=1` (the smallest combo); at an intermediate
+    `iter=2000`/`burnin=1000` a single fit alone ran 12.8-41.4s depending on
+    `n_lag` (1/2/4) -- still far too slow once multiplied across the
+    "standard" grid, origins, and 4 policies. Verified scan total after the
+    fix (4 policies, `iter=300`/`burnin=100`, `n_lag` capped at `(1, 2)`):
+    28.41s.
+  - `favar`: see the separate favar entry above (`nburn`/`nrep` and its new
+    dedicated search space). Verified scan total 54.6s.
+  - `macro_random_forest`: default `B` `50`->`25`; "standard" preset `B`
+    `(25, 50, 100)`->`(10, 25)` (own dedicated spaces dict). Verified scan
+    total 81.8s (was 241.9s uncontended, i.e. already over the 150s bar).
+  - `lgb_plus`: default `n_ensemble` `10`->`3`, `n_steps` `200`->`30`;
+    "standard" preset `n_ensemble` `(5, 10)`->`(3, 5)`, `n_steps`
+    `(100, 200, 400)`->`(30, 50, 100)` (own dedicated spaces dict). Verified
+    scan total 84.2s (was: did not finish within 300s before this change).
+  - `mars`: default unchanged (`max_degree=1`, `max_terms=20`); "standard"
+    search preset drops the `max_degree=2` x `max_terms=30` corner
+    (`max_terms` `(10, 20, 30)`->`(10, 20)`); "wide" preset unchanged (still
+    reaches `max_terms=30` x `max_degree=2` for deep/explicit use). That corner
+    alone took 3.7s per fit in isolation (vs. 1.0s for the plain default), and
+    with a 20-trial random search repeated across multiple origins and 4
+    policies it was the single biggest cost driver in the "standard" preset.
+    Verified scan total after the fix: 132.9s (this WP does not have a clean
+    "before" scan total on record -- the corner was identified and removed
+    based on the isolated per-fit timing above, not a full before/after scan
+    comparison).
+  - `restricted_midas`: `maxiter` `1000`->`200`, `tolerance` `1e-8`->`1e-6`.
+    Verified scan total 38.6s (was 211.3s, i.e. already over the 150s bar).
+  Deep/paper-faithful settings remain reachable by passing the old values
+  explicitly (or, for `mars`, using the "wide" preset). A new
+  `tests/models/test_default_cost_budget.py` (marked `@pytest.mark.slow`,
+  this repo's opt-in gate for realistic-shape integration tests -- there is
+  no registered `deep` marker) pins that a single default fit for each model
+  stays inside a generous wall-clock budget, to catch a future default
+  regressing back toward a pathological cost.
+
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
   (`direct=False`) instead of the DIRECT s-step projection, so each path step

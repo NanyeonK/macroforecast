@@ -488,6 +488,23 @@ _AR_SPACES: SearchSpaces = {
     "wide": {"n_lag": (1, 2, 3, 4, 6, 9, 12, 18, 24)},
 }
 
+# favar's own (n_factors, n_lag) grid -- NOT the shared _FACTOR_SPACES/_AR_SPACES
+# above. favar's Gibbs/Wishart posterior sampler cost per fit grows sharply with
+# both n_factors and n_lag (the coefficient-draw covariance is a
+# ((n_factors + 1) * n_lag)-square system rebuilt every MCMC iteration), unlike
+# the OLS-based "far"/"ar"/"var" models that also use _FACTOR_SPACES/_AR_SPACES.
+# The shared "standard" corner n_factors=8/n_lag=12 alone takes minutes per fit
+# even with a handful of draws, which makes the default "standard"-preset grid
+# search (25 combos, exhaustive) pathologically slow for favar specifically.
+# Capping favar's own ranges keeps search dimensionality at 2 (n_factors, n_lag)
+# unchanged while keeping every combo affordable; "wide" is deliberately not as
+# rich as _FACTOR_SPACES/_AR_SPACES' "wide" for the same reason.
+_FAVAR_SPACES: SearchSpaces = {
+    "small": {"n_factors": (1, 2), "n_lag": (1, 2)},
+    "standard": {"n_factors": (1, 2), "n_lag": (1, 2)},
+    "wide": {"n_factors": (1, 2, 3, 5), "n_lag": (1, 2, 4, 6)},
+}
+
 _SVM_SPACES: SearchSpaces = {
     "small": {"C": (0.1, 1.0), "epsilon": (0.01, 0.1), "gamma": ("scale",)},
     "standard": {
@@ -2458,8 +2475,8 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "kappa1": 0.5,
             "nu0": 0.0,
             "s0": 0.0,
-            "iter": 10000,
-            "burnin": 5000,
+            "iter": 300,
+            "burnin": 100,
             "random_state": 0,
         },
         parameters=(
@@ -2483,12 +2500,20 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "Inverse-Wishart scale prior parameter.",
                 False,
             ),
-            _p("iter", 10000, "int", "Total Gibbs iterations.", False),
+            _p(
+                "iter",
+                300,
+                "int",
+                "Total Gibbs iterations (deep/paper-faithful default is 10000; "
+                "pass explicitly to restore it).",
+                False,
+            ),
             _p(
                 "burnin",
-                5000,
+                100,
                 "int",
-                "Burn-in iterations discarded from posterior summaries.",
+                "Burn-in iterations discarded from posterior summaries "
+                "(deep/paper-faithful default is 5000; pass explicitly to restore it).",
                 False,
             ),
             _p("random_state", 0, "int", "Random seed for posterior draws.", False),
@@ -2496,7 +2521,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         spaces={
             "small": {"n_lag": (1, 2), "kappa0": (1.0, 2.0), "kappa1": (0.5,)},
             "standard": {
-                "n_lag": (1, 2, 4),
+                "n_lag": (1, 2),
                 "kappa0": (0.5, 1.0, 2.0),
                 "kappa1": (0.5, 1.0),
             },
@@ -2521,8 +2546,8 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "vb0": 0.0,
             "nu0": 0.0,
             "s0": 0.0,
-            "iter": 10000,
-            "burnin": 5000,
+            "iter": 300,
+            "burnin": 100,
             "random_state": 0,
         },
         parameters=(
@@ -2550,19 +2575,27 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "Inverse-Wishart scale prior parameter.",
                 False,
             ),
-            _p("iter", 10000, "int", "Total Gibbs iterations.", False),
+            _p(
+                "iter",
+                300,
+                "int",
+                "Total Gibbs iterations (deep/paper-faithful default is 10000; "
+                "pass explicitly to restore it).",
+                False,
+            ),
             _p(
                 "burnin",
-                5000,
+                100,
                 "int",
-                "Burn-in iterations discarded from posterior summaries.",
+                "Burn-in iterations discarded from posterior summaries "
+                "(deep/paper-faithful default is 5000; pass explicitly to restore it).",
                 False,
             ),
             _p("random_state", 0, "int", "Random seed for posterior draws.", False),
         ),
         spaces={
             "small": {"n_lag": (1, 2)},
-            "standard": {"n_lag": (1, 2, 4)},
+            "standard": {"n_lag": (1, 2)},
             "wide": {"n_lag": (1, 2, 4, 6, 12)},
         },
         input_kind="panel",
@@ -2896,8 +2929,8 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "n_steps": 3,
             "step_bounds": None,
             "fit_intercept": True,
-            "maxiter": 1000,
-            "tolerance": 1e-8,
+            "maxiter": 200,
+            "tolerance": 1e-6,
         },
         parameters=(
             _p(
@@ -2944,12 +2977,20 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             ),
             _p(
                 "maxiter",
-                1000,
+                200,
                 "int",
-                "Maximum SciPy least_squares function evaluations.",
+                "Maximum SciPy least_squares function evaluations "
+                "(deep/paper-faithful default is 1000; pass explicitly to restore it).",
                 False,
             ),
-            _p("tolerance", 1e-8, "float", "least_squares xtol/ftol/gtol.", False),
+            _p(
+                "tolerance",
+                1e-6,
+                "float",
+                "least_squares xtol/ftol/gtol "
+                "(deep/paper-faithful default is 1e-8; pass explicitly to restore it).",
+                False,
+            ),
         ),
         spaces={
             "small": {"weighting": ("almon",), "polynomial_order": (1, 2)},
@@ -3131,12 +3172,12 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         default_params={
             "n_factors": 2,
             "n_lag": 2,
-            "fctmethod": "BBE",
+            "fctmethod": "BGM",
             "slowcode": None,
             "factorprior": None,
             "varprior": None,
-            "nburn": 5000,
-            "nrep": 15000,
+            "nburn": 100,
+            "nrep": 200,
             "standardize": True,
             "random_state": 0,
         },
@@ -3145,9 +3186,9 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             _p("n_lag", 2, "int", "VAR lag order on target plus factors."),
             _p(
                 "fctmethod",
-                "BBE",
+                "BGM",
                 "str",
-                "FAVAR factor identification method: BBE or BGM.",
+                "FAVAR factor identification method: BBE or BGM (default BGM; BBE requires slowcode).",
                 False,
             ),
             _p(
@@ -3173,16 +3214,18 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             ),
             _p(
                 "nburn",
-                5000,
+                100,
                 "int",
-                "Burn-in iterations for loading/BVAR posterior draws.",
+                "Burn-in iterations for loading/BVAR posterior draws "
+                "(deep/paper-faithful default is 5000; pass explicitly to restore it).",
                 False,
             ),
             _p(
                 "nrep",
-                15000,
+                200,
                 "int",
-                "Saved loading draws and post-burn BVAR draw count.",
+                "Saved loading draws and post-burn BVAR draw count "
+                "(deep/paper-faithful default is 15000; pass explicitly to restore it).",
                 False,
             ),
             _p(
@@ -3194,9 +3237,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             ),
             _p("random_state", 0, "int", "Random seed for posterior draws.", False),
         ),
-        spaces={
-            key: {**space, **_AR_SPACES[key]} for key, space in _FACTOR_SPACES.items()
-        },
+        spaces=_FAVAR_SPACES,
         backend="internal FAVAR::FAVAR-aligned Bayesian sampler",
         description="FAVAR::FAVAR-aligned Bayesian factor-augmented VAR sampler.",
     ),
@@ -3320,7 +3361,14 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         spaces={
             "small": {"max_terms": (8, 12), "max_degree": (1,), "n_knots": (5, 10)},
             "standard": {
-                "max_terms": (10, 20, 30),
+                # Drops the max_degree=2 x max_terms=30 corner: that combo is the
+                # single most expensive cell in the preset (each interaction-degree
+                # candidate reruns the forward pass over all pairwise hinge
+                # products, and max_terms=30 forces many more forward steps before
+                # GCV pruning), which was enough on its own to blow the per-model
+                # scan-worker time budget. max_degree=2 stays reachable at
+                # max_terms<=20; the richer combo remains available in "wide".
+                "max_terms": (10, 20),
                 "max_degree": (1, 2),
                 "n_knots": (5, 10),
             },
@@ -3409,8 +3457,8 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "tree",
         lgb_plus,
         default_params={
-            "n_ensemble": 10,
-            "n_steps": 200,
+            "n_ensemble": 3,
+            "n_steps": 30,
             "learning_rate": 0.05,
             "subsample": 0.7,
             "num_leaves": 5,
@@ -3424,12 +3472,19 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "random_state": 0,
         },
         parameters=(
-            _p("n_ensemble", 10, "int", "Independent LGB+ ensemble members."),
+            _p(
+                "n_ensemble",
+                3,
+                "int",
+                "Independent LGB+ ensemble members "
+                "(deep/paper-faithful default is 10; pass explicitly to restore it).",
+            ),
             _p(
                 "n_steps",
-                200,
+                30,
                 "int",
-                "Maximum tree/linear competition steps per member.",
+                "Maximum tree/linear competition steps per member "
+                "(deep/paper-faithful default is 200; pass explicitly to restore it).",
             ),
             _p(
                 "learning_rate",
@@ -3492,9 +3547,16 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "min_data_in_leaf": (10, 20),
                 "linear_candidate_fraction": (0.33, 0.5),
             },
+            # n_ensemble/n_steps here (not just default_params) drive the search-time
+            # cost: model_selection=None still runs the "standard" preset's random
+            # search, and its worst combo alone (n_ensemble=10 x n_steps=400 = 4000
+            # sequential lgb.train calls per fit) was enough to blow the per-model
+            # scan-worker time budget even after cheapening default_params. Capped to
+            # keep any sampled combo affordable; "wide" keeps the richer, paper-style
+            # range for deep/explicit use.
             "standard": {
-                "n_ensemble": (5, 10),
-                "n_steps": (100, 200, 400),
+                "n_ensemble": (3, 5),
+                "n_steps": (30, 50, 100),
                 "learning_rate": (0.02, 0.05, 0.1),
                 "subsample": (0.6, 0.7, 0.8),
                 "num_leaves": (5, 7, 10),
@@ -3652,7 +3714,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "x_pos": None,
             "S_pos": None,
             "y_pos": 0,
-            "B": 50,
+            "B": 25,
             "minsize": 10,
             "mtry_frac": 1.0 / 3.0,
             "min_leaf_frac_of_x": 1.0,
@@ -3715,7 +3777,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "Fixed target position for the X/y callable adapter; must remain 0.",
                 False,
             ),
-            _p("B", 50, "int", "Number of MRF trees."),
+            _p(
+                "B",
+                25,
+                "int",
+                "Number of MRF trees "
+                "(deep/paper-faithful default is 50; pass explicitly to restore it).",
+            ),
             _p("minsize", 10, "int", "Minimum node size before split attempts."),
             _p(
                 "mtry_frac",
@@ -3853,8 +3921,12 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "ridge_lambda": (0.1, 0.5),
                 "resampling_opt": (2,),
             },
+            # B (forest tree count) dominates per-fit cost, and model_selection=None
+            # still runs this preset's random search regardless of default_params --
+            # capped so no sampled combo reruns the expensive B=100 forest; "wide"
+            # keeps the richer range for deep/explicit use.
             "standard": {
-                "B": (25, 50, 100),
+                "B": (10, 25),
                 "minsize": (5, 10, 20),
                 "mtry_frac": (1.0 / 3.0, 0.5, 1.0),
                 "min_leaf_frac_of_x": (0.5, 1.0),

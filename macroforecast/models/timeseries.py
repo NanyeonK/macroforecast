@@ -782,8 +782,8 @@ def bvar_minnesota(
     kappa1: float = 0.5,
     nu0: float = 0.0,
     s0: float | Sequence[Sequence[float]] | None = 0.0,
-    iter: int = 10000,
-    burnin: int = 5000,
+    iter: int = 300,
+    burnin: int = 100,
     random_state: int = 0,
     own_lag_prior_mean: float = 0.0,
 ) -> ModelFit:
@@ -792,6 +792,11 @@ def bvar_minnesota(
     ``own_lag_prior_mean`` sets the prior mean of each variable's own first lag
     (default 0.0; pass 1.0 for the classic Litterman random-walk prior). The panel
     is demeaned internally, so 0.0 shrinks toward white noise around the mean.
+
+    ``iter=300``/``burnin=100`` are cheapened defaults (the Gibbs/Wishart draw
+    loop cost grows sharply with panel width and ``n_lag``). The deep/
+    paper-faithful defaults (``iter=10000``, ``burnin=5000``) remain reachable
+    by passing them explicitly.
     """
 
     frame = as_frame(panel)
@@ -844,11 +849,17 @@ def bvar_normal_inverse_wishart(
     vb0: float = 0.0,
     nu0: float = 0.0,
     s0: float | Sequence[Sequence[float]] | None = 0.0,
-    iter: int = 10000,
-    burnin: int = 5000,
+    iter: int = 300,
+    burnin: int = 100,
     random_state: int = 0,
 ) -> ModelFit:
-    """Fit a FAVAR::BVAR-style Bayesian VAR with normal-Wishart priors."""
+    """Fit a FAVAR::BVAR-style Bayesian VAR with normal-Wishart priors.
+
+    ``iter=300``/``burnin=100`` are cheapened defaults (the Gibbs/Wishart draw
+    loop cost grows sharply with panel width and ``n_lag``). The deep/
+    paper-faithful defaults (``iter=10000``, ``burnin=5000``) remain reachable
+    by passing them explicitly.
+    """
 
     frame = as_frame(panel)
     estimator = _BayesianVAR(
@@ -1152,12 +1163,12 @@ class _FAVAR:
         *,
         n_factors: int = 2,
         n_lag: int = 2,
-        fctmethod: str = "BBE",
+        fctmethod: str = "BGM",
         slowcode: Sequence[bool] | None = None,
         factorprior: Mapping[str, Any] | None = None,
         varprior: Mapping[str, Any] | None = None,
-        nburn: int = 5000,
-        nrep: int = 15000,
+        nburn: int = 100,
+        nrep: int = 200,
         standardize: bool = True,
         random_state: int = 0,
     ) -> None:
@@ -1278,16 +1289,28 @@ def favar(
     *,
     n_factors: int = 2,
     n_lag: int = 2,
-    fctmethod: str = "BBE",
+    fctmethod: str = "BGM",
     slowcode: Sequence[bool] | None = None,
     factorprior: Mapping[str, Any] | None = None,
     varprior: Mapping[str, Any] | None = None,
-    nburn: int = 5000,
-    nrep: int = 15000,
+    nburn: int = 100,
+    nrep: int = 200,
     standardize: bool = True,
     random_state: int = 0,
 ) -> ModelFit:
-    """Fit a FAVAR::FAVAR-aligned Bayesian factor-augmented VAR."""
+    """Fit a FAVAR::FAVAR-aligned Bayesian factor-augmented VAR.
+
+    Defaults to ``fctmethod=\"BGM\"``, an iterative factor-purging
+    identification (``_favar_bgm``) that needs no ``slowcode``. Passing
+    ``fctmethod=\"BBE\"`` selects the slow/fast ``facrot()`` rotation instead,
+    which requires an explicit ``slowcode`` mask and raises otherwise.
+
+    ``nburn=100``/``nrep=200`` are cheapened defaults so the model is usable
+    out of the box (the Gibbs/Wishart posterior draw loop is expensive per
+    iteration for larger ``n_factors``/``n_lag``). The deep/paper-faithful
+    ``FAVAR::FAVAR`` defaults (``nburn=5000``, ``nrep=15000``) remain
+    reachable by passing them explicitly.
+    """
 
     frame, target = resolve_xy(X, y)
     estimator = _FAVAR(
@@ -1614,6 +1637,16 @@ def dfm_unrestricted_midas(
     frame, meta = _coerce_panel_with_metadata(panel, metadata=metadata)
     if target not in frame.columns:
         raise ValueError(f"target {target!r} is not in the mixed-frequency panel")
+    if target_frequency is not None:
+        normalized_target_frequency = _normalize_frequency_label(target_frequency)
+        if normalized_target_frequency not in {"monthly", "quarterly", "annual"}:
+            raise ValueError(
+                "target_frequency must be one of ['monthly', 'quarterly', 'annual'] "
+                f"(or None); got {target_frequency!r}. A frequency label that does not "
+                "match a supported cadence would otherwise silently fall back to a "
+                "monthly anchor projection, which is a common source of prediction-time "
+                "missing-value failures rather than a clear fit-time error."
+            )
     lag_values = _normalize_model_lags(lags)
     factor_lag_values = _normalize_model_lags(factor_lags)
     lag_column_values = tuple(str(column) for column in lag_columns or ())
@@ -1752,6 +1785,7 @@ def _dfm_unrestricted_midas_design(
         frequency=target_frequency or metadata.get("frequency") or "quarterly",
         anchor_position=anchor_position,
     )
+    factors = _extend_dfm_factors(dfm_fit, factors, through_date=anchor_index.max())
     design_parts: list[pd.DataFrame] = [
         _factor_lag_design(factors, anchor_index=anchor_index, lags=factor_lags)
     ]
@@ -2060,10 +2094,16 @@ def restricted_midas(
     n_steps: int = 3,
     step_bounds: tuple[int, ...] | None = None,
     fit_intercept: bool = True,
-    maxiter: int = 1000,
-    tolerance: float = 1e-8,
+    maxiter: int = 200,
+    tolerance: float = 1e-6,
 ) -> ModelFit:
-    """Fit a midasr::midas_r-style nonlinear restricted MIDAS regression."""
+    """Fit a midasr::midas_r-style nonlinear restricted MIDAS regression.
+
+    ``maxiter=200``/``tolerance=1e-6`` are cheapened defaults for the SciPy
+    ``least_squares`` finite-difference-Jacobian solve. The deep/paper-faithful
+    defaults (``maxiter=1000``, ``tolerance=1e-8``) remain reachable by passing
+    them explicitly.
+    """
 
     weighting_value = _normalize_restricted_weighting(weighting)
     polynomial_order = _validate_polynomial_order(polynomial_order)
@@ -3344,6 +3384,66 @@ def _position_target_dates(
     if freq == "annual":
         return pd.DatetimeIndex(raw.to_period("Y").asfreq("M", how=how).to_timestamp(), name="date")
     return pd.DatetimeIndex(raw.to_period("M").to_timestamp(), name="date")
+
+
+def _extend_dfm_factors(
+    dfm_fit: Any,
+    factors: pd.DataFrame,
+    *,
+    through_date: Any,
+) -> pd.DataFrame:
+    """Extend fitted DFM filtered factors forward to cover ``through_date``.
+
+    Prediction-time anchor dates can fall past the last date the DFM factors
+    were filtered through (e.g. a "period_end" quarterly anchor projects a
+    monthly forecast date onto a later quarter-end month than any observed
+    predictor data reaches). Previously this left ``dfm_factor*_lag0`` as NaN
+    (a plain ``reindex``), which made ``predict_from_panel`` reject the design
+    outright. Instead, extend the already-fitted DynamicFactorMQ state-space
+    result with placeholder (all-missing) observations for the gap months and
+    read off its own Kalman-filter forecast of the factors -- i.e. propagate
+    the fitted factor-VAR state forward rather than manufacturing missing
+    values. Falls back to returning ``factors`` unchanged (preserving the
+    prior reindex-to-NaN behavior, and therefore the existing missing-value
+    error) if the underlying fit is unavailable or the extension itself fails.
+    """
+    if not isinstance(factors, pd.DataFrame) or factors.empty:
+        return factors
+    estimator = getattr(dfm_fit, "estimator", None)
+    result = getattr(estimator, "result_", None)
+    if result is None:
+        return factors
+    last_date = pd.Timestamp(factors.index.max()).to_period("M").to_timestamp()
+    target_date = pd.Timestamp(through_date).to_period("M").to_timestamp()
+    if target_date <= last_date:
+        return factors
+    ext_index = pd.date_range(last_date + pd.DateOffset(months=1), target_date, freq="MS")
+    if ext_index.empty:
+        return factors
+    monthly_columns = list(getattr(estimator, "monthly_columns_", ()))
+    quarterly_columns = list(getattr(estimator, "quarterly_columns_", ()))
+    if not monthly_columns:
+        return factors
+    monthly_ext = pd.DataFrame(np.nan, index=ext_index, columns=monthly_columns)
+    try:
+        if quarterly_columns:
+            quarterly_ext = pd.DataFrame(
+                np.nan,
+                index=pd.period_range(ext_index[0], ext_index[-1], freq="Q"),
+                columns=quarterly_columns,
+            )
+            extended = result.extend(monthly_ext, endog_quarterly=quarterly_ext)
+        else:
+            extended = result.extend(monthly_ext)
+        extended_bunch = extended.factors
+        extended_factors = extended_bunch.filtered if extended_bunch is not None else None
+    except Exception:  # noqa: BLE001 - fall back to the prior reindex-to-NaN contract
+        return factors
+    if not isinstance(extended_factors, pd.DataFrame) or extended_factors.empty:
+        return factors
+    extended_factors = extended_factors.reindex(columns=factors.columns)
+    combined = pd.concat([factors, extended_factors])
+    return combined[~combined.index.duplicated(keep="last")].sort_index()
 
 
 def _factor_lag_design(
