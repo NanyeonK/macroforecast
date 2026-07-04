@@ -35,8 +35,18 @@ A live R cross-check of the (fully deterministic, non-Bayesian) factor-
 identification helpers -- ``_favar_extr_pc``/``_favar_facrot``/
 ``_favar_olssvd``/``_favar_bgm`` -- against ``FAVAR:::ExtrPC``/``facrot``/
 ``olssvd``/``BGM`` lives in ``tests/parity/test_favar_r_parity.py``.
+
+3. ``test_favar_default_varprior_recovers_forecast`` (WP-V2 fix regression
+   test, added alongside the ``bvar_normal_inverse_wishart`` default-``s0``
+   fix in ``test_bvar_minnesota_niw_anchors.py``): the SAME DGP as anchor 2,
+   but calling ``favar()`` with no ``varprior`` at all, proving the fixed
+   BVAR-prior default is inherited end-to-end through ``favar``'s own
+   default resolution path (no ``favar``-specific code change was needed --
+   see ``_parse_favar_varprior`` in ``macroforecast.models.timeseries``).
 """
 from __future__ import annotations
+
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -128,13 +138,17 @@ def _rotating_state_dgp(n_obs: int = 260, seed: int = 11, idio_noise: float = 0.
        favar-specific bug (R FAVAR's own BGM.R has the identical fixed-point
        iteration and would plausibly do the same).
     2. Independently of (1), a near-singular residual covariance in the VAR-
-       on-(factors, target) step interacts badly with favar()'s DEFAULT
-       diffuse prior (``s0=0.0``) -- see the dedicated xfail regression test
-       ``test_niw_default_s0_is_numerically_stable_on_near_singular_residual_covariance``
-       in ``test_bvar_minnesota_niw_anchors.py`` for the isolated root cause.
-       This test therefore passes an explicit, non-degenerate ``varprior``
-       (``s0=1.0``) to avoid re-discovering that already-diagnosed, separately
-       xfailed bug on every run.
+       on-(factors, target) step used to interact badly with favar()'s
+       DEFAULT prior (``s0=0.0``) -- see the (now-resolved; was xfail)
+       regression test
+       ``test_niw_default_s0_matches_closed_form_ols_on_previously_diverging_fixture``
+       in ``test_bvar_minnesota_niw_anchors.py`` for the isolated root cause
+       and fix. This test still passes an explicit, non-degenerate
+       ``varprior`` (``s0=1.0``) to keep this file's anchor scoped to the
+       factor/loading FAVAR math rather than re-exercising the BVAR-prior
+       fix on every run; ``test_favar_default_varprior_recovers_forecast``
+       below covers the fixed default (``varprior=None``) end-to-end on
+       this exact DGP instead.
 
     With 1% idiosyncratic noise and an explicit non-degenerate varprior,
     neither pathology triggers and recovery is tight (verified empirically
@@ -192,4 +206,51 @@ def test_favar_near_noiseless_dgp_oracle_recovers_forecast():
     # Discriminating check: a correct FAVAR must beat the naive last-value
     # forecast by a wide margin on this rotating-state DGP (the naive
     # forecast ignores the known rotation entirely).
+    assert abs(pred - true_next) < 0.3 * naive_error, (pred, true_next, naive_error)
+
+
+@pytest.mark.reference
+@pytest.mark.slow
+def test_favar_default_varprior_recovers_forecast():
+    """favar()'s own default (``varprior=None``) must now be safe end-to-end.
+
+    WP-V2 fix regression test: before the fix, ``favar(varprior=None)``
+    silently resolved to ``s0=0.0`` (via ``_parse_favar_varprior`` treating
+    the empty ``{}`` dict as falsy) and produced one-step forecasts many
+    orders of magnitude off on this exact DGP (observed -8.6e24, -881948,
+    -24374 across noise-level variants vs a true value of about -1.0) --
+    see ``test_bvar_minnesota_niw_anchors.py``'s FINDING block for the
+    isolated root cause. With the fixed default (a data-dependent diagonal
+    ``s0``, see ``_favar_default_niw_scale``), no ``varprior`` needs to be
+    passed at all, and recovery should match
+    ``test_favar_near_noiseless_dgp_oracle_recovers_forecast``'s explicit-
+    ``varprior`` recovery at essentially the same tolerance.
+    """
+    x, y, a, state = _rotating_state_dgp()
+    train_x, train_y = x.iloc[:-1], y.iloc[:-1]
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        fit = mf.models.favar(
+            train_x,
+            train_y,
+            n_factors=2,
+            n_lag=1,
+            fctmethod="BGM",
+            # varprior intentionally omitted: this is the whole point of the
+            # regression test -- favar()'s own default must be safe.
+            nburn=1500,
+            nrep=3000,
+            standardize=True,
+            random_state=20260704,
+        )
+    pred = float(np.asarray(fit.predict(x.iloc[[-1]])).reshape(-1)[0])
+    true_next = float(y.iloc[-1])
+    naive_last = float(train_y.iloc[-1])
+
+    target_range = float(train_y.max() - train_y.min())
+    tolerance = 0.03 * target_range
+    naive_error = abs(naive_last - true_next)
+
+    assert abs(pred - true_next) < tolerance, (pred, true_next, tolerance)
     assert abs(pred - true_next) < 0.3 * naive_error, (pred, true_next, naive_error)

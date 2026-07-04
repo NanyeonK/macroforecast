@@ -43,6 +43,21 @@ the Gibbs sampler and copying its formula:
 A companion live R cross-check of anchor (1) against ``bvartools::minnesota_prior``
 (the exact R function the docstring names) lives in
 ``tests/parity/test_bvar_minnesota_r_parity.py``.
+
+FIX (WP-V2 follow-up, same branch): the near-singular-residual-covariance
+finding below was originally an ``xfail(strict=True)`` regression pin. It is
+now fixed -- ``bvar_normal_inverse_wishart``/``bvar_minnesota``'s ``s0``
+default changed from the exactly-zero ``0.0`` to ``None``, which resolves to
+a data-dependent diagonal scale ``diag(sigma_1**2, ..., sigma_k**2)`` from
+each series' own AR(n_lag)-OLS residual variance (see
+``_favar_default_niw_scale`` in ``macroforecast.models.timeseries``, and the
+CHANGELOG ``[Unreleased]`` entry). A divergence guard
+(``_warn_if_bvar_draws_diverged``) also now fires a ``UserWarning`` whenever
+post-burn-in draws explode, which fires for the *old* behavior (an
+explicitly passed ``s0=0.0``) so that path stays non-silent too. The finding
+below is kept for historical context; the test that follows it is now a
+positive regression test (closed-form OLS anchor) plus a companion warning
+test, not an xfail.
 """
 from __future__ import annotations
 
@@ -253,17 +268,18 @@ def test_niw_gibbs_posterior_mean_matches_closed_form_ols_two_lags():
 
 
 # ---------------------------------------------------------------------------
-# FINDING: bvar_normal_inverse_wishart's own default s0=0.0 (an exactly-zero
-# inverse-Wishart prior scale) is numerically dangerous when the fitted VAR's
-# residual covariance is even mildly near-singular -- a realistic, not
-# pathological, situation (e.g. any near-collinear macro block, or a
-# FAVAR-style factor+target system where the factors are DESIGNED to explain
-# the target well). Discovered while building the ``favar`` noiseless-DGP
-# oracle in ``test_favar_anchors.py``: favar()'s own default ``varprior=None``
-# silently resolves (``_parse_favar_varprior`` treats the empty ``{}`` dict as
-# falsy) to this exact same s0=0.0/vb0=0.0 configuration, and produced
-# one-step forecasts many orders of magnitude off (observed -8.6e24, -881948,
-# -24374 vs a true value of about -1.0 across DGP noise-level variants).
+# FINDING (RESOLVED): bvar_normal_inverse_wishart's own default s0=0.0 (an
+# exactly-zero inverse-Wishart prior scale) was numerically dangerous when
+# the fitted VAR's residual covariance is even mildly near-singular -- a
+# realistic, not pathological, situation (e.g. any near-collinear macro
+# block, or a FAVAR-style factor+target system where the factors are
+# DESIGNED to explain the target well). Discovered while building the
+# ``favar`` noiseless-DGP oracle in ``test_favar_anchors.py``: favar()'s own
+# default ``varprior=None`` silently resolved (``_parse_favar_varprior``
+# treats the empty ``{}`` dict as falsy) to this exact same
+# s0=0.0/vb0=0.0 configuration, and produced one-step forecasts many orders
+# of magnitude off (observed -8.6e24, -881948, -24374 vs a true value of
+# about -1.0 across DGP noise-level variants).
 #
 # Root cause isolated by direct parameter sweep on bvar_normal_inverse_wishart
 # alone (bypassing FAVAR's factor/loading machinery entirely) on a fixed
@@ -275,56 +291,107 @@ def test_niw_gibbs_posterior_mean_matches_closed_form_ols_two_lags():
 #   s0=1e-3  -> partial recovery (26% of draws still divergent).
 #   s0=1.0   -> well-behaved, matches OLS/true values closely (5.5% divergent
 #               draws, within normal MC noise).
-# This isolates the mechanism to the interaction between an (exactly or
+# This isolated the mechanism to the interaction between an (exactly or
 # near-)zero inverse-Wishart prior scale and a near-singular residual
 # covariance in the Wishart-draw step of ``_favar_bvar_draws`` -- NOT
 # something specific to FAVAR's standardization or factor-extraction code.
-# It is not merely rare-draw noise: the MEDIAN draw is also badly wrong, so
-# no MCSE-based tolerance could paper over it.
+# It was not merely rare-draw noise: the MEDIAN draw was also badly wrong, so
+# no MCSE-based tolerance could have papered over it.
 #
-# This is a genuine silent-failure / robustness gap (no error, warning, NaN,
-# or other signal is raised), not a differing-but-valid convention, so per
-# the WP-V2 mission rule it is marked xfail(strict=True) with this diagnosis
-# rather than tolerance-loosened away. If/when this is fixed (e.g. flooring
-# s0 away from exactly zero, or warning on a near-singular Wishart scale),
-# this test should start passing and the xfail marker should be removed.
+# FIX: ``bvar_normal_inverse_wishart``/``bvar_minnesota``'s ``s0`` default is
+# now ``None``, which `_favar_bvar_draws` resolves to a data-dependent
+# diagonal scale ``diag(sigma_1**2, ..., sigma_k**2)`` (per-equation
+# AR(n_lag)-OLS residual variance -- see `_favar_default_niw_scale`), instead
+# of the literal-zero scale. This keeps the Wishart draw's scale matrix
+# strictly positive-definite regardless of how (near-)singular the sample
+# residual covariance is. A companion divergence guard
+# (`_warn_if_bvar_draws_diverged`) additionally fires a `UserWarning` if
+# post-burn-in draws ever do explode (e.g. an explicitly passed `s0=0.0`),
+# so that path is no longer silent either. Two tests now cover this: a
+# positive regression test that the default-s0 posterior mean matches the
+# closed-form OLS anchor on this exact previously-diverging fixture, and a
+# companion test that an explicit `s0=0.0` still reproduces the old
+# divergence AND raises the new warning.
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.reference
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "bvar_normal_inverse_wishart's default s0=0.0 (zero inverse-Wishart "
-        "prior scale) makes the Gibbs sampler numerically unstable on a "
-        "near-singular-residual-covariance VAR: posterior mean off by "
-        "3-4+ orders of magnitude, ~97% of draws divergent (not rare-draw "
-        "MC noise). See module docstring block above this test for the "
-        "isolating parameter sweep. Silent failure: no error/warning/NaN."
-    ),
-)
-def test_niw_default_s0_is_numerically_stable_on_near_singular_residual_covariance():
-    rng = np.random.default_rng(2026)
-    n_obs = 200
+def _near_singular_favar_like_panel(n_obs: int = 200, seed: int = 2026) -> pd.DataFrame:
+    """The exact fixture that originally triggered the WP-V2 finding.
+
+    A 2x2 rotation embedded in a 3-variable VAR(1) system where the third
+    variable ("y") is (almost) an exact linear combination of the other two
+    ("f1", "f2") -- i.e. a near-singular residual covariance, the realistic
+    FAVAR-style scenario (a target well-explained by its own factors) that
+    the finding's root-cause sweep isolated.
+    """
+    rng = np.random.default_rng(seed)
     a = np.array(
         [[np.cos(np.pi / 9), -np.sin(np.pi / 9)], [np.sin(np.pi / 9), np.cos(np.pi / 9)]]
     )
-    state = np.zeros((n_obs, 2), dtype=float)
+    state: np.ndarray = np.zeros((n_obs, 2), dtype=float)
     state[0] = [1.0, 0.4]
     for t in range(1, n_obs):
         state[t] = a @ state[t - 1]
     target = state @ np.array([0.8, -0.6]) + 1e-3 * rng.normal(size=n_obs)
-    panel = pd.DataFrame(
+    return pd.DataFrame(
         np.column_stack([state, target]),
         columns=["f1", "f2", "y"],
         index=pd.date_range("1990-01-31", periods=n_obs, freq="ME"),
     )
 
+
+@pytest.mark.reference
+def test_niw_default_s0_matches_closed_form_ols_on_previously_diverging_fixture():
+    """Regression test for the (now fixed) WP-V2 finding.
+
+    Same closed-form-OLS anchor as
+    ``test_niw_gibbs_posterior_mean_matches_closed_form_ols`` above (the
+    flat coefficient prior b0=vb0=0 makes the Gibbs sampler's coefficient
+    posterior mean equal plain OLS on the shared VAR design for ANY
+    positive-definite Sigma draw -- unaffected by what s0 is), but run on
+    the exact near-singular fixture that used to diverge under the old
+    s0=0.0 default. With the new data-dependent default, this must now pass
+    at the same MCSE-based tolerance as the other OLS-anchor tests, not just
+    "less than some generous bound".
+    """
+    panel = _near_singular_favar_like_panel()
+    n_lag = 1
+    design, response = _demeaned_var_design(panel, n_lag)
+    ols_coef, *_ = np.linalg.lstsq(design, response, rcond=None)
+    ols_coef_eq_major = ols_coef.T
+
     fit = mf.models.bvar_normal_inverse_wishart(
-        panel, n_lag=1, iter=4000, burnin=1000, random_state=2026
-    )  # b0/vb0/nu0/s0 all left at their documented defaults, incl. s0=0.0.
+        panel, n_lag=n_lag, iter=6000, burnin=1000, random_state=2026
+    )  # b0/vb0/nu0/s0 all left at their documented defaults (s0=None now).
+    gibbs_mean = fit.diagnostics["coef_mean"].to_numpy()
+    gibbs_mcse = fit.diagnostics["coef_mcse"].to_numpy()
+    assert gibbs_mean.shape == ols_coef_eq_major.shape
+
+    tolerance = np.maximum(6.0 * gibbs_mcse, 5e-3)
+    diff = np.abs(gibbs_mean - ols_coef_eq_major)
+    assert np.all(diff <= tolerance), (diff, tolerance, gibbs_mean, ols_coef_eq_major)
+
+    # True coefficients (the embedded 2x2 rotation, plus a near-zero third
+    # row) are all in [-1, 1]; a well-behaved posterior mean must be too.
+    assert np.max(np.abs(gibbs_mean)) < 5.0, gibbs_mean
+
+
+@pytest.mark.reference
+def test_niw_explicit_s0_zero_still_diverges_and_warns():
+    """An explicitly passed s0=0.0 keeps its old (diverging) behavior exactly,
+    but is no longer silent: `_warn_if_bvar_draws_diverged` must now raise a
+    `UserWarning` naming the cause. This is the regression test for the
+    divergence guard itself, and confirms explicit callers are unaffected by
+    the new *default* (i.e. the fix only changes what happens when s0 is
+    left unspecified).
+    """
+    panel = _near_singular_favar_like_panel()
+    with pytest.warns(UserWarning, match="near-singular residual covariance"):
+        fit = mf.models.bvar_normal_inverse_wishart(
+            panel, n_lag=1, iter=4000, burnin=1000, random_state=2026, s0=0.0
+        )
     coef_mean = fit.diagnostics["coef_mean"].to_numpy()
-    # True coefficients (a 2x2 rotation embedded in a 3x3 system with a
-    # near-collinear third row) are all in [-1, 1]; a well-behaved posterior
-    # mean should be too, generously.
-    assert np.max(np.abs(coef_mean)) < 5.0, coef_mean
+    # Confirms this is genuinely the same old failure mode reproduced (not a
+    # spurious warning on well-behaved output): the posterior mean must still
+    # be wildly off from the true [-1, 1]-bounded coefficients.
+    assert np.max(np.abs(coef_mean)) > 10.0, coef_mean

@@ -663,6 +663,16 @@ class _BayesianVAR:
     # The Python RNG cannot be bit-identical to R's rWishart/MCMC stream, but
     # the model, prior shapes, stored draw arrays, and point-forecast coefficient
     # summary follow the R package logic rather than a compact ridge surrogate.
+    #
+    # s0=None (the default) resolves to a data-dependent diagonal prior scale
+    # computed in `_favar_bvar_draws` (see `_favar_default_niw_scale`) rather
+    # than an exactly-zero improper scale -- WP-V2 finding: the exactly-zero
+    # default made the Wishart draw's scale matrix equal the bare (possibly
+    # near-singular) sample residual cross-product with no floor, silently
+    # diverging the Gibbs sampler on near-singular VAR residual covariance.
+    # Passing s0 explicitly (including s0=0.0) is honored exactly as before,
+    # now paired with a UserWarning if draws diverge (see
+    # `_warn_if_bvar_draws_diverged`).
 
     def __init__(
         self,
@@ -673,7 +683,7 @@ class _BayesianVAR:
         b0: float = 0.0,
         vb0: float = 0.0,
         nu0: float = 0.0,
-        s0: float | Sequence[Sequence[float]] | None = 0.0,
+        s0: float | Sequence[Sequence[float]] | None = None,
         kappa0: float | None = None,
         kappa1: float | None = None,
         iter: int = 10000,
@@ -781,7 +791,7 @@ def bvar_minnesota(
     kappa0: float = 2.0,
     kappa1: float = 0.5,
     nu0: float = 0.0,
-    s0: float | Sequence[Sequence[float]] | None = 0.0,
+    s0: float | Sequence[Sequence[float]] | None = None,
     iter: int = 300,
     burnin: int = 100,
     random_state: int = 0,
@@ -797,6 +807,16 @@ def bvar_minnesota(
     loop cost grows sharply with panel width and ``n_lag``). The deep/
     paper-faithful defaults (``iter=10000``, ``burnin=5000``) remain reachable
     by passing them explicitly.
+
+    ``s0`` (inverse-Wishart prior scale for the residual covariance) defaults
+    to ``None``, which resolves to a data-dependent diagonal scale
+    ``diag(sigma_1**2, ..., sigma_k**2)`` from each series' own univariate
+    AR(``n_lag``)-OLS residual variance -- the standard natural-conjugate
+    NIW-BVAR default (Karlsson 2013, Handbook of Economic Forecasting Vol.
+    2B Ch. 15; Giannone, Lenza & Primiceri 2015, REStat 97(2)). Passing an
+    explicit ``s0`` (including ``0.0``) is honored exactly as before; a
+    ``UserWarning`` is now raised if the resulting posterior draws diverge
+    (near-singular residual covariance with too-small a scale).
     """
 
     frame = as_frame(panel)
@@ -848,7 +868,7 @@ def bvar_normal_inverse_wishart(
     b0: float = 0.0,
     vb0: float = 0.0,
     nu0: float = 0.0,
-    s0: float | Sequence[Sequence[float]] | None = 0.0,
+    s0: float | Sequence[Sequence[float]] | None = None,
     iter: int = 300,
     burnin: int = 100,
     random_state: int = 0,
@@ -859,6 +879,21 @@ def bvar_normal_inverse_wishart(
     loop cost grows sharply with panel width and ``n_lag``). The deep/
     paper-faithful defaults (``iter=10000``, ``burnin=5000``) remain reachable
     by passing them explicitly.
+
+    ``s0`` (inverse-Wishart prior scale for the residual covariance) defaults
+    to ``None``, which resolves to a data-dependent diagonal scale
+    ``diag(sigma_1**2, ..., sigma_k**2)`` from each series' own univariate
+    AR(``n_lag``)-OLS residual variance -- the standard natural-conjugate
+    NIW-BVAR default (Karlsson 2013, Handbook of Economic Forecasting Vol.
+    2B Ch. 15; Giannone, Lenza & Primiceri 2015, REStat 97(2)) -- instead of
+    the previous exactly-zero ``s0=0.0``, which left the Gibbs sampler's
+    Wishart-draw scale matrix equal to the bare (possibly near-singular)
+    sample residual cross-product with no floor: on a near-singular VAR
+    residual covariance (e.g. a well-explained FAVAR factor block) this
+    silently diverged the posterior mean by orders of magnitude with no
+    error, warning, or NaN. Passing an explicit ``s0`` (including ``0.0``)
+    is honored exactly as before; a ``UserWarning`` is now raised if the
+    resulting posterior draws diverge (see `_warn_if_bvar_draws_diverged`).
     """
 
     frame = as_frame(panel)
@@ -2842,7 +2877,15 @@ def _favar_bvar_draws(
     else:
         a_mu_prior = np.full(n_coef, float(b0), dtype=float)
         a_v_i_prior = np.eye(n_coef, dtype=float) * float(vb0)
-    s0_matrix = _prior_scale_matrix(s0, k)
+    if s0 is None:
+        # Data-dependent default (WP-V2 fix) -- see
+        # `_favar_default_niw_scale`'s docstring. Replaces the previous
+        # exactly-zero s0=0.0 default, which left `scale_post` below equal to
+        # the bare (possibly near-singular) sample residual cross-product
+        # with no floor.
+        s0_matrix = _favar_default_niw_scale(values, n_lag)
+    else:
+        s0_matrix = _prior_scale_matrix(s0, k)
     sigma_df_post = int(tnum + float(nu0))
     if sigma_df_post <= k - 1:
         sigma_df_post = k
@@ -2870,6 +2913,7 @@ def _favar_bvar_draws(
             sigma_draws.append(sigma)
     coef_arr = np.stack(coef_draws, axis=0)
     sigma_arr = np.stack(sigma_draws, axis=0)
+    _warn_if_bvar_draws_diverged(coef_arr, design, response)
     posterior_sd = coef_arr.std(axis=0, ddof=1)
     summary = {
         "mean": coef_arr.mean(axis=0),
@@ -2964,8 +3008,45 @@ def _favar_univariate_ar_sigma(values: np.ndarray, n_lag: int) -> np.ndarray:
     return out
 
 
+def _favar_default_niw_scale(values: np.ndarray, n_lag: int) -> np.ndarray:
+    """Data-dependent default inverse-Wishart prior scale S0 (WP-V2 fix).
+
+    Standard natural-conjugate NIW-BVAR convention (Karlsson 2013, Handbook
+    of Economic Forecasting Vol. 2B Ch. 15 -- already this repo's own
+    reference for the sibling Minnesota-prior sigma^2 scaling fix, see
+    CHANGELOG "PR8"; Giannone, Lenza & Primiceri 2015, "Prior Selection for
+    Vector Autoregressions", Review of Economics and Statistics 97(2)).
+
+    Under this module's own inverse-Wishart parameterization -- the Gibbs
+    loop in `_favar_bvar_draws` draws ``Sigma | data`` with scale
+    ``S0 + SSE`` and degrees of freedom ``tnum + nu0``, so
+    ``E[Sigma] = scale / (df - k - 1)`` for ``df > k + 1`` -- the minimal
+    proper (integer) prior degrees of freedom keeping a no-data prior mean
+    finite is ``nu0_min = k + 2`` (``df - k - 1 = 1`` at that value). Setting
+    ``S0 = diag(sigma_1**2, ..., sigma_k**2)`` then makes the prior's implied
+    residual-covariance mean equal each equation's own univariate
+    AR(n_lag)-OLS residual variance -- the standard empirical-Bayes
+    Minnesota-style scale -- instead of the previous literal-zero default,
+    which left ``S0 + SSE`` equal to the bare (possibly near-singular) sample
+    residual cross-product with no floor: on a near-singular VAR residual
+    covariance (e.g. a well-explained FAVAR factor block) that silently
+    diverged the Gibbs sampler's posterior mean by orders of magnitude.
+
+    ``sigma_i`` reuses `_favar_univariate_ar_sigma`, the same per-equation
+    AR-residual-SD helper already used (and independently anchored, see
+    ``test_minnesota_prior_variance_matches_documented_formula``) for the
+    Minnesota prior's cross-lag variance scaling.
+    """
+    sigma = _favar_univariate_ar_sigma(values, n_lag)
+    return np.diag(sigma**2)
+
+
 def _prior_scale_matrix(value: float | Sequence[Sequence[float]] | None, k: int) -> np.ndarray:
     if value is None:
+        # Callers resolve s0=None to `_favar_default_niw_scale(...)` upstream
+        # (see `_favar_bvar_draws`); this function only ever sees an already-
+        # resolved scale. Reaching here with None means a caller forgot that
+        # resolution step.
         raise ValueError("s0 must not be None for FAVAR::BVAR-compatible fitting")
     if np.isscalar(value):
         # A scalar s0 denotes an isotropic inverse-Wishart scale s0*I. The old
@@ -2976,6 +3057,53 @@ def _prior_scale_matrix(value: float | Sequence[Sequence[float]] | None, k: int)
     if arr.shape != (k, k):
         raise ValueError(f"s0 must be scalar or a {k}x{k} matrix")
     return arr
+
+
+def _warn_if_bvar_draws_diverged(
+    coef_arr: np.ndarray,
+    design: np.ndarray,
+    response: np.ndarray,
+    *,
+    explosion_multiplier: float = 50.0,
+    divergent_fraction_threshold: float = 0.10,
+) -> None:
+    """Warn (never raise) if the collected Gibbs coefficient draws exploded.
+
+    Divergence guard for the WP-V2 finding: a (near-)zero inverse-Wishart
+    prior scale ``s0`` interacting with a near-singular VAR residual
+    covariance can make the Gibbs sampler's coefficient draws numerically
+    diverge -- silently, with no error or NaN (posterior means observed off
+    by 3-4+ orders of magnitude, ~97% of draws divergent). Detected here by
+    comparing each draw's coefficient-matrix Frobenius norm against a large
+    multiple of the plain OLS estimate's own norm on the same shared VAR
+    design -- the same closed-form reference the WP-V2 anchor tests use
+    (equation-by-equation OLS is the GLS/Bayesian-posterior-mean limit for a
+    flat coefficient prior, for any positive-definite Sigma). If a large
+    fraction of post-burn-in draws are many times larger than that reference,
+    the chain has not converged to a sane posterior and the caller almost
+    certainly needs a larger/explicit ``s0`` or rescaled data.
+    """
+    ols_coef, *_ = np.linalg.lstsq(design, response, rcond=None)
+    ols_scale = float(np.linalg.norm(ols_coef))
+    # Floor the reference scale so a (near-)zero OLS fit doesn't make an
+    # arbitrarily small absolute coefficient norm look "divergent".
+    reference = max(ols_scale, 1.0)
+    draw_norms = np.linalg.norm(coef_arr.reshape(coef_arr.shape[0], -1), axis=1)
+    if draw_norms.size == 0:
+        return
+    divergent = draw_norms > explosion_multiplier * reference
+    frac_divergent = float(np.mean(divergent))
+    if frac_divergent > divergent_fraction_threshold:
+        warnings.warn(
+            "bvar posterior draws diverged: "
+            f"{frac_divergent:.0%} of post-burn-in Gibbs draws have a "
+            f"coefficient-matrix norm > {explosion_multiplier:.0f}x the "
+            "OLS-based reference scale. Likely cause: near-singular residual "
+            "covariance with (near-)zero prior scale s0 -- posterior draws "
+            "diverged; set s0>0 or rescale data.",
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def _stable_inverse(matrix: np.ndarray) -> np.ndarray:
@@ -3138,6 +3266,13 @@ def _favar_loading_draws(
 
 
 def _parse_favar_varprior(prior: Mapping[str, Any]) -> dict[str, Any]:
+    # "s0" defaults to None (not 0.0): `_favar_bvar_draws` resolves None to
+    # the data-dependent default scale (WP-V2 fix, `_favar_default_niw_scale`)
+    # so that favar()'s own default `varprior=None` -- which reaches here as
+    # the empty dict `{}` -- transparently inherits the same fix as
+    # `bvar_normal_inverse_wishart`'s default, instead of silently forcing
+    # the old exactly-zero scale. Passing an explicit `s0` (including `0.0`)
+    # in `varprior` is honored exactly as before.
     mn = prior.get("mn", {}) if prior else {}
     if isinstance(mn, Mapping) and mn.get("kappa0") is not None:
         return {
@@ -3145,7 +3280,7 @@ def _parse_favar_varprior(prior: Mapping[str, Any]) -> dict[str, Any]:
             "b0": 0.0,
             "vb0": 0.0,
             "nu0": float(prior.get("nu0", 0.0)),
-            "s0": prior.get("s0", 0.0),
+            "s0": prior.get("s0"),
             "kappa0": float(cast(Any, mn.get("kappa0"))),
             "kappa1": float(mn.get("kappa1", 0.5)),
         }
@@ -3154,7 +3289,7 @@ def _parse_favar_varprior(prior: Mapping[str, Any]) -> dict[str, Any]:
         "b0": float(prior.get("b0", 0.0)) if prior else 0.0,
         "vb0": float(prior.get("vb0", 0.0)) if prior else 0.0,
         "nu0": float(prior.get("nu0", 0.0)) if prior else 0.0,
-        "s0": prior.get("s0", 0.0) if prior else 0.0,
+        "s0": prior.get("s0") if prior else None,
         "kappa0": None,
         "kappa1": None,
     }

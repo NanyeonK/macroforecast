@@ -2474,7 +2474,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "kappa0": 2.0,
             "kappa1": 0.5,
             "nu0": 0.0,
-            "s0": 0.0,
+            "s0": None,
             "iter": 300,
             "burnin": 100,
             "random_state": 0,
@@ -2495,9 +2495,10 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             ),
             _p(
                 "s0",
-                0.0,
+                None,
                 "float | matrix | None",
-                "Inverse-Wishart scale prior parameter.",
+                "Inverse-Wishart scale prior parameter. None (default): "
+                "data-dependent diag(AR/OLS residual variance) scale.",
                 False,
             ),
             _p(
@@ -2545,7 +2546,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "b0": 0.0,
             "vb0": 0.0,
             "nu0": 0.0,
-            "s0": 0.0,
+            "s0": None,
             "iter": 300,
             "burnin": 100,
             "random_state": 0,
@@ -2570,9 +2571,10 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             ),
             _p(
                 "s0",
-                0.0,
+                None,
                 "float | matrix | None",
-                "Inverse-Wishart scale prior parameter.",
+                "Inverse-Wishart scale prior parameter. None (default): "
+                "data-dependent diag(AR/OLS residual variance) scale.",
                 False,
             ),
             _p(
