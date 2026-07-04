@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 
 # t-code (FRED-MD/QD integration order) -> (forecast_policy, target_transform).
@@ -172,9 +172,25 @@ class PipelineSpec:
     # parallel cells reuse each per-(spec, target, origin) FittedPreprocessor instead
     # of recomputing it. Both backends construct a store pointing at this directory;
     # in parallel mode every worker process points at the SAME directory and shares
-    # the persisted fits through the filesystem (the ~36x EM dedup). Default None =
-    # current behavior, no disk store (byte-for-byte unchanged).
-    preprocessing_cache_dir: str | None = None
+    # the persisted fits through the filesystem (the ~36x EM dedup).
+    #
+    # Three states:
+    #   - an explicit str path: use it (persists across runs if reused).
+    #   - None (default): "not configured". When n_jobs==1 this is a no-op, byte-
+    #     for-byte the original behavior (no disk store; the serial backend already
+    #     shares fits via its own in-memory cache). When n_jobs>1, run_pipeline/
+    #     run_arms AUTO-CREATE a run-scoped temporary directory for the duration of
+    #     the run (removed afterward) so parallel workers recover the cross-arm/
+    #     cross-horizon EM dedup that they would otherwise silently lose (each
+    #     worker previously got preprocessing_cache=None with no fallback).
+    #   - False: explicit opt-out. Never auto-create a store even when n_jobs>1,
+    #     matching the pre-this-change parallel behavior (each worker recomputes
+    #     its own EM, no shared cache of any kind).
+    # The store is namespaced by each arm's effective preprocessing_policy, so
+    # sharing one directory (explicit or auto-created) across specs/arms that
+    # resolve to different scopes never cross-contaminates (see
+    # preprocessing/cache.py and pipeline/run.py::_effective_preprocessing_policy).
+    preprocessing_cache_dir: str | Literal[False] | None = None
     seed: int | None = 42
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
@@ -466,6 +482,29 @@ def model_arms(
 # generator
 # --------------------------------------------------------------------------- #
 
+def _resolve_preprocessing_cache_dir(value: str | bool | None) -> str | Literal[False] | None:
+    """Normalize the raw ``preprocessing_cache_dir`` argument to its stored form.
+
+    ``None`` -> ``None`` ("not configured"; run-time defaulting decides). ``False``
+    -> ``False`` (explicit opt-out, stored as-is). Any other value is coerced to
+    ``str`` (an explicit directory path). ``True`` is rejected -- it is not a valid
+    directory and it is not the opt-out sentinel, so silently accepting it would
+    invite exactly the "did the user mean an explicit path or the default" ambiguity
+    this three-state contract exists to avoid. The stored form is therefore
+    ``str | Literal[False] | None`` (the field annotation): ``True`` never
+    survives validation, so truthiness-narrowing the FIELD yields ``str``.
+    """
+    if value is None or value is False:
+        return value
+    if value is True:
+        raise ValueError(
+            "preprocessing_cache_dir=True is not valid; pass a directory path "
+            "(str), None (default: auto-managed temp dir when n_jobs>1), or "
+            "False (explicit opt-out of any preprocessing cache)."
+        )
+    return str(value)
+
+
 def pipeline_spec(
     *,
     data: Any,
@@ -482,7 +521,7 @@ def pipeline_spec(
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
     n_jobs: int | str = 1,
-    preprocessing_cache_dir: str | None = None,
+    preprocessing_cache_dir: str | bool | None = None,
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
 ) -> PipelineSpec:
@@ -494,6 +533,13 @@ def pipeline_spec(
     :func:`auto_parallelism` and splits the cores between cell workers
     (stored as the resolved ``PipelineSpec.n_jobs``) and per-cell model-internal
     threads (stored as ``PipelineSpec.model_threads``).
+
+    ``preprocessing_cache_dir`` is a path, ``None``, or ``False`` -- see the field
+    docstring on :class:`PipelineSpec` for the full three-state contract. In short:
+    a path pins a persistent shared on-disk preprocessing-fit cache; ``None``
+    (default) auto-manages a temporary one for the duration of the run when
+    ``n_jobs>1`` (a no-op when ``n_jobs==1``); ``False`` explicitly opts out of any
+    disk-backed cache even when parallel. ``True`` is invalid and raises.
     """
     arms = tuple(arms)
     if not arms:
@@ -577,9 +623,7 @@ def pipeline_spec(
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
         n_jobs=n_jobs,
         model_threads=int(model_threads),
-        preprocessing_cache_dir=(
-            str(preprocessing_cache_dir) if preprocessing_cache_dir is not None else None
-        ),
+        preprocessing_cache_dir=_resolve_preprocessing_cache_dir(preprocessing_cache_dir),
         seed=seed,
         provenance=notes,
     )

@@ -1,9 +1,9 @@
 """Content-addressed on-disk store for fitted preprocessing objects.
 
 ``PreprocessorStore`` is a directory-backed cache that maps a
-``(PreprocessSpec, target, origin_pos)`` triple to a pickled
-``FittedPreprocessor`` (or any picklable object).  It is designed for safe
-concurrent multi-process access:
+``(PreprocessSpec, target, origin_pos)`` triple -- optionally salted by a
+caller-supplied ``namespace`` -- to a pickled ``FittedPreprocessor`` (or any
+picklable object). It is designed for safe concurrent multi-process access:
 
 - Writes use a temp-file + ``os.replace`` (atomic on POSIX), so a concurrent
   reader never observes a partially-written file.
@@ -19,6 +19,16 @@ serialisation of ``(spec_dict, target, origin_pos)`` where ``spec_dict`` is
 ``spec.to_dict()``.  ``PreprocessSpec.to_dict()`` calls ``_json_ready`` on the
 options dict, converting callables to their qualified name strings and tuples to
 lists, so the output is always JSON-serialisable with ``json.dumps(sort_keys=True)``.
+
+When the store is constructed with a ``namespace`` (any JSON-serialisable
+value -- e.g. the effective ``StagePolicy.to_dict()`` the caller fitted under),
+the namespace is folded into the same digest. Two callers sharing one
+``root_dir`` but constructing the store with DIFFERENT namespaces therefore
+never collide: their keys differ even for an identical ``(spec, target,
+origin_pos)`` triple, so a fit produced under one namespace is never served to
+a reader in another. ``namespace=None`` (the default) reproduces the original,
+pre-namespace digest exactly, so existing stores built before this parameter
+existed keep working unchanged for callers that do not pass one.
 
 Dependencies
 ------------
@@ -44,10 +54,19 @@ class PreprocessorStore:
     root_dir:
         Directory where cached files are stored.  Created on first ``put`` if
         it does not already exist.
+    namespace:
+        Optional JSON-serialisable value folded into every key digest (see
+        :meth:`key`). Use this to safely share one ``root_dir`` across callers
+        whose fitted objects would otherwise collide for the same
+        ``(spec, target, origin_pos)`` triple but differ in some other
+        run-level knob (e.g. the ``preprocessing_policy`` scope) that is not
+        already part of ``spec``. ``None`` (the default) reproduces the
+        original pre-namespace digest.
     """
 
-    def __init__(self, root_dir: str | Path) -> None:
+    def __init__(self, root_dir: str | Path, *, namespace: Any | None = None) -> None:
         self._root = Path(root_dir)
+        self._namespace = namespace
 
     # ------------------------------------------------------------------
     # Key construction
@@ -83,13 +102,21 @@ class PreprocessorStore:
         standardize / transform / outliers options) carry no anonymous
         callables and are unaffected.
 
-        Second caveat: the key does NOT encode the ``fit_policy``
+        Second caveat: the key does NOT independently encode the ``fit_policy``
         (``origin_available`` vs ``fit_window``) used when calling
-        ``PreprocessSpec.fit``. Within a single run/pipeline the scope is
-        constant, so reuse is safe. Never share one store directory across runs
-        that differ in ``preprocessing_policy.scope`` for the same spec -- a
-        fit_window fit would be served where an origin_available fit is expected
-        (or vice versa), silently producing wrong transforms.
+        ``PreprocessSpec.fit`` -- UNLESS the store was constructed with a
+        ``namespace`` that carries it (see :meth:`__init__`). Within a single
+        run/pipeline the scope is constant, so reuse is safe without a
+        namespace. Never share one store directory across runs that differ in
+        ``preprocessing_policy.scope`` for the same spec WITHOUT namespacing by
+        that scope -- a fit_window fit would be served where an
+        origin_available fit is expected (or vice versa), silently producing
+        wrong transforms. ``macroforecast.pipeline`` always constructs its
+        shared store with a namespace derived from the effective
+        ``StagePolicy`` so pipeline-driven runs are safe by construction; a
+        caller wiring ``PreprocessorStore`` directly (bypassing the pipeline)
+        is responsible for passing a namespace when it shares one directory
+        across differing scopes.
 
         Parameters
         ----------
@@ -110,6 +137,8 @@ class PreprocessorStore:
             "target": str(target),
             "origin_pos": int(origin_pos),
         }
+        if self._namespace is not None:
+            payload["namespace"] = self._namespace
         canonical = json.dumps(payload, sort_keys=True, default=str)
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 

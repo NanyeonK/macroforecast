@@ -16,6 +16,8 @@ CI. (Note: ``impute="median"`` is not a valid imputation method in
 ``forward_fill``, and ``none`` -- so ``mean`` is used here.)
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -325,3 +327,182 @@ def test_pipeline_cache_dir_dedupes_across_cells(tmp_path):
     )
     # And strictly fewer than the naive per-cell count, proving the dedup happened.
     assert n_files < expected * n_arms * n_horizons
+
+
+# --------------------------------------------------------------------------- #
+# WP7: scope-namespace isolation (the footgun) + auto-managed cache dir (n_jobs>1)
+# --------------------------------------------------------------------------- #
+
+
+def test_store_namespace_isolates_cross_scope_writes(tmp_path):
+    """A store's key must depend on its ``namespace``, closing the footgun where
+    ``preprocessing_policy.scope`` was invisible to the cache key.
+
+    Without a namespace (the pre-fix, and still the default, behavior), two
+    different scopes sharing one store directory collide: the key depends only on
+    ``(spec, target, origin_pos)``, so a fit_window fit could be served where an
+    origin_available fit was expected. Constructing the store with a namespace
+    that carries the effective policy (what ``pipeline/run.py`` does for every
+    pipeline-driven store) makes the two scopes resolve to DISTINCT keys, so
+    each writes/reads its own file and never collides with the other.
+    """
+    prep = PreprocessSpec(options={"impute": "mean", "standardize": "zscore"})
+
+    # Pre-fix-equivalent: no namespace -> scope is invisible to the key.
+    bare = PreprocessorStore(tmp_path)
+    assert bare.key(prep, target="Y", origin_pos=5) == bare.key(prep, target="Y", origin_pos=5)
+
+    store_origin_available = PreprocessorStore(tmp_path, namespace={"scope": "origin_available"})
+    store_fit_window = PreprocessorStore(tmp_path, namespace={"scope": "fit_window"})
+    key_origin_available = store_origin_available.key(prep, target="Y", origin_pos=5)
+    key_fit_window = store_fit_window.key(prep, target="Y", origin_pos=5)
+    assert key_origin_available != key_fit_window
+
+    store_origin_available.put(key_origin_available, {"marker": "origin_available"})
+    store_fit_window.put(key_fit_window, {"marker": "fit_window"})
+
+    # Each store round-trips its OWN write, and (critically) its own .key() call
+    # is what a real caller uses to look things up -- so the two scopes' fits
+    # never occupy the same file, however many processes share this directory.
+    assert store_origin_available.get(key_origin_available) == {"marker": "origin_available"}
+    assert store_fit_window.get(key_fit_window) == {"marker": "fit_window"}
+    assert len(list(tmp_path.iterdir())) == 2  # two distinct on-disk entries, not one
+
+
+def _scope_toy(preprocessing_policy, cache_dir):
+    """A single-arm toy pipeline spec parameterized by an explicit ARM-level
+    ``preprocessing_policy``, sharing ``cache_dir`` as its ``preprocessing_cache_dir``.
+
+    Arm-level preprocessing (not spec-level) exercises the exact override branch
+    ``_effective_preprocessing_policy`` resolves (``arm.preprocessing_policy``
+    when ``arm.preprocessing is not None``).
+    """
+    idx = pd.date_range("1990-01-01", periods=160, freq="MS")
+    rng = np.random.default_rng(1)
+    cols = {f"S{i}": rng.normal(size=160) for i in range(6)}
+    cols["Y"] = np.cumsum(rng.normal(size=160))
+    panel = pd.DataFrame(cols, index=idx)
+    panel.index.name = "date"
+    bundle = mf.data.custom_dataset(panel, transform_codes={c: 1 for c in panel.columns})
+    prep = mf.preprocessing.preprocess_spec(
+        transform="official", impute="mean", standardize="zscore"
+    )
+    win = mf.window.from_cutoffs(
+        test_start="2002-01-01",
+        test_end="2003-12-01",
+        mode="expanding",
+        val_method="last_block",
+        retrain_every=1,
+    )
+    feats = mf.feature_engineering.feature_spec(
+        target="Y", predictors="all", lags=range(1, 4)
+    )
+    return pipeline_spec(
+        data=bundle,
+        targets=[TargetSpec(name="Y")],
+        horizons=[1],
+        window=win,
+        arms=[
+            Arm(
+                name="RIDGE",
+                model="ridge",
+                preprocessing=prep,
+                preprocessing_policy=preprocessing_policy,
+                features=feats,
+                is_benchmark=True,
+            ),
+        ],
+        evaluation=EvalSpec(benchmark="RIDGE", metrics=("rmse",)),
+        preprocessing_cache_dir=str(cache_dir),
+    )
+
+
+def test_shared_cache_dir_does_not_cross_contaminate_across_scopes(tmp_path):
+    """Two specs sharing ONE ``preprocessing_cache_dir`` but differing ONLY in
+    ``preprocessing_policy.scope`` must not silently serve one scope's fit to the
+    other -- the exact cross-run footgun ``cache.py``'s ``key()`` docstring warns
+    about, now closed by namespacing the store at construction (pipeline/run.py).
+
+    Proof is by FIT-CALL COUNT (via ``_count_fits``, the same instrument
+    ``test_disk_store_dedupes_preprocessing_fit`` above uses), not by forecast
+    values: for this toy spec (no missing data, no model_selection carving out a
+    distinct validation block) ``origin_available`` and ``fit_window`` happen to
+    select the identical fit rows, so numeric equality would not distinguish
+    "correctly recomputed" from "wrongly reused". Fit-call counting does not have
+    that ambiguity -- under the pre-fix footgun, the second (different-scope) run
+    would find the first run's entries already on disk under the SAME key and
+    perform ZERO real fits (a silent wrong-scope cache hit); with the namespaced
+    key, the second run's keys are misses against the first run's entries, so it
+    must independently recompute every origin.
+    """
+    cache_dir = tmp_path / "shared"
+    origin_available_spec = _scope_toy(mf.window.stage_policy("origin_available"), cache_dir)
+    fit_window_spec = _scope_toy(mf.window.stage_policy("fit_window"), cache_dir)
+
+    _, fits_first = _count_fits(lambda: run_pipeline(origin_available_spec))
+    assert fits_first > 0  # the first scope actually computes its origins
+
+    # A DIFFERENT scope sharing the same directory must NOT find any cache hits
+    # from the first scope's entries -- it must recompute independently.
+    _, fits_second = _count_fits(lambda: run_pipeline(fit_window_spec))
+    assert fits_second == fits_first, (
+        f"fit_window run performed {fits_second} fits but origin_available (same "
+        f"origins, same directory) performed {fits_first} -- a shortfall would "
+        "mean fit_window silently reused origin_available's cached fits"
+    )
+
+    # Within-scope dedup still works: re-running the FIRST scope again against the
+    # same shared directory now finds its OWN entries and performs zero new fits.
+    _, fits_first_again = _count_fits(lambda: run_pipeline(origin_available_spec))
+    assert fits_first_again == 0
+
+
+def test_auto_cache_dir_dedupes_across_cells_when_unset(monkeypatch, tmp_path):
+    """``n_jobs>1`` with ``preprocessing_cache_dir`` left at its ``None`` default
+    must still perform the expensive per-origin fit AT MOST ONCE per (target,
+    origin) across the whole run -- proving the run-scoped auto-managed temp dir
+    (WP7 fix 2) actually engages, not just the explicit ``preprocessing_cache_dir=``
+    path the other tests in this file already pin.
+
+    The auto-created directory is removed before ``run_pipeline`` returns, so it
+    is snapshotted by wrapping ``shutil.rmtree`` (the exact call
+    ``pipeline/run.py::_run_cells`` uses to clean it up) rather than inspected
+    after the fact.
+    """
+    import shutil as _shutil_mod
+
+    spec = _toy(2)
+    assert spec.preprocessing_cache_dir is None  # sanity: truly left unset
+
+    captured: dict[str, list] = {}
+    real_rmtree = _shutil_mod.rmtree
+
+    def _snapshotting_rmtree(path, *args, **kwargs):
+        p = Path(path)
+        if p.is_dir():
+            captured["files"] = [
+                entry for entry in p.iterdir()
+                if entry.is_file() and not entry.name.endswith(".tmp")
+            ]
+        return real_rmtree(path, *args, **kwargs)
+
+    monkeypatch.setattr(_shutil_mod, "rmtree", _snapshotting_rmtree)
+
+    report = run_pipeline(spec)
+    assert not report.forecasts.empty
+    assert "files" in captured, (
+        "auto-managed preprocessing cache dir was never created/cleaned up -- "
+        "the n_jobs>1 default-to-temp-dir path did not engage"
+    )
+
+    expected = _distinct_origin_count(str(tmp_path / "control"))
+    assert expected > 1  # a real dedup target
+
+    n_arms = len(spec.arms)
+    n_horizons = len(spec.horizons)
+    assert len(captured["files"]) == expected, (
+        f"auto-managed store holds {len(captured['files'])} entries but expected "
+        f"{expected} distinct origins (naive per-cell would write up to "
+        f"{expected * n_arms * n_horizons})"
+    )
+    assert len(captured["files"]) < expected * n_arms * n_horizons

@@ -126,6 +126,37 @@ full per-version honesty-pass history embedded in repo documentation.
   no registered `deep` marker) pins that a single default fit for each model
   stays inside a generous wall-clock budget, to catch a future default
   regressing back toward a pathological cost.
+- `preprocessing`/`pipeline` (footgun fix + perf default): two defects in the #416
+  on-disk `PreprocessorStore` shared-cache. (1) The store key hashed
+  `(PreprocessSpec.to_dict(), target, origin_pos)` but OMITTED
+  `preprocessing_policy.scope` -- sharing one `preprocessing_cache_dir` across runs
+  that differ ONLY in scope (e.g. one `origin_available`, one `fit_window` for the
+  same spec) could silently serve one run's fitted preprocessor to the other.
+  `PreprocessorStore` now accepts an optional `namespace` (any JSON-serialisable
+  value, folded into the key digest); `pipeline/run.py::_execute_cell` always
+  constructs its store with a namespace derived from each arm's EFFECTIVE
+  `preprocessing_policy` (`StagePolicy.to_dict()`, resolved exactly as `run()`
+  itself resolves it), so pipeline-driven runs are safe by construction.
+  `namespace=None` (the default for anyone constructing `PreprocessorStore`
+  directly) reproduces the original digest exactly. **This changes the on-disk key
+  for every pipeline-driven store entry** -- existing `preprocessing_cache_dir`
+  directories from before this change are silently invalidated (a clean cache MISS,
+  never a wrong-answer HIT) and will be recomputed once. (2) `n_jobs>1` previously
+  left every worker with `preprocessing_cache=None` and no store unless the user
+  knew to set `preprocessing_cache_dir` explicitly, so parallel runs silently lost
+  all cross-arm/cross-horizon EM-fit dedup. `preprocessing_cache_dir` is now a
+  three-state knob: an explicit `str` path is used as-is (unchanged); `None`
+  (default) auto-creates a run-scoped temporary directory for the duration of the
+  run when `n_jobs>1` (removed afterward; a no-op when `n_jobs==1`, which already
+  dedupes via its own in-memory cache) so parallel EM dedup now works
+  out-of-the-box; `False` is the new explicit opt-out sentinel (never auto-create a
+  store, matching the pre-this-change parallel behavior). `pipeline_spec(...,
+  preprocessing_cache_dir=True)` now raises -- it is neither a valid path nor the
+  opt-out sentinel. New tests: `test_store_namespace_isolates_cross_scope_writes`,
+  `test_shared_cache_dir_does_not_cross_contaminate_across_scopes`, and
+  `test_auto_cache_dir_dedupes_across_cells_when_unset` in
+  `tests/pipeline/test_preprocessing_share.py`. The existing serial==parallel and
+  store-off==store-on golden pins are unchanged and still pass.
 
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
