@@ -274,6 +274,52 @@ full per-version honesty-pass history embedded in repo documentation.
     the Python function's own keyword default) are updated to `s0=None` to
     match, so recipe/`forecasting.run()`-driven fits inherit the fix too.
 
+- `tests/mc` (WP-V3, Monte Carlo size/power validation harness): new `tests/mc/`
+  directory (marker `mc`, opt-in via `pytest tests/mc/ -m mc`, excluded from the
+  `ci-core.yml` default run alongside `slow`) validates the STATISTICAL
+  calibration of the inference-critical forecast-comparison tests -- empirical
+  rejection rate under a TRUE null vs nominal alpha, judged against exact
+  Clopper-Pearson 99% binomial bands (fixed before looking at results, never
+  widened to pass), master seed 20260705 with `SeedSequence`-spawned independent
+  per-replication streams, R=1000-5000 per design cell, full suite ~5m20s on a
+  single core. This is complementary to WP-V1/V2 parity: parity proves we match
+  a reference implementation, MC size proves the statistical behavior is right
+  -- and catches distribution/HAC/df errors both sides of a parity check can
+  share. 21 tests: 14 passed, 7 xfailed (`strict=True` -- a future fix flips
+  them to loud XPASS). Correct calibration POSITIVELY verified for: `dm_test`
+  at h=1 (n=50/200, HLN and none, alpha=.05/.10) and n=200 h=4, plus the
+  Harvey-Leybourne-Newbold DIRECTION property (HLN strictly closer to nominal
+  than uncorrected at n=50 h=4); `clark_west_test` under a nested null with
+  demonstrably induced nested bias (does not over-reject; conservative exactly
+  as Clark-West 2007 reports, with mid-range power .55 against a small true
+  alternative); `model_confidence_set` retaining a genuinely dominant model at
+  .947 >= 1-alpha; `pesaran_timmermann_test` at n=200;
+  `superior_predictive_ability_test` on iid loss panels; `giacomini_white_test`
+  at h=1. **Size-distortion findings (reported as strict xfails + diagnosis in
+  `.dev-notes/anchor_coverage/v3_mc_results.md`, NOT silently absorbed)**:
+  (1) `giacomini_white_test` is genuinely oversized for h>1 (.124 at
+  alpha=.05/n=50/h=4; still .072-.092 at n up to 5000 -- does NOT vanish
+  asymptotically; distortion is monotone in the number of Newey-West HAC lags
+  h-1, mean statistic 2.29 vs chi2(2) mean 2.00 at n=5000) -- the HAC-Wald
+  construction lacks any small-sample correction analogous to HLN; a real
+  calibration issue for multi-horizon use worth a code fix. (2)
+  `model_confidence_set` under-covers the equal-losers GLOBAL null: P(all 5
+  tied models retained)=.818 vs the >=.90 floor, stable across n_boot
+  1000/2000, n=100/200, alpha=.10/.05, with/without a common loss factor --
+  isolates an over-rejecting first-step elimination test built on
+  `_mcs_statistic` (the same private helper WP-V0 ranked as tests.py gap #1).
+  (3) `superior_predictive_ability_test` over-rejects ~1.5-2x nominal whenever
+  losses are serially correlated (AR(1) rho=.3 suffices), insensitive to
+  p_value_type/studentize/block_length(1-20,auto)/n(100-500), while the iid
+  design is in band -- tracks the `arch.bootstrap.SPA` backend's
+  block-bootstrap calibration, not the macroforecast panel layer. (4) `dm_test`
+  is oversized at n=50 h=4 (.065 HLN / .095 uncorrected at alpha=.05,
+  re-confirmed at R=10000) -- too few effective non-overlapping blocks for 3
+  HAC lags; shared with forecast::dm.test by construction (formula is
+  parity-matched), documented as a usage caveat rather than a bug. (5)
+  `pesaran_timmermann_test` mildly oversized at n=50 (.056 at alpha=.05,
+  R=15000) -- PT-1992 asymptotic-normal reference at small n. Raw machine
+  results: `tests/mc/_mc_raw_results.json` (rewritten by each `-m mc` session).
 - `forecasting`/`pipeline` (performance, Gap A): the per-origin fitted feature
   builder (`FeatureSpec.fit()` -- the PCA/MARX/SIR-style numerical state) is now
   shared across arms of the same target in the serial pipeline path, exactly like
