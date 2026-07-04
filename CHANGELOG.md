@@ -50,6 +50,20 @@ full per-version honesty-pass history embedded in repo documentation.
   `forecast::dm.test`'s own bartlett convention (verified: 6/6 pass in
   `test_dm_test.py`).
 
+- `tests.py` (bugfix, HAC kernel finding 1 above): fixed
+  `_long_run_variance(..., kernel="andrews")`, which had been unusable
+  since it was introduced -- every call raised `ValueError: unknown HAC
+  kernel 'newey_west'` because the code reassigned `kernel = "newey_west"`
+  after computing the Andrews/Newey-West AR(1) plug-in bandwidth, but the
+  linear-taper branch below is spelled `"bartlett"`, not `"newey_west"`.
+  Reassigning to `"bartlett"` directly unbreaks `kernel="andrews"` for
+  `dm_test`, `gw_test`, `harvey_newbold_test`, `clark_west_test`/`cw_test`,
+  and `enc_t_test` (all now exercised end-to-end in
+  `tests/parity/test_hac_kernels.py`, which also hand-computes the expected
+  `_long_run_variance(kernel="andrews")` value independently and matches it
+  to 1e-10). The former strict-`xfail` crash reproduction in that file is
+  replaced by these positive regression tests.
+
 - `forecasting`/`pipeline` (performance, Gap A): the per-origin fitted feature
   builder (`FeatureSpec.fit()` -- the PCA/MARX/SIR-style numerical state) is now
   shared across arms of the same target in the serial pipeline path, exactly like

@@ -51,15 +51,36 @@ numerical-precision artifact. See ``test_hac_kernel_matches_sandwich_kernhac``
 and ``test_hac_kernel_small_n_edge``'s ``xfail`` on the "bartlett"
 parametrization for the R-facing consequence.
 
-The "andrews" kernel is exercised separately in
-``test_andrews_kernel_is_broken`` -- see that test's docstring for the bug
-this harness surfaced.
+RESOLVED FINDING (andrews kernel, fixed): ``_long_run_variance(...,
+kernel="andrews")`` used to ALWAYS raise ``ValueError: unknown HAC kernel
+'newey_west'`` -- reachable from ``dm_test``, ``gw_test``,
+``harvey_newbold_test``, ``clark_west_test``/``cw_test``, ``enc_t_test``.
+Root cause: after computing the Andrews (1991, eq. 6.4)/Newey-West (1994)
+AR(1) plug-in automatic bandwidth, the code reassigned ``kernel =
+"newey_west"``, intending to route into the linear-taper (bartlett) branch
+below, but that branch is spelled ``"bartlett"``, not ``"newey_west"`` --
+so no branch matched and every call fell through to the final
+``raise ValueError``. Fixed by reassigning to ``"bartlett"`` directly (see
+``macroforecast/tests.py``, ``_long_run_variance``). Since the andrews
+branch reuses the bartlett taper, it inherits the bartlett kernel's own
+bandwidth-taper convention (finding 2 above), so it is likewise not
+expected to match ``sandwich::kernHAC``'s default auto-bandwidth Bartlett
+kernel -- see
+``test_andrews_kernel_documented_divergence_from_kernhac_auto_bandwidth``
+below, which confirms and documents this rather than asserting parity. See
+``test_dm_test_andrews_kernel_no_longer_crashes``,
+``test_andrews_kernel_no_longer_crashes_through_other_public_callables``,
+and ``test_long_run_variance_andrews_kernel_matches_hand_computed_value``
+for the regression coverage.
 """
 from __future__ import annotations
+
+import math
 
 import numpy as np
 import pytest
 
+import macroforecast as mf
 from macroforecast.tests import _long_run_variance
 
 from tests.parity.conftest import parse_float, require_r, run_rscript, write_csv
@@ -84,6 +105,31 @@ fit <- lm(x ~ 1, data = df)
 n <- nrow(df)
 V <- kernHAC(fit, kernel = "{r_kernel}", bw = {bandwidth}, prewhite = FALSE,
              adjust = FALSE, sandwich = TRUE)
+lrv <- as.numeric(V) * n
+emit("lrv", lrv)
+'''
+    result = run_rscript(script)
+    return parse_float(result["lrv"])
+
+
+def _r_kernhac_lrv_auto_bw(values: np.ndarray, *, kernel: str, tmp_path) -> float:
+    """Like ``_r_kernhac_lrv``, but lets R select its own bandwidth via the
+    package default ``bw = bwAndrews`` (``approx = "AR(1)"``) instead of
+    pinning an explicit ``bw=``. Used only by the andrews-kernel divergence
+    check below, where the question is whether R's OWN automatic-bandwidth
+    Bartlett-kernel HAC estimate coincides with macroforecast's
+    ``kernel="andrews"`` value, not whether a shared fixed bandwidth does.
+    """
+    r_kernel = _KERNEL_MAP[kernel]
+    csv_path = tmp_path / "series.csv"
+    write_csv(csv_path, {"x": values})
+    script = f'''
+library(sandwich)
+df <- read.csv("{csv_path}")
+fit <- lm(x ~ 1, data = df)
+n <- nrow(df)
+V <- kernHAC(fit, kernel = "{r_kernel}", bw = bwAndrews, approx = "AR(1)",
+             prewhite = FALSE, adjust = FALSE, sandwich = TRUE)
 lrv <- as.numeric(V) * n
 emit("lrv", lrv)
 '''
@@ -250,55 +296,146 @@ def test_horizon_implied_bandwidth_matches_sandwich_at_that_lag(
     )
 
 
-def test_andrews_kernel_is_broken() -> None:
-    """SUSPECTED BUG (found while building this harness, not an R-parity
-    mismatch -- macroforecast crashes on its own before any R comparison is
-    possible): ``_long_run_variance(..., kernel="andrews")`` -- and every
-    public callable that forwards to it (``dm_test``, ``gw_test``,
-    ``harvey_newbold_test`` confirmed directly below; ``clark_west_test``/
-    ``cw_test``/``enc_t_test`` share the same ``_mean_hac_test_statistic`` ->
-    ``_long_run_variance`` path and are almost certainly affected too) --
-    ALWAYS raises ``ValueError: unknown HAC kernel 'newey_west'`` for any
-    input, any n, any horizon.
+def test_long_run_variance_andrews_kernel_matches_hand_computed_value() -> None:
+    """Regression + value check for the fixed andrews-kernel crash
+    (previously ``_long_run_variance(..., kernel="andrews")`` always raised
+    ``ValueError: unknown HAC kernel 'newey_west'`` -- see the module
+    docstring's "RESOLVED FINDING (andrews kernel, fixed)" section).
 
-    Root cause (macroforecast/tests.py, ``_long_run_variance``, the
-    ``if kernel == "andrews":`` branch): after computing the Andrews/
-    Newey-West (1994) AR(1)-plug-in automatic bandwidth, the code does
-    ``kernel = "newey_west"`` -- clearly *intending* to route into the
-    linear-taper (Bartlett/Newey-West) weighted-sum branch below -- but
-    that branch is spelled ``if kernel == "bartlett":``, not
-    ``"newey_west"``. Since no branch matches the string ``"newey_west"``,
-    execution always falls through to the final
-    ``raise ValueError(f"unknown HAC kernel {{kernel!r}}")``. This makes
-    ``kernel="andrews"`` -- one of the two automatic-bandwidth options
-    matrix.csv's row for ``dm_test`` explicitly flags as unverified/broken
-    ("bartlett/parzen/andrews kernels of _long_run_variance are NOT
-    independently formula-matched anywhere, only metadata-string-checked")
-    -- dead on arrival rather than merely unverified: it cannot return a
-    value at all, in production, today.
-
-    One-line fix (not applied here per the WP-V1 mandate that a finding is
-    reported, not silently patched by the audit): change
-    ``kernel = "newey_west"`` to ``kernel = "bartlett"`` in that branch.
-
-    This assertion needs no R and no R package -- it is a pure-Python crash
-    reproduction -- but is kept in ``tests/parity/`` (with the ``rparity``
-    marker, so it does not newly appear in default CI as part of this PR)
-    because it was discovered specifically while building the HAC-kernel
-    R-parity harness for work item 2.
+    This does not just check that the call no longer raises -- it
+    independently re-derives, in this test, the exact value the andrews
+    branch should return under macroforecast's own documented convention:
+    the Andrews (1991, eq. 6.4)/Newey-West (1994) AR(1) plug-in bandwidth,
+    then the SAME NW-1987 bartlett taper ``1 - k/(bandwidth+1)`` used by
+    the "bartlett" branch (macroforecast's andrews branch reassigns into
+    that branch after computing the bandwidth). Neither the bandwidth
+    formula nor the taper is imported from ``macroforecast/tests.py`` --
+    both are re-typed here from the module docstring's formula, so this is
+    a genuine hand-check, not a tautological call-the-same-code-twice test.
     """
-    import numpy as np
+    rng = np.random.default_rng(3)
+    n = 40
+    ar = np.empty(n)
+    ar[0] = rng.standard_normal()
+    for t in range(1, n):
+        ar[t] = 0.5 * ar[t - 1] + rng.standard_normal()
 
-    import macroforecast as mf
-    from macroforecast.tests import _long_run_variance
+    centered = ar - ar.mean()
+    gamma_0 = float(np.dot(centered, centered) / n)
 
+    # Andrews (1991, eq. 6.4) / Newey-West (1994) AR(1) plug-in bandwidth.
+    numerator = float(np.sum(centered[:-1] * centered[1:]))
+    denominator = float(np.sum(centered[:-1] ** 2))
+    alpha1 = numerator / denominator if denominator > 0 else 0.0
+    alpha = (4.0 * alpha1**2) / (max(1.0 - alpha1**2, 1e-12) ** 2)
+    expected_bandwidth = max(1, int(np.floor(1.1447 * (alpha * n) ** (1 / 3))))
+
+    expected_variance = gamma_0
+    for k in range(1, expected_bandwidth + 1):
+        if n > k:
+            weight = 1.0 - k / (expected_bandwidth + 1)  # NW-1987 bartlett taper
+            expected_variance += 2.0 * weight * float(np.dot(centered[:-k], centered[k:]) / n)
+
+    py_actual = _long_run_variance(ar, kernel="andrews")
+
+    assert py_actual == pytest.approx(expected_variance, abs=1e-10), (
+        f"kernel='andrews': py={py_actual!r} vs hand-computed={expected_variance!r} "
+        "(Andrews plug-in bandwidth + NW-1987 bartlett taper) -- if this fails, "
+        "the andrews branch's bandwidth formula or taper changed in "
+        "macroforecast/tests.py and this hand-check needs re-deriving."
+    )
+
+
+def test_andrews_kernel_documented_divergence_from_kernhac_auto_bandwidth(tmp_path) -> None:
+    """Documented divergence, not a bug (per the WP-V1 mandate: report,
+    don't silently align): even letting R choose ITS OWN automatic
+    bandwidth for the Bartlett kernel (``sandwich::kernHAC``'s default,
+    ``bw = bwAndrews(approx = "AR(1)")``) rather than pinning a shared
+    explicit bandwidth, macroforecast's ``kernel="andrews"`` value does not
+    match it. The root cause is the SAME one already documented for the
+    plain "bartlett" kernel (see
+    ``test_bartlett_kernel_uses_different_bandwidth_convention_than_its_siblings``):
+    macroforecast's andrews branch reuses the NW-1987 bartlett taper
+    (``1 - k/(bandwidth+1)``), while ``sandwich::kernHAC``'s Bartlett
+    kernel always uses the Andrews-1991 taper (``1 - k/bandwidth``),
+    regardless of how the bandwidth itself was chosen. This divergence is
+    the deliberate cost of the documented ``dm_test(kernel="bartlett")``
+    parity dependency (``tests/parity/test_dm_test.py``, 6/6 pass vs
+    ``forecast::dm.test``) and is NOT expected to be closed by this test
+    suite.
+    """
+    require_r("sandwich")
+    rng = np.random.default_rng(42)
+    n = 80
+    ar = np.empty(n)
+    ar[0] = rng.standard_normal()
+    for t in range(1, n):
+        ar[t] = 0.4 * ar[t - 1] + rng.standard_normal()
+
+    py_lrv = _long_run_variance(ar, kernel="andrews")
+    r_lrv = _r_kernhac_lrv_auto_bw(ar, kernel="bartlett", tmp_path=tmp_path)
+
+    assert py_lrv != pytest.approx(r_lrv, abs=1e-6), (
+        f"andrews (auto-bandwidth): py={py_lrv!r} unexpectedly matched R "
+        f"sandwich::kernHAC(bw=bwAndrews)={r_lrv!r} -- if this now passes, "
+        "re-verify whether the bartlett-taper-convention asymmetry is still "
+        "accurate before relying on this as a 'divergence' assertion."
+    )
+
+
+def test_dm_test_andrews_kernel_no_longer_crashes() -> None:
+    """Regression test for the fixed andrews-kernel crash: previously,
+    ``dm_test(..., kernel="andrews")`` ALWAYS raised ``ValueError: unknown
+    HAC kernel 'newey_west'`` for any input, any n, any horizon -- see the
+    module docstring's "RESOLVED FINDING (andrews kernel, fixed)" section
+    for the root cause and fix. This exercises the public ``dm_test`` path
+    end-to-end with ``kernel="andrews"`` and asserts it returns a real
+    ``TestResult`` with a finite statistic and a valid p-value, not merely
+    that it avoids raising.
+    """
     rng = np.random.default_rng(0)
-    values = rng.standard_normal(50)
-    with pytest.raises(ValueError, match="unknown HAC kernel"):
-        _long_run_variance(values, kernel="andrews")
-
     a = rng.standard_normal(60)
     b = rng.standard_normal(60)
+
+    result = mf.tests.dm_test(a, b, kernel="andrews")
+
+    assert result.statistic is not None
+    assert math.isfinite(result.statistic)
+    assert result.p_value is not None
+    assert 0.0 <= result.p_value <= 1.0
+
+
+def test_andrews_kernel_no_longer_crashes_through_other_public_callables() -> None:
+    """Same regression as ``test_dm_test_andrews_kernel_no_longer_crashes``,
+    extended to the other public callables that share
+    ``_long_run_variance``'s andrews branch: ``gw_test`` and
+    ``harvey_newbold_test`` (both confirmed to crash by the original
+    finding, via the same ``_diebold_mariano_stat``/direct
+    ``_long_run_variance`` call sites as ``dm_test``), plus
+    ``clark_west_test`` and ``enc_t_test`` (which route through
+    ``_mean_hac_test_statistic`` -> ``_long_run_variance`` instead -- the
+    original finding flagged these as "almost certainly affected too" but
+    did not confirm them directly; this test promotes that to confirmed).
+    """
+    rng = np.random.default_rng(0)
+    a = rng.standard_normal(60)
+    b = rng.standard_normal(60)
+
     for public_callable in (mf.tests.dm_test, mf.tests.gw_test, mf.tests.harvey_newbold_test):
-        with pytest.raises(ValueError, match="unknown HAC kernel"):
-            public_callable(a, b, kernel="andrews")
+        result = public_callable(a, b, kernel="andrews")
+        assert result.statistic is not None
+        assert math.isfinite(result.statistic)
+        assert result.p_value is not None
+        assert 0.0 <= result.p_value <= 1.0
+
+    forecast_small = rng.standard_normal(60)
+    forecast_large = rng.standard_normal(60)
+    cw_result = mf.tests.clark_west_test(a, b, forecast_small, forecast_large, kernel="andrews")
+    assert cw_result.statistic is not None
+    assert math.isfinite(cw_result.statistic)
+
+    enc_result = mf.tests.enc_t_test(a, b, kernel="andrews", normal_approximation=True)
+    assert enc_result.statistic is not None
+    assert math.isfinite(enc_result.statistic)
+    assert enc_result.p_value is not None
+    assert 0.0 <= enc_result.p_value <= 1.0

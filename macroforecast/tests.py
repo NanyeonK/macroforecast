@@ -2568,7 +2568,13 @@ def _long_run_variance(
             lag = max(1, int(np.floor(1.1447 * (alpha * n) ** (1 / 3))))
         else:
             lag = 1
-        kernel = "newey_west"
+        # Route the Andrews (1991, eq. 6.4) / Newey-West (1994) AR(1)
+        # plug-in bandwidth through the linear-taper branch below, which is
+        # spelled "bartlett" (NOT "newey_west" -- that string matches no
+        # branch and previously fell through to the ValueError at the
+        # bottom of this function, making kernel="andrews" always crash;
+        # see tests/parity/test_hac_kernels.py::test_andrews_kernel_no_longer_crashes*).
+        kernel = "bartlett"
     if lag is None:
         lag = max(1, int(np.floor(4.0 * (n / 100.0) ** (2.0 / 9.0))))
     bandwidth = max(0, int(lag))
