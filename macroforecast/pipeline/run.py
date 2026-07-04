@@ -492,23 +492,43 @@ def _run_cells(
                     elif frame is not None:
                         results[cell] = frame
         else:
-            # One shared preprocessing cache per target: arms of the same target
-            # reuse the per-origin FittedPreprocessor (spec-level preprocessing
-            # only -- arm overrides opt out by getting their own cache). Removes
-            # per-arm EM redundancy.
-            target_caches: dict[str, dict[Any, Any]] = (
-                {t.name: {} for t in spec.targets} if spec.preprocessing is not None else {}
-            )
+            # One shared per-target cache: arms of the same target reuse the per-origin
+            # FittedPreprocessor/_PreparedStage (Gap A's original sharing) AND the
+            # per-origin fitted feature builder (Gap A promotion -- see
+            # forecasting/feature_stage.py), all keyed into the SAME dict, distinctly
+            # namespaced per tier. Built unconditionally (not gated on
+            # ``spec.preprocessing is not None``) so feature-only pipelines -- no
+            # spec-level preprocessing at all -- still get cross-arm feature-fit
+            # sharing; when ``spec.preprocessing is None`` the preprocessing tier is
+            # simply never touched (``_prepare_origin_panel`` short-circuits before any
+            # cache read/write), so this is a no-op for that stage, unchanged from
+            # before.
+            #
+            # An arm opts OUT of ALL sharing by overriding ``preprocessing`` OR
+            # ``window``: a ``preprocessing`` override is a genuinely different
+            # transform (the preprocessing cache key does not encode the spec, only
+            # origin_pos, so sharing across different specs would silently serve the
+            # wrong fit). A ``window`` override (a real, tested configuration -- see
+            # ``tests/pipeline/test_per_arm_window.py``) changes the estimation/fit
+            # row bounds at a given origin_pos; the feature-fit cache key is
+            # self-verifying against that (it carries the exact fit-sample position
+            # bounds, see feature_stage.py), but the PREPROCESSING cache key is NOT
+            # (origin_pos alone), so a window-overriding arm must not share the
+            # preprocessing tier either. Gating both tiers on the same eligibility
+            # check keeps one dict, one invariant.
+            target_caches: dict[str, dict[Any, Any]] = {t.name: {} for t in spec.targets}
             for cell in cells:
                 arm = spec.arms[cell.arm_idx]
                 target = spec.targets[cell.target_idx]
                 cache = target_caches.get(target.name)
-                arm_cache = cache if arm.preprocessing is None else None
+                arm_cache = (
+                    cache if (arm.preprocessing is None and arm.window is None) else None
+                )
                 try:
                     results[cell] = _execute_cell(spec, cell, preprocessing_cache=arm_cache)
                 except Exception as exc:
-                    # Record the failure and CONTINUE the rest of the set rather
-                    # than aborting the whole pipeline on one bad cell.
+                    # Record the failure and CONTINUE the rest of the set rather than
+                    # aborting the whole pipeline on one bad cell.
                     failed.append(
                         _cell_failure(spec, cell, f"{type(exc).__name__}: {exc}")
                     )

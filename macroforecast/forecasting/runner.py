@@ -17,7 +17,7 @@ from macroforecast.data import (
     panel_info,
     validate_panel,
 )
-from macroforecast.feature_engineering import FeatureSet, FeatureSpec
+from macroforecast.feature_engineering import FeatureSet, FeatureSpec, FittedFeatureBuilder
 from macroforecast.meta import get_config
 from macroforecast.models import ModelSpec
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
@@ -81,6 +81,10 @@ from macroforecast.forecasting.preprocessing_stage import (
     _prepare_origin_panel,
     _preprocessing_cache_key,
     _preprocessor_fit_input,
+)
+from macroforecast.forecasting.feature_stage import (
+    _feature_cache_key,  # noqa: F401  (re-export)
+    _fitted_feature_builder_for_origin,
 )
 from macroforecast.forecasting.selection_stage import (
     _SELECTION_DEGRADED_KEY,  # noqa: F401  (re-export)
@@ -172,7 +176,7 @@ def run(
     | None = None,
     save_models: bool = True,
     model_store: str | Path = "trained_model",
-    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
+    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None,
     preprocessing_store: PreprocessorStore | None = None,
     checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:
@@ -510,8 +514,19 @@ def run(
                 feature_fit_panel = prepared.panel.reindex(feature_fit_labels).dropna(
                     how="all"
                 )
-                fitted_feature_cache = features.fit(
-                    feature_fit_panel, metadata=prepared_metadata
+                # Gap A: share the (often expensive PCA/MARX/SIR) feature-builder
+                # fit across arms of the same target via the SAME shared cache dict
+                # _prepare_origin_panel already uses for preprocessing -- see
+                # feature_stage.py for the content-digest + exact fit-sample-bounds
+                # key design that makes this safe regardless of why two arms' fit
+                # sample might differ (window override, retrain cadence, scope).
+                fitted_feature_cache = _fitted_feature_builder_for_origin(
+                    features,
+                    feature_fit_panel,
+                    prepared_metadata=prepared_metadata,
+                    feature_stage_policy=feature_stage_policy,
+                    item=item,
+                    preprocessing_cache=preprocessing_cache,
                 )
                 feature_updated = True
                 _mark_stage_updated(feature_state, item)
@@ -691,7 +706,7 @@ def _run_multiple_horizons(
     | None,
     save_models: bool,
     model_store: str | Path,
-    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
+    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None,
     preprocessing_store: PreprocessorStore | None = None,
     checkpoint_path: str | Path | None = None,
 ) -> ForecastResult:

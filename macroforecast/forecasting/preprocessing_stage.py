@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.data import DataBundle, spec as data_spec
-from macroforecast.feature_engineering import FeatureSpec
+from macroforecast.feature_engineering import FeatureSpec, FittedFeatureBuilder
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
 from macroforecast.preprocessing.cache import PreprocessorStore
 from macroforecast.window import StagePolicy, stage_panel
@@ -96,7 +96,7 @@ def _prepare_origin_panel(
     item: dict[str, Any],
     include_target_pos: bool = True,
     fitted_preprocessing: FittedPreprocessor | None = None,
-    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage] | None = None,
+    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None,
     cache_key: Any | None = None,
     preprocessing_store: PreprocessorStore | None = None,
     target: str | None = None,
