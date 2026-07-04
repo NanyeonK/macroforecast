@@ -1152,12 +1152,12 @@ class _FAVAR:
         *,
         n_factors: int = 2,
         n_lag: int = 2,
-        fctmethod: str = "BBE",
+        fctmethod: str = "BGM",
         slowcode: Sequence[bool] | None = None,
         factorprior: Mapping[str, Any] | None = None,
         varprior: Mapping[str, Any] | None = None,
-        nburn: int = 5000,
-        nrep: int = 15000,
+        nburn: int = 100,
+        nrep: int = 200,
         standardize: bool = True,
         random_state: int = 0,
     ) -> None:
@@ -1278,16 +1278,28 @@ def favar(
     *,
     n_factors: int = 2,
     n_lag: int = 2,
-    fctmethod: str = "BBE",
+    fctmethod: str = "BGM",
     slowcode: Sequence[bool] | None = None,
     factorprior: Mapping[str, Any] | None = None,
     varprior: Mapping[str, Any] | None = None,
-    nburn: int = 5000,
-    nrep: int = 15000,
+    nburn: int = 100,
+    nrep: int = 200,
     standardize: bool = True,
     random_state: int = 0,
 ) -> ModelFit:
-    """Fit a FAVAR::FAVAR-aligned Bayesian factor-augmented VAR."""
+    """Fit a FAVAR::FAVAR-aligned Bayesian factor-augmented VAR.
+
+    Defaults to ``fctmethod=\"BGM\"``, an iterative factor-purging
+    identification (``_favar_bgm``) that needs no ``slowcode``. Passing
+    ``fctmethod=\"BBE\"`` selects the slow/fast ``facrot()`` rotation instead,
+    which requires an explicit ``slowcode`` mask and raises otherwise.
+
+    ``nburn=100``/``nrep=200`` are cheapened defaults so the model is usable
+    out of the box (the Gibbs/Wishart posterior draw loop is expensive per
+    iteration for larger ``n_factors``/``n_lag``). The deep/paper-faithful
+    ``FAVAR::FAVAR`` defaults (``nburn=5000``, ``nrep=15000``) remain
+    reachable by passing them explicitly.
+    """
 
     frame, target = resolve_xy(X, y)
     estimator = _FAVAR(

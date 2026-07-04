@@ -488,6 +488,23 @@ _AR_SPACES: SearchSpaces = {
     "wide": {"n_lag": (1, 2, 3, 4, 6, 9, 12, 18, 24)},
 }
 
+# favar's own (n_factors, n_lag) grid -- NOT the shared _FACTOR_SPACES/_AR_SPACES
+# above. favar's Gibbs/Wishart posterior sampler cost per fit grows sharply with
+# both n_factors and n_lag (the coefficient-draw covariance is a
+# ((n_factors + 1) * n_lag)-square system rebuilt every MCMC iteration), unlike
+# the OLS-based "far"/"ar"/"var" models that also use _FACTOR_SPACES/_AR_SPACES.
+# The shared "standard" corner n_factors=8/n_lag=12 alone takes minutes per fit
+# even with a handful of draws, which makes the default "standard"-preset grid
+# search (25 combos, exhaustive) pathologically slow for favar specifically.
+# Capping favar's own ranges keeps search dimensionality at 2 (n_factors, n_lag)
+# unchanged while keeping every combo affordable; "wide" is deliberately not as
+# rich as _FACTOR_SPACES/_AR_SPACES' "wide" for the same reason.
+_FAVAR_SPACES: SearchSpaces = {
+    "small": {"n_factors": (1, 2), "n_lag": (1, 2)},
+    "standard": {"n_factors": (1, 2), "n_lag": (1, 2)},
+    "wide": {"n_factors": (1, 2, 3, 5), "n_lag": (1, 2, 4, 6)},
+}
+
 _SVM_SPACES: SearchSpaces = {
     "small": {"C": (0.1, 1.0), "epsilon": (0.01, 0.1), "gamma": ("scale",)},
     "standard": {
@@ -3131,12 +3148,12 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         default_params={
             "n_factors": 2,
             "n_lag": 2,
-            "fctmethod": "BBE",
+            "fctmethod": "BGM",
             "slowcode": None,
             "factorprior": None,
             "varprior": None,
-            "nburn": 5000,
-            "nrep": 15000,
+            "nburn": 100,
+            "nrep": 200,
             "standardize": True,
             "random_state": 0,
         },
@@ -3145,9 +3162,9 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             _p("n_lag", 2, "int", "VAR lag order on target plus factors."),
             _p(
                 "fctmethod",
-                "BBE",
+                "BGM",
                 "str",
-                "FAVAR factor identification method: BBE or BGM.",
+                "FAVAR factor identification method: BBE or BGM (default BGM; BBE requires slowcode).",
                 False,
             ),
             _p(
@@ -3173,16 +3190,18 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             ),
             _p(
                 "nburn",
-                5000,
+                100,
                 "int",
-                "Burn-in iterations for loading/BVAR posterior draws.",
+                "Burn-in iterations for loading/BVAR posterior draws "
+                "(deep/paper-faithful default is 5000; pass explicitly to restore it).",
                 False,
             ),
             _p(
                 "nrep",
-                15000,
+                200,
                 "int",
-                "Saved loading draws and post-burn BVAR draw count.",
+                "Saved loading draws and post-burn BVAR draw count "
+                "(deep/paper-faithful default is 15000; pass explicitly to restore it).",
                 False,
             ),
             _p(
@@ -3194,9 +3213,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             ),
             _p("random_state", 0, "int", "Random seed for posterior draws.", False),
         ),
-        spaces={
-            key: {**space, **_AR_SPACES[key]} for key, space in _FACTOR_SPACES.items()
-        },
+        spaces=_FAVAR_SPACES,
         backend="internal FAVAR::FAVAR-aligned Bayesian sampler",
         description="FAVAR::FAVAR-aligned Bayesian factor-augmented VAR sampler.",
     ),

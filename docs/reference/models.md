@@ -3212,12 +3212,12 @@ macroforecast.models.favar(
     *,
     n_factors=2,
     n_lag=2,
-    fctmethod="BBE",
+    fctmethod="BGM",
     slowcode=None,
     factorprior=None,
     varprior=None,
-    nburn=5000,
-    nrep=15000,
+    nburn=100,
+    nrep=200,
     standardize=True,
     random_state=0,
 )
@@ -3239,12 +3239,12 @@ posterior-mean coefficients.
 | --- | --- | --- | --- |
 | `n_factors` | `2` | yes | Number of latent factors. |
 | `n_lag` | `2` | yes | VAR lag order on the target plus factors. |
-| `fctmethod` | `"BBE"` | fixed by preset | Factor identification method: `"BBE"` or `"BGM"`. |
+| `fctmethod` | `"BGM"` | fixed by preset | Factor identification method: `"BBE"` or `"BGM"` (BBE requires `slowcode`). |
 | `slowcode` | `None` | fixed by preset | Boolean slow-variable mask required by BBE. |
 | `factorprior` | `None` | fixed by preset | Factor loading prior controls. |
 | `varprior` | `None` | fixed by preset | BVAR prior controls for the factor VAR block. |
-| `nburn` | `5000` | fixed by preset | Burn-in iterations for posterior draws. |
-| `nrep` | `15000` | fixed by preset | Saved posterior draw count. |
+| `nburn` | `100` | fixed by preset | Burn-in iterations for posterior draws (deep/paper-faithful default is `5000`; pass explicitly to restore it). |
+| `nrep` | `200` | fixed by preset | Saved posterior draw count (deep/paper-faithful default is `15000`; pass explicitly to restore it). |
 | `standardize` | `True` | fixed by preset | Use R `scale()` semantics for X and y before factor extraction. |
 | `random_state` | `0` | fixed by preset | Random seed for posterior draws. |
 

@@ -40,6 +40,27 @@ full per-version honesty-pass history embedded in repo documentation.
   models a horizon must land on a date where the target realises (the old
   window "supported" quarterly targets at h=1 only because the mislabeled
   first test row was the quarter-end origin itself). Fixes #423.
+- `models` (favar unusable with defaults): `favar`'s default `fctmethod` was
+  `"BBE"` with `slowcode=None`, but `_FAVAR.fit` hard-requires `slowcode` under
+  BBE, so every trial in the default "standard" search space failed instantly
+  with `SearchError: ... slowcode is required when fctmethod='BBE'`. Default
+  `fctmethod` is now `"BGM"` (needs no `slowcode`); the BBE+missing-slowcode
+  error is unchanged (pinned by a new regression test), and `fctmethod` is
+  still NOT part of the search space (search dimensionality unchanged, as
+  locked). Making the default trial actually run also exposed a second,
+  previously invisible problem: `favar`'s Gibbs/Wishart posterior sampler
+  (`nburn`/`nrep` = 5000/15000) combined with the *shared* `_FACTOR_SPACES`/
+  `_AR_SPACES` "standard" grid (n_factors up to 8, n_lag up to 12 -- cheap for
+  the OLS-based `far`/`ar`/`var` models that also use it, but not for a
+  Bayesian sampler that rebuilds an `O((n_factors + 1) * n_lag)`-square
+  posterior every MCMC draw) made even a single default-preset grid search
+  take many minutes. `favar` now has its own dedicated search space
+  (`_FAVAR_SPACES`, NOT shared with `far`/`ar`/`var`) with the same two tuned
+  dimensions (`n_factors`, `n_lag`) but a much tighter "standard"/"wide" range,
+  and cheapened `nburn`/`nrep` defaults: `5000`->`100` / `15000`->`200`. Old
+  (paper-faithful) values remain reachable by passing them explicitly. Verified
+  with the empirical policy-matrix scan: favar now reports `OK` on all 4
+  policies (previously all 25/25 default-preset trials failed).
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
   (`direct=False`) instead of the DIRECT s-step projection, so each path step
