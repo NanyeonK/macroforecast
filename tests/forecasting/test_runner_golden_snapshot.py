@@ -49,6 +49,26 @@ _MATRIX = [
 
 _KEY_COLS = ["forecast_policy", "model", "horizon", "origin", "date", "prediction", "actual"]
 
+# Models in _MATRIX whose backing package is an OPTIONAL extra (not part of the
+# core install). CI core installs only ".[ci]" (no such extras), so these cells
+# cannot run there: the runner yields an empty frame for the arm and the row
+# count silently shrinks below the committed golden (18 origins x 1 horizon per
+# cell). Both the snapshot run and the golden comparison exclude the models
+# whose import is unavailable in the CURRENT environment; regeneration
+# (MF_UPDATE_GOLDEN=1) refuses to write a partial fixture so the committed
+# golden always carries the full matrix.
+_OPTIONAL_MODEL_IMPORTS = {"garch11": "arch"}
+
+
+def _missing_optional_models() -> "set[str]":
+    import importlib.util
+
+    return {
+        model
+        for model, package in _OPTIONAL_MODEL_IMPORTS.items()
+        if importlib.util.find_spec(package) is None
+    }
+
 
 def _dataset():
     """A fixed, mildly factor-structured monthly panel (deterministic)."""
@@ -89,7 +109,10 @@ def _snapshot():
     from macroforecast.models.specs import MODEL_SPECS
 
     frames = []
+    missing = _missing_optional_models()
     for policy, model, params, horizons in _MATRIX:
+        if model in missing:
+            continue
         input_kind = MODEL_SPECS[model].input_kind
         if input_kind == "panel":
             # panel-input models consume the panel directly (a separate strategy).
@@ -120,8 +143,14 @@ def _snapshot():
 
 
 def test_runner_matrix_matches_golden_snapshot():
+    missing = _missing_optional_models()
     current = _snapshot()
     if os.environ.get("MF_UPDATE_GOLDEN") == "1":
+        assert not missing, (
+            f"refusing to regenerate a PARTIAL golden fixture: optional model "
+            f"package(s) unavailable for {sorted(missing)}; install the missing "
+            "extras so the committed fixture carries the full matrix"
+        )
         _FIXTURE.parent.mkdir(parents=True, exist_ok=True)
         current.to_parquet(_FIXTURE)
         return  # regeneration mode: no assertion
@@ -130,9 +159,12 @@ def test_runner_matrix_matches_golden_snapshot():
         "MF_UPDATE_GOLDEN=1 pytest tests/forecasting/test_runner_golden_snapshot.py"
     )
     golden = pd.read_parquet(_FIXTURE)
+    if missing:
+        golden = golden[~golden["model"].isin(missing)].reset_index(drop=True)
     assert list(current.columns) == list(golden.columns)
     assert len(current) == len(golden), (
         f"row count changed: {len(current)} vs golden {len(golden)}"
+        + (f" (models excluded as unavailable here: {sorted(missing)})" if missing else "")
     )
     # exact on labels/dates, tight tolerance on the float forecasts
     pd.testing.assert_frame_equal(
