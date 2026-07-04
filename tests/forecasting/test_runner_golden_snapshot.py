@@ -37,6 +37,14 @@ _MATRIX = [
     ("path_average", "far", {"n_factors": 3, "n_lag": 2}, [2, 3]),
     ("recursive", "ols", {}, [2]),
     ("recursive", "ridge", {}, [2]),
+    # other input_kinds -- deterministic representatives so the refactor cannot silently
+    # break the target / volatility routing. (Panel routing is guarded separately in
+    # test_panel_routing_intact because the var/panel path is not bit-reproducible, see
+    # the note there -- so its forecasts cannot be pinned to exact values.)
+    ("direct", "naive", {}, [2, 3]),
+    ("path_average", "naive", {}, [2, 3]),
+    ("direct", "arima", {}, [2]),
+    ("direct", "garch11", {}, [2]),
 ]
 
 _KEY_COLS = ["forecast_policy", "model", "horizon", "origin", "date", "prediction", "actual"]
@@ -78,10 +86,18 @@ def _snapshot():
         target="Y", predictors=[], lags=None,
         target_lags=range(0, 4), target_transform="level",
     )
+    from macroforecast.models.specs import MODEL_SPECS
+
     frames = []
     for policy, model, params, horizons in _MATRIX:
-        feats = feats_ar if policy == "recursive" else feats_exog
-        target_transform = "level" if policy == "recursive" else "value"
+        input_kind = MODEL_SPECS[model].input_kind
+        if input_kind == "panel":
+            # panel-input models consume the panel directly (a separate strategy).
+            feats, target_transform = None, "level"
+        elif policy == "recursive":
+            feats, target_transform = feats_ar, "level"
+        else:
+            feats, target_transform = feats_exog, "value"
         spec = pipeline_spec(
             data=bundle,
             targets=[TargetSpec(name="Y", transform=target_transform, policy=policy)],
@@ -131,3 +147,32 @@ def test_runner_matrix_matches_golden_snapshot():
             rtol=0.0, atol=1e-10, equal_nan=True,
             err_msg=f"{col} drifted from the golden snapshot",
         )
+
+
+def test_panel_routing_intact():
+    """Guard that the panel-input strategy still routes and produces forecasts.
+
+    The var/panel path is NOT bit-reproducible run-to-run (observed ~2.8e-2 drift), so
+    its forecasts cannot be pinned to exact values like the golden snapshot. This is a
+    separate reproducibility issue tracked apart from the refactor. Here we only assert
+    the routing survives -- var under the direct and path_average policies yields the
+    expected non-empty forecast rows -- so the policy-strategy refactor cannot silently
+    drop the panel path.
+    """
+    bundle = _dataset()
+    win = mf.window.from_cutoffs(
+        test_start="2008-01-01", test_end="2009-06-01", mode="expanding",
+        val_method="last_block", retrain_every=1,
+    )
+    for policy in ("direct", "path_average"):
+        spec = pipeline_spec(
+            data=bundle, targets=[TargetSpec(name="Y", transform="level", policy=policy)],
+            horizons=[2], window=win,
+            arms=[Arm(name="M", model="var", features=None, is_benchmark=True)],
+            evaluation=EvalSpec(benchmark="M", metrics=("rmse",)), n_jobs=1,
+        )
+        f = run_pipeline(spec).forecasts
+        # var/panel forecasts vary run-to-run and its per-horizon availability is
+        # unstable, so we only assert the routing survives: non-empty with predictions.
+        assert not f.empty, f"var/{policy} produced no forecasts -- panel routing broke"
+        assert f["prediction"].notna().any(), f"var/{policy} produced no predictions"
