@@ -102,6 +102,28 @@ class _ModelRun:
 
 
 @dataclass(frozen=True)
+class _OriginRunConfig:
+    """The per-origin run configuration shared by every feature-matrix forecast
+    policy (direct / direct_average / path_average). Bundles the ten arguments that
+    were previously threaded as keyword parameters through each ``_fit_predict_*``
+    function and both call sites. ``param_cache`` and ``selection_cache`` are shared
+    mutable dicts (mutated in place across origins); the dataclass only freezes the
+    references, not their contents.
+    """
+
+    model_runs: list[_ModelRun]
+    selection: "SearchSpec | Mapping[str, SearchSpec | None] | None"
+    selection_policy: StagePolicy
+    selection_metric: "str | Callable[..., float]"
+    maximize_selection: bool
+    param_cache: dict[str, dict[str, Any]]
+    selection_cache: dict[str, Any]
+    selection_random_state: int | None
+    save_models: bool
+    model_store: "str | Path"
+
+
+@dataclass(frozen=True)
 class _PreparedStage:
     panel: pd.DataFrame
     fitted_preprocessing: FittedPreprocessor | None
@@ -585,16 +607,18 @@ def run(
         }
         origin_records = _fit_predict_origin(
             origin_item,
-            model_runs=model_runs,
-            selection=selection,
-            selection_policy=selection_stage_policy,
-            selection_metric=selection_metric,
-            maximize_selection=maximize_selection,
-            param_cache=model_param_cache,
-            selection_cache=selection_cache,
-            selection_random_state=config["random_seed"],
-            save_models=save_models,
-            model_store=model_store,
+            _OriginRunConfig(
+                model_runs=model_runs,
+                selection=selection,
+                selection_policy=selection_stage_policy,
+                selection_metric=selection_metric,
+                maximize_selection=maximize_selection,
+                param_cache=model_param_cache,
+                selection_cache=selection_cache,
+                selection_random_state=config["random_seed"],
+                save_models=save_models,
+                model_store=model_store,
+            ),
         )
         if already_done:
             # Origin was recomputed only to keep stage caches consistent (state
@@ -1080,16 +1104,18 @@ def _run_feature_set(
         records.extend(
             _fit_predict_origin(
                 item,
-                model_runs=model_runs,
-                selection=selection,
-                selection_policy=selection_policy,
-                selection_metric=selection_metric,
-                maximize_selection=maximize_selection,
-                param_cache=model_param_cache,
-                selection_cache=selection_cache,
-                selection_random_state=config["random_seed"],
-                save_models=save_models,
-                model_store=model_store,
+                _OriginRunConfig(
+                    model_runs=model_runs,
+                    selection=selection,
+                    selection_policy=selection_policy,
+                    selection_metric=selection_metric,
+                    maximize_selection=maximize_selection,
+                    param_cache=model_param_cache,
+                    selection_cache=selection_cache,
+                    selection_random_state=config["random_seed"],
+                    save_models=save_models,
+                    model_store=model_store,
+                ),
             )
         )
     _assert_selection_was_possible(
@@ -1388,46 +1414,25 @@ def _fit_predict_panel_origin(
 
 def _fit_predict_origin(
     item: dict[str, Any],
-    *,
-    model_runs: list[_ModelRun],
-    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
-    selection_policy: StagePolicy,
-    selection_metric: str | Callable[..., float],
-    maximize_selection: bool,
-    param_cache: dict[str, dict[str, Any]],
-    selection_cache: dict[str, Any],
-    selection_random_state: int | None,
-    save_models: bool,
-    model_store: str | Path,
+    cfg: _OriginRunConfig,
 ) -> list[dict[str, Any]]:
     if item.get("forecast_policy") == "path_average":
-        return _fit_predict_path_average_origin(
-            item,
-            model_runs=model_runs,
-            selection=selection,
-            selection_policy=selection_policy,
-            selection_metric=selection_metric,
-            maximize_selection=maximize_selection,
-            param_cache=param_cache,
-            selection_cache=selection_cache,
-            selection_random_state=selection_random_state,
-            save_models=save_models,
-            model_store=model_store,
-        )
+        return _fit_predict_path_average_origin(item, cfg)
     if item.get("forecast_policy") == "recursive":
-        return _fit_predict_recursive_origin(
-            item,
-            model_runs=model_runs,
-            selection=selection,
-            selection_policy=selection_policy,
-            selection_metric=selection_metric,
-            maximize_selection=maximize_selection,
-            param_cache=param_cache,
-            selection_cache=selection_cache,
-            selection_random_state=selection_random_state,
-            save_models=save_models,
-            model_store=model_store,
-        )
+        return _fit_predict_recursive_origin(item, cfg)
+
+    # Unpack the shared run configuration into the local names the body below uses,
+    # so the direct/direct_average body stays byte-identical to the prior version.
+    model_runs = cfg.model_runs
+    selection = cfg.selection
+    selection_policy = cfg.selection_policy
+    selection_metric = cfg.selection_metric
+    maximize_selection = cfg.maximize_selection
+    param_cache = cfg.param_cache
+    selection_cache = cfg.selection_cache
+    selection_random_state = cfg.selection_random_state
+    save_models = cfg.save_models
+    model_store = cfg.model_store
 
     X_fit = item["X_fit"]
     y_fit = item["y_fit"]
@@ -1629,18 +1634,19 @@ def _fit_predict_origin(
 
 def _fit_predict_recursive_origin(
     item: dict[str, Any],
-    *,
-    model_runs: list[_ModelRun],
-    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
-    selection_policy: StagePolicy,
-    selection_metric: str | Callable[..., float],
-    maximize_selection: bool,
-    param_cache: dict[str, dict[str, Any]],
-    selection_cache: dict[str, Any],
-    selection_random_state: int | None,
-    save_models: bool,
-    model_store: str | Path,
+    cfg: _OriginRunConfig,
 ) -> list[dict[str, Any]]:
+    model_runs = cfg.model_runs
+    selection = cfg.selection
+    selection_policy = cfg.selection_policy
+    selection_metric = cfg.selection_metric
+    maximize_selection = cfg.maximize_selection
+    param_cache = cfg.param_cache
+    selection_cache = cfg.selection_cache
+    selection_random_state = cfg.selection_random_state
+    save_models = cfg.save_models
+    model_store = cfg.model_store
+
     X_fit = item["X_fit"]
     y_fit = item["y_fit"]
     X_selection = item.get("X_selection", X_fit)
@@ -1815,18 +1821,19 @@ def _fit_predict_recursive_origin(
 
 def _fit_predict_path_average_origin(
     item: dict[str, Any],
-    *,
-    model_runs: list[_ModelRun],
-    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
-    selection_policy: StagePolicy,
-    selection_metric: str | Callable[..., float],
-    maximize_selection: bool,
-    param_cache: dict[str, dict[str, Any]],
-    selection_cache: dict[str, Any],
-    selection_random_state: int | None,
-    save_models: bool,
-    model_store: str | Path,
+    cfg: _OriginRunConfig,
 ) -> list[dict[str, Any]]:
+    model_runs = cfg.model_runs
+    selection = cfg.selection
+    selection_policy = cfg.selection_policy
+    selection_metric = cfg.selection_metric
+    maximize_selection = cfg.maximize_selection
+    param_cache = cfg.param_cache
+    selection_cache = cfg.selection_cache
+    selection_random_state = cfg.selection_random_state
+    save_models = cfg.save_models
+    model_store = cfg.model_store
+
     X_fit = pd.DataFrame(item["X_fit"])
     X_selection_base = pd.DataFrame(item.get("X_selection", X_fit))
     X_test = pd.DataFrame(item["X_test"])
