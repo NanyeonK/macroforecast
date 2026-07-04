@@ -140,20 +140,33 @@ chain.
 
 | Comparison | Computed once and REUSED | Recomputed per variant |
 | --- | --- | --- |
-| **Model** (arms differ in `model` only) | data load, window/origin schedule, and the per-origin preprocessing `fit` **and** `transform` (EM/factor imputation) | only the model fit/predict |
-| **Feature** (arms differ in `features`, same `preprocessing`) | data, window/origins, per-origin preprocessing | feature build + model |
+| **Model** (arms differ in `model` only) | data load, window/origin schedule, the per-origin preprocessing `fit` **and** `transform` (EM/factor imputation), **and** the per-origin feature-builder `fit` (PCA/MARX/SIR/etc. numerical state) | the feature `transform` (building X/y from the fitted builder) and the model fit/predict |
+| **Feature** (arms differ in `features`, same `preprocessing`) | data, window/origins, per-origin preprocessing | feature build (fit + transform) + model |
 | **Preprocessing** (arms differ in `preprocessing`) | data, window/origin schedule | the preprocessing itself (it is the thing being compared) + everything downstream |
 
-The load-bearing case is **model comparison**: the dominant per-origin cost (the
-`FittedPreprocessor` fit and its EM/factor transform of the panel) is computed once
-per origin and reused across every arm AND every horizon of the same target. So
-comparing `N` models over `M` horizons runs the preprocessing once per origin, not
-`N x M` times. This reuse is real only when the arms **share one spec-level
-preprocessing** -- i.e. `preprocessing=` is set on `pipeline_spec` (or `model_arms`)
-and each `Arm.preprocessing is None`. An arm that carries its OWN `preprocessing`
-opts out and recomputes it (correct for a preprocessing comparison, where each
-variant must differ). The reuse is keyed on `(PreprocessSpec, target, origin_pos)`
-and is horizon-independent, so it never leaks a different origin's or horizon's fit.
+The load-bearing case is **model comparison**: the dominant per-origin costs -- the
+`FittedPreprocessor` fit and its EM/factor transform of the panel, AND the
+feature-builder fit -- are each computed once per origin and reused across every arm
+AND every horizon of the same target. So comparing `N` models over `M` horizons runs
+preprocessing and feature-fitting once per origin, not `N x M` times. This reuse is
+real only when the arms **share one spec-level preprocessing** -- i.e. `preprocessing=`
+is set on `pipeline_spec` (or `model_arms`) and each `Arm.preprocessing is None` --
+AND do not override `Arm.window` (a window override changes which rows fall in the
+per-origin fit sample, so it opts out of both the preprocessing and feature-fit
+reuse). An arm that carries its OWN `preprocessing` or `window` opts out and
+recomputes both stages (correct for a preprocessing comparison, or a genuinely
+independent per-arm window, where each variant must differ). The preprocessing reuse
+is keyed on `(PreprocessSpec, target, origin_pos)` and is horizon-independent; the
+feature-fit reuse is keyed on a content digest of the `FeatureSpec` (which already
+captures horizon/forecast-policy-dependence -- e.g. a supervised
+`sliced_inverse_regression` feature step) plus the EXACT fit-sample row-position
+bounds for that origin, so it never leaks a different spec's, origin's, or arm's fit
+even when the position-bounds-based key alone is asked to arbitrate (see
+`macroforecast/forecasting/feature_stage.py`). The feature *transform* step (applying
+the shared fit to build X/y) is NOT shared -- it is cheap relative to the fit for the
+supported feature methods, and doing so safely needs additional per-arm bookkeeping
+that duplicates most of the fit-sharing complexity for comparatively little gain, so
+it is left recomputed per arm.
 
 For **preprocessing comparison** the preprocessing necessarily differs per arm and is
 recomputed -- that is the comparison. Everything upstream (the same `data` bundle and
@@ -162,9 +175,14 @@ identical `(spec, target, origin)` sub-fit can still be deduplicated across proc
 and runs via the on-disk `preprocessing_cache_dir` (`PreprocessorStore`).
 
 These invariants are pinned by `tests/pipeline/test_preprocessing_share.py`
-(cross-arm and on-disk dedup, serial==parallel) and
+(cross-arm and on-disk dedup, serial==parallel),
 `tests/pipeline/test_crosshorizon_transform_dedup.py` (the per-origin fit and heavy
-transform each run exactly once per origin regardless of arm and horizon count).
+transform each run exactly once per origin regardless of arm and horizon count), and
+`tests/pipeline/test_feature_cache_sharing.py` (the per-origin feature-builder fit
+runs exactly once per origin across arms, including with no spec-level preprocessing
+at all; a per-arm `window`/`preprocessing` override correctly opts out and still
+produces byte-identical forecasts; `never`/interval feature-update cadences keep
+their exact single-fit semantics under sharing).
 
 ## Parallel execution (`n_jobs`)
 

@@ -5,6 +5,35 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting`/`pipeline` (performance, Gap A): the per-origin fitted feature
+  builder (`FeatureSpec.fit()` -- the PCA/MARX/SIR-style numerical state) is now
+  shared across arms of the same target in the serial pipeline path, exactly like
+  the per-origin `FittedPreprocessor` already was. Previously the fitted builder
+  lived in a `run()`-local variable, so two arms differing only in `model` -- the
+  most common pipeline comparison -- refit the feature transform at every origin;
+  `docs/reference/pipeline.md` over-claimed that model comparison recomputes "only
+  the model fit/predict" (now corrected). New
+  `macroforecast/forecasting/feature_stage.py` holds the sharing helper: the cache
+  key is `("features", <sha256 of FeatureSpec.to_dict() + feature StagePolicy
+  .to_dict()>, (scope, fit_start_pos, fit_end_pos))` -- a content digest (never
+  object identity) plus the EXACT per-origin fit-sample row bounds, so an arm with
+  its own `window` (different estimation rows at the same origin) or a `custom`
+  feature scope can never be served another arm's fit; unresolvable bounds mean
+  "do not share", never a wildcard. Horizon/forecast-policy dependence is carried
+  by the digest itself (`_feature_spec_for_policy` bakes the resolved horizon,
+  `target_mode`, and `target_transform` into the spec). Sharing rides the existing
+  per-target `preprocessing_cache` dict (value type widened to `FittedPreprocessor
+  | _PreparedStage | FittedFeatureBuilder`), which `pipeline/run.py` now builds
+  unconditionally in the serial backend (previously only when spec-level
+  `preprocessing` was set) so feature-only pipelines share too; an arm opts out of
+  ALL sharing by overriding `preprocessing` OR `window`. `never`/interval feature
+  update cadences keep their exact semantics (the cache only changes HOW a due
+  refit is computed, not WHEN). The parallel backend (`preprocessing_cache=None`)
+  and direct `run()` calls without a cache dict are byte-for-byte unchanged.
+  Forecasts are pinned byte-identical to the unshared path by
+  `tests/pipeline/test_feature_cache_sharing.py` (fit-counter: once per origin
+  across arms; divergent-window no-wrong-share; `update="never"` single total fit)
+  and the existing golden snapshot / serial==parallel / oracle gates.
 - `forecasting`/`window` (CRITICAL correctness fix): panel-input models (`var`,
   `bvar_*`, `dfm_mixed_mariano_murasawa`, `midas_almon`) mislabeled the forecast
   horizon -- a `horizons=[2]` request emitted a multi-step path but tagged EVERY
