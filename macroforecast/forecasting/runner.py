@@ -1148,7 +1148,7 @@ def _run_panel_models(
     """Run models that fit on the canonical panel rather than engineered X/y."""
 
     _validate_panel_target(panel, target)
-    _validate_runner_window(window_spec, panel.index)
+    _validate_runner_window(window_spec, panel.index, exclude_origin=True)
     metadata = dict(panel.attrs.get("macroforecast_metadata", {}))
     records: list[dict[str, Any]] = []
     stage_records: list[dict[str, Any]] = []
@@ -1176,7 +1176,11 @@ def _run_panel_models(
 
     preprocessing_state = _StageUpdateState()
     fitted_preprocessing_cache: FittedPreprocessor | None = None
-    for origin_count, item in enumerate(window_spec.iter_origins(panel.index)):
+    for origin_count, item in enumerate(
+        # exclude_origin=True: the panel test slice must not include the
+        # origin date itself -- see WindowSpec.origins() and issue #423.
+        window_spec.iter_origins(panel.index, exclude_origin=True)
+    ):
         preprocessing_updated = False
         if full_stage is None:
             preprocessing_updated = _stage_update_due(
@@ -1329,13 +1333,23 @@ def _fit_predict_panel_origin(
         else:
             pred = _prediction_series(fit.predict(test_panel), index=test_panel.index)
         y_test = test_panel[target] if target in test_panel.columns else pd.Series(dtype=float)
+        requested_horizon = int(row.get("horizon", 1))
         for date, value in pred.items():
             step_horizon = _panel_prediction_horizon(
                 date,
                 origin=row.get("origin"),
                 base_index=test_panel.index,
-                default=int(row.get("horizon", 1)),
+                default=requested_horizon,
             )
+            if step_horizon != requested_horizon:
+                # test_panel spans origin+1 .. origin+horizon so panel models
+                # that predict a full multi-step path can still be scored
+                # internally, but only the row at the REQUESTED horizon is a
+                # genuine forecast the caller asked for. Emitting the other
+                # path steps here would create duplicate (origin, horizon)
+                # keys once a multi-horizon request runs this same origin at
+                # another horizon. See #423.
+                continue
             actual: Any = (
                 y_test.reindex([date]).iloc[0] if date in y_test.index else None
             )
@@ -2889,8 +2903,10 @@ def _validate_panel_selection(
 def _validate_runner_window(
     window_spec: WindowSpec,
     index: int | Sequence[Any] | pd.Index,
+    *,
+    exclude_origin: bool = False,
 ) -> None:
-    report = window_spec.validate(index)
+    report = window_spec.validate(index, exclude_origin=exclude_origin)
     if bool(report.get("ok")):
         return
     errors = [str(error) for error in report.get("errors", [])]
@@ -3344,15 +3360,25 @@ def _panel_prediction_horizon(
     base_index: pd.Index,
     default: int,
 ) -> int:
+    """Positional distance from the origin to a panel prediction date.
+
+    ``base_index`` is the panel test window, which (as of #423) always
+    excludes the origin itself -- ``WindowSpec.origins(exclude_origin=True)``
+    starts the test slice at ``origin_pos + 1``. The horizon is therefore the
+    plain positional difference, with no floor: an earlier ``max(1, ...)``
+    floor papered over the window bug by forcing the origin's own row (which
+    the buggy window used to include) to read as horizon 1 -- exactly how
+    every row of a multi-step path ended up mislabeled horizon=1. With the
+    window fix, distances are already >= 1 in normal operation; the floor is
+    removed so a caller that passes an origin still inside ``base_index``
+    (e.g. a unit test) gets back the true distance (0 for the origin's own
+    row) instead of a silently-clamped value.
+    """
     origin_index = base_index.insert(0, origin) if origin not in base_index else base_index
     positions = origin_index.get_indexer(pd.Index([origin, date]))
     if (positions < 0).any():
         return int(default)
-    # Horizon is the number of steps from the origin to the target date, i.e.
-    # positions[1] - positions[0]. The previous "+ 1" overstated every panel
-    # prediction's horizon by one, so horizon-keyed evaluation selected the
-    # wrong rows.
-    return max(1, int(positions[1] - positions[0]))
+    return int(positions[1] - positions[0])
 
 
 def _safe_path_part(value: Any) -> str:

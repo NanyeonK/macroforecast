@@ -1363,7 +1363,11 @@ def test_forecasting_runner_applies_panel_input_preprocessing_policy() -> None:
         save_models=False,
     )
     table = result.to_frame()
-    first_item = next(window.iter_origins(panel.index))
+    # The panel runner plans its origins with exclude_origin=True (#423): the
+    # origin is the last in-sample date (fit runs through it) and the test
+    # slice starts one position later. Derive the expected slices from the
+    # same plan the runner executes.
+    first_item = next(window.iter_origins(panel.index, exclude_origin=True))
     first_fit_raw = panel.iloc[first_item["fit_idx"]]
     first_test_raw = panel.iloc[first_item["test_idx"]]
     expected = (
@@ -1422,6 +1426,13 @@ def test_forecasting_runner_supports_composite_dfm_midas_panel_model() -> None:
         "dfm_unrestricted_midas",
         window=window,
         target="q_target",
+        # The corrected panel window (#423) no longer emits the origin's own
+        # date as a forecast row. From a quarter-end origin, a 1-month-ahead
+        # forecast of the QUARTERLY target would land mid-quarter where the
+        # target never realises (the old window "passed" at h=1 only because
+        # the mislabeled first test row WAS the quarter-end origin itself).
+        # Target the next quarterly realisation: origin + 3 months.
+        horizons=[3],
         params={
             "dfm_unrestricted_midas": {
                 "target": "q_target",

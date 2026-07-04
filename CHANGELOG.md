@@ -5,6 +5,41 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting`/`window` (CRITICAL correctness fix): panel-input models (`var`,
+  `bvar_*`, `dfm_mixed_mariano_murasawa`, `midas_almon`) mislabeled the forecast
+  horizon -- a `horizons=[2]` request emitted a multi-step path but tagged EVERY
+  row `horizon=1`, and the requested horizon was never produced (`(horizon,
+  origin)` was not a unique key). Root cause was two compounding bugs: (1)
+  `WindowSpec.origins()` built the panel test slice as `[origin_pos, origin_pos +
+  horizon - 1]`, so the origin's own date doubled as the first test row instead
+  of being excluded from the test window; (2) `_panel_prediction_horizon` floored
+  the computed distance to `max(1, ...)` to compensate, so the origin's own row
+  (true distance 0) and the genuinely-1-step-away row both read horizon=1. Fix:
+  `WindowSpec.origins`/`plan`/`iter_origins`/`validate` take a new
+  `exclude_origin` keyword (default `False`, preserving byte-identical behavior
+  for every existing caller); the panel runner (`_run_panel_models`) opts in.
+  Under `exclude_origin=True` the origin is the LAST IN-SAMPLE date: the
+  estimation window runs through the origin (`origin_pos - embargo`, previously
+  `origin_pos - embargo - 1`) and the test slice is `[origin_pos + 1, origin_pos
+  + horizon]`. Fitting through the origin is what makes the labels TRUE: panel
+  models forecast positionally from the end of their fit data, so forecast step
+  s now lands exactly on `origin + s` (pinned by a `_VAR` value oracle in the
+  regression test, `abs=1e-12`). `_panel_prediction_horizon` no longer floors
+  the distance, and `_fit_predict_panel_origin` emits ONLY the row matching the
+  requested horizon (matching the supervised direct-policy contract of one row
+  per `(origin, horizon)`); intermediate path steps are dropped so a
+  multi-horizon request can no longer create duplicate `(horizon, origin)` keys.
+  Supervised/target/volatility window plans are untouched (`exclude_origin`
+  defaults off and only the panel call site sets it -- their `test_idx[0] ==
+  origin_pos` "as-of" feature-row contract is unaffected). Behavior changes:
+  panel forecast VALUES shift because the information set now includes the
+  origin's own observation (each emitted value is a true h-step-ahead forecast
+  conditioned on data through the origin); origins near the sample end now
+  require data through `origin + h`, so panel origin coverage at longer horizons
+  shifts to align with the supervised path; and for mixed-frequency panel
+  models a horizon must land on a date where the target realises (the old
+  window "supported" quarterly targets at h=1 only because the mislabeled
+  first test row was the quarter-end origin itself). Fixes #423.
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
   (`direct=False`) instead of the DIRECT s-step projection, so each path step
