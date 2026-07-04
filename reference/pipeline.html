@@ -728,12 +728,12 @@ chain.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><strong>Model</strong> (arms differ in <code class="docutils literal notranslate"><span class="pre">model</span></code> only)</p></td>
-<td><p>data load, window/origin schedule, and the per-origin preprocessing <code class="docutils literal notranslate"><span class="pre">fit</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">transform</span></code> (EM/factor imputation)</p></td>
-<td><p>only the model fit/predict</p></td>
+<td><p>data load, window/origin schedule, the per-origin preprocessing <code class="docutils literal notranslate"><span class="pre">fit</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">transform</span></code> (EM/factor imputation), <strong>and</strong> the per-origin feature-builder <code class="docutils literal notranslate"><span class="pre">fit</span></code> (PCA/MARX/SIR/etc. numerical state)</p></td>
+<td><p>the feature <code class="docutils literal notranslate"><span class="pre">transform</span></code> (building X/y from the fitted builder) and the model fit/predict</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>Feature</strong> (arms differ in <code class="docutils literal notranslate"><span class="pre">features</span></code>, same <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>)</p></td>
 <td><p>data, window/origins, per-origin preprocessing</p></td>
-<td><p>feature build + model</p></td>
+<td><p>feature build (fit + transform) + model</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>Preprocessing</strong> (arms differ in <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>)</p></td>
 <td><p>data, window/origin schedule</p></td>
@@ -742,25 +742,43 @@ chain.</p>
 </tbody>
 </table>
 </div>
-<p>The load-bearing case is <strong>model comparison</strong>: the dominant per-origin cost (the
-<code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code> fit and its EM/factor transform of the panel) is computed once
-per origin and reused across every arm AND every horizon of the same target. So
-comparing <code class="docutils literal notranslate"><span class="pre">N</span></code> models over <code class="docutils literal notranslate"><span class="pre">M</span></code> horizons runs the preprocessing once per origin, not
-<code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">x</span> <span class="pre">M</span></code> times. This reuse is real only when the arms <strong>share one spec-level
-preprocessing</strong> – i.e. <code class="docutils literal notranslate"><span class="pre">preprocessing=</span></code> is set on <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code> (or <code class="docutils literal notranslate"><span class="pre">model_arms</span></code>)
-and each <code class="docutils literal notranslate"><span class="pre">Arm.preprocessing</span> <span class="pre">is</span> <span class="pre">None</span></code>. An arm that carries its OWN <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>
-opts out and recomputes it (correct for a preprocessing comparison, where each
-variant must differ). The reuse is keyed on <code class="docutils literal notranslate"><span class="pre">(PreprocessSpec,</span> <span class="pre">target,</span> <span class="pre">origin_pos)</span></code>
-and is horizon-independent, so it never leaks a different origin’s or horizon’s fit.</p>
+<p>The load-bearing case is <strong>model comparison</strong>: the dominant per-origin costs – the
+<code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code> fit and its EM/factor transform of the panel, AND the
+feature-builder fit – are each computed once per origin and reused across every arm
+AND every horizon of the same target. So comparing <code class="docutils literal notranslate"><span class="pre">N</span></code> models over <code class="docutils literal notranslate"><span class="pre">M</span></code> horizons runs
+preprocessing and feature-fitting once per origin, not <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">x</span> <span class="pre">M</span></code> times. This reuse is
+real only when the arms <strong>share one spec-level preprocessing</strong> – i.e. <code class="docutils literal notranslate"><span class="pre">preprocessing=</span></code>
+is set on <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code> (or <code class="docutils literal notranslate"><span class="pre">model_arms</span></code>) and each <code class="docutils literal notranslate"><span class="pre">Arm.preprocessing</span> <span class="pre">is</span> <span class="pre">None</span></code> –
+AND do not override <code class="docutils literal notranslate"><span class="pre">Arm.window</span></code> (a window override changes which rows fall in the
+per-origin fit sample, so it opts out of both the preprocessing and feature-fit
+reuse). An arm that carries its OWN <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code> or <code class="docutils literal notranslate"><span class="pre">window</span></code> opts out and
+recomputes both stages (correct for a preprocessing comparison, or a genuinely
+independent per-arm window, where each variant must differ). The preprocessing reuse
+is keyed on <code class="docutils literal notranslate"><span class="pre">(PreprocessSpec,</span> <span class="pre">target,</span> <span class="pre">origin_pos)</span></code> and is horizon-independent; the
+feature-fit reuse is keyed on a content digest of the <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> (which already
+captures horizon/forecast-policy-dependence – e.g. a supervised
+<code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression</span></code> feature step) plus the EXACT fit-sample row-position
+bounds for that origin, so it never leaks a different spec’s, origin’s, or arm’s fit
+even when the position-bounds-based key alone is asked to arbitrate (see
+<code class="docutils literal notranslate"><span class="pre">macroforecast/forecasting/feature_stage.py</span></code>). The feature <em>transform</em> step (applying
+the shared fit to build X/y) is NOT shared – it is cheap relative to the fit for the
+supported feature methods, and doing so safely needs additional per-arm bookkeeping
+that duplicates most of the fit-sharing complexity for comparatively little gain, so
+it is left recomputed per arm.</p>
 <p>For <strong>preprocessing comparison</strong> the preprocessing necessarily differs per arm and is
 recomputed – that is the comparison. Everything upstream (the same <code class="docutils literal notranslate"><span class="pre">data</span></code> bundle and
 <code class="docutils literal notranslate"><span class="pre">window</span></code>/origin schedule) is shared trivially, and two variants that share an
 identical <code class="docutils literal notranslate"><span class="pre">(spec,</span> <span class="pre">target,</span> <span class="pre">origin)</span></code> sub-fit can still be deduplicated across processes
 and runs via the on-disk <code class="docutils literal notranslate"><span class="pre">preprocessing_cache_dir</span></code> (<code class="docutils literal notranslate"><span class="pre">PreprocessorStore</span></code>).</p>
 <p>These invariants are pinned by <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_preprocessing_share.py</span></code>
-(cross-arm and on-disk dedup, serial==parallel) and
+(cross-arm and on-disk dedup, serial==parallel),
 <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_crosshorizon_transform_dedup.py</span></code> (the per-origin fit and heavy
-transform each run exactly once per origin regardless of arm and horizon count).</p>
+transform each run exactly once per origin regardless of arm and horizon count), and
+<code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_feature_cache_sharing.py</span></code> (the per-origin feature-builder fit
+runs exactly once per origin across arms, including with no spec-level preprocessing
+at all; a per-arm <code class="docutils literal notranslate"><span class="pre">window</span></code>/<code class="docutils literal notranslate"><span class="pre">preprocessing</span></code> override correctly opts out and still
+produces byte-identical forecasts; <code class="docutils literal notranslate"><span class="pre">never</span></code>/interval feature-update cadences keep
+their exact single-fit semantics under sharing).</p>
 </section>
 </section>
 <section id="parallel-execution-n-jobs">
