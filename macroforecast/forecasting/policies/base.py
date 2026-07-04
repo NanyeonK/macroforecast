@@ -10,7 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
+
+from macroforecast.models import ModelSpec, save_fit
 
 from macroforecast.model_selection import (
     SearchSpec,
@@ -242,10 +245,204 @@ def _fit_one_model_at_origin(
     )
 
 
-# Imported at the bottom: these helpers still live in runner.py, and runner.py
-# imports this package after defining them, so a top-of-module import would be
-# circular.
-from macroforecast.forecasting.runner import (  # noqa: E402
-    _prediction_series,
-    _store_model_fit,
-)
+# ---------------------------------------------------------------------------
+# Shared policy output machinery (Phase 5 of the runner decomposition; bodies
+# moved verbatim from ``macroforecast.forecasting.runner``): prediction /
+# variance / quantile coercion onto the test index, the model store, the
+# per-model parameter-cache key, and origin -> target date mapping.
+# ---------------------------------------------------------------------------
+
+
+def _prediction_series(prediction: Any, *, index: pd.Index) -> pd.Series:
+    if isinstance(prediction, pd.Series):
+        return _aligned_or_positional_series(
+            prediction,
+            index=index,
+            label="model prediction",
+        )
+    if isinstance(prediction, pd.DataFrame):
+        if prediction.shape[1] != 1:
+            raise ValueError("model prediction DataFrame must have exactly one column")
+        return _aligned_or_positional_series(
+            prediction.iloc[:, 0],
+            index=index,
+            label="model prediction",
+        )
+    values = np.asarray(prediction).reshape(-1)
+    if len(values) != len(index):
+        raise ValueError("model prediction length does not match X_test")
+    return pd.Series(values, index=index)
+
+
+def _aligned_or_positional_series(
+    values: pd.Series,
+    *,
+    index: pd.Index,
+    label: str,
+) -> pd.Series:
+    if len(values) != len(index):
+        raise ValueError(f"{label} length does not match X_test")
+    if values.index.equals(index):
+        return values.copy()
+    if _is_default_position_index(values.index, len(index)):
+        return pd.Series(values.to_numpy(), index=index, name=values.name)
+    raise ValueError(
+        f"{label} index does not match X_test. Return an array-like object for "
+        "positional predictions, or return a pandas object indexed by X_test.index."
+    )
+
+
+def _is_default_position_index(index: pd.Index, n: int) -> bool:
+    if isinstance(index, pd.RangeIndex):
+        return index.equals(pd.RangeIndex(n))
+    try:
+        return bool(np.array_equal(index.to_numpy(dtype=int), np.arange(n)))
+    except (TypeError, ValueError):
+        return False
+
+
+def _variance_series(
+    fit: Any,
+    *,
+    X_test: pd.DataFrame | None = None,
+    index: pd.Index,
+) -> pd.Series | None:
+    if not hasattr(fit, "predict_variance"):
+        return None
+    prediction = None
+    if X_test is not None:
+        try:
+            prediction = fit.predict_variance(X_test)
+        except TypeError:
+            prediction = None
+    try:
+        if prediction is None:
+            prediction = fit.predict_variance(horizon=len(index))
+    except TypeError:
+        prediction = fit.predict_variance(len(index))
+    values = _positional_prediction_values(prediction, expected_len=len(index))
+    return pd.Series(values, index=index, name="variance_prediction")
+
+
+def _quantile_frame(
+    fit: Any, *, X_test: pd.DataFrame, index: pd.Index
+) -> pd.DataFrame | None:
+    if not hasattr(fit, "predict_quantiles"):
+        return None
+    prediction = fit.predict_quantiles(X_test)
+    if isinstance(prediction, pd.DataFrame):
+        frame = prediction.copy()
+        if len(frame) != len(index):
+            raise ValueError("quantile prediction length does not match X_test")
+        if frame.index.equals(index):
+            return frame
+        if _is_default_position_index(frame.index, len(index)):
+            frame.index = index
+            return frame
+        raise ValueError(
+            "quantile prediction index does not match X_test. Return a DataFrame "
+            "indexed by X_test.index, use RangeIndex(len(X_test)), or return a mapping "
+            "of array-like quantile predictions."
+        )
+    if isinstance(prediction, Mapping):
+        columns: dict[str, np.ndarray] = {}
+        for level, values in prediction.items():
+            arr = np.asarray(values, dtype=float).reshape(-1)
+            if len(arr) != len(index):
+                raise ValueError("quantile prediction length does not match X_test")
+            columns[str(level)] = arr
+        return pd.DataFrame(columns, index=index)
+    raise TypeError("quantile predictions must be a DataFrame or mapping")
+
+
+def _store_model_fit(
+    fit: Any,
+    *,
+    root: str | Path,
+    alias: str,
+    model_spec: ModelSpec,
+    row: Mapping[str, Any],
+    params: Mapping[str, Any],
+    selection_metadata: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    model_dir = Path(root) / _safe_path_part(alias)
+    model_dir.mkdir(parents=True, exist_ok=True)
+    stem = _model_store_stem(row)
+    pickle_path = model_dir / f"{stem}.pkl"
+    metadata_path = model_dir / f"{stem}.json"
+    metadata = {
+        "alias": alias,
+        "model": model_spec.name,
+        "model_spec": model_spec.to_metadata(),
+        "params": dict(params),
+        "model_selection": selection_metadata,
+        "window": dict(row),
+    }
+    return save_fit(
+        fit,
+        pickle_path,
+        metadata_path=metadata_path,
+        metadata=metadata,
+    ).to_dict()
+
+
+def _model_store_stem(row: Mapping[str, Any]) -> str:
+    origin_pos = row.get("origin_pos", "unknown")
+    horizon = row.get("horizon", "unknown")
+    origin = row.get("origin")
+    if isinstance(origin, pd.Timestamp):
+        origin_label = origin.strftime("%Y%m%d")
+    else:
+        origin_label = str(origin).replace(" ", "_").replace(":", "-")
+    target_key = row.get("target_key")
+    suffix = "" if target_key is None else f"_{_safe_path_part(target_key)}"
+    return f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}{suffix}"
+
+
+def _model_cache_key(alias: str, target_key: Any | None) -> str:
+    if target_key is None:
+        return str(alias)
+    return f"{alias}::{target_key}"
+
+
+def _forecast_target_dates(
+    index: pd.Index,
+    *,
+    base_index: pd.Index | None,
+    horizon: int,
+) -> pd.Series:
+    if base_index is None:
+        return pd.Series(index, index=index)
+    positions = base_index.get_indexer(index)
+    target_positions = positions + int(horizon)
+    valid = (positions >= 0) & (target_positions < len(base_index))
+    values = pd.Series(pd.NA, index=index, dtype="object")
+    if valid.any():
+        valid_positions = target_positions[valid]
+        values.iloc[np.flatnonzero(valid)] = list(base_index[valid_positions])
+    return values
+
+
+
+def _safe_path_part(value: Any) -> str:
+    text = str(value)
+    keep = [char if char.isalnum() or char in {"-", "_", "."} else "_" for char in text]
+    out = "".join(keep).strip("._")
+    return out or "model"
+
+
+
+def _positional_prediction_values(prediction: Any, *, expected_len: int) -> np.ndarray:
+    if isinstance(prediction, pd.DataFrame):
+        if prediction.shape[1] != 1:
+            raise ValueError(
+                "variance prediction DataFrame must have exactly one column"
+            )
+        values = prediction.iloc[:, 0].to_numpy(dtype=float)
+    elif isinstance(prediction, pd.Series):
+        values = prediction.to_numpy(dtype=float)
+    else:
+        values = np.asarray(prediction, dtype=float).reshape(-1)
+    if len(values) != expected_len:
+        raise ValueError("variance prediction length does not match X_test")
+    return values

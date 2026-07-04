@@ -11,6 +11,10 @@ import pandas as pd
 from macroforecast.forecasting.policies.base import (
     _OriginRunConfig,
     _fit_one_model_at_origin,
+    _forecast_target_dates,
+    _model_cache_key,
+    _quantile_frame,
+    _variance_series,
 )
 from macroforecast.forecasting.selection_stage import (
     _allow_non_temporal_selection_splits,
@@ -147,11 +151,3 @@ def forecast_direct_origin(
             )
     return records
 
-
-# Bottom import for the same circularity reason as policies.base.
-from macroforecast.forecasting.runner import (  # noqa: E402
-    _forecast_target_dates,
-    _model_cache_key,
-    _quantile_frame,
-    _variance_series,
-)

@@ -19,7 +19,7 @@ from macroforecast.data import (
 )
 from macroforecast.feature_engineering import FeatureSet, FeatureSpec
 from macroforecast.meta import get_config
-from macroforecast.models import ModelSpec, save_fit
+from macroforecast.models import ModelSpec
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
 from macroforecast.preprocessing.cache import PreprocessorStore
 from macroforecast.model_selection import SearchSpec
@@ -93,7 +93,7 @@ from macroforecast.forecasting.selection_stage import (
     _filter_xy_to_target_availability,  # noqa: F401  (re-export)
     _relative_splits_for_index,
     _resolve_degraded_selection,  # noqa: F401  (re-export)
-    _selection_for_model,
+    _selection_for_model,  # noqa: F401  (re-export)
     _single_target,
     _target_availability_base_index,  # noqa: F401  (re-export)
     _target_availability_mask,  # noqa: F401  (re-export)
@@ -1160,48 +1160,6 @@ def _panel_runner_target(target: str | None, model_runs: Sequence[_ModelRun]) ->
     )
 
 
-def _panel_fit_params(model_spec: ModelSpec, *, target: str) -> dict[str, Any]:
-    params: dict[str, Any] = {}
-    if "target" in model_spec.default_params and model_spec.params.get("target") is None:
-        params["target"] = target
-    return params
-
-
-def _panel_prediction_input_without_test_target(
-    fit_panel: pd.DataFrame,
-    test_panel: pd.DataFrame,
-    *,
-    target: str,
-    metadata: Mapping[str, Any],
-) -> DataBundle:
-    """Return panel available at prediction time with test target values masked."""
-
-    combined = pd.concat([fit_panel, test_panel], axis=0)
-    combined = combined.loc[~combined.index.duplicated(keep="last")].sort_index()
-    if target in combined.columns:
-        combined.loc[test_panel.index, target] = np.nan
-    combined.attrs["macroforecast_metadata"] = dict(metadata)
-    return DataBundle(combined, dict(metadata))
-
-
-def _validate_panel_selection(
-    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
-    model_run: _ModelRun,
-) -> None:
-    selected, use_model_default_selection = _selection_for_model(selection, model_run)
-    if selected is not None:
-        raise ValueError(
-            "panel-input forecasting does not tune model parameters yet; pass "
-            f"model_selection={{'{model_run.alias}': None}} or model_selection=None"
-        )
-    if isinstance(selection, Mapping) and (
-        model_run.alias in selection or model_run.spec.name in selection
-    ):
-        return
-    if use_model_default_selection and model_run.spec.search_spaces:
-        return
-
-
 def _validate_runner_window(
     window_spec: WindowSpec,
     index: int | Sequence[Any] | pd.Index,
@@ -1215,296 +1173,6 @@ def _validate_runner_window(
     if not errors:
         errors = ["unknown window validation error"]
     raise ValueError(f"window validation failed: {'; '.join(errors)}")
-
-
-def _prediction_series(prediction: Any, *, index: pd.Index) -> pd.Series:
-    if isinstance(prediction, pd.Series):
-        return _aligned_or_positional_series(
-            prediction,
-            index=index,
-            label="model prediction",
-        )
-    if isinstance(prediction, pd.DataFrame):
-        if prediction.shape[1] != 1:
-            raise ValueError("model prediction DataFrame must have exactly one column")
-        return _aligned_or_positional_series(
-            prediction.iloc[:, 0],
-            index=index,
-            label="model prediction",
-        )
-    values = np.asarray(prediction).reshape(-1)
-    if len(values) != len(index):
-        raise ValueError("model prediction length does not match X_test")
-    return pd.Series(values, index=index)
-
-
-def _aligned_or_positional_series(
-    values: pd.Series,
-    *,
-    index: pd.Index,
-    label: str,
-) -> pd.Series:
-    if len(values) != len(index):
-        raise ValueError(f"{label} length does not match X_test")
-    if values.index.equals(index):
-        return values.copy()
-    if _is_default_position_index(values.index, len(index)):
-        return pd.Series(values.to_numpy(), index=index, name=values.name)
-    raise ValueError(
-        f"{label} index does not match X_test. Return an array-like object for "
-        "positional predictions, or return a pandas object indexed by X_test.index."
-    )
-
-
-def _is_default_position_index(index: pd.Index, n: int) -> bool:
-    if isinstance(index, pd.RangeIndex):
-        return index.equals(pd.RangeIndex(n))
-    try:
-        return bool(np.array_equal(index.to_numpy(dtype=int), np.arange(n)))
-    except (TypeError, ValueError):
-        return False
-
-
-def _variance_series(
-    fit: Any,
-    *,
-    X_test: pd.DataFrame | None = None,
-    index: pd.Index,
-) -> pd.Series | None:
-    if not hasattr(fit, "predict_variance"):
-        return None
-    prediction = None
-    if X_test is not None:
-        try:
-            prediction = fit.predict_variance(X_test)
-        except TypeError:
-            prediction = None
-    try:
-        if prediction is None:
-            prediction = fit.predict_variance(horizon=len(index))
-    except TypeError:
-        prediction = fit.predict_variance(len(index))
-    values = _positional_prediction_values(prediction, expected_len=len(index))
-    return pd.Series(values, index=index, name="variance_prediction")
-
-
-def _quantile_frame(
-    fit: Any, *, X_test: pd.DataFrame, index: pd.Index
-) -> pd.DataFrame | None:
-    if not hasattr(fit, "predict_quantiles"):
-        return None
-    prediction = fit.predict_quantiles(X_test)
-    if isinstance(prediction, pd.DataFrame):
-        frame = prediction.copy()
-        if len(frame) != len(index):
-            raise ValueError("quantile prediction length does not match X_test")
-        if frame.index.equals(index):
-            return frame
-        if _is_default_position_index(frame.index, len(index)):
-            frame.index = index
-            return frame
-        raise ValueError(
-            "quantile prediction index does not match X_test. Return a DataFrame "
-            "indexed by X_test.index, use RangeIndex(len(X_test)), or return a mapping "
-            "of array-like quantile predictions."
-        )
-    if isinstance(prediction, Mapping):
-        columns: dict[str, np.ndarray] = {}
-        for level, values in prediction.items():
-            arr = np.asarray(values, dtype=float).reshape(-1)
-            if len(arr) != len(index):
-                raise ValueError("quantile prediction length does not match X_test")
-            columns[str(level)] = arr
-        return pd.DataFrame(columns, index=index)
-    raise TypeError("quantile predictions must be a DataFrame or mapping")
-
-
-def _store_model_fit(
-    fit: Any,
-    *,
-    root: str | Path,
-    alias: str,
-    model_spec: ModelSpec,
-    row: Mapping[str, Any],
-    params: Mapping[str, Any],
-    selection_metadata: Mapping[str, Any] | None,
-) -> dict[str, Any]:
-    model_dir = Path(root) / _safe_path_part(alias)
-    model_dir.mkdir(parents=True, exist_ok=True)
-    stem = _model_store_stem(row)
-    pickle_path = model_dir / f"{stem}.pkl"
-    metadata_path = model_dir / f"{stem}.json"
-    metadata = {
-        "alias": alias,
-        "model": model_spec.name,
-        "model_spec": model_spec.to_metadata(),
-        "params": dict(params),
-        "model_selection": selection_metadata,
-        "window": dict(row),
-    }
-    return save_fit(
-        fit,
-        pickle_path,
-        metadata_path=metadata_path,
-        metadata=metadata,
-    ).to_dict()
-
-
-def _model_store_stem(row: Mapping[str, Any]) -> str:
-    origin_pos = row.get("origin_pos", "unknown")
-    horizon = row.get("horizon", "unknown")
-    origin = row.get("origin")
-    if isinstance(origin, pd.Timestamp):
-        origin_label = origin.strftime("%Y%m%d")
-    else:
-        origin_label = str(origin).replace(" ", "_").replace(":", "-")
-    target_key = row.get("target_key")
-    suffix = "" if target_key is None else f"_{_safe_path_part(target_key)}"
-    return f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}{suffix}"
-
-
-def _model_cache_key(alias: str, target_key: Any | None) -> str:
-    if target_key is None:
-        return str(alias)
-    return f"{alias}::{target_key}"
-
-
-def _forecast_target_dates(
-    index: pd.Index,
-    *,
-    base_index: pd.Index | None,
-    horizon: int,
-) -> pd.Series:
-    if base_index is None:
-        return pd.Series(index, index=index)
-    positions = base_index.get_indexer(index)
-    target_positions = positions + int(horizon)
-    valid = (positions >= 0) & (target_positions < len(base_index))
-    values = pd.Series(pd.NA, index=index, dtype="object")
-    if valid.any():
-        valid_positions = target_positions[valid]
-        values.iloc[np.flatnonzero(valid)] = list(base_index[valid_positions])
-    return values
-
-
-def _target_level_at(panel: pd.DataFrame, target: str, label: Any) -> float:
-    if target not in panel.columns:
-        raise ValueError(f"recursive target {target!r} is not present in the panel")
-    if label not in panel.index:
-        raise ValueError(f"recursive target date {label!r} is not present in the panel")
-    value = panel.loc[label, target]
-    if pd.isna(value):
-        raise ValueError(f"recursive target {target!r} is missing at {label!r}")
-    return float(value)
-
-
-def _recursive_next_level(
-    current_level: float,
-    prediction: float,
-    *,
-    transform: str,
-) -> float:
-    if transform == "level":
-        return float(prediction)
-    if transform == "change":
-        return float(current_level + prediction)
-    if transform == "growth":
-        return float(current_level * (1.0 + prediction))
-    if transform == "log_growth":
-        return float(current_level * np.exp(prediction))
-    raise ValueError(
-        "recursive forecasting supports target_transform level, change, growth, or log_growth"
-    )
-
-
-def _recursive_output_value(
-    origin_level: float,
-    final_level: float,
-    *,
-    transform: str,
-) -> float:
-    if transform == "level":
-        return float(final_level)
-    if transform == "change":
-        return float(final_level - origin_level)
-    if transform == "growth":
-        if origin_level == 0:
-            return float("nan")
-        return float(final_level / origin_level - 1.0)
-    if transform == "log_growth":
-        if origin_level <= 0 or final_level <= 0:
-            return float("nan")
-        return float(np.log(final_level) - np.log(origin_level))
-    raise ValueError(
-        "recursive forecasting supports target_transform level, change, growth, or log_growth"
-    )
-
-
-def _path_step_columns(y: pd.DataFrame, *, horizon: int) -> list[str]:
-    frame = pd.DataFrame(y)
-    columns = [str(column) for column in frame.columns]
-    selected: list[str] = []
-    for step in range(1, int(horizon) + 1):
-        suffix = f"_step{step}"
-        matches = [column for column in columns if column.endswith(suffix)]
-        if len(matches) != 1:
-            raise ValueError(
-                "path_average forecasting requires exactly one path target "
-                f"column for step {step}; got {matches}"
-            )
-        selected.append(matches[0])
-    return selected
-
-
-def _panel_prediction_horizon(
-    date: Any,
-    *,
-    origin: Any,
-    base_index: pd.Index,
-    default: int,
-) -> int:
-    """Positional distance from the origin to a panel prediction date.
-
-    ``base_index`` is the panel test window, which (as of #423) always
-    excludes the origin itself -- ``WindowSpec.origins(exclude_origin=True)``
-    starts the test slice at ``origin_pos + 1``. The horizon is therefore the
-    plain positional difference, with no floor: an earlier ``max(1, ...)``
-    floor papered over the window bug by forcing the origin's own row (which
-    the buggy window used to include) to read as horizon 1 -- exactly how
-    every row of a multi-step path ended up mislabeled horizon=1. With the
-    window fix, distances are already >= 1 in normal operation; the floor is
-    removed so a caller that passes an origin still inside ``base_index``
-    (e.g. a unit test) gets back the true distance (0 for the origin's own
-    row) instead of a silently-clamped value.
-    """
-    origin_index = base_index.insert(0, origin) if origin not in base_index else base_index
-    positions = origin_index.get_indexer(pd.Index([origin, date]))
-    if (positions < 0).any():
-        return int(default)
-    return int(positions[1] - positions[0])
-
-
-def _safe_path_part(value: Any) -> str:
-    text = str(value)
-    keep = [char if char.isalnum() or char in {"-", "_", "."} else "_" for char in text]
-    out = "".join(keep).strip("._")
-    return out or "model"
-
-
-def _positional_prediction_values(prediction: Any, *, expected_len: int) -> np.ndarray:
-    if isinstance(prediction, pd.DataFrame):
-        if prediction.shape[1] != 1:
-            raise ValueError(
-                "variance prediction DataFrame must have exactly one column"
-            )
-        values = prediction.iloc[:, 0].to_numpy(dtype=float)
-    elif isinstance(prediction, pd.Series):
-        values = prediction.to_numpy(dtype=float)
-    else:
-        values = np.asarray(prediction, dtype=float).reshape(-1)
-    if len(values) != expected_len:
-        raise ValueError("variance prediction length does not match X_test")
-    return values
 
 
 def _select_existing_features(
@@ -1782,17 +1450,36 @@ from macroforecast.forecasting.policies import (  # noqa: E402
 from macroforecast.forecasting.policies.base import (  # noqa: E402
     _FitOutcome,  # noqa: F401  (re-export)
     _OriginRunConfig,
+    _aligned_or_positional_series,  # noqa: F401  (re-export)
     _fit_one_model_at_origin,  # noqa: F401  (re-export)
+    _forecast_target_dates,  # noqa: F401  (re-export)
+    _is_default_position_index,  # noqa: F401  (re-export)
+    _model_cache_key,  # noqa: F401  (re-export)
+    _model_store_stem,  # noqa: F401  (re-export)
+    _positional_prediction_values,  # noqa: F401  (re-export)
+    _prediction_series,  # noqa: F401  (re-export)
+    _quantile_frame,  # noqa: F401  (re-export)
+    _safe_path_part,  # noqa: F401  (re-export)
+    _store_model_fit,  # noqa: F401  (re-export)
+    _variance_series,  # noqa: F401  (re-export)
 )
 from macroforecast.forecasting.policies.direct import (  # noqa: E402
     forecast_direct_origin as _forecast_direct_origin,  # noqa: F401  (re-export)
 )
 from macroforecast.forecasting.policies.panel import (  # noqa: E402
+    _panel_fit_params,  # noqa: F401  (re-export)
+    _panel_prediction_horizon,  # noqa: F401  (re-export; tests import it from runner)
+    _panel_prediction_input_without_test_target,  # noqa: F401  (re-export)
+    _validate_panel_selection,  # noqa: F401  (re-export)
     forecast_panel_origin as _fit_predict_panel_origin,
 )
 from macroforecast.forecasting.policies.path_average import (  # noqa: E402
+    _path_step_columns,  # noqa: F401  (re-export)
     forecast_path_average_origin as _fit_predict_path_average_origin,  # noqa: F401  (re-export)
 )
 from macroforecast.forecasting.policies.recursive import (  # noqa: E402
+    _recursive_next_level,  # noqa: F401  (re-export)
+    _recursive_output_value,  # noqa: F401  (re-export)
+    _target_level_at,  # noqa: F401  (re-export)
     forecast_recursive_origin as _fit_predict_recursive_origin,  # noqa: F401  (re-export)
 )

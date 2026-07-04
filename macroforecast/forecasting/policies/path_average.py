@@ -10,6 +10,8 @@ import pandas as pd
 from macroforecast.forecasting.policies.base import (
     _OriginRunConfig,
     _fit_one_model_at_origin,
+    _forecast_target_dates,
+    _model_cache_key,
 )
 from macroforecast.forecasting.selection_stage import (
     _align_feature_xy,
@@ -203,9 +205,22 @@ def forecast_path_average_origin(
     return records
 
 
-# Bottom import for the same circularity reason as policies.base.
-from macroforecast.forecasting.runner import (  # noqa: E402
-    _forecast_target_dates,
-    _model_cache_key,
-    _path_step_columns,
-)
+# ---------------------------------------------------------------------------
+# Path-target column resolution (Phase 5; moved verbatim from runner).
+# ---------------------------------------------------------------------------
+
+
+def _path_step_columns(y: pd.DataFrame, *, horizon: int) -> list[str]:
+    frame = pd.DataFrame(y)
+    columns = [str(column) for column in frame.columns]
+    selected: list[str] = []
+    for step in range(1, int(horizon) + 1):
+        suffix = f"_step{step}"
+        matches = [column for column in columns if column.endswith(suffix)]
+        if len(matches) != 1:
+            raise ValueError(
+                "path_average forecasting requires exactly one path target "
+                f"column for step {step}; got {matches}"
+            )
+        selected.append(matches[0])
+    return selected

@@ -11,6 +11,8 @@ import pandas as pd
 from macroforecast.forecasting.policies.base import (
     _OriginRunConfig,
     _fit_one_model_at_origin,
+    _model_cache_key,
+    _prediction_series,
 )
 from macroforecast.forecasting.policy_config import FutureFeaturePolicy
 from macroforecast.forecasting.selection_stage import (
@@ -164,12 +166,67 @@ def forecast_recursive_origin(
     return records
 
 
-# Bottom import for the same circularity reason as policies.base.
+# Bottom import for the same circularity reason as policies.base:
+# _test_feature_builder is feature-window plumbing shared with the runner
+# orchestration and still lives there.
 from macroforecast.forecasting.runner import (  # noqa: E402
-    _model_cache_key,
-    _prediction_series,
-    _recursive_next_level,
-    _recursive_output_value,
-    _target_level_at,
     _test_feature_builder,
 )
+
+
+# ---------------------------------------------------------------------------
+# Recursive level math (Phase 5; moved verbatim from runner).
+# ---------------------------------------------------------------------------
+
+
+def _target_level_at(panel: pd.DataFrame, target: str, label: Any) -> float:
+    if target not in panel.columns:
+        raise ValueError(f"recursive target {target!r} is not present in the panel")
+    if label not in panel.index:
+        raise ValueError(f"recursive target date {label!r} is not present in the panel")
+    value = panel.loc[label, target]
+    if pd.isna(value):
+        raise ValueError(f"recursive target {target!r} is missing at {label!r}")
+    return float(value)
+
+
+def _recursive_next_level(
+    current_level: float,
+    prediction: float,
+    *,
+    transform: str,
+) -> float:
+    if transform == "level":
+        return float(prediction)
+    if transform == "change":
+        return float(current_level + prediction)
+    if transform == "growth":
+        return float(current_level * (1.0 + prediction))
+    if transform == "log_growth":
+        return float(current_level * np.exp(prediction))
+    raise ValueError(
+        "recursive forecasting supports target_transform level, change, growth, or log_growth"
+    )
+
+
+def _recursive_output_value(
+    origin_level: float,
+    final_level: float,
+    *,
+    transform: str,
+) -> float:
+    if transform == "level":
+        return float(final_level)
+    if transform == "change":
+        return float(final_level - origin_level)
+    if transform == "growth":
+        if origin_level == 0:
+            return float("nan")
+        return float(final_level / origin_level - 1.0)
+    if transform == "log_growth":
+        if origin_level <= 0 or final_level <= 0:
+            return float("nan")
+        return float(np.log(final_level) - np.log(origin_level))
+    raise ValueError(
+        "recursive forecasting supports target_transform level, change, growth, or log_growth"
+    )

@@ -14,17 +14,24 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from macroforecast.data import DataBundle
 from macroforecast.model_selection import SearchSpec
+from macroforecast.models import ModelSpec
 from macroforecast.window import StagePolicy
 
 from macroforecast.forecasting.model_resolution import (
     _ModelRun,
     _actual_model_params,
 )
+from macroforecast.forecasting.policies.base import (
+    _prediction_series,
+    _store_model_fit,
+)
 from macroforecast.forecasting.policy_config import ForecastPolicy
+from macroforecast.forecasting.selection_stage import _selection_for_model
 
 
 def forecast_panel_origin(
@@ -136,12 +143,79 @@ def forecast_panel_origin(
     return records
 
 
-# Bottom import for the same circularity reason as policies.base.
-from macroforecast.forecasting.runner import (  # noqa: E402
-    _panel_fit_params,
-    _panel_prediction_horizon,
-    _panel_prediction_input_without_test_target,
-    _prediction_series,
-    _store_model_fit,
-    _validate_panel_selection,
-)
+# ---------------------------------------------------------------------------
+# Panel-input helpers (Phase 5; moved verbatim from runner): fit params from
+# the model spec, the prediction input without the leaking test target, panel
+# selection validation, and the origin-distance horizon label (#423).
+# ---------------------------------------------------------------------------
+
+
+def _panel_fit_params(model_spec: ModelSpec, *, target: str) -> dict[str, Any]:
+    params: dict[str, Any] = {}
+    if "target" in model_spec.default_params and model_spec.params.get("target") is None:
+        params["target"] = target
+    return params
+
+
+def _panel_prediction_input_without_test_target(
+    fit_panel: pd.DataFrame,
+    test_panel: pd.DataFrame,
+    *,
+    target: str,
+    metadata: Mapping[str, Any],
+) -> DataBundle:
+    """Return panel available at prediction time with test target values masked."""
+
+    combined = pd.concat([fit_panel, test_panel], axis=0)
+    combined = combined.loc[~combined.index.duplicated(keep="last")].sort_index()
+    if target in combined.columns:
+        combined.loc[test_panel.index, target] = np.nan
+    combined.attrs["macroforecast_metadata"] = dict(metadata)
+    return DataBundle(combined, dict(metadata))
+
+
+def _validate_panel_selection(
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    model_run: _ModelRun,
+) -> None:
+    selected, use_model_default_selection = _selection_for_model(selection, model_run)
+    if selected is not None:
+        raise ValueError(
+            "panel-input forecasting does not tune model parameters yet; pass "
+            f"model_selection={{'{model_run.alias}': None}} or model_selection=None"
+        )
+    if isinstance(selection, Mapping) and (
+        model_run.alias in selection or model_run.spec.name in selection
+    ):
+        return
+    if use_model_default_selection and model_run.spec.search_spaces:
+        return
+
+
+
+def _panel_prediction_horizon(
+    date: Any,
+    *,
+    origin: Any,
+    base_index: pd.Index,
+    default: int,
+) -> int:
+    """Positional distance from the origin to a panel prediction date.
+
+    ``base_index`` is the panel test window, which (as of #423) always
+    excludes the origin itself -- ``WindowSpec.origins(exclude_origin=True)``
+    starts the test slice at ``origin_pos + 1``. The horizon is therefore the
+    plain positional difference, with no floor: an earlier ``max(1, ...)``
+    floor papered over the window bug by forcing the origin's own row (which
+    the buggy window used to include) to read as horizon 1 -- exactly how
+    every row of a multi-step path ended up mislabeled horizon=1. With the
+    window fix, distances are already >= 1 in normal operation; the floor is
+    removed so a caller that passes an origin still inside ``base_index``
+    (e.g. a unit test) gets back the true distance (0 for the origin's own
+    row) instead of a silently-clamped value.
+    """
+    origin_index = base_index.insert(0, origin) if origin not in base_index else base_index
+    positions = origin_index.get_indexer(pd.Index([origin, date]))
+    if (positions < 0).any():
+        return int(default)
+    return int(positions[1] - positions[0])
