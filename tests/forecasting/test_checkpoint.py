@@ -134,11 +134,11 @@ def test_resume_skips_completed_origins(tmp_path: Path, monkeypatch) -> None:
     computed_origins: list[int] = []
     original = runner._fit_predict_origin
 
-    def _spy(item, **kwargs):
+    def _spy(item, *args, **kwargs):
         pos = item["row"].get("origin_pos")
         if pos is not None:
             computed_origins.append(int(pos))
-        return original(item, **kwargs)
+        return original(item, *args, **kwargs)
 
     monkeypatch.setattr(runner, "_fit_predict_origin", _spy)
 
@@ -216,9 +216,9 @@ def test_resume_recomputes_when_stage_state_carries_forward(
     computed: list[int] = []
     original = runner._fit_predict_origin
 
-    def _spy(item, **kwargs):
+    def _spy(item, *args, **kwargs):
         computed.append(int(item["row"].get("origin_pos")))
-        return original(item, **kwargs)
+        return original(item, *args, **kwargs)
 
     monkeypatch.setattr(runner, "_fit_predict_origin", _spy)
 
@@ -252,9 +252,9 @@ def test_resume_with_all_origins_on_disk(tmp_path: Path, monkeypatch) -> None:
     computed: list[int] = []
     original = runner._fit_predict_origin
 
-    def _spy(item, **kwargs):
+    def _spy(item, *args, **kwargs):
         computed.append(int(item["row"].get("origin_pos")))
-        return original(item, **kwargs)
+        return original(item, *args, **kwargs)
 
     monkeypatch.setattr(runner, "_fit_predict_origin", _spy)
 
