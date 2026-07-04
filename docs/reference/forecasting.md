@@ -331,6 +331,46 @@ the input index. Window validation errors, such as invalid inner validation
 splits or `reuse_params=False` with skipped retune origins, stop the run with
 `window validation failed: ...`.
 
+### Model x Policy Compatibility
+
+`forecast_policy in {"direct", "direct_average"}` asks the model to fit a genuine
+h-step-ahead projection: the target itself is constructed as the h-step object
+(`y[t+h]`, or its h-period average), and the model regresses directly onto it.
+Most models in `list_model_specs()` are built for exactly this (any
+`input_kind="supervised"` feature-matrix model such as `ols`/`ridge`/`lasso`/tree
+models/nets, plus `ar`/`far`, which have a validated direct-projection mode).
+
+A subset of models instead forecast a horizon by ITERATING their own one-step
+dynamics -- an ARIMA/ETS/Theta-style recursion, a panel VAR/DFM update, or FAVAR's
+internal factor-VAR -- rather than fitting a direct h-step regression. Asking one
+of these for a `direct`/`direct_average` forecast does not raise: the runner still
+constructs the h-step target and fits it, but because the model's own recursion is
+bypassed, the result can silently degrade toward a stale/persistence-like forecast
+at longer horizons (the defect documented in CHANGELOG `[Unreleased]`, originally
+found in `ar`/`far` and fixed there; the other iterated models below still carry
+it). `pipeline_spec(...)` therefore emits a `UserWarning` (never a rejection --
+deliberate use, e.g. an intentionally weak benchmark, stays possible) whenever one
+of these models is combined with `direct`/`direct_average`:
+
+| Bucket (`ModelSpec.input_kind`) | Models |
+| --- | --- |
+| `target` | `arima`, `auto_arima`, `ets`, `holt_winters`, `naive`, `random_walk_drift`, `seasonal_naive`, `stlf`, `theta_method` |
+| `panel` | `var`, `bvar_minnesota`, `bvar_normal_inverse_wishart`, `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas` |
+| `supervised` (iterated internally) | `favar` |
+
+`ar` and `far` share the `supervised` `input_kind` bucket with `favar` but are
+deliberately EXCLUDED from the warning: they now have a true direct-projection
+mode (regress the h-ahead target on the fresh one-period lags), so direct-policy
+semantics genuinely apply to them.
+
+For any guarded model, prefer `forecast_policy="recursive"` (iterate the model's
+own one-step dynamics out to h, the design it is built for) or `"path_average"`
+(fit one model per step, then average). The guarded-model set is derived
+programmatically from `list_model_specs()` (`input_kind in {"target", "panel"}`
+plus `"favar"`) and is cross-checked against it by
+`tests/pipeline/test_direct_policy_guard.py`, so it tracks the models lane rather
+than drifting out of sync as models are added or removed.
+
 ## Execution Order
 
 For raw panel input, `run()` executes one test origin at a time:

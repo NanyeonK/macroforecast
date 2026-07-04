@@ -6,6 +6,7 @@ execution (``run_pipeline``), interpretation, and reporting layers build on thes
 """
 from __future__ import annotations
 
+import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, cast
@@ -327,6 +328,81 @@ def contender_names(arm: Arm) -> list[str]:
 
 
 # --------------------------------------------------------------------------- #
+# direct-policy guard for iterated/state-space models
+# --------------------------------------------------------------------------- #
+# These models forecast a horizon h by ITERATING their own one-step dynamics
+# (an AR/state-space recursion, a panel VAR/DFM update, or FAVAR's internal
+# factor-VAR), not by fitting a genuine h-step-ahead projection. Under
+# ``forecast_policy in {"direct", "direct_average"}`` the runner nonetheless
+# constructs an h-step-ahead TARGET and asks the model to fit it directly; for
+# these models that silently degrades toward a stale/persistence-like forecast
+# at longer horizons rather than raising (the CHANGELOG [Unreleased] "stale
+# persistence" defect originally found in ar/far, which now have a true
+# direct-projection mode and are DELIBERATELY excluded here).
+#
+# The set below is every model whose ``ModelSpec.input_kind`` is "target" or
+# "panel", PLUS "favar" (its input_kind is "supervised" -- the same bucket as
+# ar/far -- because FAVAR's own factor-VAR update is still an iterated
+# dynamics model; ar/far are excluded from this set by name because they now
+# have a validated direct-projection mode). This set is cross-checked against
+# ``macroforecast.list_model_specs()`` by
+# ``tests/pipeline/test_direct_policy_guard.py`` so it cannot silently rot as
+# the models lane adds or removes models -- update it there, not just here, if
+# that test starts failing.
+DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
+    # input_kind == "target": iterate their own one-step dynamics.
+    "arima", "auto_arima", "ets", "holt_winters", "naive", "random_walk_drift",
+    "seasonal_naive", "stlf", "theta_method",
+    # input_kind == "panel": iterate their own dynamics at the panel level.
+    "var", "bvar_minnesota", "bvar_normal_inverse_wishart",
+    "dfm_mixed_mariano_murasawa", "dfm_unrestricted_midas",
+    # input_kind == "supervised" but genuinely iterated internally (unlike
+    # ar/far, deliberately excluded -- see module docstring above).
+    "favar",
+})
+
+_DIRECT_LIKE_POLICIES = frozenset({"direct", "direct_average"})
+
+
+def _direct_policy_guard_message(arm: Arm, model_name: str, policies: "Sequence[str]") -> str:
+    """The ``UserWarning`` text for one guarded arm under a direct-like policy."""
+    policies_txt = ", ".join(sorted(set(policies)))
+    return (
+        f"arm {arm.name!r} (model {model_name!r}) is run under forecast "
+        f"policy/policies {{{policies_txt}}}: {model_name!r} forecasts by "
+        "ITERATING its own dynamics rather than fitting a genuine h-step-ahead "
+        "projection, so direct-policy semantics do not apply to it -- long-horizon "
+        "forecasts may silently degrade toward a stale/persistence-like forecast "
+        "(see CHANGELOG [Unreleased], GCLS replication Bug 3). This is a warning, "
+        "not a rejection: deliberate use (e.g. an intentionally weak benchmark) "
+        "stays possible. Prefer forecast_policy='recursive' or 'path_average' for "
+        f"{model_name!r}, or give this target an explicit "
+        "TargetSpec(policy=...) override if only some targets should differ."
+    )
+
+
+def _warn_direct_policy_guard(arms: "Sequence[Arm]", targets: "Sequence[ResolvedTarget]") -> None:
+    """Emit one ``UserWarning`` per guarded arm whose target(s) use direct/direct_average.
+
+    Grouped per-arm (not per (arm, target)) so a pipeline with many targets that
+    all resolve to the same policy produces ONE informative warning per affected
+    arm rather than one per target.
+    """
+    for arm in arms:
+        model_name = _arm_model_name(arm)
+        if model_name not in DIRECT_POLICY_GUARD_MODELS:
+            continue
+        affected = [t.policy for t in targets if t.policy in _DIRECT_LIKE_POLICIES]
+        if affected:
+            warnings.warn(
+                _direct_policy_guard_message(arm, model_name, affected),
+                UserWarning,
+                stacklevel=2,
+            )
+
+
+
+# --------------------------------------------------------------------------- #
 # multi-model convenience
 # --------------------------------------------------------------------------- #
 
@@ -605,6 +681,10 @@ def pipeline_spec(
             f"evaluation.benchmark {evaluation.benchmark!r} is not among the "
             f"contenders {sorted(all_contenders)}"
         )
+
+    # Warn (never reject) when a guarded iterated/state-space model is combined
+    # with a direct-like forecast policy -- see DIRECT_POLICY_GUARD_MODELS above.
+    _warn_direct_policy_guard(arms, resolved)
 
     notes = dict(provenance or {})
     if not save_models and any(a.interpret for a in arms):

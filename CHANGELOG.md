@@ -157,6 +157,31 @@ full per-version honesty-pass history embedded in repo documentation.
   `test_auto_cache_dir_dedupes_across_cells_when_unset` in
   `tests/pipeline/test_preprocessing_share.py`. The existing serial==parallel and
   store-off==store-on golden pins are unchanged and still pass.
+- `pipeline` (spec-build-time guard): `pipeline_spec(...)` now emits a
+  `UserWarning` whenever a guarded iterated/state-space model is combined with
+  `forecast_policy` `direct` or `direct_average`. These models forecast a horizon
+  by ITERATING their own one-step dynamics (statsmodels-style target forecasters,
+  panel VAR/DFM models, `favar`'s internal factor-VAR) rather than fitting a
+  genuine h-step-ahead projection, so a direct-policy request can silently degrade
+  toward a stale/persistence-like forecast at longer horizons -- the same defect
+  fixed for `ar`/`far` above (GCLS replication Bug 3), documented at the time as a
+  follow-up for the other iterated model families. The guard WARNS, it does not
+  reject: deliberate use (e.g. an intentionally weak benchmark) stays possible.
+  Guarded set (new `pipeline.DIRECT_POLICY_GUARD_MODELS`, derived from
+  `list_model_specs()`: every `input_kind in {"target", "panel"}` model plus
+  `favar`): `arima`, `auto_arima`, `ets`, `holt_winters`, `naive`,
+  `random_walk_drift`, `seasonal_naive`, `stlf`, `theta_method` (target-kind);
+  `var`, `bvar_minnesota`, `bvar_normal_inverse_wishart`,
+  `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas` (panel-kind); `favar`.
+  `ar`/`far` are deliberately excluded -- they now have a validated
+  direct-projection mode. New `tests/pipeline/test_direct_policy_guard.py`
+  (warning-fires tests for a representative target-kind and panel-kind model, no
+  warning for ar/far/supervised models or for recursive/path_average, a
+  cross-check that the guarded set tracks `list_model_specs()`, and a
+  forecasts-byte-identical pin proving the warning has zero effect on computed
+  output). New docs section `docs/reference/forecasting.md#model-x-policy-compatibility`.
+  `runner.py`, `window/`, and `models/` are untouched -- the guard lives entirely
+  in `pipeline/spec.py` at spec-validation time.
 
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
