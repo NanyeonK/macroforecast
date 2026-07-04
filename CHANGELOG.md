@@ -89,9 +89,14 @@ full per-version honesty-pass history embedded in repo documentation.
   (dispatch is out of scope; only per-trial cost changed). Old -> new:
   - `bvar_minnesota` / `bvar_normal_inverse_wishart`: `iter` `10000`->`300`,
     `burnin` `5000`->`100`; "standard" preset `n_lag` `(1, 2, 4)`->`(1, 2)`
-    (own dedicated spaces dict, not shared with other models). Verified scan
-    total (4 policies) 28.41s (was: every cell exceeded 150s; single default
-    fits alone ran 12.8-41.4s before this change).
+    (own dedicated spaces dict, not shared with other models). With the
+    original `iter=10000`/`burnin=5000` defaults, a single fit did not finish
+    within 280s even at `n_lag=1` (the smallest combo); at an intermediate
+    `iter=2000`/`burnin=1000` a single fit alone ran 12.8-41.4s depending on
+    `n_lag` (1/2/4) -- still far too slow once multiplied across the
+    "standard" grid, origins, and 4 policies. Verified scan total after the
+    fix (4 policies, `iter=300`/`burnin=100`, `n_lag` capped at `(1, 2)`):
+    28.41s.
   - `favar`: see the separate favar entry above (`nburn`/`nrep` and its new
     dedicated search space). Verified scan total 54.6s.
   - `macro_random_forest`: default `B` `50`->`25`; "standard" preset `B`
@@ -104,9 +109,14 @@ full per-version honesty-pass history embedded in repo documentation.
   - `mars`: default unchanged (`max_degree=1`, `max_terms=20`); "standard"
     search preset drops the `max_degree=2` x `max_terms=30` corner
     (`max_terms` `(10, 20, 30)`->`(10, 20)`); "wide" preset unchanged (still
-    reaches `max_terms=30` x `max_degree=2` for deep/explicit use). Verified
-    scan total 132.9s (was 98.9s for the single `direct` cell alone using just
-    the worst corner, i.e. the full search made every policy far worse).
+    reaches `max_terms=30` x `max_degree=2` for deep/explicit use). That corner
+    alone took 3.7s per fit in isolation (vs. 1.0s for the plain default), and
+    with a 20-trial random search repeated across multiple origins and 4
+    policies it was the single biggest cost driver in the "standard" preset.
+    Verified scan total after the fix: 132.9s (this WP does not have a clean
+    "before" scan total on record -- the corner was identified and removed
+    based on the isolated per-fit timing above, not a full before/after scan
+    comparison).
   - `restricted_midas`: `maxiter` `1000`->`200`, `tolerance` `1e-8`->`1e-6`.
     Verified scan total 38.6s (was 211.3s, i.e. already over the 150s bar).
   Deep/paper-faithful settings remain reachable by passing the old values
