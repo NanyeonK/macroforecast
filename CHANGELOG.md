@@ -182,6 +182,27 @@ full per-version honesty-pass history embedded in repo documentation.
   output). New docs section `docs/reference/forecasting.md#model-x-policy-compatibility`.
   `runner.py`, `window/`, and `models/` are untouched -- the guard lives entirely
   in `pipeline/spec.py` at spec-validation time.
+- `pipeline` (convenience API): new `pipeline.rescore(checkpoint_dir, spec)`
+  re-scores a saved pipeline run from its checkpoint directory alone -- no
+  refitting. Evaluation was already pure-frame (`evaluate(master, spec)`) and
+  `forecasting.checkpoint.load_checkpoint_frame` already reconstructed one cell's
+  lean records, but re-scoring a full run meant hand-walking the
+  `<checkpoint_dir>/<target>__<arm>/h<h>/` tree and reassembling the master frame
+  by hand. `rescore` is that glue: it walks every (target, arm, horizon) cell the
+  spec describes, loads the persisted per-origin parquet, reattaches the
+  `arm`/`contender` labels (the lean schema does not store them), and runs the
+  standard evaluation, returning the same `PipelineReport` type as `run_pipeline`
+  with `forecasts`/`accuracy`/`significance`/`mcs` populated identically to a
+  live run over the same forecasts. Live-run-only fields are absent by contract:
+  `interpretation` is `None`, `failed_cells` is empty (a failed cell wrote no
+  checkpoints and is indistinguishable from a never-run one), `empty_cells` is
+  best-effort (arms with zero checkpoint rows), and `provenance`/`leakage_audit`
+  carry a `rescored_from` marker. An empty or wrong directory raises an
+  actionable `ValueError` instead of returning a silently empty report. New
+  module `macroforecast/pipeline/rescore.py`, exported from
+  `macroforecast.pipeline`; round-trip + failure-mode tests in
+  `tests/pipeline/test_rescore.py`; how-to section in
+  `docs/reference/pipeline.md`.
 
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
