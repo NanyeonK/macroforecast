@@ -82,6 +82,105 @@ full per-version honesty-pass history embedded in repo documentation.
   hand-computed NW-1987 fixture, and separately asserted to deliberately
   differ from R `sandwich::kernHAC`'s Bartlett value, with a comment
   pointing at the `dm_test` parity dependency it protects.
+- `tests/models/anchors/` + `tests/parity/` (WP-V2, model-anchors-v2): independent
+  correctness anchors for the remaining Tier-1 (zero-anchor) MODELS identified by
+  `.dev-notes/anchor_coverage/summary.md` -- `bvar_minnesota`,
+  `bvar_normal_inverse_wishart`, `favar`, `dfm_mixed_mariano_murasawa`,
+  `tvp_ridge`, `lgb_plus`, `lgba_plus`, `assemblage_regression`,
+  `supervised_aggregation`. `hemisphere_nn`/`density_hnn` remain
+  BLOCKED(no-torch) -- torch is deliberately not installed on this host; see
+  `.dev-notes/anchor_coverage/v2_anchor_results.md` for the proposed anchor
+  design once torch is available. `bvartools`/`FAVAR` R packages now build
+  cleanly from CRAN on this host (`BVAR` also installs but was not needed),
+  enabling live R parity tests alongside the from-formula clean-room ones.
+  Full per-model anchor-type/tolerance/result table in
+  `.dev-notes/anchor_coverage/v2_anchor_results.md`.
+
+  - `bvar_minnesota`/`bvar_normal_inverse_wishart`: the Minnesota prior
+    variance grid (own-lag/cross-lag/lag-decay) is checked deterministically
+    (1e-12) against the documented `bvartools::minnesota_prior` formula two
+    ways -- an independent from-scratch reimplementation, and a live R
+    subprocess-Rscript parity test against `bvartools::minnesota_prior`
+    itself. Separately, the Normal-Inverse-Wishart Gibbs sampler's posterior
+    mean is shown (Monte Carlo, tolerance set from the sampler's own reported
+    MCSE) to converge to the closed-form OLS estimate on the shared VAR
+    design -- the exact special case where a diffuse coefficient prior makes
+    the GLS estimator, for any sampled error covariance, algebraically
+    identical to OLS (shared-regressor SUR equivalence).
+
+    **FINDING**: `bvar_normal_inverse_wishart`'s own default `s0=0.0` (an
+    exactly-zero inverse-Wishart prior scale) makes the Gibbs sampler
+    numerically unstable -- posterior mean off by 3-4+ orders of magnitude,
+    ~97% of post-burn-in draws divergent -- whenever the fitted VAR's
+    residual covariance is even mildly near-singular (a realistic scenario,
+    not a corner case: e.g. a FAVAR-style factor+target block where the
+    factors explain the target well). `favar()`'s own default
+    `varprior=None` silently resolves to this same fragile configuration
+    with no warning. Marked `xfail(strict=True)` with the full isolating
+    diagnosis in `test_bvar_minnesota_niw_anchors.py`; not tolerance-loosened
+    away. Reported prominently in the WP-V2 results file.
+
+  - `favar`: the fully deterministic factor-identification helpers
+    (`_favar_extr_pc`/`_favar_facrot`/`_favar_olssvd`/`_favar_bgm`) now
+    have both an independent PCA-via-SVD cross-check and live R parity
+    against `FAVAR:::ExtrPC`/`facrot`/`olssvd`/`BGM` (the exact R
+    functions the docstrings claim alignment with). A near-noiseless
+    known-factor DGP oracle (small idiosyncratic noise + an explicit
+    non-degenerate `varprior`, both required to avoid the `s0=0.0` finding
+    above and a separate BGM-on-exactly-rank-deficient-data degeneracy)
+    recovers the forecast to <1% of the target's in-sample range through the
+    full `favar()` pipeline.
+
+  - `dfm_mixed_mariano_murasawa`: confirmed (by reading the source) to be a
+    thin wrapper around `statsmodels.tsa.statespace.dynamic_factor_mq
+    .DynamicFactorMQ`, so the wrapper's own glue (column reordering,
+    frequency inference) is anchored directly -- parameter/log-likelihood/
+    fitted-value pass-through vs a direct `DynamicFactorMQ` call on an
+    identically-shaped frame, including a column-order-shuffle variant -- plus
+    a low-noise Mariano-Murasawa [1,2,3,2,1] mixed-frequency factor-recovery
+    oracle (correlation with the true factor > 0.9).
+
+  - `tvp_ridge`: `_dual_generalized_ridge` ("dualGRR") is shown, via an
+    independent Woodbury-identity derivation (not read off the code), to
+    solve the textbook generalized-ridge/Tikhonov estimator
+    `theta = (Z'WZ + Lambda)^-1 Z'Wy`; matched to 1e-8 against a from-scratch
+    reference solve, including a heterogeneous-weights case. A
+    constant-parameter limit test confirms lambda1 -> infinity collapses the
+    recovered path to a single plain (static-only) ridge fit with penalty
+    lambda2, the textbook "TVP collapses to constant coefficients as state
+    variance -> 0" limit.
+
+  - `lgb_plus`/`lgba_plus`: the competition/alternating ensemble logic is
+    clean-roomed against hand-rolled loops calling raw `lightgbm` directly
+    (`lightgbm` extra now installed) -- for `lgb_plus` this includes
+    reproducing the exact `np.random.default_rng(seed)` call sequence
+    (subsample draw, then linear-candidate-feature draw, per step) so the
+    random streams -- and therefore predictions -- match bit-for-bit; for
+    `lgba_plus` (deterministic at `subsample=1.0`) no RNG replay is needed.
+    Both get a same-seed determinism pin.
+
+  - `assemblage_regression`/`supervised_aggregation`: both route through
+    the shared `SupervisedAggregationRegressor` (confirmed by reading
+    `assemblage.py`), anchored with hand-computable analytic fixtures --
+    plain ridge, target-shrinkage ridge (both unconstrained closed forms),
+    and simplex-/mean-match-constrained ridge (solved exactly via the
+    bordered KKT linear system, with an explicit check that the `nonneg`
+    inequality constraint is non-binding so the equality-only closed form is
+    the correct target) -- plus a thin check that the public
+    `assemblage_regression`/`supervised_aggregation` entry points route to
+    the same verified estimator.
+
+  - Cheap bonus: a git-archaeology pass over historically deleted test files
+    (`git log --diff-filter=D --name-only -- 'tests/**'`) found dedicated,
+    substantive (59-424 line) BVAR/FAVAR/DFM/HNN test files removed in the
+    `2e62e740` "Clean semantic package structure" reorg (same commit V0
+    flagged for the deleted R cross-ref suite). Spot-checked: these import a
+    now-nonexistent `macroforecast.core.runtime` / `macroforecast.models.ops`
+    (`OPERATIONAL_MODELS`/`FUTURE_MODELS`/`get_family_status`) registry API,
+    so they are NOT directly restorable (`git show > file` would not import);
+    restoration would need rewriting to the current module structure. Full
+    candidate list with commits/line counts in the WP-V2 results file; not
+    restored here per the task brief.
 
 - `forecasting`/`pipeline` (performance, Gap A): the per-origin fitted feature
   builder (`FeatureSpec.fit()` -- the PCA/MARX/SIR-style numerical state) is now
