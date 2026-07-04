@@ -1412,6 +1412,196 @@ def _fit_predict_panel_origin(
     return records
 
 
+@dataclass(frozen=True)
+class _FitOutcome:
+    """What one model produced at one origin via the shared skeleton.
+
+    ``prediction`` is ``None`` when the caller supplied no ``X_test`` (the
+    recursive policy predicts by rolling its own panel forward instead of a
+    single ``fit.predict`` call).
+    """
+
+    fit: Any
+    fit_params: dict[str, Any]
+    selection_metadata: dict[str, Any] | None
+    stored_model: dict[str, Any] | None
+    prediction: pd.Series | None
+
+
+def _fit_one_model_at_origin(
+    model_run: _ModelRun,
+    X_fit: pd.DataFrame,
+    y_fit: Any,
+    X_sel: pd.DataFrame,
+    y_sel: Any,
+    X_test: pd.DataFrame | None,
+    cfg: _OriginRunConfig,
+    *,
+    direct_capable_flag: bool,
+    cache_key: str,
+    row: Mapping[str, Any],
+    selection_splits: Sequence[Any] | None,
+    target_step: int,
+    allow_non_temporal_splits: bool,
+    ic_selection_enabled: bool = True,
+    degraded_alias: str | None = None,
+    retuned_metadata_extras: Mapping[str, Any] | None = None,
+    reused_metadata_extras: Mapping[str, Any] | None = None,
+) -> _FitOutcome:
+    """The select -> fit -> predict -> save skeleton shared by the feature-matrix
+    policies (the direct/direct_average inline body, recursive, and each
+    path_average step). One implementation of the block that used to be
+    copy-pasted per policy, so "one policy bug = four policy bugs" cannot recur:
+    the IC-vs-CV selection branch, graceful selection degradation, the
+    ``direct=True`` injection for direct-capable iterated models, the
+    param/selection cache handling (the caller owns the CACHE KEY -- per-target
+    for direct/recursive, per-step for path_average), and model saving all live
+    here. The panel policy is NOT forced through this skeleton: its input
+    contract (DataBundle panel, not an engineered feature matrix) is different.
+
+    Variation points, all keyword-only:
+
+    - ``direct_capable_flag``: inject ``direct=True`` into the fit call and IC
+      selection (the direct policy and path_average per-step projections; the
+      recursive roll-forward never injects it).
+    - ``ic_selection_enabled``: the recursive policy historically routes
+      IC-capable models through the CV/validation-split branch; ``False``
+      preserves that.
+    - ``degraded_alias``: display alias for the degraded-selection warning
+      (path steps append " (path step N)").
+    - ``retuned_metadata_extras`` / ``reused_metadata_extras``: policy-specific
+      keys appended to the selection metadata when freshly tuned vs when reused
+      from cache or degraded (recursive tags retuned metadata with
+      ``recursive``/``future_feature_policy``; path tags everything with
+      ``path_step``).
+    """
+
+    model_spec = model_run.spec
+    retune = bool(row.get("retune", True))
+    ic_fixed_params = {"direct": True} if direct_capable_flag else None
+    selected, use_model_default_selection = _selection_for_model(
+        cfg.selection, model_run
+    )
+    should_select = selected is not None or (
+        use_model_default_selection and bool(model_spec.search_spaces)
+    )
+    selection_metadata: dict[str, Any] | None = None
+    uses_ic = ic_selection_enabled and str(
+        getattr(model_spec, "selection_method", "cv")
+    ).lower() in ("bic", "aic", "aicc")
+    if should_select and uses_ic:
+        # Information-criterion models (AR, FM) select their order by BIC/AIC on
+        # the full training sample, so they need no validation split. This is
+        # both paper-faithful and what lets the autoregression run with a window
+        # that carries no validation block; for path_average steps it is also
+        # what preserves the horizon-1 direct==path invariant (a CV split would
+        # score the order on a truncated sample and pick a different order).
+        if retune or cache_key not in cfg.param_cache:
+            result = select_by_information_criterion(
+                model_spec,
+                X_sel,
+                y_sel,
+                search=selected,
+                criterion=str(model_spec.selection_method).lower(),
+                fixed_params=ic_fixed_params,
+            )
+            cfg.param_cache[cache_key] = dict(result.best_params)
+            selection_metadata = {
+                **result.to_metadata(),
+                "policy": cfg.selection_policy.to_dict(),
+                "retuned": True,
+                **(retuned_metadata_extras or {}),
+            }
+            cfg.selection_cache[cache_key] = selection_metadata
+            cfg.selection_cache[_SELECTION_TUNED_KEY] = True
+            best_params = dict(cfg.param_cache.get(cache_key, {}))
+        else:
+            selection_metadata = cfg.selection_cache.get(cache_key)
+            if selection_metadata is not None:
+                selection_metadata = {
+                    **selection_metadata,
+                    "retuned": False,
+                    **(reused_metadata_extras or {}),
+                }
+            best_params = dict(cfg.param_cache.get(cache_key, {}))
+    elif should_select:
+        if not selection_splits:
+            best_params, selection_metadata = _resolve_degraded_selection(
+                cache_key=cache_key,
+                alias=degraded_alias if degraded_alias is not None else model_run.alias,
+                target_step=target_step,
+                origin_label=row.get("origin"),
+                param_cache=cfg.param_cache,
+                selection_cache=cfg.selection_cache,
+                selection_policy=cfg.selection_policy,
+            )
+            if reused_metadata_extras and isinstance(selection_metadata, dict):
+                selection_metadata = {**selection_metadata, **reused_metadata_extras}
+        elif retune or cache_key not in cfg.param_cache:
+            result = select_params(
+                model_spec,
+                X_sel,
+                y_sel,
+                search=selected,
+                splits=selection_splits,
+                metric=cfg.selection_metric,
+                maximize=cfg.maximize_selection,
+                random_state=cfg.selection_random_state if selected is None else None,
+                allow_non_temporal_splits=allow_non_temporal_splits,
+            )
+            cfg.param_cache[cache_key] = dict(result.best_params)
+            selection_metadata = {
+                **result.to_metadata(),
+                "policy": cfg.selection_policy.to_dict(),
+                "retuned": True,
+                **(retuned_metadata_extras or {}),
+            }
+            cfg.selection_cache[cache_key] = selection_metadata
+            cfg.selection_cache[_SELECTION_TUNED_KEY] = True
+            best_params = dict(cfg.param_cache.get(cache_key, {}))
+        else:
+            selection_metadata = cfg.selection_cache.get(cache_key)
+            if selection_metadata is not None:
+                selection_metadata = {
+                    **selection_metadata,
+                    "retuned": False,
+                    **(reused_metadata_extras or {}),
+                }
+            best_params = dict(cfg.param_cache.get(cache_key, {}))
+    else:
+        best_params = {}
+    call_params = (
+        {**best_params, "direct": True} if direct_capable_flag else best_params
+    )
+    fit_params = _actual_model_params(model_spec, call_params)
+    fit = model_spec(X_fit, y_fit, **call_params)
+    stored_model = (
+        _store_model_fit(
+            fit,
+            root=cfg.model_store,
+            alias=model_run.alias,
+            model_spec=model_spec,
+            row=row,
+            params=fit_params,
+            selection_metadata=selection_metadata,
+        )
+        if cfg.save_models
+        else None
+    )
+    prediction = (
+        _prediction_series(fit.predict(X_test), index=X_test.index)
+        if X_test is not None
+        else None
+    )
+    return _FitOutcome(
+        fit=fit,
+        fit_params=fit_params,
+        selection_metadata=selection_metadata,
+        stored_model=stored_model,
+        prediction=prediction,
+    )
+
+
 def _fit_predict_origin(
     item: dict[str, Any],
     cfg: _OriginRunConfig,
@@ -1421,18 +1611,7 @@ def _fit_predict_origin(
     if item.get("forecast_policy") == "recursive":
         return _fit_predict_recursive_origin(item, cfg)
 
-    # Unpack the shared run configuration into the local names the body below uses,
-    # so the direct/direct_average body stays byte-identical to the prior version.
     model_runs = cfg.model_runs
-    selection = cfg.selection
-    selection_policy = cfg.selection_policy
-    selection_metric = cfg.selection_metric
-    maximize_selection = cfg.maximize_selection
-    param_cache = cfg.param_cache
-    selection_cache = cfg.selection_cache
-    selection_random_state = cfg.selection_random_state
-    save_models = cfg.save_models
-    model_store = cfg.model_store
 
     X_fit = item["X_fit"]
     y_fit = item["y_fit"]
@@ -1476,112 +1655,36 @@ def _fit_predict_origin(
     )
     if X_fit.empty:
         return []
-    retune = bool(row.get("retune", True))
     for model_run in model_runs:
         model_spec = model_run.spec
         # This branch handles the direct / direct_average policies only (recursive and
         # path_average are dispatched earlier). Direct-capable iterated models (ar, far)
-        # declare a ``direct`` flag in their default params; set it so they do a one-shot
-        # projection onto the fresh one-period lag features instead of a roll-forward
-        # that would persist a stale origin-h value. IC order selection uses the same
-        # flag so n_lag is chosen for the direct projection, not the autoregression.
+        # declare a ``direct`` flag in their default params; the shared skeleton sets
+        # it so they do a one-shot projection onto the fresh one-period lag features
+        # instead of a roll-forward that would persist a stale origin-h value. IC order
+        # selection uses the same flag so n_lag is chosen for the direct projection,
+        # not the autoregression.
         direct_capable = "direct" in getattr(model_spec, "default_params", {})
-        ic_fixed_params = {"direct": True} if direct_capable else None
-        selected, use_model_default_selection = _selection_for_model(
-            selection, model_run
+        outcome = _fit_one_model_at_origin(
+            model_run,
+            X_fit,
+            y_fit,
+            X_selection,
+            y_selection,
+            X_test,
+            cfg,
+            direct_capable_flag=direct_capable,
+            cache_key=_model_cache_key(model_run.alias, row.get("target_key")),
+            row=row,
+            selection_splits=selection_splits,
+            target_step=target_step,
+            allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
         )
-        should_select = selected is not None or (
-            use_model_default_selection and bool(model_spec.search_spaces)
-        )
-        selection_metadata: dict[str, Any] | None = None
-        cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
-        uses_ic = str(getattr(model_spec, "selection_method", "cv")).lower() in (
-            "bic", "aic", "aicc"
-        )
-        if should_select and uses_ic:
-            # Information-criterion models (AR, FM) select their order by BIC/AIC on
-            # the training sample, so they need no validation split. This is both
-            # paper-faithful and what lets the autoregression run with a window that
-            # carries no validation block.
-            if retune or cache_key not in param_cache:
-                result = select_by_information_criterion(
-                    model_spec,
-                    X_selection,
-                    y_selection,
-                    search=selected,
-                    criterion=str(model_spec.selection_method).lower(),
-                    fixed_params=ic_fixed_params,
-                )
-                param_cache[cache_key] = dict(result.best_params)
-                selection_metadata = {
-                    **result.to_metadata(),
-                    "policy": selection_policy.to_dict(),
-                    "retuned": True,
-                }
-                selection_cache[cache_key] = selection_metadata
-                selection_cache[_SELECTION_TUNED_KEY] = True
-                best_params = dict(param_cache.get(cache_key, {}))
-            else:
-                selection_metadata = selection_cache.get(cache_key)
-                if selection_metadata is not None:
-                    selection_metadata = {**selection_metadata, "retuned": False}
-                best_params = dict(param_cache.get(cache_key, {}))
-        elif should_select:
-            if not selection_splits:
-                best_params, selection_metadata = _resolve_degraded_selection(
-                    cache_key=cache_key,
-                    alias=model_run.alias,
-                    target_step=target_step,
-                    origin_label=row.get("origin"),
-                    param_cache=param_cache,
-                    selection_cache=selection_cache,
-                    selection_policy=selection_policy,
-                )
-            elif retune or cache_key not in param_cache:
-                result = select_params(
-                    model_spec,
-                    X_selection,
-                    y_selection,
-                    search=selected,
-                    splits=selection_splits,
-                    metric=selection_metric,
-                    maximize=maximize_selection,
-                    random_state=selection_random_state if selected is None else None,
-                    allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
-                )
-                param_cache[cache_key] = dict(result.best_params)
-                selection_metadata = {
-                    **result.to_metadata(),
-                    "policy": selection_policy.to_dict(),
-                    "retuned": True,
-                }
-                selection_cache[cache_key] = selection_metadata
-                selection_cache[_SELECTION_TUNED_KEY] = True
-                best_params = dict(param_cache.get(cache_key, {}))
-            else:
-                selection_metadata = selection_cache.get(cache_key)
-                if selection_metadata is not None:
-                    selection_metadata = {**selection_metadata, "retuned": False}
-                best_params = dict(param_cache.get(cache_key, {}))
-        else:
-            best_params = {}
-        call_params = {**best_params, "direct": True} if direct_capable else best_params
-        fit_params = _actual_model_params(model_spec, call_params)
-        fit = model_spec(X_fit, y_fit, **call_params)
-        stored_model = (
-            _store_model_fit(
-                fit,
-                root=model_store,
-                alias=model_run.alias,
-                model_spec=model_spec,
-                row=row,
-                params=fit_params,
-                selection_metadata=selection_metadata,
-            )
-            if save_models
-            else None
-        )
-        pred = _prediction_series(fit.predict(X_test), index=X_test.index)
+        fit = outcome.fit
+        fit_params = outcome.fit_params
+        selection_metadata = outcome.selection_metadata
+        stored_model = outcome.stored_model
+        pred = outcome.prediction
         variance_pred = _variance_series(fit, X_test=X_test, index=X_test.index)
         quantile_pred = _quantile_frame(fit, X_test=X_test, index=X_test.index)
         for date, value in pred.items():
@@ -1637,15 +1740,6 @@ def _fit_predict_recursive_origin(
     cfg: _OriginRunConfig,
 ) -> list[dict[str, Any]]:
     model_runs = cfg.model_runs
-    selection = cfg.selection
-    selection_policy = cfg.selection_policy
-    selection_metric = cfg.selection_metric
-    maximize_selection = cfg.maximize_selection
-    param_cache = cfg.param_cache
-    selection_cache = cfg.selection_cache
-    selection_random_state = cfg.selection_random_state
-    save_models = cfg.save_models
-    model_store = cfg.model_store
 
     X_fit = item["X_fit"]
     y_fit = item["y_fit"]
@@ -1676,61 +1770,42 @@ def _fit_predict_recursive_origin(
     }
     origin_level = _target_level_at(recursive_panel, target, origin_label)
     actual_level = _target_level_at(pd.DataFrame(item.get("actual_panel", recursive_panel)), target, target_label)
-    retune = bool(row.get("retune", True))
     records: list[dict[str, Any]] = []
 
     for model_run in model_runs:
         model_spec = model_run.spec
-        selected, use_model_default_selection = _selection_for_model(selection, model_run)
-        should_select = selected is not None or (
-            use_model_default_selection and bool(model_spec.search_spaces)
+        # The shared skeleton covers selection -> fit -> save; the roll-forward
+        # below produces the predictions itself, so no X_test is passed. The
+        # recursive policy never injects ``direct=True`` (its whole point is the
+        # iterated roll-forward) and routes IC-capable models through the
+        # CV/validation-split branch exactly as it always has
+        # (ic_selection_enabled=False). Model saving now happens at fit time,
+        # before the roll-forward, instead of after it -- the saved content is
+        # unchanged because predicting does not mutate the fit.
+        outcome = _fit_one_model_at_origin(
+            model_run,
+            X_fit,
+            y_fit,
+            X_selection,
+            y_selection,
+            None,
+            cfg,
+            direct_capable_flag=False,
+            cache_key=_model_cache_key(model_run.alias, row.get("target_key")),
+            row=row,
+            selection_splits=item.get("selection_splits"),
+            target_step=horizon,
+            allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
+            ic_selection_enabled=False,
+            retuned_metadata_extras={
+                "recursive": True,
+                "future_feature_policy": future_policy,
+            },
         )
-        selection_metadata: dict[str, Any] | None = None
-        cache_key = _model_cache_key(model_run.alias, row.get("target_key"))
-        recursive_splits = item.get("selection_splits")
-        if should_select:
-            if not recursive_splits:
-                best_params, selection_metadata = _resolve_degraded_selection(
-                    cache_key=cache_key,
-                    alias=model_run.alias,
-                    target_step=horizon,
-                    origin_label=row.get("origin"),
-                    param_cache=param_cache,
-                    selection_cache=selection_cache,
-                    selection_policy=selection_policy,
-                )
-            elif retune or cache_key not in param_cache:
-                result = select_params(
-                    model_spec,
-                    X_selection,
-                    y_selection,
-                    search=selected,
-                    splits=recursive_splits,
-                    metric=selection_metric,
-                    maximize=maximize_selection,
-                    random_state=selection_random_state if selected is None else None,
-                    allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
-                )
-                param_cache[cache_key] = dict(result.best_params)
-                selection_metadata = {
-                    **result.to_metadata(),
-                    "policy": selection_policy.to_dict(),
-                    "retuned": True,
-                    "recursive": True,
-                    "future_feature_policy": future_policy,
-                }
-                selection_cache[cache_key] = selection_metadata
-                selection_cache[_SELECTION_TUNED_KEY] = True
-                best_params = dict(param_cache.get(cache_key, {}))
-            else:
-                selection_metadata = selection_cache.get(cache_key)
-                if selection_metadata is not None:
-                    selection_metadata = {**selection_metadata, "retuned": False}
-                best_params = dict(param_cache.get(cache_key, {}))
-        else:
-            best_params = {}
-        fit_params = _actual_model_params(model_spec, best_params)
-        fit = model_spec(X_fit, y_fit, **best_params)
+        fit = outcome.fit
+        fit_params = outcome.fit_params
+        selection_metadata = outcome.selection_metadata
+        stored_model = outcome.stored_model
         working_panel = recursive_panel.copy()
         step_predictions: list[float] = []
         step_levels: list[float] = []
@@ -1771,19 +1846,6 @@ def _fit_predict_recursive_origin(
             origin_level,
             actual_level,
             transform=transform,
-        )
-        stored_model = (
-            _store_model_fit(
-                fit,
-                root=model_store,
-                alias=model_run.alias,
-                model_spec=model_spec,
-                row=row,
-                params=fit_params,
-                selection_metadata=selection_metadata,
-            )
-            if save_models
-            else None
         )
         records.append(
             {
@@ -1826,13 +1888,7 @@ def _fit_predict_path_average_origin(
     model_runs = cfg.model_runs
     selection = cfg.selection
     selection_policy = cfg.selection_policy
-    selection_metric = cfg.selection_metric
-    maximize_selection = cfg.maximize_selection
-    param_cache = cfg.param_cache
-    selection_cache = cfg.selection_cache
-    selection_random_state = cfg.selection_random_state
     save_models = cfg.save_models
-    model_store = cfg.model_store
 
     X_fit = pd.DataFrame(item["X_fit"])
     X_selection_base = pd.DataFrame(item.get("X_selection", X_fit))
@@ -1871,7 +1927,6 @@ def _fit_predict_path_average_origin(
         base_index=item.get("base_index"),
         horizon=horizon,
     )
-    retune = bool(row.get("retune", True))
     records: list[dict[str, Any]] = []
 
     for model_run in model_runs:
@@ -1880,18 +1935,15 @@ def _fit_predict_path_average_origin(
         should_select = selected is not None or (
             use_model_default_selection and bool(model_spec.search_spaces)
         )
-        uses_ic = str(getattr(model_spec, "selection_method", "cv")).lower() in (
-            "bic", "aic", "aicc"
-        )
         # Each path step forecasts the one-period target s steps ahead, regressed on
         # the origin-available features -- a DIRECT s-step projection. Direct-capable
         # iterated models (ar, far) must therefore run with ``direct=True`` per step,
-        # exactly as the direct policy does; otherwise the per-step fit falls back to
-        # the legacy roll-forward and persists a stale value (mild at h1, growing with
-        # the step). IC order selection uses the same flag so n_lag is chosen for the
-        # direct projection.
+        # exactly as the direct policy does -- the shared skeleton injects the flag,
+        # so the direct policy and path per-step projections flow through the same
+        # code; otherwise the per-step fit would fall back to the legacy roll-forward
+        # and persist a stale value (mild at h1, growing with the step). IC order
+        # selection uses the same flag so n_lag is chosen for the direct projection.
         direct_capable = "direct" in getattr(model_spec, "default_params", {})
-        ic_fixed_params = {"direct": True} if direct_capable else None
         predictions_by_step: dict[int, pd.Series] = {}
         stored_by_step: dict[str, Any] = {}
         selection_by_step: dict[str, Any] = {}
@@ -1928,113 +1980,37 @@ def _fit_predict_path_average_origin(
                 model_run.alias,
                 f"{item.get('target_key', 'path')}_step{step}",
             )
-            selection_metadata: dict[str, Any] | None = None
-            if should_select and uses_ic:
-                # Information-criterion models (AR, FM) select their order by
-                # BIC/AIC on the full per-step training sample, exactly as the
-                # direct path does. Routing them through the CV/validation-split
-                # branch below would score the order on a truncated sample (the
-                # validation block is held out) and pick a different order, which
-                # breaks the horizon-1 direct==path invariant.
-                if retune or step_key not in param_cache:
-                    result = select_by_information_criterion(
-                        model_spec,
-                        X_selection_step,
-                        y_selection_aligned,
-                        search=selected,
-                        criterion=str(model_spec.selection_method).lower(),
-                        fixed_params=ic_fixed_params,
-                    )
-                    param_cache[step_key] = dict(result.best_params)
-                    selection_metadata = {
-                        **result.to_metadata(),
-                        "policy": selection_policy.to_dict(),
-                        "retuned": True,
-                        "path_step": step,
-                    }
-                    selection_cache[step_key] = selection_metadata
-                    selection_cache[_SELECTION_TUNED_KEY] = True
-                    best_params = dict(param_cache.get(step_key, {}))
-                else:
-                    selection_metadata = selection_cache.get(step_key)
-                    if selection_metadata is not None:
-                        selection_metadata = {
-                            **selection_metadata,
-                            "retuned": False,
-                            "path_step": step,
-                        }
-                    best_params = dict(param_cache.get(step_key, {}))
-            elif should_select:
-                if not selection_splits:
-                    best_params, selection_metadata = _resolve_degraded_selection(
-                        cache_key=step_key,
-                        alias=f"{model_run.alias} (path step {step})",
-                        target_step=step,
-                        origin_label=row.get("origin"),
-                        param_cache=param_cache,
-                        selection_cache=selection_cache,
-                        selection_policy=selection_policy,
-                    )
-                    if isinstance(selection_metadata, dict):
-                        selection_metadata = {**selection_metadata, "path_step": step}
-                elif retune or step_key not in param_cache:
-                    result = select_params(
-                        model_spec,
-                        X_selection_step,
-                        y_selection_aligned,
-                        search=selected,
-                        splits=selection_splits,
-                        metric=selection_metric,
-                        maximize=maximize_selection,
-                        random_state=selection_random_state if selected is None else None,
-                        allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
-                    )
-                    param_cache[step_key] = dict(result.best_params)
-                    selection_metadata = {
-                        **result.to_metadata(),
-                        "policy": selection_policy.to_dict(),
-                        "retuned": True,
-                        "path_step": step,
-                    }
-                    selection_cache[step_key] = selection_metadata
-                    selection_cache[_SELECTION_TUNED_KEY] = True
-                    best_params = dict(param_cache.get(step_key, {}))
-                else:
-                    selection_metadata = selection_cache.get(step_key)
-                    if selection_metadata is not None:
-                        selection_metadata = {
-                            **selection_metadata,
-                            "retuned": False,
-                            "path_step": step,
-                        }
-                    best_params = dict(param_cache.get(step_key, {}))
-            else:
-                best_params = {}
-            call_params = (
-                {**best_params, "direct": True} if direct_capable else best_params
-            )
-            fit_params = _actual_model_params(model_spec, call_params)
-            fit = model_spec(X_fit_step, y_fit_aligned, **call_params)
             step_row = {**row, "target_key": f"{row.get('target_key')}_step{step}"}
-            stored_by_step[str(step)] = (
-                _store_model_fit(
-                    fit,
-                    root=model_store,
-                    alias=model_run.alias,
-                    model_spec=model_spec,
-                    row=step_row,
-                    params=fit_params,
-                    selection_metadata=selection_metadata,
-                )
-                if save_models
-                else None
+            # Per-step select -> fit -> save -> predict runs through the shared
+            # skeleton -- the same code the direct policy uses, so the per-step
+            # direct=True projection and the IC-on-full-sample selection (which
+            # preserves the horizon-1 direct==path invariant) can never drift
+            # from the direct policy again. The step-specific cache key keeps
+            # per-step params isolated; ``path_step`` is stamped onto both fresh
+            # and reused selection metadata, and the degraded-selection warning
+            # names the step.
+            outcome = _fit_one_model_at_origin(
+                model_run,
+                X_fit_step,
+                y_fit_aligned,
+                X_selection_step,
+                y_selection_aligned,
+                X_test,
+                cfg,
+                direct_capable_flag=direct_capable,
+                cache_key=step_key,
+                row=step_row,
+                selection_splits=selection_splits,
+                target_step=step,
+                allow_non_temporal_splits=_allow_non_temporal_selection_splits(item),
+                degraded_alias=f"{model_run.alias} (path step {step})",
+                retuned_metadata_extras={"path_step": step},
+                reused_metadata_extras={"path_step": step},
             )
-            predictions_by_step[step] = _prediction_series(
-                fit.predict(X_test),
-                index=X_test.index,
-            )
-            selection_by_step[str(step)] = selection_metadata
-            params_by_step[str(step)] = dict(fit_params)
+            stored_by_step[str(step)] = outcome.stored_model
+            predictions_by_step[step] = outcome.prediction
+            selection_by_step[str(step)] = outcome.selection_metadata
+            params_by_step[str(step)] = dict(outcome.fit_params)
 
         if set(predictions_by_step) != set(range(1, horizon + 1)):
             continue
