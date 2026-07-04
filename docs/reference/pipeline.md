@@ -36,6 +36,7 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 | `pipeline_spec(...)` | Validating generator that builds a `PipelineSpec`. |
 | `model_arms(models, ...)` | Build one `Arm` per model for a pure model comparison. |
 | `run_pipeline(spec)` | Run arms, evaluate, and return a `PipelineReport`. |
+| `rescore(checkpoint_dir, spec)` | Re-score a checkpointed run from disk alone (no refitting); returns a `PipelineReport`. |
 | `interpret_pipeline(report, *, methods, which_fit, arms)` | Deferred multi-method ML interpretation. |
 | `run_arms(spec)` | Execute every cell into the master forecast frame (lower-level; name retained for back-compat). |
 | `evaluate(master, spec)` | Accuracy + DM/CW + MCS + combinations on a master frame. |
@@ -210,6 +211,47 @@ each spawned `cpu_count` threads. Each worker now pins its model-internal thread
 `model_threads`. The split changes only the number of internal threads, **not** the
 numerical result (tree training is deterministic in `random_state` regardless of the
 thread count), so a `n_jobs="auto"` run is byte-for-byte identical to `n_jobs=1`.
+
+## Re-scoring saved forecasts (`rescore`)
+
+A checkpointed pipeline run (`pipeline_spec(..., checkpoint_dir=<dir>)`) persists
+each cell's lean forecast records under
+`<checkpoint_dir>/<target>__<arm>/h<h>/origin_<pos>.parquet` as origins complete.
+Because the evaluation stage is pure-frame (`evaluate(master, spec)` needs the
+forecasts, not the fitted models), those saved records are sufficient to rebuild
+the full evaluation -- accuracy, DM/CW significance, MCS, and combination
+contenders -- without re-running a single fit. `rescore` is that glue:
+
+```python
+spec = mf.pipeline.pipeline_spec(..., checkpoint_dir="ckpt")   # the original spec
+report = mf.pipeline.rescore("ckpt", spec)                     # no refitting
+report.accuracy                                                # same as the live run's
+```
+
+`rescore(checkpoint_dir, spec)` walks every `(target, arm, horizon)` cell the
+spec describes, loads the persisted records, reassembles the master forecast
+frame (re-attaching `arm`/`contender` labels from the spec -- the lean checkpoint
+schema does not store them), and runs the standard evaluation. It returns the
+same `PipelineReport` type as `run_pipeline`, with the evaluation fields
+(`forecasts`, `accuracy`, `significance`, `mcs`) populated identically to a live
+run over the same forecasts. The directory argument wins over whatever
+`spec.checkpoint_dir` says, so a spec built without checkpointing (or a copied
+checkpoint directory) re-scores fine.
+
+Fields that require having actually executed the run are absent or best-effort:
+
+- `interpretation` is always `None` (needs fitted models; use
+  `interpret_pipeline` on a live run).
+- `failed_cells` is always empty -- a cell that failed during the original run
+  wrote no checkpoint files and cannot be distinguished from one that never ran.
+- `empty_cells` lists arms with zero checkpoint rows across all horizons
+  (failed, interrupted, or never run -- indistinguishable from disk alone).
+- `provenance` / `leakage_audit` carry a `rescored_from` marker instead of a
+  recomputed live audit.
+
+An empty or wrong `checkpoint_dir` raises a `ValueError` naming the problem
+(no cell directories found / directories present but all empty) rather than
+returning a silently empty report.
 
 ## Notes
 

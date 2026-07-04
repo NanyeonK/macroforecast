@@ -4,6 +4,7 @@ from __future__ import annotations
 from .interpret import interpret_pipeline
 from .evaluate import apply_combinations, evaluate, evaluate_cross_policy
 from .parallelism import auto_parallelism
+from .rescore import rescore
 from .run import run_arms, run_pipeline
 from .spec import (
     TCODE_TARGET_MAP,
@@ -25,6 +26,7 @@ from .spec import (
 __all__ = [
     "TCODE_TARGET_MAP",
     "auto_parallelism",
+    "rescore",
     "run_arms",
     "run_pipeline",
     "interpret_pipeline",
