@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 
 # t-code (FRED-MD/QD integration order) -> (forecast_policy, target_transform).
@@ -190,7 +190,7 @@ class PipelineSpec:
     # sharing one directory (explicit or auto-created) across specs/arms that
     # resolve to different scopes never cross-contaminates (see
     # preprocessing/cache.py and pipeline/run.py::_effective_preprocessing_policy).
-    preprocessing_cache_dir: str | bool | None = None
+    preprocessing_cache_dir: str | Literal[False] | None = None
     seed: int | None = 42
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
@@ -482,7 +482,7 @@ def model_arms(
 # generator
 # --------------------------------------------------------------------------- #
 
-def _resolve_preprocessing_cache_dir(value: str | bool | None) -> str | bool | None:
+def _resolve_preprocessing_cache_dir(value: str | bool | None) -> str | Literal[False] | None:
     """Normalize the raw ``preprocessing_cache_dir`` argument to its stored form.
 
     ``None`` -> ``None`` ("not configured"; run-time defaulting decides). ``False``
@@ -490,7 +490,9 @@ def _resolve_preprocessing_cache_dir(value: str | bool | None) -> str | bool | N
     ``str`` (an explicit directory path). ``True`` is rejected -- it is not a valid
     directory and it is not the opt-out sentinel, so silently accepting it would
     invite exactly the "did the user mean an explicit path or the default" ambiguity
-    this three-state contract exists to avoid.
+    this three-state contract exists to avoid. The stored form is therefore
+    ``str | Literal[False] | None`` (the field annotation): ``True`` never
+    survives validation, so truthiness-narrowing the FIELD yields ``str``.
     """
     if value is None or value is False:
         return value
