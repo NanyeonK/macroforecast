@@ -2674,8 +2674,8 @@ macroforecast.models.bvar_minnesota(
     kappa1=0.5,
     nu0=0.0,
     s0=0.0,
-    iter=10000,
-    burnin=5000,
+    iter=300,
+    burnin=100,
     random_state=0,
 )
 ```
@@ -2696,8 +2696,8 @@ of BVAR forecast object.
 | `kappa1` | `0.5` | yes | Minnesota lag-decay exponent. |
 | `nu0` | `0.0` | fixed by preset | Inverse-Wishart degrees-of-freedom prior parameter. |
 | `s0` | `0.0` | fixed by preset | Inverse-Wishart scale prior parameter. |
-| `iter` | `10000` | fixed by preset | Total Gibbs iterations. |
-| `burnin` | `5000` | fixed by preset | Burn-in iterations removed before summaries. |
+| `iter` | `300` | fixed by preset | Total Gibbs iterations (deep/paper-faithful default is `10000`; pass explicitly to restore it). |
+| `burnin` | `100` | fixed by preset | Burn-in iterations removed before summaries (deep/paper-faithful default is `5000`; pass explicitly to restore it). |
 | `random_state` | `0` | fixed by preset | Random seed for posterior draws. |
 
 ### bvar_normal_inverse_wishart
@@ -2712,8 +2712,8 @@ macroforecast.models.bvar_normal_inverse_wishart(
     vb0=0.0,
     nu0=0.0,
     s0=0.0,
-    iter=10000,
-    burnin=5000,
+    iter=300,
+    burnin=100,
     random_state=0,
 )
 ```
@@ -3062,8 +3062,8 @@ macroforecast.models.restricted_midas(
     n_steps=3,
     step_bounds=None,
     fit_intercept=True,
-    maxiter=1000,
-    tolerance=1e-8,
+    maxiter=200,
+    tolerance=1e-6,
 )
 ```
 
@@ -3089,8 +3089,8 @@ utilities are not reproduced here.
 | `n_steps` | `3` | yes | Number of step buckets when `weighting="step"` and `step_bounds` is omitted. |
 | `step_bounds` | `None` | fixed by preset | Interior cut points for `polystep`-style step coefficients. |
 | `fit_intercept` | `True` | fixed by preset | Whether to estimate an intercept outside the restricted lag coefficients. |
-| `maxiter` | `1000` | fixed by preset | Maximum SciPy least-squares function evaluations. |
-| `tolerance` | `1e-8` | fixed by preset | Shared `xtol`, `ftol`, and `gtol` stopping tolerance. |
+| `maxiter` | `200` | fixed by preset | Maximum SciPy least-squares function evaluations (deep/paper-faithful default is `1000`; pass explicitly to restore it). |
+| `tolerance` | `1e-6` | fixed by preset | Shared `xtol`, `ftol`, and `gtol` stopping tolerance (deep/paper-faithful default is `1e-8`; pass explicitly to restore it). |
 
 Outputs include fitted values, residuals, unrestricted effective lag
 coefficients, the optimized restricted parameter vector, convergence metadata,
@@ -3641,8 +3641,8 @@ macroforecast.models.lgb_plus(
     X,
     y,
     *,
-    n_ensemble=10,
-    n_steps=200,
+    n_ensemble=3,
+    n_steps=30,
     learning_rate=0.05,
     subsample=0.7,
     num_leaves=5,
@@ -3695,8 +3695,8 @@ Output is a `ModelFit` with `model="lgb_plus"`. Use
 
 | Parameter | Default | Tunable | Meaning |
 | --- | --- | --- | --- |
-| `n_ensemble` | `10` | yes | Independent boosting runs. Predictions are aggregated across runs. |
-| `n_steps` | `200` | yes | Maximum tree/linear competition steps per run. |
+| `n_ensemble` | `3` | yes | Independent boosting runs. Predictions are aggregated across runs (deep/paper-faithful default is `10`; pass explicitly to restore it). |
+| `n_steps` | `30` | yes | Maximum tree/linear competition steps per run (deep/paper-faithful default is `200`; pass explicitly to restore it). |
 | `learning_rate` | `0.05` | yes | Shared shrinkage for accepted tree or linear updates. |
 | `subsample` | `0.7` | yes | Row subsample share per step. `selection_method="oob"` requires `< 1`. |
 | `num_leaves` | `5` | yes | Maximum leaves for the one-step LightGBM tree candidate. |
@@ -3903,7 +3903,7 @@ macroforecast.models.macro_random_forest(
     x_pos=None,
     S_pos=None,
     y_pos=0,
-    B=50,
+    B=25,
     minsize=10,
     mtry_frac=1/3,
     min_leaf_frac_of_x=1.0,
@@ -4049,7 +4049,7 @@ is considered at each split. Small training samples can also fail when
 | `x_pos` | `None` | fixed by preset | Reference-package predictor positions after the target column. |
 | `S_pos` | `None` | fixed by preset | Reference-package state positions after the target column. |
 | `y_pos` | `0` | fixed by preset | Fixed target position for the separated `X/y` adapter; must remain `0`. |
-| `B` | `50` | yes | Number of MRF trees. |
+| `B` | `25` | yes | Number of MRF trees (deep/paper-faithful default is `50`; pass explicitly to restore it). |
 | `minsize` | `10` | yes | Minimum node size before split attempts. |
 | `mtry_frac` | `1/3` | yes | Fraction of state variables considered at each split. |
 | `min_leaf_frac_of_x` | `1.0` | yes | Minimum leaf-size multiplier relative to local x dimension. |

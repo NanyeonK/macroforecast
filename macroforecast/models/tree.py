@@ -1123,8 +1123,8 @@ def lgb_plus(
     X: Any,
     y: Any | None = None,
     *,
-    n_ensemble: int = 10,
-    n_steps: int = 200,
+    n_ensemble: int = 3,
+    n_steps: int = 30,
     learning_rate: float = 0.05,
     subsample: float = 0.7,
     num_leaves: int = 5,
@@ -1139,7 +1139,13 @@ def lgb_plus(
     verbose: bool = False,
     **kwargs: Any,
 ) -> ModelFit:
-    """Fit competition-based LGB+ hybrid tree/linear boosting."""
+    """Fit competition-based LGB+ hybrid tree/linear boosting.
+
+    ``n_ensemble=3``/``n_steps=30`` are cheapened defaults (each fit runs
+    ``n_ensemble * n_steps`` sequential ``lgb.train`` calls). The deep/
+    paper-faithful defaults (``n_ensemble=10``, ``n_steps=200``) remain
+    reachable by passing them explicitly.
+    """
 
     params = {
         "n_ensemble": int(n_ensemble),
@@ -1442,7 +1448,7 @@ class MacroRandomForestRegressor:
         x_pos: Sequence[int] | None = None,
         S_pos: Sequence[int] | None = None,
         y_pos: int = 0,
-        B: int = 50,
+        B: int = 25,
         minsize: int = 10,
         mtry_frac: float = 1.0 / 3.0,
         min_leaf_frac_of_x: float = 1.0,
@@ -1684,7 +1690,7 @@ def macro_random_forest(
     x_pos: Sequence[int] | None = None,
     S_pos: Sequence[int] | None = None,
     y_pos: int = 0,
-    B: int = 50,
+    B: int = 25,
     minsize: int = 10,
     mtry_frac: float = 1.0 / 3.0,
     min_leaf_frac_of_x: float = 1.0,
@@ -1712,7 +1718,11 @@ def macro_random_forest(
     n_cores: int = 1,
     **kwargs: Any,
 ) -> ModelFit:
-    """Fit Macroeconomic Random Forest with the vendored reference backend."""
+    """Fit Macroeconomic Random Forest with the vendored reference backend.
+
+    ``B=25`` is a cheapened default tree count. The deep/paper-faithful
+    default (``B=50``) remains reachable by passing it explicitly.
+    """
 
     params = {
         "x_columns": x_columns,

@@ -82,6 +82,41 @@ full per-version honesty-pass history embedded in repo documentation.
   default params, `direct` policy, `h=2`) and with the empirical policy-matrix
   scan (`direct`/`direct_average`/`path_average` now `OK`).
 
+- `models` (pathological default costs): six models exceeded 150s on a 140-obs
+  toy policy-matrix scan (`.dev-notes/policy_matrix_scan.py`) with their
+  out-of-the-box defaults, either from the default params themselves or from
+  the "standard" search-space preset that `model_selection=None` still runs
+  (dispatch is out of scope; only per-trial cost changed). Old -> new:
+  - `bvar_minnesota` / `bvar_normal_inverse_wishart`: `iter` `10000`->`300`,
+    `burnin` `5000`->`100`; "standard" preset `n_lag` `(1, 2, 4)`->`(1, 2)`
+    (own dedicated spaces dict, not shared with other models). Verified scan
+    total (4 policies) 28.41s (was: every cell exceeded 150s; single default
+    fits alone ran 12.8-41.4s before this change).
+  - `favar`: see the separate favar entry above (`nburn`/`nrep` and its new
+    dedicated search space). Verified scan total 54.6s.
+  - `macro_random_forest`: default `B` `50`->`25`; "standard" preset `B`
+    `(25, 50, 100)`->`(10, 25)` (own dedicated spaces dict). Verified scan
+    total 81.8s (was 241.9s uncontended, i.e. already over the 150s bar).
+  - `lgb_plus`: default `n_ensemble` `10`->`3`, `n_steps` `200`->`30`;
+    "standard" preset `n_ensemble` `(5, 10)`->`(3, 5)`, `n_steps`
+    `(100, 200, 400)`->`(30, 50, 100)` (own dedicated spaces dict). Verified
+    scan total 84.2s (was: did not finish within 300s before this change).
+  - `mars`: default unchanged (`max_degree=1`, `max_terms=20`); "standard"
+    search preset drops the `max_degree=2` x `max_terms=30` corner
+    (`max_terms` `(10, 20, 30)`->`(10, 20)`); "wide" preset unchanged (still
+    reaches `max_terms=30` x `max_degree=2` for deep/explicit use). Verified
+    scan total 132.9s (was 98.9s for the single `direct` cell alone using just
+    the worst corner, i.e. the full search made every policy far worse).
+  - `restricted_midas`: `maxiter` `1000`->`200`, `tolerance` `1e-8`->`1e-6`.
+    Verified scan total 38.6s (was 211.3s, i.e. already over the 150s bar).
+  Deep/paper-faithful settings remain reachable by passing the old values
+  explicitly (or, for `mars`, using the "wide" preset). A new
+  `tests/models/test_default_cost_budget.py` (marked `@pytest.mark.slow`,
+  this repo's opt-in gate for realistic-shape integration tests -- there is
+  no registered `deep` marker) pins that a single default fit for each model
+  stays inside a generous wall-clock budget, to catch a future default
+  regressing back toward a pathological cost.
+
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
   (`direct=False`) instead of the DIRECT s-step projection, so each path step

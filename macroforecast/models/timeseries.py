@@ -782,8 +782,8 @@ def bvar_minnesota(
     kappa1: float = 0.5,
     nu0: float = 0.0,
     s0: float | Sequence[Sequence[float]] | None = 0.0,
-    iter: int = 10000,
-    burnin: int = 5000,
+    iter: int = 300,
+    burnin: int = 100,
     random_state: int = 0,
     own_lag_prior_mean: float = 0.0,
 ) -> ModelFit:
@@ -792,6 +792,11 @@ def bvar_minnesota(
     ``own_lag_prior_mean`` sets the prior mean of each variable's own first lag
     (default 0.0; pass 1.0 for the classic Litterman random-walk prior). The panel
     is demeaned internally, so 0.0 shrinks toward white noise around the mean.
+
+    ``iter=300``/``burnin=100`` are cheapened defaults (the Gibbs/Wishart draw
+    loop cost grows sharply with panel width and ``n_lag``). The deep/
+    paper-faithful defaults (``iter=10000``, ``burnin=5000``) remain reachable
+    by passing them explicitly.
     """
 
     frame = as_frame(panel)
@@ -844,11 +849,17 @@ def bvar_normal_inverse_wishart(
     vb0: float = 0.0,
     nu0: float = 0.0,
     s0: float | Sequence[Sequence[float]] | None = 0.0,
-    iter: int = 10000,
-    burnin: int = 5000,
+    iter: int = 300,
+    burnin: int = 100,
     random_state: int = 0,
 ) -> ModelFit:
-    """Fit a FAVAR::BVAR-style Bayesian VAR with normal-Wishart priors."""
+    """Fit a FAVAR::BVAR-style Bayesian VAR with normal-Wishart priors.
+
+    ``iter=300``/``burnin=100`` are cheapened defaults (the Gibbs/Wishart draw
+    loop cost grows sharply with panel width and ``n_lag``). The deep/
+    paper-faithful defaults (``iter=10000``, ``burnin=5000``) remain reachable
+    by passing them explicitly.
+    """
 
     frame = as_frame(panel)
     estimator = _BayesianVAR(
@@ -2083,10 +2094,16 @@ def restricted_midas(
     n_steps: int = 3,
     step_bounds: tuple[int, ...] | None = None,
     fit_intercept: bool = True,
-    maxiter: int = 1000,
-    tolerance: float = 1e-8,
+    maxiter: int = 200,
+    tolerance: float = 1e-6,
 ) -> ModelFit:
-    """Fit a midasr::midas_r-style nonlinear restricted MIDAS regression."""
+    """Fit a midasr::midas_r-style nonlinear restricted MIDAS regression.
+
+    ``maxiter=200``/``tolerance=1e-6`` are cheapened defaults for the SciPy
+    ``least_squares`` finite-difference-Jacobian solve. The deep/paper-faithful
+    defaults (``maxiter=1000``, ``tolerance=1e-8``) remain reachable by passing
+    them explicitly.
+    """
 
     weighting_value = _normalize_restricted_weighting(weighting)
     polynomial_order = _validate_polynomial_order(polynomial_order)
