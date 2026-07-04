@@ -61,6 +61,27 @@ full per-version honesty-pass history embedded in repo documentation.
   (paper-faithful) values remain reachable by passing them explicitly. Verified
   with the empirical policy-matrix scan: favar now reports `OK` on all 4
   policies (previously all 25/25 default-preset trials failed).
+- `models` (dfm_unrestricted_midas prediction NaN): `predict_from_panel`
+  rebuilt the DFM-factor design at prediction time and hard-rejected any NaN
+  in it. With the default `factor_lags=(0,)` and `target_frequency="quarterly"`
+  / `anchor_position="period_end"`, the lag-0 factor lookup date is the
+  anchor's *enclosing quarter-end* month, which can fall several months past
+  the last date the DFM's own predictors cover (e.g. forecasting April with
+  `h=2` projects the anchor to the June quarter-end) -- so
+  `dfm_factor1_lag0` was NaN and `direct`/`direct_average`/`path_average` all
+  failed (`recursive` was, and remains, correctly rejected by the panel-input
+  guard). `_dfm_unrestricted_midas_design` now extends the fitted
+  `DynamicFactorMQ` state forward to the anchor date via the model's own
+  `.extend()` Kalman-filter forecast (all-missing placeholder observations for
+  the gap months) instead of reindexing to NaN -- i.e. it forecasts the
+  factors forward using the fitted state, rather than manufacturing a missing
+  value. Also added a fit-time validation: `target_frequency` must normalize
+  to one of monthly/quarterly/annual, raising a clear `ValueError` instead of
+  silently falling back to a monthly anchor projection. Verified with a
+  regression test reproducing the original failure (monthly toy panel,
+  default params, `direct` policy, `h=2`) and with the empirical policy-matrix
+  scan (`direct`/`direct_average`/`path_average` now `OK`).
+
 - `forecasting` (CRITICAL correctness fix, found by a new oracle): the `path_average`
   policy fitted its per-step `ar`/`far` with the LEGACY iterated estimator
   (`direct=False`) instead of the DIRECT s-step projection, so each path step

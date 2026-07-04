@@ -1626,6 +1626,16 @@ def dfm_unrestricted_midas(
     frame, meta = _coerce_panel_with_metadata(panel, metadata=metadata)
     if target not in frame.columns:
         raise ValueError(f"target {target!r} is not in the mixed-frequency panel")
+    if target_frequency is not None:
+        normalized_target_frequency = _normalize_frequency_label(target_frequency)
+        if normalized_target_frequency not in {"monthly", "quarterly", "annual"}:
+            raise ValueError(
+                "target_frequency must be one of ['monthly', 'quarterly', 'annual'] "
+                f"(or None); got {target_frequency!r}. A frequency label that does not "
+                "match a supported cadence would otherwise silently fall back to a "
+                "monthly anchor projection, which is a common source of prediction-time "
+                "missing-value failures rather than a clear fit-time error."
+            )
     lag_values = _normalize_model_lags(lags)
     factor_lag_values = _normalize_model_lags(factor_lags)
     lag_column_values = tuple(str(column) for column in lag_columns or ())
@@ -1764,6 +1774,7 @@ def _dfm_unrestricted_midas_design(
         frequency=target_frequency or metadata.get("frequency") or "quarterly",
         anchor_position=anchor_position,
     )
+    factors = _extend_dfm_factors(dfm_fit, factors, through_date=anchor_index.max())
     design_parts: list[pd.DataFrame] = [
         _factor_lag_design(factors, anchor_index=anchor_index, lags=factor_lags)
     ]
@@ -3356,6 +3367,66 @@ def _position_target_dates(
     if freq == "annual":
         return pd.DatetimeIndex(raw.to_period("Y").asfreq("M", how=how).to_timestamp(), name="date")
     return pd.DatetimeIndex(raw.to_period("M").to_timestamp(), name="date")
+
+
+def _extend_dfm_factors(
+    dfm_fit: Any,
+    factors: pd.DataFrame,
+    *,
+    through_date: Any,
+) -> pd.DataFrame:
+    """Extend fitted DFM filtered factors forward to cover ``through_date``.
+
+    Prediction-time anchor dates can fall past the last date the DFM factors
+    were filtered through (e.g. a "period_end" quarterly anchor projects a
+    monthly forecast date onto a later quarter-end month than any observed
+    predictor data reaches). Previously this left ``dfm_factor*_lag0`` as NaN
+    (a plain ``reindex``), which made ``predict_from_panel`` reject the design
+    outright. Instead, extend the already-fitted DynamicFactorMQ state-space
+    result with placeholder (all-missing) observations for the gap months and
+    read off its own Kalman-filter forecast of the factors -- i.e. propagate
+    the fitted factor-VAR state forward rather than manufacturing missing
+    values. Falls back to returning ``factors`` unchanged (preserving the
+    prior reindex-to-NaN behavior, and therefore the existing missing-value
+    error) if the underlying fit is unavailable or the extension itself fails.
+    """
+    if not isinstance(factors, pd.DataFrame) or factors.empty:
+        return factors
+    estimator = getattr(dfm_fit, "estimator", None)
+    result = getattr(estimator, "result_", None)
+    if result is None:
+        return factors
+    last_date = pd.Timestamp(factors.index.max()).to_period("M").to_timestamp()
+    target_date = pd.Timestamp(through_date).to_period("M").to_timestamp()
+    if target_date <= last_date:
+        return factors
+    ext_index = pd.date_range(last_date + pd.DateOffset(months=1), target_date, freq="MS")
+    if ext_index.empty:
+        return factors
+    monthly_columns = list(getattr(estimator, "monthly_columns_", ()))
+    quarterly_columns = list(getattr(estimator, "quarterly_columns_", ()))
+    if not monthly_columns:
+        return factors
+    monthly_ext = pd.DataFrame(np.nan, index=ext_index, columns=monthly_columns)
+    try:
+        if quarterly_columns:
+            quarterly_ext = pd.DataFrame(
+                np.nan,
+                index=pd.period_range(ext_index[0], ext_index[-1], freq="Q"),
+                columns=quarterly_columns,
+            )
+            extended = result.extend(monthly_ext, endog_quarterly=quarterly_ext)
+        else:
+            extended = result.extend(monthly_ext)
+        extended_bunch = extended.factors
+        extended_factors = extended_bunch.filtered if extended_bunch is not None else None
+    except Exception:  # noqa: BLE001 - fall back to the prior reindex-to-NaN contract
+        return factors
+    if not isinstance(extended_factors, pd.DataFrame) or extended_factors.empty:
+        return factors
+    extended_factors = extended_factors.reindex(columns=factors.columns)
+    combined = pd.concat([factors, extended_factors])
+    return combined[~combined.index.duplicated(keep="last")].sort_index()
 
 
 def _factor_lag_design(
