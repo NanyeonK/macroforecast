@@ -76,6 +76,7 @@ markers = [
     "slow: realistic-shape integration tests (gated; opt in with `pytest -m slow`)",
     "reference: reference-style anchors for paper/formula behavior and invariants",
     "rparity: R cross-reference/parity tests (gated; needs Rscript + R packages, opt in with `pytest -m rparity`)",
+    "mc: Monte Carlo size/power validation (expensive -- gated; opt in with `pytest -m mc`)",
 ]
 
 [tool.mypy]
