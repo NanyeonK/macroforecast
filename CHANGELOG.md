@@ -5,6 +5,51 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
+  directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,
+  excluded from `ci-core.yml` explicitly) anchors the highest-priority gaps
+  from the WP-V0 anchor-coverage inventory (`.dev-notes/anchor_coverage/`)
+  against R, via a subprocess-`Rscript` bridge (`tests/parity/conftest.py`)
+  rather than `rpy2` -- the only `rpy2` wheel available here (3.6.7) fails to
+  import against this host's R 4.3.3 build in both API and ABI mode
+  (`undefined symbol: R_getVar`/`R_ParentEnv`), confirmed even with
+  `R_HOME`/`LD_LIBRARY_PATH` set explicitly. 37 parity tests across 7 items:
+  restored the deleted C59 R-crossref suite (`git show
+  7050f5d2:tests/core/test_r_crossref_c59.py`, adapted to the current API) for
+  `realized_garch` vs `rugarch::ugarchfit(model="realGARCH")` (all 9
+  overlapping parameters match to atol=0.01 across two seeds -- promotes
+  `realized_garch` from zero-anchor Tier-1 to a tightly-verified P-anchor) and
+  `restricted_midas`/`midas_almon` vs `midasr::midas_r(weight_method=
+  "nealmon")`; HAC long-run-variance kernel parity vs R `sandwich::kernHAC`
+  for `dm_test`'s 3 usable kernels; `dm_test` vs `forecast::dm.test` (h=1/4,
+  HLN-corrected and raw, power=1/2, 6/6 pass); `model_confidence_set`/
+  `_mcs_statistic` vs R `MCS::MCSprocedure` (deterministic `GetD` core exact,
+  survivor-set match); `_berkowitz_density_test` vs a clean-room R port of
+  Berkowitz (2001); exact-value oracles for `gaussian_nll`/`crps`/`log_score`/
+  `negative_log_score`/`qlike`/`smape` (crps also vs `scoringRules::crps_norm`
+  and `crps_sample`); `mars` vs R `earth` prediction parity. Full outcome
+  table: `.dev-notes/anchor_coverage/v1_parity_results.md`.
+  **Suspected bugs found (reported here, NOT silently fixed per the WP-V1
+  mandate)**: (1) `_long_run_variance(..., kernel="andrews")` -- and every
+  public callable that forwards to it (`dm_test`, `gw_test`,
+  `harvey_newbold_test` confirmed directly, `clark_west_test`/`cw_test`/
+  `enc_t_test` likely) -- ALWAYS raises `ValueError: unknown HAC kernel
+  'newey_west'` for any input: the code sets `kernel = "newey_west"` after
+  computing the Andrews/Newey-West automatic bandwidth, but the weighted-sum
+  branch below is spelled `"bartlett"`, not `"newey_west"`, so execution
+  always falls through to the final `raise`. (2) `_long_run_variance`'s
+  `"bartlett"` branch weights lag k as `1 - k/(bandwidth + 1)` (Newey-West
+  1987 convention) while its own `"acf"`/`"parzen"` siblings -- and R
+  `sandwich::kernHAC`'s Bartlett kernel -- use `1 - k/bandwidth` (Andrews
+  1991 convention); confirmed to full double precision this is a real
+  internal inconsistency, not a numerical artifact (both xfailed
+  `strict=True` in `tests/parity/test_hac_kernels.py`, not silently
+  loosened). Note: the public `dm_test(kernel="bartlett", horizon=h)` path
+  is NOT affected by finding (2) -- its bandwidth is always `horizon - 1`,
+  which happens to make macroforecast's formula coincide with
+  `forecast::dm.test`'s own bartlett convention (verified: 6/6 pass in
+  `test_dm_test.py`).
+
 - `forecasting`/`pipeline` (performance, Gap A): the per-origin fitted feature
   builder (`FeatureSpec.fit()` -- the PCA/MARX/SIR-style numerical state) is now
   shared across arms of the same target in the serial pipeline path, exactly like
