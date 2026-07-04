@@ -575,22 +575,25 @@ are additional contenders.</p></li>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">run_pipeline(spec)</span></code></p></td>
 <td><p>Run arms, evaluate, and return a <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interpret_pipeline(report,</span> <span class="pre">*,</span> <span class="pre">methods,</span> <span class="pre">which_fit,</span> <span class="pre">arms)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rescore(checkpoint_dir,</span> <span class="pre">spec)</span></code></p></td>
+<td><p>Re-score a checkpointed run from disk alone (no refitting); returns a <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interpret_pipeline(report,</span> <span class="pre">*,</span> <span class="pre">methods,</span> <span class="pre">which_fit,</span> <span class="pre">arms)</span></code></p></td>
 <td><p>Deferred multi-method ML interpretation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">run_arms(spec)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run_arms(spec)</span></code></p></td>
 <td><p>Execute every cell into the master forecast frame (lower-level; name retained for back-compat).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec)</span></code></p></td>
 <td><p>Accuracy + DM/CW + MCS + combinations on a master frame.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">apply_combinations(master,</span> <span class="pre">spec)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">apply_combinations(master,</span> <span class="pre">spec)</span></code></p></td>
 <td><p>Append cross-arm combination contenders.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_target(target,</span> <span class="pre">*,</span> <span class="pre">data,</span> <span class="pre">tcode,</span> <span class="pre">tcode_map,</span> <span class="pre">reduce_i2)</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_target(target,</span> <span class="pre">*,</span> <span class="pre">data,</span> <span class="pre">tcode,</span> <span class="pre">tcode_map,</span> <span class="pre">reduce_i2)</span></code></p></td>
 <td><p>Resolve a target’s (policy, transform).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contender_names(arm)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">contender_names(arm)</span></code></p></td>
 <td><p>The contender label for an arm. A contender IS exactly an arm (one model per arm), so this returns <code class="docutils literal notranslate"><span class="pre">[arm.name]</span></code>.</p></td>
 </tr>
 </tbody>
@@ -806,6 +809,44 @@ numerical result (tree training is deterministic in <code class="docutils litera
 thread count), so a <code class="docutils literal notranslate"><span class="pre">n_jobs=&quot;auto&quot;</span></code> run is byte-for-byte identical to <code class="docutils literal notranslate"><span class="pre">n_jobs=1</span></code>.</p>
 </section>
 </section>
+<section id="re-scoring-saved-forecasts-rescore">
+<h2>Re-scoring saved forecasts (<code class="docutils literal notranslate"><span class="pre">rescore</span></code>)<a class="headerlink" href="#re-scoring-saved-forecasts-rescore" title="Link to this heading">#</a></h2>
+<p>A checkpointed pipeline run (<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">checkpoint_dir=&lt;dir&gt;)</span></code>) persists
+each cell’s lean forecast records under
+<code class="docutils literal notranslate"><span class="pre">&lt;checkpoint_dir&gt;/&lt;target&gt;__&lt;arm&gt;/h&lt;h&gt;/origin_&lt;pos&gt;.parquet</span></code> as origins complete.
+Because the evaluation stage is pure-frame (<code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec)</span></code> needs the
+forecasts, not the fitted models), those saved records are sufficient to rebuild
+the full evaluation – accuracy, DM/CW significance, MCS, and combination
+contenders – without re-running a single fit. <code class="docutils literal notranslate"><span class="pre">rescore</span></code> is that glue:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">pipeline_spec</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">checkpoint_dir</span><span class="o">=</span><span class="s2">&quot;ckpt&quot;</span><span class="p">)</span>   <span class="c1"># the original spec</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">rescore</span><span class="p">(</span><span class="s2">&quot;ckpt&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>                     <span class="c1"># no refitting</span>
+<span class="n">report</span><span class="o">.</span><span class="n">accuracy</span>                                                <span class="c1"># same as the live run&#39;s</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">rescore(checkpoint_dir,</span> <span class="pre">spec)</span></code> walks every <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon)</span></code> cell the
+spec describes, loads the persisted records, reassembles the master forecast
+frame (re-attaching <code class="docutils literal notranslate"><span class="pre">arm</span></code>/<code class="docutils literal notranslate"><span class="pre">contender</span></code> labels from the spec – the lean checkpoint
+schema does not store them), and runs the standard evaluation. It returns the
+same <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> type as <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>, with the evaluation fields
+(<code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">accuracy</span></code>, <code class="docutils literal notranslate"><span class="pre">significance</span></code>, <code class="docutils literal notranslate"><span class="pre">mcs</span></code>) populated identically to a live
+run over the same forecasts. The directory argument wins over whatever
+<code class="docutils literal notranslate"><span class="pre">spec.checkpoint_dir</span></code> says, so a spec built without checkpointing (or a copied
+checkpoint directory) re-scores fine.</p>
+<p>Fields that require having actually executed the run are absent or best-effort:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">interpretation</span></code> is always <code class="docutils literal notranslate"><span class="pre">None</span></code> (needs fitted models; use
+<code class="docutils literal notranslate"><span class="pre">interpret_pipeline</span></code> on a live run).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> is always empty – a cell that failed during the original run
+wrote no checkpoint files and cannot be distinguished from one that never ran.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">empty_cells</span></code> lists arms with zero checkpoint rows across all horizons
+(failed, interrupted, or never run – indistinguishable from disk alone).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">provenance</span></code> / <code class="docutils literal notranslate"><span class="pre">leakage_audit</span></code> carry a <code class="docutils literal notranslate"><span class="pre">rescored_from</span></code> marker instead of a
+recomputed live audit.</p></li>
+</ul>
+<p>An empty or wrong <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming the problem
+(no cell directories found / directories present but all empty) rather than
+returning a silently empty report.</p>
+</section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -885,6 +926,7 @@ nested.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#n-jobs-auto"><code class="docutils literal notranslate"><span class="pre">n_jobs="auto"</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#re-scoring-saved-forecasts-rescore">Re-scoring saved forecasts (<code class="docutils literal notranslate"><span class="pre">rescore</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
 </ul>
   </nav></div>
