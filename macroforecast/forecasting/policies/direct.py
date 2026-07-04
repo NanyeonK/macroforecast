@@ -102,6 +102,10 @@ def forecast_direct_origin(
         selection_metadata = outcome.selection_metadata
         stored_model = outcome.stored_model
         pred = outcome.prediction
+        # The direct policy always supplies X_test, so the shared skeleton always
+        # returns a prediction (None is only possible for the recursive policy,
+        # which passes X_test=None -- see _FitOutcome). Narrow for mypy.
+        assert pred is not None
         variance_pred = _variance_series(fit, X_test=X_test, index=X_test.index)
         quantile_pred = _quantile_frame(fit, X_test=X_test, index=X_test.index)
         for date, value in pred.items():
