@@ -2553,6 +2553,41 @@ def _mean_hac_test_statistic(
 def _long_run_variance(
     values: np.ndarray, *, kernel: str = "acf", lag: int | None = None
 ) -> float:
+    """HAC (heteroskedasticity- and autocorrelation-consistent) long-run
+    variance of ``values``, used by every DM-family test in this module
+    (``dm_test``, ``gw_test``, ``harvey_newbold_test``, ``clark_west_test``/
+    ``cw_test``, ``enc_t_test``). Returns the LRV of the series itself
+    (``gamma_0 + 2 * sum_k w(k) * gamma_k``), NOT divided by ``n`` again --
+    callers divide by ``n`` themselves when forming a standard error.
+
+    Kernel bandwidth-taper conventions (INTENTIONALLY not uniform across
+    branches -- verified in ``tests/parity/test_hac_kernels.py`` against R
+    ``sandwich::kernHAC``, do not "fix" without re-reading that file):
+
+    - ``"bartlett"``: linear taper ``w(k) = 1 - k/(bandwidth + 1)``
+      (Newey & West 1987, Econometrica eq. 2.3). Chosen deliberately to
+      match ``forecast::dm.test``'s own bartlett/HLN variance estimator,
+      whose bandwidth is always ``horizon - 1`` -- verified 6/6 in
+      ``tests/parity/test_dm_test.py`` against ``forecast::dm.test``. This
+      is DIFFERENT from the Andrews (1991) convention below; the
+      divergence from R ``sandwich::kernHAC`` (which uses the Andrews
+      form for its own "Bartlett" kernel) is confirmed and documented in
+      ``tests/parity/test_hac_kernels.py`` -- do not align this branch to
+      ``1 - k/bandwidth`` without re-checking the ``dm_test`` parity
+      dependency first.
+    - ``"acf"`` / ``"parzen"``: Andrews (1991) generic-kernel taper using
+      ``x = k / bandwidth`` (weight reaches exactly zero at
+      ``k = bandwidth`` for parzen; truncated there for acf). Matches R
+      ``sandwich::kernHAC`` for both kernels.
+    - ``"andrews"``: not a taper shape of its own -- computes the
+      Andrews (1991, eq. 6.4) / Newey-West (1994) AR(1) plug-in automatic
+      bandwidth (``1.1447 * (alpha_hat * n) ** (1/3)``), then reuses the
+      ``"bartlett"`` linear taper above (inheriting its NW-1987
+      convention, hence also not directly comparable to
+      ``sandwich::kernHAC``'s default Andrews-bandwidth-selected Bartlett
+      kernel -- see ``tests/parity/test_hac_kernels.py`` for the
+      documented-divergence check).
+    """
     n = len(values)
     if n == 0:
         return 0.0

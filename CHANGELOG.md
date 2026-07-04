@@ -62,7 +62,26 @@ full per-version honesty-pass history embedded in repo documentation.
   `tests/parity/test_hac_kernels.py`, which also hand-computes the expected
   `_long_run_variance(kernel="andrews")` value independently and matches it
   to 1e-10). The former strict-`xfail` crash reproduction in that file is
-  replaced by these positive regression tests.
+  replaced by these positive regression tests; zero `xfail`s remain in
+  `tests/parity/`.
+
+- `tests.py` (docs/clarification, HAC kernel finding 2 above): documented,
+  in `_long_run_variance`'s new docstring, the intentional bandwidth-taper
+  asymmetry across its kernel branches -- `"bartlett"` uses the Newey-West
+  (1987) taper `1 - k/(bandwidth + 1)` (kept, NOT aligned to `"acf"`/
+  `"parzen"`, because it is required for the verified 6/6 `dm_test` parity
+  with `forecast::dm.test`, whose own bartlett bandwidth is always
+  `horizon - 1`), while `"acf"`/`"parzen"` use the Andrews (1991) taper
+  `1 - k/bandwidth` (matching R `sandwich::kernHAC` for those two kernels).
+  Behavior is byte-identical to before this entry -- only documentation and
+  test coverage changed. The former strict-`xfail` R-parity mismatch for
+  `"bartlett"` in `tests/parity/test_hac_kernels.py` is replaced by explicit
+  documented-divergence assertions (same style as the `midas_almon`
+  architecture-difference finding in `test_midas_almon.py`): our bartlett
+  value is asserted to double precision against an independently
+  hand-computed NW-1987 fixture, and separately asserted to deliberately
+  differ from R `sandwich::kernHAC`'s Bartlett value, with a comment
+  pointing at the `dm_test` parity dependency it protects.
 
 - `forecasting`/`pipeline` (performance, Gap A): the per-origin fitted feature
   builder (`FeatureSpec.fit()` -- the PCA/MARX/SIR-style numerical state) is now

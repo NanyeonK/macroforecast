@@ -30,14 +30,14 @@ Tolerance: 1e-6 (both sides are closed-form double-precision sums with no
 optimizer in the loop; the only source of residual disagreement is float
 summation order, hence not 1e-10).
 
-SUSPECTED BUG found by this harness (bartlett kernel only): macroforecast's
-"bartlett" branch weights lag k as ``1 - k/(bandwidth + 1)`` (the classical
-Newey & West 1987, Econometrica eq. 2.3, ``w_j = 1 - j/(q+1)`` formula --
-weight never reaches exactly zero at ``k=bandwidth``), while its "acf"
-(Truncated) and "parzen" branches both weight lag k using ``x = k /
-bandwidth`` (the Andrews 1991 generic-kernel convention, weight reaching
-exactly zero at ``k=bandwidth`` for Parzen and being cut off there for
-Truncated) -- which is also what R's ``sandwich::kernHAC`` uses for ALL
+RESOLVED FINDING (bartlett kernel, kept + documented, NOT aligned to R):
+macroforecast's "bartlett" branch weights lag k as ``1 - k/(bandwidth + 1)``
+(the classical Newey & West 1987, Econometrica eq. 2.3, ``w_j = 1 -
+j/(q+1)`` formula -- weight never reaches exactly zero at ``k=bandwidth``),
+while its "acf" (Truncated) and "parzen" branches both weight lag k using
+``x = k / bandwidth`` (the Andrews 1991 generic-kernel convention, weight
+reaching exactly zero at ``k=bandwidth`` for Parzen and being cut off there
+for Truncated) -- which is also what R's ``sandwich::kernHAC`` uses for ALL
 THREE kernels uniformly, including "Bartlett". So macroforecast's own three
 kernel branches do not share one bandwidth convention: "bartlett" is off
 by a `bandwidth -> bandwidth+1` rescaling relative to its OWN sibling
@@ -47,9 +47,23 @@ substituting R's `x = k/bandwidth` convention into the same lag-sum
 reproduces R's `kernHAC` value exactly, while macroforecast's own
 `x = k/(bandwidth+1)` formula reproduces macroforecast's own output exactly
 -- i.e. this is a real, reproducible internal inconsistency, not a
-numerical-precision artifact. See ``test_hac_kernel_matches_sandwich_kernhac``
-and ``test_hac_kernel_small_n_edge``'s ``xfail`` on the "bartlett"
-parametrization for the R-facing consequence.
+numerical-precision artifact.
+
+This is INTENTIONALLY kept, not "fixed": the public
+``dm_test(kernel="bartlett", horizon=h)`` path's bandwidth is always
+exactly ``horizon - 1``, which makes macroforecast's ``1 -
+k/(bandwidth+1)`` formula reduce to ``1 - k/horizon`` -- the EXACT
+convention ``forecast::dm.test`` itself uses for its own "bartlett"
+varestimator (see ``tests/parity/test_dm_test.py``'s module docstring,
+item 2, and its verified 6/6 pass against ``forecast::dm.test``). Aligning
+the private ``_long_run_variance`` bartlett branch to the Andrews-1991
+``1 - k/bandwidth`` form would silently break that ``dm_test`` parity.
+See ``test_hac_kernel_matches_sandwich_kernhac``, ``test_hac_kernel_small_n_edge``,
+and the two ``test_bartlett_kernel_*_documented_divergence_from_kernhac``
+tests below for the R-facing consequence: bartlett is excluded from the
+"should match kernHAC" parametrizations and instead has its own
+documented-divergence assertions (same style as the ``midas_almon``
+architecture-difference finding in ``test_midas_almon.py``).
 
 RESOLVED FINDING (andrews kernel, fixed): ``_long_run_variance(...,
 kernel="andrews")`` used to ALWAYS raise ``ValueError: unknown HAC kernel
@@ -62,16 +76,15 @@ below, but that branch is spelled ``"bartlett"``, not ``"newey_west"`` --
 so no branch matched and every call fell through to the final
 ``raise ValueError``. Fixed by reassigning to ``"bartlett"`` directly (see
 ``macroforecast/tests.py``, ``_long_run_variance``). Since the andrews
-branch reuses the bartlett taper, it inherits the bartlett kernel's own
-bandwidth-taper convention (finding 2 above), so it is likewise not
-expected to match ``sandwich::kernHAC``'s default auto-bandwidth Bartlett
-kernel -- see
+branch reuses the bartlett taper, it inherits the SAME NW-1987 convention
+documented above, so it is likewise not expected to match
+``sandwich::kernHAC`` (which auto-selects its own Andrews-1991-taper
+Bartlett-kernel bandwidth by default) -- see
+``test_andrews_kernel_no_longer_crashes*`` and
+``test_long_run_variance_andrews_kernel_matches_hand_computed_value`` for
+the regression coverage, and
 ``test_andrews_kernel_documented_divergence_from_kernhac_auto_bandwidth``
-below, which confirms and documents this rather than asserting parity. See
-``test_dm_test_andrews_kernel_no_longer_crashes``,
-``test_andrews_kernel_no_longer_crashes_through_other_public_callables``,
-and ``test_long_run_variance_andrews_kernel_matches_hand_computed_value``
-for the regression coverage.
+for the documented (not asserted-equal) R comparison.
 """
 from __future__ import annotations
 
@@ -137,25 +150,13 @@ emit("lrv", lrv)
     return parse_float(result["lrv"])
 
 
-_BARTLETT_XFAIL = pytest.mark.xfail(
-    reason=(
-        "SUSPECTED BUG: macroforecast's bartlett branch weights lag k as "
-        "1 - k/(bandwidth+1) (Newey-West 1987 convention) while its own "
-        "acf/parzen siblings -- and R sandwich::kernHAC's Bartlett kernel -- "
-        "use 1 - k/bandwidth (Andrews 1991 convention). See module docstring "
-        "and test_bartlett_kernel_uses_different_bandwidth_convention_than_its_siblings "
-        "for the exact-precision confirmation. Not resolved by loosening "
-        "tolerance per WP-V1 mandate; tracked as a live finding via strict xfail."
-    ),
-    strict=True,
-)
-
-
-@pytest.mark.parametrize(
-    "kernel",
-    ["acf", pytest.param("bartlett", marks=_BARTLETT_XFAIL), "parzen"],
-)
+@pytest.mark.parametrize("kernel", ["acf", "parzen"])
 def test_hac_kernel_matches_sandwich_kernhac(kernel: str, tmp_path) -> None:
+    """"bartlett" is intentionally excluded from this parametrization -- it
+    is documented to diverge from ``sandwich::kernHAC`` by design (see
+    module docstring and the ``test_bartlett_kernel_*`` tests below), so
+    asserting equality here would be asserting the wrong thing.
+    """
     require_r("sandwich")
     rng = np.random.default_rng(42)
     n = 80
@@ -174,10 +175,7 @@ def test_hac_kernel_matches_sandwich_kernhac(kernel: str, tmp_path) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "kernel",
-    ["acf", pytest.param("bartlett", marks=_BARTLETT_XFAIL), "parzen"],
-)
+@pytest.mark.parametrize("kernel", ["acf", "parzen"])
 def test_hac_kernel_small_n_edge(kernel: str, tmp_path) -> None:
     """Small-n edge: n=5, bandwidth larger than n (bandwidth=4 >= n-1=4).
 
@@ -188,6 +186,11 @@ def test_hac_kernel_small_n_edge(kernel: str, tmp_path) -> None:
     computable; only k>=n contributes nothing). This is the smallest n for
     which the requested bandwidth exceeds what a naive off-by-one
     implementation might silently zero out.
+
+    "bartlett" is intentionally excluded here for the same reason as in
+    ``test_hac_kernel_matches_sandwich_kernhac`` above -- see
+    ``test_bartlett_kernel_small_n_edge_documented_divergence_from_kernhac``
+    below for its small-n divergence check.
     """
     require_r("sandwich")
     rng = np.random.default_rng(7)
@@ -202,14 +205,73 @@ def test_hac_kernel_small_n_edge(kernel: str, tmp_path) -> None:
     )
 
 
+def test_bartlett_kernel_documented_divergence_from_kernhac(tmp_path) -> None:
+    """Documented-divergence check (same fixture as
+    ``test_hac_kernel_matches_sandwich_kernhac``): confirms, via an actual
+    R ``sandwich::kernHAC`` call, that macroforecast's bartlett branch does
+    NOT match R at a shared explicit bandwidth -- this is intentional, not
+    a regression. macroforecast's bartlett taper (``1 - k/(bandwidth+1)``,
+    Newey-West 1987) is kept specifically because it is required for the
+    public ``dm_test(kernel="bartlett")`` path's verified 6/6 parity with
+    ``forecast::dm.test`` (``tests/parity/test_dm_test.py``); aligning it
+    to kernHAC's Andrews-1991 ``1 - k/bandwidth`` convention would silently
+    break that dependency. If this assertion ever starts failing (i.e. the
+    two values coincide), treat it as a signal that the bartlett branch's
+    formula changed and re-check the ``dm_test`` parity tests immediately.
+    """
+    require_r("sandwich")
+    rng = np.random.default_rng(42)
+    n = 80
+    ar = np.empty(n)
+    ar[0] = rng.standard_normal()
+    for t in range(1, n):
+        ar[t] = 0.4 * ar[t - 1] + rng.standard_normal()
+    bandwidth = 4
+
+    py_lrv = _long_run_variance(ar, kernel="bartlett", lag=bandwidth)
+    r_lrv = _r_kernhac_lrv(ar, kernel="bartlett", bandwidth=bandwidth, tmp_path=tmp_path)
+
+    assert py_lrv != pytest.approx(r_lrv, abs=1e-6), (
+        f"bartlett: py={py_lrv!r} unexpectedly matched R sandwich::kernHAC={r_lrv!r} -- "
+        "if this now passes, the bartlett branch's NW-1987 convention changed; "
+        "re-verify tests/parity/test_dm_test.py's dm_test(kernel='bartlett') parity "
+        "before treating this as an improvement."
+    )
+
+
+def test_bartlett_kernel_small_n_edge_documented_divergence_from_kernhac(tmp_path) -> None:
+    """Documented-divergence check (same small-n fixture as
+    ``test_hac_kernel_small_n_edge``): see
+    ``test_bartlett_kernel_documented_divergence_from_kernhac`` above for
+    the full rationale -- this is the same intentional-divergence finding,
+    confirmed to also hold at the small-n/large-relative-bandwidth edge.
+    """
+    require_r("sandwich")
+    rng = np.random.default_rng(7)
+    values = rng.standard_normal(5)
+    bandwidth = 4
+
+    py_lrv = _long_run_variance(values, kernel="bartlett", lag=bandwidth)
+    r_lrv = _r_kernhac_lrv(values, kernel="bartlett", bandwidth=bandwidth, tmp_path=tmp_path)
+
+    assert py_lrv != pytest.approx(r_lrv, abs=1e-6), (
+        f"small-n bartlett: py={py_lrv!r} unexpectedly matched R sandwich::kernHAC={r_lrv!r} -- "
+        "if this now passes, re-verify the dm_test(kernel='bartlett') parity dependency "
+        "(tests/parity/test_dm_test.py) before treating this as an improvement."
+    )
+
+
 def test_bartlett_kernel_uses_different_bandwidth_convention_than_its_siblings() -> None:
-    """Exact-precision confirmation of the bartlett finding (no R needed):
-    substituting the Andrews-1991-style ``x = k/bandwidth`` weight into the
-    identical lag-sum reproduces R's ``kernHAC`` Bartlett value to ~1e-15,
-    while macroforecast's actual ``x = k/(bandwidth+1)`` weight reproduces
-    macroforecast's own reported value to ~1e-15 -- i.e. the two conventions
-    are both *internally exact*, they are simply different conventions, and
-    macroforecast mixes them across its three kernel branches.
+    """Exact-precision confirmation of the bartlett convention (no R
+    needed): substituting the Andrews-1991-style ``x = k/bandwidth`` weight
+    into the identical lag-sum reproduces R's ``kernHAC`` Bartlett value to
+    ~1e-15, while macroforecast's actual ``x = k/(bandwidth+1)`` weight
+    reproduces macroforecast's own reported value to ~1e-15 -- i.e. the two
+    conventions are both *internally exact*, they are simply different
+    conventions, and macroforecast deliberately keeps the NW-1987 one for
+    its bartlett branch (see module docstring and
+    ``_long_run_variance``'s docstring for why -- the public
+    ``dm_test(kernel="bartlett")`` parity dependency).
     """
     rng = np.random.default_rng(42)
     n = 80
@@ -236,13 +298,14 @@ def test_bartlett_kernel_uses_different_bandwidth_convention_than_its_siblings()
     assert py_actual == pytest.approx(newey_west_1987_denom, abs=1e-12), (
         "macroforecast's bartlett branch should match the k/(bandwidth+1) "
         "(Newey-West 1987) formula exactly -- if this fails, the branch's "
-        "own formula changed and the finding above needs re-diagnosis."
+        "own formula changed and the dm_test parity dependency needs re-diagnosis."
     )
     assert py_actual != pytest.approx(andrews_1991_denom, abs=1e-6), (
         "if this now passes, macroforecast's bartlett branch has been "
         "changed to the k/bandwidth (Andrews 1991 / sandwich::kernHAC) "
-        "convention and this whole xfail/finding is stale and should be "
-        "removed together with the bartlett xfail marks above."
+        "convention -- re-verify tests/parity/test_dm_test.py's "
+        "dm_test(kernel='bartlett') parity before treating this as an "
+        "improvement, since that parity currently depends on the NW-1987 form."
     )
 
 
@@ -354,15 +417,15 @@ def test_andrews_kernel_documented_divergence_from_kernhac_auto_bandwidth(tmp_pa
     explicit bandwidth, macroforecast's ``kernel="andrews"`` value does not
     match it. The root cause is the SAME one already documented for the
     plain "bartlett" kernel (see
-    ``test_bartlett_kernel_uses_different_bandwidth_convention_than_its_siblings``):
-    macroforecast's andrews branch reuses the NW-1987 bartlett taper
-    (``1 - k/(bandwidth+1)``), while ``sandwich::kernHAC``'s Bartlett
-    kernel always uses the Andrews-1991 taper (``1 - k/bandwidth``),
-    regardless of how the bandwidth itself was chosen. This divergence is
-    the deliberate cost of the documented ``dm_test(kernel="bartlett")``
-    parity dependency (``tests/parity/test_dm_test.py``, 6/6 pass vs
-    ``forecast::dm.test``) and is NOT expected to be closed by this test
-    suite.
+    ``test_bartlett_kernel_uses_different_bandwidth_convention_than_its_siblings``
+    and ``_long_run_variance``'s docstring): macroforecast's andrews branch
+    reuses the NW-1987 bartlett taper (``1 - k/(bandwidth+1)``), while
+    ``sandwich::kernHAC``'s Bartlett kernel always uses the Andrews-1991
+    taper (``1 - k/bandwidth``), regardless of how the bandwidth itself was
+    chosen. This divergence is the deliberate cost of the documented
+    ``dm_test(kernel="bartlett")`` parity dependency
+    (``tests/parity/test_dm_test.py``, 6/6 pass vs ``forecast::dm.test``)
+    and is NOT expected to be closed by this test suite.
     """
     require_r("sandwich")
     rng = np.random.default_rng(42)
@@ -378,8 +441,9 @@ def test_andrews_kernel_documented_divergence_from_kernhac_auto_bandwidth(tmp_pa
     assert py_lrv != pytest.approx(r_lrv, abs=1e-6), (
         f"andrews (auto-bandwidth): py={py_lrv!r} unexpectedly matched R "
         f"sandwich::kernHAC(bw=bwAndrews)={r_lrv!r} -- if this now passes, "
-        "re-verify whether the bartlett-taper-convention asymmetry is still "
-        "accurate before relying on this as a 'divergence' assertion."
+        "re-verify whether the bartlett-taper-convention asymmetry documented "
+        "in _long_run_variance's docstring is still accurate before relying "
+        "on this as a 'divergence' assertion."
     )
 
 
