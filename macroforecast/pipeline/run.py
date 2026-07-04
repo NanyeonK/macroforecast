@@ -249,6 +249,31 @@ def _lpt_dispatch_order(spec: PipelineSpec, cells: list[_Cell]) -> list[_Cell]:
     return sorted(cells, key=lambda c: _cell_cost(spec, c), reverse=True)
 
 
+def _effective_preprocessing_policy(spec: PipelineSpec, arm: Arm):
+    """The ``StagePolicy`` that will actually govern this arm's preprocessing fit.
+
+    Mirrors the exact override rule ``_run_one_arm_target`` uses when it calls
+    ``run()``: an arm with its own ``preprocessing`` override also supplies its own
+    ``preprocessing_policy`` (the spec-level policy never applies to an override
+    arm); otherwise the arm inherits the spec-level policy. The result is resolved
+    (string/``None``/``StagePolicy`` -> a concrete ``StagePolicy``) through the same
+    ``resolve_stage_policy`` + ``default_preprocessing_scope`` that ``run()`` itself
+    uses, so this is not a re-derivation that could drift from the runner -- it is
+    the identical resolution, called one layer earlier.
+    """
+    from macroforecast.meta import get_config
+    from macroforecast.window.policy import resolve_stage_policy
+
+    effective_preprocessing = arm.preprocessing if arm.preprocessing is not None else spec.preprocessing
+    if effective_preprocessing is None:
+        return None
+    effective_policy = (
+        arm.preprocessing_policy if arm.preprocessing is not None else spec.preprocessing_policy
+    )
+    default_scope = str(get_config()["default_preprocessing_scope"])
+    return resolve_stage_policy(effective_policy, default_scope=default_scope)
+
+
 def _execute_cell(
     spec: PipelineSpec, cell: _Cell, *, preprocessing_cache=None
 ) -> pd.DataFrame:
@@ -261,6 +286,15 @@ def _execute_cell(
     at the SAME directory and shares the persisted per-origin fits via the
     filesystem. The store is a thin, content-addressed path wrapper, so there is no
     need to pickle the store object itself across processes.
+
+    The store is namespaced by this arm's EFFECTIVE ``preprocessing_policy``
+    (``StagePolicy.to_dict()``, not just its ``scope`` string, so a
+    ``fixed_reference``/``custom`` policy that differs only in its reference
+    bounds or selector is also isolated) -- see ``_effective_preprocessing_policy``.
+    Without this, the store key hashes only ``(PreprocessSpec, target,
+    origin_pos)``; two runs sharing one ``preprocessing_cache_dir`` but using
+    different scopes (e.g. one ``origin_available``, one ``fit_window``) for the
+    same spec would otherwise silently serve one run's fit to the other.
     """
     arm = spec.arms[cell.arm_idx]
     target = spec.targets[cell.target_idx]
@@ -268,11 +302,14 @@ def _execute_cell(
     if spec.preprocessing_cache_dir:
         from macroforecast.preprocessing.cache import PreprocessorStore
 
+        policy = _effective_preprocessing_policy(spec, arm)
+        namespace = policy.to_dict() if policy is not None else None
         # Passed to every arm, including arms with a per-arm ``preprocessing``
         # override: the store key hashes the per-arm resolved spec, so an override
         # arm's distinct spec yields a distinct key and never collides with the
-        # shared-spec arms.
-        store = PreprocessorStore(spec.preprocessing_cache_dir)
+        # shared-spec arms. The namespace additionally isolates arms/specs that
+        # resolve to a different effective preprocessing_policy.
+        store = PreprocessorStore(spec.preprocessing_cache_dir, namespace=namespace)
     return _run_one_arm_target(
         spec, arm, target,
         preprocessing_cache=preprocessing_cache,
@@ -376,6 +413,39 @@ def _find_empty_cells(
     return empty
 
 
+def _resolve_run_cache_dir(
+    spec: PipelineSpec,
+) -> "tuple[PipelineSpec, str | None]":
+    """Resolve the effective ``preprocessing_cache_dir`` for one execution of *spec*.
+
+    ``preprocessing_cache_dir`` has three states:
+
+    - an explicit ``str``: used as-is (unchanged prior behavior).
+    - ``False``: explicit opt-out. Never auto-create a store, matching the
+      pre-existing parallel behavior where each worker recomputes its own EM
+      with no shared cache. ``spec`` is returned unchanged (``_execute_cell``
+      already treats a falsy ``preprocessing_cache_dir`` as "no store").
+    - ``None`` (the ``pipeline_spec`` default, meaning "not explicitly
+      configured"): when ``spec.n_jobs > 1`` this auto-creates a run-scoped
+      temporary directory so parallel workers still share the per-origin EM
+      dedup that is otherwise silently lost (each worker previously received
+      ``preprocessing_cache=None`` with no fallback). When ``n_jobs == 1`` this
+      is a no-op -- the serial backend already shares fits via its own
+      in-memory ``target_caches``.
+
+    Returns ``(run_spec, created_tmp_dir)``. The caller must remove
+    ``created_tmp_dir`` (if not ``None``) once the run completes, via a
+    ``finally`` block -- this function only creates it, never cleans it up.
+    """
+    import dataclasses as _dc
+    import tempfile as _tempfile
+
+    if spec.preprocessing_cache_dir is None and spec.n_jobs > 1:
+        tmp_dir = _tempfile.mkdtemp(prefix="macroforecast_preprocessing_cache_")
+        return _dc.replace(spec, preprocessing_cache_dir=tmp_dir), tmp_dir
+    return spec, None
+
+
 def _run_cells(
     spec: PipelineSpec,
 ) -> "tuple[pd.DataFrame, list[dict[str, Any]], list[dict[str, Any]]]":
@@ -386,90 +456,105 @@ def _run_cells(
     the zero-row ``empty_cells`` are assembled in the deterministic cell order
     independent of execution backend.
     """
+    import shutil as _shutil
     import warnings as _warnings
 
     cells = _enumerate_cells(spec)
     if not cells:
         return pd.DataFrame(), [], []
 
-    results: dict[_Cell, pd.DataFrame] = {}
-    failed: list[dict[str, Any]] = []
+    # Auto-manage a run-scoped on-disk preprocessing cache dir when the caller
+    # left preprocessing_cache_dir unset and n_jobs>1 (see _resolve_run_cache_dir).
+    # created_cache_dir is non-None only when THIS call created it, so only then
+    # is it our responsibility to remove it once the run finishes -- everything
+    # below (dispatch, reassembly, empty-cell scan) runs inside the try so the
+    # cache dir stays alive for the whole run and is always cleaned up after.
+    spec, created_cache_dir = _resolve_run_cache_dir(spec)
+    try:
+        results: dict[_Cell, pd.DataFrame] = {}
+        failed: list[dict[str, Any]] = []
 
-    if spec.n_jobs > 1:
-        from concurrent.futures import ProcessPoolExecutor
+        if spec.n_jobs > 1:
+            from concurrent.futures import ProcessPoolExecutor
 
-        max_workers = min(spec.n_jobs, len(cells))
-        # Dispatch heaviest-first (LPT) so a heavy cell is never stranded alone at
-        # the tail while cores sit idle. Results are keyed by cell and reassembled
-        # in the canonical order below, so this changes makespan only, not output.
-        dispatch = _lpt_dispatch_order(spec, cells)
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            for cell, frame, error in executor.map(
-                _parallel_cell_worker, [(spec, c) for c in dispatch]
-            ):
-                if error is not None:
-                    failed.append(_cell_failure(spec, cell, error))
-                elif frame is not None:
-                    results[cell] = frame
-    else:
-        # One shared preprocessing cache per target: arms of the same target reuse
-        # the per-origin FittedPreprocessor (spec-level preprocessing only -- arm
-        # overrides opt out by getting their own cache). Removes per-arm EM redundancy.
-        target_caches: dict[str, dict[Any, Any]] = (
-            {t.name: {} for t in spec.targets} if spec.preprocessing is not None else {}
-        )
+            max_workers = min(spec.n_jobs, len(cells))
+            # Dispatch heaviest-first (LPT) so a heavy cell is never stranded alone
+            # at the tail while cores sit idle. Results are keyed by cell and
+            # reassembled in the canonical order below, so this changes makespan
+            # only, not output.
+            dispatch = _lpt_dispatch_order(spec, cells)
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                for cell, frame, error in executor.map(
+                    _parallel_cell_worker, [(spec, c) for c in dispatch]
+                ):
+                    if error is not None:
+                        failed.append(_cell_failure(spec, cell, error))
+                    elif frame is not None:
+                        results[cell] = frame
+        else:
+            # One shared preprocessing cache per target: arms of the same target
+            # reuse the per-origin FittedPreprocessor (spec-level preprocessing
+            # only -- arm overrides opt out by getting their own cache). Removes
+            # per-arm EM redundancy.
+            target_caches: dict[str, dict[Any, Any]] = (
+                {t.name: {} for t in spec.targets} if spec.preprocessing is not None else {}
+            )
+            for cell in cells:
+                arm = spec.arms[cell.arm_idx]
+                target = spec.targets[cell.target_idx]
+                cache = target_caches.get(target.name)
+                arm_cache = cache if arm.preprocessing is None else None
+                try:
+                    results[cell] = _execute_cell(spec, cell, preprocessing_cache=arm_cache)
+                except Exception as exc:
+                    # Record the failure and CONTINUE the rest of the set rather
+                    # than aborting the whole pipeline on one bad cell.
+                    failed.append(
+                        _cell_failure(spec, cell, f"{type(exc).__name__}: {exc}")
+                    )
+
+        # Reassemble in enumeration order; warn once per (arm, target) that yielded
+        # no rows (an empty arm hides a misconfiguration). A failed cell does NOT
+        # also warn as empty -- the failure is already recorded on failed_cells.
+        frames: list[pd.DataFrame] = []
+        seen_empty: set[tuple[str, str]] = set()
+        failed_keys = {(f["arm"], f["target"]) for f in failed}
         for cell in cells:
             arm = spec.arms[cell.arm_idx]
             target = spec.targets[cell.target_idx]
-            cache = target_caches.get(target.name)
-            arm_cache = cache if arm.preprocessing is None else None
-            try:
-                results[cell] = _execute_cell(spec, cell, preprocessing_cache=arm_cache)
-            except Exception as exc:
-                # Record the failure and CONTINUE the rest of the set rather than
-                # aborting the whole pipeline on one bad cell.
-                failed.append(
-                    _cell_failure(spec, cell, f"{type(exc).__name__}: {exc}")
-                )
+            frame = results.get(cell)
+            if frame is not None and not frame.empty:
+                frames.append(frame)
+                continue
+            key = (arm.name, target.name)
+            if key in failed_keys or key in seen_empty:
+                continue
+            seen_empty.add(key)
+            _warnings.warn(
+                _empty_arm_warning(arm.name, target.name),
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
-    # Reassemble in enumeration order; warn once per (arm, target) that yielded no
-    # rows (an empty arm hides a misconfiguration). A failed cell does NOT also warn
-    # as empty -- the failure is already recorded on failed_cells.
-    frames: list[pd.DataFrame] = []
-    seen_empty: set[tuple[str, str]] = set()
-    failed_keys = {(f["arm"], f["target"]) for f in failed}
-    for cell in cells:
-        arm = spec.arms[cell.arm_idx]
-        target = spec.targets[cell.target_idx]
-        frame = results.get(cell)
-        if frame is not None and not frame.empty:
-            frames.append(frame)
-            continue
-        key = (arm.name, target.name)
-        if key in failed_keys or key in seen_empty:
-            continue
-        seen_empty.add(key)
-        _warnings.warn(
-            _empty_arm_warning(arm.name, target.name),
-            RuntimeWarning,
-            stacklevel=2,
-        )
+        master = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 
-    master = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        # Surface (target, horizon) cells that RAN but produced zero rows. These are
+        # a distinct, more granular signal from the per-(arm, target) empty-arm
+        # warning above: a multi-horizon arm can populate some horizons and
+        # silently drop a long horizon, which the (arm, target) check cannot see.
+        # Warn once per cell.
+        empty_cells = _find_empty_cells(spec, master, failed_keys)
+        for cell_rec in empty_cells:
+            _warnings.warn(
+                _empty_cell_warning(cell_rec["target"], cell_rec["horizon"], cell_rec["arms"]),
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
-    # Surface (target, horizon) cells that RAN but produced zero rows. These are a
-    # distinct, more granular signal from the per-(arm, target) empty-arm warning
-    # above: a multi-horizon arm can populate some horizons and silently drop a
-    # long horizon, which the (arm, target) check cannot see. Warn once per cell.
-    empty_cells = _find_empty_cells(spec, master, failed_keys)
-    for cell_rec in empty_cells:
-        _warnings.warn(
-            _empty_cell_warning(cell_rec["target"], cell_rec["horizon"], cell_rec["arms"]),
-            RuntimeWarning,
-            stacklevel=2,
-        )
-
-    return master, failed, empty_cells
+        return master, failed, empty_cells
+    finally:
+        if created_cache_dir is not None:
+            _shutil.rmtree(created_cache_dir, ignore_errors=True)
 
 
 def run_arms(spec: PipelineSpec) -> pd.DataFrame:
