@@ -150,16 +150,16 @@ def test_runner_matrix_matches_golden_snapshot():
 
 
 def test_panel_routing_intact():
-    """Guard that the panel-input strategy still routes and produces forecasts.
+    """Guard that the panel-input strategy still routes, forecasts, and labels correctly.
 
-    var/panel IS deterministic, but the panel path currently MISLABELS the forecast
-    horizon: for a horizons=[2] request it emits the multi-step path but tags every row
-    horizon=1 (the ``date`` is correct, the ``horizon`` column is not), so (horizon,
-    origin) is not a unique key and the rows cannot be pinned by (policy, model,
-    horizon, origin) like the golden snapshot. That horizon-labeling bug is tracked
-    separately; here we only assert the routing survives -- var under the direct and
-    path_average policies yields non-empty forecasts -- so the policy-strategy refactor
-    cannot silently drop the panel path.
+    var/panel IS deterministic (pure OLS). Issue #423 (panel test window included the
+    origin itself + ``_panel_prediction_horizon`` floored to max(1, ...)) used to mean a
+    horizons=[2] request emitted a multi-step path but tagged every row horizon=1, so
+    (horizon, origin) was not a unique key and the rows could not be pinned by
+    (policy, model, horizon, origin) like the golden snapshot. That fix has landed
+    (WindowSpec.origins(exclude_origin=True) for the panel call site + the unfloored
+    positional-distance helper), so this guard now also pins the horizon label and
+    date offset -- not just routing survival -- for both policies.
     """
     bundle = _dataset()
     win = mf.window.from_cutoffs(
@@ -174,7 +174,21 @@ def test_panel_routing_intact():
             evaluation=EvalSpec(benchmark="M", metrics=("rmse",)), n_jobs=1,
         )
         f = run_pipeline(spec).forecasts
-        # var/panel forecasts vary run-to-run and its per-horizon availability is
-        # unstable, so we only assert the routing survives: non-empty with predictions.
         assert not f.empty, f"var/{policy} produced no forecasts -- panel routing broke"
         assert f["prediction"].notna().any(), f"var/{policy} produced no predictions"
+        # Post-#423: every emitted row must be tagged with the REQUESTED horizon (2),
+        # not the pre-fix constant 1, and (horizon, origin) must be a unique key.
+        assert sorted(f["horizon"].unique().tolist()) == [2], (
+            f"var/{policy} horizon labels drifted from the requested horizon: "
+            f"{sorted(f['horizon'].unique().tolist())}"
+        )
+        assert not f.duplicated(["horizon", "origin"]).any(), (
+            f"var/{policy} produced duplicate (horizon, origin) keys"
+        )
+        # date must be exactly origin + 2 positional steps in the panel index.
+        positions = bundle.panel.index.get_indexer(f["origin"])
+        assert (positions >= 0).all(), f"var/{policy}: every origin must be a real panel date"
+        expected_dates = bundle.panel.index[positions + 2]
+        assert (f["date"].to_numpy() == expected_dates.to_numpy()).all(), (
+            f"var/{policy} date != origin + horizon"
+        )
