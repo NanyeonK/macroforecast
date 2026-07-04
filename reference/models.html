@@ -5714,8 +5714,8 @@ point forecasts.</p>
     <span class="n">kappa1</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">nu0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
     <span class="n">s0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="nb">iter</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-    <span class="n">burnin</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="nb">iter</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">burnin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -5767,14 +5767,14 @@ of BVAR forecast object.</p>
 <td><p>Inverse-Wishart scale prior parameter.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iter</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">10000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">300</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Total Gibbs iterations.</p></td>
+<td><p>Total Gibbs iterations (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">10000</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">burnin</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">5000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Burn-in iterations removed before summaries.</p></td>
+<td><p>Burn-in iterations removed before summaries (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">5000</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
@@ -5796,8 +5796,8 @@ of BVAR forecast object.</p>
     <span class="n">vb0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
     <span class="n">nu0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
     <span class="n">s0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="nb">iter</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-    <span class="n">burnin</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+    <span class="nb">iter</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">burnin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
@@ -6411,8 +6411,8 @@ contain one value per resulting bucket.</p>
     <span class="n">n_steps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
     <span class="n">step_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">fit_intercept</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-    <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
+    <span class="n">maxiter</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -6468,14 +6468,14 @@ utilities are not reproduced here.</p>
 <td><p>Whether to estimate an intercept outside the restricted lag coefficients.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maxiter</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">200</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Maximum SciPy least-squares function evaluations.</p></td>
+<td><p>Maximum SciPy least-squares function evaluations (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">1000</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tolerance</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1e-8</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-6</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Shared <code class="docutils literal notranslate"><span class="pre">xtol</span></code>, <code class="docutils literal notranslate"><span class="pre">ftol</span></code>, and <code class="docutils literal notranslate"><span class="pre">gtol</span></code> stopping tolerance.</p></td>
+<td><p>Shared <code class="docutils literal notranslate"><span class="pre">xtol</span></code>, <code class="docutils literal notranslate"><span class="pre">ftol</span></code>, and <code class="docutils literal notranslate"><span class="pre">gtol</span></code> stopping tolerance (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">1e-8</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 </tbody>
 </table>
@@ -6646,12 +6646,12 @@ groups and per-lag coefficients.</p>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">n_factors</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
     <span class="n">n_lag</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-    <span class="n">fctmethod</span><span class="o">=</span><span class="s2">&quot;BBE&quot;</span><span class="p">,</span>
+    <span class="n">fctmethod</span><span class="o">=</span><span class="s2">&quot;BGM&quot;</span><span class="p">,</span>
     <span class="n">slowcode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">factorprior</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">varprior</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">nburn</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
-    <span class="n">nrep</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span>
+    <span class="n">nburn</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">nrep</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
     <span class="n">standardize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span>
@@ -6687,9 +6687,9 @@ posterior-mean coefficients.</p>
 <td><p>VAR lag order on the target plus factors.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fctmethod</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;BBE&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;BGM&quot;</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Factor identification method: <code class="docutils literal notranslate"><span class="pre">&quot;BBE&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;BGM&quot;</span></code>.</p></td>
+<td><p>Factor identification method: <code class="docutils literal notranslate"><span class="pre">&quot;BBE&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;BGM&quot;</span></code> (BBE requires <code class="docutils literal notranslate"><span class="pre">slowcode</span></code>).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">slowcode</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
@@ -6707,14 +6707,14 @@ posterior-mean coefficients.</p>
 <td><p>BVAR prior controls for the factor VAR block.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nburn</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">5000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Burn-in iterations for posterior draws.</p></td>
+<td><p>Burn-in iterations for posterior draws (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">5000</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nrep</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">15000</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">200</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Saved posterior draw count.</p></td>
+<td><p>Saved posterior draw count (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">15000</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">standardize</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
@@ -7545,8 +7545,8 @@ aggregation, channel accounting, and pandas metadata are implemented inside
     <span class="n">X</span><span class="p">,</span>
     <span class="n">y</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">n_ensemble</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">n_steps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">n_ensemble</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">n_steps</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
     <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
     <span class="n">subsample</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
     <span class="n">num_leaves</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
@@ -7654,14 +7654,14 @@ those two reference surfaces: <code class="docutils literal notranslate"><span c
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_ensemble</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
 <td><p>yes</p></td>
-<td><p>Independent boosting runs. Predictions are aggregated across runs.</p></td>
+<td><p>Independent boosting runs. Predictions are aggregated across runs (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">10</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_steps</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">200</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">30</span></code></p></td>
 <td><p>yes</p></td>
-<td><p>Maximum tree/linear competition steps per run.</p></td>
+<td><p>Maximum tree/linear competition steps per run (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">200</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">learning_rate</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
@@ -8100,7 +8100,7 @@ dominate the empirical quantile solely because they contain more observations.</
     <span class="n">x_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">S_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">y_pos</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">B</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">B</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
     <span class="n">minsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">mtry_frac</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span>
     <span class="n">min_leaf_frac_of_x</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
@@ -8275,9 +8275,9 @@ is considered at each split. Small training samples can also fail when
 <td><p>Fixed target position for the separated <code class="docutils literal notranslate"><span class="pre">X/y</span></code> adapter; must remain <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">B</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">25</span></code></p></td>
 <td><p>yes</p></td>
-<td><p>Number of MRF trees.</p></td>
+<td><p>Number of MRF trees (deep/paper-faithful default is <code class="docutils literal notranslate"><span class="pre">50</span></code>; pass explicitly to restore it).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">minsize</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
