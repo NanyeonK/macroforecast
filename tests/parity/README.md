@@ -88,7 +88,9 @@ requires.
 ## Fixtures
 
 Deterministic: seeded `numpy` RNGs with fixed seeds committed in the test
-bodies, or small CSVs under `tests/parity/data/` for shared fixtures reused
-by both the Python and R sides of a comparison (so both languages read the
-literal same numbers off disk instead of regenerating a DGP twice and
-risking language-level RNG drift).
+bodies. Every cross-language comparison materializes its fixture to a CSV
+in a pytest `tmp_path` at runtime and has R read that file, so both
+languages consume the literal same numbers off disk instead of
+regenerating a DGP twice and risking language-level RNG drift. (No
+fixtures are committed as static CSVs yet; if one is ever needed, put it
+under `tests/parity/data/`.)
