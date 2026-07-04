@@ -152,12 +152,14 @@ def test_runner_matrix_matches_golden_snapshot():
 def test_panel_routing_intact():
     """Guard that the panel-input strategy still routes and produces forecasts.
 
-    The var/panel path is NOT bit-reproducible run-to-run (observed ~2.8e-2 drift), so
-    its forecasts cannot be pinned to exact values like the golden snapshot. This is a
-    separate reproducibility issue tracked apart from the refactor. Here we only assert
-    the routing survives -- var under the direct and path_average policies yields the
-    expected non-empty forecast rows -- so the policy-strategy refactor cannot silently
-    drop the panel path.
+    var/panel IS deterministic, but the panel path currently MISLABELS the forecast
+    horizon: for a horizons=[2] request it emits the multi-step path but tags every row
+    horizon=1 (the ``date`` is correct, the ``horizon`` column is not), so (horizon,
+    origin) is not a unique key and the rows cannot be pinned by (policy, model,
+    horizon, origin) like the golden snapshot. That horizon-labeling bug is tracked
+    separately; here we only assert the routing survives -- var under the direct and
+    path_average policies yields non-empty forecasts -- so the policy-strategy refactor
+    cannot silently drop the panel path.
     """
     bundle = _dataset()
     win = mf.window.from_cutoffs(
