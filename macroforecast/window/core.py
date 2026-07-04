@@ -494,11 +494,16 @@ class WindowSpec:
             else self.estimation.embargo,
         )
 
-    def plan(self, index: int | Sequence[Any] | pd.Index) -> pd.DataFrame:
+    def plan(
+        self,
+        index: int | Sequence[Any] | pd.Index,
+        *,
+        exclude_origin: bool = False,
+    ) -> pd.DataFrame:
         """Return an execution plan with estimation, val, and test metadata."""
 
         labels = _coerce_index(index)
-        rows = self.origins(labels).copy()
+        rows = self.origins(labels, exclude_origin=exclude_origin).copy()
         retune_group = -1
         selection_start_pos: int | None = None
         selection_end_pos: int | None = None
@@ -548,7 +553,9 @@ class WindowSpec:
                     last_retune_label = cast(pd.Timestamp, labels[origin_pos])
                 selection_start_pos = int(row["estimation_start_pos"])
                 selection_end_pos = int(row["estimation_end_pos"])
-                splits = self.val_splits_for_origin(labels, origin_pos)
+                splits = self.val_splits_for_origin(
+                    labels, origin_pos, exclude_origin=exclude_origin
+                )
                 val_positions = np.concatenate([split[1] for split in splits])
                 rows.at[loc, "n_val_splits"] = len(splits)
                 rows.at[loc, "val_start"] = labels[int(val_positions.min())]
@@ -577,11 +584,13 @@ class WindowSpec:
         self,
         index: int | Sequence[Any] | pd.Index,
         origin: Any,
+        *,
+        exclude_origin: bool = False,
     ) -> list[Split]:
         """Return absolute-position inner train/val splits for one test origin."""
 
         labels = _coerce_index(index)
-        row = self._origin_row(labels, origin)
+        row = self._origin_row(labels, origin, exclude_origin=exclude_origin)
         start = int(row["estimation_start_pos"])
         end = int(row["estimation_end_pos"])
         n_samples = end - start + 1
@@ -611,11 +620,16 @@ class WindowSpec:
         )
         return [(train_idx + start, val_idx + start) for train_idx, val_idx in relative]
 
-    def iter_origins(self, index: int | Sequence[Any] | pd.Index) -> Iterator[dict[str, Any]]:
+    def iter_origins(
+        self,
+        index: int | Sequence[Any] | pd.Index,
+        *,
+        exclude_origin: bool = False,
+    ) -> Iterator[dict[str, Any]]:
         """Yield origin metadata and absolute-position slices for model runners."""
 
         labels = _coerce_index(index)
-        for _, row in self.plan(labels).iterrows():
+        for _, row in self.plan(labels, exclude_origin=exclude_origin).iterrows():
             fit_idx: np.ndarray = np.arange(
                 int(row["fit_start_pos"]),
                 int(row["fit_end_pos"]) + 1,
@@ -636,7 +650,11 @@ class WindowSpec:
                 "estimation_idx": estimation_idx,
                 "fit_idx": fit_idx,
                 "test_idx": test_idx,
-                "val_splits": self.val_splits_for_origin(labels, int(row["origin_pos"]))
+                "val_splits": self.val_splits_for_origin(
+                    labels,
+                    int(row["origin_pos"]),
+                    exclude_origin=exclude_origin,
+                )
                 if bool(row["retune"])
                 else [],
             }
@@ -683,14 +701,19 @@ class WindowSpec:
                 })
             yield output
 
-    def validate(self, index: int | Sequence[Any] | pd.Index) -> dict[str, Any]:
+    def validate(
+        self,
+        index: int | Sequence[Any] | pd.Index,
+        *,
+        exclude_origin: bool = False,
+    ) -> dict[str, Any]:
         """Return a validation report for this time-frame specification."""
 
         errors: list[str] = []
         warnings: list[str] = []
         try:
             labels = _coerce_index(index)
-            plan = self.plan(labels)
+            plan = self.plan(labels, exclude_origin=exclude_origin)
         except Exception as exc:  # noqa: BLE001 - validation reports user-facing errors.
             return {
                 "ok": False,
@@ -750,8 +773,31 @@ class WindowSpec:
             "warnings": warnings,
         }
 
-    def origins(self, index: int | Sequence[Any] | pd.Index) -> pd.DataFrame:
-        """Return test-origin rows with train and test ranges."""
+    def origins(
+        self,
+        index: int | Sequence[Any] | pd.Index,
+        *,
+        exclude_origin: bool = False,
+    ) -> pd.DataFrame:
+        """Return test-origin rows with train and test ranges.
+
+        ``exclude_origin`` controls whether the test slice starts at the origin
+        position itself (the default -- every feature-matrix forecast policy
+        relies on ``test_idx[0] == origin_pos`` as the "as-of" feature row, see
+        the ``_feature_window_for_policy`` call site in ``forecasting/runner.py``)
+        or one position after it. Panel-input models treat every row of the test
+        slice as a genuine forecast target (``_fit_predict_panel_origin``), so
+        their origin date must not double as a forecast row, and the slice must
+        extend one position further to still reach the requested horizon.
+
+        Under ``exclude_origin=True`` the estimation window also runs THROUGH
+        the origin (``origin_pos - embargo``) instead of stopping one short of
+        it: the origin is the last in-sample date, so the model fits on data
+        through the origin and its positional forecast steps 1..h line up with
+        the test dates ``origin+1 .. origin+h``. The embargo gap between
+        estimation end and test start is identical in both modes. See issue
+        #423.
+        """
 
         labels = _coerce_index(index)
         n = len(labels)
@@ -778,7 +824,11 @@ class WindowSpec:
             self.estimation,
             n,
         )
-        last_default = n - horizon if self.test.drop_incomplete else n - 1
+        last_default = (
+            n - horizon - (1 if exclude_origin else 0)
+            if self.test.drop_incomplete
+            else n - 1
+        )
         first_origin = _resolve_position(
             labels,
             self.test.first_origin,
@@ -811,13 +861,38 @@ class WindowSpec:
             step=step,
         )
         for origin_pos in origin_positions:
-            test_start_pos = origin_pos
-            test_end_pos = origin_pos + horizon - 1
+            if exclude_origin:
+                # Panel test slice: origin_pos+1 .. origin_pos+horizon. The
+                # origin date itself is excluded from the test window (it is
+                # not a genuine forecast target), and the window extends one
+                # position further than the historical formula so the true
+                # h-step-ahead date is still reachable. See issue #423.
+                test_start_pos = origin_pos + 1
+                test_end_pos = origin_pos + horizon
+                if test_start_pos >= n:
+                    # Nothing exists past the origin at all; there is no test
+                    # row to produce regardless of drop_incomplete.
+                    continue
+            else:
+                test_start_pos = origin_pos
+                test_end_pos = origin_pos + horizon - 1
             if test_end_pos >= n:
                 if self.test.drop_incomplete:
                     continue
                 test_end_pos = n - 1
-            estimation_end_pos = min(origin_pos - embargo - 1, estimation_end_bound)
+            if exclude_origin:
+                # The origin is the LAST IN-SAMPLE date: estimation runs
+                # through the origin itself (minus embargo), and the first
+                # test row sits at origin_pos + 1. Without this, panel
+                # models would fit through origin-1 while their forecast
+                # steps are labeled from origin+1 -- relabeling every value
+                # one step late (panel models forecast positionally from
+                # the end of their fit data). The embargo gap between
+                # estimation end and test start is the same in both modes.
+                # See issue #423.
+                estimation_end_pos = min(origin_pos - embargo, estimation_end_bound)
+            else:
+                estimation_end_pos = min(origin_pos - embargo - 1, estimation_end_bound)
             estimation_start_pos = _estimation_start_position(
                 self.estimation,
                 estimation_start_bound=estimation_start_bound,
@@ -879,8 +954,14 @@ class WindowSpec:
             raise ValueError("window produced no test origins")
         return pd.DataFrame(rows)
 
-    def _origin_row(self, labels: pd.Index, origin: Any) -> pd.Series:
-        rows = self.origins(labels)
+    def _origin_row(
+        self,
+        labels: pd.Index,
+        origin: Any,
+        *,
+        exclude_origin: bool = False,
+    ) -> pd.Series:
+        rows = self.origins(labels, exclude_origin=exclude_origin)
         if isinstance(origin, pd.Series):
             return origin
         if isinstance(origin, dict):
