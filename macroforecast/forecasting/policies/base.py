@@ -19,6 +19,16 @@ from macroforecast.model_selection import (
 )
 from macroforecast.window import StagePolicy
 
+from macroforecast.forecasting.model_resolution import (
+    _ModelRun,
+    _actual_model_params,
+)
+from macroforecast.forecasting.selection_stage import (
+    _SELECTION_TUNED_KEY,
+    _resolve_degraded_selection,
+    _selection_for_model,
+)
+
 
 @dataclass(frozen=True)
 class _OriginRunConfig:
@@ -232,15 +242,10 @@ def _fit_one_model_at_origin(
     )
 
 
-# Imported at the bottom: these helpers still live in runner.py (they move to
-# stage modules in Phase 4), and runner.py imports this package after defining
-# them, so a top-of-module import would be circular.
+# Imported at the bottom: these helpers still live in runner.py, and runner.py
+# imports this package after defining them, so a top-of-module import would be
+# circular.
 from macroforecast.forecasting.runner import (  # noqa: E402
-    _ModelRun,  # noqa: F401
-    _SELECTION_TUNED_KEY,
-    _actual_model_params,
     _prediction_series,
-    _resolve_degraded_selection,
-    _selection_for_model,
     _store_model_fit,
 )

@@ -12,6 +12,10 @@ from macroforecast.forecasting.policies.base import (
     _OriginRunConfig,
     _fit_one_model_at_origin,
 )
+from macroforecast.forecasting.policy_config import FutureFeaturePolicy
+from macroforecast.forecasting.selection_stage import (
+    _allow_non_temporal_selection_splits,
+)
 
 
 def forecast_recursive_origin(
@@ -162,8 +166,6 @@ def forecast_recursive_origin(
 
 # Bottom import for the same circularity reason as policies.base.
 from macroforecast.forecasting.runner import (  # noqa: E402
-    FutureFeaturePolicy,
-    _allow_non_temporal_selection_splits,
     _model_cache_key,
     _prediction_series,
     _recursive_next_level,

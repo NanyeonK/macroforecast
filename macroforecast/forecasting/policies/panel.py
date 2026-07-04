@@ -20,6 +20,12 @@ from macroforecast.data import DataBundle
 from macroforecast.model_selection import SearchSpec
 from macroforecast.window import StagePolicy
 
+from macroforecast.forecasting.model_resolution import (
+    _ModelRun,
+    _actual_model_params,
+)
+from macroforecast.forecasting.policy_config import ForecastPolicy
+
 
 def forecast_panel_origin(
     item: dict[str, Any],
@@ -132,9 +138,6 @@ def forecast_panel_origin(
 
 # Bottom import for the same circularity reason as policies.base.
 from macroforecast.forecasting.runner import (  # noqa: E402
-    ForecastPolicy,  # noqa: F401
-    _ModelRun,  # noqa: F401
-    _actual_model_params,
     _panel_fit_params,
     _panel_prediction_horizon,
     _panel_prediction_input_without_test_target,

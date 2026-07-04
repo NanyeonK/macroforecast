@@ -12,6 +12,12 @@ from macroforecast.forecasting.policies.base import (
     _OriginRunConfig,
     _fit_one_model_at_origin,
 )
+from macroforecast.forecasting.selection_stage import (
+    _allow_non_temporal_selection_splits,
+    _availability_safe_selection_splits,
+    _filter_xy_to_target_availability,
+    _target_availability_window_fields,
+)
 
 
 def forecast_direct_origin(
@@ -144,12 +150,8 @@ def forecast_direct_origin(
 
 # Bottom import for the same circularity reason as policies.base.
 from macroforecast.forecasting.runner import (  # noqa: E402
-    _allow_non_temporal_selection_splits,
-    _availability_safe_selection_splits,
-    _filter_xy_to_target_availability,
     _forecast_target_dates,
     _model_cache_key,
     _quantile_frame,
-    _target_availability_window_fields,
     _variance_series,
 )
