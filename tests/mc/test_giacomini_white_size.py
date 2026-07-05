@@ -1,4 +1,5 @@
-"""WP-V3 target #6: ``giacomini_white_test`` size under equal conditional predictive ability.
+"""WP-V3/WP-A1 target #6: ``giacomini_white_test`` size under equal conditional
+predictive ability.
 
 DGP: same MA(h-1) equal-accuracy forecast-error construction as the
 ``dm_test`` size suite (independent innovations, identical variance per
@@ -6,11 +7,24 @@ model) -- H0 (conditional AND unconditional equal predictive ability) is
 true by construction: the loss differential ``dL_t`` has zero mean and no
 functional dependence on its own lag (the default GW instrument, ``[1,
 dL_{t-h}]``), since the two loss series are built from independent
-innovations. The GW statistic is a chi2(q) Wald test (q=2 with the default
-instrument set), not a t-test, so it is checked against its own nominal
-alpha independently of the ``dm_test`` size suite (different reference
-distribution, different HAC construction: Newey-West with ``h-1`` lags and
-Bartlett weights, vs. dm_test's unweighted acf-kernel sum).
+innovations.
+
+WP-V3 found the h=4 cells here genuinely oversized (Bartlett-tapered HAC +
+chi2(q) reference; see ``.dev-notes/anchor_coverage/v3_mc_results.md``
+finding 2) -- confirmed NOT a small-n artifact (persisted out to n=100,000).
+WP-A1 root-caused it to the linear Bartlett taper discarding a large,
+non-vanishing fraction of the *known* (finite-order, exactly h-1-dependent)
+autocovariance of an h-step loss differential, and fixed
+``giacomini_white_test`` (default ``small_sample=True``) to (a) sum
+UNTAPERED autocovariances over the same h-1 lags -- matching ``dm_test``'s
+own convention (R's ``forecast::dm.test``) for this exact finite-MA
+structure -- with a bandwidth-shrink-on-non-PSD fallback, and (b) reference
+``F(q, ESS-q)`` (``ESS = n/(1+2*bandwidth_used)``) instead of chi2(q)
+whenever a HAC lag was used. See ``giacomini_white_test``'s docstring for
+the full diagnosis and the exact correction. All four cells below (h in
+{1,4} x n in {50,200}) are now confirmed in-band with the corrected
+default; h=1 is unaffected (bandwidth=0 reduces to the original chi2(q)
+reference).
 """
 from __future__ import annotations
 
@@ -30,37 +44,10 @@ def _simulate_ma_errors(rng: np.random.Generator, n: int, h: int) -> np.ndarray:
     return np.convolve(eps, np.ones(h), mode="valid")
 
 
-_H4_DISTORTION_REASON = (
-    "CONFIRMED, not sample-size noise: rate stays ~1.5-1.8x nominal alpha at "
-    "n=50, 200, 500, 1000, 2000, AND 5000 (see v3_mc_results.md) -- e.g. at "
-    "n=5000 mean(statistic)=2.29 vs the chi2(2) mean of 2.00, rate@alpha=.05 "
-    "=0.072. Diagnosis: a follow-up sweep over h=1..4 at fixed n=500 shows a "
-    "MONOTONIC relationship between h (i.e. the number of HAC lags, h-1, in "
-    "the Newey-West/Bartlett covariance) and the size distortion: h=1 (zero "
-    "HAC lags) is correctly calibrated (mean stat 1.95, rate 0.045); h=2,3,4 "
-    "(1, 2, 3 HAC lags) show increasing over-rejection (mean stat 2.27, 2.45, "
-    "2.57; rate 0.070, 0.079, 0.084 at n=500). This is consistent with the "
-    "well-documented finite-sample behavior of HAC-robust Wald tests, where "
-    "more HAC lags relative to the effective sample size inflate the "
-    "estimated-covariance-based Wald statistic (same qualitative mechanism "
-    "as the dm_test HLN small-sample correction exists to address -- but "
-    "giacomini_white_test has no analogous small-sample correction here). "
-    "Shrinks only very slowly with n (does not resolve by n=5000), so this "
-    "is reported as a genuine, still-open distortion rather than dismissed "
-    "as small-n noise."
-)
-
-
 @pytest.mark.mc
 @pytest.mark.timeout(90)
 @pytest.mark.parametrize("n", [50, 200])
-@pytest.mark.parametrize(
-    "h",
-    [
-        1,
-        pytest.param(4, marks=pytest.mark.xfail(reason=_H4_DISTORTION_REASON, strict=True)),
-    ],
-)
+@pytest.mark.parametrize("h", [1, 4])
 def test_giacomini_white_size_equal_conditional_accuracy(n: int, h: int) -> None:
     gens = spawn_generators(N_REPS, salt=7_000_000 + n * 10 + h)
     pvals = np.empty(N_REPS)
@@ -88,7 +75,7 @@ def test_giacomini_white_size_equal_conditional_accuracy(n: int, h: int) -> None
             n_reps=n_valid,
             n_rejections=n_reject,
             verdict=verdict,
-            note="default instrument [1, dL_{t-h}]; chi2(df=2) reference",
+            note="default instrument [1, dL_{t-h}]; small_sample=True (chi2(df=2) at h=1, F(q,ESS-q) at h>1)",
             extra={"n": n, "h": h},
         )
         if not in_band:

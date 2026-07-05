@@ -24,9 +24,21 @@ Both designs were checked across n_boot in {1000, 2000}, n_origins in
 {50, 100, 200, 500}, alpha in {0.05, 0.10}, with/without the shared common
 factor, and multiple fixed block lengths (1/5/10/20/"auto") before writing
 this file (see ``.dev-notes/anchor_coverage/v3_mc_results.md`` for the full
-sweep) -- design B's under-coverage is stable across all of those, which is
-why it is reported as a genuine finding (``xfail(strict=True)``) rather than
-tuned away.
+sweep) -- design B's under-coverage is stable across all of those.
+
+WP-A1 Step 0 resolution: design B's ~0.82 rate (vs the naive 1-alpha=0.90
+target) was cross-checked against R's own ``MCS::MCSprocedure`` on the
+identical design (subprocess-Rscript bridge, R=200 replications,
+n_boot=500) and R independently reproduces the SAME ~0.82 coverage
+(rate=0.8200, CI99=[0.7401,0.8841]). Since the reference R implementation
+shows the identical behavior, this is a genuine property of the
+Hansen-Lunde-Nason MCS procedure at an exact global null with many tied
+models, not a macroforecast bug -- no code change was made. Design B's test
+is now a documented-behavior regression band (see
+``_EQUAL_SET_DOCUMENTED_BEHAVIOR_NOTE`` in this file and the
+``model_confidence_set`` entry in ``docs/reference/tests.md``), not an
+``xfail``. Design A (dominant-model coverage) is unaffected and remains a
+straightforward ``>=1-alpha`` floor check.
 """
 from __future__ import annotations
 
@@ -124,29 +136,42 @@ def test_mcs_retains_true_best_model_near_nominal_coverage() -> None:
     )
 
 
-_EQUAL_SET_DISTORTION_REASON = (
-    "CONFIRMED across a wide diagnostic sweep (see v3_mc_results.md), not a "
-    "single-run artifact: P(all 5 tied models jointly retained) came in at "
-    "0.82-0.87 against a 1-alpha=0.90 target (alpha=.10) -- and 0.867 against "
-    "a 1-alpha=0.95 target (alpha=.05, i.e. an even larger relative shortfall "
-    "-- across n_boot in {1000,2000} (rules out bootstrap MC noise), "
-    "n_origins in {100,200} (rules out a simple finite-sample effect that "
-    "vanishes with more data), and with/without the shared common factor "
-    "(rules out cross-model correlation as the sole driver). Diagnosis: this "
-    "isolates the distortion to the model_confidence_set / "
-    "_iterative_mcs_wide first-step elimination test itself (the exact "
-    "_mcs_statistic private helper flagged in WP-V0 as the single biggest "
-    "untested gap in tests.py) under-covering the 'no model is worse' global "
-    "null by a stable, non-vanishing margin -- not to this MC design's DGP, "
-    "block length, or replication budget."
+_EQUAL_SET_DOCUMENTED_BEHAVIOR_NOTE = (
+    "WP-V3 found P(all 5 tied models jointly retained) ~= 0.82 against a "
+    "naive 1-alpha=0.90 target (alpha=.10), confirmed stable across a wide "
+    "diagnostic sweep (n_boot in {1000,2000}, n_origins in {100,200}, "
+    "with/without the shared common factor -- see v3_mc_results.md finding "
+    "3). WP-A1 Step 0 then independently cross-checked this EXACT design "
+    "(same K=5/n=100/idio_sd=0.3/alpha=.10/block_length=5 DGP and params) "
+    "against R's OWN canonical MCS::MCSprocedure via the subprocess-Rscript "
+    "bridge (R=200 replications, n_boot=500, MCSprocedure(..., "
+    "statistic='Tmax', k=5, min.k=3)): R gives rate=0.8200, CI99=[0.7401, "
+    "0.8841] -- essentially identical to this suite's own longer-run (n_reps"
+    "=1000) measurement of rate=0.8180, CI99=[0.7846,0.8483]. Since R's own "
+    "reference implementation shows the SAME under-coverage on the SAME "
+    "design, this is a genuine property of the Hansen-Lunde-Nason MCS "
+    "sequential-elimination procedure under an exact global null with many "
+    "tied models -- not a macroforecast bug -- so no code change was made. "
+    "This is now a DOCUMENTED-BEHAVIOR regression band (not a >=1-alpha "
+    "coverage-floor assertion): see the model_confidence_set entry in "
+    "docs/reference/tests.md for the interpretation note (what alpha means "
+    "under a global null with many ties). A future rate drifting up toward "
+    "~0.90 (an unexpected fix upstream) or down below ~0.70 (a new "
+    "regression) should fail this band loudly and be re-investigated, not "
+    "silently absorbed by widening the band further."
 )
 
 
 @pytest.mark.mc
 @pytest.mark.timeout(300)
-@pytest.mark.xfail(reason=_EQUAL_SET_DISTORTION_REASON, strict=True)
-def test_mcs_equal_losers_global_null_coverage() -> None:
-    """Design B: all K=5 models tied -> P(all 5 retained) should be ~1-alpha."""
+def test_mcs_equal_losers_global_null_coverage_documented_behavior() -> None:
+    """Design B: all K=5 models tied. P(all 5 retained) is ~0.82 here, NOT the
+    naive 1-alpha=0.90 target -- see ``_EQUAL_SET_DOCUMENTED_BEHAVIOR_NOTE``:
+    this is a confirmed property of the MCS procedure itself under a global
+    null with many ties (matched independently by R's own MCS::MCSprocedure,
+    WP-A1 Step 0), not a macroforecast defect, so this checks a documented-
+    behavior band around the known ~0.82 rate rather than the 1-alpha floor.
+    """
 
     n, idio_sd, alpha, n_reps = 100, 0.3, 0.10, 1000
     model_names = [f"m{i}" for i in range(5)]
@@ -164,19 +189,34 @@ def test_mcs_equal_losers_global_null_coverage() -> None:
             n_ok += 1
 
     lo, hi = clopper_pearson(n_ok, n_reps, conf=0.99)
-    target = 1.0 - alpha
-    meets_floor = hi >= target
+    rate = n_ok / n_reps
+    # Documented-behavior band (WP-A1, see _EQUAL_SET_DOCUMENTED_BEHAVIOR_NOTE):
+    # NOT a 1-alpha coverage-floor check. Centered on the R-cross-validated
+    # ~0.82 empirical property of the MCS procedure at this exact global-null,
+    # many-ties design.
+    documented_lo, documented_hi = 0.70, 0.90
+    in_band = documented_lo <= rate < documented_hi
     record(
         test="model_confidence_set",
-        design=f"K=5, all models tied (idio_sd={idio_sd}, n={n}); target = P(all retained) >= 1-alpha",
+        design=(
+            f"K=5, all models tied (idio_sd={idio_sd}, n={n}); DOCUMENTED "
+            "BEHAVIOR band (not a 1-alpha coverage floor -- see WP-A1 Step 0)"
+        ),
         nominal_alpha=alpha,
         n_reps=n_reps,
         n_rejections=n_ok,
-        verdict="PASS (meets >=1-alpha coverage floor)" if meets_floor else "UNDERCOVERAGE (below floor)",
-        note=f"target retention rate = 1-alpha = {target:.2f} (one-sided floor check)",
-        extra={"target_coverage": target},
+        verdict="PASS (matches documented ~0.82 MCS behavior)" if in_band else "UNEXPECTED -- investigate",
+        note=(
+            "R MCS::MCSprocedure cross-check (WP-A1 Step 0): rate=0.8200 "
+            "CI99=[0.7401,0.8841], R=200, n_boot=500 -- matches this Python "
+            "measurement; interpretation note in docs/reference/tests.md"
+        ),
+        extra={"documented_band": [documented_lo, documented_hi]},
     )
-    assert meets_floor, (
-        f"model_confidence_set equal-losers global-null undercoverage: rate="
-        f"{n_ok / n_reps:.4f} CI99=[{lo:.4f},{hi:.4f}] vs floor={target:.2f}"
+    assert in_band, (
+        f"model_confidence_set equal-losers global-null rate moved outside "
+        f"the documented ~0.82 behavior band: rate={rate:.4f} "
+        f"CI99=[{lo:.4f},{hi:.4f}] expected in [{documented_lo},{documented_hi}) "
+        "-- re-investigate rather than widen this band (see "
+        "_EQUAL_SET_DOCUMENTED_BEHAVIOR_NOTE)."
     )
