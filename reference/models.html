@@ -4449,12 +4449,12 @@ stable for macro panels.</p>
     <span class="n">neurons</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">dropout</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
-    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
     <span class="n">subsample</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
     <span class="n">nu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">variance_penalty</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">patience</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">patience</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
     <span class="n">validation_fraction</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="n">device</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
@@ -4518,12 +4518,12 @@ callable accepts legacy aliases <code class="docutils literal notranslate"><span
 <td><p>Adam learning rate.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_epochs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">40</span></code> (was <code class="docutils literal notranslate"><span class="pre">100</span></code> before 2026-07-05; old value reachable explicitly)</p></td>
 <td><p>fixed by preset</p></td>
 <td><p>Training epoch cap.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_estimators</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">20</span></code> (was <code class="docutils literal notranslate"><span class="pre">100</span></code> before 2026-07-05; old value reachable explicitly)</p></td>
 <td><p>yes</p></td>
 <td><p>Number of blocked-subsample bags.</p></td>
 </tr>
@@ -4543,7 +4543,7 @@ callable accepts legacy aliases <code class="docutils literal notranslate"><span
 <td><p>Soft penalty on the variance-emphasis target.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">patience</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">15</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8</span></code> (was <code class="docutils literal notranslate"><span class="pre">15</span></code> before 2026-07-05; old value reachable explicitly)</p></td>
 <td><p>fixed by preset</p></td>
 <td><p>Early-stopping patience.</p></td>
 </tr>
@@ -4579,14 +4579,14 @@ callable accepts legacy aliases <code class="docutils literal notranslate"><span
     <span class="n">neurons</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
     <span class="n">dropout</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
     <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
-    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">prior_estimators</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">max_epochs</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+    <span class="n">n_estimators</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">prior_estimators</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">subsample</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
     <span class="n">block_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
     <span class="n">volatility_emphasis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">rescale_volatility</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">patience</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+    <span class="n">patience</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="n">device</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
     <span class="n">quantile_levels</span><span class="o">=</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">),</span>
@@ -4740,17 +4740,17 @@ conditional-volatility head.</p></li>
 <td><p>Adam learning rate.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_epochs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">40</span></code> (was <code class="docutils literal notranslate"><span class="pre">100</span></code> before 2026-07-05; old value reachable explicitly)</p></td>
 <td><p>fixed by preset</p></td>
 <td><p>Training epoch cap.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_estimators</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">20</span></code> (was <code class="docutils literal notranslate"><span class="pre">100</span></code> before 2026-07-05; old value reachable explicitly)</p></td>
 <td><p>yes</p></td>
-<td><p>DensityHNN bootstrap ensemble size.</p></td>
+<td><p>DensityHNN bootstrap ensemble size. Fewer bags widen the per-row predicted-variance right tail (bagged-member disagreement noise) – see the WP-A4 anchor finding in CHANGELOG; pass <code class="docutils literal notranslate"><span class="pre">n_estimators=100</span></code> explicitly to restore the old ensemble size.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prior_estimators</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">50</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code> (was <code class="docutils literal notranslate"><span class="pre">50</span></code> before 2026-07-05; old value reachable explicitly)</p></td>
 <td><p>yes</p></td>
 <td><p>Prior-DNN bootstrap ensemble size used to estimate volatility emphasis.</p></td>
 </tr>
@@ -4775,7 +4775,7 @@ conditional-volatility head.</p></li>
 <td><p>Apply the blocked-OOB volatility reality-check recalibration.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">patience</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">15</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8</span></code> (was <code class="docutils literal notranslate"><span class="pre">15</span></code> before 2026-07-05; old value reachable explicitly)</p></td>
 <td><p>fixed by preset</p></td>
 <td><p>Early-stopping patience.</p></td>
 </tr>
