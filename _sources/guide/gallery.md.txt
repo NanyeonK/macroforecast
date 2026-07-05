@@ -4,8 +4,7 @@
 
 The studies below show how published macro-forecasting designs are expressed
 with the current `macroforecast` API. Each card links to a replication guide
-or script set. These are not marketing examples. Each study separates three
-objects:
+or script set. Each study separates three objects:
 
 1. the paper specification stated in the main text or appendix,
 2. the closest reproducible `macroforecast` setting,
@@ -143,7 +142,7 @@ spec = pipeline_spec(
 report = run_pipeline(spec)
 
 # 11. Inspect results.
-print(report.accuracy)       # relative RMSE table by target/horizon/arm
+print(report.accuracy)       # relative-accuracy table by target/horizon/arm
 print(report.significance)   # DM and CW p-values
 print(report.mcs)            # Model Confidence Set membership
 forecasts = report.forecasts  # full forecast DataFrame

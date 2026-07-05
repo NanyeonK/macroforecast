@@ -138,13 +138,6 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="getting_started.html">
-    Getting Started
-  </a>
-</li>
-
-
-<li class="nav-item ">
   <a class="nav-link nav-internal" href="index.html">
     User Guide
   </a>
@@ -291,13 +284,6 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="getting_started.html">
-    Getting Started
-  </a>
-</li>
-
-
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="index.html">
     User Guide
@@ -470,8 +456,7 @@
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to User Guide</span></a></p>
 <p>The studies below show how published macro-forecasting designs are expressed
 with the current <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> API. Each card links to a replication guide
-or script set. These are not marketing examples. Each study separates three
-objects:</p>
+or script set. Each study separates three objects:</p>
 <ol class="arabic simple">
 <li><p>the paper specification stated in the main text or appendix,</p></li>
 <li><p>the closest reproducible <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> setting,</p></li>
@@ -620,7 +605,7 @@ for the replication scripts above.</p>
 <span class="n">report</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 
 <span class="c1"># 11. Inspect results.</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">accuracy</span><span class="p">)</span>       <span class="c1"># relative RMSE table by target/horizon/arm</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">accuracy</span><span class="p">)</span>       <span class="c1"># relative-accuracy table by target/horizon/arm</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">significance</span><span class="p">)</span>   <span class="c1"># DM and CW p-values</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">mcs</span><span class="p">)</span>            <span class="c1"># Model Confidence Set membership</span>
 <span class="n">forecasts</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">forecasts</span>  <span class="c1"># full forecast DataFrame</span>

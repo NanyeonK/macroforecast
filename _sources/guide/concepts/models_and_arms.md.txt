@@ -3,10 +3,9 @@
 [Back to User Guide](../index.md)
 
 An `Arm` is a target-agnostic configuration: preprocessing + features + a single
-model. It is not a cell by itself; applied to a target and a horizon it forms one
-cell (executed by one `run()` call), and in the evaluation it appears as exactly
-one contender. An arm is one contender: one arm, one named entry in the
-accuracy/DM/MCS table.
+model. Applied to a target and a horizon it forms one cell (executed by one
+`run()` call), and in the evaluation it appears as exactly one contender — one
+named entry in the accuracy/DM/MCS table.
 
 A `ModelSpec` is the description of a single model: its name, optional fixed
 parameters, and optional parameter search space. Most model families are

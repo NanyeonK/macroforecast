@@ -8,9 +8,9 @@ source metadata. The main output is always a `DataBundle` or `DataSpec`. This
 module does not apply stationarity transforms, outlier rules, imputation, feature
 engineering, model fitting, or evaluation.
 
-The standard panel is a `pandas.DataFrame` with a `DatetimeIndex` named `date`,
-one macro series per column, and dataset metadata stored separately and mirrored
-in `panel.attrs["macroforecast_metadata"]`. `mf.data.load_*()` returns a
+The standard panel is a `pandas.DataFrame` with a `DatetimeIndex` named `date`
+and one macro series per column. Dataset metadata is kept separately and also
+mirrored in `panel.attrs["macroforecast_metadata"]`. `mf.data.load_*()` returns a
 `DataBundle(panel, metadata)`. `mf.data.spec(...)` attaches target, horizon,
 sample-window, and predictor choices to that panel.
 

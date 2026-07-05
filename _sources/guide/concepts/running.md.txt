@@ -12,7 +12,7 @@ predictions for the test horizon.
 `macroforecast.pipeline.run_pipeline` wraps `run` into a full POOS evaluation.
 It enumerates every (arm, target, horizon) cell, calls `run` for each, collects
 the master forecast frame, evaluates every contender against the benchmark with
-relative RMSE, DM/CW, and the Model Confidence Set, and returns a
+relative MSE, DM/CW, and the Model Confidence Set, and returns a
 `PipelineReport`.
 
 ## Forecast policies
@@ -27,9 +27,11 @@ The `forecast_policy` argument to `run` (and the policy resolved from a
   single-period value. This is the standard convention for growth-rate series
   (t-codes 2, 3, 5, 6, 7 in FRED-MD/QD) and matches how practitioners report
   average inflation or average growth over the horizon.
-- **path_average** (`forecast_policy="path_average"`): fit h separate one-step
-  models, forecast each step, then average the step forecasts. This is a
-  multi-step iterated design.
+- **path_average** (`forecast_policy="path_average"`): fit h step-specific
+  models, where step s forecasts the one-period object realized at t+s from
+  information available at the origin, then average the h step forecasts. This is
+  a direct multi-step design, not an iterated one; iterating a single model
+  forward instead is the separate `recursive` policy.
 
 At horizon 1, `direct_average` and `path_average` are the same forecast by
 construction (averaging over a single step is that step), so the two policies

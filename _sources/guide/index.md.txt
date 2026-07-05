@@ -65,32 +65,88 @@ origin rather than once on the full sample.
 
 If you have not run the package yet, start with
 [Getting Started](getting_started.md) for the shortest path from install to a
-first result. Then read the [Concepts](concepts/index.md) pages in the order of
-the map above. Each one explains one stage and most include a short executed
-walkthrough you can paste and run.
+first result. Then work through the stage pages below in the order of the map
+above. Each one explains one stage and most include a short executed walkthrough
+you can paste and run.
 
 When you need exact signatures, follow the reference link at the foot of each
-concept page. The [Glossary](glossary.md), [Models and Features](model_overview.md),
+stage page. The [Glossary](glossary.md), [Models and Features](model_overview.md),
 and [Replication Gallery](gallery.md) are reached from the documentation home and
 are useful once the workflow is familiar.
 
-## Concepts
+## The guide, stage by stage
 
-::::{grid} 1
+::::{grid} 2
 
-:::{grid-item-card} Start the walkthrough
-:link: concepts/index
+:::{grid-item-card} Getting Started
+:link: getting_started
 :link-type: doc
 
-Data, preprocessing, features, windows, models, running, and evaluation, in
-order.
+Install, the five core ideas, and the shortest path from a single forecast to a
+full study.
+:::
+
+:::{grid-item-card} Data
+:link: concepts/data
+:link-type: doc
+
+Loading FRED-MD, FRED-QD, FRED-SD, and custom panels into a `DataBundle`.
+:::
+
+:::{grid-item-card} Preprocessing
+:link: concepts/preprocessing
+:link-type: doc
+
+Stationarity transforms, outlier rules, EM imputation, and standardization.
+:::
+
+:::{grid-item-card} Features
+:link: concepts/features
+:link-type: doc
+
+F / X / MARX / MAF / Level feature families and the `FeatureSpec` abstraction.
+:::
+
+:::{grid-item-card} Models and Arms
+:link: concepts/models_and_arms
+:link-type: doc
+
+`ModelSpec`, `Arm`, and how one arm becomes one contender in the evaluation.
+:::
+
+:::{grid-item-card} Windows
+:link: concepts/windows
+:link-type: doc
+
+Expanding, rolling, and no-validation windows; retrain and retune cadence.
+:::
+
+:::{grid-item-card} Running
+:link: concepts/running
+:link-type: doc
+
+`run` and `run_pipeline`: direct vs path-average forecast policy.
+:::
+
+:::{grid-item-card} Evaluation
+:link: concepts/evaluation
+:link-type: doc
+
+RMSE, relative MSE, relative RMSE, DM/CW tests, and the Model Confidence Set.
 :::
 
 ::::
 
 ```{toctree}
-:maxdepth: 2
+:maxdepth: 1
 :hidden:
 
-concepts/index
+getting_started
+concepts/data
+concepts/preprocessing
+concepts/features
+concepts/models_and_arms
+concepts/windows
+concepts/running
+concepts/evaluation
 ```

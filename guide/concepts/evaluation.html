@@ -137,13 +137,6 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../getting_started.html">
-    Getting Started
-  </a>
-</li>
-
-
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../index.html">
     User Guide
@@ -291,13 +284,6 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../getting_started.html">
-    Getting Started
-  </a>
-</li>
-
-
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="../index.html">
     User Guide
@@ -407,16 +393,14 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Concepts</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="data.html">Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="features.html">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models_and_arms.html">Models and Arms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="windows.html">Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="running.html">Running</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Evaluation</a></li>
-</ul>
-</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models_and_arms.html">Models and Arms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="windows.html">Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Evaluation</a></li>
 </ul>
 </div>
 </nav></div>
@@ -459,9 +443,6 @@
     </li>
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
-    
-    
-    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Concepts</a></li>
     
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Evaluation</span></li>
   </ul>
@@ -517,9 +498,9 @@ per-contender, and the pipeline emits a <code class="docutils literal notranslat
 so the heterogeneity is visible rather than silent.</p>
 <p>The Model Confidence Set is different. It needs a single joint sample where every
 candidate is observed, so it uses the listwise-common sample across all
-contenders. The accuracy table and the MCS can therefore rest on different
-samples by design. This is correct, because a pairwise relative metric should use
-all the data each pair shares while a joint comparison needs common origins.</p>
+contenders. The accuracy table and the MCS therefore rest on different samples by
+design: a pairwise relative metric uses all the data each pair shares, while the
+joint MCS needs origins common to every candidate.</p>
 </section>
 <section id="forecast-comparison-tests">
 <h2>Forecast comparison tests<a class="headerlink" href="#forecast-comparison-tests" title="Link to this heading">#</a></h2>

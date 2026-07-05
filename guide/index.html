@@ -487,8 +487,8 @@ window.runMermaid = runMermaid;</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Concepts" href="concepts/index.html" />
-    <link rel="prev" title="Getting Started" href="getting_started.html" />
+    <link rel="next" title="Getting Started" href="getting_started.html" />
+    <link rel="prev" title="Welcome to macroforecast" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
@@ -573,13 +573,6 @@ window.runMermaid = runMermaid;</script>
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="getting_started.html">
-    Getting Started
-  </a>
-</li>
-
-
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
     User Guide
@@ -727,13 +720,6 @@ window.runMermaid = runMermaid;</script>
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="getting_started.html">
-    Getting Started
-  </a>
-</li>
-
-
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
     User Guide
@@ -843,16 +829,14 @@ window.runMermaid = runMermaid;</script>
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="concepts/index.html">Concepts</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="concepts/data.html">Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts/preprocessing.html">Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts/features.html">Features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts/models_and_arms.html">Models and Arms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts/windows.html">Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts/running.html">Running</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts/evaluation.html">Evaluation</a></li>
-</ul>
-</details></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/data.html">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/models_and_arms.html">Models and Arms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/windows.html">Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/running.html">Running</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/evaluation.html">Evaluation</a></li>
 </ul>
 </div>
 </nav></div>
@@ -971,27 +955,90 @@ origin rather than once on the full sample.</p>
 <h2>How to use this guide<a class="headerlink" href="#how-to-use-this-guide" title="Link to this heading">#</a></h2>
 <p>If you have not run the package yet, start with
 <a class="reference internal" href="getting_started.html"><span class="std std-doc">Getting Started</span></a> for the shortest path from install to a
-first result. Then read the <a class="reference internal" href="concepts/index.html"><span class="std std-doc">Concepts</span></a> pages in the order of
-the map above. Each one explains one stage and most include a short executed
-walkthrough you can paste and run.</p>
+first result. Then work through the stage pages below in the order of the map
+above. Each one explains one stage and most include a short executed walkthrough
+you can paste and run.</p>
 <p>When you need exact signatures, follow the reference link at the foot of each
-concept page. The <a class="reference internal" href="glossary.html"><span class="std std-doc">Glossary</span></a>, <a class="reference internal" href="model_overview.html"><span class="std std-doc">Models and Features</span></a>,
+stage page. The <a class="reference internal" href="glossary.html"><span class="std std-doc">Glossary</span></a>, <a class="reference internal" href="model_overview.html"><span class="std std-doc">Models and Features</span></a>,
 and <a class="reference internal" href="gallery.html"><span class="std std-doc">Replication Gallery</span></a> are reached from the documentation home and
 are useful once the workflow is familiar.</p>
 </section>
-<section id="concepts">
-<h2>Concepts<a class="headerlink" href="#concepts" title="Link to this heading">#</a></h2>
+<section id="the-guide-stage-by-stage">
+<h2>The guide, stage by stage<a class="headerlink" href="#the-guide-stage-by-stage" title="Link to this heading">#</a></h2>
 <div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-1 sd-row-cols-xs-1 sd-row-cols-sm-1 sd-row-cols-md-1 sd-row-cols-lg-1 docutils">
+<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
 <div class="sd-col sd-d-flex-row docutils">
 <div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
 <div class="sd-card-body docutils">
 <div class="sd-card-title sd-font-weight-bold docutils">
-Start the walkthrough</div>
-<p class="sd-card-text">Data, preprocessing, features, windows, models, running, and evaluation, in
-order.</p>
+Getting Started</div>
+<p class="sd-card-text">Install, the five core ideas, and the shortest path from a single forecast to a
+full study.</p>
 </div>
-<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/index.html"><span class="doc">Concepts</span></a></div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="getting_started.html"><span class="doc">Getting Started</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Data</div>
+<p class="sd-card-text">Loading FRED-MD, FRED-QD, FRED-SD, and custom panels into a <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>.</p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/data.html"><span class="doc">Data</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Preprocessing</div>
+<p class="sd-card-text">Stationarity transforms, outlier rules, EM imputation, and standardization.</p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/preprocessing.html"><span class="doc">Preprocessing</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Features</div>
+<p class="sd-card-text">F / X / MARX / MAF / Level feature families and the <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> abstraction.</p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/features.html"><span class="doc">Features</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Models and Arms</div>
+<p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">Arm</span></code>, and how one arm becomes one contender in the evaluation.</p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/models_and_arms.html"><span class="doc">Models and Arms</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Windows</div>
+<p class="sd-card-text">Expanding, rolling, and no-validation windows; retrain and retune cadence.</p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/windows.html"><span class="doc">Windows</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Running</div>
+<p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">run</span></code> and <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>: direct vs path-average forecast policy.</p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/running.html"><span class="doc">Running</span></a></div>
+</div>
+<div class="sd-col sd-d-flex-row docutils">
+<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
+<div class="sd-card-body docutils">
+<div class="sd-card-title sd-font-weight-bold docutils">
+Evaluation</div>
+<p class="sd-card-text">RMSE, relative MSE, relative RMSE, DM/CW tests, and the Model Confidence Set.</p>
+</div>
+<a class="sd-stretched-link sd-hide-link-text reference internal" href="concepts/evaluation.html"><span class="doc">Evaluation</span></a></div>
 </div>
 </div>
 </div>
@@ -1011,20 +1058,20 @@ order.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="getting_started.html"
+       href="../index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Getting Started</p>
+        <p class="prev-next-title">Welcome to macroforecast</p>
       </div>
     </a>
     <a class="right-next"
-       href="concepts/index.html"
+       href="getting_started.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Concepts</p>
+        <p class="prev-next-title">Getting Started</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1050,7 +1097,7 @@ order.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-pipeline-at-a-glance">The pipeline at a glance</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-pieces-fit">How the pieces fit</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-use-this-guide">How to use this guide</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#concepts">Concepts</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-guide-stage-by-stage">The guide, stage by stage</a></li>
 </ul>
   </nav></div>
 

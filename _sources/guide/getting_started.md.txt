@@ -25,7 +25,7 @@ environment manager in development, and all dependency groups are defined in
 
 ## Key concepts
 
-Five ideas cover almost everything. The [Concepts](concepts/index.md) section
+Five ideas cover almost everything. The [User Guide](index.md) stage pages
 explains each in full and the [Glossary](glossary.md) defines every term.
 
 **The spec.** A `pipeline_spec` bundles the data, targets, horizons, window,
@@ -85,7 +85,7 @@ spec = pipeline_spec(
     evaluation=EvalSpec(benchmark="AR"),
 )
 report = run_pipeline(spec)
-print(report.accuracy)       # relative RMSE table by target/horizon/arm
+print(report.accuracy)       # relative-accuracy table by target/horizon/arm
 ```
 
 ### A full study
@@ -143,7 +143,7 @@ spec = pipeline_spec(
 )
 report = run_pipeline(spec)
 
-print(report.accuracy)       # relative RMSE table by target/horizon/arm
+print(report.accuracy)       # relative-accuracy table by target/horizon/arm
 print(report.significance)   # DM and CW p-values
 print(report.mcs)            # Model Confidence Set membership
 ```
@@ -163,7 +163,7 @@ python -m scripts.replication.gcls_2021_pipeline.run_pipeline_full --smoke
 
 ## What Comes Next
 
-The [Concepts](concepts/index.md) section explains each step in detail.
+The [User Guide](index.md) stage pages explain each step in detail.
 The [Glossary](glossary.md) defines every term used above.
 The [Models and Features](model_overview.md) page lists every feature step and registered model.
 The [Replication Gallery](gallery.md) shows full published-paper replication examples.
