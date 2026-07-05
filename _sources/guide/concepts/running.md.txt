@@ -32,6 +32,14 @@ The `forecast_policy` argument to `run` (and the policy resolved from a
   information available at the origin, then average the h step forecasts. This is
   a direct multi-step design, not an iterated one; iterating a single model
   forward instead is the separate `recursive` policy.
+- **recursive** (`forecast_policy="recursive"`, code alias `"iterated"`): fit
+  one one-step-ahead model, then roll it forward h times, feeding each step's
+  own prediction back in as the next step's lagged input (the textbook
+  "iterated" multi-step forecast). Unlike `path_average`, a later step's
+  forecast depends on an earlier step's prediction rather than only on
+  origin-available data. See
+  [`future_feature_policy`](../../reference/forecasting.md) for how exogenous
+  (non-target) predictors are rolled forward under this policy.
 
 At horizon 1, `direct_average` and `path_average` are the same forecast by
 construction (averaging over a single step is that step), so the two policies
@@ -40,6 +48,24 @@ where the h-period-average target and the averaged one-step path are genuinely
 different objects. This holds across every model, including the
 information-criterion autoregressions (`ar`, `far`), whose order is selected by
 BIC/AIC on the same sample under both policies.
+
+### Textbook mapping
+
+`macroforecast`'s policy names do not always match the vocabulary of a
+forecasting textbook. The table below lines them up:
+
+| Textbook term | `forecast_policy` | What it does |
+| --- | --- | --- |
+| direct | `"direct"` | One model per horizon h, fit directly on the h-period-ahead value. |
+| iterated / recursive | `"recursive"` (code alias `"iterated"`) | One one-step model, rolled forward h times, each step's prediction feeding the next. |
+| direct, h-period-average object | `"direct_average"` | The direct idea, but the forecast object is the h-period average of the stationary transform. |
+| h-average of h one-step models | `"path_average"` | h independent step-specific one-step-ahead models (never iterated), averaged. |
+
+The `*_average` variants (`direct_average`, `path_average`) are both h-average
+forecast objects; they differ in whether one model is fit on the h-period-average
+target directly (`direct_average`) or h one-step models are averaged after the
+fact (`path_average`). Neither feeds a prediction back into the next step's
+inputs -- only `recursive` does that.
 
 The t-code to policy mapping is documented in the
 [Pipeline reference](../../reference/pipeline.md).

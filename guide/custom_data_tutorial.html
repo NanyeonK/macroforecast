@@ -1,0 +1,895 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Your Data, Your Model, One Table &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/custom_data_tutorial';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Models and Features" href="model_overview.html" />
+    <link rel="prev" title="Evaluation" href="concepts/evaluation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="glossary.html">
+    Glossary
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar"><svg class="pst-icon svg-inline--fa" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/data.html">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/preprocessing.html">Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/models_and_arms.html">Models and Arms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/windows.html">Windows</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/running.html">Running</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts/evaluation.html">Evaluation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Your Data, Your Model, One Table</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Your Data, Your Model, One Table</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="your-data-your-model-one-table">
+<h1>Your Data, Your Model, One Table<a class="headerlink" href="#your-data-your-model-one-table" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to User Guide</span></a></p>
+<p><a class="reference internal" href="getting_started.html"><span class="std std-doc">Getting Started</span></a> runs a study on FRED-MD with two
+built-in models. The reference pages for
+<a class="reference internal" href="../reference/custom/custom_dataset.html"><span class="std std-doc">custom data</span></a> and
+<a class="reference internal" href="../reference/custom/custom_model.html"><span class="std std-doc">custom models</span></a> each cover one stage in
+isolation – loading your own CSV, or wiring up your own estimator – but stop
+one step short of a scored comparison. This page connects every stage: your
+own CSV, your own model, a horse race against a benchmark, and the one-line
+table you would put in a paper. Every code block below was executed for real;
+the output shown is genuine, not illustrative.</p>
+<section id="what-you-will-build">
+<h2>What you will build<a class="headerlink" href="#what-you-will-build" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>A small synthetic monthly panel, written to an actual CSV file.</p></li>
+<li><p>Load it with <code class="docutils literal notranslate"><span class="pre">mf.data.load_custom_csv</span></code>.</p></li>
+<li><p>Declare the forecast target – and meet the real error the package raises
+when custom data has no FRED t-code to fall back on.</p></li>
+<li><p>Wrap a plain <code class="docutils literal notranslate"><span class="pre">sklearn.linear_model.Ridge</span></code> as a <code class="docutils literal notranslate"><span class="pre">mf.models.custom_model</span></code>,
+next to an <code class="docutils literal notranslate"><span class="pre">&quot;ar&quot;</span></code> benchmark arm.</p></li>
+<li><p>Run the pipeline over a window built with <code class="docutils literal notranslate"><span class="pre">mf.window.from_cutoffs</span></code>.</p></li>
+<li><p>Turn the resulting <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> into a referee-ready table with
+<code class="docutils literal notranslate"><span class="pre">mf.reporting.paper_accuracy_table(...).to_latex()</span></code>.</p></li>
+</ol>
+</section>
+<section id="a-small-synthetic-panel">
+<h2>1. A small synthetic panel<a class="headerlink" href="#a-small-synthetic-panel" title="Link to this heading">#</a></h2>
+<p>The demo panel has one target (<code class="docutils literal notranslate"><span class="pre">demand_index</span></code>) and two predictors
+(<code class="docutils literal notranslate"><span class="pre">orders_idx</span></code>, <code class="docutils literal notranslate"><span class="pre">sentiment_idx</span></code>) that the target is built from with a one-month
+lag, so a model that can see the predictors has a genuine edge over a model
+that only sees the target’s own history:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">180</span>
+<span class="n">dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2005-01-31&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;ME&quot;</span><span class="p">)</span>
+<span class="n">orders_idx</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="n">sentiment_idx</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="n">demand_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="n">demand_index</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">0.05</span> <span class="o">*</span> <span class="n">demand_index</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="o">+</span> <span class="mf">1.3</span> <span class="o">*</span> <span class="n">orders_idx</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="o">+</span> <span class="mf">1.1</span> <span class="o">*</span> <span class="n">sentiment_idx</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">dates</span><span class="p">,</span>
+        <span class="s2">&quot;demand_index&quot;</span><span class="p">:</span> <span class="n">demand_index</span><span class="p">,</span>
+        <span class="s2">&quot;orders_idx&quot;</span><span class="p">:</span> <span class="n">orders_idx</span><span class="p">,</span>
+        <span class="s2">&quot;sentiment_idx&quot;</span><span class="p">:</span> <span class="n">sentiment_idx</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">frame</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;tutorial_panel.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>        date  demand_index  orders_idx  sentiment_idx
+0 2005-01-31      0.000000    0.001230      -0.441145
+1 2005-02-28     -0.332604    0.298746      -0.507961
+2 2005-03-31      0.374245   -0.274138       0.630083
+3 2005-04-30      0.533016   -0.890592      -0.301868
+4 2005-05-31     -1.446430   -0.454671      -0.151444
+</pre></div>
+</div>
+<p>If your panel is already an in-memory <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> rather than a file on disk,
+use <code class="docutils literal notranslate"><span class="pre">mf.data.custom_dataset(...)</span></code> instead of the CSV loader below – both
+return the same <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>. See
+<a class="reference internal" href="../reference/custom/custom_dataset.html"><span class="std std-doc">custom_dataset</span></a> for the full contract
+of either path.</p>
+</section>
+<section id="load-it-with-load-custom-csv">
+<h2>2. Load it with <code class="docutils literal notranslate"><span class="pre">load_custom_csv</span></code><a class="headerlink" href="#load-it-with-load-custom-csv" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+
+<span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">load_custom_csv</span><span class="p">(</span>
+    <span class="s2">&quot;tutorial_panel.csv&quot;</span><span class="p">,</span>
+    <span class="n">date</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;tutorial_demo&quot;</span><span class="p">,</span>
+    <span class="n">frequency</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">panel</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">],</span> <span class="n">bundle</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;frequency&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bundle</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;transform_codes&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>(180, 3)
+tutorial_demo monthly
+{}
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">transform_codes</span></code> is empty: nothing here told the loader which FRED-style
+stationarity transform (McCracken-Ng t-code) each column uses, because this
+data was never a FRED panel. That empty dict is exactly what makes the next
+step raise.</p>
+</section>
+<section id="declare-the-target-and-meet-a-real-error">
+<h2>3. Declare the target – and meet a real error<a class="headerlink" href="#declare-the-target-and-meet-a-real-error" title="Link to this heading">#</a></h2>
+<p>FRED loaders resolve a <code class="docutils literal notranslate"><span class="pre">TargetSpec</span></code>’s forecast policy and transform from the
+column’s t-code automatically. Custom data has no t-code, so leaving
+<code class="docutils literal notranslate"><span class="pre">TargetSpec(transform=...)</span></code> unset does not silently pick something reasonable
+– it raises:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">Arm</span><span class="p">,</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">TargetSpec</span><span class="p">,</span> <span class="n">pipeline_spec</span><span class="p">,</span> <span class="n">run_pipeline</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">pipeline_spec</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
+        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;demand_index&quot;</span><span class="p">)],</span>
+        <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">window</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span>
+            <span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;2015-01-31&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2019-06-30&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+        <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ValueError: target &#39;demand_index&#39;: no explicit transform and no usable t-code (provide TargetSpec(transform=...) or transform_codes metadata)
+</pre></div>
+</div>
+<p>The fix is exactly what the message says – give the target an explicit
+transform. <code class="docutils literal notranslate"><span class="pre">demand_index</span></code> here is already a stationary synthetic series, so
+<code class="docutils literal notranslate"><span class="pre">&quot;level&quot;</span></code> is the right choice (use <code class="docutils literal notranslate"><span class="pre">&quot;change&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;growth&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;log_growth&quot;</span></code>
+for a series that still needs differencing; see the <a class="reference internal" href="glossary.html#term-t-code"><span class="xref std std-term">t-code</span></a> glossary
+entry for what each FRED t-code maps to):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">target_spec</span> <span class="o">=</span> <span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;demand_index&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="your-own-model">
+<h2>4. Your own model<a class="headerlink" href="#your-own-model" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">mf.models.custom_model</span></code> wraps any <code class="docutils literal notranslate"><span class="pre">fit(X,</span> <span class="pre">y)</span> <span class="pre">-&gt;</span> <span class="pre">fitted;</span> <span class="pre">fitted.predict(X)</span></code>
+callable into a <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code> that the runner treats exactly like a built-in
+model name. Here it wraps a plain ridge regression:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ridge</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">fit_ridge</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Ridge</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+
+<span class="n">ridge_spec</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span>
+    <span class="s2">&quot;ridge_demo&quot;</span><span class="p">,</span> <span class="n">fit_ridge</span><span class="p">,</span> <span class="n">default_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ridge_spec</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ridge_spec</span><span class="o">.</span><span class="n">input_kind</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ridge_demo supervised
+</pre></div>
+</div>
+<p>Give it an explicit <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> that actually uses the panel – an arm with
+<code class="docutils literal notranslate"><span class="pre">features=None</span></code> does NOT mean “no predictors”; see the
+<a class="reference internal" href="concepts/models_and_arms.html"><span class="std std-doc">Models and Arms</span></a> page and the default-feature-spec
+<code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> if you hit it on your own data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;demand_index&quot;</span><span class="p">,</span> <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="window-pipeline-and-the-horse-race">
+<h2>5. Window, pipeline, and the horse race<a class="headerlink" href="#window-pipeline-and-the-horse-race" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Arm(model=&quot;ar&quot;,</span> <span class="pre">is_benchmark=True)</span></code> is the benchmark – an autoregression
+using only <code class="docutils literal notranslate"><span class="pre">demand_index</span></code>’s own history – run head to head against
+<code class="docutils literal notranslate"><span class="pre">Arm(model=ridge_spec,</span> <span class="pre">features=features)</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span><span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;2015-01-31&quot;</span><span class="p">,</span> <span class="n">test_end</span><span class="o">=</span><span class="s2">&quot;2019-06-30&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">spec</span> <span class="o">=</span> <span class="n">pipeline_spec</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">target_spec</span><span class="p">],</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">arms</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Ridge&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">ridge_spec</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">)),</span>
+<span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">accuracy</span><span class="p">[[</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;contender&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">]])</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>      target  horizon contender     rmse  relative_mse    r2_oos
+demand_index        1        AR 0.299713      1.000000  0.000000
+demand_index        1     Ridge 0.295677      0.973249  0.026751
+demand_index        3        AR 1.615274      1.000000  0.000000
+demand_index        3     Ridge 1.627858      1.015641 -0.015641
+</pre></div>
+</div>
+<p>At horizon 1, <code class="docutils literal notranslate"><span class="pre">Ridge</span></code> has the lower RMSE (<code class="docutils literal notranslate"><span class="pre">relative_mse</span></code> below 1) because it
+can see <code class="docutils literal notranslate"><span class="pre">orders_idx</span></code>/<code class="docutils literal notranslate"><span class="pre">sentiment_idx</span></code> directly, exactly the predictors
+<code class="docutils literal notranslate"><span class="pre">demand_index</span></code> was built from one month later. At horizon 3 the edge is gone
+– these two predictors carry no information three months ahead in this
+synthetic design, and <code class="docutils literal notranslate"><span class="pre">Ridge</span></code> is (very slightly) worse than the AR benchmark
+there. <code class="docutils literal notranslate"><span class="pre">report.significance</span></code> shows the horizon-1 edge does not clear
+conventional significance in this small sample:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">significance</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>      target  horizon contender   dm_stat     dm_p
+demand_index        1     Ridge -1.427501  0.159301
+demand_index        3     Ridge  1.444998  0.154345
+</pre></div>
+</div>
+<p>This is an honest, small-sample result, not a rigged one: a genuinely useful
+predictor does not guarantee a statistically significant win over 54 test
+origins. Real studies run longer windows, more horizons, and report the
+Model Confidence Set alongside DM, exactly as <code class="docutils literal notranslate"><span class="pre">report.mcs</span></code> already does here:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">mcs</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>      target  horizon contender  in_mcs
+demand_index        1        AR    True
+demand_index        1     Ridge    True
+demand_index        3        AR    True
+demand_index        3     Ridge    True
+</pre></div>
+</div>
+</section>
+<section id="one-line-to-a-referee-ready-table">
+<h2>6. One line to a referee-ready table<a class="headerlink" href="#one-line-to-a-referee-ready-table" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">report.accuracy</span></code>, <code class="docutils literal notranslate"><span class="pre">report.significance</span></code>, and <code class="docutils literal notranslate"><span class="pre">report.mcs</span></code> are three separate
+long frames. <code class="docutils literal notranslate"><span class="pre">mf.reporting.paper_accuracy_table</span></code> joins them into the wide
+models-by-horizons table a paper actually publishes – rel-RMSE, DM
+significance stars, and an MCS marker, one row per model, one column per
+horizon:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">paper_accuracy_table</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">booktabs</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>         Model     h1     h3
+AR (benchmark) 1.000† 1.000†
+         Ridge 0.987† 1.008†
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>\begin{table}[!htbp]
+\centering
+\caption{Forecast accuracy — demand\_index}
+\begin{tabular}{lll}
+\toprule
+Model &amp; h1 &amp; h3 \\
+\midrule
+AR (benchmark) &amp; 1.000† &amp; 1.000† \\
+Ridge &amp; 0.987† &amp; 1.008† \\
+\bottomrule
+\end{tabular}
+\\[-0.2em]{\footnotesize Entries are rel-RMSE relative to the benchmark (AR); the benchmark&#39;s own value is 1.000 by construction.}
+\\[-0.2em]{\footnotesize Significance markers: *** p&lt;=0.01, ** p&lt;=0.05, * p&lt;=0.1. (Diebold-Mariano test vs. the benchmark).}
+\\[-0.2em]{\footnotesize † denotes inclusion in the Model Confidence Set.}
+\end{table}
+</pre></div>
+</div>
+<p>Neither model earns a significance star at these thresholds in this
+54-origin demo (matching <code class="docutils literal notranslate"><span class="pre">report.significance</span></code> above), and both stay in the
+Model Confidence Set (the † marker on every cell) – the table is telling the
+truth about a small sample, exactly as it would on a real study with a
+genuinely weak edge. <code class="docutils literal notranslate"><span class="pre">.to_html()</span></code> and <code class="docutils literal notranslate"><span class="pre">.to_markdown()</span></code> render the same
+<code class="docutils literal notranslate"><span class="pre">ReportTable</span></code> for a notebook or a README instead of a paper.</p>
+</section>
+<section id="where-to-go-next">
+<h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/custom/custom_dataset.html"><span class="std std-doc">custom_dataset</span></a> and
+<a class="reference internal" href="../reference/custom/custom_model.html"><span class="std std-doc">custom_model</span></a> – the full contract for
+each stage used above, including <code class="docutils literal notranslate"><span class="pre">custom_model_ensemble</span></code> and the file-loader
+variants.</p></li>
+<li><p><a class="reference internal" href="../reference/reporting.html#paper-accuracy-table"><span class="std std-ref">paper_accuracy_table reference</span></a>
+– every argument, including multi-target reports and dropping the
+benchmark row.</p></li>
+<li><p><a class="reference internal" href="getting_started.html"><span class="std std-doc">Getting Started</span></a> and the
+<a class="reference internal" href="gallery.html"><span class="std std-doc">Replication Gallery</span></a> – the same shape of study on FRED-MD with
+built-in models and richer feature engineering.</p></li>
+<li><p><a class="reference internal" href="concepts/models_and_arms.html"><span class="std std-doc">Models and Arms</span></a> – what an arm’s implicit
+default feature spec actually resolves to, and when the runner warns about it.</p></li>
+</ul>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/data.html"><span class="std std-doc">Data reference</span></a> — <code class="docutils literal notranslate"><span class="pre">load_custom_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">load_custom_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_dataset</span></code>.</p></li>
+<li><p><a class="reference internal" href="../reference/models.html"><span class="std std-doc">Models reference</span></a> — <code class="docutils literal notranslate"><span class="pre">custom_model</span></code>, <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code>.</p></li>
+<li><p><a class="reference internal" href="../reference/pipeline.html"><span class="std std-doc">Pipeline reference</span></a> — <code class="docutils literal notranslate"><span class="pre">Arm</span></code>, <code class="docutils literal notranslate"><span class="pre">TargetSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code>, <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>, <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code>.</p></li>
+<li><p><a class="reference internal" href="../reference/reporting.html"><span class="std std-doc">Reporting reference</span></a> — <code class="docutils literal notranslate"><span class="pre">paper_accuracy_table</span></code> and the other paper-facing table builders.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="concepts/evaluation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Evaluation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="model_overview.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Models and Features</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-you-will-build">What you will build</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-small-synthetic-panel">1. A small synthetic panel</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-it-with-load-custom-csv">2. Load it with <code class="docutils literal notranslate"><span class="pre">load_custom_csv</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declare-the-target-and-meet-a-real-error">3. Declare the target – and meet a real error</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#your-own-model">4. Your own model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#window-pipeline-and-the-horse-race">5. Window, pipeline, and the horse race</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-line-to-a-referee-ready-table">6. One line to a referee-ready table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-go-next">Where to go next</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/guide/custom_data_tutorial.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/guide/custom_data_tutorial.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

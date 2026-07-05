@@ -66,10 +66,29 @@ from macroforecast.pipeline import Arm, EvalSpec, TargetSpec, pipeline_spec, run
 # Load FRED-MD (downloads if not cached; returns DataBundle).
 bundle = mf.data.load_fred_md()
 
-# Two arms: an AR benchmark and a random forest.
+# Two arms: an AR benchmark (its own lags only) and a random forest that
+# explicitly names a handful of panel predictors. Leaving an arm's `features`
+# unset does NOT mean "no predictors" -- it resolves to every OTHER panel
+# column at lags 0/1 with no feature engineering (a `UserWarning` says so if
+# you hit it), which is rarely what an "AR vs RF" comparison wants for either
+# side. `model_selection` turns off RF's per-origin hyperparameter search so
+# this first run stays quick; "A full study" below tunes it.
 arms = [
-    Arm(name="AR", model="ar", is_benchmark=True),
-    Arm(name="RF", model="random_forest"),
+    Arm(
+        name="AR", model="ar", is_benchmark=True,
+        features=mf.feature_engineering.feature_spec(
+            target="INDPRO", predictors=[], lags=None, target_lags=(1, 2, 3),
+        ),
+    ),
+    Arm(
+        name="RF", model="random_forest",
+        features=mf.feature_engineering.feature_spec(
+            target="INDPRO",
+            predictors=["UNRATE", "CPIAUCSL", "FEDFUNDS", "HOUST", "PAYEMS"],
+            lags=(0, 1),
+        ),
+        model_selection={"random_forest": None},
+    ),
 ]
 
 # A minimal expanding window over a short test span; one target.
@@ -87,6 +106,20 @@ spec = pipeline_spec(
 report = run_pipeline(spec)
 print(report.accuracy)       # relative-accuracy table by target/horizon/arm
 ```
+
+```text
+   target  horizon contender  ...  n_common  is_benchmark  benchmark_present
+0  INDPRO        1        AR  ...        95          True               True
+1  INDPRO        1        RF  ...        95         False               True
+
+[2 rows x 9 columns]
+```
+
+This first run is for a fast, genuine result, not a claim that random forest
+beats AR: with only five untuned predictors at horizon 1, `AR` has the lower
+RMSE here (`relative_mse` above 1 for `RF`). "A full study" below adds real
+preprocessing, a MARX feature ladder over the whole panel, and several
+horizons -- the comparison most papers actually care about.
 
 ### A full study
 

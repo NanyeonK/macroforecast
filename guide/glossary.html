@@ -568,7 +568,7 @@ alongside. See <a class="reference internal" href="concepts/data.html"><span cla
 horizon, each forecasting the one-period object at that step from information
 available at the origin, then averages the step forecasts. It is a direct
 multi-step construction, not an iterated one; iterating a single model forward
-is the separate recursive policy. Contrast with the <a class="reference internal" href="#term-direct-policy"><span class="xref std std-term">direct policy</span></a>.</p>
+is the separate <a class="reference internal" href="#term-recursive-policy"><span class="xref std std-term">recursive policy</span></a>. Contrast with the <a class="reference internal" href="#term-direct-policy"><span class="xref std std-term">direct policy</span></a>.</p>
 </dd>
 <dt id="term-PipelineReport">PipelineReport<a class="headerlink" href="#term-PipelineReport" title="Link to this term">#</a></dt><dd><p>The object returned by <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>. It carries <code class="docutils literal notranslate"><span class="pre">.accuracy</span></code> for relative
 accuracy by target and horizon, <code class="docutils literal notranslate"><span class="pre">.significance</span></code> for the comparison tests,
@@ -596,6 +596,14 @@ stays <a class="reference internal" href="#term-leak-free"><span class="xref std
 <dt id="term-R-squared-out-of-sample">R-squared out-of-sample<a class="headerlink" href="#term-R-squared-out-of-sample" title="Link to this term">#</a></dt><dd><p>An accuracy metric, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>, giving the share of benchmark forecast-error
 variance the contender removes. A positive value means the contender beats
 the benchmark.</p>
+</dd>
+<dt id="term-recursive-policy">recursive policy<a class="headerlink" href="#term-recursive-policy" title="Link to this term">#</a></dt><dd><p>A multi-step strategy that fits one one-step-ahead model, then rolls it
+forward h times, feeding each step’s own prediction back in as the next
+step’s lagged input. This is the textbook “iterated” multi-step forecast;
+the code accepts <code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;iterated&quot;</span></code> as an alias for it. Contrast
+with the <a class="reference internal" href="#term-path_average-policy"><span class="xref std std-term">path_average policy</span></a>, which is also multi-step but never
+feeds a prediction back into the next step’s inputs. See
+<a class="reference internal" href="concepts/running.html"><span class="std std-doc">Running</span></a>.</p>
 </dd>
 <dt id="term-relative-MSE">relative MSE<a class="headerlink" href="#term-relative-MSE" title="Link to this term">#</a></dt><dd><p>The ratio of contender mean squared error to <a class="reference internal" href="#term-benchmark"><span class="xref std std-term">benchmark</span></a> mean squared
 error. A value below one means the contender wins. It is the default

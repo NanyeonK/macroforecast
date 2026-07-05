@@ -572,12 +572,18 @@ must use <code class="docutils literal notranslate"><span class="pre">X_test.ind
 <h3>Runner Use<a class="headerlink" href="#runner-use" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
     <span class="n">panel</span><span class="p">,</span>
-    <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">:</span> <span class="s2">&quot;ridge&quot;</span><span class="p">},</span>
+    <span class="n">model</span><span class="p">,</span>
     <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
     <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">mf.forecasting.run</span></code> is atomic: one model per call. To compare a custom model
+against a benchmark, give each one its own <code class="docutils literal notranslate"><span class="pre">Arm</span></code> and run them through
+<code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code>/<code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> instead – for the full worked example (your
+own CSV, this model, a scored horse race, and a paper-ready table), continue
+to the full horse-race tutorial:
+<a class="reference internal" href="../../guide/custom_data_tutorial.html"><span class="std std-doc">Your Data, Your Model, One Table</span></a>.</p>
 </section>
 </section>
 <section id="custom-model-ensemble">

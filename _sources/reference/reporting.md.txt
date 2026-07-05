@@ -191,6 +191,87 @@ mapping of named `TestResult` objects, or any object accepted by
 paper needs the standard test statistic, p-value, rejection, and sample-size
 columns; use `test_provenance_table(...)` for source-alignment details.
 
+## paper_accuracy_table
+
+```python
+macroforecast.reporting.paper_accuracy_table(
+    report,
+    *,
+    target=None,
+    metric="rel_rmse",
+    star_levels=((0.01, "***"), (0.05, "**"), (0.10, "*")),
+    mcs_mark="†",
+    benchmark_row=True,
+    precision=3,
+    missing="--",
+    caption=None,
+    label=None,
+    notes=(),
+    metadata=None,
+) -> ReportTable | dict[str, ReportTable]
+```
+
+One line from a `PipelineReport` to the wide models-by-horizons table ("Table
+3") that almost every macro forecasting paper publishes: rel-RMSE with
+Diebold-Mariano significance stars and a Model Confidence Set marker, joined
+from the three separate long frames `run_pipeline` returns.
+
+| Argument | Default | Meaning |
+| --- | --- | --- |
+| `report` | — | A `PipelineReport`, or anything exposing `.accuracy` (required) and optionally `.significance`/`.mcs` with the same column contract as `macroforecast.pipeline.evaluate`'s output. A mapping with `"accuracy"`/`"significance"`/`"mcs"` keys also works. |
+| `target` | `None` | Restrict to one target. With `None` and more than one target present, returns `dict[target, ReportTable]` instead of a single table (see below). |
+| `metric` | `"rel_rmse"` | The accuracy column to display. `"rel_rmse"` is computed here as `sqrt(relative_mse)` (not itself a column of `report.accuracy`). Any other column already on the accuracy frame (`"relative_mse"`, `"rmse"`, `"r2_oos"`, ...) is used as-is. |
+| `star_levels` | `((0.01,"***"),(0.05,"**"),(0.10,"*"))` | `(p_value_threshold, marker)` pairs for the DM significance stars, smallest threshold first. |
+| `mcs_mark` | `"†"` | Marker appended where `report.mcs.in_mcs` is True for that `(target, horizon, contender)`. |
+| `benchmark_row` | `True` | Set `False` to drop the benchmark's own row (always `1.000` by construction). |
+| `precision` | `3` | Digits after the decimal for the metric value. |
+| `missing` | `"--"` | Display value where the metric could not be computed. |
+| `caption`, `label`, `notes`, `metadata` | — | Same presentation fields as the other preset builders. |
+
+Output rows are models (the benchmark first, when `benchmark_row=True`),
+columns are horizons (`h1`, `h3`, ...). DM stars are joined on `(target,
+horizon, contender)` from `report.significance`; the benchmark's own row is
+never starred. Missing `significance`/`mcs` frames (or missing rows within
+them) contribute no stars/marker rather than raising -- not every
+`PipelineReport` carries them.
+
+Multi-target reports return `dict[target, ReportTable]` rather than one
+stacked frame: different targets can have different available horizons and a
+different benchmark-present status, and a `ReportTable` is a single flat 2-D
+grid, so folding targets together would either force a ragged union of
+horizons or break the "one line to `\begin{tabular}`" contract this function
+exists to provide. Passing an explicit `target=...`, or a report that only has
+one target, returns that target's `ReportTable` directly.
+
+```python
+report = run_pipeline(spec)  # PipelineReport: AR benchmark vs. RF, one target
+
+table = mf.reporting.paper_accuracy_table(report)
+print(table.to_latex(booktabs=True))
+```
+
+```text
+\begin{table}[!htbp]
+\centering
+\caption{Forecast accuracy — demand\_index}
+\begin{tabular}{lll}
+\toprule
+Model & h1 & h3 \\
+\midrule
+AR (benchmark) & 1.000† & 1.000† \\
+Ridge & 0.997† & 1.016† \\
+\bottomrule
+\end{tabular}
+\\[-0.2em]{\footnotesize Entries are rel-RMSE relative to the benchmark (AR); the benchmark's own value is 1.000 by construction.}
+\\[-0.2em]{\footnotesize Significance markers: *** p<=0.01, ** p<=0.05, * p<=0.1. (Diebold-Mariano test vs. the benchmark).}
+\\[-0.2em]{\footnotesize † denotes inclusion in the Model Confidence Set.}
+\end{table}
+```
+
+For the full worked example -- your own CSV, your own model, a horse race, and
+this table -- see
+[Your Data, Your Model, One Table](../guide/custom_data_tutorial.md).
+
 ## test_report_table
 
 ```python

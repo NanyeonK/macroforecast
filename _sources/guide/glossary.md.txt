@@ -169,7 +169,7 @@ path_average policy
     horizon, each forecasting the one-period object at that step from information
     available at the origin, then averages the step forecasts. It is a direct
     multi-step construction, not an iterated one; iterating a single model forward
-    is the separate recursive policy. Contrast with the {term}`direct policy`.
+    is the separate {term}`recursive policy`. Contrast with the {term}`direct policy`.
 
 PipelineReport
     The object returned by `run_pipeline`. It carries `.accuracy` for relative
@@ -203,6 +203,15 @@ R-squared out-of-sample
     An accuracy metric, `r2_oos`, giving the share of benchmark forecast-error
     variance the contender removes. A positive value means the contender beats
     the benchmark.
+
+recursive policy
+    A multi-step strategy that fits one one-step-ahead model, then rolls it
+    forward h times, feeding each step's own prediction back in as the next
+    step's lagged input. This is the textbook "iterated" multi-step forecast;
+    the code accepts `forecast_policy="iterated"` as an alias for it. Contrast
+    with the {term}`path_average policy`, which is also multi-step but never
+    feeds a prediction back into the next step's inputs. See
+    [Running](concepts/running.md).
 
 relative MSE
     The ratio of contender mean squared error to {term}`benchmark` mean squared

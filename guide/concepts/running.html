@@ -401,6 +401,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Windows</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../custom_data_tutorial.html">Your Data, Your Model, One Table</a></li>
 </ul>
 </div>
 </nav></div>
@@ -492,6 +493,14 @@ models, where step s forecasts the one-period object realized at t+s from
 information available at the origin, then average the h step forecasts. This is
 a direct multi-step design, not an iterated one; iterating a single model
 forward instead is the separate <code class="docutils literal notranslate"><span class="pre">recursive</span></code> policy.</p></li>
+<li><p><strong>recursive</strong> (<code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;recursive&quot;</span></code>, code alias <code class="docutils literal notranslate"><span class="pre">&quot;iterated&quot;</span></code>): fit
+one one-step-ahead model, then roll it forward h times, feeding each step’s
+own prediction back in as the next step’s lagged input (the textbook
+“iterated” multi-step forecast). Unlike <code class="docutils literal notranslate"><span class="pre">path_average</span></code>, a later step’s
+forecast depends on an earlier step’s prediction rather than only on
+origin-available data. See
+<a class="reference internal" href="../../reference/forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">future_feature_policy</span></code></span></a> for how exogenous
+(non-target) predictors are rolled forward under this policy.</p></li>
 </ul>
 <p>At horizon 1, <code class="docutils literal notranslate"><span class="pre">direct_average</span></code> and <code class="docutils literal notranslate"><span class="pre">path_average</span></code> are the same forecast by
 construction (averaging over a single step is that step), so the two policies
@@ -500,8 +509,45 @@ where the h-period-average target and the averaged one-step path are genuinely
 different objects. This holds across every model, including the
 information-criterion autoregressions (<code class="docutils literal notranslate"><span class="pre">ar</span></code>, <code class="docutils literal notranslate"><span class="pre">far</span></code>), whose order is selected by
 BIC/AIC on the same sample under both policies.</p>
+<section id="textbook-mapping">
+<h3>Textbook mapping<a class="headerlink" href="#textbook-mapping" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast</span></code>’s policy names do not always match the vocabulary of a
+forecasting textbook. The table below lines them up:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Textbook term</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">forecast_policy</span></code></p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>direct</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code></p></td>
+<td><p>One model per horizon h, fit directly on the h-period-ahead value.</p></td>
+</tr>
+<tr class="row-odd"><td><p>iterated / recursive</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;recursive&quot;</span></code> (code alias <code class="docutils literal notranslate"><span class="pre">&quot;iterated&quot;</span></code>)</p></td>
+<td><p>One one-step model, rolled forward h times, each step’s prediction feeding the next.</p></td>
+</tr>
+<tr class="row-even"><td><p>direct, h-period-average object</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;direct_average&quot;</span></code></p></td>
+<td><p>The direct idea, but the forecast object is the h-period average of the stationary transform.</p></td>
+</tr>
+<tr class="row-odd"><td><p>h-average of h one-step models</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;path_average&quot;</span></code></p></td>
+<td><p>h independent step-specific one-step-ahead models (never iterated), averaged.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">*_average</span></code> variants (<code class="docutils literal notranslate"><span class="pre">direct_average</span></code>, <code class="docutils literal notranslate"><span class="pre">path_average</span></code>) are both h-average
+forecast objects; they differ in whether one model is fit on the h-period-average
+target directly (<code class="docutils literal notranslate"><span class="pre">direct_average</span></code>) or h one-step models are averaged after the
+fact (<code class="docutils literal notranslate"><span class="pre">path_average</span></code>). Neither feeds a prediction back into the next step’s
+inputs – only <code class="docutils literal notranslate"><span class="pre">recursive</span></code> does that.</p>
 <p>The t-code to policy mapping is documented in the
 <a class="reference internal" href="../../reference/pipeline.html"><span class="std std-doc">Pipeline reference</span></a>.</p>
+</section>
 </section>
 <section id="key-callables">
 <h2>Key Callables<a class="headerlink" href="#key-callables" title="Link to this heading">#</a></h2>
@@ -605,7 +651,10 @@ pipeline in the <a class="reference internal" href="../gallery.html#a-complete-p
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-policies">Forecast policies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-policies">Forecast policies</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#textbook-mapping">Textbook mapping</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callables">Key Callables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
 </ul>

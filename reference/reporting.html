@@ -763,6 +763,115 @@ mapping of named <code class="docutils literal notranslate"><span class="pre">Te
 paper needs the standard test statistic, p-value, rejection, and sample-size
 columns; use <code class="docutils literal notranslate"><span class="pre">test_provenance_table(...)</span></code> for source-alignment details.</p>
 </section>
+<section id="paper-accuracy-table">
+<h2>paper_accuracy_table<a class="headerlink" href="#paper-accuracy-table" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">paper_accuracy_table</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;rel_rmse&quot;</span><span class="p">,</span>
+    <span class="n">star_levels</span><span class="o">=</span><span class="p">((</span><span class="mf">0.01</span><span class="p">,</span> <span class="s2">&quot;***&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.10</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">)),</span>
+    <span class="n">mcs_mark</span><span class="o">=</span><span class="s2">&quot;†&quot;</span><span class="p">,</span>
+    <span class="n">benchmark_row</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">missing</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+    <span class="n">caption</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">notes</span><span class="o">=</span><span class="p">(),</span>
+    <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReportTable</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ReportTable</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>One line from a <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> to the wide models-by-horizons table (“Table
+3”) that almost every macro forecasting paper publishes: rel-RMSE with
+Diebold-Mariano significance stars and a Model Confidence Set marker, joined
+from the three separate long frames <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> returns.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">report</span></code></p></td>
+<td><p>—</p></td>
+<td><p>A <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code>, or anything exposing <code class="docutils literal notranslate"><span class="pre">.accuracy</span></code> (required) and optionally <code class="docutils literal notranslate"><span class="pre">.significance</span></code>/<code class="docutils literal notranslate"><span class="pre">.mcs</span></code> with the same column contract as <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.evaluate</span></code>’s output. A mapping with <code class="docutils literal notranslate"><span class="pre">&quot;accuracy&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;significance&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;mcs&quot;</span></code> keys also works.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Restrict to one target. With <code class="docutils literal notranslate"><span class="pre">None</span></code> and more than one target present, returns <code class="docutils literal notranslate"><span class="pre">dict[target,</span> <span class="pre">ReportTable]</span></code> instead of a single table (see below).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metric</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;rel_rmse&quot;</span></code></p></td>
+<td><p>The accuracy column to display. <code class="docutils literal notranslate"><span class="pre">&quot;rel_rmse&quot;</span></code> is computed here as <code class="docutils literal notranslate"><span class="pre">sqrt(relative_mse)</span></code> (not itself a column of <code class="docutils literal notranslate"><span class="pre">report.accuracy</span></code>). Any other column already on the accuracy frame (<code class="docutils literal notranslate"><span class="pre">&quot;relative_mse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rmse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;r2_oos&quot;</span></code>, …) is used as-is.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">star_levels</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">((0.01,&quot;***&quot;),(0.05,&quot;**&quot;),(0.10,&quot;*&quot;))</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(p_value_threshold,</span> <span class="pre">marker)</span></code> pairs for the DM significance stars, smallest threshold first.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mcs_mark</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;†&quot;</span></code></p></td>
+<td><p>Marker appended where <code class="docutils literal notranslate"><span class="pre">report.mcs.in_mcs</span></code> is True for that <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">contender)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_row</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Set <code class="docutils literal notranslate"><span class="pre">False</span></code> to drop the benchmark’s own row (always <code class="docutils literal notranslate"><span class="pre">1.000</span></code> by construction).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">precision</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
+<td><p>Digits after the decimal for the metric value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;--&quot;</span></code></p></td>
+<td><p>Display value where the metric could not be computed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">caption</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">notes</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p>—</p></td>
+<td><p>Same presentation fields as the other preset builders.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Output rows are models (the benchmark first, when <code class="docutils literal notranslate"><span class="pre">benchmark_row=True</span></code>),
+columns are horizons (<code class="docutils literal notranslate"><span class="pre">h1</span></code>, <code class="docutils literal notranslate"><span class="pre">h3</span></code>, …). DM stars are joined on <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">contender)</span></code> from <code class="docutils literal notranslate"><span class="pre">report.significance</span></code>; the benchmark’s own row is
+never starred. Missing <code class="docutils literal notranslate"><span class="pre">significance</span></code>/<code class="docutils literal notranslate"><span class="pre">mcs</span></code> frames (or missing rows within
+them) contribute no stars/marker rather than raising – not every
+<code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> carries them.</p>
+<p>Multi-target reports return <code class="docutils literal notranslate"><span class="pre">dict[target,</span> <span class="pre">ReportTable]</span></code> rather than one
+stacked frame: different targets can have different available horizons and a
+different benchmark-present status, and a <code class="docutils literal notranslate"><span class="pre">ReportTable</span></code> is a single flat 2-D
+grid, so folding targets together would either force a ragged union of
+horizons or break the “one line to <code class="docutils literal notranslate"><span class="pre">\begin{tabular}</span></code>” contract this function
+exists to provide. Passing an explicit <code class="docutils literal notranslate"><span class="pre">target=...</span></code>, or a report that only has
+one target, returns that target’s <code class="docutils literal notranslate"><span class="pre">ReportTable</span></code> directly.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>  <span class="c1"># PipelineReport: AR benchmark vs. RF, one target</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">paper_accuracy_table</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">booktabs</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>\begin{table}[!htbp]
+\centering
+\caption{Forecast accuracy — demand\_index}
+\begin{tabular}{lll}
+\toprule
+Model &amp; h1 &amp; h3 \\
+\midrule
+AR (benchmark) &amp; 1.000† &amp; 1.000† \\
+Ridge &amp; 0.997† &amp; 1.016† \\
+\bottomrule
+\end{tabular}
+\\[-0.2em]{\footnotesize Entries are rel-RMSE relative to the benchmark (AR); the benchmark&#39;s own value is 1.000 by construction.}
+\\[-0.2em]{\footnotesize Significance markers: *** p&lt;=0.01, ** p&lt;=0.05, * p&lt;=0.1. (Diebold-Mariano test vs. the benchmark).}
+\\[-0.2em]{\footnotesize † denotes inclusion in the Model Confidence Set.}
+\end{table}
+</pre></div>
+</div>
+<p>For the full worked example – your own CSV, your own model, a horse race, and
+this table – see
+<a class="reference internal" href="../guide/custom_data_tutorial.html"><span class="std std-doc">Your Data, Your Model, One Table</span></a>.</p>
+</section>
 <section id="test-report-table">
 <h2>test_report_table<a class="headerlink" href="#test-report-table" title="Link to this heading">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">test_report_table</span><span class="p">(</span>
@@ -1054,6 +1163,7 @@ stored in <code class="docutils literal notranslate"><span class="pre">attrs[&qu
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#accuracy-table">accuracy_table</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-comparison-table">model_comparison_table</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-test-table">forecast_test_table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#paper-accuracy-table">paper_accuracy_table</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-report-table">test_report_table</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-provenance-table">test_provenance_table</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#renderers">Renderers</a></li>

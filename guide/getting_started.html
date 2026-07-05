@@ -401,6 +401,7 @@
 <li class="toctree-l1"><a class="reference internal" href="concepts/windows.html">Windows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts/running.html">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts/evaluation.html">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_data_tutorial.html">Your Data, Your Model, One Table</a></li>
 </ul>
 </div>
 </nav></div>
@@ -517,10 +518,29 @@ a short test span.</p>
 <span class="c1"># Load FRED-MD (downloads if not cached; returns DataBundle).</span>
 <span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">load_fred_md</span><span class="p">()</span>
 
-<span class="c1"># Two arms: an AR benchmark and a random forest.</span>
+<span class="c1"># Two arms: an AR benchmark (its own lags only) and a random forest that</span>
+<span class="c1"># explicitly names a handful of panel predictors. Leaving an arm&#39;s `features`</span>
+<span class="c1"># unset does NOT mean &quot;no predictors&quot; -- it resolves to every OTHER panel</span>
+<span class="c1"># column at lags 0/1 with no feature engineering (a `UserWarning` says so if</span>
+<span class="c1"># you hit it), which is rarely what an &quot;AR vs RF&quot; comparison wants for either</span>
+<span class="c1"># side. `model_selection` turns off RF&#39;s per-origin hyperparameter search so</span>
+<span class="c1"># this first run stays quick; &quot;A full study&quot; below tunes it.</span>
 <span class="n">arms</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-    <span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;RF&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">),</span>
+    <span class="n">Arm</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">features</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">predictors</span><span class="o">=</span><span class="p">[],</span> <span class="n">lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">target_lags</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">Arm</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;RF&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">,</span>
+        <span class="n">features</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+            <span class="n">predictors</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;UNRATE&quot;</span><span class="p">,</span> <span class="s2">&quot;CPIAUCSL&quot;</span><span class="p">,</span> <span class="s2">&quot;FEDFUNDS&quot;</span><span class="p">,</span> <span class="s2">&quot;HOUST&quot;</span><span class="p">,</span> <span class="s2">&quot;PAYEMS&quot;</span><span class="p">],</span>
+            <span class="n">lags</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">),</span>
+        <span class="n">model_selection</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;random_forest&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+    <span class="p">),</span>
 <span class="p">]</span>
 
 <span class="c1"># A minimal expanding window over a short test span; one target.</span>
@@ -539,6 +559,18 @@ a short test span.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">accuracy</span><span class="p">)</span>       <span class="c1"># relative-accuracy table by target/horizon/arm</span>
 </pre></div>
 </div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   target  horizon contender  ...  n_common  is_benchmark  benchmark_present
+0  INDPRO        1        AR  ...        95          True               True
+1  INDPRO        1        RF  ...        95         False               True
+
+[2 rows x 9 columns]
+</pre></div>
+</div>
+<p>This first run is for a fast, genuine result, not a claim that random forest
+beats AR: with only five untuned predictors at horizon 1, <code class="docutils literal notranslate"><span class="pre">AR</span></code> has the lower
+RMSE here (<code class="docutils literal notranslate"><span class="pre">relative_mse</span></code> above 1 for <code class="docutils literal notranslate"><span class="pre">RF</span></code>). “A full study” below adds real
+preprocessing, a MARX feature ladder over the whole panel, and several
+horizons – the comparison most papers actually care about.</p>
 </section>
 <section id="a-full-study">
 <h3>A full study<a class="headerlink" href="#a-full-study" title="Link to this heading">#</a></h3>
