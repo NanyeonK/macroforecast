@@ -17,7 +17,7 @@ from typing import Any
 import pandas as pd
 
 from macroforecast.forecasting.checkpoint import load_checkpoint_frame
-from macroforecast.pipeline.run import _cell_checkpoint_path
+from macroforecast.pipeline.run import _cell_checkpoint_path, _environment_provenance
 
 
 def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
@@ -129,6 +129,14 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
             "(an arm with zero checkpoint rows for every horizon)."
         ),
     }
+    # Same "full" (default) / "basic" opt-out as a live run_pipeline() report --
+    # a rescored report still benefits from knowing WHERE the re-scoring ran
+    # (this is a fresh evaluate() call, so its own environment is real
+    # provenance), even though "data"/"spec_echo" are not attached here (the
+    # rescore path does not re-touch the original data or re-derive execution
+    # choices; the marker above already documents its provenance limits).
+    if getattr(spec, "provenance_level", "full") == "full":
+        provenance["environment"] = _environment_provenance()
     leakage_audit = {
         "rescored_from": str(checkpoint_root),
         "empty_cells": list(empty_cells),

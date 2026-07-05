@@ -5,6 +5,44 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/run.py`, `pipeline/spec.py`, `pipeline/rescore.py` (feature,
+  Wave B lane B-2, self-certifying `PipelineReport`): `run_pipeline`'s
+  provenance (`pipeline/run.py::_audit`) and `output.collect_provenance`
+  (`output/core.py`) were two systems that never met -- the pipeline's
+  `report.provenance` had `package_version`/`seed`/`targets`/`arms`/
+  leakage-audit but no git SHA, no environment, and no data identity, while
+  `collect_provenance` had all of that (git commit/branch/dirty, Python/
+  platform, pinned `numpy`/`pandas`/`scipy`/`scikit-learn`/`statsmodels`
+  versions) but only attached on the opt-in save/`write_run` path. A referee
+  handed only the report artifact could not tell which macroforecast build
+  produced it, nor pin the data vintage. By default
+  (`pipeline_spec(..., provenance_level="full")`, the default)
+  `report.provenance` now additionally carries: (1) `"environment"` -- reuses
+  `output.collect_provenance` (no duplicated git/env/deps logic), pointed at
+  the RUNNING macroforecast package's own checkout rather than the caller's
+  cwd, so it resolves to that checkout's commit/branch/dirty from a source
+  install and gracefully returns `None`s from a wheel install (no `.git` above
+  site-packages); (2) `"data"` -- dataset name/source family/declared vintage
+  from the `DataBundle` metadata, panel shape, date range, and a stable sha256
+  content fingerprint over the panel's index+columns+values (full-content by
+  default, measured at ~1ms for a FRED-MD-sized panel and ~8ms for a 2,000 x
+  400 panel; a deterministic strided subsample only above 20,000,000 cells,
+  labeled via `fingerprint["method"]`, never silently mistaken for a full
+  digest); (3) `"spec_echo"` -- a plain JSON-able snapshot of the resolved
+  spec's key choices (targets/policies, horizons, window cutoffs, arms/
+  models, benchmark, evaluation config, seed, `n_jobs`/`model_threads`,
+  cache/checkpoint dirs). `provenance_level="basic"` opts out to exactly the
+  pre-existing dict shape. `rescore()` reports carry the same `"environment"`
+  block (respecting the spec's `provenance_level`) plus the existing
+  `rescored_from` marker; `"data"`/`"spec_echo"` are not attached to a
+  rescored report since rescoring does not re-touch the original data.
+  Forecasts/accuracy are BYTE-IDENTICAL to a pre-change golden fixture
+  (`tests/pipeline/_golden/default_provenance_*.parquet`, captured at base
+  commit `70ad5b0e`) -- provenance is purely additive, and neither
+  `_run_cells`/`evaluate()` nor any numerical path was touched. See
+  `docs/reference/pipeline.md` ("Provenance") and
+  `tests/pipeline/test_default_provenance.py`.
+
 - `pipeline/evaluate.py`, `pipeline/spec.py` (bugfix): `EvalSpec.metrics` and
   `EvalSpec.tests` were declared fields that `evaluate()` silently ignored --
   `accuracy_table` always emitted the hard-coded `rmse`/`relative_mse`/`r2_oos`

@@ -221,6 +221,22 @@ class PipelineSpec:
     preprocessing_cache_dir: str | Literal[False] | None = None
     seed: int | None = 42
     provenance: Mapping[str, Any] = field(default_factory=dict)
+    # "full" (default): PipelineReport.provenance additionally carries an
+    # "environment" block (git SHA/branch/dirty, Python/platform, pinned core
+    # dependency versions -- via output.collect_provenance), a "data" identity
+    # descriptor (dataset/source_family/vintage, panel shape/date range, and a
+    # content fingerprint), and a "spec_echo" of the resolved spec's key choices
+    # (targets/policies, horizons, window cutoffs, arms/models, seed, n_jobs).
+    # "basic" keeps exactly the pre-existing provenance dict shape (package_
+    # version/seed/targets/horizons/arms/benchmark/combinations) with none of
+    # the three additive blocks -- for callers who build the dict themselves
+    # from a lighter-weight report, or who find the extra collection cost (git/
+    # env probing, one panel fingerprint) unnecessary. Distinct from the
+    # ``provenance`` field/kwarg above, which carries caller-supplied NOTES
+    # (e.g. the "warnings" list below) merged into whichever shape this
+    # produces -- ``provenance`` is the mapping payload, ``provenance_level``
+    # is only the additive-blocks toggle.
+    provenance_level: Literal["full", "basic"] = "full"
 
 
 
@@ -627,6 +643,7 @@ def pipeline_spec(
     preprocessing_cache_dir: str | bool | None = None,
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
+    provenance_level: Literal["full", "basic"] = "full",
 ) -> PipelineSpec:
     """Validate and build a :class:`PipelineSpec`.
 
@@ -643,10 +660,21 @@ def pipeline_spec(
     (default) auto-manages a temporary one for the duration of the run when
     ``n_jobs>1`` (a no-op when ``n_jobs==1``); ``False`` explicitly opts out of any
     disk-backed cache even when parallel. ``True`` is invalid and raises.
+
+    ``provenance_level`` ("full" default, or "basic") controls how much
+    ``PipelineReport.provenance`` a live ``run_pipeline``/``rescore`` call
+    attaches -- see the field docstring on :class:`PipelineSpec`. Note this is
+    independent of ``provenance=`` above (caller-supplied notes merged into
+    whichever shape results); "basic" does not drop caller-supplied notes, it
+    only omits the "environment"/"data"/"spec_echo" blocks.
     """
     arms = tuple(arms)
     if not arms:
         raise ValueError("pipeline requires at least one arm")
+    if provenance_level not in ("full", "basic"):
+        raise ValueError(
+            f"provenance_level must be 'full' or 'basic', got {provenance_level!r}"
+        )
     # n_jobs is a positive int OR the literal "auto"; the auto split is computed
     # below once the cell count (targets x arms x horizons) is known.
     auto_jobs = n_jobs == "auto"
@@ -745,4 +773,5 @@ def pipeline_spec(
         preprocessing_cache_dir=_resolve_preprocessing_cache_dir(preprocessing_cache_dir),
         seed=seed,
         provenance=notes,
+        provenance_level=provenance_level,
     )
