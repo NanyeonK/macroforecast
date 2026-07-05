@@ -11,6 +11,31 @@ defaults and/or trimmed "standard" search-space presets; the deep/
 paper-faithful settings remain reachable via explicit params or the "wide"
 preset (see CHANGELOG and docs/reference/models.md).
 
+2026-07-05 (WP-B4): `hemisphere_nn` and `density_hnn` (torch-backed, WP-A4's
+Tier-1 zero-anchor closeout) did not finish a single policy-matrix scan
+worker call (all 4 policies) even at a 900s timeout with their out-of-the-box
+defaults. Root cause: `model_selection=None` still runs a 20-trial random
+search over the model's "standard" search-space preset (same mechanism as
+`mars` above), so the untuned `max_epochs`/`patience` defaults and the
+"standard" preset's `neurons`/`n_estimators`/`prior_estimators` corners were
+each paid 20 times per origin per policy. `hemisphere_nn`: `n_estimators`
+100->20, `max_epochs` 100->40, `patience` 15->8; "standard" preset `neurons`
+(32, 64)->(16, 32), `n_estimators` (5, 10)->(3, 5). `density_hnn`:
+`n_estimators` 100->20, `prior_estimators` 50->10, `max_epochs` 100->40,
+`patience` 15->8; "standard" preset `neurons` (32, 64)->(16, 32),
+`n_estimators` (5, 10)->(3, 5), `prior_estimators` (3, 5)->(2, 3) (`neurons`
+default stays 400 -- the paper-faithful Aionx width is never the scan's cost
+driver since search always overrides `neurons`). Measured scan totals (4
+policies, thread-pinned): `hemisphere_nn` 360.1s -> 90.2s; `density_hnn`
+240.6s -> 66.3s -- both now comfortably under the 150s bar. Fewer bag members
+trades statistical quality for cost: `density_hnn`'s per-row predicted
+variance already has a wide right tail from bagged-member disagreement (the
+WP-A4 anchor finding, `tests/models/anchors/test_hnn_anchors.py`), and fewer
+members widens that tail further (more sampling noise in the
+cross-member-disagreement variance estimate). Old defaults remain reachable
+by passing them explicitly, or via the "wide" preset for search-driven runs
+(see CHANGELOG and docs/reference/models.md).
+
 These are single-fit smoke pins on a small toy panel, NOT a replication of the
 full policy-matrix scan (that lives in `.dev-notes/policy_matrix_scan.py` and
 is run by hand, not by CI). They exist to catch a future default value
@@ -147,4 +172,26 @@ def test_restricted_midas_default_cost_budget() -> None:
         20.0,
         lambda: mf.models.restricted_midas(X, y, weighting="beta", polynomial_order=3),
     )
+    _assert_finite_predictions(fit.predict(X.iloc[-4:]))
+
+
+@pytest.mark.slow
+def test_hemisphere_nn_default_cost_budget() -> None:
+    pytest.importorskip("torch")
+    panel = _toy_panel()
+    X = panel.drop(columns=["Y"])
+    y = panel["Y"]
+    fit = _within_budget(
+        "hemisphere_nn", 20.0, lambda: mf.models.hemisphere_nn(X, y)
+    )
+    _assert_finite_predictions(fit.predict(X.iloc[-4:]))
+
+
+@pytest.mark.slow
+def test_density_hnn_default_cost_budget() -> None:
+    pytest.importorskip("torch")
+    panel = _toy_panel()
+    X = panel.drop(columns=["Y"])
+    y = panel["Y"]
+    fit = _within_budget("density_hnn", 30.0, lambda: mf.models.density_hnn(X, y))
     _assert_finite_predictions(fit.predict(X.iloc[-4:]))

@@ -565,8 +565,17 @@ _HNN_SPACES: SearchSpaces = {
         "learning_rate": (0.001,),
     },
     "standard": {
-        "neurons": (32, 64),
-        "n_estimators": (5, 10),
+        # Trimmed 2026-07-05 (WP-B4, default-cost fix): (32, 64) -> (16, 32) /
+        # (5, 10) -> (3, 5). `model_selection=None` still runs a 20-trial random
+        # search over this preset even with no explicit tuning request (see
+        # `_selection_for_model`/`_fit_one_model_at_origin` in
+        # `forecasting/policies/base.py`), so the old preset multiplied a
+        # 20-trial search across 4 origins x 4 policies into a scan that did
+        # not finish inside a 900s timeout. See CHANGELOG for old->new values
+        # and measured before/after scan costs. "wide" is unchanged and still
+        # reaches the old (32, 64) / (5, 10) corner for deep/explicit use.
+        "neurons": (16, 32),
+        "n_estimators": (3, 5),
         "learning_rate": (0.0005, 0.001),
     },
     "wide": {
@@ -584,9 +593,14 @@ _DENSITY_HNN_SPACES: SearchSpaces = {
         "learning_rate": (0.001,),
     },
     "standard": {
-        "neurons": (32, 64),
-        "n_estimators": (5, 10),
-        "prior_estimators": (3, 5),
+        # Trimmed 2026-07-05 (WP-B4, default-cost fix): (32, 64) -> (16, 32) /
+        # (5, 10) -> (3, 5) / (3, 5) -> (2, 3). Same rationale as _HNN_SPACES
+        # above -- `model_selection=None` still runs a 20-trial random search
+        # over this preset. "wide" is unchanged and still reaches the old
+        # (32, 64) / (5, 10) / (3, 5) corner for deep/explicit use.
+        "neurons": (16, 32),
+        "n_estimators": (3, 5),
+        "prior_estimators": (2, 3),
         "learning_rate": (0.0005, 0.001),
     },
     "wide": {
@@ -1843,6 +1857,11 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "hemisphere_nn",
         "neural",
         hemisphere_nn,
+        # Defaults trimmed 2026-07-05 (WP-B4, default-cost fix): n_estimators
+        # 100->20, max_epochs 100->40, patience 15->8 (old values: see
+        # CHANGELOG). Old values remain reachable by passing them explicitly,
+        # e.g. `hemisphere_nn(X, y, n_estimators=100, max_epochs=100,
+        # patience=15)`.
         default_params={
             "lc": 2,
             "lm": 2,
@@ -1850,12 +1869,12 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "neurons": 64,
             "dropout": 0.2,
             "learning_rate": 0.001,
-            "max_epochs": 100,
-            "n_estimators": 100,
+            "max_epochs": 40,
+            "n_estimators": 20,
             "subsample": 0.8,
             "nu": None,
             "variance_penalty": 1.0,
-            "patience": 15,
+            "patience": 8,
             "validation_fraction": 0.2,
             "random_state": 0,
             "device": "auto",
@@ -1874,8 +1893,8 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             _p("neurons", 64, "int", "Hidden width for all dense layers."),
             _p("dropout", 0.2, "float", "Dropout rate.", False),
             _p("learning_rate", 0.001, "float", "Adam learning rate."),
-            _p("max_epochs", 100, "int", "Training epoch cap.", False),
-            _p("n_estimators", 100, "int", "Number of blocked-subsample bags."),
+            _p("max_epochs", 40, "int", "Training epoch cap.", False),
+            _p("n_estimators", 20, "int", "Number of blocked-subsample bags."),
             _p("subsample", 0.8, "float", "Blocked-subsample fraction.", False),
             _p("nu", None, "float | None", "Variance-emphasis target ratio.", False),
             _p(
@@ -1885,7 +1904,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "Soft penalty on the variance-emphasis target.",
                 False,
             ),
-            _p("patience", 15, "int", "Early-stopping patience.", False),
+            _p("patience", 8, "int", "Early-stopping patience.", False),
             _p(
                 "validation_fraction",
                 0.2,
@@ -1934,6 +1953,16 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "density_hnn",
         "neural",
         density_hnn,
+        # Defaults trimmed 2026-07-05 (WP-B4, default-cost fix): n_estimators
+        # 100->20, prior_estimators 50->10, max_epochs 100->40, patience
+        # 15->8 (old values: see CHANGELOG). `neurons` (400, the paper-faithful
+        # Aionx DensityHNN width) is UNCHANGED -- `model_selection=None` always
+        # overrides `neurons` via the "standard"/"wide" search preset anyway
+        # (see `_DENSITY_HNN_SPACES`), so it was never the cost driver in the
+        # policy-matrix scan; trimming it would only cost paper-fidelity for
+        # no scan-cost benefit. Old values remain reachable by passing them
+        # explicitly, e.g. `density_hnn(X, y, n_estimators=100,
+        # prior_estimators=50, max_epochs=100, patience=15)`.
         default_params={
             "common_layers": 2,
             "mean_layers": 2,
@@ -1942,14 +1971,14 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "neurons": 400,
             "dropout": 0.2,
             "learning_rate": 0.001,
-            "max_epochs": 100,
-            "n_estimators": 100,
-            "prior_estimators": 50,
+            "max_epochs": 40,
+            "n_estimators": 20,
+            "prior_estimators": 10,
             "subsample": 0.8,
             "block_size": 8,
             "volatility_emphasis": None,
             "rescale_volatility": True,
-            "patience": 15,
+            "patience": 8,
             "random_state": 0,
             "device": "auto",
             "quantile_levels": (0.05, 0.5, 0.95),
@@ -1969,11 +1998,11 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             _p("neurons", 400, "int", "Hidden width used by all dense blocks."),
             _p("dropout", 0.2, "float", "Dropout rate.", False),
             _p("learning_rate", 0.001, "float", "Adam learning rate."),
-            _p("max_epochs", 100, "int", "Training epoch cap.", False),
-            _p("n_estimators", 100, "int", "Density-HNN bootstrap ensemble size."),
+            _p("max_epochs", 40, "int", "Training epoch cap.", False),
+            _p("n_estimators", 20, "int", "Density-HNN bootstrap ensemble size."),
             _p(
                 "prior_estimators",
-                50,
+                10,
                 "int",
                 "Prior-DNN bootstrap ensemble size used to estimate volatility emphasis.",
             ),
@@ -1993,7 +2022,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "Apply Aionx blocked-OOB log residual-square volatility recalibration.",
                 False,
             ),
-            _p("patience", 15, "int", "Early-stopping patience.", False),
+            _p("patience", 8, "int", "Early-stopping patience.", False),
             _p("random_state", 0, "int", "Random seed.", False),
             _p("device", "auto", "str", "Torch device: auto, cpu, or cuda.", False),
             _p(
