@@ -2951,6 +2951,42 @@ def var_arch_test(
     )
 
 
+def _gw_omega_bartlett(centered: np.ndarray, n: int, bandwidth: int, h: int) -> np.ndarray:
+    """Original (pre-WP-A1) Bartlett-tapered Newey-West HAC, bandwidth ``h-1``."""
+
+    omega = centered.T @ centered / n
+    for lag in range(1, bandwidth + 1):
+        weight = 1.0 - lag / float(h)
+        gamma = centered[lag:].T @ centered[:-lag] / n
+        omega = omega + weight * (gamma + gamma.T)
+    return omega
+
+
+def _gw_omega_acf_with_fallback(centered: np.ndarray, n: int, bandwidth: int) -> tuple[np.ndarray, int]:
+    """Untapered ("acf"-style) HAC, matching ``dm_test``/``_long_run_variance``'s
+    own convention for a known finite-order MA(h-1) forecast-error structure
+    (WP-A1 fix, see ``giacomini_white_test`` docstring). Untapered sums are not
+    guaranteed PSD, so this shrinks the bandwidth (down to 0) until the
+    candidate is -- mirroring ``_long_run_variance``'s existing
+    non-positive-variance fallback for the scalar (``dm_test``) case.
+    """
+
+    b_used = bandwidth
+    while b_used >= 0:
+        candidate = centered.T @ centered / n
+        for lag in range(1, b_used + 1):
+            gamma = centered[lag:].T @ centered[:-lag] / n
+            candidate = candidate + (gamma + gamma.T)
+        sym = (candidate + candidate.T) / 2.0
+        eigvals = np.linalg.eigvalsh(sym)
+        if eigvals.min() > 1e-10 * max(eigvals.max(), 1e-12):
+            return candidate, b_used
+        b_used -= 1
+    # Bandwidth 0 (plain sample covariance) is always PSD, so this is
+    # unreachable in practice, but keep a safe fallback.
+    return centered.T @ centered / n, 0
+
+
 def giacomini_white_test(
     loss_a: Any,
     loss_b: Any,
@@ -2958,16 +2994,56 @@ def giacomini_white_test(
     horizon: int = 1,
     instruments: Any | None = None,
     alpha: float = 0.05,
+    small_sample: bool = True,
 ) -> TestResult:
     """Giacomini-White (2006) conditional predictive ability (Wald) test.
 
     Tests H0: ``E[h_{t-1} * dL_t] = 0`` where ``dL_t = loss_a - loss_b`` is the
     loss differential and ``h_{t-1}`` is a test-function instrument available at
-    the forecast origin (default ``[1, dL_{t-h}]``). The statistic
-    ``n * Rbar' Omega^{-1} Rbar ~ chi2(q)`` with ``q`` instruments and ``Omega`` a
-    Newey-West HAC of ``R_t = h_{t-1} * dL_t`` (horizon-1 lags). Unlike the
-    unconditional Diebold-Mariano test, this tests CONDITIONAL equal predictive
-    ability. ``instruments`` may be supplied as an array aligned to ``dL_t``.
+    the forecast origin (default ``[1, dL_{t-h}]``). ``instruments`` may be
+    supplied as an array aligned to ``dL_t``. ``Omega`` is a HAC estimator of
+    ``R_t = h_{t-1} * dL_t`` built from lags ``0..horizon-1`` -- the known
+    dependence order of an h-step-ahead loss differential, the same order
+    ``dm_test`` uses.
+
+    ``small_sample=True`` (default -- see CHANGELOG, p-values for horizon > 1
+    change relative to prior releases): WP-A1's Monte Carlo size validation
+    (``tests/mc/test_giacomini_white_size.py``, following on WP-V3) found the
+    *original* Bartlett-tapered-HAC + chi2(q) construction genuinely oversized
+    for horizon > 1 (2-2.5x nominal at h=4; confirmed NOT a small-n artifact,
+    it does not vanish out to n=100,000). Root cause, isolated by direct
+    comparison of the estimated HAC covariance against its true population
+    value: the linear Bartlett taper ``1 - lag/h`` applied to lags 1..h-1
+    systematically discards a large, non-vanishing fraction of the *known*
+    (finite-order, exactly h-1-dependent) autocovariance of an h-step loss
+    differential -- e.g. at h=4 the taper's population expectation is only
+    ~69% of the true long-run variance (matches the closed-form taper-weight
+    calculation exactly). ``dm_test`` never had this problem because it
+    already uses an UNTAPERED ("acf") sum over the same lags (matching R's
+    ``forecast::dm.test``) -- appropriate because the true autocovariance is
+    *exactly* zero beyond lag h-1 here, so tapering (whose purpose is
+    guaranteeing positive semi-definiteness for general, not-known-finite-
+    order processes) only throws away real signal.
+
+    The corrected estimator: (a) sums UNTAPERED sample autocovariances over
+    lags ``0..bandwidth`` (``bandwidth = horizon - 1``), matching ``dm_test``;
+    (b) falls back to a smaller bandwidth (down to 0) if that untapered sum is
+    not positive semi-definite -- untapered sums lose Newey-West's automatic
+    PSD guarantee, so this mirrors ``_long_run_variance``'s own existing
+    non-positive-variance fallback; (c) references the Wald statistic against
+    ``F(q, ESS - q)`` (Hotelling-style, statistic scaled by ``q``) rather than
+    chi2(q) whenever a HAC lag was actually used, with
+    ``ESS = n / (1 + 2 * bandwidth_used)`` the standard effective-sample-size
+    correction for serially dependent data -- this mops up the residual
+    (much smaller than the taper bias, but still real at small n) finite-
+    sample over-rejection of a Wald test built on an estimated multi-
+    dimensional covariance. At horizon=1 (bandwidth=0, already well-
+    calibrated per WP-V3/WP-A1 MC results) this reduces exactly to the
+    original chi2(q) reference -- verified by MC to introduce no regression.
+
+    ``small_sample=False`` restores the pre-WP-A1 behavior exactly: Bartlett-
+    tapered HAC + chi2(q) reference, for users who need bit-identical
+    backward-compatible p-values.
     """
 
     _validate_alpha(alpha)
@@ -2993,24 +3069,53 @@ def giacomini_white_test(
     n, q = reg.shape
     rbar = reg.mean(axis=0)
     centered = reg - rbar
-    omega = centered.T @ centered / n
-    for lag in range(1, h):
-        weight = 1.0 - lag / float(h)
-        gamma = centered[lag:].T @ centered[:-lag] / n
-        omega += weight * (gamma + gamma.T)
-    omega_inv = np.linalg.pinv(omega)
-    statistic = float(n * rbar @ omega_inv @ rbar)
-    from scipy.stats import chi2
+    bandwidth = h - 1
 
-    p_value = float(chi2.sf(statistic, df=q))
+    from scipy.stats import chi2
+    from scipy.stats import f as f_dist
+
+    if small_sample:
+        omega, bandwidth_used = _gw_omega_acf_with_fallback(centered, n, bandwidth)
+        omega_inv = np.linalg.pinv(omega)
+        statistic = float(n * rbar @ omega_inv @ rbar)
+        if bandwidth_used == 0:
+            p_value = float(chi2.sf(statistic, df=q))
+            correction_policy = "acf_hac_chi2"
+            extra_metadata = {"bandwidth_used": int(bandwidth_used), "reference_distribution": "chi2"}
+        else:
+            ess = n / (1.0 + 2.0 * bandwidth_used)
+            f_df2 = max(ess - q, 1.0)
+            p_value = float(f_dist.sf(statistic / q, q, f_df2))
+            correction_policy = "acf_hac_small_sample_f"
+            extra_metadata = {
+                "bandwidth_used": int(bandwidth_used),
+                "reference_distribution": "f",
+                "f_df2": float(f_df2),
+                "effective_sample_size": float(ess),
+            }
+    else:
+        omega = _gw_omega_bartlett(centered, n, bandwidth, h)
+        omega_inv = np.linalg.pinv(omega)
+        statistic = float(n * rbar @ omega_inv @ rbar)
+        p_value = float(chi2.sf(statistic, df=q))
+        correction_policy = "newey_west_hac"
+        extra_metadata = {"bandwidth_used": int(bandwidth), "reference_distribution": "chi2"}
+
     return TestResult(
         statistic=statistic,
         p_value=p_value,
         decision=bool(p_value < alpha),
         alternative="conditional_equal_predictive_ability",
-        correction_policy="newey_west_hac",
+        correction_policy=correction_policy,
         n_obs=int(n),
-        metadata={"test": "giacomini_white", "instruments": int(q), "horizon": int(h), "df": int(q)},
+        metadata={
+            "test": "giacomini_white",
+            "instruments": int(q),
+            "horizon": int(h),
+            "df": int(q),
+            "small_sample": bool(small_sample),
+            **extra_metadata,
+        },
     )
 
 
