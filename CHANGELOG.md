@@ -82,6 +82,197 @@ full per-version honesty-pass history embedded in repo documentation.
   hand-computed NW-1987 fixture, and separately asserted to deliberately
   differ from R `sandwich::kernHAC`'s Bartlett value, with a comment
   pointing at the `dm_test` parity dependency it protects.
+- `tests/models/anchors/` + `tests/parity/` (WP-V2, model-anchors-v2): independent
+  correctness anchors for the remaining Tier-1 (zero-anchor) MODELS identified by
+  `.dev-notes/anchor_coverage/summary.md` -- `bvar_minnesota`,
+  `bvar_normal_inverse_wishart`, `favar`, `dfm_mixed_mariano_murasawa`,
+  `tvp_ridge`, `lgb_plus`, `lgba_plus`, `assemblage_regression`,
+  `supervised_aggregation`. `hemisphere_nn`/`density_hnn` remain
+  BLOCKED(no-torch) -- torch is deliberately not installed on this host; see
+  `.dev-notes/anchor_coverage/v2_anchor_results.md` for the proposed anchor
+  design once torch is available. `bvartools`/`FAVAR` R packages now build
+  cleanly from CRAN on this host (`BVAR` also installs but was not needed),
+  enabling live R parity tests alongside the from-formula clean-room ones.
+  Full per-model anchor-type/tolerance/result table in
+  `.dev-notes/anchor_coverage/v2_anchor_results.md`.
+
+  - `bvar_minnesota`/`bvar_normal_inverse_wishart`: the Minnesota prior
+    variance grid (own-lag/cross-lag/lag-decay) is checked deterministically
+    (1e-12) against the documented `bvartools::minnesota_prior` formula two
+    ways -- an independent from-scratch reimplementation, and a live R
+    subprocess-Rscript parity test against `bvartools::minnesota_prior`
+    itself. Separately, the Normal-Inverse-Wishart Gibbs sampler's posterior
+    mean is shown (Monte Carlo, tolerance set from the sampler's own reported
+    MCSE) to converge to the closed-form OLS estimate on the shared VAR
+    design -- the exact special case where a diffuse coefficient prior makes
+    the GLS estimator, for any sampled error covariance, algebraically
+    identical to OLS (shared-regressor SUR equivalence).
+
+    **FINDING (RESOLVED, see the correctness fix below)**:
+    `bvar_normal_inverse_wishart`'s own default `s0=0.0` (an
+    exactly-zero inverse-Wishart prior scale) made the Gibbs sampler
+    numerically unstable -- posterior mean off by 3-4+ orders of magnitude,
+    ~97% of post-burn-in draws divergent -- whenever the fitted VAR's
+    residual covariance was even mildly near-singular (a realistic scenario,
+    not a corner case: e.g. a FAVAR-style factor+target block where the
+    factors explain the target well). `favar()`'s own default
+    `varprior=None` silently resolved to this same fragile configuration
+    with no warning. Originally marked `xfail(strict=True)` with the full
+    isolating diagnosis in `test_bvar_minnesota_niw_anchors.py`; not
+    tolerance-loosened away. Reported prominently in the WP-V2 results file.
+    Fixed in the same PR -- see "BVAR-NIW default prior scale + diverging-
+    draws guard" below.
+
+  - `favar`: the fully deterministic factor-identification helpers
+    (`_favar_extr_pc`/`_favar_facrot`/`_favar_olssvd`/`_favar_bgm`) now
+    have both an independent PCA-via-SVD cross-check and live R parity
+    against `FAVAR:::ExtrPC`/`facrot`/`olssvd`/`BGM` (the exact R
+    functions the docstrings claim alignment with). A near-noiseless
+    known-factor DGP oracle (small idiosyncratic noise + an explicit
+    non-degenerate `varprior`, both required to avoid the `s0=0.0` finding
+    above and a separate BGM-on-exactly-rank-deficient-data degeneracy)
+    recovers the forecast to <1% of the target's in-sample range through the
+    full `favar()` pipeline.
+
+  - `dfm_mixed_mariano_murasawa`: confirmed (by reading the source) to be a
+    thin wrapper around `statsmodels.tsa.statespace.dynamic_factor_mq
+    .DynamicFactorMQ`, so the wrapper's own glue (column reordering,
+    frequency inference) is anchored directly -- parameter/log-likelihood/
+    fitted-value pass-through vs a direct `DynamicFactorMQ` call on an
+    identically-shaped frame, including a column-order-shuffle variant -- plus
+    a low-noise Mariano-Murasawa [1,2,3,2,1] mixed-frequency factor-recovery
+    oracle (correlation with the true factor > 0.9).
+
+  - `tvp_ridge`: `_dual_generalized_ridge` ("dualGRR") is shown, via an
+    independent Woodbury-identity derivation (not read off the code), to
+    solve the textbook generalized-ridge/Tikhonov estimator
+    `theta = (Z'WZ + Lambda)^-1 Z'Wy`; matched to 1e-8 against a from-scratch
+    reference solve, including a heterogeneous-weights case. A
+    constant-parameter limit test confirms lambda1 -> infinity collapses the
+    recovered path to a single plain (static-only) ridge fit with penalty
+    lambda2, the textbook "TVP collapses to constant coefficients as state
+    variance -> 0" limit.
+
+  - `lgb_plus`/`lgba_plus`: the competition/alternating ensemble logic is
+    clean-roomed against hand-rolled loops calling raw `lightgbm` directly
+    (`lightgbm` extra now installed) -- for `lgb_plus` this includes
+    reproducing the exact `np.random.default_rng(seed)` call sequence
+    (subsample draw, then linear-candidate-feature draw, per step) so the
+    random streams -- and therefore predictions -- match bit-for-bit; for
+    `lgba_plus` (deterministic at `subsample=1.0`) no RNG replay is needed.
+    Both get a same-seed determinism pin.
+
+  - `assemblage_regression`/`supervised_aggregation`: both route through
+    the shared `SupervisedAggregationRegressor` (confirmed by reading
+    `assemblage.py`), anchored with hand-computable analytic fixtures --
+    plain ridge, target-shrinkage ridge (both unconstrained closed forms),
+    and simplex-/mean-match-constrained ridge (solved exactly via the
+    bordered KKT linear system, with an explicit check that the `nonneg`
+    inequality constraint is non-binding so the equality-only closed form is
+    the correct target) -- plus a thin check that the public
+    `assemblage_regression`/`supervised_aggregation` entry points route to
+    the same verified estimator.
+
+  - Cheap bonus: a git-archaeology pass over historically deleted test files
+    (`git log --diff-filter=D --name-only -- 'tests/**'`) found dedicated,
+    substantive (59-424 line) BVAR/FAVAR/DFM/HNN test files removed in the
+    `2e62e740` "Clean semantic package structure" reorg (same commit V0
+    flagged for the deleted R cross-ref suite). Spot-checked: these import a
+    now-nonexistent `macroforecast.core.runtime` / `macroforecast.models.ops`
+    (`OPERATIONAL_MODELS`/`FUTURE_MODELS`/`get_family_status`) registry API,
+    so they are NOT directly restorable (`git show > file` would not import);
+    restoration would need rewriting to the current module structure. Full
+    candidate list with commits/line counts in the WP-V2 results file; not
+    restored here per the task brief.
+
+- **`models` (CORRECTNESS, follow-up to the WP-V2 finding above): BVAR-NIW
+  default prior scale + diverging-draws guard.** Users who called
+  `bvar_normal_inverse_wishart`/`bvar_minnesota`/`favar` with their documented
+  defaults (i.e. never passed `s0`) got a *different, and previously silently
+  wrong, result* on any near-singular-residual-covariance panel. This is a
+  breaking behavior change for anyone relying on the old default numerically
+  -- read this entry before upgrading if you fit these models without an
+  explicit `s0`.
+
+  - **Old default**: `s0=0.0` (an exactly-zero inverse-Wishart prior scale).
+    On a near-singular VAR residual covariance this made the Gibbs sampler's
+    Wishart-draw scale matrix equal the bare sample residual cross-product
+    with no floor, and posterior means silently diverged by 3-4+ orders of
+    magnitude (~97% of post-burn-in draws divergent; `favar()`'s default
+    forecast on a realistic near-noiseless factor-augmented-VAR DGP was
+    `-8.6e24` vs a true value of about `-1.0`) -- no error, warning, or NaN.
+
+  - **New default**: `s0=None`, which resolves (in `_favar_bvar_draws`, via
+    the new `_favar_default_niw_scale` helper) to a data-dependent diagonal
+    scale `diag(sigma_1**2, ..., sigma_k**2)`, where `sigma_i` is each
+    series' own univariate AR(`n_lag`)-OLS residual SD on the fit data (the
+    same per-equation AR-residual helper already used, and independently
+    anchored, for the Minnesota prior's cross-lag variance scaling). This is
+    the standard natural-conjugate NIW-BVAR convention: under this module's
+    posterior parameterization (`Sigma | data ~ InvWishart(S0 + SSE, tnum +
+    nu0)`, `E[Sigma] = scale / (df - k - 1)`), the minimal proper integer
+    degrees of freedom keeping a no-data prior mean finite is `k + 2`, and at
+    that reference point `S0 = diag(sigma_i**2)` makes the prior's implied
+    residual-covariance mean equal each equation's own AR/OLS variance
+    estimate (Karlsson 2013, Handbook of Economic Forecasting Vol. 2B Ch. 15
+    -- already this repo's own reference for the sibling Minnesota-prior
+    sigma^2-scaling fix, see the "PR8" entry further down; Giannone, Lenza &
+    Primiceri 2015, "Prior Selection for Vector Autoregressions", Review of
+    Economics and Statistics 97(2)). `s0` stays fully exposed and an
+    explicitly passed value (including `s0=0.0`, to reproduce the exact old
+    behavior) is honored exactly as before. `nu0`'s own default (`0.0`) is
+    unchanged -- only the `s0` default changed.
+
+  - **New diverging-draws guard**: `_warn_if_bvar_draws_diverged` now checks,
+    after every fit, what fraction of post-burn-in Gibbs coefficient draws
+    have a coefficient-matrix Frobenius norm more than 50x the plain-OLS
+    reference scale on the same shared VAR design; if more than 10% do, a
+    `UserWarning` is raised ("near-singular residual covariance with
+    (near-)zero prior scale s0 -- posterior draws diverged; set s0>0 or
+    rescale data"). This never raises -- it is a visibility fix, not a
+    behavior-restricting one -- and it still fires for an explicitly passed
+    `s0=0.0` on a fragile panel (that path's dedicated regression test), so
+    explicit callers who want the old numerics are still warned rather than
+    silently misled. Bonus finding surfaced by this guard: an existing,
+    unrelated smoke test (`test_bvar_and_target_timeseries_models_fit_and_
+    predict`) fits `bvar_normal_inverse_wishart` on a fully deterministic
+    (zero-noise) synthetic panel; even the new data-dependent `s0` is
+    numerically tiny there (the AR-residual-variance estimate is itself
+    near-zero on noiseless data), so the guard correctly still fires --
+    previously this same fit silently produced a ~6.4e13-magnitude
+    coefficient with no signal at all.
+
+  - **`favar`**: no `favar`-specific code changed. `_parse_favar_varprior`'s
+    two dict-building branches previously hardcoded `"s0": prior.get("s0",
+    0.0)`, so `favar(varprior=None)` (favar's own default) always forwarded
+    an explicit `s0=0.0`, bypassing whatever `bvar_normal_inverse_wishart`'s
+    own default was. Both branches now use `prior.get("s0")` (defaulting to
+    `None`), so `favar`'s default transparently inherits the same fixed
+    default through the shared `_favar_bvar_draws` resolution -- proven by a
+    new end-to-end test (`test_favar_default_varprior_recovers_forecast`)
+    that asserts both forecast accuracy AND the absence of the new warning
+    on the exact DGP that used to produce `-8.6e24`-scale garbage.
+
+  - Tests: the WP-V2 `xfail(strict=True)` regression pin in
+    `test_bvar_minnesota_niw_anchors.py` is now two positive tests --
+    `test_niw_default_s0_matches_closed_form_ols_on_previously_diverging_
+    fixture` (default-`s0` posterior mean matches the closed-form OLS anchor
+    on the exact previously-diverging fixture, same MCSE-based tolerance as
+    the other OLS-anchor tests) and `test_niw_explicit_s0_zero_still_
+    diverges_and_warns` (explicit `s0=0.0` still diverges exactly as before,
+    but now raises the guard's `UserWarning`) -- plus
+    `test_favar_default_varprior_recovers_forecast` in
+    `test_favar_anchors.py`. All pre-existing WP-V2 anchor tests (the
+    explicit-`s0=1.0` diffuse-prior Gibbs-vs-OLS tests) are confirmed
+    unaffected. `mypy` clean on all touched files; no new errors in the
+    project-wide baseline (still the same 4 pre-existing, unrelated errors
+    in `data_analysis/summary.py`/`models/linear.py`).
+
+  - `macroforecast/models/specs.py`: the `bvar_minnesota`/
+    `bvar_normal_inverse_wishart` `MODEL_SPECS` entries' `default_params`
+    (consumed directly by `ModelSpec.fit()`/recipe-driven runs, which bypass
+    the Python function's own keyword default) are updated to `s0=None` to
+    match, so recipe/`forecasting.run()`-driven fits inherit the fix too.
 
 - `forecasting`/`pipeline` (performance, Gap A): the per-origin fitted feature
   builder (`FeatureSpec.fit()` -- the PCA/MARX/SIR-style numerical state) is now

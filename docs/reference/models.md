@@ -2673,7 +2673,7 @@ macroforecast.models.bvar_minnesota(
     kappa0=2.0,
     kappa1=0.5,
     nu0=0.0,
-    s0=0.0,
+    s0=None,
     iter=300,
     burnin=100,
     random_state=0,
@@ -2695,7 +2695,7 @@ of BVAR forecast object.
 | `kappa0` | `2.0` | yes | Minnesota own-lag prior scale. |
 | `kappa1` | `0.5` | yes | Minnesota lag-decay exponent. |
 | `nu0` | `0.0` | fixed by preset | Inverse-Wishart degrees-of-freedom prior parameter. |
-| `s0` | `0.0` | fixed by preset | Inverse-Wishart scale prior parameter. |
+| `s0` | `None` | fixed by preset | Inverse-Wishart scale prior parameter. `None` resolves to a data-dependent `diag(sigma_i**2)` scale from each series' own AR(`n_lag`)-OLS residual variance; pass an explicit value (including `0.0`) to restore the old exactly-zero-scale behavior (a `UserWarning` fires if the resulting draws diverge). |
 | `iter` | `300` | fixed by preset | Total Gibbs iterations (deep/paper-faithful default is `10000`; pass explicitly to restore it). |
 | `burnin` | `100` | fixed by preset | Burn-in iterations removed before summaries (deep/paper-faithful default is `5000`; pass explicitly to restore it). |
 | `random_state` | `0` | fixed by preset | Random seed for posterior draws. |
@@ -2711,7 +2711,7 @@ macroforecast.models.bvar_normal_inverse_wishart(
     b0=0.0,
     vb0=0.0,
     nu0=0.0,
-    s0=0.0,
+    s0=None,
     iter=300,
     burnin=100,
     random_state=0,
@@ -2721,7 +2721,14 @@ macroforecast.models.bvar_normal_inverse_wishart(
 Fits the same FAVAR-style Bayesian VAR posterior sampler with direct controls
 for coefficient prior mean/variance and inverse-Wishart covariance prior terms.
 Saved diagnostics include coefficient posterior mean, standard deviation,
-credible interval bounds, and posterior mean covariance.
+credible interval bounds, and posterior mean covariance. `s0` defaults to
+`None`, which resolves to a data-dependent `diag(sigma_i**2)` scale from each
+series' own AR(`n_lag`)-OLS residual variance (instead of the previous
+exactly-zero scale, which could silently diverge on near-singular residual
+covariance); pass an explicit `s0` (including `0.0`) to restore the old
+behavior (a `UserWarning` now fires if the resulting draws diverge). See the
+CHANGELOG `[Unreleased]` entry "BVAR-NIW default prior scale + diverging-draws
+guard" for the full rationale.
 
 ### ets
 
@@ -3242,7 +3249,7 @@ posterior-mean coefficients.
 | `fctmethod` | `"BGM"` | fixed by preset | Factor identification method: `"BBE"` or `"BGM"` (BBE requires `slowcode`). |
 | `slowcode` | `None` | fixed by preset | Boolean slow-variable mask required by BBE. |
 | `factorprior` | `None` | fixed by preset | Factor loading prior controls. |
-| `varprior` | `None` | fixed by preset | BVAR prior controls for the factor VAR block. |
+| `varprior` | `None` | fixed by preset | BVAR prior controls for the factor VAR block. `varprior=None` (the default) inherits `bvar_normal_inverse_wishart`'s own data-dependent default `s0` (see that entry above) rather than forcing an exactly-zero prior scale. |
 | `nburn` | `100` | fixed by preset | Burn-in iterations for posterior draws (deep/paper-faithful default is `5000`; pass explicitly to restore it). |
 | `nrep` | `200` | fixed by preset | Saved posterior draw count (deep/paper-faithful default is `15000`; pass explicitly to restore it). |
 | `standardize` | `True` | fixed by preset | Use R `scale()` semantics for X and y before factor extraction. |
