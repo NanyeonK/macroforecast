@@ -38,9 +38,9 @@ so the heterogeneity is visible rather than silent.
 
 The Model Confidence Set is different. It needs a single joint sample where every
 candidate is observed, so it uses the listwise-common sample across all
-contenders. The accuracy table and the MCS can therefore rest on different
-samples by design. This is correct, because a pairwise relative metric should use
-all the data each pair shares while a joint comparison needs common origins.
+contenders. The accuracy table and the MCS therefore rest on different samples by
+design: a pairwise relative metric uses all the data each pair shares, while the
+joint MCS needs origins common to every candidate.
 
 ## Forecast comparison tests
 

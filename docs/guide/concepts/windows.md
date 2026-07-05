@@ -4,11 +4,14 @@
 
 `macroforecast.window` defines the estimation/val/test time frame. A `WindowSpec`
 is the object passed between data, feature engineering, model selection, models,
-and evaluation. It answers six questions: how the pre-test estimation sample
-expands or rolls; how validation splits are created inside the estimation sample
-for model selection; where the final test origins start and end; how far each
-test target horizon runs; when the model is retrained versus reused; and where
-each runner stage may fit stateful operations.
+and evaluation. It answers six questions:
+
+- how the pre-test estimation sample expands or rolls;
+- how validation splits are created inside it for model selection;
+- where the final test origins start and end;
+- how far each test target horizon runs;
+- when the model is retrained versus reused;
+- where each runner stage may fit stateful operations.
 
 ## Estimation modes
 
@@ -16,8 +19,8 @@ The estimation window controls how the pre-test training data grows across origi
 
 - **Expanding** (`mode="expanding"`): the training sample grows by one period at
   each test origin. This is the standard POOS convention.
-- **Rolling** (`mode="rolling"`): a fixed-size trailing window moves forward. A
-  `size` must be specified.
+- **Rolling** (`mode="rolling"`): a fixed-size trailing window moves forward. An
+  `estimation_size` must be specified.
 - **Fixed** (`mode="fixed"`): the estimation sample is anchored between fixed
   start and end dates.
 
@@ -31,11 +34,12 @@ splits), `expanding` (walk-forward expanding train/val splits), `rolling_blocks`
 folds). Use `random_kfold` only when reproducing papers that explicitly used
 random iid folds.
 
-## No-validation window
+## Per-arm windows and no-validation fits
 
-An arm may declare its own per-arm window via `Arm(window=...)`. A typical use
-is the autoregression: set `val_method="last_block"` with no model selection so
-the AR benchmark fits on the full estimation window without a holdout.
+An arm may declare its own per-arm window via `Arm(window=...)`. When an arm has
+no tunable hyperparameters — the AR benchmark is the typical case — no validation
+split is consumed and the model fits on the full estimation window, regardless of
+the window's `val_method`.
 
 ## Retrain and retune cadence
 

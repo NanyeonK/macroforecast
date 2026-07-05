@@ -84,8 +84,8 @@ fs = mf.build_features(
     sl, target="INDPRO", predictors="all", lags=None,
     feature_steps=[mf.feature_engineering.marx_step(name="MARX_X", max_lag=12)],
 )
-print(type(fs).__name__, fs.matrix.shape)
-print(list(fs.matrix.columns[:6]))
+print(type(fs).__name__, fs.X.shape)
+print(list(fs.X.columns[:6]))
 ```
 
 ```text
