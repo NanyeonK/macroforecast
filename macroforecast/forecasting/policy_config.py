@@ -18,6 +18,15 @@ from macroforecast.window import ValWindow, WindowSpec
 ForecastPolicy = Literal["direct", "direct_average", "path_average", "recursive"]
 FutureFeaturePolicy = Literal["target_lags", "observed_future"]
 
+# ``ModelSpec.input_kind == "supervised"`` models whose DOCUMENTED, intended
+# construction is an explicit ``feature_spec(predictors=[], target_lags=...)``
+# (see the "full study" AR arm in docs/guide/getting_started.md): the
+# univariate/factor-augmented autoregression benchmarks. Cross-referenced with
+# the same carve-out in ``macroforecast.pipeline.spec.DIRECT_POLICY_GUARD_MODELS``.
+# See ``_feature_spec_for_policy`` for where this gates the
+# default-feature-spec warning.
+_TARGET_LAGS_BY_DESIGN_MODELS = frozenset({"ar", "far"})
+
 
 def _feature_target_name(features: FeatureSpec) -> str | None:
     if features.target is not None:
@@ -89,6 +98,8 @@ def _feature_spec_for_policy(
     forecast_policy: ForecastPolicy,
     future_feature_policy: FutureFeaturePolicy | None,
     target_transform: str | None,
+    model_input_kind: str | None = None,
+    model_name: str | None = None,
 ) -> FeatureSpec:
     # _target_transform_for_policy returns plain str but only ever yields valid
     # TargetTransform literals; likewise target_mode is a TargetMode literal.
@@ -115,6 +126,32 @@ def _feature_spec_for_policy(
                 target_transform=transform,
                 metadata={"future_feature_policy": future_feature_policy},
             )
+        # Trap: a supervised model (random_forest, ridge, ...) with no explicit
+        # FeatureSpec silently gets THIS default -- ``feature_spec(target=...,
+        # horizon=..., target_mode=..., target_transform=...)`` with no
+        # ``predictors``/``lags``/``target_lags`` -- which resolves at fit time
+        # (``_resolve_predictors`` in feature_engineering/shared.py, documented
+        # in docs/reference/feature_engineering.md's ``predictors`` row) to ALL
+        # other panel columns at lags 0 and 1, with NO feature engineering
+        # (no PCA/MARX/scaling) and the target's OWN lags NOT included (verified
+        # empirically: ``fs.predictors is None`` -> ``base.predictors`` ("all")
+        # -> every non-target column). So the surprise for a wide panel (e.g.
+        # FRED-MD's 127 series) is not "too narrow" but "too wide and
+        # uncurated, and missing the target's own dynamics" -- easy to misread
+        # from ``predictors: ... = None`` alone without tracing the runtime
+        # fallback. target/panel-input models (arima, var, dfm_*, ...) never
+        # reach this branch at all: they are excluded upstream (input_kind ==
+        # "panel" is routed to the panel runner before features are ever
+        # resolved; input_kind == "target" models such as arima/ets never call
+        # this function with model_input_kind == "supervised"). ``ar``/``far``
+        # are the one carve-out WITHIN "supervised": their ``ModelSpec.input_kind``
+        # is "supervised" (they fit an (X, y) regression under the hood), and
+        # the documented pattern for them (see the "full study" arm in
+        # docs/guide/getting_started.md) is an explicit ``target_lags=...``
+        # FeatureSpec with ``predictors=[]`` -- the same ar/far carve-out
+        # documented in ``macroforecast.pipeline.spec.DIRECT_POLICY_GUARD_MODELS``.
+        if model_input_kind == "supervised" and model_name not in _TARGET_LAGS_BY_DESIGN_MODELS:
+            _warn_default_feature_spec_used()
         return feature_spec(
             target=target,
             horizon=horizon,
@@ -171,6 +208,28 @@ def _warn_change_based_target_default(
         "the target. Pass an explicit value-based target_transform "
         "('average_value' for direct_average, 'value' for path_average) to build "
         "averages from the one-period transformed series.",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
+def _warn_default_feature_spec_used() -> None:
+    # Identical message + call site each time -> Python's default warning
+    # filter dedups repeats (same message/category/module/lineno), so a 60-cell
+    # pipeline grid built from the same code path warns once, not 60 times.
+    #
+    # Message verified against the actual resolved FeatureSpec (not just this
+    # function's own predictors=None default): ``_resolve_predictors`` falls
+    # back to ``base.predictors``, whose own default is ``"all"``
+    # (docs/reference/feature_engineering.md's ``predictors`` row), so this
+    # branch's implicit FeatureSpec ends up using EVERY other panel column at
+    # lags 0/1 with no feature engineering -- and, because ``target_lags`` is
+    # never set here, none of the target's own history.
+    warnings.warn(
+        "arm used the implicit default feature spec (every other panel column "
+        "at lags 0 and 1, no feature engineering -- and NOT the target's own "
+        "lags) -- pass features=feature_spec(...) for explicit control over "
+        "which predictors are used",
         UserWarning,
         stacklevel=3,
     )

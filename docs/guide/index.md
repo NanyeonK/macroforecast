@@ -67,7 +67,10 @@ If you have not run the package yet, start with
 [Getting Started](getting_started.md) for the shortest path from install to a
 first result. Then work through the stage pages below in the order of the map
 above. Each one explains one stage and most include a short executed walkthrough
-you can paste and run.
+you can paste and run. Once the stages are familiar, or once you already have
+your own data and your own model in mind, go straight to
+[Your Data, Your Model, One Table](custom_data_tutorial.md) -- a capstone
+tutorial that runs every stage above end to end on a custom CSV.
 
 When you need exact signatures, follow the reference link at the foot of each
 stage page. The [Glossary](glossary.md), [Models and Features](model_overview.md),
@@ -135,6 +138,14 @@ Expanding, rolling, and no-validation windows; retrain and retune cadence.
 RMSE, relative MSE, relative RMSE, DM/CW tests, and the Model Confidence Set.
 :::
 
+:::{grid-item-card} Your Data, Your Model, One Table
+:link: custom_data_tutorial
+:link-type: doc
+
+A capstone tutorial: your own CSV, your own model, a scored horse race, and
+one line to a referee-ready LaTeX table.
+:::
+
 ::::
 
 ```{toctree}
@@ -149,4 +160,5 @@ concepts/models_and_arms
 concepts/windows
 concepts/running
 concepts/evaluation
+custom_data_tutorial
 ```

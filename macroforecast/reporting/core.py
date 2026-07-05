@@ -36,6 +36,7 @@ _DEFAULT_METRIC_RENAME = {
     "variance_share": "Variance share",
     "relative_mse": "Relative MSE",
     "relative_mae": "Relative MAE",
+    "rel_rmse": "Relative RMSE",
     "mse_reduction": "MSE reduction",
     "r2_oos": "R2 OOS",
     "theil_u2": "Theil U2",
@@ -515,6 +516,266 @@ def forecast_test_table(
     )
 
 
+def paper_accuracy_table(
+    report: Any,
+    *,
+    target: str | None = None,
+    metric: str = "rel_rmse",
+    star_levels: PValueStarLevels = ((0.01, "***"), (0.05, "**"), (0.10, "*")),
+    mcs_mark: str = "†",
+    benchmark_row: bool = True,
+    precision: int = 3,
+    missing: str = "--",
+    caption: str | None = None,
+    label: str | None = None,
+    notes: Sequence[str] = (),
+    metadata: Mapping[str, Any] | None = None,
+) -> ReportTable | dict[str, ReportTable]:
+    """One line from a ``PipelineReport`` to a referee-ready horse-race table.
+
+    ``run_pipeline`` returns three separate long frames -- ``.accuracy`` (RMSE /
+    relative MSE / R2 OOS per target/horizon/contender), ``.significance`` (DM/CW
+    p-values per target/horizon/contender), and ``.mcs`` (Model Confidence Set
+    membership per target/horizon/contender). Nothing joined them into the wide
+    models-by-horizons table that is "Table 3" of almost every macro forecasting
+    paper -- rel-RMSE with significance stars and an MCS marker, one row per
+    model, one column per horizon. This does that join.
+
+    Accepts a ``PipelineReport`` (or any object/mapping exposing ``accuracy``,
+    and optionally ``significance``/``mcs``, with the same column contract as
+    ``macroforecast.pipeline.evaluate``'s output).
+
+    ``metric``: the accuracy column to display. ``"rel_rmse"`` (the default) is
+    computed here as ``sqrt(relative_mse)`` -- rel-RMSE is a common paper
+    convention that is not itself a column of the accuracy frame. Any other
+    column already on ``report.accuracy`` (``"relative_mse"``, ``"rmse"``,
+    ``"r2_oos"``, ...) may be passed instead and is used as-is.
+
+    DM significance stars are joined from ``report.significance`` on
+    ``(target, horizon, contender)`` and rendered with ``star_levels``
+    (``(threshold, marker)`` pairs, smallest threshold first); the benchmark row
+    itself is never starred (DM never compares a contender to itself). The MCS
+    marker (``mcs_mark``) is appended wherever ``report.mcs.in_mcs`` is True for
+    that ``(target, horizon, contender)``. Missing significance/MCS frames (or
+    missing rows within them) simply contribute no stars/marker rather than
+    raising, since not every ``PipelineReport`` carries them.
+
+    ``benchmark_row=False`` drops the benchmark's own row (always rel-RMSE
+    1.000 by construction, since it is scored against itself).
+
+    Multi-target reports: with ``target=None`` and more than one distinct
+    target in ``report.accuracy``, this returns ``dict[target, ReportTable]``
+    rather than stacking targets into one frame. A ``ReportTable`` is one flat
+    2-D presentation grid (see ``ReportTable.to_latex()``); different targets
+    can have different available horizons and a different benchmark-present
+    status, so folding them into one MultiIndex-columned or MultiIndex-rowed
+    frame would either force a ragged union of horizons or break the plain
+    "one line to ``\\begin{tabular}``" contract this function exists to provide.
+    A dict keeps each target's table independently well-formed and still lets a
+    caller do ``paper_accuracy_table(report)["INDPRO"].to_latex()``. Passing an
+    explicit ``target=...``, or a report that only has one target, returns that
+    target's ``ReportTable`` directly (no dict wrapping) so the common case is
+    truly one line to LaTeX.
+    """
+
+    accuracy = _report_component_frame(report, "accuracy")
+    if accuracy.empty:
+        raise ValueError(
+            "report.accuracy has no rows to build a paper_accuracy_table from"
+        )
+    significance = _report_component_frame(report, "significance")
+    mcs = _report_component_frame(report, "mcs")
+
+    if target is not None and target not in set(accuracy["target"]):
+        raise ValueError(f"target {target!r} is not present in report.accuracy")
+    targets = [target] if target is not None else list(dict.fromkeys(accuracy["target"]))
+
+    tables = {
+        str(one_target): _paper_accuracy_table_one_target(
+            accuracy,
+            significance,
+            mcs,
+            target=one_target,
+            metric=metric,
+            star_levels=star_levels,
+            mcs_mark=mcs_mark,
+            benchmark_row=benchmark_row,
+            precision=precision,
+            missing=missing,
+            caption=caption,
+            label=label,
+            notes=notes,
+            metadata=metadata,
+        )
+        for one_target in targets
+    }
+    if target is not None or len(tables) == 1:
+        return next(iter(tables.values()))
+    return tables
+
+
+def _report_component_frame(report: Any, name: str) -> pd.DataFrame:
+    """Best-effort extraction of a named long frame off a report-like object."""
+
+    value = report.get(name) if isinstance(report, Mapping) else getattr(report, name, None)
+    if value is None:
+        return pd.DataFrame()
+    return pd.DataFrame(value).copy()
+
+
+def _ensure_columns(frame: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:
+    out = frame.copy()
+    for column in columns:
+        if column not in out.columns:
+            out[column] = np.nan
+    return out
+
+
+def _paper_accuracy_table_one_target(
+    accuracy: pd.DataFrame,
+    significance: pd.DataFrame,
+    mcs: pd.DataFrame,
+    *,
+    target: Any,
+    metric: str,
+    star_levels: PValueStarLevels,
+    mcs_mark: str,
+    benchmark_row: bool,
+    precision: int,
+    missing: str,
+    caption: str | None,
+    label: str | None,
+    notes: Sequence[str],
+    metadata: Mapping[str, Any] | None,
+) -> ReportTable:
+    acc = accuracy.loc[accuracy["target"] == target].copy()
+    if acc.empty:
+        raise ValueError(f"target {target!r} is not present in report.accuracy")
+    acc["rel_rmse"] = np.sqrt(acc["relative_mse"].astype(float))
+    if metric not in acc.columns:
+        raise ValueError(
+            f"metric {metric!r} is not a column of report.accuracy "
+            "(and is not the built-in 'rel_rmse')"
+        )
+
+    is_benchmark_by_contender = (
+        acc.loc[acc.get("is_benchmark", False) == True, "contender"]  # noqa: E712
+        if "is_benchmark" in acc.columns
+        else pd.Series(dtype=object)
+    )
+    bench_name = (
+        str(is_benchmark_by_contender.iloc[0]) if not is_benchmark_by_contender.empty else None
+    )
+
+    sig = (
+        _ensure_columns(significance.loc[significance["target"] == target], ("dm_p",))
+        if not significance.empty and "target" in significance.columns
+        else pd.DataFrame(columns=["horizon", "contender", "dm_p"])
+    )
+    merged = acc.merge(
+        sig[["horizon", "contender", "dm_p"]], on=["horizon", "contender"], how="left"
+    )
+    mcs_t = (
+        _ensure_columns(mcs.loc[mcs["target"] == target], ("in_mcs",))
+        if not mcs.empty and "target" in mcs.columns
+        else pd.DataFrame(columns=["horizon", "contender", "in_mcs"])
+    )
+    merged = merged.merge(
+        mcs_t[["horizon", "contender", "in_mcs"]], on=["horizon", "contender"], how="left"
+    )
+
+    if not benchmark_row and bench_name is not None:
+        merged = merged[merged["contender"] != bench_name]
+
+    merged["_display"] = [
+        _format_paper_accuracy_cell(
+            row[metric],
+            row.get("dm_p"),
+            row.get("in_mcs"),
+            precision=precision,
+            missing=missing,
+            star_levels=star_levels,
+            mcs_mark=mcs_mark,
+            is_benchmark=bool(row.get("is_benchmark", False)),
+        )
+        for _, row in merged.iterrows()
+    ]
+
+    model_order = list(dict.fromkeys(merged["contender"]))
+    if benchmark_row and bench_name is not None and bench_name in model_order:
+        model_order = [bench_name, *[m for m in model_order if m != bench_name]]
+    horizon_order = sorted({int(h) for h in merged["horizon"]})
+
+    wide = merged.pivot(index="contender", columns="horizon", values="_display")
+    wide = wide.reindex(index=model_order, columns=horizon_order)
+    wide.columns = [f"h{int(h)}" for h in wide.columns]
+    wide = wide.fillna(missing)
+    wide.insert(
+        0,
+        "Model",
+        [
+            f"{name} (benchmark)" if bench_name is not None and name == bench_name else str(name)
+            for name in wide.index
+        ],
+    )
+    wide = wide.reset_index(drop=True)
+    wide.attrs["macroforecast_metadata_schema"] = {
+        "kind": "report_table",
+        "version": 1,
+        "columns": [str(column) for column in wide.columns],
+        "n_rows": int(len(wide)),
+    }
+    report_metadata = {
+        "source_kind": "paper_accuracy_table",
+        "target": str(target),
+        "metric": str(metric),
+        "benchmark": bench_name,
+        "star_levels": _json_ready(list(star_levels)),
+        "mcs_mark": str(mcs_mark),
+        **dict(metadata or {}),
+    }
+    wide.attrs["macroforecast_metadata"] = _json_ready(report_metadata)
+
+    metric_label = "rel-RMSE" if metric == "rel_rmse" else metric
+    default_notes: tuple[str, ...] = (
+        f"Entries are {metric_label} relative to the benchmark"
+        + (f" ({bench_name})" if bench_name is not None else "")
+        + "; the benchmark's own value is 1.000 by construction.",
+        _star_note(star_levels) + " (Diebold-Mariano test vs. the benchmark).",
+        f"{mcs_mark} denotes inclusion in the Model Confidence Set.",
+    )
+    merged_notes = tuple(str(note) for note in (*default_notes, *tuple(notes)))
+
+    return ReportTable(
+        data=wide,
+        caption=caption if caption is not None else f"Forecast accuracy — {target}",
+        label=label,
+        notes=merged_notes,
+        metadata=report_metadata,
+    )
+
+
+def _format_paper_accuracy_cell(
+    value: Any,
+    dm_p: Any,
+    in_mcs: Any,
+    *,
+    precision: int,
+    missing: str,
+    star_levels: PValueStarLevels,
+    mcs_mark: str,
+    is_benchmark: bool,
+) -> str:
+    if _is_missing(value):
+        return missing
+    text = f"{float(value):.{precision}f}"
+    if not is_benchmark and not _is_missing(dm_p):
+        text += _p_value_stars(float(dm_p), star_levels)
+    if not _is_missing(in_mcs) and bool(in_mcs):
+        text += mcs_mark
+    return text
+
+
 def latex_table(value: ReportTable | Any, *, booktabs: bool = True, **kwargs: Any) -> str:
     """Render a report table as LaTeX text."""
 
@@ -952,6 +1213,7 @@ __all__ = [
     "latex_table",
     "markdown_table",
     "model_comparison_table",
+    "paper_accuracy_table",
     "render_tables",
     "report_bundle",
     "report_table",

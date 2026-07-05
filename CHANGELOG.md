@@ -75,6 +75,83 @@ full per-version honesty-pass history embedded in repo documentation.
   for all 6 previously torch-blocked models (`lstm`, `gru`, `nn`,
   `transformer`, `hemisphere_nn`, `density_hnn`); see PR body for the full
   status table.
+- `reporting` (`paper_accuracy_table`, publication on-ramp): new
+  `mf.reporting.paper_accuracy_table(report, *, target=None, metric="rel_rmse",
+  star_levels=..., mcs_mark="†", benchmark_row=True)` joins `report.accuracy` /
+  `.significance` / `.mcs` -- the three separate long frames `run_pipeline`
+  returns -- into the one wide models-by-horizons table ("Table 3") most macro
+  forecasting papers publish: rel-RMSE (computed here as `sqrt(relative_mse)`,
+  added as `"rel_rmse"` to the metric rename map), Diebold-Mariano
+  significance stars, and a Model Confidence Set marker, one line to
+  `.to_latex(booktabs=True)` / `.to_html()` / `.to_markdown()`. Multi-target
+  reports return `dict[target, ReportTable]` (folding targets into one frame
+  would force a ragged union of horizons); an explicit `target=...`, or a
+  single-target report, returns the `ReportTable` directly. Tests:
+  `tests/reporting/test_reporting.py` (hand-built fixture -> exact wide frame
+  incl. stars/marks, LaTeX render smoke, missing-benchmark and single-horizon
+  edge cases).
+
+- `docs/guide` (`custom_data_tutorial`, publication on-ramp): new capstone
+  tutorial "Your Data, Your Model, One Table"
+  (`docs/guide/custom_data_tutorial.md`) connects `load_custom_csv`/
+  `custom_dataset` -> `TargetSpec(transform=...)` -> `custom_model(...)` ->
+  `run_pipeline` -> `paper_accuracy_table(...).to_latex()` end to end on a
+  small synthetic panel; every code block was executed for real and the
+  output shown is genuine. Closes the audited gap where the `custom_dataset`/
+  `custom_model` reference pages each stopped one step short of a scored
+  comparison (`custom_dataset` dead-ended at `reprocess`, `custom_model`'s
+  "Runner Use" example used low-level `forecasting.run` -- and, incidentally,
+  showed a multi-model dict that `forecasting.run` now rejects since `run` is
+  atomic; fixed in the same pass); both reference pages now cross-link to the
+  tutorial.
+
+- `forecasting` (implicit default-feature-spec `UserWarning`, publication
+  on-ramp): an arm with a supervised model (`random_forest`, a custom model,
+  ...) and `features=None` silently resolves to
+  `feature_spec(target=..., horizon=..., target_mode=..., target_transform=...)`
+  with no explicit `predictors`/`lags`/`target_lags`. That FeatureSpec's
+  `predictors=None` falls back at FIT time (`_resolve_predictors` in
+  `feature_engineering/shared.py`) to `base.predictors`'s own default,
+  `"all"` -- i.e. it uses EVERY other panel column at lags 0 and 1 with no
+  feature engineering, and, because `target_lags` is never set on this path,
+  NOT the target's own lags either. This is the opposite of what a
+  signature-only reading of `feature_spec(predictors: ... = None)` suggests
+  (verified empirically by tracing the resolved `FeatureSpec.predictors`
+  through to the actual fitted `X` columns; documented in
+  `docs/reference/feature_engineering.md`'s `predictors` row, but easy to miss
+  without running it). `_feature_spec_for_policy` now emits one `UserWarning`
+  (relies on Python's default warning-filter dedup, not custom bookkeeping,
+  so a 60-cell pipeline grid warns once per call site rather than once per
+  cell) when this branch fires for a supervised model; `ar`/`far` are carved
+  out (their documented construction is an explicit target-lags-only
+  `FeatureSpec`, matching the same ar/far carve-out in
+  `pipeline.spec.DIRECT_POLICY_GUARD_MODELS`), and panel-/target-input models
+  never reach this branch at all. Fixed `getting_started.md`'s "single
+  forecast" quickstart, whose AR and RF arms both relied on this default: AR
+  was silently NOT an autoregression (it was regressing on the whole FRED-MD
+  panel excluding its own lags), and RF's implicit, untuned 254-feature
+  (127 columns x 2 lags) matrix -- combined with `random_forest`'s own
+  per-origin hyperparameter search, which runs by default whenever a search
+  space exists and is not explicitly disabled -- made the quickstart take
+  upwards of 40 minutes to run for real. Both arms now get explicit, curated
+  `FeatureSpec`s and RF's per-origin search is disabled
+  (`model_selection={"random_forest": None}`) for this quickstart, bringing
+  it under 2.5 minutes; "A full study" below it is unaffected (both arms
+  there already had explicit features). Test:
+  `tests/forecasting/test_default_feature_spec_warning.py`.
+
+- `docs/guide` (glossary/running, `recursive` policy, publication on-ramp):
+  `docs/guide/glossary.md` had no `recursive policy` entry at all -- only
+  `direct policy`/`direct_average policy`/`path_average policy` were defined,
+  even though `recursive` (and its `forecast_policy="iterated"` code alias)
+  has existed in the policy registry throughout. Added the term
+  (cross-linked from `path_average policy`, which already referenced "the
+  separate recursive policy" in prose) and a "Textbook mapping" table to
+  `docs/guide/concepts/running.md` (direct -> `direct`; iterated/recursive ->
+  `recursive` (alias `iterated`); the `*_average` variants as h-average
+  forms). `running.md`'s `path_average` semantics (a direct per-step
+  average, not an iterated one) were already corrected in #420; this pass
+  only adds the missing `recursive` policy and its textbook cross-reference.
 
 - `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
   directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,

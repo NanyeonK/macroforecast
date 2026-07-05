@@ -65,6 +65,11 @@ bundle = mf.data.custom_dataset(
 processed = mf.preprocessing.reprocess(bundle, transform="none")
 ```
 
+This page stops at a processed panel. For the rest of the story -- a
+`TargetSpec`, a custom model, a scored horse race against a benchmark, and a
+one-line paper table -- continue to the full horse-race tutorial:
+[Your Data, Your Model, One Table](../../guide/custom_data_tutorial.md).
+
 ## File Loaders
 
 ```python
