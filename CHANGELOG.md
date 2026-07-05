@@ -647,6 +647,82 @@ full per-version honesty-pass history embedded in repo documentation.
   byte-identical forecasts. Cross-arm reuse (per-`(origin, horizon)` prepared stage) is
   unchanged.
 
+- `tests.py`/`giacomini_white_test` (bugfix, WP-A1 following on WP-V3 finding
+  2): **p-values for `horizon > 1` CHANGE under the new default**
+  (`small_sample=True`) -- see the exact before/after numbers below; pass
+  `small_sample=False` to reproduce the OLD p-values byte-for-byte. WP-V3's
+  Monte Carlo size validation found the test genuinely oversized at h=4
+  (.124 at alpha=.05/n=50; still .072-.092 out to n=5000 -- confirmed NOT a
+  small-n artifact). WP-A1 root-caused it: the inline Bartlett-tapered
+  Newey-West HAC (`weight = 1 - lag/h`) applied to lags 1..h-1 systematically
+  discards a large, NON-VANISHING fraction of the *known* (finite-order,
+  exactly h-1-dependent) autocovariance of an h-step loss differential --
+  confirmed two ways: analytically (the taper weights predict
+  `E[Omega_11]=11.0` vs the true `16.0` at h=4, exactly matching the measured
+  downward bias) and empirically (plugging the TRUE population `Omega` into
+  the same Wald construction gives `mean(stat)=1.995~=2.0`,
+  `rate@alpha=.05=.050` -- i.e. the test's instrument choice and construction
+  are otherwise correct; ALL of the size distortion traces to the `Omega`
+  estimator). `dm_test` never had this problem because it already uses an
+  UNTAPERED (`kernel="acf"`) sum over the same lags (matching R
+  `forecast::dm.test`) -- correct here because the true ACF is exactly zero
+  beyond h-1, so Bartlett tapering (whose purpose is guaranteeing PSD for
+  GENERAL, not-known-finite-order processes) only discards real signal for
+  no benefit. Fix (default `small_sample=True`): (a) sum UNTAPERED sample
+  autocovariances over lags 0..h-1, matching `dm_test`'s own convention;
+  (b) fall back to a smaller bandwidth (down to 0) if that untapered sum is
+  not positive semi-definite -- untapered sums lose Newey-West's automatic
+  PSD guarantee, so this mirrors `_long_run_variance`'s own existing
+  non-positive-variance fallback; (c) reference the Wald statistic against
+  `F(q, ESS-q)` (Hotelling-style, statistic scaled by `q`) instead of
+  chi2(q) whenever a HAC lag was actually used, with
+  `ESS = n/(1+2*bandwidth_used)` the standard effective-sample-size
+  correction for serially dependent data -- this mops up the residual (much
+  smaller than the taper bias, but still real at small n) finite-sample
+  over-rejection of a Wald test built on an estimated multi-dimensional
+  covariance. At horizon=1 (bandwidth=0, already well-calibrated) this
+  reduces EXACTLY to the old chi2(q) reference -- verified by MC to
+  introduce no regression. `small_sample=False` restores the exact pre-fix
+  Bartlett-HAC + chi2(q) behavior. MC before/after
+  (`tests/mc/test_giacomini_white_size.py`, identical seeds, R=5000): h=4
+  n=50 alpha=.05 `.1210 -> .0450` (CI99 [.038,.053]), alpha=.10
+  `.2062 -> .1030`; h=4 n=200 alpha=.05 `.0886 -> .0480`, alpha=.10
+  `.1650 -> .1022`; h=1 unchanged at both n (still in band, e.g. n=50
+  alpha=.05 `.0492`, n=200 alpha=.05 `.0456`). All four MC cells now PASS;
+  the `xfail(strict=True)` tripwires at h=4 (n=50/200) are removed (no
+  xfails remain for `giacomini_white_test`). New deterministic unit tests
+  (`tests/correctness/test_add_gw_cpa.py`) pin the corrected h=4
+  statistic/p-value on a fixed fixture and confirm `small_sample=False`
+  reproduces the exact old formula bit-for-bit. `docs/reference/tests.md`'s
+  `giacomini_white_test` entry is updated with the new default and a
+  summary of the diagnosis.
+
+- `tests/mc/test_mcs_coverage.py` (WP-A1 Step 0, following on WP-V3 finding
+  3, **no code change**): the equal-losers global-null xfail
+  (`P(all 5 tied models retained)=.818` vs a naive `>=.90` floor reading)
+  was cross-checked against R's own `MCS::MCSprocedure` on the IDENTICAL
+  design (subprocess-Rscript bridge, same pattern as `tests/parity/`,
+  R=200 replications, `n_boot=500`,
+  `MCSprocedure(alpha=.10, B=500, statistic="Tmax", k=5, min.k=3)`): R
+  reproduces the SAME ~.82 coverage (`rate=.8200`,
+  `CI99=[.7401,.8841]`), matching this package's own longer-run measurement
+  (`rate=.8180`, `CI99=[.7846,.8483]`, n_reps=1000, WP-V3). Since the
+  reference R implementation shows the identical under-coverage on the
+  identical design, this is a genuine property of the Hansen-Lunde-Nason
+  MCS sequential-elimination procedure itself under an exact global null
+  with many tied models -- not a `macroforecast` defect -- so no code
+  change was made. Converted the `xfail(strict=True)` into a
+  documented-behavior regression band (`[0.70, 0.90)`, i.e. re-investigate
+  if the rate ever drifts toward the naive `>=.90` floor -- an unexpected
+  upstream fix -- or drops well below `.70` -- a new regression) rather
+  than a `>=1-alpha` floor assertion; added an interpretation note to the
+  `model_confidence_set` entry in `docs/reference/tests.md` (what `alpha`
+  means under a global null with many ties: the `>=1-alpha` inclusion
+  guarantee is confirmed for a genuinely-best model, but does not read
+  literally as `P(all K retained)>=1-alpha` when all `K` are exactly tied).
+  Design A (single dominant model, `>=1-alpha` floor, `.947`) is unaffected
+  and unchanged.
+
 ## [0.9.5] -- 2026-06-27 -- "Replication robustness, Python 3.10 compatibility, type-clean"
 
 **Correctness and compatibility:**

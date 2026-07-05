@@ -954,6 +954,25 @@ the maximum selected AR order across loss columns and enforce a minimum of 3.
 For bit-level reproducibility across software stacks, pass an explicit integer
 `block_length`.
 
+**Coverage under a global null with many ties (WP-A1 Step 0).** Monte Carlo
+size/coverage validation (`tests/mc/test_mcs_coverage.py`) confirms the MCS
+inclusion guarantee `P(true best retained) >= 1-alpha` holds when one model
+has a genuine (even small) loss advantage over the rest. But when **all**
+candidate models are exactly tied (an exact global null with `K` symmetric
+models, no true best), `P(all K models jointly retained)` is measurably
+**below** the naive `1-alpha` reading of the guarantee -- e.g. ~0.82, not
+~0.90, at `alpha=0.10`, `K=5`. This was cross-checked directly against R's
+own `MCS::MCSprocedure` on the identical design (subprocess-Rscript bridge,
+R=200 replications, `B=500`): R reproduces the same ~0.82 rate
+(`rate=0.8200`, 99% CI `[0.7401,0.8841]`), matching this package's own
+longer-run measurement (`rate=0.8180`, CI `[0.7846,0.8483]`, n_reps=1000).
+Since the reference R implementation shows the identical behavior, this is a
+property of the Hansen-Lunde-Nason sequential-elimination procedure itself
+under many exact ties, not a `macroforecast` defect -- treat `alpha` as
+calibrated for "is there a worse model to eliminate" one step at a time,
+not as a literal `1-alpha` bound on "are all K models jointly retained"
+when many of them are exactly tied.
+
 ### iterative_model_confidence_set
 
 ```python
@@ -1042,7 +1061,7 @@ Source-alignment notes:
 - `granger_causality` -- Granger causality test in a VAR (vars::causality; F or Wald).
 - `instantaneous_causality` -- instantaneous (contemporaneous) causality test in a VAR.
 
-- `giacomini_white_test` -- Giacomini-White (2006) CONDITIONAL predictive ability Wald test (chi2, HAC), instrument [1, dL_{t-h}].
+- `giacomini_white_test` -- Giacomini-White (2006) CONDITIONAL predictive ability Wald test, instrument [1, dL_{t-h}]. **Default changed (WP-A1):** `small_sample=True` uses an untapered ("acf"-style) HAC over lags 0..horizon-1 (matching `dm_test`'s own kernel convention, with a bandwidth-shrink-on-non-PSD fallback) referenced against `F(q, ESS-q)` with `ESS = n/(1+2*bandwidth_used)` whenever horizon > 1 -- the original Bartlett-tapered-HAC + chi2(q) construction was Monte Carlo-confirmed oversized (2-2.5x nominal) for horizon > 1, non-vanishing out to n=100,000 (see `tests/mc/test_giacomini_white_size.py`). `small_sample=False` restores the exact pre-WP-A1 Bartlett-HAC + chi2(q) p-values. horizon=1 is unaffected either way.
 
 - `var_serial_test` -- multivariate residual serial-correlation (Portmanteau/LM) test for a VAR (vars::serial.test).
 
