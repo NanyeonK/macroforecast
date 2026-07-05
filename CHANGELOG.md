@@ -75,6 +75,21 @@ full per-version honesty-pass history embedded in repo documentation.
   for all 6 previously torch-blocked models (`lstm`, `gru`, `nn`,
   `transformer`, `hemisphere_nn`, `density_hnn`); see PR body for the full
   status table.
+- `reporting` (`paper_accuracy_table`, publication on-ramp): new
+  `mf.reporting.paper_accuracy_table(report, *, target=None, metric="rel_rmse",
+  star_levels=..., mcs_mark="†", benchmark_row=True)` joins `report.accuracy` /
+  `.significance` / `.mcs` -- the three separate long frames `run_pipeline`
+  returns -- into the one wide models-by-horizons table ("Table 3") most macro
+  forecasting papers publish: rel-RMSE (computed here as `sqrt(relative_mse)`,
+  added as `"rel_rmse"` to the metric rename map), Diebold-Mariano
+  significance stars, and a Model Confidence Set marker, one line to
+  `.to_latex(booktabs=True)` / `.to_html()` / `.to_markdown()`. Multi-target
+  reports return `dict[target, ReportTable]` (folding targets into one frame
+  would force a ragged union of horizons); an explicit `target=...`, or a
+  single-target report, returns the `ReportTable` directly. Tests:
+  `tests/reporting/test_reporting.py` (hand-built fixture -> exact wide frame
+  incl. stars/marks, LaTeX render smoke, missing-benchmark and single-horizon
+  edge cases).
 
 - `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
   directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,
