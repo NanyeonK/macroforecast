@@ -53,7 +53,7 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 - `InterpretSpec` -- ML interpretation request (methods, which_fit, background, top_k).
 - `EvalSpec` -- benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples. `metrics` and `tests` are live configuration (see "Custom metrics, significance tests, and loss" below), not documentation-only fields.
 - `CombinationContender` -- a forecast combination that becomes an additional contender.
-- `PipelineReport` -- output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`.
+- `PipelineReport` -- output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`. `provenance` is self-certifying by default (`pipeline_spec(..., provenance_level="full")`, the default) -- see "Provenance" below.
 - `TCODE_TARGET_MAP` -- FRED t-code to (forecast_policy, target_transform) mapping.
 
 ## t-code to target mapping
@@ -229,6 +229,73 @@ each spawned `cpu_count` threads. Each worker now pins its model-internal thread
 `model_threads`. The split changes only the number of internal threads, **not** the
 numerical result (tree training is deterministic in `random_state` regardless of the
 thread count), so a `n_jobs="auto"` run is byte-for-byte identical to `n_jobs=1`.
+
+## Provenance (what a referee can verify from the report)
+
+`PipelineReport.provenance` is self-certifying by default: everything a referee
+needs to verify and attempt to reproduce a result lives in the report object
+itself, without re-running anything or having access to the original script.
+
+By default (`pipeline_spec(..., provenance_level="full")`, the default) the
+dict has these keys:
+
+| Key | Contents |
+| --- | --- |
+| `package_version`, `seed`, `targets`, `horizons`, `arms`, `benchmark`, `combinations` | The original, pre-existing fields: what ran. |
+| `environment` | Git commit/branch/dirty, Python version/executable, platform string, and pinned `numpy`/`pandas`/`scipy`/`scikit-learn`/`statsmodels` versions -- **where** it ran from. |
+| `data` | Dataset name/source family/declared vintage (from the `DataBundle` metadata), panel shape, date range, and a content fingerprint -- **what data** it ran on. |
+| `spec_echo` | A plain, JSON-able snapshot of the resolved spec's key choices: targets/policies, horizons, window cutoffs, arms/models, benchmark, evaluation config, seed, `n_jobs`/`model_threads`, cache/checkpoint dirs -- **what was asked for**. |
+
+```python
+report = run_pipeline(spec)
+report.provenance["environment"]["git"]           # {"commit": ..., "branch": ..., "dirty": ...}
+report.provenance["data"]["fingerprint"]["value"]  # sha256 over the panel's index+columns+values
+report.provenance["spec_echo"]["window"]["test"]   # resolved test-window cutoffs
+```
+
+`environment` reuses `output.collect_provenance` (the same probe the opt-in
+save path has always used, see `docs/reference/output.md`), pointed at the
+**running macroforecast package's own checkout** -- not the caller's current
+working directory. From a source/editable install this resolves to that
+checkout's commit/branch/dirty state regardless of what directory the
+analysis script runs from; from a wheel install (no `.git` above
+site-packages) the git probe fails gracefully and `commit`/`branch` are `None`
+(`dirty` is not meaningful in that case -- it is not a tri-state and reports
+`False` by default, matching `collect_provenance`'s existing behavior on the
+save path, which this reuse does not change).
+
+`data.fingerprint` is a sha256 digest over the panel's `DatetimeIndex` (as
+int64 nanosecond timestamps), column names in order, and values cast to
+explicit little-endian float64 bytes -- stable across runs and across
+platforms/byte orders, and it changes if a single cell, column, or date
+changes. It is computed over the FULL panel by default: measured at ~1ms for a
+FRED-MD-sized panel (780 rows x 130 columns) and ~8ms for a much larger 2,000 x
+400 panel, both far under the ~0.5s budget this design targets. Only above
+20,000,000 cells (a size no FRED-MD/QD/SD panel macroforecast loads
+approaches -- a deliberately huge synthetic 50,000 x 2,000 panel, 100,000,000
+cells, took ~1.3s to fingerprint in full) does it fall back to a deterministic
+strided subsample instead, and `fingerprint["method"]` says
+`"strided_subsample"` (with `row_stride`/`col_stride`/`sampled_shape`) rather
+than silently returning a partial-content digest labeled as full.
+
+Pass `provenance_level="basic"` to `pipeline_spec(...)` to keep exactly the
+pre-existing dict shape (`package_version`/`seed`/`targets`/`horizons`/`arms`/
+`benchmark`/`combinations`, no `environment`/`data`/`spec_echo`) -- for callers
+who assemble their own environment/data documentation elsewhere, or who want
+to skip the git/environment probe and the one panel-fingerprint pass. This is
+independent of the pre-existing `provenance=` keyword (caller-supplied notes,
+e.g. the `save_models=False` + `interpret` warning merged into whichever shape
+results): `provenance=` is the payload, `provenance_level` is only the
+additive-blocks toggle. Forecasts and accuracy are byte-identical regardless
+of `provenance_level` -- this only changes what is attached to the report, never
+what is computed.
+
+`rescore(...)` reports carry the same `environment` block (when
+`provenance_level="full"`, respecting the spec's setting) plus the existing
+`rescored_from` marker; `data`/`spec_echo` are not attached to a rescored
+report (rescoring does not re-touch the original data or re-derive execution
+choices -- the `rescored_from`/`rescore_note` fields already document that this
+is a reassembly, not a live run).
 
 ## Re-scoring saved forecasts (`rescore`)
 

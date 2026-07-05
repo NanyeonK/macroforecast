@@ -7,12 +7,14 @@ into one cell; the parallel backend splits one horizon per cell.
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, NamedTuple
 
+import numpy as np
 import pandas as pd
 
 from macroforecast.pipeline.spec import (
@@ -597,14 +599,227 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     return master
 
 
-def _panel_index(data: Any):
-    """Best-effort extraction of the panel DatetimeIndex from any data input."""
+def _panel_frame(data: Any) -> Any:
+    """Best-effort extraction of the panel object (usually a DataFrame) from any
+    data input (``DataBundle``/``DataSpec``/``(panel, metadata)`` tuple/bare
+    ``DataFrame``). Returns whatever ``.panel`` (or the bare frame) is, without
+    an ``isinstance`` narrowing, so :func:`_panel_index` below keeps its exact
+    prior behavior; callers that need a ``pd.DataFrame`` specifically (the data
+    provenance descriptor) narrow it themselves.
+    """
     panel = getattr(data, "panel", None)
     if panel is None and isinstance(data, tuple) and data:
         panel = data[0]
     if panel is None and isinstance(data, pd.DataFrame):
         panel = data
-    return getattr(panel, "index", None)
+    return panel
+
+
+def _panel_index(data: Any):
+    """Best-effort extraction of the panel DatetimeIndex from any data input."""
+    return getattr(_panel_frame(data), "index", None)
+
+
+# --------------------------------------------------------------------------- #
+# Default provenance: environment/git block + data identity + spec echo
+# --------------------------------------------------------------------------- #
+# ``PipelineReport.provenance`` historically carried only package_version/seed/
+# targets/horizons/arms/benchmark/combinations -- enough to describe WHAT ran,
+# but not WHERE it ran from (no git SHA, no environment) or WHAT DATA it ran on
+# (no vintage, no content identity). A referee handed only the report artifact
+# could not tell which macroforecast commit produced it, nor pin the data
+# vintage. This section adds that, reusing ``output.collect_provenance`` (the
+# existing git/env/deps probe used by the opt-in save path) rather than
+# duplicating its logic.
+
+# Empirically measured on this project's dev host (see Wave B lane B-2 report):
+# a FRED-MD-sized panel (780 rows x 130 cols, ~0.1M cells) fingerprints in
+# ~1ms; a 2,000 x 400 panel in ~8ms; a deliberately huge synthetic 50,000 x
+# 2,000 panel (100M cells) took ~1.3s. FRED-MD/QD/SD panels macroforecast
+# actually loads are all far below this cap's cell count, so the default path
+# is always the full-content digest; the cap below is a safety valve for a
+# pathologically large custom panel, not something real usage is expected to
+# hit.
+_FINGERPRINT_FULL_CELL_CAP = 20_000_000
+
+
+def _package_source_root() -> Path:
+    """Directory of the RUNNING macroforecast package, for the git provenance
+    probe.
+
+    This is inside the ``macroforecast`` package tree whether it was installed
+    as an editable/source checkout or from a wheel. ``collect_provenance``'s
+    git probe walks up from here to find an enclosing ``.git``: when running
+    from a source checkout it resolves to that checkout's commit/branch/dirty
+    state; when installed from a wheel (no ``.git`` anywhere above
+    site-packages) the git subprocess calls fail and it returns ``None``s --
+    exactly the "absent when installed from a wheel" behavior this lane's
+    design calls for, with no special-casing needed here.
+    """
+    import macroforecast as _mf
+
+    return Path(_mf.__file__).resolve().parent
+
+
+def _environment_provenance() -> dict[str, Any]:
+    """The git/environment/dependency block, reusing ``output.collect_provenance``.
+
+    Deliberately passes ``cwd=`` pointing at the macroforecast PACKAGE's own
+    checkout, not the caller's current working directory (the default
+    ``collect_provenance()`` behavior used by the opt-in save path, which is
+    left unchanged) -- a referee needs to know which macroforecast commit/build
+    produced this report regardless of what directory the analysis script
+    itself was run from.
+    """
+    from macroforecast.output import collect_provenance
+
+    return collect_provenance(cwd=_package_source_root())
+
+
+def _panel_fingerprint(frame: pd.DataFrame) -> dict[str, Any]:
+    """A stable sha256 fingerprint over the panel's index, columns, and values.
+
+    Full content by default (index as int64 ns timestamps, column names in
+    order, values as explicit little-endian float64 bytes -- so the digest is
+    stable across platforms/byte orders, not just across runs on one machine).
+    Above :data:`_FINGERPRINT_FULL_CELL_CAP` cells the digest is computed from
+    a deterministic strided subsample instead (same row/col stride every call
+    for the same shape), and ``method``/``row_stride``/``col_stride`` record
+    this so a referee never mistakes it for a full-content digest.
+    """
+    n_rows, n_cols = frame.shape
+    total_cells = n_rows * n_cols
+    row_stride = col_stride = 1
+    method = "full_content"
+    sampled = frame
+    if total_cells > _FINGERPRINT_FULL_CELL_CAP and n_rows > 0 and n_cols > 0:
+        reduction = total_cells / _FINGERPRINT_FULL_CELL_CAP
+        row_stride = max(1, round(reduction ** 0.5))
+        col_stride = max(1, round(reduction / row_stride))
+        sampled = frame.iloc[::row_stride, ::col_stride]
+        method = "strided_subsample"
+
+    digest = hashlib.sha256()
+    try:
+        digest.update(np.ascontiguousarray(sampled.index.asi8).tobytes())
+    except AttributeError:
+        # Non-datetime index (should not happen for a canonical panel, but the
+        # fingerprint must never raise): fall back to a stable string form.
+        digest.update("\x1f".join(str(v) for v in sampled.index).encode())
+    digest.update("\x1f".join(str(c) for c in sampled.columns).encode())
+    values = np.ascontiguousarray(sampled.to_numpy(dtype="float64"))
+    digest.update(values.astype("<f8", copy=False).tobytes())
+
+    return {
+        "algorithm": "sha256",
+        "method": method,
+        "value": digest.hexdigest(),
+        "row_stride": row_stride,
+        "col_stride": col_stride,
+        "sampled_shape": [int(sampled.shape[0]), int(sampled.shape[1])],
+    }
+
+
+def _data_identity(data: Any) -> dict[str, Any]:
+    """Data-identity descriptor: dataset/source_family/vintage (from bundle
+    metadata), panel shape/date range/column count, and a content fingerprint.
+
+    Best-effort over any accepted ``data`` shape (``DataBundle``/``DataSpec``/
+    ``(panel, metadata)`` tuple/bare ``DataFrame``); a metadata-free or
+    malformed input yields ``None`` for the fields that do not resolve rather
+    than raising -- provenance collection must never break a run.
+    """
+    from macroforecast.data import metadata as _bundle_metadata
+
+    try:
+        meta = dict(_bundle_metadata(data))
+    except Exception:
+        meta = {}
+
+    frame = _panel_frame(data)
+    n_rows = n_columns = start = end = None
+    fingerprint: dict[str, Any] | None = None
+    if isinstance(frame, pd.DataFrame):
+        n_rows = int(frame.shape[0])
+        n_columns = int(frame.shape[1])
+        if len(frame.index):
+            try:
+                start = frame.index[0].isoformat()
+                end = frame.index[-1].isoformat()
+            except AttributeError:
+                start = str(frame.index[0])
+                end = str(frame.index[-1])
+        try:
+            fingerprint = _panel_fingerprint(frame)
+        except Exception as exc:  # pragma: no cover - defensive, never break a run
+            fingerprint = {
+                "algorithm": "sha256",
+                "method": "unavailable",
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+
+    return {
+        "dataset": meta.get("dataset"),
+        "source_family": meta.get("source_family"),
+        "vintage": meta.get("vintage"),
+        "frequency": meta.get("frequency"),
+        "n_rows": n_rows,
+        "n_columns": n_columns,
+        "start": start,
+        "end": end,
+        "fingerprint": fingerprint,
+    }
+
+
+def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
+    """A plain, JSON-able echo of the resolved spec's key choices.
+
+    Not a substitute for the spec itself -- ``preprocessing``/``features``
+    objects are not serialized here, only the choices a referee needs to see
+    the shape of the design: targets/policies, horizons, window cutoffs,
+    arms/models, seed, and worker/cache configuration.
+    """
+    window = spec.window
+    if hasattr(window, "to_dict"):
+        try:
+            window_echo = window.to_dict()
+        except Exception as exc:  # pragma: no cover - defensive
+            window_echo = {"repr": str(window), "to_dict_error": f"{type(exc).__name__}: {exc}"}
+    else:
+        window_echo = {"repr": str(window)}
+
+    def _metric_name(metric: Any) -> str:
+        return metric if isinstance(metric, str) else str(getattr(metric, "__name__", metric))
+
+    return {
+        "targets": [
+            {"name": t.name, "policy": t.policy, "transform": t.transform, "tcode": t.tcode}
+            for t in spec.targets
+        ],
+        "horizons": list(spec.horizons),
+        "window": window_echo,
+        "arms": [
+            {
+                "name": a.name,
+                "model": _model_default_name(a.model),
+                "is_benchmark": bool(a.is_benchmark),
+                "nested_in_benchmark": bool(a.nested_in_benchmark),
+            }
+            for a in spec.arms
+        ],
+        "benchmark": spec.evaluation.benchmark,
+        "evaluation": {
+            "metrics": [_metric_name(m) for m in spec.evaluation.metrics],
+            "tests": list(spec.evaluation.tests),
+            "mcs_alpha": spec.evaluation.mcs_alpha,
+            "mcs_method": spec.evaluation.mcs_method,
+        },
+        "seed": spec.seed,
+        "n_jobs": spec.n_jobs,
+        "model_threads": spec.model_threads,
+        "preprocessing_cache_dir": spec.preprocessing_cache_dir,
+        "checkpoint_dir": spec.checkpoint_dir,
+    }
 
 
 def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
@@ -624,6 +839,15 @@ def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
         "benchmark": spec.evaluation.benchmark,
         "combinations": [c.name for c in spec.combinations],
     })
+    # "basic" (opt-out) reproduces exactly the dict shape above -- the pre-
+    # existing behavior. "full" (default) additionally self-certifies the
+    # report: WHERE it ran (environment/git), WHAT DATA it ran on (identity +
+    # content fingerprint), and WHAT WAS ASKED FOR (a plain echo of the
+    # resolved spec's key choices) -- see the module-level comment above.
+    if getattr(spec, "provenance_level", "full") == "full":
+        provenance["environment"] = _environment_provenance()
+        provenance["data"] = _data_identity(spec.data)
+        provenance["spec_echo"] = _spec_echo(spec)
     leakage: dict = {}
     # Surface window.validate() warnings (e.g. embargo < horizon-1) when available.
     # The runner injects each horizon into the window's test spec at execution
