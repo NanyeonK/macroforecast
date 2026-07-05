@@ -596,7 +596,7 @@ are additional contenders.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">InterpretSpec</span></code> – ML interpretation request (methods, which_fit, background, top_k).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> – benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples. <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code> are live configuration (see “Custom metrics, significance tests, and loss” below), not documentation-only fields.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CombinationContender</span></code> – a forecast combination that becomes an additional contender.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> – output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> lists any <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon-group)</span></code> cell whose <code class="docutils literal notranslate"><span class="pre">run()</span></code> raised; the rest of the cells still ran and the failures are also mirrored into <code class="docutils literal notranslate"><span class="pre">leakage_audit[&quot;failed_cells&quot;]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> – output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> lists any <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon-group)</span></code> cell whose <code class="docutils literal notranslate"><span class="pre">run()</span></code> raised; the rest of the cells still ran and the failures are also mirrored into <code class="docutils literal notranslate"><span class="pre">leakage_audit[&quot;failed_cells&quot;]</span></code>. <code class="docutils literal notranslate"><span class="pre">provenance</span></code> is self-certifying by default (<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">provenance_level=&quot;full&quot;)</span></code>, the default) – see “Provenance” below.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TCODE_TARGET_MAP</span></code> – FRED t-code to (forecast_policy, target_transform) mapping.</p></li>
 </ul>
 </section>
@@ -813,6 +813,82 @@ numerical result (tree training is deterministic in <code class="docutils litera
 thread count), so a <code class="docutils literal notranslate"><span class="pre">n_jobs=&quot;auto&quot;</span></code> run is byte-for-byte identical to <code class="docutils literal notranslate"><span class="pre">n_jobs=1</span></code>.</p>
 </section>
 </section>
+<section id="provenance-what-a-referee-can-verify-from-the-report">
+<h2>Provenance (what a referee can verify from the report)<a class="headerlink" href="#provenance-what-a-referee-can-verify-from-the-report" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">PipelineReport.provenance</span></code> is self-certifying by default: everything a referee
+needs to verify and attempt to reproduce a result lives in the report object
+itself, without re-running anything or having access to the original script.</p>
+<p>By default (<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">provenance_level=&quot;full&quot;)</span></code>, the default) the
+dict has these keys:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Contents</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">package_version</span></code>, <code class="docutils literal notranslate"><span class="pre">seed</span></code>, <code class="docutils literal notranslate"><span class="pre">targets</span></code>, <code class="docutils literal notranslate"><span class="pre">horizons</span></code>, <code class="docutils literal notranslate"><span class="pre">arms</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark</span></code>, <code class="docutils literal notranslate"><span class="pre">combinations</span></code></p></td>
+<td><p>The original, pre-existing fields: what ran.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">environment</span></code></p></td>
+<td><p>Git commit/branch/dirty, Python version/executable, platform string, and pinned <code class="docutils literal notranslate"><span class="pre">numpy</span></code>/<code class="docutils literal notranslate"><span class="pre">pandas</span></code>/<code class="docutils literal notranslate"><span class="pre">scipy</span></code>/<code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code>/<code class="docutils literal notranslate"><span class="pre">statsmodels</span></code> versions – <strong>where</strong> it ran from.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p>Dataset name/source family/declared vintage (from the <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code> metadata), panel shape, date range, and a content fingerprint – <strong>what data</strong> it ran on.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spec_echo</span></code></p></td>
+<td><p>A plain, JSON-able snapshot of the resolved spec’s key choices: targets/policies, horizons, window cutoffs, arms/models, benchmark, evaluation config, seed, <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code>/<code class="docutils literal notranslate"><span class="pre">model_threads</span></code>, cache/checkpoint dirs – <strong>what was asked for</strong>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+<span class="n">report</span><span class="o">.</span><span class="n">provenance</span><span class="p">[</span><span class="s2">&quot;environment&quot;</span><span class="p">][</span><span class="s2">&quot;git&quot;</span><span class="p">]</span>           <span class="c1"># {&quot;commit&quot;: ..., &quot;branch&quot;: ..., &quot;dirty&quot;: ...}</span>
+<span class="n">report</span><span class="o">.</span><span class="n">provenance</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;fingerprint&quot;</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>  <span class="c1"># sha256 over the panel&#39;s index+columns+values</span>
+<span class="n">report</span><span class="o">.</span><span class="n">provenance</span><span class="p">[</span><span class="s2">&quot;spec_echo&quot;</span><span class="p">][</span><span class="s2">&quot;window&quot;</span><span class="p">][</span><span class="s2">&quot;test&quot;</span><span class="p">]</span>   <span class="c1"># resolved test-window cutoffs</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">environment</span></code> reuses <code class="docutils literal notranslate"><span class="pre">output.collect_provenance</span></code> (the same probe the opt-in
+save path has always used, see <code class="docutils literal notranslate"><span class="pre">docs/reference/output.md</span></code>), pointed at the
+<strong>running macroforecast package’s own checkout</strong> – not the caller’s current
+working directory. From a source/editable install this resolves to that
+checkout’s commit/branch/dirty state regardless of what directory the
+analysis script runs from; from a wheel install (no <code class="docutils literal notranslate"><span class="pre">.git</span></code> above
+site-packages) the git probe fails gracefully and <code class="docutils literal notranslate"><span class="pre">commit</span></code>/<code class="docutils literal notranslate"><span class="pre">branch</span></code> are <code class="docutils literal notranslate"><span class="pre">None</span></code>
+(<code class="docutils literal notranslate"><span class="pre">dirty</span></code> is not meaningful in that case – it is not a tri-state and reports
+<code class="docutils literal notranslate"><span class="pre">False</span></code> by default, matching <code class="docutils literal notranslate"><span class="pre">collect_provenance</span></code>’s existing behavior on the
+save path, which this reuse does not change).</p>
+<p><code class="docutils literal notranslate"><span class="pre">data.fingerprint</span></code> is a sha256 digest over the panel’s <code class="docutils literal notranslate"><span class="pre">DatetimeIndex</span></code> (as
+int64 nanosecond timestamps), column names in order, and values cast to
+explicit little-endian float64 bytes – stable across runs and across
+platforms/byte orders, and it changes if a single cell, column, or date
+changes. It is computed over the FULL panel by default: measured at ~1ms for a
+FRED-MD-sized panel (780 rows x 130 columns) and ~8ms for a much larger 2,000 x
+400 panel, both far under the ~0.5s budget this design targets. Only above
+20,000,000 cells (a size no FRED-MD/QD/SD panel macroforecast loads
+approaches – a deliberately huge synthetic 50,000 x 2,000 panel, 100,000,000
+cells, took ~1.3s to fingerprint in full) does it fall back to a deterministic
+strided subsample instead, and <code class="docutils literal notranslate"><span class="pre">fingerprint[&quot;method&quot;]</span></code> says
+<code class="docutils literal notranslate"><span class="pre">&quot;strided_subsample&quot;</span></code> (with <code class="docutils literal notranslate"><span class="pre">row_stride</span></code>/<code class="docutils literal notranslate"><span class="pre">col_stride</span></code>/<code class="docutils literal notranslate"><span class="pre">sampled_shape</span></code>) rather
+than silently returning a partial-content digest labeled as full.</p>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">provenance_level=&quot;basic&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> to keep exactly the
+pre-existing dict shape (<code class="docutils literal notranslate"><span class="pre">package_version</span></code>/<code class="docutils literal notranslate"><span class="pre">seed</span></code>/<code class="docutils literal notranslate"><span class="pre">targets</span></code>/<code class="docutils literal notranslate"><span class="pre">horizons</span></code>/<code class="docutils literal notranslate"><span class="pre">arms</span></code>/
+<code class="docutils literal notranslate"><span class="pre">benchmark</span></code>/<code class="docutils literal notranslate"><span class="pre">combinations</span></code>, no <code class="docutils literal notranslate"><span class="pre">environment</span></code>/<code class="docutils literal notranslate"><span class="pre">data</span></code>/<code class="docutils literal notranslate"><span class="pre">spec_echo</span></code>) – for callers
+who assemble their own environment/data documentation elsewhere, or who want
+to skip the git/environment probe and the one panel-fingerprint pass. This is
+independent of the pre-existing <code class="docutils literal notranslate"><span class="pre">provenance=</span></code> keyword (caller-supplied notes,
+e.g. the <code class="docutils literal notranslate"><span class="pre">save_models=False</span></code> + <code class="docutils literal notranslate"><span class="pre">interpret</span></code> warning merged into whichever shape
+results): <code class="docutils literal notranslate"><span class="pre">provenance=</span></code> is the payload, <code class="docutils literal notranslate"><span class="pre">provenance_level</span></code> is only the
+additive-blocks toggle. Forecasts and accuracy are byte-identical regardless
+of <code class="docutils literal notranslate"><span class="pre">provenance_level</span></code> – this only changes what is attached to the report, never
+what is computed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rescore(...)</span></code> reports carry the same <code class="docutils literal notranslate"><span class="pre">environment</span></code> block (when
+<code class="docutils literal notranslate"><span class="pre">provenance_level=&quot;full&quot;</span></code>, respecting the spec’s setting) plus the existing
+<code class="docutils literal notranslate"><span class="pre">rescored_from</span></code> marker; <code class="docutils literal notranslate"><span class="pre">data</span></code>/<code class="docutils literal notranslate"><span class="pre">spec_echo</span></code> are not attached to a rescored
+report (rescoring does not re-touch the original data or re-derive execution
+choices – the <code class="docutils literal notranslate"><span class="pre">rescored_from</span></code>/<code class="docutils literal notranslate"><span class="pre">rescore_note</span></code> fields already document that this
+is a reassembly, not a live run).</p>
+</section>
 <section id="re-scoring-saved-forecasts-rescore">
 <h2>Re-scoring saved forecasts (<code class="docutils literal notranslate"><span class="pre">rescore</span></code>)<a class="headerlink" href="#re-scoring-saved-forecasts-rescore" title="Link to this heading">#</a></h2>
 <p>A checkpointed pipeline run (<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">checkpoint_dir=&lt;dir&gt;)</span></code>) persists
@@ -983,6 +1059,7 @@ nested.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#n-jobs-auto"><code class="docutils literal notranslate"><span class="pre">n_jobs="auto"</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#provenance-what-a-referee-can-verify-from-the-report">Provenance (what a referee can verify from the report)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#re-scoring-saved-forecasts-rescore">Re-scoring saved forecasts (<code class="docutils literal notranslate"><span class="pre">rescore</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-metrics-significance-tests-and-loss-evalspec">Custom metrics, significance tests, and loss (<code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
