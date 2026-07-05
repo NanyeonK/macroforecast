@@ -7,7 +7,7 @@ execution (``run_pipeline``), interpretation, and reporting layers build on thes
 from __future__ import annotations
 
 import warnings
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, cast
 
@@ -108,12 +108,38 @@ class CombinationContender:
     shrink_to_equal: float | None = None
 
 
+#: Test names ``EvalSpec.tests`` currently wires into the evaluation. ``spa``/``gr``
+#: (superior predictive ability / Giacomini-Rossi) are recognized elsewhere in the
+#: package but not yet threaded through the pipeline evaluator -- passing them
+#: raises at :func:`pipeline_spec` build time rather than being silently dropped.
+SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset({"dm", "cw", "mcs"})
+
+
 @dataclass(frozen=True)
 class EvalSpec:
-    """Automatic evaluation and significance-testing configuration."""
+    """Automatic evaluation and significance-testing configuration.
+
+    ``metrics`` entries are either a name resolved through the metric registry
+    (:func:`macroforecast.metrics.get_metric`, e.g. ``"mae"``, ``"mape"``) or a
+    callable ``metric(y_true, y_pred) -> float`` named by its ``__name__``.
+    ``accuracy_table`` computes one column per listed metric, per contender, on
+    the same pairwise-vs-benchmark sample it always has. The three defaults
+    (``"rmse"``, ``"relative_mse"``, ``"r2_oos"``) keep their existing
+    benchmark-relative formulas regardless of how they are requested.
+
+    ``loss`` is a per-observation loss ``loss(y_true, y_pred) -> ndarray`` used
+    by the Diebold-Mariano loss differential and the Model Confidence Set's loss
+    matrix; ``None`` (default) is squared error, the prior, only behavior. Since
+    the Clark-West adjustment is derived under quadratic loss, setting a custom
+    ``loss`` makes ``significance_table`` skip CW (with a ``UserWarning``)
+    rather than compute it against the wrong loss.
+
+    ``tests`` lists which significance tests actually run; unsupported names
+    raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
+    """
 
     benchmark: str
-    metrics: tuple[str, ...] = ("rmse", "relative_mse", "r2_oos")
+    metrics: tuple[str | Callable[..., float], ...] = ("rmse", "relative_mse", "r2_oos")
     tests: tuple[str, ...] = ("dm", "cw", "mcs")
     by: tuple[str, ...] = ("target", "horizon")
     primary_axis: str = "contender"
@@ -123,6 +149,7 @@ class EvalSpec:
     multiple_testing: str | None = None
     subsamples: Mapping[str, tuple[Any, Any]] = field(default_factory=dict)
     dm_kwargs: Mapping[str, Any] = field(default_factory=dict)
+    loss: Callable[[Any, Any], Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -680,6 +707,18 @@ def pipeline_spec(
         raise ValueError(
             f"evaluation.benchmark {evaluation.benchmark!r} is not among the "
             f"contenders {sorted(all_contenders)}"
+        )
+
+    # evaluation.tests: only "dm"/"cw"/"mcs" are wired into the evaluator today;
+    # a typo or an aspirational "spa"/"gr" must raise here rather than be
+    # silently ignored (the historical bug this validation replaces).
+    unknown_tests = set(evaluation.tests) - SUPPORTED_EVAL_TESTS
+    if unknown_tests:
+        raise ValueError(
+            f"evaluation.tests contains unsupported name(s) {sorted(unknown_tests)}; "
+            f"supported tests are {sorted(SUPPORTED_EVAL_TESTS)} ('spa'/'gr' are "
+            "recognized elsewhere in macroforecast.tests but not yet wired into "
+            "the pipeline evaluator)."
         )
 
     # Warn (never reject) when a guarded iterated/state-space model is combined
