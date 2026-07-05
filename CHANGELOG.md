@@ -38,6 +38,43 @@ full per-version honesty-pass history embedded in repo documentation.
   silently computing it against the wrong loss -- DM and MCS are loss-agnostic
   and are unaffected. See `docs/reference/pipeline.md` ("Custom metrics,
   significance tests, and loss").
+- `deps` (WP-A4, torch install + Tier-1 anchor coverage completion): CPU-only
+  `torch` (`pip install torch --index-url
+  https://download.pytorch.org/whl/cpu`) installed into the shared dev
+  `.venv` (torch 2.12.1+cpu, ~2.0GB added), closing the last
+  environment-blocked gap from WP-V2's anchor-coverage inventory. New
+  `tests/models/anchors/test_hnn_anchors.py` (torch-gated via module-level
+  `pytest.importorskip("torch")`, so `ci-core` -- which does not install
+  `[deep]` -- collects and skips the whole file cleanly, verified by
+  simulating torch-absence via meta-path/`sys.modules` import blocking
+  rather than uninstalling) anchors both previously-`BLOCKED(no-torch)`
+  Tier-1 zero-anchor models, `hemisphere_nn` and `density_hnn`: (1) a seeded
+  determinism pin (bit-identical `fit`+`predict`+bagged-member
+  `state_dict()` across repeated same-seed fits; different seed changes the
+  result -- no silent RNG leak), (2) a closed-form zero-weight
+  architecture-limit anchor (every `Linear` layer zeroed except the final
+  head bias collapses each network to an input-independent constant,
+  hand-verified to float32 precision; `density_hnn`'s volatility-head
+  normalization additionally collapses to exactly its own
+  `volatility_emphasis` parameter, independent of the raw pre-normalization
+  bias -- both verified directly against `_TorchHemisphereNet`/
+  `_TorchDensityHNNNet`, not assumed from the docstring), (3) a low-noise
+  linear-DGP recovery smoke test (>= 50% RMSE improvement over a naive
+  constant forecast; both models actually achieve 84-89%), and (4) for
+  `density_hnn`, a density-output contract check (finite/positive variance
+  always; a loose, median-based calibration-sanity band anchored on the
+  model's own realized out-of-sample MSE, not the unobservable true DGP
+  noise floor). 7 new tests, all green, 6.6s wall time. **Finding (reported,
+  not xfail'd)**: `density_hnn`'s per-row predicted variance has a wide
+  right tail even on a near-noiseless DGP; isolated by ablation
+  (`rescale_volatility=False` shows the same tail, if anything larger) to
+  the base bagged-ensemble disagreement across members, not the OOB
+  log-linear volatility-rescaling step originally suspected -- documented
+  in the new test file's module docstring, not hidden. Bonus: re-ran the
+  `.dev-notes/policy_matrix_scan.py` empirical (model x policy) support scan
+  for all 6 previously torch-blocked models (`lstm`, `gru`, `nn`,
+  `transformer`, `hemisphere_nn`, `density_hnn`); see PR body for the full
+  status table.
 
 - `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
   directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,
