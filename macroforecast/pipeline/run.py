@@ -917,4 +917,6 @@ def run_pipeline(spec: PipelineSpec):
         spec=spec,
         failed_cells=tuple(failed_cells),
         empty_cells=tuple(empty_cells),
+        density=results["density"],
+        calibration=results["calibration"],
     )

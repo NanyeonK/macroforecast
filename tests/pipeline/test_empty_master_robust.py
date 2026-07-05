@@ -77,8 +77,10 @@ def test_evaluate_on_empty_master_returns_empty_frames():
     """``evaluate`` (the orchestrator) survives an empty master end to end."""
     spec = _spec_for_eval()
     out = evaluate(pd.DataFrame(), spec)
-    assert set(out) == {"forecasts", "accuracy", "significance", "mcs"}
-    for key in ("forecasts", "accuracy", "significance", "mcs"):
+    assert set(out) == {
+        "forecasts", "accuracy", "significance", "mcs", "density", "calibration",
+    }
+    for key in ("forecasts", "accuracy", "significance", "mcs", "density", "calibration"):
         assert isinstance(out[key], pd.DataFrame)
         assert out[key].empty
 

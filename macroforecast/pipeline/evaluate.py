@@ -8,7 +8,12 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
-from macroforecast.pipeline.spec import CombinationContender, PipelineSpec, contender_names
+from macroforecast.pipeline.spec import (
+    CALIBRATION_EVAL_TESTS,
+    CombinationContender,
+    PipelineSpec,
+    contender_names,
+)
 
 # The (target, horizon) grouping keys every evaluation table requires. When the
 # master forecast frame is EMPTY (zero rows, hence no columns) or otherwise lacks
@@ -25,6 +30,12 @@ _BUILTIN_ACCURACY_METRICS = {"rmse", "relative_mse", "r2_oos"}
 
 _SIGNIFICANCE_COLUMNS = ["target", "horizon", "contender"]
 _MCS_COLUMNS = ["target", "horizon", "contender", "in_mcs"]
+_DENSITY_GROUP_BY = ["target", "horizon", "contender"]
+_DENSITY_COLUMNS = ["target", "horizon", "contender", "n"]
+_CALIBRATION_COLUMNS = [
+    "target", "horizon", "contender", "test", "statistic", "p_value", "reject", "n_obs",
+    "coverage_rate",
+]
 
 
 def _has_groups(master: pd.DataFrame) -> bool:
@@ -50,6 +61,10 @@ def _eval_tests(spec: PipelineSpec) -> tuple[str, ...]:
 
 def _eval_loss(spec: PipelineSpec) -> Callable[[Any, Any], Any] | None:
     return getattr(spec.evaluation, "loss", None)
+
+
+def _eval_calibration_alpha(spec: PipelineSpec) -> float:
+    return float(getattr(spec.evaluation, "calibration_alpha", 0.05))
 
 
 # combination methods that need realised values (estimated weights), and their lag
@@ -160,9 +175,38 @@ def _accuracy_columns(metric_names: Sequence[str]) -> list[str]:
     return ["target", "horizon", "contender", *metric_names, "n_common", "is_benchmark", "benchmark_present"]
 
 
+def _point_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
+    """``spec.evaluation.metrics`` minus the density-classified names.
+
+    Density/interval metrics (``crps``/``gaussian_nll``/``qlike``/
+    ``pinball_loss``/... -- see :func:`macroforecast.metrics.metric_kind`) need
+    ``variance_prediction``/``quantile_predictions`` columns rather than plain
+    ``(y_true, y_pred)``, so they are routed to :func:`density_table` and MUST
+    NOT be fed through ``accuracy_table``'s generic pointwise path (which would
+    call them as ``metric(y_true, y_pred)`` and raise a confusing
+    ``TypeError``). Callables always pass through -- the classification is
+    name-based.
+    """
+    from macroforecast.metrics import metric_kind
+
+    return tuple(
+        metric
+        for metric in _eval_metrics(spec)
+        if not (
+            isinstance(metric, str)
+            and metric_kind(metric) in {"variance", "volatility", "quantile"}
+        )
+    )
+
+
 def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
-    """Per-``spec.evaluation.metrics`` accuracy per (target, horizon, contender)."""
-    return _accuracy_against(master, spec.evaluation.benchmark, metrics=_eval_metrics(spec))
+    """Per-``spec.evaluation.metrics`` accuracy per (target, horizon, contender).
+
+    Density-classified metric names in ``spec.evaluation.metrics`` are excluded
+    here and scored by :func:`density_table` instead (see :func:`_point_metrics`);
+    the point metrics keep their exact prior behavior.
+    """
+    return _accuracy_against(master, spec.evaluation.benchmark, metrics=_point_metrics(spec))
 
 
 def _accuracy_against(
@@ -392,6 +436,262 @@ def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) ->
     return pd.DataFrame(out) if out else pd.DataFrame(columns=_MCS_COLUMNS)
 
 
+# --------------------------------------------------------------------------- #
+# Density / interval accuracy (Phase 1 density pipeline)
+# --------------------------------------------------------------------------- #
+# Wiring note: forecasting.run() ALREADY emits ``variance_prediction`` (a plain
+# float) and ``quantile_predictions`` (a ``{level: value}`` mapping) on every
+# forecast row for the direct policy, when the fitted model exposes
+# ``predict_variance``/``predict_quantiles`` (see
+# ``forecasting/policies/base.py::_variance_series``/``_quantile_frame``, called
+# from ``forecasting/policies/direct.py``; other policies emit explicit
+# ``None`` for both -- Phase 1 scope). ``macroforecast.metrics`` already has a
+# full, registry-driven table-level evaluator for exactly these columns
+# (:func:`macroforecast.metrics.evaluate_forecasts`, with ``crps``/
+# ``gaussian_nll``/``log_score``/``negative_log_score``/``qlike`` and the
+# pinball/coverage/interval-width/interval-score quantile bundle already in its
+# metric registry). ``density_table`` below is a thin, EvalSpec-gated wrapper
+# around that existing evaluator -- not a reimplementation -- so a requested
+# density metric with no matching column raises the SAME actionable
+# ``ValueError`` :func:`macroforecast.metrics.evaluate_forecasts` already
+# raises today.
+
+
+def _density_metric_names(spec: PipelineSpec) -> list[str]:
+    """The subset of ``spec.evaluation.metrics`` that needs a distributional
+    column (``variance_prediction``/``quantile_predictions``) rather than plain
+    ``(y_true, y_pred)`` -- see :func:`macroforecast.metrics.metric_kind`.
+    Callables are never density metrics (classification is name-based).
+    """
+    from macroforecast.metrics import metric_kind
+
+    return [
+        name
+        for name in _eval_metrics(spec)
+        if isinstance(name, str) and metric_kind(name) in {"variance", "volatility", "quantile"}
+    ]
+
+
+def density_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
+    """Density/interval accuracy per (target, horizon, contender).
+
+    Gated entirely by ``spec.evaluation.metrics``: a default ``EvalSpec``
+    (``("rmse", "relative_mse", "r2_oos")``) requests no density metric, so this
+    returns an empty frame WITHOUT ever inspecting ``master``'s columns -- a
+    point-only run and a run with an unrequested variance-emitting model both
+    produce the identical empty frame, matching ``accuracy_table``'s existing
+    gating convention (see ``mcs_table`` for the same "not requested -> empty"
+    shape).
+
+    When at least one density metric is requested, delegates to
+    :func:`macroforecast.metrics.evaluate_forecasts` grouped by
+    ``(target, horizon, contender)``. That function computes variance-density
+    metrics (``gaussian_nll``/``crps``) as a bundle whenever
+    ``variance_prediction`` is present, and the quantile bundle (per-level
+    ``pinball_loss_<level>`` plus ``coverage_rate_*``/``interval_width_*``/
+    ``interval_score_*`` for every matched symmetric quantile pair) whenever
+    ``quantile_predictions`` is present -- regardless of exactly which density
+    metric name triggered the call. Requesting ANY one member of a bundle
+    computes the whole bundle; this mirrors ``evaluate_forecasts``'s own
+    pre-existing behavior (not new here) and is documented rather than
+    surgically narrowed, since the two are computed from the same columns in
+    one pass.
+    """
+    requested = _density_metric_names(spec)
+    if not requested or not _has_groups(master):
+        return pd.DataFrame(columns=_DENSITY_COLUMNS)
+    if "contender" not in master.columns:
+        return pd.DataFrame(columns=_DENSITY_COLUMNS)
+
+    from macroforecast.metrics import evaluate_forecasts
+
+    return evaluate_forecasts(
+        master,
+        by=_DENSITY_GROUP_BY,
+        metrics=requested,
+        actual="actual",
+        prediction="prediction",
+    )
+
+
+def _eval_calibration_tests(spec: PipelineSpec) -> list[str]:
+    return [name for name in _eval_tests(spec) if name in CALIBRATION_EVAL_TESTS]
+
+
+def _quantile_dict_levels(value: Any) -> dict[float, float] | None:
+    """Parse one ``quantile_predictions`` cell into ``{level: prediction}``
+    floats, or ``None`` when the value is missing/not a mapping."""
+    if not isinstance(value, dict):
+        return None
+    try:
+        return {float(level): float(pred) for level, pred in value.items()}
+    except (TypeError, ValueError):
+        return None
+
+
+def _widest_symmetric_quantile_pair(
+    group: pd.DataFrame, *, quantile_predictions: str = "quantile_predictions"
+) -> tuple[float, float] | None:
+    """The widest symmetric ``(lower, upper)`` quantile-level pair (``lower +
+    upper == 1``) common to every non-null row of ``group[quantile_predictions]``,
+    or ``None`` when the column is absent/empty or carries no symmetric pair.
+    """
+    if quantile_predictions not in group.columns:
+        return None
+    parsed = [
+        levels
+        for value in group[quantile_predictions].dropna()
+        if (levels := _quantile_dict_levels(value)) is not None
+    ]
+    if not parsed:
+        return None
+    common = set(parsed[0])
+    for levels in parsed[1:]:
+        common &= set(levels)
+    lowers = sorted(
+        lower
+        for lower in common
+        if lower < 0.5 and any(abs((1.0 - lower) - upper) < 1e-9 for upper in common)
+    )
+    if not lowers:
+        return None
+    lower = lowers[0]
+    upper = next(upper for upper in common if abs(upper - (1.0 - lower)) < 1e-9)
+    return (lower, upper)
+
+
+def _quantile_bound_series(
+    column: pd.Series, level: float
+) -> pd.Series:
+    """Extract the prediction at ``level`` from a ``quantile_predictions`` column."""
+
+    def _at(value: Any) -> float:
+        levels = _quantile_dict_levels(value)
+        if levels is None:
+            return float("nan")
+        for key, pred in levels.items():
+            if abs(key - level) < 1e-9:
+                return pred
+        return float("nan")
+
+    return column.map(_at)
+
+
+def _gaussian_pit(group: pd.DataFrame) -> pd.Series | None:
+    """Gaussian PIT values ``Phi((actual - prediction) / sqrt(variance))`` for a
+    group carrying ``variance_prediction``, or ``None`` when the column is
+    absent. Rows with a non-finite or non-positive variance are dropped."""
+    if "variance_prediction" not in group.columns:
+        return None
+    from scipy import stats as _stats
+
+    valid = group[["actual", "prediction", "variance_prediction"]].dropna()
+    valid = valid[valid["variance_prediction"] > 0.0]
+    if valid.empty:
+        return pd.Series(dtype=float)
+    z = (valid["actual"] - valid["prediction"]) / np.sqrt(valid["variance_prediction"])
+    return pd.Series(_stats.norm.cdf(z.to_numpy(dtype=float)), index=valid.index)
+
+
+def calibration_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
+    """PIT-based calibration diagnostics per (target, horizon, contender).
+
+    Gated entirely by ``spec.evaluation.tests``: none of ``"berkowitz"``/
+    ``"pit_autocorr"``/``"coverage"`` are in the default ``EvalSpec.tests``
+    (``("dm", "cw", "mcs")``), so a default run returns an empty frame without
+    inspecting ``master``'s columns, mirroring ``density_table``'s gating.
+
+    ``"berkowitz"``/``"pit_autocorr"`` need ``variance_prediction`` (the PIT is
+    the Gaussian CDF of the standardized residual) and reuse
+    :func:`macroforecast.tests.density_interval_tests`; a requested test raises
+    ``ValueError`` if ``variance_prediction`` is absent from ``master``'s
+    schema entirely (not merely NaN for one contender -- a contender that
+    itself never emitted a variance is silently skipped, degrading gracefully,
+    the same convention :func:`macroforecast.metrics.evaluate_forecasts` uses).
+    ``"coverage"`` needs a symmetric quantile pair from ``quantile_predictions``
+    and reuses :func:`macroforecast.tests.interval_coverage_test`; same
+    schema-level ValueError contract.
+    """
+    requested = _eval_calibration_tests(spec)
+    if not requested or not _has_groups(master):
+        return pd.DataFrame(columns=_CALIBRATION_COLUMNS)
+    if "contender" not in master.columns:
+        return pd.DataFrame(columns=_CALIBRATION_COLUMNS)
+
+    needs_variance = bool({"berkowitz", "pit_autocorr"} & set(requested))
+    if needs_variance and "variance_prediction" not in master.columns:
+        missing = sorted({"berkowitz", "pit_autocorr"} & set(requested))
+        raise ValueError(
+            f"variance_prediction column is required for requested calibration "
+            f"test(s) {missing}; no arm in this forecast frame emits a predictive "
+            "variance (see macroforecast.forecasting.policies.base._variance_series)."
+        )
+    if "coverage" in requested and "quantile_predictions" not in master.columns:
+        raise ValueError(
+            "quantile_predictions column is required for the requested 'coverage' "
+            "calibration test; no arm in this forecast frame emits quantile "
+            "predictions (see macroforecast.forecasting.policies.base._quantile_frame)."
+        )
+
+    from macroforecast.tests import density_interval_tests, interval_coverage_test
+
+    alpha = _eval_calibration_alpha(spec)
+    rows: list[dict[str, Any]] = []
+    for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
+        for contender, cgroup in group.groupby("contender", dropna=False):
+            if needs_variance:
+                pit = _gaussian_pit(cgroup)
+                if pit is not None and len(pit) > 0:
+                    diagnostics = density_interval_tests(pit, alpha=alpha)
+                    if "berkowitz" in requested:
+                        berkowitz = diagnostics.get("berkowitz", {})
+                        rows.append({
+                            "target": target, "horizon": horizon, "contender": contender,
+                            "test": "berkowitz",
+                            "statistic": berkowitz.get("lr_statistic"),
+                            "p_value": berkowitz.get("p_value"),
+                            "reject": berkowitz.get("reject"),
+                            "n_obs": diagnostics.get("n_obs"),
+                            "coverage_rate": None,
+                        })
+                    if "pit_autocorr" in requested:
+                        pit_auto = diagnostics.get("pit_autocorrelation", {})
+                        rows.append({
+                            "target": target, "horizon": horizon, "contender": contender,
+                            "test": "pit_autocorr",
+                            "statistic": pit_auto.get("statistic"),
+                            "p_value": pit_auto.get("p_value"),
+                            "reject": pit_auto.get("decision"),
+                            "n_obs": diagnostics.get("n_obs"),
+                            "coverage_rate": None,
+                        })
+            if "coverage" in requested:
+                pair = _widest_symmetric_quantile_pair(cgroup)
+                if pair is not None:
+                    lower_level, upper_level = pair
+                    lower = _quantile_bound_series(cgroup["quantile_predictions"], lower_level)
+                    upper = _quantile_bound_series(cgroup["quantile_predictions"], upper_level)
+                    valid = pd.DataFrame({
+                        "actual": cgroup["actual"], "lower": lower, "upper": upper,
+                    }).dropna()
+                    if not valid.empty:
+                        coverage = interval_coverage_test(
+                            valid["actual"], valid["lower"], valid["upper"],
+                            alpha=1.0 - (upper_level - lower_level),
+                        )
+                        kupiec = coverage.get("kupiec_pof", {})
+                        rows.append({
+                            "target": target, "horizon": horizon, "contender": contender,
+                            "test": "coverage",
+                            "statistic": kupiec.get("lr_statistic"),
+                            "p_value": kupiec.get("p_value"),
+                            "reject": kupiec.get("reject"),
+                            "n_obs": coverage.get("n_obs"),
+                            "coverage_rate": coverage.get("coverage_rate"),
+                        })
+    return pd.DataFrame(rows, columns=_CALIBRATION_COLUMNS) if rows else pd.DataFrame(columns=_CALIBRATION_COLUMNS)
+
+
 def evaluate_cross_policy(
     forecasts: pd.DataFrame,
     *,
@@ -478,11 +778,20 @@ def evaluate_cross_policy(
 
 
 def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame]:
-    """Run the full evaluation: combinations -> accuracy + significance + MCS."""
+    """Run the full evaluation: combinations -> accuracy + significance + MCS
+    + density + calibration.
+
+    ``density``/``calibration`` are opt-in via ``EvalSpec.metrics``/``tests``
+    (see ``density_table``/``calibration_table``); a default ``EvalSpec`` never
+    computes them (empty frames), so ``forecasts``/``accuracy``/``significance``/
+    ``mcs`` stay byte-identical to before these two keys existed.
+    """
     full = apply_combinations(master, spec)
     return {
         "forecasts": full,
         "accuracy": accuracy_table(full, spec),
         "significance": significance_table(full, spec),
         "mcs": mcs_table(full, spec),
+        "density": density_table(full, spec),
+        "calibration": calibration_table(full, spec),
     }

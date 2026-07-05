@@ -112,7 +112,18 @@ class CombinationContender:
 #: (superior predictive ability / Giacomini-Rossi) are recognized elsewhere in the
 #: package but not yet threaded through the pipeline evaluator -- passing them
 #: raises at :func:`pipeline_spec` build time rather than being silently dropped.
-SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset({"dm", "cw", "mcs"})
+#: ``berkowitz``/``pit_autocorr``/``coverage`` are the PIT-based calibration tests
+#: (Phase 1 density pipeline): they populate ``report.calibration`` instead of
+#: ``report.significance`` and are never on by default (see ``EvalSpec.tests``'s
+#: docstring below).
+SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
+    {"dm", "cw", "mcs", "berkowitz", "pit_autocorr", "coverage"}
+)
+
+#: The subset of :data:`SUPPORTED_EVAL_TESTS` that are PIT-based calibration
+#: diagnostics: they run in ``pipeline/evaluate.py::calibration_table`` and land
+#: in ``PipelineReport.calibration``, not ``significance``/``mcs``.
+CALIBRATION_EVAL_TESTS: frozenset[str] = frozenset({"berkowitz", "pit_autocorr", "coverage"})
 
 
 @dataclass(frozen=True)
@@ -136,6 +147,26 @@ class EvalSpec:
 
     ``tests`` lists which significance tests actually run; unsupported names
     raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
+    ``"berkowitz"``/``"pit_autocorr"``/``"coverage"`` are PIT-based calibration
+    diagnostics (Phase 1 density pipeline) -- they populate
+    ``PipelineReport.calibration`` rather than ``significance``/``mcs`` and,
+    like every other test name, are opt-in only (absent from the default).
+
+    Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
+    ``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
+    ``"coverage_rate"``, ``"interval_width"``, ``"interval_score"`` -- are
+    requested the SAME way as any other ``metrics`` entry; they land in
+    ``PipelineReport.density`` instead of ``accuracy`` because they need a
+    ``variance_prediction``/``quantile_predictions`` column rather than plain
+    ``(y_true, y_pred)`` (see ``macroforecast.metrics.metric_kind``). Requesting
+    one on a forecast frame that carries no such column raises the same
+    actionable ``ValueError`` :func:`macroforecast.metrics.evaluate_forecasts`
+    already raises. Absent from the defaults, so a default-EvalSpec run never
+    computes them.
+
+    ``calibration_alpha`` is the significance level for the calibration tests
+    above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
+    checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
     """
 
     benchmark: str
@@ -150,6 +181,7 @@ class EvalSpec:
     subsamples: Mapping[str, tuple[Any, Any]] = field(default_factory=dict)
     dm_kwargs: Mapping[str, Any] = field(default_factory=dict)
     loss: Callable[[Any, Any], Any] | None = None
+    calibration_alpha: float = 0.05
 
 
 @dataclass(frozen=True)
@@ -264,6 +296,18 @@ class PipelineReport:
     # Each entry is {"target", "horizon", "arms": [...]} listing the arm(s) that
     # yielded no rows for that cell. Empty (default) means every cell had rows.
     empty_cells: "Sequence[Mapping[str, Any]]" = field(default_factory=tuple)
+    # Density/interval accuracy metrics (crps, gaussian_nll, pinball_loss, ...)
+    # per (target, horizon, contender) -- see ``pipeline/evaluate.py::density_table``.
+    # ``None`` only for a ``PipelineReport`` built by hand without this field (a
+    # live ``run_pipeline``/``rescore`` always passes an actual, possibly-empty,
+    # frame). Appended at the end of the dataclass (rather than near ``mcs``) so
+    # any positional ``PipelineReport(...)`` construction elsewhere is unaffected.
+    density: "Any" = None
+    # PIT-based calibration diagnostics (Berkowitz, PIT autocorrelation, interval
+    # coverage) per (target, horizon, contender) -- see
+    # ``pipeline/evaluate.py::calibration_table``. Same ``None``-default contract
+    # as ``density`` above.
+    calibration: "Any" = None
 
     def to_frame(self) -> "Any":
         """Return the master forecast frame."""

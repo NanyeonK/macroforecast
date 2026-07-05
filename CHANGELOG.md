@@ -972,6 +972,79 @@ full per-version honesty-pass history embedded in repo documentation.
   Design A (single dominant model, `>=1-alpha` floor, `.947`) is unaffected
   and unchanged.
 
+- `pipeline/evaluate.py`, `pipeline/spec.py`, `forecasting/checkpoint.py`,
+  `metrics.py` (feature, Phase 1 density pipeline): density/interval
+  forecasting is now wired end to end through the MANAGED pipeline, not just
+  the standalone `forecasting.run()`/`ForecastResult.evaluate()` path. Reality
+  check first: `variance_prediction`/`quantile_predictions` emission onto the
+  forecast table already existed (`forecasting/policies/base.py::
+  _variance_series`/`_quantile_frame`, called from the direct policy) and
+  `macroforecast.metrics` already had a full registry-driven table-level
+  evaluator for them (`evaluate_forecasts`, with `crps`/`gaussian_nll`/
+  `log_score`/`qlike`/`pinball_loss`/`coverage_rate`/`interval_width`/
+  `interval_score` already in its metric registry) and `macroforecast.tests`
+  already had the calibration diagnostics (`density_interval_tests`,
+  `pit_autocorrelation_test`, `interval_coverage_test`). The actual gaps were
+  narrower than assumed: (1) `pipeline/evaluate.py::evaluate()` never called
+  any of it -- only `forecasts`/`accuracy`/`significance`/`mcs`; (2)
+  `forecasting/checkpoint.py`'s lean schema was point-only, so a checkpointed/
+  resumed run silently dropped `variance_prediction`/`quantile_predictions` for
+  any origin recovered from disk; (3) `pipeline/rescore.py` reconstructs its
+  ENTIRE master frame from the checkpoint, so a rescored report was ALWAYS
+  point-only regardless of what the live run emitted.
+  - New `metrics.metric_kind(name)` (registry plumbing, no new metric math):
+    classifies a registered metric name as `"variance"`/`"volatility"`/
+    `"quantile"`/`"relative"`/`"direction"`/`"point"` by the forecast-table
+    column(s) its table-level evaluation needs. `metrics.DENSITY_METRIC_NAMES`
+    is the union of the first three.
+  - New `pipeline/evaluate.py::density_table(master, spec)` and
+    `calibration_table(master, spec)`, both EvalSpec-gated (density metrics via
+    `EvalSpec.metrics`, calibration tests via new `EvalSpec.tests` names
+    `"berkowitz"`/`"pit_autocorr"`/`"coverage"`, added to `SUPPORTED_EVAL_TESTS`
+    and new `pipeline/spec.py::CALIBRATION_EVAL_TESTS`) and populated into two
+    new `evaluate()`/`PipelineReport` keys, `density`/`calibration`. Both are
+    thin wrappers around the ALREADY-EXISTING `evaluate_forecasts`/
+    `density_interval_tests`/`interval_coverage_test` machinery -- not
+    reimplementations -- so a requested density metric with no matching column
+    raises the same actionable `ValueError` those functions already raise.
+    New `EvalSpec.calibration_alpha: float = 0.05` (independent of
+    `mcs_alpha`). Defaults are unchanged: a default `EvalSpec` requests no
+    density metric/calibration test, so `density`/`calibration` are empty
+    frames and no forecast-frame column is even inspected -- pinned by two new
+    golden fixtures (`tests/pipeline/_golden/density_defaults_*.parquet`,
+    generated from the base commit) alongside the pre-existing
+    `evalspec_defaults_*` golden (point-only case).
+  - `forecasting/checkpoint.py::LEAN_FORECAST_COLUMNS` gains a fixed
+    `variance_prediction` column (a plain float, `None` when a model does not
+    emit one -- same convention as the rich table). Quantile predictions are a
+    `{level: value}` mapping, not a scalar, so they are expanded into wide,
+    per-origin `q_<pct>` columns instead (e.g. `q_05`/`q_50`/`q_95` for levels
+    `0.05`/`0.5`/`0.95`) -- **a deliberate design deviation from a
+    spec-declared quantile grid**: the level set is a per-model hyperparameter
+    already fixed for the run, so it is derived empirically per origin rather
+    than added as new pipeline-spec configuration surface.
+    `load_checkpoint_frame` unions differing origin-file schemas via
+    `pd.concat` (old checkpoints written before this column existed load fine
+    and rescore as point-only) and reconstructs a `quantile_predictions`
+    mapping column from the wide columns, so `rescore()` and a resumed
+    `run()`'s in-memory merge (`forecasting/runner.py::
+    _merge_checkpoint_records`) both end up with the SAME dict-based
+    representation a live run's forecast table carries -- one quantile
+    dispatch path regardless of source.
+  - `pipeline/run.py::run_pipeline` and `pipeline/rescore.py::rescore` now
+    thread `density`/`calibration` into the returned `PipelineReport` (new
+    optional fields, appended at the end of the dataclass, default `None` for
+    any hand-built report that does not pass them) -- outside this lane's
+    original file scope (`pipeline/run.py` was not listed), but necessary: a
+    report built through the standard `run_pipeline()` entry point would
+    otherwise never expose either field despite `evaluate()` computing them.
+  - Phase 1 scope, explicitly not addressed here: no synthetic residual-based
+    variance fallback for models that do not natively emit one (columns stay
+    absent/NaN, degrading gracefully); emission itself is unchanged and still
+    direct/direct_average-policy only (recursive/path_average/panel/
+    combinations emit explicit `None`, as before). See
+    `docs/reference/pipeline.md` ("Density and interval forecasting").
+
 ## [0.9.5] -- 2026-06-27 -- "Replication robustness, Python 3.10 compatibility, type-clean"
 
 **Correctness and compatibility:**
