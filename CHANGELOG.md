@@ -140,6 +140,19 @@ full per-version honesty-pass history embedded in repo documentation.
   there already had explicit features). Test:
   `tests/forecasting/test_default_feature_spec_warning.py`.
 
+- `docs/guide` (glossary/running, `recursive` policy, publication on-ramp):
+  `docs/guide/glossary.md` had no `recursive policy` entry at all -- only
+  `direct policy`/`direct_average policy`/`path_average policy` were defined,
+  even though `recursive` (and its `forecast_policy="iterated"` code alias)
+  has existed in the policy registry throughout. Added the term
+  (cross-linked from `path_average policy`, which already referenced "the
+  separate recursive policy" in prose) and a "Textbook mapping" table to
+  `docs/guide/concepts/running.md` (direct -> `direct`; iterated/recursive ->
+  `recursive` (alias `iterated`); the `*_average` variants as h-average
+  forms). `running.md`'s `path_average` semantics (a direct per-step
+  average, not an iterated one) were already corrected in #420; this pass
+  only adds the missing `recursive` policy and its textbook cross-reference.
+
 - `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
   directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,
   excluded from `ci-core.yml` explicitly) anchors the highest-priority gaps
