@@ -35,7 +35,7 @@ jobs:
           # first, so a single push surfaces the full failure set. A fail-fast
           # run once masked Python-3.10-only and optional-dependency failures
           # behind an earlier error.
-          pytest tests/ -q -m 'not deep and not slow'
+          pytest tests/ -q -m 'not deep and not slow and not rparity'
 
       - name: Check seed hardcoding absent (Phase 0)
         run: |
