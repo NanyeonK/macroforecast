@@ -59,11 +59,18 @@ model = mf.models.custom_model(
 ```python
 result = mf.forecasting.run(
     panel,
-    {"mean": model, "ridge": "ridge"},
+    model,
     window=window,
     features=features,
 )
 ```
+
+`mf.forecasting.run` is atomic: one model per call. To compare a custom model
+against a benchmark, give each one its own `Arm` and run them through
+`pipeline_spec`/`run_pipeline` instead -- for the full worked example (your
+own CSV, this model, a scored horse race, and a paper-ready table), continue
+to the full horse-race tutorial:
+[Your Data, Your Model, One Table](../../guide/custom_data_tutorial.md).
 
 ## custom_model_ensemble
 

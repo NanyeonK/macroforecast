@@ -91,6 +91,20 @@ full per-version honesty-pass history embedded in repo documentation.
   incl. stars/marks, LaTeX render smoke, missing-benchmark and single-horizon
   edge cases).
 
+- `docs/guide` (`custom_data_tutorial`, publication on-ramp): new capstone
+  tutorial "Your Data, Your Model, One Table"
+  (`docs/guide/custom_data_tutorial.md`) connects `load_custom_csv`/
+  `custom_dataset` -> `TargetSpec(transform=...)` -> `custom_model(...)` ->
+  `run_pipeline` -> `paper_accuracy_table(...).to_latex()` end to end on a
+  small synthetic panel; every code block was executed for real and the
+  output shown is genuine. Closes the audited gap where the `custom_dataset`/
+  `custom_model` reference pages each stopped one step short of a scored
+  comparison (`custom_dataset` dead-ended at `reprocess`, `custom_model`'s
+  "Runner Use" example used low-level `forecasting.run` -- and, incidentally,
+  showed a multi-model dict that `forecasting.run` now rejects since `run` is
+  atomic; fixed in the same pass); both reference pages now cross-link to the
+  tutorial.
+
 - `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
   directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,
   excluded from `ci-core.yml` explicitly) anchors the highest-priority gaps
