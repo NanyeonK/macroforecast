@@ -594,7 +594,7 @@ are additional contenders.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TargetSpec</span></code> – a target and how its forecast object is defined (transform, policy, reduce_i2).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ResolvedTarget</span></code> – a target with its forecast policy and transform resolved.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">InterpretSpec</span></code> – ML interpretation request (methods, which_fit, background, top_k).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> – benchmark, metrics, tests, primary_axis, MCS settings, subsamples.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> – benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples. <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code> are live configuration (see “Custom metrics, significance tests, and loss” below), not documentation-only fields.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CombinationContender</span></code> – a forecast combination that becomes an additional contender.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> – output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> lists any <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon-group)</span></code> cell whose <code class="docutils literal notranslate"><span class="pre">run()</span></code> raised; the rest of the cells still ran and the failures are also mirrored into <code class="docutils literal notranslate"><span class="pre">leakage_audit[&quot;failed_cells&quot;]</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TCODE_TARGET_MAP</span></code> – FRED t-code to (forecast_policy, target_transform) mapping.</p></li>
@@ -851,6 +851,59 @@ recomputed live audit.</p></li>
 (no cell directories found / directories present but all empty) rather than
 returning a silently empty report.</p>
 </section>
+<section id="custom-metrics-significance-tests-and-loss-evalspec">
+<h2>Custom metrics, significance tests, and loss (<code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code>)<a class="headerlink" href="#custom-metrics-significance-tests-and-loss-evalspec" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">EvalSpec.metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">EvalSpec.tests</span></code> are consumed, not decorative: only the
+metrics and tests actually named are computed, and unsupported names fail fast.</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">metrics:</span> <span class="pre">tuple[str</span> <span class="pre">|</span> <span class="pre">Callable,</span> <span class="pre">...]</span></code></strong> (default <code class="docutils literal notranslate"><span class="pre">(&quot;rmse&quot;,</span> <span class="pre">&quot;relative_mse&quot;,</span> <span class="pre">&quot;r2_oos&quot;)</span></code>) – each entry is either a name resolved through
+<code class="docutils literal notranslate"><span class="pre">macroforecast.metrics.get_metric</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">&quot;mae&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mape&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bias&quot;</span></code>) or a
+callable <code class="docutils literal notranslate"><span class="pre">metric(y_true,</span> <span class="pre">y_pred)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code>, named by its <code class="docutils literal notranslate"><span class="pre">__name__</span></code> for the
+accuracy-table column. <code class="docutils literal notranslate"><span class="pre">accuracy_table</span></code> computes exactly the listed metrics,
+per contender, on the same pairwise-vs-benchmark sample it always used. The
+three defaults keep their existing benchmark-relative formulas (<code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>/
+<code class="docutils literal notranslate"><span class="pre">r2_oos</span></code> need the benchmark’s MSE; a same-named custom callable does not
+override this) regardless of how they are requested. Passing <code class="docutils literal notranslate"><span class="pre">metrics=(&quot;mae&quot;,)</span></code>
+now returns only an <code class="docutils literal notranslate"><span class="pre">mae</span></code> column – prior to this, <code class="docutils literal notranslate"><span class="pre">metrics</span></code> was parsed but
+never read, so every spec silently got <code class="docutils literal notranslate"><span class="pre">rmse</span></code>/<code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>/<code class="docutils literal notranslate"><span class="pre">r2_oos</span></code> no matter
+what was requested.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">tests:</span> <span class="pre">tuple[str,</span> <span class="pre">...]</span></code></strong> (default <code class="docutils literal notranslate"><span class="pre">(&quot;dm&quot;,</span> <span class="pre">&quot;cw&quot;,</span> <span class="pre">&quot;mcs&quot;)</span></code>) – only the named
+tests run. <code class="docutils literal notranslate"><span class="pre">&quot;cw&quot;</span></code> is additionally gated by <code class="docutils literal notranslate"><span class="pre">cw_for_nested</span></code> as before (Clark-West
+only for contenders whose <code class="docutils literal notranslate"><span class="pre">Arm.nested_in_benchmark=True</span></code>). <code class="docutils literal notranslate"><span class="pre">tests=(&quot;dm&quot;,)</span></code> runs
+DM only (<code class="docutils literal notranslate"><span class="pre">significance</span></code> carries no <code class="docutils literal notranslate"><span class="pre">cw_*</span></code> columns, <code class="docutils literal notranslate"><span class="pre">mcs</span></code> is empty);
+<code class="docutils literal notranslate"><span class="pre">tests=()</span></code> yields <code class="docutils literal notranslate"><span class="pre">accuracy</span></code> only. An unsupported name (anything other than
+<code class="docutils literal notranslate"><span class="pre">&quot;dm&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;cw&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;mcs&quot;</span></code>) raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> at <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> build time
+rather than being silently dropped. <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;gr&quot;</span></code> (superior predictive
+ability / Giacomini-Rossi) are implemented in <code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code> but not yet
+wired into the pipeline evaluator – a follow-up, not supported here.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">loss:</span> <span class="pre">Callable[[y_true,</span> <span class="pre">y_pred],</span> <span class="pre">ndarray]</span> <span class="pre">|</span> <span class="pre">None</span></code></strong> (default <code class="docutils literal notranslate"><span class="pre">None</span></code> = squared
+error) – a per-observation loss threaded into the Diebold-Mariano loss
+differential and the Model Confidence Set’s loss matrix, enabling asymmetric-
+loss horse races (e.g. linex, or an absolute-error DM/MCS instead of squared
+error). <strong>Clark-West is derived under quadratic loss</strong> and is not a valid test
+for an arbitrary loss function: when <code class="docutils literal notranslate"><span class="pre">loss</span></code> is set and CW would otherwise run
+(<code class="docutils literal notranslate"><span class="pre">&quot;cw&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">cw_for_nested</span></code> true, and at least one nested contender),
+<code class="docutils literal notranslate"><span class="pre">significance_table</span></code> skips CW entirely and emits a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> explaining why,
+instead of silently computing it against the wrong loss. DM and MCS are
+loss-agnostic and are unaffected.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvalSpec</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">linex_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="n">err</span> <span class="o">=</span> <span class="n">y_pred</span> <span class="o">-</span> <span class="n">y_true</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">err</span><span class="p">)</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">err</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">a</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">evaluation</span> <span class="o">=</span> <span class="n">EvalSpec</span><span class="p">(</span>
+    <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">,</span> <span class="n">my_custom_metric</span><span class="p">),</span>   <span class="c1"># my_custom_metric(y_true, y_pred) -&gt; float</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">),</span>                          <span class="c1"># skip cw explicitly (or let the loss rule skip it)</span>
+    <span class="n">loss</span><span class="o">=</span><span class="n">linex_loss</span><span class="p">,</span>                              <span class="c1"># asymmetric-loss DM/MCS horse race</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">rescore(checkpoint_dir,</span> <span class="pre">spec)</span></code> honors all of this automatically – it calls the
+same <code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec)</span></code> the live run does.</p>
+</section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -931,6 +984,7 @@ nested.</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#re-scoring-saved-forecasts-rescore">Re-scoring saved forecasts (<code class="docutils literal notranslate"><span class="pre">rescore</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-metrics-significance-tests-and-loss-evalspec">Custom metrics, significance tests, and loss (<code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
 </ul>
   </nav></div>
