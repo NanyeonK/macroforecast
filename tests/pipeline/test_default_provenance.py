@@ -220,6 +220,21 @@ _PLAIN_FORECAST_COLS = [
 ]
 
 
+def _normalize_datetime_resolution(frame: pd.DataFrame) -> pd.DataFrame:
+    """Cast every datetime64 column to ns resolution before comparison.
+
+    The parquet round-trip can hand timestamps back at us resolution while the
+    live pipeline emits ns (pandas/pyarrow resolve the unit differently across
+    CI matrix legs). Values are untouched, so the byte-identity claim on the
+    forecast/accuracy numbers stays strict.
+    """
+    out = frame.copy()
+    for col in out.columns:
+        if pd.api.types.is_datetime64_any_dtype(out[col]):
+            out[col] = out[col].astype("datetime64[ns]")
+    return out
+
+
 @pytest.mark.parametrize("table", ["forecasts", "accuracy"])
 def test_forecasts_and_accuracy_byte_identical_to_pre_change_golden(table):
     """Provenance is additive: adding environment/data/spec_echo must not move a
@@ -232,4 +247,8 @@ def test_forecasts_and_accuracy_byte_identical_to_pre_change_golden(table):
     else:
         got = report.accuracy.reset_index(drop=True)
     golden = pd.read_parquet(_GOLDEN_DIR / f"default_provenance_{table}.parquet").reset_index(drop=True)
-    pd.testing.assert_frame_equal(got, golden, atol=1e-12)
+    pd.testing.assert_frame_equal(
+        _normalize_datetime_resolution(got),
+        _normalize_datetime_resolution(golden),
+        atol=1e-12,
+    )
