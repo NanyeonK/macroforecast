@@ -5713,7 +5713,7 @@ point forecasts.</p>
     <span class="n">kappa0</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
     <span class="n">kappa1</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
     <span class="n">nu0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">s0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">s0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">iter</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
     <span class="n">burnin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -5762,9 +5762,9 @@ of BVAR forecast object.</p>
 <td><p>Inverse-Wishart degrees-of-freedom prior parameter.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">s0</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>Inverse-Wishart scale prior parameter.</p></td>
+<td><p>Inverse-Wishart scale prior parameter. <code class="docutils literal notranslate"><span class="pre">None</span></code> resolves to a data-dependent <code class="docutils literal notranslate"><span class="pre">diag(sigma_i**2)</span></code> scale from each series’ own AR(<code class="docutils literal notranslate"><span class="pre">n_lag</span></code>)-OLS residual variance; pass an explicit value (including <code class="docutils literal notranslate"><span class="pre">0.0</span></code>) to restore the old exactly-zero-scale behavior (a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> fires if the resulting draws diverge).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iter</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">300</span></code></p></td>
@@ -5795,7 +5795,7 @@ of BVAR forecast object.</p>
     <span class="n">b0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
     <span class="n">vb0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
     <span class="n">nu0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
-    <span class="n">s0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">s0</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">iter</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
     <span class="n">burnin</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -5805,7 +5805,14 @@ of BVAR forecast object.</p>
 <p>Fits the same FAVAR-style Bayesian VAR posterior sampler with direct controls
 for coefficient prior mean/variance and inverse-Wishart covariance prior terms.
 Saved diagnostics include coefficient posterior mean, standard deviation,
-credible interval bounds, and posterior mean covariance.</p>
+credible interval bounds, and posterior mean covariance. <code class="docutils literal notranslate"><span class="pre">s0</span></code> defaults to
+<code class="docutils literal notranslate"><span class="pre">None</span></code>, which resolves to a data-dependent <code class="docutils literal notranslate"><span class="pre">diag(sigma_i**2)</span></code> scale from each
+series’ own AR(<code class="docutils literal notranslate"><span class="pre">n_lag</span></code>)-OLS residual variance (instead of the previous
+exactly-zero scale, which could silently diverge on near-singular residual
+covariance); pass an explicit <code class="docutils literal notranslate"><span class="pre">s0</span></code> (including <code class="docutils literal notranslate"><span class="pre">0.0</span></code>) to restore the old
+behavior (a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> now fires if the resulting draws diverge). See the
+CHANGELOG <code class="docutils literal notranslate"><span class="pre">[Unreleased]</span></code> entry “BVAR-NIW default prior scale + diverging-draws
+guard” for the full rationale.</p>
 </section>
 <section id="ets">
 <h3>ets<a class="headerlink" href="#ets" title="Link to this heading">#</a></h3>
@@ -6704,7 +6711,7 @@ posterior-mean coefficients.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">varprior</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p>fixed by preset</p></td>
-<td><p>BVAR prior controls for the factor VAR block.</p></td>
+<td><p>BVAR prior controls for the factor VAR block. <code class="docutils literal notranslate"><span class="pre">varprior=None</span></code> (the default) inherits <code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>’s own data-dependent default <code class="docutils literal notranslate"><span class="pre">s0</span></code> (see that entry above) rather than forcing an exactly-zero prior scale.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nburn</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">100</span></code></p></td>
