@@ -105,6 +105,41 @@ full per-version honesty-pass history embedded in repo documentation.
   atomic; fixed in the same pass); both reference pages now cross-link to the
   tutorial.
 
+- `forecasting` (implicit default-feature-spec `UserWarning`, publication
+  on-ramp): an arm with a supervised model (`random_forest`, a custom model,
+  ...) and `features=None` silently resolves to
+  `feature_spec(target=..., horizon=..., target_mode=..., target_transform=...)`
+  with no explicit `predictors`/`lags`/`target_lags`. That FeatureSpec's
+  `predictors=None` falls back at FIT time (`_resolve_predictors` in
+  `feature_engineering/shared.py`) to `base.predictors`'s own default,
+  `"all"` -- i.e. it uses EVERY other panel column at lags 0 and 1 with no
+  feature engineering, and, because `target_lags` is never set on this path,
+  NOT the target's own lags either. This is the opposite of what a
+  signature-only reading of `feature_spec(predictors: ... = None)` suggests
+  (verified empirically by tracing the resolved `FeatureSpec.predictors`
+  through to the actual fitted `X` columns; documented in
+  `docs/reference/feature_engineering.md`'s `predictors` row, but easy to miss
+  without running it). `_feature_spec_for_policy` now emits one `UserWarning`
+  (relies on Python's default warning-filter dedup, not custom bookkeeping,
+  so a 60-cell pipeline grid warns once per call site rather than once per
+  cell) when this branch fires for a supervised model; `ar`/`far` are carved
+  out (their documented construction is an explicit target-lags-only
+  `FeatureSpec`, matching the same ar/far carve-out in
+  `pipeline.spec.DIRECT_POLICY_GUARD_MODELS`), and panel-/target-input models
+  never reach this branch at all. Fixed `getting_started.md`'s "single
+  forecast" quickstart, whose AR and RF arms both relied on this default: AR
+  was silently NOT an autoregression (it was regressing on the whole FRED-MD
+  panel excluding its own lags), and RF's implicit, untuned 254-feature
+  (127 columns x 2 lags) matrix -- combined with `random_forest`'s own
+  per-origin hyperparameter search, which runs by default whenever a search
+  space exists and is not explicitly disabled -- made the quickstart take
+  upwards of 40 minutes to run for real. Both arms now get explicit, curated
+  `FeatureSpec`s and RF's per-origin search is disabled
+  (`model_selection={"random_forest": None}`) for this quickstart, bringing
+  it under 2.5 minutes; "A full study" below it is unaffected (both arms
+  there already had explicit features). Test:
+  `tests/forecasting/test_default_feature_spec_warning.py`.
+
 - `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
   directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,
   excluded from `ci-core.yml` explicitly) anchors the highest-priority gaps

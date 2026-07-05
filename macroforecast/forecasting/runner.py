@@ -338,6 +338,10 @@ def run(
             future_feature_policy=future_policy,
         )
     _validate_feature_model_runs(model_runs)
+    # ``run`` is atomic (exactly one model per call, enforced by
+    # ``_reject_multi_model`` in ``_resolve_model_runs``), so ``model_runs`` is
+    # always a one-element list here; its spec name/``input_kind`` gate the
+    # implicit default-feature-spec warning (see ``_feature_spec_for_policy``).
     features = _feature_spec_for_policy(
         features,
         target=target,
@@ -345,6 +349,8 @@ def run(
         forecast_policy=policy,
         future_feature_policy=future_policy,
         target_transform=target_transform,
+        model_input_kind=model_runs[0].spec.input_kind,
+        model_name=model_runs[0].spec.name,
     )
     if policy == "recursive":
         _validate_recursive_feature_contract(
