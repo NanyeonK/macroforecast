@@ -5,6 +5,40 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/evaluate.py`, `pipeline/spec.py` (bugfix): `EvalSpec.metrics` and
+  `EvalSpec.tests` were declared fields that `evaluate()` silently ignored --
+  `accuracy_table` always emitted the hard-coded `rmse`/`relative_mse`/`r2_oos`
+  columns and `significance_table`/`mcs_table` always ran DM/CW/MCS regardless
+  of what a user passed. `EvalSpec(metrics=("mae",), tests=("dm",))` now
+  actually restricts the output to those metrics/tests: `accuracy_table`
+  computes exactly the listed metrics (string names resolved through
+  `macroforecast.metrics.get_metric`, or a callable `metric(y_true, y_pred) ->
+  float` named by `__name__`) per contender on the same pairwise-vs-benchmark
+  sample it always used; `significance_table`/`mcs_table` run only the named
+  tests (`"dm"`/`"cw"`/`"mcs"`), with `"cw"` still additionally gated by
+  `cw_for_nested`. An unsupported test name (anything but `dm`/`cw`/`mcs` --
+  `spa`/`gr` are not yet wired into the pipeline evaluator) now raises
+  `ValueError` at `pipeline_spec(...)` build time instead of being silently
+  dropped. The three default metrics keep their existing benchmark-relative
+  formulas byte-for-byte, pinned by a golden test
+  (`tests/pipeline/test_evalspec_threading.py`) captured from the pre-fix
+  `evaluate()` output on a fixed master forecast frame. `rescore()` inherits
+  all of this automatically since it just calls `evaluate()`.
+
+- `pipeline/spec.py`, `pipeline/evaluate.py` (feature): new `EvalSpec.loss:
+  Callable[[y_true, y_pred], ndarray] | None = None`, a per-observation loss
+  threaded into the Diebold-Mariano loss differential and the Model Confidence
+  Set's loss matrix (default `None` is squared error, the prior, only
+  behavior), enabling custom-loss (e.g. asymmetric/linex) horse races for the
+  IJF-economist persona. Because the Clark-West adjustment term is derived
+  under quadratic loss, it is not a valid test under an arbitrary loss
+  function: when `loss` is set and CW would otherwise run (`"cw"` requested,
+  `cw_for_nested` true, and at least one nested contender), `significance_table`
+  skips CW entirely and emits a `UserWarning` explaining why, rather than
+  silently computing it against the wrong loss -- DM and MCS are loss-agnostic
+  and are unaffected. See `docs/reference/pipeline.md` ("Custom metrics,
+  significance tests, and loss").
+
 - `tests/parity` (WP-V1, R-parity verification harness): new `tests/parity/`
   directory (marker `rparity`, opt-in via `pytest tests/parity/ -m rparity`,
   excluded from `ci-core.yml` explicitly) anchors the highest-priority gaps

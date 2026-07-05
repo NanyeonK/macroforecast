@@ -1,7 +1,8 @@
 """Pipeline evaluation: accuracy, DM/CW significance, MCS, cross-arm combinations (Stage 2)."""
 from __future__ import annotations
 
-from collections.abc import Callable
+import warnings
+from collections.abc import Callable, Sequence
 from typing import Any, cast
 
 import numpy as np
@@ -15,10 +16,13 @@ from macroforecast.pipeline.spec import CombinationContender, PipelineSpec, cont
 # instead return an empty frame with the right columns.
 _GROUP_KEYS = {"target", "horizon"}
 
-_ACCURACY_COLUMNS = [
-    "target", "horizon", "contender", "rmse", "relative_mse", "r2_oos",
-    "n_common", "is_benchmark", "benchmark_present",
-]
+# The three metrics ``accuracy_table`` has always computed, kept as the default
+# ``EvalSpec.metrics`` value and given their benchmark-relative formulas below
+# regardless of how they were resolved (name or explicit request), so that the
+# default output is byte-identical to before ``EvalSpec.metrics`` was consumed.
+_DEFAULT_ACCURACY_METRICS: tuple[str, ...] = ("rmse", "relative_mse", "r2_oos")
+_BUILTIN_ACCURACY_METRICS = {"rmse", "relative_mse", "r2_oos"}
+
 _SIGNIFICANCE_COLUMNS = ["target", "horizon", "contender"]
 _MCS_COLUMNS = ["target", "horizon", "contender", "in_mcs"]
 
@@ -26,6 +30,26 @@ _MCS_COLUMNS = ["target", "horizon", "contender", "in_mcs"]
 def _has_groups(master: pd.DataFrame) -> bool:
     """True when ``master`` is non-empty and carries the (target, horizon) keys."""
     return not master.empty and _GROUP_KEYS.issubset(master.columns)
+
+
+# ``evaluate``/``accuracy_table``/... are pure-frame and duck-type friendly: some
+# callers (and tests) pass a minimal spec double carrying only
+# ``evaluation.benchmark``. The newly-consumed EvalSpec fields are therefore read
+# with ``getattr`` defaults matching :class:`~macroforecast.pipeline.spec.EvalSpec`'s
+# own defaults, so such spec doubles keep the exact pre-threading behavior.
+_DEFAULT_EVAL_TESTS: tuple[str, ...] = ("dm", "cw", "mcs")
+
+
+def _eval_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
+    return tuple(getattr(spec.evaluation, "metrics", _DEFAULT_ACCURACY_METRICS))
+
+
+def _eval_tests(spec: PipelineSpec) -> tuple[str, ...]:
+    return tuple(getattr(spec.evaluation, "tests", _DEFAULT_EVAL_TESTS))
+
+
+def _eval_loss(spec: PipelineSpec) -> Callable[[Any, Any], Any] | None:
+    return getattr(spec.evaluation, "loss", None)
 
 
 # combination methods that need realised values (estimated weights), and their lag
@@ -100,20 +124,67 @@ def apply_combinations(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     return pd.concat([master, *rows], ignore_index=True)
 
 
+def _metric_column_name(metric: str | Callable[..., float]) -> str:
+    """The accuracy-table column label for a metric: its name, or ``__name__``."""
+    if isinstance(metric, str):
+        return metric
+    name = getattr(metric, "__name__", None)
+    return str(name) if name else str(metric)
+
+
+def _resolve_accuracy_metrics(
+    metrics: Sequence[str | Callable[..., float]],
+) -> list[tuple[Callable[..., float] | None, str, bool]]:
+    """Resolve ``metrics`` to ``(callable_or_None, column_name, is_builtin)``.
+
+    The three benchmark-relative builtins (``rmse``/``relative_mse``/``r2_oos``)
+    keep their existing inline formulas whenever they are requested BY NAME (an
+    explicit callable named e.g. ``rmse`` would instead go through the generic
+    pointwise path below) -- ``callable_or_None`` is ``None`` for those. Every
+    other entry is resolved through :func:`macroforecast.metrics.get_metric` up
+    front (so an unknown metric name raises immediately, not silently as NaN)
+    and applied generically as ``metric(y_true, y_pred) -> float``.
+    """
+    from macroforecast.metrics import get_metric
+
+    resolved: list[tuple[Callable[..., float] | None, str, bool]] = []
+    for metric in metrics:
+        name = _metric_column_name(metric)
+        is_builtin = isinstance(metric, str) and name in _BUILTIN_ACCURACY_METRICS
+        fn = None if is_builtin else get_metric(metric)
+        resolved.append((fn, name, is_builtin))
+    return resolved
+
+
+def _accuracy_columns(metric_names: Sequence[str]) -> list[str]:
+    return ["target", "horizon", "contender", *metric_names, "n_common", "is_benchmark", "benchmark_present"]
+
+
 def accuracy_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
-    """RMSE, relative-MSE (vs benchmark) and OOS-R2 per (target, horizon, contender)."""
-    return _accuracy_against(master, spec.evaluation.benchmark)
+    """Per-``spec.evaluation.metrics`` accuracy per (target, horizon, contender)."""
+    return _accuracy_against(master, spec.evaluation.benchmark, metrics=_eval_metrics(spec))
 
 
-def _accuracy_against(master: pd.DataFrame, bench: str) -> pd.DataFrame:
+def _accuracy_against(
+    master: pd.DataFrame,
+    bench: str,
+    *,
+    metrics: Sequence[str | Callable[..., float]] = _DEFAULT_ACCURACY_METRICS,
+) -> pd.DataFrame:
     """The accuracy table scored against the named benchmark contender.
 
     Split out of :func:`accuracy_table` so callers that score the same forecasts
     against a benchmark that is not ``spec.evaluation.benchmark`` (e.g. the
-    cross-policy common denominator) do not have to fabricate a spec.
+    cross-policy common denominator) do not have to fabricate a spec. ``metrics``
+    defaults to the historical three-column set (see :data:`_DEFAULT_ACCURACY_METRICS`);
+    :func:`evaluate_cross_policy` relies on that default and does not thread a
+    ``PipelineSpec`` through, so it is unaffected by ``EvalSpec.metrics``.
     """
+    resolved = _resolve_accuracy_metrics(metrics)
+    metric_names = [name for _, name, _ in resolved]
+    columns = _accuracy_columns(metric_names)
     if not _has_groups(master):
-        return pd.DataFrame(columns=_ACCURACY_COLUMNS)
+        return pd.DataFrame(columns=columns)
     out: list[dict[str, Any]] = []
     ragged: list[tuple[Any, Any]] = []
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
@@ -139,26 +210,36 @@ def _accuracy_against(master: pd.DataFrame, bench: str) -> pd.DataFrame:
             n = int(mask.sum())
             if n:
                 y = actual.loc[mask].to_numpy(dtype=float)
-                mse = float(np.mean((wide.loc[mask, contender].to_numpy(dtype=float) - y) ** 2))
+                pred = wide.loc[mask, contender].to_numpy(dtype=float)
+                mse = float(np.mean((pred - y) ** 2))
                 bench_mse = (
                     float(np.mean((wide.loc[mask, bench].to_numpy(dtype=float) - y) ** 2))
                     if bench_present else np.nan
                 )
             else:
+                y = pred = np.asarray([], dtype=float)
                 mse = bench_mse = np.nan
             ok = np.isfinite(mse) and np.isfinite(bench_mse) and bench_mse > 0
-            out.append({
-                "target": target, "horizon": horizon, "contender": contender,
-                "rmse": float(np.sqrt(mse)) if np.isfinite(mse) else np.nan,
-                "relative_mse": (mse / bench_mse) if ok else np.nan,
-                "r2_oos": (1.0 - mse / bench_mse) if ok else np.nan,
-                "n_common": n,
-                "is_benchmark": contender == bench,
-                "benchmark_present": bench_present,
-            })
+            row: dict[str, Any] = {"target": target, "horizon": horizon, "contender": contender}
+            for fn, name, is_builtin in resolved:
+                value: float
+                if is_builtin:
+                    if name == "rmse":
+                        value = float(np.sqrt(mse)) if np.isfinite(mse) else np.nan
+                    elif name == "relative_mse":
+                        value = (mse / bench_mse) if ok else np.nan
+                    else:  # "r2_oos"
+                        value = (1.0 - mse / bench_mse) if ok else np.nan
+                elif n and fn is not None:
+                    value = float(fn(y, pred))
+                else:
+                    value = np.nan
+                row[name] = value
+            row["n_common"] = n
+            row["is_benchmark"] = contender == bench
+            row["benchmark_present"] = bench_present
+            out.append(row)
     if ragged:
-        import warnings
-
         cells = ", ".join(f"{t} h{h}" for t, h in ragged[:5])
         more = "" if len(ragged) <= 5 else f" (+{len(ragged) - 5} more)"
         warnings.warn(
@@ -168,17 +249,33 @@ def _accuracy_against(master: pd.DataFrame, bench: str) -> pd.DataFrame:
             f"longer truncates the others.",
             RuntimeWarning, stacklevel=2,
         )
-    return pd.DataFrame(out, columns=_ACCURACY_COLUMNS)
+    return pd.DataFrame(out, columns=columns)
 
 
 def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
-    """Diebold-Mariano and Clark-West p-values of each contender vs the benchmark."""
+    """Diebold-Mariano and Clark-West p-values of each contender vs the benchmark.
+
+    Only the tests named in ``spec.evaluation.tests`` run (``"dm"``/``"cw"``,
+    ``cw`` additionally gated by ``cw_for_nested`` as before). The DM/CW loss
+    differentials use ``spec.evaluation.loss(y_true, y_pred)`` when set, else
+    squared error. Clark-West's adjustment term is only valid under quadratic
+    loss, so when a custom ``loss`` is set and CW would otherwise run, CW is
+    skipped (never silently computed against the wrong loss) and a
+    ``UserWarning`` explains why; DM and MCS are loss-agnostic and are
+    unaffected.
+    """
     from macroforecast.tests import clark_west_test, dm_test
 
     bench = spec.evaluation.benchmark
     if not _has_groups(master):
         return pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
-    use_cw = bool(spec.evaluation.cw_for_nested)
+
+    requested = _eval_tests(spec)
+    want_dm = "dm" in requested
+    want_cw = "cw" in requested and bool(spec.evaluation.cw_for_nested)
+    if not want_dm and not want_cw:
+        return pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
+
     # Clark-West is only licensed where the benchmark is nested in the contender.
     # Build the set of contenders whose arm declares nesting; CW is emitted only
     # for those. Non-nested contenders get DM only (CW would be an invalid test).
@@ -186,6 +283,18 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     for a in spec.arms:
         if getattr(a, "nested_in_benchmark", False):
             nested |= set(contender_names(a))
+
+    loss_fn = _eval_loss(spec)
+    cw_blocked_by_custom_loss = bool(want_cw and loss_fn is not None and nested)
+    if cw_blocked_by_custom_loss:
+        warnings.warn(
+            "EvalSpec.loss is a custom per-observation loss, but the Clark-West "
+            "adjustment term is derived under quadratic loss and is not a valid "
+            "test for an arbitrary loss function; skipping CW for this evaluation "
+            "(DM and MCS are loss-agnostic and still run under the custom loss).",
+            UserWarning, stacklevel=2,
+        )
+
     out: list[dict[str, Any]] = []
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
         pivot_f = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
@@ -201,29 +310,47 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             if int(common.sum()) < 8:
                 continue
             y = actual[common].to_numpy(float)
-            loss_b = (fb[common].to_numpy(float) - y) ** 2
-            loss_c = (fc[common].to_numpy(float) - y) ** 2
+            fb_vals = fb[common].to_numpy(float)
+            fc_vals = fc[common].to_numpy(float)
+            if loss_fn is not None:
+                loss_b = np.asarray(loss_fn(y, fb_vals), dtype=float)
+                loss_c = np.asarray(loss_fn(y, fc_vals), dtype=float)
+            else:
+                loss_b = (fb_vals - y) ** 2
+                loss_c = (fc_vals - y) ** 2
             row: dict[str, Any] = {"target": target, "horizon": horizon, "contender": contender}
-            try:
-                dm = dm_test(loss_c, loss_b, horizon=int(horizon), input_type="loss")
-                row["dm_stat"] = float(cast(float, dm.statistic)); row["dm_p"] = float(cast(float, dm.p_value))
-            except Exception:
-                row["dm_stat"] = np.nan; row["dm_p"] = np.nan
-            if use_cw and contender in nested:
+            has_result = False
+            if want_dm:
                 try:
-                    cw = clark_west_test(loss_b, loss_c, fb[common].to_numpy(float),
-                                         fc[common].to_numpy(float), horizon=int(horizon))
+                    dm = dm_test(loss_c, loss_b, horizon=int(horizon), input_type="loss")
+                    row["dm_stat"] = float(cast(float, dm.statistic)); row["dm_p"] = float(cast(float, dm.p_value))
+                except Exception:
+                    row["dm_stat"] = np.nan; row["dm_p"] = np.nan
+                has_result = True
+            if want_cw and not cw_blocked_by_custom_loss and contender in nested:
+                try:
+                    cw = clark_west_test(loss_b, loss_c, fb_vals, fc_vals, horizon=int(horizon))
                     row["cw_stat"] = float(cast(float, cw.statistic)); row["cw_p"] = float(cast(float, cw.p_value))
                 except Exception:
                     row["cw_stat"] = np.nan; row["cw_p"] = np.nan
-            out.append(row)
+                has_result = True
+            if has_result:
+                out.append(row)
     return pd.DataFrame(out) if out else pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
 
 
 def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) -> pd.DataFrame:
-    """Model Confidence Set membership per (target, horizon)."""
+    """Model Confidence Set membership per (target, horizon).
+
+    Runs only when ``"mcs"`` is in ``spec.evaluation.tests``. The loss matrix is
+    ``spec.evaluation.loss(y_true, y_pred)`` when set, else squared error (the
+    prior, only behavior); MCS is loss-agnostic, so any per-observation loss is
+    valid here (unlike Clark-West, see :func:`significance_table`).
+    """
     from macroforecast.tests import model_confidence_set
 
+    if "mcs" not in _eval_tests(spec):
+        return pd.DataFrame(columns=_MCS_COLUMNS)
     # An empty / column-less master has no scorable cells; the required columns
     # (actual/prediction as well as the group keys) may be entirely absent.
     if not _has_groups(master) or not {"actual", "prediction", "contender"}.issubset(master.columns):
@@ -232,10 +359,15 @@ def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) ->
     panel = panel[panel["actual"].notna() & panel["prediction"].notna()]
     if panel.empty:
         return pd.DataFrame(columns=_MCS_COLUMNS)
-    panel = panel.assign(
-        squared_error=(panel["prediction"].astype(float) - panel["actual"].astype(float)) ** 2,
-        model_id=panel["contender"],
+    loss_fn = _eval_loss(spec)
+    actual_vals = panel["actual"].astype(float).to_numpy()
+    pred_vals = panel["prediction"].astype(float).to_numpy()
+    loss_values = (
+        np.asarray(loss_fn(actual_vals, pred_vals), dtype=float)
+        if loss_fn is not None
+        else (pred_vals - actual_vals) ** 2
     )
+    panel = panel.assign(squared_error=loss_values, model_id=panel["contender"])
     out: list[dict[str, Any]] = []
     for (target, horizon), group in panel.groupby(["target", "horizon"], dropna=False):
         if group["model_id"].nunique() < 2:

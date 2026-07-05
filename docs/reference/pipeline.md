@@ -51,7 +51,7 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 - `TargetSpec` -- a target and how its forecast object is defined (transform, policy, reduce_i2).
 - `ResolvedTarget` -- a target with its forecast policy and transform resolved.
 - `InterpretSpec` -- ML interpretation request (methods, which_fit, background, top_k).
-- `EvalSpec` -- benchmark, metrics, tests, primary_axis, MCS settings, subsamples.
+- `EvalSpec` -- benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples. `metrics` and `tests` are live configuration (see "Custom metrics, significance tests, and loss" below), not documentation-only fields.
 - `CombinationContender` -- a forecast combination that becomes an additional contender.
 - `PipelineReport` -- output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`.
 - `TCODE_TARGET_MAP` -- FRED t-code to (forecast_policy, target_transform) mapping.
@@ -270,6 +270,61 @@ Fields that require having actually executed the run are absent or best-effort:
 An empty or wrong `checkpoint_dir` raises a `ValueError` naming the problem
 (no cell directories found / directories present but all empty) rather than
 returning a silently empty report.
+
+## Custom metrics, significance tests, and loss (`EvalSpec`)
+
+`EvalSpec.metrics` and `EvalSpec.tests` are consumed, not decorative: only the
+metrics and tests actually named are computed, and unsupported names fail fast.
+
+- **`metrics: tuple[str | Callable, ...]`** (default `("rmse", "relative_mse",
+  "r2_oos")`) -- each entry is either a name resolved through
+  `macroforecast.metrics.get_metric` (e.g. `"mae"`, `"mape"`, `"bias"`) or a
+  callable `metric(y_true, y_pred) -> float`, named by its `__name__` for the
+  accuracy-table column. `accuracy_table` computes exactly the listed metrics,
+  per contender, on the same pairwise-vs-benchmark sample it always used. The
+  three defaults keep their existing benchmark-relative formulas (`relative_mse`/
+  `r2_oos` need the benchmark's MSE; a same-named custom callable does not
+  override this) regardless of how they are requested. Passing `metrics=("mae",)`
+  now returns only an `mae` column -- prior to this, `metrics` was parsed but
+  never read, so every spec silently got `rmse`/`relative_mse`/`r2_oos` no matter
+  what was requested.
+- **`tests: tuple[str, ...]`** (default `("dm", "cw", "mcs")`) -- only the named
+  tests run. `"cw"` is additionally gated by `cw_for_nested` as before (Clark-West
+  only for contenders whose `Arm.nested_in_benchmark=True`). `tests=("dm",)` runs
+  DM only (`significance` carries no `cw_*` columns, `mcs` is empty);
+  `tests=()` yields `accuracy` only. An unsupported name (anything other than
+  `"dm"`/`"cw"`/`"mcs"`) raises `ValueError` at `pipeline_spec(...)` build time
+  rather than being silently dropped. `"spa"`/`"gr"` (superior predictive
+  ability / Giacomini-Rossi) are implemented in `macroforecast.tests` but not yet
+  wired into the pipeline evaluator -- a follow-up, not supported here.
+- **`loss: Callable[[y_true, y_pred], ndarray] | None`** (default `None` = squared
+  error) -- a per-observation loss threaded into the Diebold-Mariano loss
+  differential and the Model Confidence Set's loss matrix, enabling asymmetric-
+  loss horse races (e.g. linex, or an absolute-error DM/MCS instead of squared
+  error). **Clark-West is derived under quadratic loss** and is not a valid test
+  for an arbitrary loss function: when `loss` is set and CW would otherwise run
+  (`"cw"` in `tests`, `cw_for_nested` true, and at least one nested contender),
+  `significance_table` skips CW entirely and emits a `UserWarning` explaining why,
+  instead of silently computing it against the wrong loss. DM and MCS are
+  loss-agnostic and are unaffected.
+
+```python
+from macroforecast.pipeline import EvalSpec
+
+def linex_loss(y_true, y_pred, a=1.0):
+    err = y_pred - y_true
+    return (np.exp(a * err) - a * err - 1.0) / (a ** 2)
+
+evaluation = EvalSpec(
+    benchmark="AR",
+    metrics=("rmse", "mae", my_custom_metric),   # my_custom_metric(y_true, y_pred) -> float
+    tests=("dm", "mcs"),                          # skip cw explicitly (or let the loss rule skip it)
+    loss=linex_loss,                              # asymmetric-loss DM/MCS horse race
+)
+```
+
+`rescore(checkpoint_dir, spec)` honors all of this automatically -- it calls the
+same `evaluate(master, spec)` the live run does.
 
 ## Notes
 
