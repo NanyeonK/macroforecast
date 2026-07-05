@@ -1971,12 +1971,12 @@ macroforecast.models.hemisphere_nn(
     neurons=64,
     dropout=0.2,
     learning_rate=0.001,
-    max_epochs=100,
-    n_estimators=100,
+    max_epochs=40,
+    n_estimators=20,
     subsample=0.8,
     nu=None,
     variance_penalty=1.0,
-    patience=15,
+    patience=8,
     validation_fraction=0.2,
     random_state=0,
     device="auto",
@@ -2011,12 +2011,12 @@ callable accepts legacy aliases `lr`, `n_epochs`, `B`, `sub_rate`,
 | `neurons` | `64` | yes | Hidden width. |
 | `dropout` | `0.2` | fixed by preset | Dropout rate. |
 | `learning_rate` | `0.001` | yes | Adam learning rate. |
-| `max_epochs` | `100` | fixed by preset | Training epoch cap. |
-| `n_estimators` | `100` | yes | Number of blocked-subsample bags. |
+| `max_epochs` | `40` (was `100` before 2026-07-05; old value reachable explicitly) | fixed by preset | Training epoch cap. |
+| `n_estimators` | `20` (was `100` before 2026-07-05; old value reachable explicitly) | yes | Number of blocked-subsample bags. |
 | `subsample` | `0.8` | fixed by preset | Blocked-subsample fraction. |
 | `nu` | `None` | fixed by preset | Variance-emphasis target ratio; `None` uses `0.5`. |
 | `variance_penalty` | `1.0` | fixed by preset | Soft penalty on the variance-emphasis target. |
-| `patience` | `15` | fixed by preset | Early-stopping patience. |
+| `patience` | `8` (was `15` before 2026-07-05; old value reachable explicitly) | fixed by preset | Early-stopping patience. |
 | `validation_fraction` | `0.2` | fixed by preset | Chronological validation fraction. |
 | `device` | `"auto"` | fixed by preset | Torch device. |
 | `quantile_levels` | `(0.05, 0.5, 0.95)` | fixed by preset | Default normal-approximation quantile levels returned by `predict_quantiles()`. |
@@ -2035,14 +2035,14 @@ macroforecast.models.density_hnn(
     neurons=400,
     dropout=0.2,
     learning_rate=0.001,
-    max_epochs=100,
-    n_estimators=100,
-    prior_estimators=50,
+    max_epochs=40,
+    n_estimators=20,
+    prior_estimators=10,
     subsample=0.8,
     block_size=8,
     volatility_emphasis=None,
     rescale_volatility=True,
-    patience=15,
+    patience=8,
     random_state=0,
     device="auto",
     quantile_levels=(0.05, 0.5, 0.95),
@@ -2117,14 +2117,14 @@ Diagnostics:
 | `neurons` | `400` | yes | Hidden width. The paper/Aionx default is 400; smaller values are useful for smoke tests. |
 | `dropout` | `0.2` | fixed by preset | Dropout rate. |
 | `learning_rate` | `0.001` | yes | Adam learning rate. |
-| `max_epochs` | `100` | fixed by preset | Training epoch cap. |
-| `n_estimators` | `100` | yes | DensityHNN bootstrap ensemble size. |
-| `prior_estimators` | `50` | yes | Prior-DNN bootstrap ensemble size used to estimate volatility emphasis. |
+| `max_epochs` | `40` (was `100` before 2026-07-05; old value reachable explicitly) | fixed by preset | Training epoch cap. |
+| `n_estimators` | `20` (was `100` before 2026-07-05; old value reachable explicitly) | yes | DensityHNN bootstrap ensemble size. Fewer bags widen the per-row predicted-variance right tail (bagged-member disagreement noise) -- see the WP-A4 anchor finding in CHANGELOG; pass `n_estimators=100` explicitly to restore the old ensemble size. |
+| `prior_estimators` | `10` (was `50` before 2026-07-05; old value reachable explicitly) | yes | Prior-DNN bootstrap ensemble size used to estimate volatility emphasis. |
 | `subsample` | `0.8` | fixed by preset | Blocked bootstrap sampling rate. |
 | `block_size` | `8` | fixed by preset | Time-series block size. The paper uses blocked subsampling to preserve temporal dependence. |
 | `volatility_emphasis` | `None` | fixed by preset | `None` estimates the value from prior-DNN OOB MSE. Passing a float overrides it. Values outside Aionx's `[0.01, 1.0]` range are mapped to `0.99`, following the source code. |
 | `rescale_volatility` | `True` | fixed by preset | Apply the blocked-OOB volatility reality-check recalibration. |
-| `patience` | `15` | fixed by preset | Early-stopping patience. |
+| `patience` | `8` (was `15` before 2026-07-05; old value reachable explicitly) | fixed by preset | Early-stopping patience. |
 | `device` | `"auto"` | fixed by preset | Torch device. |
 | `quantile_levels` | `(0.05, 0.5, 0.95)` | fixed by preset | Default normal-approximation quantile levels. |
 | `volatility_clip` | `0.05` | fixed by preset | Minimum volatility used in Gaussian negative log likelihood, matching Aionx's numerical-stability clip. |

@@ -42,6 +42,69 @@ full per-version honesty-pass history embedded in repo documentation.
   `_run_cells`/`evaluate()` nor any numerical path was touched. See
   `docs/reference/pipeline.md` ("Provenance") and
   `tests/pipeline/test_default_provenance.py`.
+- `models` (WP-B4, default-cost fix, closes the WP-A4 policy-matrix-scan
+  finding): `hemisphere_nn` and `density_hnn` (torch-backed, bagged
+  dual-head/density Hemisphere neural networks) could not finish a single
+  `.dev-notes/policy_matrix_scan.py` worker call (all 4 policies, 140-obs toy
+  panel) even at a 900s timeout with their out-of-the-box defaults. Same
+  root cause as the six-model WP4 fix below: `model_selection=None` still
+  runs a 20-trial random search over the model's "standard" search-space
+  preset even with no explicit tuning request (`_selection_for_model` /
+  `_fit_one_model_at_origin` in `forecasting/policies/base.py`), so an
+  untuned fixed cost (`max_epochs`, `patience`) held at its literal default
+  for every trial, multiplied by the "standard" preset's `neurons`/
+  `n_estimators`/`prior_estimators` corners, got paid 20 times per origin per
+  policy. Old -> new defaults (both `MODEL_SPECS[...].default_params` in
+  `models/specs.py` and the public-function/regressor-class kwarg defaults in
+  `models/neural.py`, which are independent of the spec layer for any
+  direct, non-pipeline call):
+  - `hemisphere_nn`: `n_estimators` `100`->`20`, `max_epochs` `100`->`40`,
+    `patience` `15`->`8`. "standard" preset (own dedicated `_HNN_SPACES`,
+    not shared with other models): `neurons` `(32, 64)`->`(16, 32)`,
+    `n_estimators` `(5, 10)`->`(3, 5)`; `learning_rate` unchanged. "small"
+    and "wide" are unchanged -- "wide" still reaches the old `(32, 64)` /
+    `(5, 10)` corner for deep/explicit use.
+  - `density_hnn`: `n_estimators` `100`->`20`, `prior_estimators` `50`->`10`,
+    `max_epochs` `100`->`40`, `patience` `15`->`8`. `neurons` (400, the
+    paper-faithful Aionx `DensityHNN` width) is UNCHANGED: `model_selection`
+    left at `None` always overrides `neurons` via the "standard"/"wide"
+    preset anyway, so it was never the scan's cost driver, and trimming it would
+    only cost paper-fidelity for direct/no-search callers with no scan-cost
+    benefit. "standard" preset (own dedicated `_DENSITY_HNN_SPACES`):
+    `neurons` `(32, 64)`->`(16, 32)`, `n_estimators` `(5, 10)`->`(3, 5)`,
+    `prior_estimators` `(3, 5)`->`(2, 3)`; `learning_rate` unchanged. "small"
+    and "wide" are unchanged.
+  Verified scan totals (4 policies, thread-pinned for clean numbers --
+  `OMP_NUM_THREADS=1`/`MKL_NUM_THREADS=1`/`OPENBLAS_NUM_THREADS=1`,
+  `torch.set_num_threads(1)`; per-policy seconds from
+  `.dev-notes/policy_matrix_scan.py --model <name>`): `hemisphere_nn`
+  360.12s (`direct` 70.15s, `direct_average` 69.67s, `path_average` 140.27s,
+  `recursive` 80.03s) -> 90.16s (18.91s, 17.76s, 35.43s, 18.06s);
+  `density_hnn` 240.62s (46.53s, 46.50s, 94.66s, 52.93s) -> 66.29s (13.75s,
+  13.05s, 26.08s, 13.41s). Both now comfortably clear the 150s bar with the
+  full 4-policy scan; individual policies are all well under 60s, and the
+  new bagged member counts (20/10) are still real ensembles, not degenerate
+  single fits. Deep/paper-faithful settings remain reachable by passing the old
+  values explicitly (e.g. `hemisphere_nn(X, y, n_estimators=100,
+  max_epochs=100, patience=15)`) or via the "wide" preset for search-driven
+  runs. Trade-off, not free: fewer bag members widens `density_hnn`'s
+  per-row predicted-variance right tail further -- WP-A4's anchor work
+  (`tests/models/anchors/test_hnn_anchors.py`) already found and documented
+  that tail as driven by base bagged-ensemble member disagreement (not the
+  OOB volatility-rescaling step), so fewer members means more sampling noise
+  in that cross-member disagreement estimate, i.e. a wider tail than before
+  -- reachable back to the old width via explicit `n_estimators=100`.
+  `tests/models/test_default_cost_budget.py` (WP4's single-fit cost-budget
+  gate) gets two new tests, `test_hemisphere_nn_default_cost_budget` /
+  `test_density_hnn_default_cost_budget`, torch-gated per-test
+  (`pytest.importorskip("torch")`, matching `tests/models/test_models.py`'s
+  existing mixed-file convention) since this file is not module-level
+  torch-gated. `tests/models/test_models.py`'s
+  `density_hnn_spec.default_params["prior_estimators"]` assertion updated
+  `50`->`10` to match. The WP-A4 anchor tests
+  (`tests/models/anchors/test_hnn_anchors.py`) use explicit small params
+  throughout (e.g. `neurons=8, max_epochs=15, n_estimators=3`) and are
+  unaffected -- re-verified green (7 passed).
 
 - `pipeline/evaluate.py`, `pipeline/spec.py` (bugfix): `EvalSpec.metrics` and
   `EvalSpec.tests` were declared fields that `evaluate()` silently ignored --

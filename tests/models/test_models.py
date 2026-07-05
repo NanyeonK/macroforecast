@@ -1019,7 +1019,7 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert hnn_spec.default_params["B"] is None
     assert density_hnn_spec.backend == "torch-native Aionx DensityHNN port"
     assert density_hnn_spec.requires_extra == "deep"
-    assert density_hnn_spec.default_params["prior_estimators"] == 50
+    assert density_hnn_spec.default_params["prior_estimators"] == 10
     assert density_hnn_spec.default_params["rescale_volatility"] is True
 
     table = mf.models.list_model_specs(family="neural")
