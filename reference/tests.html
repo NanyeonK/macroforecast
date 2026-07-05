@@ -1850,6 +1850,24 @@ loss rows are rejected instead of being averaged inside the pivot step.</p>
 the maximum selected AR order across loss columns and enforce a minimum of 3.
 For bit-level reproducibility across software stacks, pass an explicit integer
 <code class="docutils literal notranslate"><span class="pre">block_length</span></code>.</p>
+<p><strong>Coverage under a global null with many ties (WP-A1 Step 0).</strong> Monte Carlo
+size/coverage validation (<code class="docutils literal notranslate"><span class="pre">tests/mc/test_mcs_coverage.py</span></code>) confirms the MCS
+inclusion guarantee <code class="docutils literal notranslate"><span class="pre">P(true</span> <span class="pre">best</span> <span class="pre">retained)</span> <span class="pre">&gt;=</span> <span class="pre">1-alpha</span></code> holds when one model
+has a genuine (even small) loss advantage over the rest. But when <strong>all</strong>
+candidate models are exactly tied (an exact global null with <code class="docutils literal notranslate"><span class="pre">K</span></code> symmetric
+models, no true best), <code class="docutils literal notranslate"><span class="pre">P(all</span> <span class="pre">K</span> <span class="pre">models</span> <span class="pre">jointly</span> <span class="pre">retained)</span></code> is measurably
+<strong>below</strong> the naive <code class="docutils literal notranslate"><span class="pre">1-alpha</span></code> reading of the guarantee – e.g. ~0.82, not
+~0.90, at <code class="docutils literal notranslate"><span class="pre">alpha=0.10</span></code>, <code class="docutils literal notranslate"><span class="pre">K=5</span></code>. This was cross-checked directly against R’s
+own <code class="docutils literal notranslate"><span class="pre">MCS::MCSprocedure</span></code> on the identical design (subprocess-Rscript bridge,
+R=200 replications, <code class="docutils literal notranslate"><span class="pre">B=500</span></code>): R reproduces the same ~0.82 rate
+(<code class="docutils literal notranslate"><span class="pre">rate=0.8200</span></code>, 99% CI <code class="docutils literal notranslate"><span class="pre">[0.7401,0.8841]</span></code>), matching this package’s own
+longer-run measurement (<code class="docutils literal notranslate"><span class="pre">rate=0.8180</span></code>, CI <code class="docutils literal notranslate"><span class="pre">[0.7846,0.8483]</span></code>, n_reps=1000).
+Since the reference R implementation shows the identical behavior, this is a
+property of the Hansen-Lunde-Nason sequential-elimination procedure itself
+under many exact ties, not a <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> defect – treat <code class="docutils literal notranslate"><span class="pre">alpha</span></code> as
+calibrated for “is there a worse model to eliminate” one step at a time,
+not as a literal <code class="docutils literal notranslate"><span class="pre">1-alpha</span></code> bound on “are all K models jointly retained”
+when many of them are exactly tied.</p>
 </section>
 <section id="iterative-model-confidence-set">
 <h3>iterative_model_confidence_set<a class="headerlink" href="#iterative-model-confidence-set" title="Link to this heading">#</a></h3>
@@ -1989,7 +2007,7 @@ which callable produced the result.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">jarque_bera_test</span></code> – Jarque-Bera normality test (single series, chi2 df=2; tseries::jarque.bera.test convention).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">granger_causality</span></code> – Granger causality test in a VAR (vars::causality; F or Wald).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">instantaneous_causality</span></code> – instantaneous (contemporaneous) causality test in a VAR.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">giacomini_white_test</span></code> – Giacomini-White (2006) CONDITIONAL predictive ability Wald test (chi2, HAC), instrument [1, dL_{t-h}].</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">giacomini_white_test</span></code> – Giacomini-White (2006) CONDITIONAL predictive ability Wald test, instrument [1, dL_{t-h}]. <strong>Default changed (WP-A1):</strong> <code class="docutils literal notranslate"><span class="pre">small_sample=True</span></code> uses an untapered (“acf”-style) HAC over lags 0..horizon-1 (matching <code class="docutils literal notranslate"><span class="pre">dm_test</span></code>’s own kernel convention, with a bandwidth-shrink-on-non-PSD fallback) referenced against <code class="docutils literal notranslate"><span class="pre">F(q,</span> <span class="pre">ESS-q)</span></code> with <code class="docutils literal notranslate"><span class="pre">ESS</span> <span class="pre">=</span> <span class="pre">n/(1+2*bandwidth_used)</span></code> whenever horizon &gt; 1 – the original Bartlett-tapered-HAC + chi2(q) construction was Monte Carlo-confirmed oversized (2-2.5x nominal) for horizon &gt; 1, non-vanishing out to n=100,000 (see <code class="docutils literal notranslate"><span class="pre">tests/mc/test_giacomini_white_size.py</span></code>). <code class="docutils literal notranslate"><span class="pre">small_sample=False</span></code> restores the exact pre-WP-A1 Bartlett-HAC + chi2(q) p-values. horizon=1 is unaffected either way.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">var_serial_test</span></code> – multivariate residual serial-correlation (Portmanteau/LM) test for a VAR (vars::serial.test).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">var_normality_test</span></code> – multivariate normality (Doornik-Hansen/Lutkepohl JB) test for VAR residuals (vars::normality.test).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">var_arch_test</span></code> – multivariate ARCH-LM test for VAR residuals (vars::arch.test, Lutkepohl).</p></li>
