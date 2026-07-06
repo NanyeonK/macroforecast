@@ -5,6 +5,25 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/result_store.py`, `pipeline/run.py`, `pipeline/spec.py`,
+  `preprocessing/cache.py`, `forecasting/preprocessing_stage.py` (feature, W9
+  result store + Gap C): added `pipeline_spec(..., result_store=...)` for
+  cross-run reuse of completed `(target, horizon, arm)` forecast cells. Stored
+  cells live under `<store>/cells/<digest>.parquet` with a JSON manifest, are
+  written via atomic replace, and are reused only when the resolved cell identity
+  and the pipeline data fingerprint match. `PipelineReport.provenance` now
+  includes a `result_store` block when enabled, with reused/computed/
+  undigestible counts and version-mismatch details; mismatched package versions
+  still reuse but warn once. Custom user callables are intentionally
+  undigestible unless they carry an explicit `__mf_digest__` string. New
+  `mf.pipeline.result_store_summary()` and `mf.pipeline.purge_result_store()`
+  inspect and maintain stores. The existing `PreprocessorStore` also persists
+  the horizon-independent prepared-base DataFrame tier when
+  `preprocessing_cache_dir` is configured, so adding a new model to an existing
+  horse race no longer re-fits or re-transforms the shared per-origin
+  preprocessing base. Default `result_store=None` leaves the existing execution
+  path unchanged.
+
 - `data/vintage.py`, `forecasting/runner.py`, `pipeline/run.py`,
   `forecasting/checkpoint.py` (feature, per-origin vintages Phase 1): added the
   `VintageSource` protocol, `VintageUnavailableError`, `fred_md_vintages()` /
