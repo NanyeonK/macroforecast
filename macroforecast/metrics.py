@@ -1100,6 +1100,62 @@ def get_metric(metric: MetricLike) -> Callable[..., float]:
     return _METRICS[key]
 
 
+# The true quantile/interval-distributional subset of ``_QUANTILE_METRIC_NAMES``
+# (which also carries ``mase``/``seasonal_naive_mae``/``acf1`` -- point-adjacent
+# metrics with a different input shape entirely, deliberately excluded here; see
+# ``evaluate_forecasts``'s ``continue``-without-computing handling of them).
+_QUANTILE_DENSITY_METRIC_NAMES = frozenset(
+    {"pinball_loss", "coverage_rate", "interval_width", "interval_score"}
+)
+
+# Every metric name whose table-level evaluation needs a distributional column
+# (``variance_prediction`` or ``quantile_predictions``) rather than plain
+# ``(y_true, y_pred)`` -- the union ``metric_kind`` classifies as "variance",
+# "volatility", or "quantile".
+DENSITY_METRIC_NAMES: frozenset[str] = frozenset(
+    _VARIANCE_METRIC_NAMES | _VOLATILITY_METRIC_NAMES | _QUANTILE_DENSITY_METRIC_NAMES
+)
+
+
+def metric_kind(metric: MetricLike) -> str:
+    """Classify a metric by the forecast-table column(s) its table-level
+    evaluation requires (registry plumbing only -- no new metric math).
+
+    Returns one of:
+
+    - ``"variance"``: Gaussian predictive-density metrics needing
+      ``(y_true, y_pred, variance_prediction)`` -- ``crps``, ``gaussian_nll``,
+      ``log_score``, ``negative_log_score``.
+    - ``"volatility"``: realized-vs-forecast variance metrics needing
+      ``(realized_variance, variance_prediction)`` -- ``qlike``.
+    - ``"quantile"``: interval/quantile metrics needing ``quantile_predictions``
+      -- ``pinball_loss``, ``coverage_rate``, ``interval_width``,
+      ``interval_score``.
+    - ``"relative"``: benchmark-relative metrics needing a benchmark forecast --
+      ``relative_mse``, ``relative_mae``, ``mse_reduction``, ``r2_oos``.
+    - ``"direction"``: metrics needing a ``previous_actual`` reference --
+      ``theil_u2``, ``success_ratio``.
+    - ``"point"`` (the default): every ordinary ``(y_true, y_pred)`` metric,
+      including any custom callable (classification is name-based, so a
+      callable -- which carries no registry name -- is always ``"point"``).
+    """
+
+    if not isinstance(metric, str):
+        return "point"
+    key = metric.lower()
+    if key in _VARIANCE_METRIC_NAMES:
+        return "variance"
+    if key in _VOLATILITY_METRIC_NAMES:
+        return "volatility"
+    if key in _QUANTILE_DENSITY_METRIC_NAMES:
+        return "quantile"
+    if key in _RELATIVE_METRIC_NAMES:
+        return "relative"
+    if key in _DIRECTION_METRIC_NAMES:
+        return "direction"
+    return "point"
+
+
 def _resolve_metrics(
     metrics: Sequence[str | MetricLike],
 ) -> list[tuple[Callable[..., float], str]]:
@@ -1862,6 +1918,7 @@ def _risk_return_frame(
 
 __all__ = [
     "MetricLike",
+    "DENSITY_METRIC_NAMES",
     "bias",
     "compute_point_loss",
     "coverage_rate",
@@ -1879,6 +1936,7 @@ __all__ = [
     "mape",
     "max_drawdown",
     "medae",
+    "metric_kind",
     "mse",
     "mse_reduction",
     "negative_log_score",

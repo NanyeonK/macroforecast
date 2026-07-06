@@ -49,8 +49,13 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
     -------
     PipelineReport
         The same report type ``run_pipeline`` returns, with the evaluation fields
-        (``forecasts``, ``accuracy``, ``significance``, ``mcs``) populated exactly
-        as a live run would produce from the same forecasts. Fields that require
+        (``forecasts``, ``accuracy``, ``significance``, ``mcs``, ``density``,
+        ``calibration``) populated exactly as a live run would produce from the
+        same forecasts -- ``density``/``calibration`` are only non-empty when
+        ``spec.evaluation.metrics``/``tests`` requests a density metric or
+        calibration test AND the checkpointed forecasts actually carry the
+        needed ``variance_prediction``/``quantile_predictions`` columns (see
+        ``forecasting/checkpoint.py``'s lean schema). Fields that require
         having actually EXECUTED the run are explicitly absent/best-effort:
 
         - ``interpretation`` is always ``None`` (interpretation needs the fitted
@@ -154,6 +159,8 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
         spec=spec,
         failed_cells=(),
         empty_cells=tuple(empty_cells),
+        density=results["density"],
+        calibration=results["calibration"],
     )
 
 

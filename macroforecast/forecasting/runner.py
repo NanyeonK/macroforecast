@@ -1249,6 +1249,15 @@ def _merge_checkpoint_records(
     checkpoint as lean rows. Rows present in memory win; only checkpoint rows with
     a key not already in memory are appended, so a resumed run returns the
     complete frame across all origins without duplication.
+
+    ``variance_prediction`` is one of :data:`LEAN_FORECAST_COLUMNS` (a plain
+    float), so it survives this merge with no extra handling. Quantile
+    predictions are stored on disk as wide ``q_<pct>`` columns;
+    ``load_checkpoint_frame`` already reconstructs a ``quantile_predictions``
+    mapping column from them (see ``forecasting/checkpoint.py``), matching the
+    SAME ``{level_str: value}`` representation a freshly-computed origin's
+    ``quantile_predictions`` carries, so a resumed run's forecast table never
+    mixes two different quantile representations across rows.
     """
     in_memory_keys = {_checkpoint_record_key(record) for record in records}
     frame = load_checkpoint_frame(checkpoint_path)
@@ -1258,7 +1267,9 @@ def _merge_checkpoint_records(
     for lean_record in frame.to_dict(orient="records"):
         if _checkpoint_record_key(lean_record) in in_memory_keys:
             continue
-        merged.append({column: lean_record.get(column) for column in LEAN_FORECAST_COLUMNS})
+        row = {column: lean_record.get(column) for column in LEAN_FORECAST_COLUMNS}
+        row["quantile_predictions"] = lean_record.get("quantile_predictions")
+        merged.append(row)
     return merged
 
 

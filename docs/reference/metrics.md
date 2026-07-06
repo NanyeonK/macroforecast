@@ -437,6 +437,44 @@ benchmark forecasts, variances, intervals, or previous actuals need one of the
 specialized built-in metric names because `evaluate_forecasts()` must know
 which forecast-table columns to pass.
 
+### metric_kind
+
+```python
+macroforecast.metrics.metric_kind(metric)
+```
+
+Input: a metric name or callable (`MetricLike`).
+
+Output: one string classifying the metric by the forecast-table column(s) its
+table-level evaluation requires. Classification is name-based registry
+plumbing only (no new metric math): a custom callable carries no registry
+name, so a callable is always `"point"`.
+
+| Kind | Metrics | Required inputs |
+| --- | --- | --- |
+| `"variance"` | `crps`, `gaussian_nll`, `log_score`, `negative_log_score` | `(y_true, y_pred, variance_prediction)` |
+| `"volatility"` | `qlike` | realized variance vs `variance_prediction` |
+| `"quantile"` | `pinball_loss`, `coverage_rate`, `interval_width`, `interval_score` | `quantile_predictions` |
+| `"relative"` | `relative_mse`, `relative_mae`, `mse_reduction`, `r2_oos` | a benchmark forecast |
+| `"direction"` | `theil_u2`, `success_ratio` | a previous-actual reference |
+| `"point"` | every other `(y_true, y_pred)` metric, and any callable | plain point forecasts |
+
+### DENSITY_METRIC_NAMES
+
+```python
+macroforecast.metrics.DENSITY_METRIC_NAMES
+```
+
+A `frozenset[str]` of every metric name whose table-level evaluation needs a
+distributional forecast column (`variance_prediction` or
+`quantile_predictions`) rather than plain `(y_true, y_pred)` -- exactly the
+names `metric_kind` classifies as `"variance"`, `"volatility"`, or
+`"quantile"`. Note `mase`, `seasonal_naive_mae`, and `acf1` are NOT members:
+they carry a different input shape but are point-adjacent, not distributional.
+The managed pipeline routes `EvalSpec.metrics` entries of these density kinds
+into `PipelineReport.density` (see the pipeline reference, "Density and
+interval forecasting").
+
 ## Point Metrics
 
 All point metrics align inputs as pandas Series, drop missing paired
