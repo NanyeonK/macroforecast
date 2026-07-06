@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
-import pytest
+import pandas.testing as pdt
 
 import macroforecast as mf
 from macroforecast.pipeline import Arm, EvalSpec, pipeline_spec, run_pipeline
@@ -35,7 +35,7 @@ class _Source:
         return self.bundles[max(keys)]
 
 
-def _spec(*, n_jobs=1):
+def _spec(*, n_jobs=1, horizons=(1,), preprocessing_cache_dir=None, preprocessing=False):
     source = _Source()
     data = mf.data.VintagePanelSpec(source, source.reference)
     window = mf.window.spec(
@@ -53,21 +53,90 @@ def _spec(*, n_jobs=1):
         lags=None,
         target_lags=(1,),
     )
+    prep = (
+        mf.preprocessing.preprocess_spec(
+            transform="none",
+            impute="none",
+            standardize="zscore",
+        )
+        if preprocessing
+        else None
+    )
     return pipeline_spec(
         data=data,
         targets=[mf.pipeline.TargetSpec("A", transform="level")],
-        horizons=[1],
+        horizons=horizons,
         window=window,
         arms=[Arm("AR", model="ols", features=features)],
         evaluation=EvalSpec(benchmark="AR", tests=[]),
+        preprocessing=prep,
         save_models=False,
         n_jobs=n_jobs,
+        preprocessing_cache_dir=preprocessing_cache_dir,
     )
 
 
-def test_vintage_pipeline_rejects_parallel_phase1() -> None:
-    with pytest.raises(ValueError, match="n_jobs=1"):
-        _spec(n_jobs=2)
+def test_vintage_pipeline_parallel_equals_serial() -> None:
+    serial = (
+        run_pipeline(_spec(n_jobs=1, horizons=(1, 2)))
+        .forecasts.sort_values(["horizon", "origin", "date", "model"])
+        .reset_index(drop=True)
+    )
+    parallel = (
+        run_pipeline(_spec(n_jobs=2, horizons=(1, 2)))
+        .forecasts.sort_values(["horizon", "origin", "date", "model"])
+        .reset_index(drop=True)
+    )
+
+    assert not serial.empty
+    assert not parallel.empty
+    pdt.assert_frame_equal(
+        serial[
+            [
+                "target",
+                "horizon",
+                "origin",
+                "origin_pos",
+                "date",
+                "model",
+                "prediction",
+                "actual",
+                "vintage_id",
+                "actuals_vintage_id",
+            ]
+        ],
+        parallel[
+            [
+                "target",
+                "horizon",
+                "origin",
+                "origin_pos",
+                "date",
+                "model",
+                "prediction",
+                "actual",
+                "vintage_id",
+                "actuals_vintage_id",
+            ]
+        ],
+    )
+
+
+def test_vintage_parallel_uses_vintage_namespaced_preprocessing_store(tmp_path) -> None:
+    report = run_pipeline(
+        _spec(
+            n_jobs=2,
+            horizons=(1, 2),
+            preprocessing=True,
+            preprocessing_cache_dir=str(tmp_path),
+        )
+    )
+
+    assert not report.forecasts.empty
+    # Three test origins share the same per-origin vintage across the two
+    # horizon cells. The explicit store should therefore contain one fitted
+    # preprocessor per origin/vintage, not one per origin/horizon.
+    assert len(list(tmp_path.glob("*.pkl"))) == 3
 
 
 def test_vintage_pipeline_report_carries_audit_and_provenance() -> None:
