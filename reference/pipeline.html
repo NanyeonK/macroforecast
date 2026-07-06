@@ -564,6 +564,12 @@ are additional contenders.</p></li>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rescore(checkpoint_dir,</span> <span class="pre">spec)</span></code></p></td>
 <td><p>Re-score a checkpointed run from disk alone (no refitting); returns a <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code>.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">result_store_summary(store)</span></code></p></td>
+<td><p>Summarise stored result cells from a cross-run result store.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">purge_result_store(store,</span> <span class="pre">*,</span> <span class="pre">before=None,</span> <span class="pre">version=None,</span> <span class="pre">digests=None)</span></code></p></td>
+<td><p>Delete matching result-store cells and return the number removed.</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interpret_pipeline(report,</span> <span class="pre">*,</span> <span class="pre">methods,</span> <span class="pre">which_fit,</span> <span class="pre">arms)</span></code></p></td>
 <td><p>Deferred multi-method ML interpretation.</p></td>
 </tr>
@@ -761,6 +767,34 @@ recomputed – that is the comparison. Everything upstream (the same <code class
 <code class="docutils literal notranslate"><span class="pre">window</span></code>/origin schedule) is shared trivially, and two variants that share an
 identical <code class="docutils literal notranslate"><span class="pre">(spec,</span> <span class="pre">target,</span> <span class="pre">origin)</span></code> sub-fit can still be deduplicated across processes
 and runs via the on-disk <code class="docutils literal notranslate"><span class="pre">preprocessing_cache_dir</span></code> (<code class="docutils literal notranslate"><span class="pre">PreprocessorStore</span></code>).</p>
+</section>
+<section id="cross-run-result-store">
+<h3>Cross-run result store<a class="headerlink" href="#cross-run-result-store" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">result_store=&quot;path/to/store&quot;)</span></code> enables cross-run reuse at the
+cell level: one stored payload per <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">arm)</span></code>. A stored cell is reused
+only when its digest matches the resolved target, horizon, model identity and
+parameters, feature/preprocessing/window/selection choices, vintage mode, and the
+same data fingerprint that pipeline provenance records. Reused cells are loaded back
+into the master forecast frame before evaluation, so <code class="docutils literal notranslate"><span class="pre">report.forecasts</span></code>,
+<code class="docutils literal notranslate"><span class="pre">report.accuracy</span></code>, and significance tables behave as if the cell had just been
+computed.</p>
+<p>This is the intended workflow for incremental horse races. Run a two-model
+comparison with <code class="docutils literal notranslate"><span class="pre">result_store=...</span></code>; later add a third <code class="docutils literal notranslate"><span class="pre">Arm</span></code> and use the same store.
+The old two cells are reused and only the new arm is fit. If <code class="docutils literal notranslate"><span class="pre">preprocessing_cache_dir</span></code>
+is also shared, the prepared per-origin preprocessing base panels are reused across
+the later run too, so adding a model does not re-fit or re-transform the common
+preprocessing base.</p>
+<p>Custom code is conservative by default. A user-owned model function, custom feature
+step, custom preprocessing step, metric callable, or loss callable makes the cell
+undigestible unless that callable carries a stable string attribute named
+<code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code>. Undigestible cells are always recomputed and never stored. Use
+<code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code> only when you are willing to treat that string as the callable’s
+semantic version; if you edit the callable, change the string or do not trust reuse.</p>
+<p>The result store assumes a single writer. Writes are atomic at the file level, so a
+crash leaves a miss rather than a half-readable cell, but concurrent writers to the
+same directory are outside the contract. Use <code class="docutils literal notranslate"><span class="pre">result_store_summary(store)</span></code> to inspect
+stored cells and <code class="docutils literal notranslate"><span class="pre">purge_result_store(store,</span> <span class="pre">before=...,</span> <span class="pre">version=...,</span> <span class="pre">digests=...)</span></code> to
+remove selected cells.</p>
 <p>These invariants are pinned by <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_preprocessing_share.py</span></code>
 (cross-arm and on-disk dedup, serial==parallel),
 <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_crosshorizon_transform_dedup.py</span></code> (the per-origin fit and heavy
@@ -1169,6 +1203,7 @@ nested.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#comparing-models-model-arms">Comparing models (<code class="docutils literal notranslate"><span class="pre">model_arms</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-held-fixed-vs-varied-the-reuse-contract">What is held fixed vs varied (the reuse contract)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cross-run-result-store">Cross-run result store</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parallel-execution-n-jobs">Parallel execution (<code class="docutils literal notranslate"><span class="pre">n_jobs</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">

@@ -595,6 +595,54 @@ inputs – only <code class="docutils literal notranslate"><span class="pre">rec
 snippets in <a class="reference internal" href="../getting_started.html"><span class="std std-doc">Getting Started</span></a> and the step-by-step
 pipeline in the <a class="reference internal" href="../gallery.html#a-complete-pipeline-step-by-step"><span class="std std-ref">Replication Gallery</span></a>.</p>
 </section>
+<section id="incremental-horse-races">
+<h2>Incremental horse races<a class="headerlink" href="#incremental-horse-races" title="Link to this heading">#</a></h2>
+<p>Long paper projects often grow a model comparison over many months. Use
+<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">result_store=&quot;results/cells&quot;,</span> <span class="pre">preprocessing_cache_dir=&quot;results/prep&quot;)</span></code>
+when you expect to add arms later:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">pipeline_spec</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">)],</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">arms</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">),</span>
+        <span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;RF&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">),</span>
+    <span class="n">result_store</span><span class="o">=</span><span class="s2">&quot;cache/result_cells&quot;</span><span class="p">,</span>
+    <span class="n">preprocessing_cache_dir</span><span class="o">=</span><span class="s2">&quot;cache/preprocessing&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">first</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+<span class="n">later</span> <span class="o">=</span> <span class="n">pipeline_spec</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">)],</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">arms</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">),</span>
+        <span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;RF&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">),</span>
+        <span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;GBM&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gradient_boosting&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">),</span>
+    <span class="n">result_store</span><span class="o">=</span><span class="s2">&quot;cache/result_cells&quot;</span><span class="p">,</span>
+    <span class="n">preprocessing_cache_dir</span><span class="o">=</span><span class="s2">&quot;cache/preprocessing&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">second</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">later</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The second run reuses the stored <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">arm)</span></code> cells for <code class="docutils literal notranslate"><span class="pre">AR</span></code> and <code class="docutils literal notranslate"><span class="pre">RF</span></code>
+and computes only <code class="docutils literal notranslate"><span class="pre">GBM</span></code>. The shared <code class="docutils literal notranslate"><span class="pre">preprocessing_cache_dir</span></code> also reuses the
+prepared per-origin preprocessing base when the preprocessing spec is unchanged.</p>
+<p>For custom code, reuse is opt-in. A custom model function, feature step,
+preprocessing step, metric, or loss must carry a stable <code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code> string to be
+stored. Without it, the cell is recomputed every run. If you edit the callable, do
+not trust old results unless you also update <code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code> and force a miss. The
+store is intended for a single writer; inspect it with
+<code class="docutils literal notranslate"><span class="pre">mf.pipeline.result_store_summary(...)</span></code> and delete cells with
+<code class="docutils literal notranslate"><span class="pre">mf.pipeline.purge_result_store(...)</span></code>.</p>
+</section>
 <section id="reference">
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -656,6 +704,7 @@ pipeline in the <a class="reference internal" href="../gallery.html#a-complete-p
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callables">Key Callables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#incremental-horse-races">Incremental horse races</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
 </ul>
   </nav></div>
