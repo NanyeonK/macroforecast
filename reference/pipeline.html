@@ -910,6 +910,11 @@ cells, took ~1.3s to fingerprint in full) does it fall back to a deterministic
 strided subsample instead, and <code class="docutils literal notranslate"><span class="pre">fingerprint[&quot;method&quot;]</span></code> says
 <code class="docutils literal notranslate"><span class="pre">&quot;strided_subsample&quot;</span></code> (with <code class="docutils literal notranslate"><span class="pre">row_stride</span></code>/<code class="docutils literal notranslate"><span class="pre">col_stride</span></code>/<code class="docutils literal notranslate"><span class="pre">sampled_shape</span></code>) rather
 than silently returning a partial-content digest labeled as full.</p>
+<p>For vintage-aware runs, <code class="docutils literal notranslate"><span class="pre">provenance[&quot;vintage_source&quot;]</span></code> records the source kind,
+<code class="docutils literal notranslate"><span class="pre">actuals_vintage</span></code> policy, reference-calendar summary, and origin-to-vintage map.
+Maps with 500 origins or fewer are stored inline. Larger maps are written as
+<code class="docutils literal notranslate"><span class="pre">vintage_map.json</span></code> next to <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code>, and provenance stores the sidecar
+<code class="docutils literal notranslate"><span class="pre">path</span></code>, <code class="docutils literal notranslate"><span class="pre">sha256</span></code>, and <code class="docutils literal notranslate"><span class="pre">n_origins</span></code>.</p>
 <p>Pass <code class="docutils literal notranslate"><span class="pre">provenance_level=&quot;basic&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> to keep exactly the
 pre-existing dict shape (<code class="docutils literal notranslate"><span class="pre">package_version</span></code>/<code class="docutils literal notranslate"><span class="pre">seed</span></code>/<code class="docutils literal notranslate"><span class="pre">targets</span></code>/<code class="docutils literal notranslate"><span class="pre">horizons</span></code>/<code class="docutils literal notranslate"><span class="pre">arms</span></code>/
 <code class="docutils literal notranslate"><span class="pre">benchmark</span></code>/<code class="docutils literal notranslate"><span class="pre">combinations</span></code>, no <code class="docutils literal notranslate"><span class="pre">environment</span></code>/<code class="docutils literal notranslate"><span class="pre">data</span></code>/<code class="docutils literal notranslate"><span class="pre">spec_echo</span></code>) – for callers
@@ -955,6 +960,13 @@ reconstructed into the same <code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code> carries; see “Density and interval forecasting” below).
 The directory argument wins over whatever <code class="docutils literal notranslate"><span class="pre">spec.checkpoint_dir</span></code> says, so a spec
 built without checkpointing (or a copied checkpoint directory) re-scores fine.</p>
+<p>For vintage-aware runs, <code class="docutils literal notranslate"><span class="pre">rescore()</span></code> uses the <code class="docutils literal notranslate"><span class="pre">actual</span></code> and
+<code class="docutils literal notranslate"><span class="pre">actuals_vintage_id</span></code> values already stored in the checkpoint records. It cannot
+change <code class="docutils literal notranslate"><span class="pre">VintagePanelSpec(actuals_vintage=...)</span></code> retroactively, because the
+checkpoint contains forecasts and realized values, not enough information to
+resolve a different actuals convention. To compare <code class="docutils literal notranslate"><span class="pre">&quot;latest&quot;</span></code> with
+<code class="docutils literal notranslate"><span class="pre">&quot;first_release&quot;</span></code>, run two otherwise identical specs and checkpoint/report them
+separately.</p>
 <p>Fields that require having actually executed the run are absent or best-effort:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">interpretation</span></code> is always <code class="docutils literal notranslate"><span class="pre">None</span></code> (needs fitted models; use

@@ -54,6 +54,8 @@ guessing which columns or horizons the run intended to use.
 | `list_vintages` | Generate supported monthly vintage labels for a dataset. | `list[str]` |
 | `fred_md_vintages` | Build a per-origin FRED-MD vintage source. | `VintageSource` |
 | `fred_qd_vintages` | Build a per-origin FRED-QD vintage source. | `VintageSource` |
+| `custom_vintages` | Build a per-origin source from callable, mapping, or long-frame custom vintages. | `VintageSource` |
+| `with_static_extras` | Join non-revised columns onto every resolved vintage snapshot. | `VintageSource` |
 | `as_panel` | Normalize a `DataFrame` to the canonical panel contract. | `pandas.DataFrame` |
 | `validate_panel` | Validate the canonical panel contract. | `None` |
 | `panel_info` | Summarize panel shape, dates, missingness, and frequency. | `dict` |
@@ -1197,6 +1199,49 @@ are memoized by vintage label and must carry `metadata["vintage"]`.
 Build a `VintageSource` that resolves FRED-QD by forecast origin. Its arguments
 and behavior mirror `fred_md_vintages`, delegating to `load_fred_qd`.
 
+### custom_vintages
+
+Build a `VintageSource` from user-supplied point-in-time snapshots.
+
+```python
+macroforecast.data.custom_vintages(
+    source,
+    *,
+    vintage_column: str | None = None,
+    date_column: str | None = None,
+    vintage_id=None,
+    dataset: str = "custom_vintages",
+    frequency: str = "unknown",
+    strict: bool = True,
+) -> VintageSource
+```
+
+`source` may be a callable `origin_date -> DataBundle | DataFrame`, a mapping
+from date-like vintage keys to snapshots, or a long ALFRED-style frame with
+`vintage_column` and `date_column`. Every resolved snapshot is normalized
+through the canonical panel contract and memoized by `vintage_id` (default:
+`str(resolved_key)`). Non-deterministic callable sources should run with
+runner/pipeline preprocessing caching disabled.
+
+### with_static_extras
+
+Wrap any `VintageSource` so static, non-revised columns are joined onto every
+resolved bundle.
+
+```python
+macroforecast.data.with_static_extras(
+    source: VintageSource,
+    extra,
+    *,
+    join: "outer" | "inner" | "left" = "outer",
+) -> VintageSource
+```
+
+The wrapper accepts `extra` as a `DataBundle` or `DataFrame`, normalizes it
+through the canonical panel contract, and includes the same SHA-256 panel
+fingerprint used by pipeline data provenance in each resolved vintage ID. A
+change to static extras therefore changes cache identity.
+
 ### VintageSource
 
 Runtime-checkable protocol for point-in-time data sources.
@@ -1216,9 +1261,12 @@ macroforecast.data.VintagePanelSpec(
 )
 ```
 
-Phase 1 supports `actuals_vintage="latest"` only in the runner. The reference
-calendar is required, non-empty, and monotonic; forecast target dates are derived
-from it while each origin's training data is resolved through `source`.
+The reference calendar is required, non-empty, and monotonic; forecast target
+dates are derived from it while each origin's training data is resolved through
+`source`. `actuals_vintage="latest"` scores every forecast against the latest
+snapshot available to the run. `actuals_vintage="first_release"` scores target
+date `d` against the first vintage strictly after `d`; the resulting
+`actuals_vintage_id` can vary by forecast row.
 
 ### VintageUnavailableError
 

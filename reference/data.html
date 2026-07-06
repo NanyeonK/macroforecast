@@ -606,6 +606,14 @@ guessing which columns or horizons the run intended to use.</p>
 <td><p>Build a per-origin FRED-QD vintage source.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">VintageSource</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_vintages</span></code></p></td>
+<td><p>Build a per-origin source from callable, mapping, or long-frame custom vintages.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">VintageSource</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">with_static_extras</span></code></p></td>
+<td><p>Join non-revised columns onto every resolved vintage snapshot.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">VintageSource</span></code></p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">as_panel</span></code></p></td>
 <td><p>Normalize a <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> to the canonical panel contract.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></p></td>
@@ -2696,6 +2704,45 @@ are memoized by vintage label and must carry <code class="docutils literal notra
 <p>Build a <code class="docutils literal notranslate"><span class="pre">VintageSource</span></code> that resolves FRED-QD by forecast origin. Its arguments
 and behavior mirror <code class="docutils literal notranslate"><span class="pre">fred_md_vintages</span></code>, delegating to <code class="docutils literal notranslate"><span class="pre">load_fred_qd</span></code>.</p>
 </section>
+<section id="custom-vintages">
+<h3>custom_vintages<a class="headerlink" href="#custom-vintages" title="Link to this heading">#</a></h3>
+<p>Build a <code class="docutils literal notranslate"><span class="pre">VintageSource</span></code> from user-supplied point-in-time snapshots.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_vintages</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">vintage_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">date_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">vintage_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;custom_vintages&quot;</span><span class="p">,</span>
+    <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span><span class="p">,</span>
+    <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VintageSource</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">source</span></code> may be a callable <code class="docutils literal notranslate"><span class="pre">origin_date</span> <span class="pre">-&gt;</span> <span class="pre">DataBundle</span> <span class="pre">|</span> <span class="pre">DataFrame</span></code>, a mapping
+from date-like vintage keys to snapshots, or a long ALFRED-style frame with
+<code class="docutils literal notranslate"><span class="pre">vintage_column</span></code> and <code class="docutils literal notranslate"><span class="pre">date_column</span></code>. Every resolved snapshot is normalized
+through the canonical panel contract and memoized by <code class="docutils literal notranslate"><span class="pre">vintage_id</span></code> (default:
+<code class="docutils literal notranslate"><span class="pre">str(resolved_key)</span></code>). Non-deterministic callable sources should run with
+runner/pipeline preprocessing caching disabled.</p>
+</section>
+<section id="with-static-extras">
+<h3>with_static_extras<a class="headerlink" href="#with-static-extras" title="Link to this heading">#</a></h3>
+<p>Wrap any <code class="docutils literal notranslate"><span class="pre">VintageSource</span></code> so static, non-revised columns are joined onto every
+resolved bundle.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">with_static_extras</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">VintageSource</span><span class="p">,</span>
+    <span class="n">extra</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">join</span><span class="p">:</span> <span class="s2">&quot;outer&quot;</span> <span class="o">|</span> <span class="s2">&quot;inner&quot;</span> <span class="o">|</span> <span class="s2">&quot;left&quot;</span> <span class="o">=</span> <span class="s2">&quot;outer&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VintageSource</span>
+</pre></div>
+</div>
+<p>The wrapper accepts <code class="docutils literal notranslate"><span class="pre">extra</span></code> as a <code class="docutils literal notranslate"><span class="pre">DataBundle</span></code> or <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code>, normalizes it
+through the canonical panel contract, and includes the same SHA-256 panel
+fingerprint used by pipeline data provenance in each resolved vintage ID. A
+change to static extras therefore changes cache identity.</p>
+</section>
 <section id="vintagesource">
 <h3>VintageSource<a class="headerlink" href="#vintagesource" title="Link to this heading">#</a></h3>
 <p>Runtime-checkable protocol for point-in-time data sources.</p>
@@ -2725,9 +2772,12 @@ and behavior mirror <code class="docutils literal notranslate"><span class="pre"
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Phase 1 supports <code class="docutils literal notranslate"><span class="pre">actuals_vintage=&quot;latest&quot;</span></code> only in the runner. The reference
-calendar is required, non-empty, and monotonic; forecast target dates are derived
-from it while each origin’s training data is resolved through <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p>
+<p>The reference calendar is required, non-empty, and monotonic; forecast target
+dates are derived from it while each origin’s training data is resolved through
+<code class="docutils literal notranslate"><span class="pre">source</span></code>. <code class="docutils literal notranslate"><span class="pre">actuals_vintage=&quot;latest&quot;</span></code> scores every forecast against the latest
+snapshot available to the run. <code class="docutils literal notranslate"><span class="pre">actuals_vintage=&quot;first_release&quot;</span></code> scores target
+date <code class="docutils literal notranslate"><span class="pre">d</span></code> against the first vintage strictly after <code class="docutils literal notranslate"><span class="pre">d</span></code>; the resulting
+<code class="docutils literal notranslate"><span class="pre">actuals_vintage_id</span></code> can vary by forecast row.</p>
 </section>
 <section id="vintageunavailableerror">
 <h3>VintageUnavailableError<a class="headerlink" href="#vintageunavailableerror" title="Link to this heading">#</a></h3>
@@ -2902,6 +2952,8 @@ requested origin date.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Output</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fred-md-vintages">fred_md_vintages</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fred-qd-vintages">fred_qd_vintages</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-vintages">custom_vintages</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-static-extras">with_static_extras</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vintagesource">VintageSource</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vintagepanelspec">VintagePanelSpec</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vintageunavailableerror">VintageUnavailableError</a></li>

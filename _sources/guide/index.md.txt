@@ -71,6 +71,8 @@ you can paste and run. Once the stages are familiar, or once you already have
 your own data and your own model in mind, go straight to
 [Your Data, Your Model, One Table](custom_data_tutorial.md) -- a capstone
 tutorial that runs every stage above end to end on a custom CSV.
+Use [Real-Time Vintages](vintages.md) when the study must resolve one data
+snapshot per forecast origin.
 
 When you need exact signatures, follow the reference link at the foot of each
 stage page. The [Glossary](glossary.md), [Models and Features](model_overview.md),
@@ -94,6 +96,13 @@ full study.
 :link-type: doc
 
 Loading FRED-MD, FRED-QD, FRED-SD, and custom panels into a `DataBundle`.
+:::
+
+:::{grid-item-card} Real-Time Vintages
+:link: vintages
+:link-type: doc
+
+Run true point-in-time studies with FRED-MD/QD or custom vintage snapshots.
 :::
 
 :::{grid-item-card} Preprocessing
@@ -154,6 +163,7 @@ one line to a referee-ready LaTeX table.
 
 getting_started
 concepts/data
+vintages
 concepts/preprocessing
 concepts/features
 concepts/models_and_arms
