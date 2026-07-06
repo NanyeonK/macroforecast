@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 import pandas.testing as pdt
+import numpy as np
 
 import macroforecast as mf
 from macroforecast.pipeline import Arm, EvalSpec, pipeline_spec, run_pipeline
@@ -15,10 +16,10 @@ def _latest_key(keys, origin):
 class _Source:
     kind = "pipeline_synthetic"
 
-    def __init__(self) -> None:
-        self.reference = pd.date_range("2000-01-31", periods=9, freq="ME", name="date")
+    def __init__(self, periods: int = 9) -> None:
+        self.reference = pd.date_range("2000-01-31", periods=periods, freq="ME", name="date")
         base = pd.DataFrame(
-            {"A": [float(i) for i in range(1, 10)]},
+            {"A": [float(i) for i in range(1, periods + 1)]},
             index=self.reference,
         )
         self.bundles = {
@@ -38,6 +39,28 @@ class _Source:
         if not keys:
             raise mf.data.VintageUnavailableError("no vintage available")
         return self.bundles[max(keys)]
+
+
+class _RevisionSource(_Source):
+    def __init__(self) -> None:
+        super().__init__(periods=16)
+        for key, bundle in list(self.bundles.items()):
+            panel = bundle.panel.copy()
+            for pos in range(5, 13):
+                if key >= self.reference[pos + 2] and self.reference[pos] in panel.index:
+                    panel.loc[self.reference[pos], "A"] = float((pos + 1) * 10)
+            self.bundles[key] = mf.data.DataBundle(panel, dict(bundle.metadata))
+
+
+def _constant_model(value: float, name: str) -> mf.models.ModelSpec:
+    class Fit:
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(float(value), index=X.index)
+
+    def fit(X: pd.DataFrame, y: pd.Series):
+        return Fit()
+
+    return mf.models.custom_model(name, fit)
 
 
 def _spec(*, n_jobs=1, horizons=(1,), preprocessing_cache_dir=None, preprocessing=False):
@@ -79,6 +102,72 @@ def _spec(*, n_jobs=1, horizons=(1,), preprocessing_cache_dir=None, preprocessin
         n_jobs=n_jobs,
         preprocessing_cache_dir=preprocessing_cache_dir,
     )
+
+
+def _scoring_spec(actuals_vintage: str):
+    source = _RevisionSource()
+    data = mf.data.VintagePanelSpec(
+        source,
+        source.reference,
+        actuals_vintage=actuals_vintage,
+    )
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=3),
+        val=mf.window.val_last_block(size=1),
+        test=mf.window.test_origins(
+            first_origin=source.reference[4],
+            last_origin=source.reference[11],
+            horizon=1,
+        ),
+    )
+    features = mf.feature_engineering.feature_spec(
+        target="A",
+        predictors=[],
+        lags=None,
+        target_lags=(1,),
+    )
+    return pipeline_spec(
+        data=data,
+        targets=[mf.pipeline.TargetSpec("A", transform="level")],
+        horizons=[1],
+        window=window,
+        arms=[
+            Arm("ZERO", model=_constant_model(0.0, "vintage_zero"), features=features),
+            Arm("TEN", model=_constant_model(10.0, "vintage_ten"), features=features),
+        ],
+        evaluation=EvalSpec(
+            benchmark="ZERO",
+            metrics=("relative_mse",),
+            tests=("dm",),
+        ),
+        save_models=False,
+    )
+
+
+def test_first_release_actuals_change_pipeline_scores() -> None:
+    latest = run_pipeline(_scoring_spec("latest"))
+    first = run_pipeline(_scoring_spec("first_release"))
+
+    latest_actuals = (
+        latest.forecasts[latest.forecasts["contender"] == "ZERO"]
+        .sort_values("date")["actual"]
+        .to_numpy(float)
+    )
+    first_actuals = (
+        first.forecasts[first.forecasts["contender"] == "ZERO"]
+        .sort_values("date")["actual"]
+        .to_numpy(float)
+    )
+    np.testing.assert_allclose(latest_actuals, [60.0, 70.0, 80.0, 90.0, 100.0, 110.0, 120.0, 130.0])
+    np.testing.assert_allclose(first_actuals, [6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0])
+
+    latest_rel = float(latest.accuracy[latest.accuracy["contender"] == "TEN"]["relative_mse"].iloc[0])
+    first_rel = float(first.accuracy[first.accuracy["contender"] == "TEN"]["relative_mse"].iloc[0])
+    assert latest_rel != first_rel
+
+    latest_dm = float(latest.significance[latest.significance["contender"] == "TEN"]["dm_stat"].iloc[0])
+    first_dm = float(first.significance[first.significance["contender"] == "TEN"]["dm_stat"].iloc[0])
+    assert latest_dm != first_dm
 
 
 def _custom_shape_sources():

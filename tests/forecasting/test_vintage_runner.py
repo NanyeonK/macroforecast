@@ -98,7 +98,7 @@ def _recording_model(sink: list[dict[str, pd.DataFrame | pd.Series]]) -> mf.mode
     return mf.models.custom_model("recording_vintage_oracle", fit)
 
 
-def _constant_model(value: float = 1.0) -> mf.models.ModelSpec:
+def _constant_model(value: float = 1.0, *, name: str = "constant_vintage_oracle") -> mf.models.ModelSpec:
     class Fit:
         def predict(self, X: pd.DataFrame) -> pd.Series:
             return pd.Series(float(value), index=X.index)
@@ -106,7 +106,7 @@ def _constant_model(value: float = 1.0) -> mf.models.ModelSpec:
     def fit(X: pd.DataFrame, y: pd.Series):
         return Fit()
 
-    return mf.models.custom_model("constant_vintage_oracle", fit)
+    return mf.models.custom_model(name, fit)
 
 
 def _recording_panel_model(sink: list[dict[str, pd.DataFrame]]) -> mf.models.ModelSpec:
@@ -235,17 +235,6 @@ def test_vintage_runner_validations_and_embargo_warning() -> None:
             save_models=False,
         )
 
-    first_release = mf.data.VintagePanelSpec(source, reference, actuals_vintage="first_release")
-    with pytest.raises(NotImplementedError, match="Phase 3"):
-        mf.forecasting.run(
-            first_release,
-            "ols",
-            window=_window(reference),
-            target="A",
-            features=_features(),
-            save_models=False,
-        )
-
     embargo_window = mf.window.spec(
         estimation=mf.window.estimation_expanding(min_size=3, embargo=1),
         val=mf.window.val_last_block(size=1),
@@ -260,6 +249,45 @@ def test_vintage_runner_validations_and_embargo_warning() -> None:
             features=_features(),
             save_models=False,
         )
+
+
+def _actual_revision_bundles() -> tuple[pd.DatetimeIndex, dict[pd.Timestamp, mf.data.DataBundle]]:
+    reference, bundles = _oracle_bundles()
+    revised: dict[pd.Timestamp, mf.data.DataBundle] = {}
+    for key, bundle in bundles.items():
+        panel = bundle.panel.copy()
+        if key >= reference[7] and reference[5] in panel.index:
+            panel.loc[reference[5], "A"] = 60.0
+        if key >= reference[8] and reference[6] in panel.index:
+            panel.loc[reference[6], "A"] = 70.0
+        revised[key] = mf.data.DataBundle(panel, dict(bundle.metadata))
+    return reference, revised
+
+
+def test_vintage_first_release_actuals_are_resolved_per_target_date() -> None:
+    reference, bundles = _actual_revision_bundles()
+    latest = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
+    first_release = mf.data.VintagePanelSpec(
+        _SyntheticVintageSource(bundles),
+        reference,
+        actuals_vintage="first_release",
+    )
+
+    kwargs = dict(
+        model=_constant_model(0.0),
+        window=_window(reference, last_origin=reference[5]),
+        target="A",
+        features=_features(),
+        save_models=False,
+    )
+    latest_table = mf.forecasting.run(latest, **kwargs).to_frame()
+    first_table = mf.forecasting.run(first_release, **kwargs).to_frame()
+
+    np.testing.assert_allclose(latest_table["actual"].to_numpy(float), [60.0, 70.0])
+    np.testing.assert_allclose(first_table["actual"].to_numpy(float), [6.0, 7.0])
+    assert list(latest_table["actuals_vintage_id"]) == ["v8", "v8"]
+    assert list(first_table["actuals_vintage_id"]) == ["v6", "v7"]
+    assert latest_table["actual"].tolist() != first_table["actual"].tolist()
 
 
 def test_vintage_recursive_policy_uses_per_origin_vintage_rows() -> None:

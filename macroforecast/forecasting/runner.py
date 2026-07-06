@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 
+from bisect import bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -148,6 +149,12 @@ _STAGE_RECORD_COLUMNS = (
 class _StageUpdateState:
     updated_once: bool = False
     last_origin: Any | None = None
+
+
+@dataclass(frozen=True)
+class _VintageActualValue:
+    value: float | None
+    vintage_id: Any
 
 
 def run(
@@ -1168,9 +1175,9 @@ def _run_vintage_aware(
     _validate_runner_window(execution_window, reference_index)
     _warn_vintage_embargo(execution_window)
 
-    actual_bundle = _vintage_latest_actual_bundle(data, reference_index)
-    actual_vintage_id = _bundle_vintage_id(actual_bundle)
-    actual_panel = _vintage_work_panel(actual_bundle, reference_index)
+    actual_resolver = _VintageActualResolver(data, reference_index)
+    actual_vintage_id = actual_resolver.metadata_vintage_id
+    actual_panel = actual_resolver.base_panel
 
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
@@ -1292,8 +1299,14 @@ def _run_vintage_aware(
                 )
             )
 
+        target_name = _feature_target_name(features)
+        actual_dates = _vintage_actual_dates_for_item(item, reference_index, horizon)
+        origin_actual_panel, origin_actual_vintage_id = actual_resolver.panel_for_dates(
+            target_name,
+            actual_dates,
+        )
         actual_prepared = _prepare_origin_panel(
-            actual_panel,
+            origin_actual_panel,
             features=features,
             preprocessing=preprocessing,
             preprocessing_policy=preprocessing_policy,
@@ -1413,7 +1426,7 @@ def _run_vintage_aware(
         vintage_row = {
             **item["row"],
             "vintage_id": vintage_id,
-            "actuals_vintage_id": actual_vintage_id,
+            "actuals_vintage_id": origin_actual_vintage_id,
         }
         origin_item = {
             **item,
@@ -1424,7 +1437,7 @@ def _run_vintage_aware(
             "future_feature_policy": future_feature_policy,
             "window_spec": execution_window,
             "target_transform": features.target_transform,
-            "target_name": _feature_target_name(features),
+            "target_name": target_name,
             "target_key": f"{forecast_policy}_h{horizon}",
             "X_fit": train_features.X,
             "y_fit": train_features.y
@@ -1460,7 +1473,7 @@ def _run_vintage_aware(
         )
         for record in origin_records:
             record["vintage_id"] = vintage_id
-            record["actuals_vintage_id"] = actual_vintage_id
+            record["actuals_vintage_id"] = origin_actual_vintage_id
         if already_done:
             continue
         records.extend(origin_records)
@@ -1541,9 +1554,9 @@ def _run_vintage_panel_models(
     _validate_runner_window(window_spec, reference_index, exclude_origin=True)
     _warn_vintage_embargo(window_spec)
 
-    actual_bundle = _vintage_latest_actual_bundle(data, reference_index)
-    actual_vintage_id = _bundle_vintage_id(actual_bundle)
-    actual_panel = _vintage_work_panel(actual_bundle, reference_index)
+    actual_resolver = _VintageActualResolver(data, reference_index)
+    actual_vintage_id = actual_resolver.metadata_vintage_id
+    actual_panel = actual_resolver.base_panel
 
     records: list[dict[str, Any]] = []
     stage_records: list[dict[str, Any]] = []
@@ -1632,15 +1645,6 @@ def _run_vintage_panel_models(
                 )
             )
 
-        actual_prepared = _prepare_origin_panel(
-            actual_panel,
-            features=None,
-            preprocessing=preprocessing,
-            preprocessing_policy=preprocessing_policy,
-            item=item,
-            include_target_pos=False,
-            fitted_preprocessing=prepared.fitted_preprocessing,
-        )
         prepared_metadata = dict(
             prepared.panel_metadata
             if prepared.panel_metadata is not None
@@ -1649,6 +1653,19 @@ def _run_vintage_panel_models(
 
         fit_labels = reference_index[item["fit_idx"]]
         test_labels = reference_index[item["test_idx"]]
+        origin_actual_panel, origin_actual_vintage_id = actual_resolver.panel_for_dates(
+            target,
+            pd.DatetimeIndex(test_labels),
+        )
+        actual_prepared = _prepare_origin_panel(
+            origin_actual_panel,
+            features=None,
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_policy,
+            item=item,
+            include_target_pos=False,
+            fitted_preprocessing=prepared.fitted_preprocessing,
+        )
         fit_panel = prepared.panel.reindex(fit_labels).dropna(how="all").copy()
         test_panel = prepared.panel.reindex(test_labels).copy()
         actual_test_panel = actual_prepared.panel.reindex(test_labels).copy()
@@ -1658,7 +1675,7 @@ def _run_vintage_panel_models(
         vintage_row = {
             **item["row"],
             "vintage_id": vintage_id,
-            "actuals_vintage_id": actual_vintage_id,
+            "actuals_vintage_id": origin_actual_vintage_id,
         }
         origin_records = _fit_predict_panel_origin(
             {**item, "row": vintage_row},
@@ -1677,16 +1694,21 @@ def _run_vintage_panel_models(
         for record in origin_records:
             date = record.get("date")
             actual_value = None
+            record_actual_vintage_id = origin_actual_vintage_id
             if target in actual_test_panel.columns and date in actual_test_panel.index:
                 value = actual_test_panel.loc[date, target]
                 actual_value = None if pd.isna(value) else float(value)
+                record_actual_vintage_id = actual_resolver.vintage_id_for_date(
+                    target,
+                    pd.Timestamp(date),
+                )
             record["actual"] = actual_value
             record["vintage_id"] = vintage_id
-            record["actuals_vintage_id"] = actual_vintage_id
+            record["actuals_vintage_id"] = record_actual_vintage_id
             record["window"] = {
                 **dict(record.get("window") or {}),
                 "vintage_id": vintage_id,
-                "actuals_vintage_id": actual_vintage_id,
+                "actuals_vintage_id": record_actual_vintage_id,
             }
         records.extend(origin_records)
 
@@ -1748,11 +1770,6 @@ def _validate_vintage_runner_constraints(
 ) -> None:
     if window_spec.estimation.retrain_every != 1:
         raise ValueError("vintage-aware runs require retrain_every=1 in Phase 1")
-    if data.actuals_vintage != "latest":
-        raise NotImplementedError(
-            "actuals_vintage='first_release' is not implemented for vintage-aware "
-            "runs yet; Phase 3"
-        )
 
 
 def _warn_vintage_embargo(window_spec: WindowSpec) -> None:
@@ -1778,6 +1795,80 @@ def _vintage_work_panel(bundle: DataBundle, reference_index: pd.DatetimeIndex) -
     return panel
 
 
+class _VintageActualResolver:
+    def __init__(self, data: VintagePanelSpec, reference_index: pd.DatetimeIndex) -> None:
+        self._data = data
+        self._reference_index = reference_index
+        self._policy = data.actuals_vintage
+        self._cache: dict[tuple[str, str, pd.Timestamp], _VintageActualValue] = {}
+        self._available_keys = tuple(data.source.available_vintages())
+        self._available_timestamps = tuple(
+            pd.Timestamp(value) for value in self._available_keys
+        )
+        latest_bundle = _vintage_latest_actual_bundle(data, reference_index)
+        self._latest_vintage_id = _bundle_vintage_id(latest_bundle)
+        self.base_panel = _vintage_work_panel(latest_bundle, reference_index)
+        self.metadata_vintage_id = (
+            self._latest_vintage_id
+            if self._policy == "latest"
+            else "first_release(row-varying)"
+        )
+        if self._policy == "first_release" and not self._available_keys:
+            raise ValueError(
+                "actuals_vintage='first_release' requires source.available_vintages()"
+            )
+
+    def panel_for_dates(
+        self,
+        target: str,
+        dates: Sequence[Any],
+    ) -> tuple[pd.DataFrame, Any]:
+        if self._policy == "latest":
+            return self.base_panel, self._latest_vintage_id
+        panel = self.base_panel.copy()
+        resolved: list[tuple[pd.Timestamp, Any]] = []
+        for date in pd.DatetimeIndex(dates).unique():
+            actual = self.actual_value(target, pd.Timestamp(date))
+            if date in panel.index:
+                panel.loc[date, target] = np.nan if actual.value is None else actual.value
+            resolved.append((pd.Timestamp(date), actual.vintage_id))
+        return panel, self._format_vintage_ids(resolved)
+
+    def vintage_id_for_date(self, target: str, date: pd.Timestamp) -> Any:
+        if self._policy == "latest":
+            return self._latest_vintage_id
+        return self.actual_value(target, date).vintage_id
+
+    def actual_value(self, target: str, date: pd.Timestamp) -> _VintageActualValue:
+        key = ("actual", str(target), pd.Timestamp(date))
+        cached = self._cache.get(key)
+        if cached is not None:
+            return cached
+        pos = bisect_right(self._available_timestamps, pd.Timestamp(date))
+        if pos >= len(self._available_keys):
+            raise VintageUnavailableError(
+                f"no first-release vintage is available strictly after {date.date()}"
+            )
+        bundle = self._data.source.resolve(pd.Timestamp(self._available_keys[pos]))
+        vintage_id = _bundle_vintage_id(bundle)
+        validate_panel(bundle.panel)
+        value: float | None = None
+        if target in bundle.panel.columns and date in bundle.panel.index:
+            raw = bundle.panel.loc[date, target]
+            value = None if pd.isna(raw) else float(raw)
+        actual = _VintageActualValue(value=value, vintage_id=vintage_id)
+        self._cache[key] = actual
+        return actual
+
+    @staticmethod
+    def _format_vintage_ids(resolved: Sequence[tuple[pd.Timestamp, Any]]) -> Any:
+        ids = [value for _date, value in resolved]
+        unique = {str(value) for value in ids}
+        if len(unique) == 1 and ids:
+            return ids[0]
+        return ";".join(f"{date.isoformat()}={value}" for date, value in resolved)
+
+
 def _vintage_latest_actual_bundle(
     data: VintagePanelSpec,
     reference_index: pd.DatetimeIndex,
@@ -1786,6 +1877,20 @@ def _vintage_latest_actual_bundle(
     if available_vintages:
         return data.source.resolve(pd.Timestamp(available_vintages[-1]))
     return data.source.resolve(pd.Timestamp(reference_index[-1]))
+
+
+def _vintage_actual_dates_for_item(
+    item: Mapping[str, Any],
+    reference_index: pd.DatetimeIndex,
+    horizon: int,
+) -> pd.DatetimeIndex:
+    row = item.get("row", {})
+    origin_pos = int(row.get("origin_pos", item.get("origin_pos", -1)))
+    start = origin_pos + 1
+    stop = min(len(reference_index), origin_pos + int(horizon) + 1)
+    if start < 0 or start >= stop:
+        return pd.DatetimeIndex([], name=reference_index.name)
+    return pd.DatetimeIndex(reference_index[start:stop], name=reference_index.name)
 
 
 def _bundle_vintage_id(bundle: DataBundle) -> Any:
