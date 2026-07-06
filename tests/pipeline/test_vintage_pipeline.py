@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import hashlib
+import json
+
 import pandas as pd
 import pandas.testing as pdt
 import numpy as np
 
 import macroforecast as mf
+import macroforecast.pipeline.run as run_mod
 from macroforecast.pipeline import Arm, EvalSpec, pipeline_spec, run_pipeline
 
 
@@ -63,7 +67,14 @@ def _constant_model(value: float, name: str) -> mf.models.ModelSpec:
     return mf.models.custom_model(name, fit)
 
 
-def _spec(*, n_jobs=1, horizons=(1,), preprocessing_cache_dir=None, preprocessing=False):
+def _spec(
+    *,
+    n_jobs=1,
+    horizons=(1,),
+    preprocessing_cache_dir=None,
+    preprocessing=False,
+    checkpoint_dir=None,
+):
     source = _Source()
     data = mf.data.VintagePanelSpec(source, source.reference)
     window = mf.window.spec(
@@ -101,6 +112,7 @@ def _spec(*, n_jobs=1, horizons=(1,), preprocessing_cache_dir=None, preprocessin
         save_models=False,
         n_jobs=n_jobs,
         preprocessing_cache_dir=preprocessing_cache_dir,
+        checkpoint_dir=checkpoint_dir,
     )
 
 
@@ -341,3 +353,40 @@ def test_vintage_pipeline_report_carries_audit_and_provenance() -> None:
     }
     assert report.leakage_audit["vintage_boundary_audit"]["vintage_boundary_ok"] is True
     assert {"vintage_id", "actuals_vintage_id"}.issubset(report.forecasts.columns)
+
+
+def _origin_vintage_map(n: int) -> dict[str, str]:
+    dates = pd.date_range("2000-01-31", periods=n, freq="ME")
+    return {date.isoformat(): f"v{pos}" for pos, date in enumerate(dates)}
+
+
+def test_vintage_origin_map_stays_inline_at_size_gate(tmp_path) -> None:
+    origin_map = _origin_vintage_map(500)
+    spec = _spec(checkpoint_dir=str(tmp_path))
+
+    vintage = run_mod._merge_vintage_sources(
+        spec,
+        [{"kind": "synthetic", "actuals_vintage": "latest", "origin_vintage_map": origin_map}],
+    )
+
+    assert vintage["origin_vintage_map"] == dict(sorted(origin_map.items()))
+    assert not (tmp_path / "vintage_map.json").exists()
+
+
+def test_vintage_origin_map_writes_sidecar_above_size_gate(tmp_path) -> None:
+    origin_map = _origin_vintage_map(501)
+    spec = _spec(checkpoint_dir=str(tmp_path))
+
+    vintage = run_mod._merge_vintage_sources(
+        spec,
+        [{"kind": "synthetic", "actuals_vintage": "latest", "origin_vintage_map": origin_map}],
+    )
+
+    sidecar = vintage["origin_vintage_map"]
+    path = tmp_path / "vintage_map.json"
+    assert set(sidecar) == {"path", "sha256", "n_origins"}
+    assert sidecar["path"] == str(path)
+    assert sidecar["n_origins"] == 501
+    payload = path.read_bytes()
+    assert hashlib.sha256(payload).hexdigest() == sidecar["sha256"]
+    assert json.loads(payload.decode("utf-8")) == dict(sorted(origin_map.items()))

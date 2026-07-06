@@ -8,8 +8,10 @@ into one cell; the parallel backend splits one horizon per cell.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
+import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Mapping, NamedTuple
@@ -823,6 +825,7 @@ def _panel_index(data: Any):
 # pathologically large custom panel, not something real usage is expected to
 # hit.
 _FINGERPRINT_FULL_CELL_CAP = 20_000_000
+_VINTAGE_MAP_INLINE_LIMIT = 500
 
 
 def _package_source_root() -> Path:
@@ -1037,6 +1040,71 @@ def _reference_calendar_summary(spec: PipelineSpec) -> dict[str, Any] | None:
     }
 
 
+def _compact_vintage_map_summary(
+    ordered_items: Sequence[tuple[str, Any]],
+    *,
+    note: str,
+) -> dict[str, Any]:
+    return {
+        "n_origins": int(len(ordered_items)),
+        "first": {ordered_items[0][0]: ordered_items[0][1]},
+        "last": {ordered_items[-1][0]: ordered_items[-1][1]},
+        "note": note,
+    }
+
+
+def _write_vintage_map_sidecar(
+    spec: PipelineSpec,
+    ordered_items: Sequence[tuple[str, Any]],
+) -> dict[str, Any]:
+    checkpoint_dir = getattr(spec, "checkpoint_dir", None)
+    if checkpoint_dir is None:
+        return _compact_vintage_map_summary(
+            ordered_items,
+            note=(
+                "map omitted because checkpoint_dir is not configured; set "
+                "checkpoint_dir to write vintage_map.json"
+            ),
+        )
+
+    payload = {key: value for key, value in ordered_items}
+    text = json.dumps(
+        payload,
+        indent=2,
+        sort_keys=True,
+        ensure_ascii=False,
+        default=str,
+    ) + "\n"
+    encoded = text.encode("utf-8")
+    sha256 = hashlib.sha256(encoded).hexdigest()
+
+    root = Path(checkpoint_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    final_path = root / "vintage_map.json"
+    fd, tmp_path = tempfile.mkstemp(
+        suffix=".tmp",
+        prefix=f".{final_path.name}.",
+        dir=root,
+    )
+    try:
+        os.write(fd, encoded)
+    except Exception:
+        os.close(fd)
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+    else:
+        os.close(fd)
+    os.replace(tmp_path, final_path)
+    return {
+        "path": str(final_path),
+        "sha256": sha256,
+        "n_origins": int(len(ordered_items)),
+    }
+
+
 def _merge_vintage_sources(spec: PipelineSpec, sources: Any) -> dict[str, Any]:
     records = [dict(source) for source in sources if isinstance(source, Mapping)]
     first = records[0] if records else {}
@@ -1046,15 +1114,10 @@ def _merge_vintage_sources(spec: PipelineSpec, sources: Any) -> dict[str, Any]:
         if isinstance(mapping, Mapping):
             origin_map.update({str(key): value for key, value in mapping.items()})
     ordered_items = sorted(origin_map.items())
-    if len(ordered_items) <= 500:
+    if len(ordered_items) <= _VINTAGE_MAP_INLINE_LIMIT:
         map_payload: Any = {key: value for key, value in ordered_items}
     elif ordered_items:
-        map_payload = {
-            "n_origins": int(len(ordered_items)),
-            "first": {ordered_items[0][0]: ordered_items[0][1]},
-            "last": {ordered_items[-1][0]: ordered_items[-1][1]},
-            "note": "map omitted; sidecar writer lands in Phase 3",
-        }
+        map_payload = _write_vintage_map_sidecar(spec, ordered_items)
     else:
         map_payload = {}
     return {
