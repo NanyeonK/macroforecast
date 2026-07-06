@@ -24,6 +24,7 @@ from macroforecast.pipeline.spec import (
     is_vintage_aware,
     _model_default_name,
 )
+from macroforecast.pipeline.result_store import ResultCellIdentity, ResultStore, result_cell_identity
 
 
 def _safe_segment(value: str) -> str:
@@ -172,14 +173,16 @@ def _enumerate_cells(spec: PipelineSpec) -> list[_Cell]:
     """Enumerate cells in the deterministic (target -> arm -> horizon) visit order.
 
     Serial groups all horizons per (target, arm); parallel splits one horizon per
-    cell. The reassembly order is the enumeration order, so the master frame's row
-    order is identical regardless of backend or worker completion order.
+    cell. When ``result_store`` is enabled, both backends split by horizon so the
+    persisted unit is exactly one (target, horizon, arm) cell. The reassembly order
+    is the enumeration order, so the master frame's row order is identical
+    regardless of backend or worker completion order.
     """
     horizons = tuple(int(h) for h in spec.horizons)
     cells: list[_Cell] = []
     for t_idx, _target in enumerate(spec.targets):
         for a_idx, _arm in enumerate(spec.arms):
-            if spec.n_jobs > 1:
+            if spec.n_jobs > 1 or spec.result_store is not None:
                 cells.extend(_Cell(t_idx, a_idx, (h,)) for h in horizons)
             else:
                 cells.append(_Cell(t_idx, a_idx, horizons))
@@ -455,22 +458,138 @@ def _resolve_run_cache_dir(
     return spec, None
 
 
+def _empty_result_store_metadata(spec: PipelineSpec) -> dict[str, Any] | None:
+    if spec.result_store is None:
+        return None
+    return {
+        "path": str(spec.result_store),
+        "n_reused": 0,
+        "n_computed": 0,
+        "n_undigestible": 0,
+        "version_mismatches": [],
+    }
+
+
+def _result_store_identity(
+    spec: PipelineSpec,
+    cell: _Cell,
+    data_identity: Mapping[str, Any],
+) -> ResultCellIdentity:
+    arm = spec.arms[cell.arm_idx]
+    target = spec.targets[cell.target_idx]
+    if len(cell.horizons) != 1:
+        return ResultCellIdentity(
+            digest=None,
+            cell_echo=None,
+            data_fingerprint=data_identity.get("fingerprint"),
+            reason="result_store requires one horizon per cell",
+        )
+    return result_cell_identity(
+        spec,
+        arm,
+        target,
+        horizon=int(cell.horizons[0]),
+        data_identity=data_identity,
+    )
+
+
+def _result_store_cell_label(spec: PipelineSpec, cell: _Cell) -> dict[str, Any]:
+    arm = spec.arms[cell.arm_idx]
+    target = spec.targets[cell.target_idx]
+    return {
+        "target": target.name,
+        "arm": arm.name,
+        "horizon": int(cell.horizons[0]) if cell.horizons else None,
+    }
+
+
+def _result_store_load(
+    spec: PipelineSpec,
+    cell: _Cell,
+    store: ResultStore | None,
+    data_identity: Mapping[str, Any] | None,
+    metadata: dict[str, Any] | None,
+) -> "tuple[pd.DataFrame | None, ResultCellIdentity | None]":
+    if store is None or data_identity is None or metadata is None:
+        return None, None
+    identity = _result_store_identity(spec, cell, data_identity)
+    if identity.digest is None:
+        metadata["n_undigestible"] += 1
+        return None, identity
+    hit = store.load(identity.digest, data_fingerprint=identity.data_fingerprint)
+    if hit is None:
+        return None, identity
+    metadata["n_reused"] += 1
+    import macroforecast as _mf
+
+    running_version = getattr(_mf, "__version__", "unknown")
+    store_version = hit.manifest.get("macroforecast_version")
+    if store_version != running_version:
+        metadata["version_mismatches"].append(
+            {
+                **_result_store_cell_label(spec, cell),
+                "digest": identity.digest,
+                "store_version": store_version,
+                "running_version": running_version,
+            }
+        )
+    return hit.frame, identity
+
+
+def _result_store_note_computed(
+    store: ResultStore | None,
+    metadata: dict[str, Any] | None,
+    identity: ResultCellIdentity | None,
+    frame: pd.DataFrame,
+) -> None:
+    if metadata is not None:
+        metadata["n_computed"] += 1
+    if store is None or identity is None or identity.digest is None or identity.cell_echo is None:
+        return
+    store.write(
+        identity.digest,
+        frame,
+        data_fingerprint=identity.data_fingerprint,
+        cell_echo=identity.cell_echo,
+    )
+
+
+def _warn_result_store_version_mismatches(metadata: Mapping[str, Any] | None) -> None:
+    mismatches = list((metadata or {}).get("version_mismatches", []))
+    if not mismatches:
+        return
+    import warnings as _warnings
+
+    cells = ", ".join(
+        f"{m['target']}/{m['arm']}/h{m['horizon']} "
+        f"(store={m['store_version']}, running={m['running_version']})"
+        for m in mismatches
+    )
+    _warnings.warn(
+        "result_store reused cell(s) written by a different macroforecast version: "
+        f"{cells}",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
 def _run_cells(
     spec: PipelineSpec,
-) -> "tuple[pd.DataFrame, list[dict[str, Any]], list[dict[str, Any]]]":
+) -> "tuple[pd.DataFrame, list[dict[str, Any]], list[dict[str, Any]], dict[str, Any] | None]":
     """Execute every cell, isolating per-cell failures.
 
-    Returns ``(master, failed_cells, empty_cells)``. The two backends share this
-    one enumerate-then-execute structure; the master frame, ``failed_cells`` and
-    the zero-row ``empty_cells`` are assembled in the deterministic cell order
-    independent of execution backend.
+    Returns ``(master, failed_cells, empty_cells, result_store_metadata)``. The
+    two backends share this one enumerate-then-execute structure; the master
+    frame, ``failed_cells`` and the zero-row ``empty_cells`` are assembled in the
+    deterministic cell order independent of execution backend.
     """
     import shutil as _shutil
     import warnings as _warnings
 
     cells = _enumerate_cells(spec)
+    result_store_metadata = _empty_result_store_metadata(spec)
     if not cells:
-        return pd.DataFrame(), [], []
+        return pd.DataFrame(), [], [], result_store_metadata
 
     # Auto-manage a run-scoped on-disk preprocessing cache dir when the caller
     # left preprocessing_cache_dir unset and n_jobs>1 (see _resolve_run_cache_dir).
@@ -479,27 +598,61 @@ def _run_cells(
     # below (dispatch, reassembly, empty-cell scan) runs inside the try so the
     # cache dir stays alive for the whole run and is always cleaned up after.
     spec, created_cache_dir = _resolve_run_cache_dir(spec)
+    result_store = ResultStore(spec.result_store) if spec.result_store is not None else None
+    result_store_data_identity = _data_identity(spec.data) if result_store is not None else None
     try:
         results: dict[_Cell, pd.DataFrame] = {}
+        result_identities: dict[_Cell, ResultCellIdentity | None] = {}
         failed: list[dict[str, Any]] = []
+
+        for cell in cells:
+            frame, identity = _result_store_load(
+                spec,
+                cell,
+                result_store,
+                result_store_data_identity,
+                result_store_metadata,
+            )
+            result_identities[cell] = identity
+            if frame is not None:
+                results[cell] = frame
+
+        pending_cells = [cell for cell in cells if cell not in results]
 
         if spec.n_jobs > 1:
             from concurrent.futures import ProcessPoolExecutor
 
-            max_workers = min(spec.n_jobs, len(cells))
+            max_workers = min(spec.n_jobs, len(pending_cells)) if pending_cells else 0
             # Dispatch heaviest-first (LPT) so a heavy cell is never stranded alone
             # at the tail while cores sit idle. Results are keyed by cell and
             # reassembled in the canonical order below, so this changes makespan
             # only, not output.
-            dispatch = _lpt_dispatch_order(spec, cells)
-            with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                for cell, frame, error in executor.map(
-                    _parallel_cell_worker, [(spec, c) for c in dispatch]
-                ):
-                    if error is not None:
-                        failed.append(_cell_failure(spec, cell, error))
-                    elif frame is not None:
-                        results[cell] = frame
+            if pending_cells:
+                dispatch = _lpt_dispatch_order(spec, pending_cells)
+                with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                    for cell, frame, error in executor.map(
+                        _parallel_cell_worker, [(spec, c) for c in dispatch]
+                    ):
+                        if error is not None:
+                            failed.append(_cell_failure(spec, cell, error))
+                        elif frame is not None:
+                            try:
+                                _result_store_note_computed(
+                                    result_store,
+                                    result_store_metadata,
+                                    result_identities.get(cell),
+                                    frame,
+                                )
+                            except Exception as exc:
+                                failed.append(
+                                    _cell_failure(
+                                        spec,
+                                        cell,
+                                        f"{type(exc).__name__}: {exc}",
+                                    )
+                                )
+                            else:
+                                results[cell] = frame
         else:
             # One shared per-target cache: arms of the same target reuse the per-origin
             # FittedPreprocessor/_PreparedStage (Gap A's original sharing) AND the
@@ -526,7 +679,7 @@ def _run_cells(
             # preprocessing tier either. Gating both tiers on the same eligibility
             # check keeps one dict, one invariant.
             target_caches: dict[str, dict[Any, Any]] = {t.name: {} for t in spec.targets}
-            for cell in cells:
+            for cell in pending_cells:
                 arm = spec.arms[cell.arm_idx]
                 target = spec.targets[cell.target_idx]
                 cache = target_caches.get(target.name)
@@ -534,7 +687,14 @@ def _run_cells(
                     cache if (arm.preprocessing is None and arm.window is None) else None
                 )
                 try:
-                    results[cell] = _execute_cell(spec, cell, preprocessing_cache=arm_cache)
+                    frame = _execute_cell(spec, cell, preprocessing_cache=arm_cache)
+                    _result_store_note_computed(
+                        result_store,
+                        result_store_metadata,
+                        result_identities.get(cell),
+                        frame,
+                    )
+                    results[cell] = frame
                 except Exception as exc:
                     # Record the failure and CONTINUE the rest of the set rather than
                     # aborting the whole pipeline on one bad cell.
@@ -594,7 +754,8 @@ def _run_cells(
                 stacklevel=2,
             )
 
-        return master, failed, empty_cells
+        _warn_result_store_version_mismatches(result_store_metadata)
+        return master, failed, empty_cells, result_store_metadata
     finally:
         if created_cache_dir is not None:
             _shutil.rmtree(created_cache_dir, ignore_errors=True)
@@ -616,7 +777,7 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     Per-cell failures are isolated -- see :func:`run_pipeline` /
     ``PipelineReport.failed_cells`` for how they are surfaced.
     """
-    master, _failed, _empty = _run_cells(spec)
+    master, _failed, _empty, _result_store = _run_cells(spec)
     return master
 
 
@@ -940,6 +1101,9 @@ def _audit(
     vintage_sources = execution_metadata.get("vintage_sources")
     if vintage_sources:
         provenance["vintage_source"] = _merge_vintage_sources(spec, vintage_sources)
+    result_store_metadata = execution_metadata.get("result_store")
+    if result_store_metadata is not None:
+        provenance["result_store"] = dict(result_store_metadata)
     leakage: dict = {}
     # Surface window.validate() warnings (e.g. embargo < horizon-1) when available.
     # The runner injects each horizon into the window's test spec at execution
@@ -991,7 +1155,7 @@ def run_pipeline(spec: PipelineSpec):
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.spec import PipelineReport
 
-    master, failed_cells, empty_cells = _run_cells(spec)
+    master, failed_cells, empty_cells, result_store_metadata = _run_cells(spec)
     results = evaluate(master, spec)
     provenance, leakage = _audit(
         spec,
@@ -1000,6 +1164,7 @@ def run_pipeline(spec: PipelineSpec):
                 "macroforecast_vintage_boundary_audits"
             ),
             "vintage_sources": master.attrs.get("macroforecast_vintage_sources"),
+            "result_store": result_store_metadata,
         },
     )
     # Mirror per-cell failures and zero-row cells into the leakage audit so any

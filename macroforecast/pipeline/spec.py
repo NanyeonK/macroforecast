@@ -11,6 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 import importlib.util
 import inspect
+from pathlib import Path
 from typing import Any, Literal, cast
 
 
@@ -304,6 +305,11 @@ class PipelineSpec:
     # resumes without recomputing finished origins. None (default) disables
     # checkpointing and is byte-for-byte the prior behavior.
     checkpoint_dir: str | None = None
+    # When set, run_pipeline stores each digestible (target, horizon, arm) cell's
+    # master-frame rows under ``<result_store>/cells`` and reuses matching cells
+    # across separate run_pipeline calls. None (default) disables this path and
+    # preserves the existing in-run execution graph byte-for-byte.
+    result_store: str | None = None
     # Native fan-out: when >1, the (arm x target x horizon) cells run across a
     # process pool. Default 1 keeps the sequential, cross-horizon EM-sharing path
     # byte-for-byte unchanged. The parallel path is deterministic (every cell uses
@@ -782,6 +788,7 @@ def pipeline_spec(
     save_models: bool = True,
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
+    result_store: str | Path | None = None,
     n_jobs: int | str = 1,
     preprocessing_cache_dir: str | bool | None = None,
     seed: int | None = 42,
@@ -810,6 +817,10 @@ def pipeline_spec(
     independent of ``provenance=`` above (caller-supplied notes merged into
     whichever shape results); "basic" does not drop caller-supplied notes, it
     only omits the "environment"/"data"/"spec_echo" blocks.
+
+    ``result_store`` is an optional directory for cross-run reuse of completed
+    forecast cells. When left at ``None`` (the default), the runner follows the
+    original execution path exactly.
     """
     arms = tuple(arms)
     if not arms:
@@ -927,6 +938,7 @@ def pipeline_spec(
         preprocessing=preprocessing, preprocessing_policy=preprocessing_policy,
         save_models=bool(save_models), model_store=str(model_store),
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
+        result_store=(str(result_store) if result_store is not None else None),
         n_jobs=n_jobs,
         model_threads=int(model_threads),
         preprocessing_cache_dir=_resolve_preprocessing_cache_dir(preprocessing_cache_dir),
