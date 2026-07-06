@@ -51,9 +51,9 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 - `TargetSpec` -- a target and how its forecast object is defined (transform, policy, reduce_i2).
 - `ResolvedTarget` -- a target with its forecast policy and transform resolved.
 - `InterpretSpec` -- ML interpretation request (methods, which_fit, background, top_k).
-- `EvalSpec` -- benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples. `metrics` and `tests` are live configuration (see "Custom metrics, significance tests, and loss" below), not documentation-only fields.
+- `EvalSpec` -- benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples, calibration_alpha. `metrics` and `tests` are live configuration (see "Custom metrics, significance tests, and loss" below), not documentation-only fields; `metrics`/`tests` also carry the opt-in density/calibration names (see "Density and interval forecasting" below).
 - `CombinationContender` -- a forecast combination that becomes an additional contender.
-- `PipelineReport` -- output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`. `provenance` is self-certifying by default (`pipeline_spec(..., provenance_level="full")`, the default) -- see "Provenance" below.
+- `PipelineReport` -- output: forecasts, accuracy, significance, mcs, density, calibration, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`. `density`/`calibration` are empty frames unless `EvalSpec.metrics`/`tests` explicitly requests a density metric or calibration test. `provenance` is self-certifying by default (`pipeline_spec(..., provenance_level="full")`, the default) -- see "Provenance" below.
 - `TCODE_TARGET_MAP` -- FRED t-code to (forecast_policy, target_transform) mapping.
 
 ## t-code to target mapping
@@ -318,10 +318,14 @@ spec describes, loads the persisted records, reassembles the master forecast
 frame (re-attaching `arm`/`contender` labels from the spec -- the lean checkpoint
 schema does not store them), and runs the standard evaluation. It returns the
 same `PipelineReport` type as `run_pipeline`, with the evaluation fields
-(`forecasts`, `accuracy`, `significance`, `mcs`) populated identically to a live
-run over the same forecasts. The directory argument wins over whatever
-`spec.checkpoint_dir` says, so a spec built without checkpointing (or a copied
-checkpoint directory) re-scores fine.
+(`forecasts`, `accuracy`, `significance`, `mcs`, `density`, `calibration`)
+populated identically to a live run over the same forecasts -- including
+`variance_prediction` (a plain float, in the lean schema since the density
+pipeline) and quantile predictions (persisted as wide `q_<pct>` columns and
+reconstructed into the same `{level: value}` mapping a live run's
+`quantile_predictions` carries; see "Density and interval forecasting" below).
+The directory argument wins over whatever `spec.checkpoint_dir` says, so a spec
+built without checkpointing (or a copied checkpoint directory) re-scores fine.
 
 Fields that require having actually executed the run are absent or best-effort:
 
@@ -392,6 +396,103 @@ evaluation = EvalSpec(
 
 `rescore(checkpoint_dir, spec)` honors all of this automatically -- it calls the
 same `evaluate(master, spec)` the live run does.
+
+## Density and interval forecasting (Phase 1)
+
+`forecasting.run` already threads a fitted model's predictive variance and/or
+quantiles onto the (direct-policy) forecast table when the model exposes
+`predict_variance`/`predict_quantiles` (see `forecasting/policies/base.py`):
+`variance_prediction` (a plain float) and `quantile_predictions` (a
+`{level: value}` mapping). This is Phase 1 scope -- **natively-emitting models
+only**, direct/direct_average policy only. There is no synthetic
+residual-based variance fallback for models that do not emit one: the columns
+are simply absent/NaN, and every downstream stage (accuracy, significance,
+MCS, and the density/calibration stages below) degrades to point-only
+gracefully. Recursive, path_average, panel, and combination rows always carry
+explicit `None` for both columns (a documented follow-up, not this lane's
+scope).
+
+**Which models emit today** (empirically, not by design intent): any model
+whose fit object exposes `predict_variance(X)` or `predict_variance(horizon=)`
+-- the volatility family (GARCH, Realized GARCH; needs the `arch` extra) and
+the torch hemisphere/density-HNN models (needs the `deep` extra) -- or
+`predict_quantiles(X)` -- `quantile_regression_forest` (sklearn only, no extra
+dependency) and the `model_ensemble` bagging/random-subspace/booging
+regressors (stacking/super-learner do NOT expose `predict_quantiles`), plus
+the torch density models (Gaussian closed-form quantiles from their own
+mean/variance heads).
+
+**Requesting density metrics** -- add a density-classified name to
+`EvalSpec.metrics` alongside (or instead of) the point metrics; density metrics
+land in `PipelineReport.density`, keyed by `(target, horizon, contender)`, not
+`accuracy`:
+
+```python
+from macroforecast.pipeline import EvalSpec
+
+evaluation = EvalSpec(
+    benchmark="AR",
+    metrics=("rmse", "crps", "interval_score"),   # rmse -> accuracy; crps/interval_score -> density
+    tests=("dm", "mcs", "berkowitz", "pit_autocorr", "coverage"),  # calibration -> report.calibration
+)
+```
+
+- **Gaussian density metrics** (need `variance_prediction`): `crps`,
+  `gaussian_nll`/`log_score`, `negative_log_score`.
+- **Volatility metric** (needs `variance_prediction` scored against the
+  realized target): `qlike`.
+- **Quantile/interval metrics** (need `quantile_predictions`): `pinball_loss`
+  (per requested level), `coverage_rate`, `interval_width`, `interval_score`
+  (for every matched symmetric quantile pair, e.g. `0.05`/`0.95`).
+- Requesting ANY one of the above computes the whole associated bundle (the
+  Gaussian pair or the full quantile bundle) in one pass -- `density_table` is
+  a thin wrapper around `macroforecast.metrics.evaluate_forecasts`, the same
+  registry-driven evaluator `ForecastResult.evaluate()` already exposes, not a
+  reimplementation.
+- A **default `EvalSpec`** requests no density metric, so `report.density` is
+  always an empty frame and no forecast-frame column is even inspected --
+  a point-only run and an unrequested variance-emitting run behave identically.
+- Requesting a density metric on a forecast frame with **no matching column**
+  raises the same actionable `ValueError` `evaluate_forecasts` already raises
+  (e.g. `"variance_prediction column ... is required for requested variance/
+  density metric(s): ['crps']"`) -- checked at the whole-frame schema level, so
+  one contender emitting a variance while another does not is scored
+  point-only for the second without raising (the same graceful-degradation
+  convention as accuracy/significance/MCS).
+
+**Requesting calibration tests** -- add `"berkowitz"`, `"pit_autocorr"`, and/or
+`"coverage"` to `EvalSpec.tests`; they populate `PipelineReport.calibration`
+(columns `target, horizon, contender, test, statistic, p_value, reject,
+n_obs, coverage_rate` -- `coverage_rate` is populated only for the
+`"coverage"` test row), gated at the significance level
+`EvalSpec.calibration_alpha` (default `0.05`, independent of `mcs_alpha`):
+
+- `"berkowitz"` / `"pit_autocorr"` need `variance_prediction`: the PIT is the
+  Gaussian CDF of the standardized residual, `Phi((actual - prediction) /
+  sqrt(variance_prediction))`, scored per `(target, horizon, contender)` via
+  `macroforecast.tests.density_interval_tests` (Berkowitz LR test / PIT serial-
+  correlation test).
+- `"coverage"` needs a symmetric quantile pair (e.g. `0.05`/`0.95`) from
+  `quantile_predictions`; the widest such pair is used, scored via
+  `macroforecast.tests.interval_coverage_test` (Kupiec unconditional-coverage
+  test).
+- Same schema-level `ValueError` contract as the density metrics above:
+  missing the required column entirely raises; a contender that individually
+  never emits it is silently skipped.
+
+**Checkpoint / rescore**: `forecasting/checkpoint.py`'s lean schema now carries
+`variance_prediction` (a fixed column, `None` when a model does not emit one)
+and, when a model emits quantiles, wide `q_<pct>` columns (`0.05` -> `q_05`,
+`0.5` -> `q_50`, `0.95` -> `q_95`, ...) -- parquet needs scalar columns, so the
+`{level: value}` mapping is expanded rather than stored as-is. Loading a
+checkpoint (`load_checkpoint_frame`, and therefore `rescore`, and a resumed
+`run()`) reconstructs `quantile_predictions` from those wide columns, so
+density/calibration scoring works identically whether the forecasts came from
+a live run or a rescored checkpoint. **Old checkpoints** (written before this
+column existed) load fine and rescore as point-only: the fixed
+`variance_prediction` column is simply absent from a checkpoint directory that
+carries only old-schema files, and `report.density`/`report.calibration` stay
+empty under a default `EvalSpec` exactly as for any other point-only run.
 
 ## Notes
 

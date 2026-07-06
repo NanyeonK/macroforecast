@@ -1037,6 +1037,67 @@ benchmark forecasts, variances, intervals, or previous actuals need one of the
 specialized built-in metric names because <code class="docutils literal notranslate"><span class="pre">evaluate_forecasts()</span></code> must know
 which forecast-table columns to pass.</p>
 </section>
+<section id="metric-kind">
+<h3>metric_kind<a class="headerlink" href="#metric-kind" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">metric_kind</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Input: a metric name or callable (<code class="docutils literal notranslate"><span class="pre">MetricLike</span></code>).</p>
+<p>Output: one string classifying the metric by the forecast-table column(s) its
+table-level evaluation requires. Classification is name-based registry
+plumbing only (no new metric math): a custom callable carries no registry
+name, so a callable is always <code class="docutils literal notranslate"><span class="pre">&quot;point&quot;</span></code>.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Kind</p></th>
+<th class="head"><p>Metrics</p></th>
+<th class="head"><p>Required inputs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;variance&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">crps</span></code>, <code class="docutils literal notranslate"><span class="pre">gaussian_nll</span></code>, <code class="docutils literal notranslate"><span class="pre">log_score</span></code>, <code class="docutils literal notranslate"><span class="pre">negative_log_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_pred,</span> <span class="pre">variance_prediction)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;volatility&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">qlike</span></code></p></td>
+<td><p>realized variance vs <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;quantile&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pinball_loss</span></code>, <code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">interval_width</span></code>, <code class="docutils literal notranslate"><span class="pre">interval_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;relative&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mae</span></code>, <code class="docutils literal notranslate"><span class="pre">mse_reduction</span></code>, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code></p></td>
+<td><p>a benchmark forecast</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;direction&quot;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">theil_u2</span></code>, <code class="docutils literal notranslate"><span class="pre">success_ratio</span></code></p></td>
+<td><p>a previous-actual reference</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;point&quot;</span></code></p></td>
+<td><p>every other <code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_pred)</span></code> metric, and any callable</p></td>
+<td><p>plain point forecasts</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="density-metric-names">
+<h3>DENSITY_METRIC_NAMES<a class="headerlink" href="#density-metric-names" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">DENSITY_METRIC_NAMES</span>
+</pre></div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">frozenset[str]</span></code> of every metric name whose table-level evaluation needs a
+distributional forecast column (<code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code> or
+<code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code>) rather than plain <code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_pred)</span></code> – exactly the
+names <code class="docutils literal notranslate"><span class="pre">metric_kind</span></code> classifies as <code class="docutils literal notranslate"><span class="pre">&quot;variance&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;volatility&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;quantile&quot;</span></code>. Note <code class="docutils literal notranslate"><span class="pre">mase</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_naive_mae</span></code>, and <code class="docutils literal notranslate"><span class="pre">acf1</span></code> are NOT members:
+they carry a different input shape but are point-adjacent, not distributional.
+The managed pipeline routes <code class="docutils literal notranslate"><span class="pre">EvalSpec.metrics</span></code> entries of these density kinds
+into <code class="docutils literal notranslate"><span class="pre">PipelineReport.density</span></code> (see the pipeline reference, “Density and
+interval forecasting”).</p>
+</section>
 </section>
 <section id="point-metrics">
 <h2>Point Metrics<a class="headerlink" href="#point-metrics" title="Link to this heading">#</a></h2>
@@ -1280,6 +1341,8 @@ be finite.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-forecasts">evaluate_forecasts</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rank-forecasts">rank_forecasts</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-metric">get_metric</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#metric-kind">metric_kind</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#density-metric-names">DENSITY_METRIC_NAMES</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#point-metrics">Point Metrics</a></li>

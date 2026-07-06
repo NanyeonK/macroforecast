@@ -594,9 +594,9 @@ are additional contenders.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TargetSpec</span></code> – a target and how its forecast object is defined (transform, policy, reduce_i2).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ResolvedTarget</span></code> – a target with its forecast policy and transform resolved.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">InterpretSpec</span></code> – ML interpretation request (methods, which_fit, background, top_k).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> – benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples. <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code> are live configuration (see “Custom metrics, significance tests, and loss” below), not documentation-only fields.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> – benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples, calibration_alpha. <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code> are live configuration (see “Custom metrics, significance tests, and loss” below), not documentation-only fields; <code class="docutils literal notranslate"><span class="pre">metrics</span></code>/<code class="docutils literal notranslate"><span class="pre">tests</span></code> also carry the opt-in density/calibration names (see “Density and interval forecasting” below).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CombinationContender</span></code> – a forecast combination that becomes an additional contender.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> – output: forecasts, accuracy, significance, mcs, provenance, leakage_audit, interpretation, failed_cells. <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> lists any <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon-group)</span></code> cell whose <code class="docutils literal notranslate"><span class="pre">run()</span></code> raised; the rest of the cells still ran and the failures are also mirrored into <code class="docutils literal notranslate"><span class="pre">leakage_audit[&quot;failed_cells&quot;]</span></code>. <code class="docutils literal notranslate"><span class="pre">provenance</span></code> is self-certifying by default (<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">provenance_level=&quot;full&quot;)</span></code>, the default) – see “Provenance” below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> – output: forecasts, accuracy, significance, mcs, density, calibration, provenance, leakage_audit, interpretation, failed_cells. <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> lists any <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon-group)</span></code> cell whose <code class="docutils literal notranslate"><span class="pre">run()</span></code> raised; the rest of the cells still ran and the failures are also mirrored into <code class="docutils literal notranslate"><span class="pre">leakage_audit[&quot;failed_cells&quot;]</span></code>. <code class="docutils literal notranslate"><span class="pre">density</span></code>/<code class="docutils literal notranslate"><span class="pre">calibration</span></code> are empty frames unless <code class="docutils literal notranslate"><span class="pre">EvalSpec.metrics</span></code>/<code class="docutils literal notranslate"><span class="pre">tests</span></code> explicitly requests a density metric or calibration test. <code class="docutils literal notranslate"><span class="pre">provenance</span></code> is self-certifying by default (<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">provenance_level=&quot;full&quot;)</span></code>, the default) – see “Provenance” below.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TCODE_TARGET_MAP</span></code> – FRED t-code to (forecast_policy, target_transform) mapping.</p></li>
 </ul>
 </section>
@@ -908,10 +908,14 @@ spec describes, loads the persisted records, reassembles the master forecast
 frame (re-attaching <code class="docutils literal notranslate"><span class="pre">arm</span></code>/<code class="docutils literal notranslate"><span class="pre">contender</span></code> labels from the spec – the lean checkpoint
 schema does not store them), and runs the standard evaluation. It returns the
 same <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> type as <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>, with the evaluation fields
-(<code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">accuracy</span></code>, <code class="docutils literal notranslate"><span class="pre">significance</span></code>, <code class="docutils literal notranslate"><span class="pre">mcs</span></code>) populated identically to a live
-run over the same forecasts. The directory argument wins over whatever
-<code class="docutils literal notranslate"><span class="pre">spec.checkpoint_dir</span></code> says, so a spec built without checkpointing (or a copied
-checkpoint directory) re-scores fine.</p>
+(<code class="docutils literal notranslate"><span class="pre">forecasts</span></code>, <code class="docutils literal notranslate"><span class="pre">accuracy</span></code>, <code class="docutils literal notranslate"><span class="pre">significance</span></code>, <code class="docutils literal notranslate"><span class="pre">mcs</span></code>, <code class="docutils literal notranslate"><span class="pre">density</span></code>, <code class="docutils literal notranslate"><span class="pre">calibration</span></code>)
+populated identically to a live run over the same forecasts – including
+<code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code> (a plain float, in the lean schema since the density
+pipeline) and quantile predictions (persisted as wide <code class="docutils literal notranslate"><span class="pre">q_&lt;pct&gt;</span></code> columns and
+reconstructed into the same <code class="docutils literal notranslate"><span class="pre">{level:</span> <span class="pre">value}</span></code> mapping a live run’s
+<code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code> carries; see “Density and interval forecasting” below).
+The directory argument wins over whatever <code class="docutils literal notranslate"><span class="pre">spec.checkpoint_dir</span></code> says, so a spec
+built without checkpointing (or a copied checkpoint directory) re-scores fine.</p>
 <p>Fields that require having actually executed the run are absent or best-effort:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">interpretation</span></code> is always <code class="docutils literal notranslate"><span class="pre">None</span></code> (needs fitted models; use
@@ -979,6 +983,97 @@ loss-agnostic and are unaffected.</p></li>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">rescore(checkpoint_dir,</span> <span class="pre">spec)</span></code> honors all of this automatically – it calls the
 same <code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec)</span></code> the live run does.</p>
+</section>
+<section id="density-and-interval-forecasting-phase-1">
+<h2>Density and interval forecasting (Phase 1)<a class="headerlink" href="#density-and-interval-forecasting-phase-1" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">forecasting.run</span></code> already threads a fitted model’s predictive variance and/or
+quantiles onto the (direct-policy) forecast table when the model exposes
+<code class="docutils literal notranslate"><span class="pre">predict_variance</span></code>/<code class="docutils literal notranslate"><span class="pre">predict_quantiles</span></code> (see <code class="docutils literal notranslate"><span class="pre">forecasting/policies/base.py</span></code>):
+<code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code> (a plain float) and <code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code> (a
+<code class="docutils literal notranslate"><span class="pre">{level:</span> <span class="pre">value}</span></code> mapping). This is Phase 1 scope – <strong>natively-emitting models
+only</strong>, direct/direct_average policy only. There is no synthetic
+residual-based variance fallback for models that do not emit one: the columns
+are simply absent/NaN, and every downstream stage (accuracy, significance,
+MCS, and the density/calibration stages below) degrades to point-only
+gracefully. Recursive, path_average, panel, and combination rows always carry
+explicit <code class="docutils literal notranslate"><span class="pre">None</span></code> for both columns (a documented follow-up, not this lane’s
+scope).</p>
+<p><strong>Which models emit today</strong> (empirically, not by design intent): any model
+whose fit object exposes <code class="docutils literal notranslate"><span class="pre">predict_variance(X)</span></code> or <code class="docutils literal notranslate"><span class="pre">predict_variance(horizon=)</span></code>
+– the volatility family (GARCH, Realized GARCH; needs the <code class="docutils literal notranslate"><span class="pre">arch</span></code> extra) and
+the torch hemisphere/density-HNN models (needs the <code class="docutils literal notranslate"><span class="pre">deep</span></code> extra) – or
+<code class="docutils literal notranslate"><span class="pre">predict_quantiles(X)</span></code> – <code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code> (sklearn only, no extra
+dependency) and the <code class="docutils literal notranslate"><span class="pre">model_ensemble</span></code> bagging/random-subspace/booging
+regressors (stacking/super-learner do NOT expose <code class="docutils literal notranslate"><span class="pre">predict_quantiles</span></code>), plus
+the torch density models (Gaussian closed-form quantiles from their own
+mean/variance heads).</p>
+<p><strong>Requesting density metrics</strong> – add a density-classified name to
+<code class="docutils literal notranslate"><span class="pre">EvalSpec.metrics</span></code> alongside (or instead of) the point metrics; density metrics
+land in <code class="docutils literal notranslate"><span class="pre">PipelineReport.density</span></code>, keyed by <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">contender)</span></code>, not
+<code class="docutils literal notranslate"><span class="pre">accuracy</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvalSpec</span>
+
+<span class="n">evaluation</span> <span class="o">=</span> <span class="n">EvalSpec</span><span class="p">(</span>
+    <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span>
+    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;crps&quot;</span><span class="p">,</span> <span class="s2">&quot;interval_score&quot;</span><span class="p">),</span>   <span class="c1"># rmse -&gt; accuracy; crps/interval_score -&gt; density</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">,</span> <span class="s2">&quot;berkowitz&quot;</span><span class="p">,</span> <span class="s2">&quot;pit_autocorr&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage&quot;</span><span class="p">),</span>  <span class="c1"># calibration -&gt; report.calibration</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>Gaussian density metrics</strong> (need <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code>): <code class="docutils literal notranslate"><span class="pre">crps</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gaussian_nll</span></code>/<code class="docutils literal notranslate"><span class="pre">log_score</span></code>, <code class="docutils literal notranslate"><span class="pre">negative_log_score</span></code>.</p></li>
+<li><p><strong>Volatility metric</strong> (needs <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code> scored against the
+realized target): <code class="docutils literal notranslate"><span class="pre">qlike</span></code>.</p></li>
+<li><p><strong>Quantile/interval metrics</strong> (need <code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code>): <code class="docutils literal notranslate"><span class="pre">pinball_loss</span></code>
+(per requested level), <code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code>, <code class="docutils literal notranslate"><span class="pre">interval_width</span></code>, <code class="docutils literal notranslate"><span class="pre">interval_score</span></code>
+(for every matched symmetric quantile pair, e.g. <code class="docutils literal notranslate"><span class="pre">0.05</span></code>/<code class="docutils literal notranslate"><span class="pre">0.95</span></code>).</p></li>
+<li><p>Requesting ANY one of the above computes the whole associated bundle (the
+Gaussian pair or the full quantile bundle) in one pass – <code class="docutils literal notranslate"><span class="pre">density_table</span></code> is
+a thin wrapper around <code class="docutils literal notranslate"><span class="pre">macroforecast.metrics.evaluate_forecasts</span></code>, the same
+registry-driven evaluator <code class="docutils literal notranslate"><span class="pre">ForecastResult.evaluate()</span></code> already exposes, not a
+reimplementation.</p></li>
+<li><p>A <strong>default <code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code></strong> requests no density metric, so <code class="docutils literal notranslate"><span class="pre">report.density</span></code> is
+always an empty frame and no forecast-frame column is even inspected –
+a point-only run and an unrequested variance-emitting run behave identically.</p></li>
+<li><p>Requesting a density metric on a forecast frame with <strong>no matching column</strong>
+raises the same actionable <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> <code class="docutils literal notranslate"><span class="pre">evaluate_forecasts</span></code> already raises
+(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;variance_prediction</span> <span class="pre">column</span> <span class="pre">...</span> <span class="pre">is</span> <span class="pre">required</span> <span class="pre">for</span> <span class="pre">requested</span> <span class="pre">variance/</span> <span class="pre">density</span> <span class="pre">metric(s):</span> <span class="pre">['crps']&quot;</span></code>) – checked at the whole-frame schema level, so
+one contender emitting a variance while another does not is scored
+point-only for the second without raising (the same graceful-degradation
+convention as accuracy/significance/MCS).</p></li>
+</ul>
+<p><strong>Requesting calibration tests</strong> – add <code class="docutils literal notranslate"><span class="pre">&quot;berkowitz&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pit_autocorr&quot;</span></code>, and/or
+<code class="docutils literal notranslate"><span class="pre">&quot;coverage&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">EvalSpec.tests</span></code>; they populate <code class="docutils literal notranslate"><span class="pre">PipelineReport.calibration</span></code>
+(columns <code class="docutils literal notranslate"><span class="pre">target,</span> <span class="pre">horizon,</span> <span class="pre">contender,</span> <span class="pre">test,</span> <span class="pre">statistic,</span> <span class="pre">p_value,</span> <span class="pre">reject,</span> <span class="pre">n_obs,</span> <span class="pre">coverage_rate</span></code> – <code class="docutils literal notranslate"><span class="pre">coverage_rate</span></code> is populated only for the
+<code class="docutils literal notranslate"><span class="pre">&quot;coverage&quot;</span></code> test row), gated at the significance level
+<code class="docutils literal notranslate"><span class="pre">EvalSpec.calibration_alpha</span></code> (default <code class="docutils literal notranslate"><span class="pre">0.05</span></code>, independent of <code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;berkowitz&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;pit_autocorr&quot;</span></code> need <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code>: the PIT is the
+Gaussian CDF of the standardized residual, <code class="docutils literal notranslate"><span class="pre">Phi((actual</span> <span class="pre">-</span> <span class="pre">prediction)</span> <span class="pre">/</span> <span class="pre">sqrt(variance_prediction))</span></code>, scored per <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">contender)</span></code> via
+<code class="docutils literal notranslate"><span class="pre">macroforecast.tests.density_interval_tests</span></code> (Berkowitz LR test / PIT serial-
+correlation test).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;coverage&quot;</span></code> needs a symmetric quantile pair (e.g. <code class="docutils literal notranslate"><span class="pre">0.05</span></code>/<code class="docutils literal notranslate"><span class="pre">0.95</span></code>) from
+<code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code>; the widest such pair is used, scored via
+<code class="docutils literal notranslate"><span class="pre">macroforecast.tests.interval_coverage_test</span></code> (Kupiec unconditional-coverage
+test).</p></li>
+<li><p>Same schema-level <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> contract as the density metrics above:
+missing the required column entirely raises; a contender that individually
+never emits it is silently skipped.</p></li>
+</ul>
+<p><strong>Checkpoint / rescore</strong>: <code class="docutils literal notranslate"><span class="pre">forecasting/checkpoint.py</span></code>’s lean schema now carries
+<code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code> (a fixed column, <code class="docutils literal notranslate"><span class="pre">None</span></code> when a model does not emit one)
+and, when a model emits quantiles, wide <code class="docutils literal notranslate"><span class="pre">q_&lt;pct&gt;</span></code> columns (<code class="docutils literal notranslate"><span class="pre">0.05</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">q_05</span></code>,
+<code class="docutils literal notranslate"><span class="pre">0.5</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">q_50</span></code>, <code class="docutils literal notranslate"><span class="pre">0.95</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">q_95</span></code>, …) – parquet needs scalar columns, so the
+<code class="docutils literal notranslate"><span class="pre">{level:</span> <span class="pre">value}</span></code> mapping is expanded rather than stored as-is. Loading a
+checkpoint (<code class="docutils literal notranslate"><span class="pre">load_checkpoint_frame</span></code>, and therefore <code class="docutils literal notranslate"><span class="pre">rescore</span></code>, and a resumed
+<code class="docutils literal notranslate"><span class="pre">run()</span></code>) reconstructs <code class="docutils literal notranslate"><span class="pre">quantile_predictions</span></code> from those wide columns, so
+density/calibration scoring works identically whether the forecasts came from
+a live run or a rescored checkpoint. <strong>Old checkpoints</strong> (written before this
+column existed) load fine and rescore as point-only: the fixed
+<code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code> column is simply absent from a checkpoint directory that
+carries only old-schema files, and <code class="docutils literal notranslate"><span class="pre">report.density</span></code>/<code class="docutils literal notranslate"><span class="pre">report.calibration</span></code> stay
+empty under a default <code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> exactly as for any other point-only run.</p>
 </section>
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
@@ -1062,6 +1157,7 @@ nested.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#provenance-what-a-referee-can-verify-from-the-report">Provenance (what a referee can verify from the report)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#re-scoring-saved-forecasts-rescore">Re-scoring saved forecasts (<code class="docutils literal notranslate"><span class="pre">rescore</span></code>)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-metrics-significance-tests-and-loss-evalspec">Custom metrics, significance tests, and loss (<code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#density-and-interval-forecasting-phase-1">Density and interval forecasting (Phase 1)</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
 </ul>
   </nav></div>
