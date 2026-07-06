@@ -37,6 +37,8 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 | `model_arms(models, ...)` | Build one `Arm` per model for a pure model comparison. |
 | `run_pipeline(spec)` | Run arms, evaluate, and return a `PipelineReport`. |
 | `rescore(checkpoint_dir, spec)` | Re-score a checkpointed run from disk alone (no refitting); returns a `PipelineReport`. |
+| `result_store_summary(store)` | Summarise stored result cells from a cross-run result store. |
+| `purge_result_store(store, *, before=None, version=None, digests=None)` | Delete matching result-store cells and return the number removed. |
 | `interpret_pipeline(report, *, methods, which_fit, arms)` | Deferred multi-method ML interpretation. |
 | `run_arms(spec)` | Execute every cell into the master forecast frame (lower-level; name retained for back-compat). |
 | `evaluate(master, spec)` | Accuracy + requested forecast-comparison tests + combinations on a master frame. |
@@ -176,6 +178,37 @@ recomputed -- that is the comparison. Everything upstream (the same `data` bundl
 `window`/origin schedule) is shared trivially, and two variants that share an
 identical `(spec, target, origin)` sub-fit can still be deduplicated across processes
 and runs via the on-disk `preprocessing_cache_dir` (`PreprocessorStore`).
+
+### Cross-run result store
+
+`pipeline_spec(..., result_store="path/to/store")` enables cross-run reuse at the
+cell level: one stored payload per `(target, horizon, arm)`. A stored cell is reused
+only when its digest matches the resolved target, horizon, model identity and
+parameters, feature/preprocessing/window/selection choices, vintage mode, and the
+same data fingerprint that pipeline provenance records. Reused cells are loaded back
+into the master forecast frame before evaluation, so `report.forecasts`,
+`report.accuracy`, and significance tables behave as if the cell had just been
+computed.
+
+This is the intended workflow for incremental horse races. Run a two-model
+comparison with `result_store=...`; later add a third `Arm` and use the same store.
+The old two cells are reused and only the new arm is fit. If `preprocessing_cache_dir`
+is also shared, the prepared per-origin preprocessing base panels are reused across
+the later run too, so adding a model does not re-fit or re-transform the common
+preprocessing base.
+
+Custom code is conservative by default. A user-owned model function, custom feature
+step, custom preprocessing step, metric callable, or loss callable makes the cell
+undigestible unless that callable carries a stable string attribute named
+`__mf_digest__`. Undigestible cells are always recomputed and never stored. Use
+`__mf_digest__` only when you are willing to treat that string as the callable's
+semantic version; if you edit the callable, change the string or do not trust reuse.
+
+The result store assumes a single writer. Writes are atomic at the file level, so a
+crash leaves a miss rather than a half-readable cell, but concurrent writers to the
+same directory are outside the contract. Use `result_store_summary(store)` to inspect
+stored cells and `purge_result_store(store, before=..., version=..., digests=...)` to
+remove selected cells.
 
 These invariants are pinned by `tests/pipeline/test_preprocessing_share.py`
 (cross-arm and on-disk dedup, serial==parallel),

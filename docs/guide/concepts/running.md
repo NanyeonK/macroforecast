@@ -119,6 +119,57 @@ For a runnable end-to-end example, see the single-forecast and full-study
 snippets in [Getting Started](../getting_started.md) and the step-by-step
 pipeline in the [Replication Gallery](../gallery.md#a-complete-pipeline-step-by-step).
 
+## Incremental horse races
+
+Long paper projects often grow a model comparison over many months. Use
+`pipeline_spec(..., result_store="results/cells", preprocessing_cache_dir="results/prep")`
+when you expect to add arms later:
+
+```python
+spec = pipeline_spec(
+    data=bundle,
+    targets=[TargetSpec("INDPRO")],
+    horizons=[1, 3, 12],
+    window=window,
+    arms=[
+        Arm("AR", model="ar", features=features),
+        Arm("RF", model="random_forest", features=features),
+    ],
+    evaluation=EvalSpec(benchmark="AR"),
+    result_store="cache/result_cells",
+    preprocessing_cache_dir="cache/preprocessing",
+)
+first = run_pipeline(spec)
+
+later = pipeline_spec(
+    data=bundle,
+    targets=[TargetSpec("INDPRO")],
+    horizons=[1, 3, 12],
+    window=window,
+    arms=[
+        Arm("AR", model="ar", features=features),
+        Arm("RF", model="random_forest", features=features),
+        Arm("GBM", model="gradient_boosting", features=features),
+    ],
+    evaluation=EvalSpec(benchmark="AR"),
+    result_store="cache/result_cells",
+    preprocessing_cache_dir="cache/preprocessing",
+)
+second = run_pipeline(later)
+```
+
+The second run reuses the stored `(target, horizon, arm)` cells for `AR` and `RF`
+and computes only `GBM`. The shared `preprocessing_cache_dir` also reuses the
+prepared per-origin preprocessing base when the preprocessing spec is unchanged.
+
+For custom code, reuse is opt-in. A custom model function, feature step,
+preprocessing step, metric, or loss must carry a stable `__mf_digest__` string to be
+stored. Without it, the cell is recomputed every run. If you edit the callable, do
+not trust old results unless you also update `__mf_digest__` and force a miss. The
+store is intended for a single writer; inspect it with
+`mf.pipeline.result_store_summary(...)` and delete cells with
+`mf.pipeline.purge_result_store(...)`.
+
 ## Reference
 
 - [Forecasting reference page](../../reference/forecasting.md) — `run`, `ForecastResult`, forecast policy options, and stage policy definitions.
