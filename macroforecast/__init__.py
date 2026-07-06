@@ -50,6 +50,7 @@ _LAZY_EXPORTS = {
     "fred_md_vintages": ".data",
     "fred_qd_vintages": ".data",
     "same_period_predictors": ".data",
+    "with_static_extras": ".data",
     "PreprocessedData": ".preprocessing",
     "FittedPreprocessor": ".preprocessing",
     "PreprocessSpec": ".preprocessing",

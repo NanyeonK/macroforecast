@@ -163,3 +163,48 @@ def test_custom_vintages_long_frame_requires_columns() -> None:
     with pytest.raises(ValueError, match="vintage_column and date_column"):
         mf.data.custom_vintages(pd.DataFrame({"date": ["2000-01-31"], "x": [1.0]}))
 
+
+@pytest.mark.parametrize(
+    ("join", "expected_index"),
+    [
+        ("outer", ["2000-01-31", "2000-02-29", "2000-03-31"]),
+        ("inner", ["2000-02-29"]),
+        ("left", ["2000-01-31", "2000-02-29"]),
+    ],
+)
+def test_with_static_extras_join_semantics(join: str, expected_index: list[str]) -> None:
+    frames = {
+        pd.Timestamp("2000-03-15"): pd.DataFrame(
+            {"x": [1.0, 2.0]},
+            index=pd.DatetimeIndex(["2000-01-31", "2000-02-29"], name="date"),
+        )
+    }
+    extra = pd.DataFrame(
+        {"z": [9.0, 10.0]},
+        index=pd.DatetimeIndex(["2000-02-29", "2000-03-31"], name="date"),
+    )
+    source = mf.data.with_static_extras(mf.data.custom_vintages(frames), extra, join=join)
+
+    panel = source.resolve(pd.Timestamp("2000-03-20")).panel
+
+    assert list(panel.index) == [pd.Timestamp(value) for value in expected_index]
+    assert "z" in panel.columns
+    if pd.Timestamp("2000-02-29") in panel.index:
+        assert panel.loc[pd.Timestamp("2000-02-29"), "z"] == 9.0
+
+
+def test_with_static_extras_fingerprint_changes_vintage_id() -> None:
+    frames = _custom_frames()
+    base = mf.data.custom_vintages(frames)
+    extra_a = pd.DataFrame({"z": [1.0]}, index=pd.DatetimeIndex(["2000-01-31"], name="date"))
+    extra_b = pd.DataFrame({"z": [2.0]}, index=pd.DatetimeIndex(["2000-01-31"], name="date"))
+
+    with_a = mf.data.with_static_extras(base, extra_a)
+    with_b = mf.data.with_static_extras(base, extra_b)
+
+    a_bundle = with_a.resolve(pd.Timestamp("2000-02-15"))
+    b_bundle = with_b.resolve(pd.Timestamp("2000-02-15"))
+
+    assert a_bundle.metadata["base_vintage"] == str(pd.Timestamp("2000-02-15"))
+    assert a_bundle.metadata["vintage"] != b_bundle.metadata["vintage"]
+    assert "static_extra_sha256=" in a_bundle.metadata["vintage"]

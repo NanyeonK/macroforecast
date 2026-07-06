@@ -41,6 +41,7 @@ from .vintage import (
     custom_vintages,
     fred_md_vintages,
     fred_qd_vintages,
+    with_static_extras,
 )
 
 __all__ = [
@@ -77,5 +78,6 @@ __all__ = [
     "list_vintages",
     "fred_md_vintages",
     "fred_qd_vintages",
+    "with_static_extras",
     "same_period_predictors",
 ]

@@ -10,7 +10,7 @@ import pandas as pd
 
 from .errors import VintageUnavailableError
 from .loaders import list_vintages, load_fred_md, load_fred_qd
-from .panel import DataBundle, as_panel, custom_dataset
+from .panel import DataBundle, as_panel, custom_dataset, validate_panel
 
 
 @runtime_checkable
@@ -324,6 +324,66 @@ def custom_vintages(
     raise TypeError("source must be callable, mapping, or pandas DataFrame")
 
 
+@dataclass
+class _StaticExtrasVintageSource:
+    source: VintageSource
+    extra: DataBundle
+    join: Literal["outer", "inner", "left"]
+    _extra_fingerprint: dict[str, Any] = field(init=False, repr=False)
+    _cache: dict[str, DataBundle] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        validate_panel(self.extra.panel)
+        self._extra_fingerprint = _panel_fingerprint_for_vintage(self.extra.panel)
+
+    @property
+    def kind(self) -> str:
+        return f"{_source_kind(self.source)}_with_static_extras"
+
+    def available_vintages(self) -> Sequence[Any]:
+        return self.source.available_vintages()
+
+    def resolve(self, origin_date: pd.Timestamp) -> DataBundle:
+        bundle = self.source.resolve(pd.Timestamp(origin_date))
+        base_id = _bundle_vintage_label(bundle)
+        vintage_label = _extra_vintage_label(base_id, self._extra_fingerprint)
+        cached = self._cache.get(vintage_label)
+        if cached is not None:
+            return cached
+        validate_panel(bundle.panel)
+        joined = bundle.panel.join(self.extra.panel, how=self.join)
+        metadata = {
+            **dict(bundle.metadata),
+            "vintage": vintage_label,
+            "base_vintage": base_id,
+            "static_extras": {
+                "join": self.join,
+                "fingerprint": self._extra_fingerprint,
+                "columns": [str(column) for column in self.extra.panel.columns],
+            },
+        }
+        panel = as_panel(joined, metadata=metadata)
+        out = DataBundle(panel, metadata)
+        self._cache[vintage_label] = out
+        return out
+
+
+def with_static_extras(
+    source: VintageSource,
+    extra: DataBundle | pd.DataFrame,
+    *,
+    join: Literal["outer", "inner", "left"] = "outer",
+) -> VintageSource:
+    """Join non-revised extra columns onto every resolved vintage bundle."""
+
+    if join not in {"outer", "inner", "left"}:
+        raise ValueError("join must be one of 'outer', 'inner', or 'left'")
+    if not isinstance(source, VintageSource):
+        raise TypeError("source must satisfy the VintageSource protocol")
+    extra_bundle = _coerce_static_extra(extra)
+    return _StaticExtrasVintageSource(source=source, extra=extra_bundle, join=join)
+
+
 def _vintage_label_timestamp(label: str) -> pd.Timestamp:
     return pd.Period(label, freq="M").start_time
 
@@ -335,6 +395,44 @@ def _coerce_vintage_timestamp(value: Any) -> pd.Timestamp:
     return timestamp
 
 
+def _coerce_static_extra(value: DataBundle | pd.DataFrame) -> DataBundle:
+    if isinstance(value, DataBundle):
+        metadata = dict(value.metadata)
+        panel = as_panel(value.panel, metadata=metadata)
+        return DataBundle(panel, metadata)
+    if isinstance(value, pd.DataFrame):
+        return custom_dataset(
+            value,
+            dataset="static_extras",
+            source_family="static_extras",
+            frequency="unknown",
+        )
+    raise TypeError("extra must be a DataBundle or pandas DataFrame")
+
+
+def _panel_fingerprint_for_vintage(panel: pd.DataFrame) -> dict[str, Any]:
+    from macroforecast.pipeline.run import _panel_fingerprint
+
+    return _panel_fingerprint(panel)
+
+
+def _bundle_vintage_label(bundle: DataBundle) -> str:
+    if "vintage" not in bundle.metadata:
+        raise ValueError('wrapped VintageSource bundles must set metadata["vintage"]')
+    return str(bundle.metadata["vintage"])
+
+
+def _extra_vintage_label(base_id: str, fingerprint: Mapping[str, Any]) -> str:
+    return f"{base_id}|static_extra_sha256={fingerprint.get('value')}"
+
+
+def _source_kind(source: Any) -> str:
+    kind = getattr(source, "kind", None)
+    if kind is not None:
+        return str(kind)
+    return type(source).__name__
+
+
 __all__ = [
     "VintagePanelSpec",
     "VintageSource",
@@ -342,4 +440,5 @@ __all__ = [
     "custom_vintages",
     "fred_md_vintages",
     "fred_qd_vintages",
+    "with_static_extras",
 ]

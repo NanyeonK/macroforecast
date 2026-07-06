@@ -55,6 +55,7 @@ guessing which columns or horizons the run intended to use.
 | `fred_md_vintages` | Build a per-origin FRED-MD vintage source. | `VintageSource` |
 | `fred_qd_vintages` | Build a per-origin FRED-QD vintage source. | `VintageSource` |
 | `custom_vintages` | Build a per-origin source from callable, mapping, or long-frame custom vintages. | `VintageSource` |
+| `with_static_extras` | Join non-revised columns onto every resolved vintage snapshot. | `VintageSource` |
 | `as_panel` | Normalize a `DataFrame` to the canonical panel contract. | `pandas.DataFrame` |
 | `validate_panel` | Validate the canonical panel contract. | `None` |
 | `panel_info` | Summarize panel shape, dates, missingness, and frequency. | `dict` |
@@ -1221,6 +1222,25 @@ from date-like vintage keys to snapshots, or a long ALFRED-style frame with
 through the canonical panel contract and memoized by `vintage_id` (default:
 `str(resolved_key)`). Non-deterministic callable sources should run with
 runner/pipeline preprocessing caching disabled.
+
+### with_static_extras
+
+Wrap any `VintageSource` so static, non-revised columns are joined onto every
+resolved bundle.
+
+```python
+macroforecast.data.with_static_extras(
+    source: VintageSource,
+    extra,
+    *,
+    join: "outer" | "inner" | "left" = "outer",
+) -> VintageSource
+```
+
+The wrapper accepts `extra` as a `DataBundle` or `DataFrame`, normalizes it
+through the canonical panel contract, and includes the same SHA-256 panel
+fingerprint used by pipeline data provenance in each resolved vintage ID. A
+change to static extras therefore changes cache identity.
 
 ### VintageSource
 
