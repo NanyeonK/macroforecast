@@ -28,6 +28,7 @@ _LAZY_EXPORTS = {
     "attach_metadata": ".data",
     "availability_lag": ".data",
     "chow_lin_disaggregate": ".data",
+    "custom_vintages": ".data",
     "custom_dataset": ".data",
     "metadata": ".data",
     "panel_info": ".data",

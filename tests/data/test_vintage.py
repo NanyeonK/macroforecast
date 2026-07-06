@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
+import pandas.testing as pdt
 import pytest
 
 import macroforecast as mf
@@ -11,6 +12,20 @@ def _bundle(label: str) -> mf.data.DataBundle:
     idx = pd.DatetimeIndex([pd.Timestamp("2000-01-31")], name="date")
     panel = pd.DataFrame({"x": [1.0]}, index=idx)
     return mf.data.DataBundle(panel, {"dataset": "fred_md", "vintage": label})
+
+
+def _custom_frames() -> dict[pd.Timestamp, pd.DataFrame]:
+    dates = pd.date_range("2000-01-31", periods=3, freq="ME", name="date")
+    return {
+        pd.Timestamp("2000-02-15"): pd.DataFrame(
+            {"x": [1.0, 2.0]},
+            index=dates[:2],
+        ),
+        pd.Timestamp("2000-03-15"): pd.DataFrame(
+            {"x": [1.0, 20.0, 3.0]},
+            index=dates,
+        ),
+    }
 
 
 def test_fred_md_vintages_resolve_by_latest_label_and_memoize(monkeypatch) -> None:
@@ -80,3 +95,71 @@ def test_vintage_panel_spec_validates_reference_calendar() -> None:
                 name="date",
             ),
         )
+
+
+def test_custom_vintages_three_shapes_resolve_identical_bundles() -> None:
+    frames = _custom_frames()
+
+    def callable_source(origin_date: pd.Timestamp) -> pd.DataFrame:
+        return frames[pd.Timestamp(origin_date)]
+
+    callable_vintages = mf.data.custom_vintages(callable_source, frequency="monthly")
+    mapping_vintages = mf.data.custom_vintages(frames, frequency="monthly")
+    long = pd.concat(
+        [
+            frame.reset_index().assign(vintage=key)
+            for key, frame in frames.items()
+        ],
+        ignore_index=True,
+    )
+    long_vintages = mf.data.custom_vintages(
+        long,
+        vintage_column="vintage",
+        date_column="date",
+        frequency="monthly",
+    )
+
+    for origin in frames:
+        resolved = [
+            source.resolve(origin)
+            for source in (callable_vintages, mapping_vintages, long_vintages)
+        ]
+        for bundle in resolved:
+            assert bundle.metadata["dataset"] == "custom_vintages"
+            assert bundle.metadata["frequency"] == "monthly"
+            assert bundle.metadata["vintage"] == str(origin)
+        pdt.assert_frame_equal(resolved[0].panel, resolved[1].panel, check_freq=False)
+        pdt.assert_frame_equal(resolved[0].panel, resolved[2].panel, check_freq=False)
+
+
+def test_custom_vintages_mapping_resolves_latest_available_and_memoizes() -> None:
+    frames = _custom_frames()
+    source = mf.data.custom_vintages(frames, vintage_id=lambda key: pd.Timestamp(key).strftime("%Y%m"))
+
+    first = source.resolve(pd.Timestamp("2000-03-20"))
+    second = source.resolve(pd.Timestamp("2000-03-31"))
+
+    assert first is second
+    assert first.metadata["vintage"] == "200003"
+    with pytest.raises(mf.data.VintageUnavailableError):
+        source.resolve(pd.Timestamp("2000-01-01"))
+
+
+def test_custom_vintages_callable_memoizes_by_vintage_id() -> None:
+    frames = _custom_frames()
+    calls: list[pd.Timestamp] = []
+
+    def callable_source(origin_date: pd.Timestamp) -> pd.DataFrame:
+        calls.append(pd.Timestamp(origin_date))
+        return frames[pd.Timestamp("2000-03-15")]
+
+    source = mf.data.custom_vintages(callable_source, vintage_id=lambda origin: "live")
+
+    assert source.resolve(pd.Timestamp("2000-03-20")) is source.resolve(pd.Timestamp("2000-04-20"))
+    assert calls == [pd.Timestamp("2000-03-20")]
+
+
+def test_custom_vintages_long_frame_requires_columns() -> None:
+    with pytest.raises(ValueError, match="vintage_column and date_column"):
+        mf.data.custom_vintages(pd.DataFrame({"date": ["2000-01-31"], "x": [1.0]}))
+

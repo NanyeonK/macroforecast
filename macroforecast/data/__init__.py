@@ -38,6 +38,7 @@ from .vintage import (
     VintagePanelSpec,
     VintageSource,
     VintageUnavailableError,
+    custom_vintages,
     fred_md_vintages,
     fred_qd_vintages,
 )
@@ -53,6 +54,7 @@ __all__ = [
     "as_panel",
     "attach_metadata",
     "custom_dataset",
+    "custom_vintages",
     "metadata",
     "panel_info",
     "set_frequencies",

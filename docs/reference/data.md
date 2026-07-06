@@ -54,6 +54,7 @@ guessing which columns or horizons the run intended to use.
 | `list_vintages` | Generate supported monthly vintage labels for a dataset. | `list[str]` |
 | `fred_md_vintages` | Build a per-origin FRED-MD vintage source. | `VintageSource` |
 | `fred_qd_vintages` | Build a per-origin FRED-QD vintage source. | `VintageSource` |
+| `custom_vintages` | Build a per-origin source from callable, mapping, or long-frame custom vintages. | `VintageSource` |
 | `as_panel` | Normalize a `DataFrame` to the canonical panel contract. | `pandas.DataFrame` |
 | `validate_panel` | Validate the canonical panel contract. | `None` |
 | `panel_info` | Summarize panel shape, dates, missingness, and frequency. | `dict` |
@@ -1196,6 +1197,30 @@ are memoized by vintage label and must carry `metadata["vintage"]`.
 
 Build a `VintageSource` that resolves FRED-QD by forecast origin. Its arguments
 and behavior mirror `fred_md_vintages`, delegating to `load_fred_qd`.
+
+### custom_vintages
+
+Build a `VintageSource` from user-supplied point-in-time snapshots.
+
+```python
+macroforecast.data.custom_vintages(
+    source,
+    *,
+    vintage_column: str | None = None,
+    date_column: str | None = None,
+    vintage_id=None,
+    dataset: str = "custom_vintages",
+    frequency: str = "unknown",
+    strict: bool = True,
+) -> VintageSource
+```
+
+`source` may be a callable `origin_date -> DataBundle | DataFrame`, a mapping
+from date-like vintage keys to snapshots, or a long ALFRED-style frame with
+`vintage_column` and `date_column`. Every resolved snapshot is normalized
+through the canonical panel contract and memoized by `vintage_id` (default:
+`str(resolved_key)`). Non-deterministic callable sources should run with
+runner/pipeline preprocessing caching disabled.
 
 ### VintageSource
 
