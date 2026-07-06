@@ -212,6 +212,74 @@ def test_test_options_validate_underlying_callable_kwargs():
         )
 
 
+def test_wired_pairwise_tests_emit_long_significance_rows():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"),
+        )
+    )
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert {"target", "horizon", "contender", "test", "statistic", "p_value", "reject", "n_obs"} <= set(sig.columns)
+    rows = sig.dropna(subset=["test"])
+    assert set(rows["test"]) == {"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"}
+    for name in {"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"}:
+        assert set(rows.loc[rows["test"] == name, "contender"]) == {"OLS", "RIDGE"}
+
+
+def test_pairwise_test_options_reach_underlying_callable(monkeypatch):
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("gw",),
+            test_options={"gw": {"small_sample": False, "alpha": 0.2}},
+        )
+    )
+    calls = []
+
+    def spy(loss_a, loss_b, *, horizon=1, instruments=None, alpha=0.05, small_sample=True):
+        calls.append(
+            {
+                "horizon": horizon,
+                "alpha": alpha,
+                "small_sample": small_sample,
+                "n": len(loss_a),
+            }
+        )
+        return mf.tests.TestResult(
+            statistic=1.0,
+            p_value=0.5,
+            decision=False,
+            alternative="conditional_equal_predictive_ability",
+            n_obs=len(loss_a),
+        )
+
+    monkeypatch.setattr(mf.tests, "giacomini_white_test", spy)
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert len(calls) == 2
+    assert {call["small_sample"] for call in calls} == {False}
+    assert {call["alpha"] for call in calls} == {0.2}
+    assert set(sig["test"]) == {"gw"}
+    assert set(sig["statistic"]) == {1.0}
+
+
+def test_custom_loss_skips_nested_quadratic_pairwise_tests_with_warning():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("gw", "enc_new", "enc_t"),
+            loss=_abs_loss,
+        )
+    )
+    with pytest.warns(UserWarning, match="ENC-NEW"):
+        sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert set(sig["test"]) == {"gw"}
+
+
 # --------------------------------------------------------------------------- #
 # 4. EvalSpec.loss threads into DM/MCS; CW is skipped (with warning) under it
 # --------------------------------------------------------------------------- #

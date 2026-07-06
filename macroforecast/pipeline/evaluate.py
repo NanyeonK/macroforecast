@@ -49,6 +49,8 @@ def _has_groups(master: pd.DataFrame) -> bool:
 # with ``getattr`` defaults matching :class:`~macroforecast.pipeline.spec.EvalSpec`'s
 # own defaults, so such spec doubles keep the exact pre-threading behavior.
 _DEFAULT_EVAL_TESTS: tuple[str, ...] = ("dm", "cw", "mcs")
+_PAIRWISE_LONG_TESTS = frozenset({"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"})
+_NESTED_QUADRATIC_TESTS = frozenset({"cw", "enc_new", "enc_t"})
 
 
 def _eval_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
@@ -70,6 +72,49 @@ def _eval_test_options(spec: PipelineSpec, test_name: str) -> dict[str, Any]:
 
 def _eval_calibration_alpha(spec: PipelineSpec) -> float:
     return float(getattr(spec.evaluation, "calibration_alpha", 0.05))
+
+
+def _result_row(
+    *,
+    target: Any,
+    horizon: Any,
+    contender: str,
+    test: str,
+    result: Any,
+    n_obs: int | None = None,
+) -> dict[str, Any]:
+    """Long-form significance row for a TestResult-like object."""
+
+    return {
+        "target": target,
+        "horizon": horizon,
+        "contender": contender,
+        "test": test,
+        "statistic": getattr(result, "statistic", None),
+        "p_value": getattr(result, "p_value", None),
+        "reject": getattr(result, "decision", None),
+        "n_obs": getattr(result, "n_obs", n_obs),
+    }
+
+
+def _failed_result_row(
+    *,
+    target: Any,
+    horizon: Any,
+    contender: str,
+    test: str,
+    n_obs: int,
+) -> dict[str, Any]:
+    return {
+        "target": target,
+        "horizon": horizon,
+        "contender": contender,
+        "test": test,
+        "statistic": np.nan,
+        "p_value": np.nan,
+        "reject": False,
+        "n_obs": int(n_obs),
+    }
 
 
 # combination methods that need realised values (estimated weights), and their lag
@@ -302,18 +347,32 @@ def _accuracy_against(
 
 
 def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
-    """Diebold-Mariano and Clark-West p-values of each contender vs the benchmark.
+    """Forecast-comparison tests of each contender vs the benchmark.
 
-    Only the tests named in ``spec.evaluation.tests`` run (``"dm"``/``"cw"``,
-    ``cw`` additionally gated by ``cw_for_nested`` as before). The DM/CW loss
-    differentials use ``spec.evaluation.loss(y_true, y_pred)`` when set, else
-    squared error. Clark-West's adjustment term is only valid under quadratic
-    loss, so when a custom ``loss`` is set and CW would otherwise run, CW is
-    skipped (never silently computed against the wrong loss) and a
-    ``UserWarning`` explains why; DM and MCS are loss-agnostic and are
-    unaffected.
+    The historical ``"dm"``/``"cw"`` output remains wide for byte-identity of
+    default reports. Newly wired pairwise tests append long-form rows with a
+    ``test`` column: ``"gw"``, ``"enc_new"``, ``"enc_t"``, ``"gr"``, plus
+    ``"pt"``, ``"hm"``, and ``"ag"``. The directional rows test the
+    CONTENDER's own sign skill, not a pairwise loss differential, but they use
+    the same benchmark-aligned sample as DM/CW so all significance rows rest on
+    the same available origins.
+
+    Loss-differential tests use ``spec.evaluation.loss(y_true, y_pred)`` when
+    set, else squared error. Clark-West, ENC-NEW, and ENC-T are derived under
+    quadratic-loss nested-model assumptions, so a custom loss makes those tests
+    skip with a ``UserWarning`` instead of silently computing an invalid result.
     """
-    from macroforecast.tests import clark_west_test, dm_test
+    from macroforecast.tests import (
+        anatolyev_gerko_test,
+        clark_west_test,
+        conditional_predictive_ability_test,
+        dm_test,
+        enc_new_test,
+        enc_t_test,
+        giacomini_white_test,
+        henriksson_merton_test,
+        pesaran_timmermann_test,
+    )
 
     bench = spec.evaluation.benchmark
     if not _has_groups(master):
@@ -322,7 +381,8 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     requested = _eval_tests(spec)
     want_dm = "dm" in requested
     want_cw = "cw" in requested and bool(spec.evaluation.cw_for_nested)
-    if not want_dm and not want_cw:
+    requested_long = tuple(name for name in requested if name in _PAIRWISE_LONG_TESTS)
+    if not want_dm and not want_cw and not requested_long:
         return pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
 
     # Clark-West is only licensed where the benchmark is nested in the contender.
@@ -334,17 +394,34 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             nested |= set(contender_names(a))
 
     loss_fn = _eval_loss(spec)
-    cw_blocked_by_custom_loss = bool(want_cw and loss_fn is not None and nested)
-    if cw_blocked_by_custom_loss:
+    custom_loss_blocked = {
+        name
+        for name in _NESTED_QUADRATIC_TESTS
+        if name in requested
+        and loss_fn is not None
+        and nested
+        and (name != "cw" or want_cw)
+    }
+    cw_blocked_by_custom_loss = "cw" in custom_loss_blocked
+    if custom_loss_blocked:
+        labels = {
+            "cw": "Clark-West",
+            "enc_new": "ENC-NEW",
+            "enc_t": "ENC-T",
+        }
+        skipped = ", ".join(labels[name] for name in sorted(custom_loss_blocked))
         warnings.warn(
-            "EvalSpec.loss is a custom per-observation loss, but the Clark-West "
-            "adjustment term is derived under quadratic loss and is not a valid "
-            "test for an arbitrary loss function; skipping CW for this evaluation "
-            "(DM and MCS are loss-agnostic and still run under the custom loss).",
+            "EvalSpec.loss is a custom per-observation loss, but "
+            f"{skipped} is derived under quadratic loss and is not a valid "
+            f"test for an arbitrary loss function; skipping {skipped} for this "
+            "evaluation (loss-differential tests that accept arbitrary losses "
+            "still run under the custom loss).",
             UserWarning, stacklevel=2,
         )
 
     out: list[dict[str, Any]] = []
+    dm_options = _eval_test_options(spec, "dm")
+    cw_options = _eval_test_options(spec, "cw")
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
         pivot_f = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
         actual = group.groupby("origin")["actual"].first().reindex(pivot_f.index)
@@ -371,20 +448,129 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             has_result = False
             if want_dm:
                 try:
-                    dm = dm_test(loss_c, loss_b, horizon=int(horizon), input_type="loss")
+                    dm = dm_test(
+                        loss_c,
+                        loss_b,
+                        **{**dm_options, "horizon": int(horizon), "input_type": "loss"},
+                    )
                     row["dm_stat"] = float(cast(float, dm.statistic)); row["dm_p"] = float(cast(float, dm.p_value))
                 except Exception:
                     row["dm_stat"] = np.nan; row["dm_p"] = np.nan
                 has_result = True
             if want_cw and not cw_blocked_by_custom_loss and contender in nested:
                 try:
-                    cw = clark_west_test(loss_b, loss_c, fb_vals, fc_vals, horizon=int(horizon))
+                    cw = clark_west_test(
+                        loss_b,
+                        loss_c,
+                        fb_vals,
+                        fc_vals,
+                        **{**cw_options, "horizon": int(horizon)},
+                    )
                     row["cw_stat"] = float(cast(float, cw.statistic)); row["cw_p"] = float(cast(float, cw.p_value))
                 except Exception:
                     row["cw_stat"] = np.nan; row["cw_p"] = np.nan
                 has_result = True
             if has_result:
                 out.append(row)
+            n_obs = int(common.sum())
+            for test_name in requested_long:
+                if test_name in custom_loss_blocked:
+                    continue
+                if test_name in {"enc_new", "enc_t"} and contender not in nested:
+                    continue
+                try:
+                    if test_name == "gw":
+                        res = giacomini_white_test(
+                            loss_c,
+                            loss_b,
+                            **{
+                                **_eval_test_options(spec, "gw"),
+                                "horizon": int(horizon),
+                            },
+                        )
+                        out.append(_result_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="gw", result=res, n_obs=n_obs,
+                        ))
+                    elif test_name == "enc_new":
+                        res = enc_new_test(
+                            fb_vals - y,
+                            fc_vals - y,
+                            **_eval_test_options(spec, "enc_new"),
+                        )
+                        out.append(_result_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="enc_new", result=res, n_obs=n_obs,
+                        ))
+                    elif test_name == "enc_t":
+                        res = enc_t_test(
+                            fb_vals - y,
+                            fc_vals - y,
+                            **{
+                                **_eval_test_options(spec, "enc_t"),
+                                "horizon": int(horizon),
+                            },
+                        )
+                        out.append(_result_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="enc_t", result=res, n_obs=n_obs,
+                        ))
+                    elif test_name == "pt":
+                        res = pesaran_timmermann_test(
+                            y,
+                            fc_vals,
+                            **{**_eval_test_options(spec, "pt"), "method": "pesaran_timmermann"},
+                        )
+                        out.append(_result_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="pt", result=res, n_obs=n_obs,
+                        ))
+                    elif test_name == "hm":
+                        res = henriksson_merton_test(
+                            y,
+                            fc_vals,
+                            **{**_eval_test_options(spec, "hm"), "method": "henriksson_merton"},
+                        )
+                        out.append(_result_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="hm", result=res, n_obs=n_obs,
+                        ))
+                    elif test_name == "ag":
+                        res = anatolyev_gerko_test(
+                            y,
+                            fc_vals,
+                            **{**_eval_test_options(spec, "ag"), "method": "anatolyev_gerko"},
+                        )
+                        out.append(_result_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="ag", result=res, n_obs=n_obs,
+                        ))
+                    elif test_name == "gr":
+                        gr = conditional_predictive_ability_test(
+                            loss_c,
+                            loss_b,
+                            **{
+                                **_eval_test_options(spec, "gr"),
+                                "method": "giacomini_rossi",
+                            },
+                        )
+                        out.append({
+                            "target": target,
+                            "horizon": horizon,
+                            "contender": str(contender),
+                            "test": "gr",
+                            "statistic": gr.get("statistic"),
+                            "p_value": None,
+                            "reject": gr.get("decision"),
+                            "n_obs": gr.get("n_obs"),
+                            "critical_value": gr.get("critical_value"),
+                            "window_size": gr.get("window_size"),
+                        })
+                except Exception:
+                    out.append(_failed_result_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test=test_name, n_obs=n_obs,
+                    ))
     return pd.DataFrame(out) if out else pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
 
 

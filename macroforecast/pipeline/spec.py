@@ -109,16 +109,19 @@ class CombinationContender:
     shrink_to_equal: float | None = None
 
 
-#: Test names ``EvalSpec.tests`` currently wires into the evaluation. ``spa``/``gr``
-#: (superior predictive ability / Giacomini-Rossi) are recognized elsewhere in the
-#: package but not yet threaded through the pipeline evaluator -- passing them
-#: raises at :func:`pipeline_spec` build time rather than being silently dropped.
+#: Test names ``EvalSpec.tests`` currently wires into the evaluation. The pairwise
+#: benchmark-comparison names include the historical ``dm``/``cw`` plus GW,
+#: nested encompassing, directional-accuracy, and Giacomini-Rossi fluctuation
+#: tests.
 #: ``berkowitz``/``pit_autocorr``/``coverage`` are the PIT-based calibration tests
 #: (Phase 1 density pipeline): they populate ``report.calibration`` instead of
 #: ``report.significance`` and are never on by default (see ``EvalSpec.tests``'s
 #: docstring below).
 SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
-    {"dm", "cw", "mcs", "berkowitz", "pit_autocorr", "coverage"}
+    {
+        "dm", "cw", "gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mcs",
+        "berkowitz", "pit_autocorr", "coverage",
+    }
 )
 
 #: The subset of :data:`SUPPORTED_EVAL_TESTS` that are PIT-based calibration
@@ -130,6 +133,13 @@ CALIBRATION_EVAL_TESTS: frozenset[str] = frozenset({"berkowitz", "pit_autocorr",
 _EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
     "dm": ("macroforecast.tests", "dm_test"),
     "cw": ("macroforecast.tests", "clark_west_test"),
+    "gw": ("macroforecast.tests", "giacomini_white_test"),
+    "enc_new": ("macroforecast.tests", "enc_new_test"),
+    "enc_t": ("macroforecast.tests", "enc_t_test"),
+    "pt": ("macroforecast.tests", "directional_accuracy_test"),
+    "hm": ("macroforecast.tests", "directional_accuracy_test"),
+    "ag": ("macroforecast.tests", "directional_accuracy_test"),
+    "gr": ("macroforecast.tests", "conditional_predictive_ability_test"),
     "mcs": ("macroforecast.tests", "model_confidence_set"),
     "berkowitz": ("macroforecast.tests", "density_interval_tests"),
     "pit_autocorr": ("macroforecast.tests", "density_interval_tests"),
@@ -201,6 +211,11 @@ class EvalSpec:
 
     ``tests`` lists which significance tests actually run; unsupported names
     raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
+    Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
+    ``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
+    ``"ag"`` are directional-accuracy tests for the contender's own sign
+    forecasts, evaluated on the same benchmark-aligned sample for consistency
+    with the pairwise tests.
     ``"berkowitz"``/``"pit_autocorr"``/``"coverage"`` are PIT-based calibration
     diagnostics (Phase 1 density pipeline) -- they populate
     ``PipelineReport.calibration`` rather than ``significance``/``mcs`` and,
@@ -859,9 +874,7 @@ def pipeline_spec(
     if unknown_tests:
         raise ValueError(
             f"evaluation.tests contains unsupported name(s) {sorted(unknown_tests)}; "
-            f"supported tests are {sorted(SUPPORTED_EVAL_TESTS)} ('spa'/'gr' are "
-            "recognized elsewhere in macroforecast.tests but not yet wired into "
-            "the pipeline evaluator)."
+            f"supported tests are {sorted(SUPPORTED_EVAL_TESTS)}."
         )
     _validate_eval_test_options(evaluation)
 
