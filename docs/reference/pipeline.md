@@ -314,6 +314,12 @@ strided subsample instead, and `fingerprint["method"]` says
 `"strided_subsample"` (with `row_stride`/`col_stride`/`sampled_shape`) rather
 than silently returning a partial-content digest labeled as full.
 
+For vintage-aware runs, `provenance["vintage_source"]` records the source kind,
+`actuals_vintage` policy, reference-calendar summary, and origin-to-vintage map.
+Maps with 500 origins or fewer are stored inline. Larger maps are written as
+`vintage_map.json` next to `checkpoint_dir`, and provenance stores the sidecar
+`path`, `sha256`, and `n_origins`.
+
 Pass `provenance_level="basic"` to `pipeline_spec(...)` to keep exactly the
 pre-existing dict shape (`package_version`/`seed`/`targets`/`horizons`/`arms`/
 `benchmark`/`combinations`, no `environment`/`data`/`spec_echo`) -- for callers
@@ -362,6 +368,14 @@ reconstructed into the same `{level: value}` mapping a live run's
 `quantile_predictions` carries; see "Density and interval forecasting" below).
 The directory argument wins over whatever `spec.checkpoint_dir` says, so a spec
 built without checkpointing (or a copied checkpoint directory) re-scores fine.
+
+For vintage-aware runs, `rescore()` uses the `actual` and
+`actuals_vintage_id` values already stored in the checkpoint records. It cannot
+change `VintagePanelSpec(actuals_vintage=...)` retroactively, because the
+checkpoint contains forecasts and realized values, not enough information to
+resolve a different actuals convention. To compare `"latest"` with
+`"first_release"`, run two otherwise identical specs and checkpoint/report them
+separately.
 
 Fields that require having actually executed the run are absent or best-effort:
 

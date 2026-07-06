@@ -25,22 +25,36 @@ full per-version honesty-pass history embedded in repo documentation.
   path unchanged.
 
 - `data/vintage.py`, `forecasting/runner.py`, `pipeline/run.py`,
-  `forecasting/checkpoint.py` (feature, per-origin vintages Phase 1): added the
+  `forecasting/checkpoint.py` (feature, per-origin vintages): added the
   `VintageSource` protocol, `VintageUnavailableError`, `fred_md_vintages()` /
-  `fred_qd_vintages()`, and `VintagePanelSpec` so FRED-MD/QD studies can resolve
-  one point-in-time `DataBundle` per forecast origin while keeping the
-  non-vintage runner path unchanged. The Phase 1 runner supports feature-matrix
-  `direct` and `direct_average` policies, serial execution only, and
-  `actuals_vintage="latest"` only; it raises for `retrain_every != 1`,
-  `n_jobs != 1`, `actuals_vintage="first_release"`, panel-input models, and
-  recursive/path-average vintage runs until later phases define those semantics.
-  Forecast rows and lean checkpoints now carry nullable `vintage_id` and
-  `actuals_vintage_id` columns, `PipelineReport.provenance["vintage_source"]`
-  records the source kind/reference calendar/origin-vintage map, and
-  `leakage_audit["vintage_boundary_audit"]` surfaces the mandatory check that
-  resolved vintage panels stop strictly before each origin. Vintage runs tag
-  in-memory preprocessing/feature cache keys and `PreprocessorStore` namespaces
-  with `metadata["vintage"]`; default non-vintage cache keys remain byte-identical.
+  `fred_qd_vintages()`, `custom_vintages()`, `with_static_extras()`, and
+  `VintagePanelSpec` so FRED-MD/QD or user-supplied studies can resolve one
+  point-in-time `DataBundle` per forecast origin while keeping the non-vintage
+  runner path unchanged. Custom vintages accept callable, mapping, and long
+  ALFRED-style frames, with every snapshot normalized through the canonical
+  panel contract and memoized by resolved vintage identifier. Static extras join
+  genuinely non-revised columns onto every resolved snapshot and add a stable
+  extra-panel fingerprint to the vintage ID. Vintage-aware runs now support
+  serial and parallel pipeline execution, feature-matrix `direct`,
+  `direct_average`, `path_average`, and `recursive` policies, panel-input
+  models, full-panel preprocessing, and full/fixed feature scopes; the remaining
+  guard is `retrain_every != 1`, which still needs future semantics for stale
+  fit reuse across changing data content. `actuals_vintage="latest"` scores
+  against the latest run snapshot, while `actuals_vintage="first_release"`
+  resolves each target date `d` from the first vintage strictly after `d`, making
+  `actuals_vintage_id` row-varying when needed. Forecast rows and lean
+  checkpoints carry nullable `vintage_id` and `actuals_vintage_id` columns;
+  `PipelineReport.provenance["vintage_source"]` records source kind,
+  actuals policy, reference calendar, and the origin-vintage map, writing maps
+  above 500 origins to `vintage_map.json` beside `checkpoint_dir` with a sha256
+  sidecar reference. `leakage_audit["vintage_boundary_audit"]` surfaces the
+  mandatory check that resolved vintage panels stop strictly before each origin.
+  Vintage runs tag in-memory preprocessing/feature cache keys and
+  `PreprocessorStore` namespaces with `metadata["vintage"]`; default
+  non-vintage cache keys remain byte-identical. Change/growth-style
+  macroforecast-side target transforms now emit a warning in vintage-aware runs
+  so users pre-transform those targets within each vintage snapshot when that is
+  the intended real-time estimand. See `docs/guide/vintages.md`.
 
 - `pipeline/run.py`, `pipeline/spec.py`, `pipeline/rescore.py` (feature,
   Wave B lane B-2, self-certifying `PipelineReport`): `run_pipeline`'s

@@ -1261,9 +1261,12 @@ macroforecast.data.VintagePanelSpec(
 )
 ```
 
-Phase 1 supports `actuals_vintage="latest"` only in the runner. The reference
-calendar is required, non-empty, and monotonic; forecast target dates are derived
-from it while each origin's training data is resolved through `source`.
+The reference calendar is required, non-empty, and monotonic; forecast target
+dates are derived from it while each origin's training data is resolved through
+`source`. `actuals_vintage="latest"` scores every forecast against the latest
+snapshot available to the run. `actuals_vintage="first_release"` scores target
+date `d` against the first vintage strictly after `d`; the resulting
+`actuals_vintage_id` can vary by forecast row.
 
 ### VintageUnavailableError
 
