@@ -42,6 +42,7 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 | `evaluate(master, spec)` | Accuracy + DM/CW + MCS + combinations on a master frame. |
 | `apply_combinations(master, spec)` | Append cross-arm combination contenders. |
 | `resolve_target(target, *, data, tcode, tcode_map, reduce_i2)` | Resolve a target's (policy, transform). |
+| `is_vintage_aware(spec)` | Return whether `spec.data` is a `VintagePanelSpec`. |
 | `contender_names(arm)` | The contender label for an arm. A contender IS exactly an arm (one model per arm), so this returns `[arm.name]`. |
 
 ## Configuration objects
@@ -55,6 +56,8 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 - `CombinationContender` -- a forecast combination that becomes an additional contender.
 - `PipelineReport` -- output: forecasts, accuracy, significance, mcs, density, calibration, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`. `density`/`calibration` are empty frames unless `EvalSpec.metrics`/`tests` explicitly requests a density metric or calibration test. `provenance` is self-certifying by default (`pipeline_spec(..., provenance_level="full")`, the default) -- see "Provenance" below.
 - `TCODE_TARGET_MAP` -- FRED t-code to (forecast_policy, target_transform) mapping.
+- `is_vintage_aware(spec)` -- read-only predicate for callers that need to branch
+  on per-origin vintage data without duplicating the `VintagePanelSpec` check.
 
 ## t-code to target mapping
 

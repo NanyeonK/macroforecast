@@ -579,7 +579,10 @@ are additional contenders.</p></li>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_target(target,</span> <span class="pre">*,</span> <span class="pre">data,</span> <span class="pre">tcode,</span> <span class="pre">tcode_map,</span> <span class="pre">reduce_i2)</span></code></p></td>
 <td><p>Resolve a target’s (policy, transform).</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">contender_names(arm)</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">is_vintage_aware(spec)</span></code></p></td>
+<td><p>Return whether <code class="docutils literal notranslate"><span class="pre">spec.data</span></code> is a <code class="docutils literal notranslate"><span class="pre">VintagePanelSpec</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contender_names(arm)</span></code></p></td>
 <td><p>The contender label for an arm. A contender IS exactly an arm (one model per arm), so this returns <code class="docutils literal notranslate"><span class="pre">[arm.name]</span></code>.</p></td>
 </tr>
 </tbody>
@@ -598,6 +601,8 @@ are additional contenders.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">CombinationContender</span></code> – a forecast combination that becomes an additional contender.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> – output: forecasts, accuracy, significance, mcs, density, calibration, provenance, leakage_audit, interpretation, failed_cells. <code class="docutils literal notranslate"><span class="pre">failed_cells</span></code> lists any <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">arm,</span> <span class="pre">horizon-group)</span></code> cell whose <code class="docutils literal notranslate"><span class="pre">run()</span></code> raised; the rest of the cells still ran and the failures are also mirrored into <code class="docutils literal notranslate"><span class="pre">leakage_audit[&quot;failed_cells&quot;]</span></code>. <code class="docutils literal notranslate"><span class="pre">density</span></code>/<code class="docutils literal notranslate"><span class="pre">calibration</span></code> are empty frames unless <code class="docutils literal notranslate"><span class="pre">EvalSpec.metrics</span></code>/<code class="docutils literal notranslate"><span class="pre">tests</span></code> explicitly requests a density metric or calibration test. <code class="docutils literal notranslate"><span class="pre">provenance</span></code> is self-certifying by default (<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">provenance_level=&quot;full&quot;)</span></code>, the default) – see “Provenance” below.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">TCODE_TARGET_MAP</span></code> – FRED t-code to (forecast_policy, target_transform) mapping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">is_vintage_aware(spec)</span></code> – read-only predicate for callers that need to branch
+on per-origin vintage data without duplicating the <code class="docutils literal notranslate"><span class="pre">VintagePanelSpec</span></code> check.</p></li>
 </ul>
 </section>
 <section id="t-code-to-target-mapping">
