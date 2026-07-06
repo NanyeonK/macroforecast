@@ -948,7 +948,7 @@ def test_model_confidence_set_is_exact_mcs_canonical_callable() -> None:
 
 
 def test_arch_multiple_comparison_callables_return_backend_results() -> None:
-    pytest.importorskip("arch.bootstrap")
+    pytest.importorskip("arch")
     loss_panel = pd.DataFrame(
         {
             "target": ["y"] * 36,

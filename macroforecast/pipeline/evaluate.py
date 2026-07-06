@@ -99,26 +99,6 @@ def _result_row(
     }
 
 
-def _failed_result_row(
-    *,
-    target: Any,
-    horizon: Any,
-    contender: str,
-    test: str,
-    n_obs: int,
-) -> dict[str, Any]:
-    return {
-        "target": target,
-        "horizon": horizon,
-        "contender": contender,
-        "test": test,
-        "statistic": np.nan,
-        "p_value": np.nan,
-        "reject": False,
-        "n_obs": int(n_obs),
-    }
-
-
 def _loss_values(
     y: np.ndarray,
     pred: np.ndarray,
@@ -490,99 +470,93 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                     continue
                 if test_name in {"enc_new", "enc_t"} and contender not in nested:
                     continue
-                try:
-                    if test_name == "gw":
-                        res = giacomini_white_test(
-                            loss_c,
-                            loss_b,
-                            **{
-                                **_eval_test_options(spec, "gw"),
-                                "horizon": int(horizon),
-                            },
-                        )
-                        out.append(_result_row(
-                            target=target, horizon=horizon, contender=str(contender),
-                            test="gw", result=res, n_obs=n_obs,
-                        ))
-                    elif test_name == "enc_new":
-                        res = enc_new_test(
-                            fb_vals - y,
-                            fc_vals - y,
-                            **_eval_test_options(spec, "enc_new"),
-                        )
-                        out.append(_result_row(
-                            target=target, horizon=horizon, contender=str(contender),
-                            test="enc_new", result=res, n_obs=n_obs,
-                        ))
-                    elif test_name == "enc_t":
-                        res = enc_t_test(
-                            fb_vals - y,
-                            fc_vals - y,
-                            **{
-                                **_eval_test_options(spec, "enc_t"),
-                                "horizon": int(horizon),
-                            },
-                        )
-                        out.append(_result_row(
-                            target=target, horizon=horizon, contender=str(contender),
-                            test="enc_t", result=res, n_obs=n_obs,
-                        ))
-                    elif test_name == "pt":
-                        res = pesaran_timmermann_test(
-                            y,
-                            fc_vals,
-                            **{**_eval_test_options(spec, "pt"), "method": "pesaran_timmermann"},
-                        )
-                        out.append(_result_row(
-                            target=target, horizon=horizon, contender=str(contender),
-                            test="pt", result=res, n_obs=n_obs,
-                        ))
-                    elif test_name == "hm":
-                        res = henriksson_merton_test(
-                            y,
-                            fc_vals,
-                            **{**_eval_test_options(spec, "hm"), "method": "henriksson_merton"},
-                        )
-                        out.append(_result_row(
-                            target=target, horizon=horizon, contender=str(contender),
-                            test="hm", result=res, n_obs=n_obs,
-                        ))
-                    elif test_name == "ag":
-                        res = anatolyev_gerko_test(
-                            y,
-                            fc_vals,
-                            **{**_eval_test_options(spec, "ag"), "method": "anatolyev_gerko"},
-                        )
-                        out.append(_result_row(
-                            target=target, horizon=horizon, contender=str(contender),
-                            test="ag", result=res, n_obs=n_obs,
-                        ))
-                    elif test_name == "gr":
-                        gr = conditional_predictive_ability_test(
-                            loss_c,
-                            loss_b,
-                            **{
-                                **_eval_test_options(spec, "gr"),
-                                "method": "giacomini_rossi",
-                            },
-                        )
-                        out.append({
-                            "target": target,
-                            "horizon": horizon,
-                            "contender": str(contender),
-                            "test": "gr",
-                            "statistic": gr.get("statistic"),
-                            "p_value": None,
-                            "reject": gr.get("decision"),
-                            "n_obs": gr.get("n_obs"),
-                            "critical_value": gr.get("critical_value"),
-                            "window_size": gr.get("window_size"),
-                        })
-                except Exception:
-                    out.append(_failed_result_row(
+                if test_name == "gw":
+                    res = giacomini_white_test(
+                        loss_c,
+                        loss_b,
+                        **{
+                            **_eval_test_options(spec, "gw"),
+                            "horizon": int(horizon),
+                        },
+                    )
+                    out.append(_result_row(
                         target=target, horizon=horizon, contender=str(contender),
-                        test=test_name, n_obs=n_obs,
+                        test="gw", result=res, n_obs=n_obs,
                     ))
+                elif test_name == "enc_new":
+                    res = enc_new_test(
+                        fb_vals - y,
+                        fc_vals - y,
+                        **_eval_test_options(spec, "enc_new"),
+                    )
+                    out.append(_result_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test="enc_new", result=res, n_obs=n_obs,
+                    ))
+                elif test_name == "enc_t":
+                    res = enc_t_test(
+                        fb_vals - y,
+                        fc_vals - y,
+                        **{
+                            **_eval_test_options(spec, "enc_t"),
+                            "horizon": int(horizon),
+                        },
+                    )
+                    out.append(_result_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test="enc_t", result=res, n_obs=n_obs,
+                    ))
+                elif test_name == "pt":
+                    res = pesaran_timmermann_test(
+                        y,
+                        fc_vals,
+                        **{**_eval_test_options(spec, "pt"), "method": "pesaran_timmermann"},
+                    )
+                    out.append(_result_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test="pt", result=res, n_obs=n_obs,
+                    ))
+                elif test_name == "hm":
+                    res = henriksson_merton_test(
+                        y,
+                        fc_vals,
+                        **{**_eval_test_options(spec, "hm"), "method": "henriksson_merton"},
+                    )
+                    out.append(_result_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test="hm", result=res, n_obs=n_obs,
+                    ))
+                elif test_name == "ag":
+                    res = anatolyev_gerko_test(
+                        y,
+                        fc_vals,
+                        **{**_eval_test_options(spec, "ag"), "method": "anatolyev_gerko"},
+                    )
+                    out.append(_result_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test="ag", result=res, n_obs=n_obs,
+                    ))
+                elif test_name == "gr":
+                    gr = conditional_predictive_ability_test(
+                        loss_c,
+                        loss_b,
+                        **{
+                            **_eval_test_options(spec, "gr"),
+                            "method": "giacomini_rossi",
+                        },
+                    )
+                    out.append({
+                        "target": target,
+                        "horizon": horizon,
+                        "contender": str(contender),
+                        "test": "gr",
+                        "statistic": gr.get("statistic"),
+                        "p_value": None,
+                        "reject": gr.get("decision"),
+                        "n_obs": gr.get("n_obs"),
+                        "critical_value": gr.get("critical_value"),
+                        "window_size": gr.get("window_size"),
+                    })
     if requested_joint:
         for target, target_group in master.groupby("target", dropna=False):
             contenders = [
@@ -618,35 +592,26 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                 if diff_panel.shape[0] < 4 or diff_panel.shape[1] < 2:
                     continue
                 for test_name in requested_joint:
-                    try:
-                        res = multi_horizon_spa_test(
-                            diff_panel,
-                            **{
-                                **_eval_test_options(spec, test_name),
-                                "statistic": test_name,
-                            },
-                        )
-                        out.append({
-                            "target": target,
-                            "horizon": "joint",
-                            "contender": str(contender),
-                            "test": test_name,
-                            "statistic": res.statistic,
-                            "p_value": res.p_value,
-                            "reject": res.decision,
-                            "n_obs": res.n_obs,
-                            "critical_value": res.metadata.get("critical_value"),
-                            "n_horizons": res.metadata.get("n_horizons"),
-                            "horizons": res.metadata.get("horizons"),
-                        })
-                    except Exception:
-                        out.append(_failed_result_row(
-                            target=target,
-                            horizon="joint",
-                            contender=str(contender),
-                            test=test_name,
-                            n_obs=int(diff_panel.shape[0]),
-                        ))
+                    res = multi_horizon_spa_test(
+                        diff_panel,
+                        **{
+                            **_eval_test_options(spec, test_name),
+                            "statistic": test_name,
+                        },
+                    )
+                    out.append({
+                        "target": target,
+                        "horizon": "joint",
+                        "contender": str(contender),
+                        "test": test_name,
+                        "statistic": res.statistic,
+                        "p_value": res.p_value,
+                        "reject": res.decision,
+                        "n_obs": res.n_obs,
+                        "critical_value": res.metadata.get("critical_value"),
+                        "n_horizons": res.metadata.get("n_horizons"),
+                        "horizons": res.metadata.get("horizons"),
+                    })
     return pd.DataFrame(out) if out else pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
 
 
@@ -744,10 +709,7 @@ def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) ->
                 "horizon": "horizon",
             }
         )
-        try:
-            res = set_functions[test_name](loss_panel, **options)
-        except Exception:
-            continue
+        res = set_functions[test_name](loss_panel, **options)
         records = res.get("records") or []
         for record in records:
             target = record.get("target")

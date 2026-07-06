@@ -9,6 +9,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+import importlib.util
 import inspect
 from typing import Any, Literal, cast
 
@@ -124,11 +125,16 @@ SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
         "coverage",
     }
 )
+_ARCH_BACKED_EVAL_TESTS: frozenset[str] = frozenset({"spa", "rc", "stepm"})
 
 #: The subset of :data:`SUPPORTED_EVAL_TESTS` that are PIT-based calibration
 #: diagnostics: they run in ``pipeline/evaluate.py::calibration_table`` and land
 #: in ``PipelineReport.calibration``, not ``significance``/``mcs``.
 CALIBRATION_EVAL_TESTS: frozenset[str] = frozenset({"berkowitz", "pit_autocorr", "coverage"})
+
+
+def _arch_available() -> bool:
+    return importlib.util.find_spec("arch") is not None
 
 
 _EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
@@ -225,6 +231,8 @@ class EvalSpec:
     and ``"aspa"``; they require at least two horizons and use ``"joint"`` as
     their significance-table horizon sentinel. Full-set benchmark comparisons are ``"mcs"``,
     ``"spa"``, ``"rc"``, and ``"stepm"``; they populate ``PipelineReport.mcs``.
+    ``"spa"``, ``"rc"``, and ``"stepm"`` require the ``arch`` extra
+    (``pip install "macroforecast[arch]"``).
     ``"berkowitz"``/``"pit_autocorr"``/``"coverage"`` are PIT-based calibration
     diagnostics (Phase 1 density pipeline) -- they populate
     ``PipelineReport.calibration`` rather than ``significance``/``mcs`` and,
@@ -884,6 +892,13 @@ def pipeline_spec(
         raise ValueError(
             f"evaluation.tests contains unsupported name(s) {sorted(unknown_tests)}; "
             f"supported tests are {sorted(SUPPORTED_EVAL_TESTS)}."
+        )
+    requested_arch_tests = _ARCH_BACKED_EVAL_TESTS & set(evaluation.tests)
+    if requested_arch_tests and not _arch_available():
+        raise ImportError(
+            f"evaluation.tests contains arch-backed test(s) "
+            f"{sorted(requested_arch_tests)}, but the optional arch backend is "
+            'not installed; install it with pip install "macroforecast[arch]".'
         )
     if {"uspa", "aspa"} & set(evaluation.tests) and len(horizon_tuple) < 2:
         raise ValueError(

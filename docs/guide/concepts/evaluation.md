@@ -66,6 +66,7 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   (`mcs_alpha`). Uses the iterative elimination algorithm by default.
 - **Full-set benchmark tests**: `"spa"`, `"rc"`, and `"stepm"` compare the full
   contender set against the benchmark and land in `report.mcs` alongside MCS.
+  They require the `arch` extra (`pip install "macroforecast[arch]"`).
 
 ## Choosing the benchmark
 

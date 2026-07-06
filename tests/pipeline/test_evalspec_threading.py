@@ -42,6 +42,7 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
+import macroforecast.pipeline.spec as spec_mod
 from macroforecast.pipeline import (
     Arm, EvalSpec, TargetSpec, evaluate, pipeline_spec, rescore, run_pipeline,
 )
@@ -213,6 +214,17 @@ def test_unknown_test_name_raises_at_spec_build_time():
         _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "not_a_real_test")))
 
 
+def test_arch_backed_tests_require_arch_extra(monkeypatch):
+    monkeypatch.setattr(spec_mod, "_arch_available", lambda: False)
+
+    with pytest.raises(ImportError) as excinfo:
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "spa")))
+
+    message = str(excinfo.value)
+    assert "spa" in message
+    assert 'pip install "macroforecast[arch]"' in message
+
+
 def test_test_options_must_reference_requested_tests():
     with pytest.raises(ValueError, match="test_options"):
         _spec(
@@ -313,6 +325,8 @@ def test_custom_loss_skips_nested_quadratic_pairwise_tests_with_warning():
 
 
 def test_set_comparison_tests_land_in_mcs_report():
+    pytest.importorskip("arch")
+
     spec = _spec(
         evaluation=EvalSpec(
             benchmark="AR",
@@ -335,6 +349,8 @@ def test_set_comparison_tests_land_in_mcs_report():
 
 
 def test_set_comparison_test_options_reach_underlying_callable(monkeypatch):
+    pytest.importorskip("arch")
+
     spec = _spec(
         evaluation=EvalSpec(
             benchmark="AR",
@@ -427,6 +443,8 @@ def test_joint_multi_horizon_tests_require_multiple_horizons():
 
 
 def test_end_to_end_report_with_dm_gw_gr_and_spa_is_coherent():
+    pytest.importorskip("arch")
+
     spec = _spec(
         evaluation=EvalSpec(
             benchmark="AR",

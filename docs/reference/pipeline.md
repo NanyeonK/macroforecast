@@ -378,7 +378,8 @@ metrics and tests actually named are computed, and unsupported names fail fast.
   and write `horizon="joint"` rows to `PipelineReport.significance`; requesting
   them with only one horizon raises at spec-build time. `"spa"`, `"rc"`, and
   `"stepm"` compare the full contender set against the benchmark and append rows
-  to `PipelineReport.mcs`.
+  to `PipelineReport.mcs`. `"spa"`, `"rc"`, and `"stepm"` require the `arch`
+  extra (`pip install "macroforecast[arch]"`).
 - **`test_options: Mapping[str, Mapping[str, Any]]`** -- optional per-test keyword
   options. The outer key must be present in `tests`, and every option name is
   checked against that test's public callable when `pipeline_spec(...)` is
