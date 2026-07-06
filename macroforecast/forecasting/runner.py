@@ -16,6 +16,7 @@ from macroforecast.data import (
     DataBundle,
     DataSpec,
     VintagePanelSpec,
+    VintageUnavailableError,
     as_panel,
     panel_info,
     validate_panel,
@@ -1312,6 +1313,8 @@ def _run_vintage_aware(
             )
 
         target_name = _feature_target_name(features)
+        if target_name is None:
+            raise ValueError("vintage-aware runs require exactly one target")
         actual_dates = _vintage_actual_dates_for_item(item, reference_index, horizon)
         origin_actual_panel, origin_actual_vintage_id = actual_resolver.panel_for_dates(
             target_name,
