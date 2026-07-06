@@ -770,6 +770,10 @@ def pipeline_spec(
     # By here n_jobs is a resolved int: either int(n_jobs) above or the int
     # returned by auto_parallelism when auto_jobs was set.
     assert isinstance(n_jobs, int)
+    from macroforecast.data import VintagePanelSpec
+
+    if isinstance(data, VintagePanelSpec) and n_jobs != 1:
+        raise ValueError("vintage-aware pipelines require n_jobs=1 in Phase 1")
 
     # benchmark must resolve to an existing contender (an arm name, since a
     # contender IS an arm, or a combination contender name)
