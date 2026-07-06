@@ -180,6 +180,56 @@ def test_checkpoint_files_are_scalar_only(tmp_path: Path) -> None:
                 )
 
 
+def test_checkpoint_lean_records_include_nullable_vintage_columns() -> None:
+    rows = ckpt.lean_records(
+        [
+            {
+                "target": "y",
+                "prediction": 1.0,
+                "actual": 2.0,
+                "vintage_id": "v1",
+                "actuals_vintage_id": "latest",
+            },
+            {"target": "y", "prediction": 3.0, "actual": 4.0},
+        ]
+    )
+
+    assert rows[0]["vintage_id"] == "v1"
+    assert rows[0]["actuals_vintage_id"] == "latest"
+    assert rows[1]["vintage_id"] is None
+    assert rows[1]["actuals_vintage_id"] is None
+
+
+def test_old_schema_checkpoint_without_vintage_columns_still_loads(tmp_path: Path) -> None:
+    old_columns = [
+        column
+        for column in ckpt.LEAN_FORECAST_COLUMNS
+        if column not in {"vintage_id", "actuals_vintage_id"}
+    ]
+    row = {column: None for column in old_columns}
+    row.update(
+        {
+            "target": "y",
+            "horizon": 1,
+            "origin_pos": 3,
+            "model": "ols",
+            "prediction": 1.5,
+            "actual": 2.5,
+        }
+    )
+    directory = tmp_path / "old"
+    directory.mkdir()
+    pd.DataFrame([row], columns=old_columns).to_parquet(
+        directory / "origin_3.parquet",
+        index=False,
+    )
+
+    loaded = ckpt.load_checkpoint_frame(directory)
+
+    assert loaded.loc[0, "target"] == "y"
+    assert loaded.loc[0, "prediction"] == 1.5
+
+
 # --------------------------------------------------------------------------- #
 # 3b. when an in-loop stage carries fitted state forward (feature update='never'),
 #     resume must still recompute every origin (to rebuild the once-fitted state)
