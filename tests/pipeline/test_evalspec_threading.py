@@ -426,6 +426,24 @@ def test_joint_multi_horizon_tests_require_multiple_horizons():
         _spec(evaluation=EvalSpec(benchmark="AR", tests=("uspa",)))
 
 
+def test_end_to_end_report_with_dm_gw_gr_and_spa_is_coherent():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm", "gw", "gr", "spa"),
+            test_options={"spa": {"n_boot": 25, "block_length": 2}},
+        )
+    )
+    res = evaluate(_golden_master(), spec)
+
+    assert not res["accuracy"].empty
+    assert {"dm_stat", "dm_p"} <= set(res["significance"].columns)
+    long = res["significance"].dropna(subset=["test"])
+    assert set(long["test"]) == {"gw", "gr"}
+    assert set(res["mcs"]["test"]) == {"spa"}
+    assert set(res["mcs"]["contender"]) == {"OLS", "RIDGE"}
+
+
 # --------------------------------------------------------------------------- #
 # 4. EvalSpec.loss threads into DM/MCS; CW is skipped (with warning) under it
 # --------------------------------------------------------------------------- #

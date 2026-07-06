@@ -1238,7 +1238,7 @@ def multi_horizon_spa_test(
         observed = float(sqrt_n * weighted_mean / weighted_denom)
 
     rng = np.random.default_rng(random_state)
-    boot_stats = np.empty(n_boot, dtype=float)
+    boot_stats: np.ndarray = np.empty(n_boot, dtype=float)
     for boot_id in range(n_boot):
         indices = _moving_block_bootstrap_indices(n_obs, block_length, rng)
         boot = diff[indices]
