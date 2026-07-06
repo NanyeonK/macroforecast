@@ -39,7 +39,7 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 | `rescore(checkpoint_dir, spec)` | Re-score a checkpointed run from disk alone (no refitting); returns a `PipelineReport`. |
 | `interpret_pipeline(report, *, methods, which_fit, arms)` | Deferred multi-method ML interpretation. |
 | `run_arms(spec)` | Execute every cell into the master forecast frame (lower-level; name retained for back-compat). |
-| `evaluate(master, spec)` | Accuracy + DM/CW + MCS + combinations on a master frame. |
+| `evaluate(master, spec)` | Accuracy + requested forecast-comparison tests + combinations on a master frame. |
 | `apply_combinations(master, spec)` | Append cross-arm combination contenders. |
 | `resolve_target(target, *, data, tcode, tcode_map, reduce_i2)` | Resolve a target's (policy, transform). |
 | `is_vintage_aware(spec)` | Return whether `spec.data` is a `VintagePanelSpec`. |
@@ -307,7 +307,7 @@ each cell's lean forecast records under
 `<checkpoint_dir>/<target>__<arm>/h<h>/origin_<pos>.parquet` as origins complete.
 Because the evaluation stage is pure-frame (`evaluate(master, spec)` needs the
 forecasts, not the fitted models), those saved records are sufficient to rebuild
-the full evaluation -- accuracy, DM/CW significance, MCS, and combination
+the full evaluation -- accuracy, requested significance/set tests, and combination
 contenders -- without re-running a single fit. `rescore` is that glue:
 
 ```python
@@ -366,21 +366,31 @@ metrics and tests actually named are computed, and unsupported names fail fast.
   tests run. `"cw"` is additionally gated by `cw_for_nested` as before (Clark-West
   only for contenders whose `Arm.nested_in_benchmark=True`). `tests=("dm",)` runs
   DM only (`significance` carries no `cw_*` columns, `mcs` is empty);
-  `tests=()` yields `accuracy` only. An unsupported name (anything other than
-  `"dm"`/`"cw"`/`"mcs"`) raises `ValueError` at `pipeline_spec(...)` build time
-  rather than being silently dropped. `"spa"`/`"gr"` (superior predictive
-  ability / Giacomini-Rossi) are implemented in `macroforecast.tests` but not yet
-  wired into the pipeline evaluator -- a follow-up, not supported here.
+  `tests=()` yields `accuracy` only. Supported significance names are
+  `"dm"`, `"cw"`, `"gw"`, `"enc_new"`, `"enc_t"`, `"pt"`, `"hm"`, `"ag"`,
+  `"gr"`, `"mcs"`, `"spa"`, `"rc"`, and `"stepm"` plus the calibration names
+  below. Unsupported names raise `ValueError` at `pipeline_spec(...)` build time
+  rather than being silently dropped. The newly wired pairwise tests append
+  long-form rows to `PipelineReport.significance` with `test`, `statistic`,
+  `p_value`, `reject`, and `n_obs`; `pt`/`hm`/`ag` test the contender's own
+  directional skill on the benchmark-aligned sample. `"spa"`, `"rc"`, and
+  `"stepm"` compare the full contender set against the benchmark and append
+  rows to `PipelineReport.mcs`.
+- **`test_options: Mapping[str, Mapping[str, Any]]`** -- optional per-test keyword
+  options. The outer key must be present in `tests`, and every option name is
+  checked against that test's public callable when `pipeline_spec(...)` is
+  built. Use this for bootstrap controls such as
+  `{"spa": {"n_boot": 999, "block_length": 5, "random_state": 123}}` or GR
+  controls such as `{"gr": {"window_ratio": 0.4}}`.
 - **`loss: Callable[[y_true, y_pred], ndarray] | None`** (default `None` = squared
   error) -- a per-observation loss threaded into the Diebold-Mariano loss
   differential and the Model Confidence Set's loss matrix, enabling asymmetric-
-  loss horse races (e.g. linex, or an absolute-error DM/MCS instead of squared
-  error). **Clark-West is derived under quadratic loss** and is not a valid test
-  for an arbitrary loss function: when `loss` is set and CW would otherwise run
-  (`"cw"` in `tests`, `cw_for_nested` true, and at least one nested contender),
-  `significance_table` skips CW entirely and emits a `UserWarning` explaining why,
-  instead of silently computing it against the wrong loss. DM and MCS are
-  loss-agnostic and are unaffected.
+  loss horse races (e.g. linex, or an absolute-error DM/MCS/SPA instead of
+  squared error). **Clark-West, ENC-NEW, and ENC-T are derived under quadratic
+  loss** and are not valid tests for an arbitrary loss function: when `loss` is
+  set and one of those tests would otherwise run, `significance_table` skips it
+  and emits a `UserWarning` instead of silently computing it against the wrong
+  loss. DM, GW, GR, MCS, SPA, RC, and StepM are loss-agnostic and are unaffected.
 
 ```python
 from macroforecast.pipeline import EvalSpec

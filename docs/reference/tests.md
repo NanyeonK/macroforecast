@@ -767,6 +767,14 @@ R/source comparison:
 | `ttrTests/R/dataSnoop.R::dataSnoop(test="RC" or "SPA")` | Strategy-specific data-snooping code. It rebuilds technical-trading parameter-grid performance on each bootstrapped price sample, so it is not the same API contract. |
 | `reality_check_test(...)`, `superior_predictive_ability_test(...)`, `stepm_test(...)` | Exact multiple-comparison callable family for White RC, Hansen SPA, and Romano-Wolf StepM using the optional `arch.bootstrap` backend. |
 
+Pipeline integration: request `"spa"`, `"rc"`, or `"stepm"` in
+`macroforecast.pipeline.EvalSpec.tests` to run these full-set comparisons per
+`(target, horizon)` against `EvalSpec.benchmark`. Per-test bootstrap controls
+enter through `EvalSpec.test_options`, for example
+`test_options={"spa": {"n_boot": 999, "block_length": 5, "random_state": 123}}`.
+The results append rows to `PipelineReport.mcs` with `test`, `contender`,
+`superior`, `reject`, `p_value`, and sample-size metadata.
+
 ### superior_predictive_ability_test
 
 ```python

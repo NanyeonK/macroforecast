@@ -51,6 +51,7 @@ def _has_groups(master: pd.DataFrame) -> bool:
 _DEFAULT_EVAL_TESTS: tuple[str, ...] = ("dm", "cw", "mcs")
 _PAIRWISE_LONG_TESTS = frozenset({"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"})
 _NESTED_QUADRATIC_TESTS = frozenset({"cw", "enc_new", "enc_t"})
+_SET_COMPARISON_TESTS = frozenset({"spa", "rc", "stepm"})
 
 
 def _eval_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
@@ -575,16 +576,28 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
 
 
 def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) -> pd.DataFrame:
-    """Model Confidence Set membership per (target, horizon).
+    """Set-comparison results per (target, horizon).
 
-    Runs only when ``"mcs"`` is in ``spec.evaluation.tests``. The loss matrix is
-    ``spec.evaluation.loss(y_true, y_pred)`` when set, else squared error (the
-    prior, only behavior); MCS is loss-agnostic, so any per-observation loss is
-    valid here (unlike Clark-West, see :func:`significance_table`).
+    The historical MCS membership rows run only when ``"mcs"`` is requested and
+    keep their old four-column shape when no other set-comparison test is
+    requested. ``"spa"``, ``"rc"``, and ``"stepm"`` reuse the same long loss
+    panel and append rows to this report table with a ``test`` column.
+
+    The loss matrix is ``spec.evaluation.loss(y_true, y_pred)`` when set, else
+    squared error (the prior, only behavior). These set comparisons are
+    loss-agnostic as long as the loss is a per-observation scalar series.
     """
-    from macroforecast.tests import model_confidence_set
+    from macroforecast.tests import (
+        model_confidence_set,
+        reality_check_test,
+        stepm_test,
+        superior_predictive_ability_test,
+    )
 
-    if "mcs" not in _eval_tests(spec):
+    requested = _eval_tests(spec)
+    want_mcs = "mcs" in requested
+    requested_set = tuple(name for name in requested if name in _SET_COMPARISON_TESTS)
+    if not want_mcs and not requested_set:
         return pd.DataFrame(columns=_MCS_COLUMNS)
     # An empty / column-less master has no scorable cells; the required columns
     # (actual/prediction as well as the group keys) may be entirely absent.
@@ -604,26 +617,92 @@ def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) ->
     )
     panel = panel.assign(squared_error=loss_values, model_id=panel["contender"])
     out: list[dict[str, Any]] = []
-    for (target, horizon), group in panel.groupby(["target", "horizon"], dropna=False):
-        if group["model_id"].nunique() < 2:
-            continue
+    panel_columns = ["target", "horizon", "origin", "model_id", "squared_error"]
+    loss_panel = panel[panel_columns]
+    if want_mcs:
+        mcs_options = dict(_eval_test_options(spec, "mcs"))
+        mcs_options.setdefault("alpha", spec.evaluation.mcs_alpha)
+        mcs_options.setdefault("n_boot", n_boot)
+        mcs_options.setdefault("random_state", int(spec.seed or 0))
+        mcs_options.update(
+            {
+                "loss": "squared_error",
+                "model": "model_id",
+                "origin": "origin",
+                "target": "target",
+                "horizon": "horizon",
+            }
+        )
+        for (target, horizon), group in panel.groupby(["target", "horizon"], dropna=False):
+            if group["model_id"].nunique() < 2:
+                continue
+            try:
+                res = model_confidence_set(
+                    group[["origin", "model_id", "squared_error"]],
+                    **mcs_options,
+                )
+            except Exception:
+                continue
+            included = set()
+            for entry in (res.get("mcs_inclusion") or []):
+                included |= set(entry.get("models", []))
+            for contender in group["model_id"].unique():
+                out.append({
+                    "target": target, "horizon": horizon, "contender": contender,
+                    "in_mcs": contender in included,
+                })
+    set_functions = {
+        "spa": superior_predictive_ability_test,
+        "rc": reality_check_test,
+        "stepm": stepm_test,
+    }
+    for test_name in requested_set:
+        options = dict(_eval_test_options(spec, test_name))
+        options.setdefault("random_state", int(spec.seed or 0))
+        options.update(
+            {
+                "benchmark": spec.evaluation.benchmark,
+                "loss": "squared_error",
+                "model": "model_id",
+                "origin": "origin",
+                "target": "target",
+                "horizon": "horizon",
+            }
+        )
         try:
-            res = model_confidence_set(
-                group[["origin", "model_id", "squared_error"]],
-                loss="squared_error", model="model_id", origin="origin",
-                target="target", horizon="horizon", alpha=spec.evaluation.mcs_alpha,
-                n_boot=n_boot, random_state=int(spec.seed or 0),
-            )
+            res = set_functions[test_name](loss_panel, **options)
         except Exception:
             continue
-        included = set()
-        for entry in (res.get("mcs_inclusion") or []):
-            included |= set(entry.get("models", []))
-        for contender in group["model_id"].unique():
-            out.append({
-                "target": target, "horizon": horizon, "contender": contender,
-                "in_mcs": contender in included,
-            })
+        records = res.get("records") or []
+        for record in records:
+            target = record.get("target")
+            horizon = record.get("horizon")
+            group = loss_panel[
+                (loss_panel["target"] == target)
+                & (loss_panel["horizon"] == horizon)
+            ]
+            contenders = [
+                str(name)
+                for name in group["model_id"].dropna().unique()
+                if str(name) != spec.evaluation.benchmark
+            ]
+            superior = {str(name) for name in (record.get("superior_models") or [])}
+            mean_diff = record.get("mean_loss_difference") or {}
+            for contender in contenders:
+                out.append({
+                    "target": target,
+                    "horizon": horizon,
+                    "contender": contender,
+                    "test": test_name,
+                    "benchmark": record.get("benchmark", spec.evaluation.benchmark),
+                    "superior": contender in superior,
+                    "reject": record.get("decision"),
+                    "p_value": record.get("p_value"),
+                    "n_obs": record.get("n_obs"),
+                    "n_models": record.get("n_models"),
+                    "mean_loss_difference": mean_diff.get(contender),
+                    "status": record.get("status"),
+                })
     return pd.DataFrame(out) if out else pd.DataFrame(columns=_MCS_COLUMNS)
 
 

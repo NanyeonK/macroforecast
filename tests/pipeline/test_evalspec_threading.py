@@ -280,6 +280,89 @@ def test_custom_loss_skips_nested_quadratic_pairwise_tests_with_warning():
     assert set(sig["test"]) == {"gw"}
 
 
+def test_set_comparison_tests_land_in_mcs_report():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("spa", "rc", "stepm"),
+            test_options={
+                "spa": {"n_boot": 25, "block_length": 2},
+                "rc": {"n_boot": 25, "block_length": 2},
+                "stepm": {"n_boot": 25, "block_length": 2},
+            },
+        )
+    )
+    res = evaluate(_golden_master(), spec)
+
+    assert res["significance"].empty
+    mcs = res["mcs"]
+    assert {"target", "horizon", "contender", "test", "superior", "reject", "n_obs"} <= set(mcs.columns)
+    assert set(mcs["test"]) == {"spa", "rc", "stepm"}
+    for name in {"spa", "rc", "stepm"}:
+        assert set(mcs.loc[mcs["test"] == name, "contender"]) == {"OLS", "RIDGE"}
+
+
+def test_set_comparison_test_options_reach_underlying_callable(monkeypatch):
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("spa",),
+            test_options={"spa": {"n_boot": 17, "block_length": 2, "random_state": 123}},
+        )
+    )
+    calls = []
+
+    def spy(loss_panel, *, benchmark, loss="squared_error", alpha=0.05, n_boot=1000,
+            block_length="auto", bootstrap_method="stationary_bootstrap",
+            p_value_type="consistent", studentize=True, nested=False,
+            random_state=0, target="target", horizon="horizon", origin="origin",
+            model="model_id"):
+        calls.append(
+            {
+                "benchmark": benchmark,
+                "loss": loss,
+                "n_boot": n_boot,
+                "block_length": block_length,
+                "random_state": random_state,
+                "rows": len(loss_panel),
+            }
+        )
+        return {
+            "records": [
+                {
+                    "target": "y",
+                    "horizon": 1,
+                    "benchmark": benchmark,
+                    "superior_models": ["OLS"],
+                    "decision": True,
+                    "p_value": 0.01,
+                    "n_obs": 9,
+                    "n_models": 2,
+                    "mean_loss_difference": {"OLS": 0.25, "RIDGE": -0.10},
+                    "status": "computed",
+                }
+            ]
+        }
+
+    monkeypatch.setattr(mf.tests, "superior_predictive_ability_test", spy)
+
+    mcs = evaluate(_golden_master(), spec)["mcs"]
+
+    assert calls == [
+        {
+            "benchmark": "AR",
+            "loss": "squared_error",
+            "n_boot": 17,
+            "block_length": 2,
+            "random_state": 123,
+            "rows": len(_golden_master()),
+        }
+    ]
+    assert set(mcs["test"]) == {"spa"}
+    assert bool(mcs.loc[mcs["contender"] == "OLS", "superior"].iloc[0]) is True
+    assert mcs.loc[mcs["contender"] == "RIDGE", "mean_loss_difference"].iloc[0] == -0.10
+
+
 # --------------------------------------------------------------------------- #
 # 4. EvalSpec.loss threads into DM/MCS; CW is skipped (with warning) under it
 # --------------------------------------------------------------------------- #
