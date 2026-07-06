@@ -12,7 +12,7 @@ import os
 import re
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
 import numpy as np
 import pandas as pd
@@ -21,6 +21,7 @@ from macroforecast.pipeline.spec import (
     Arm,
     PipelineSpec,
     ResolvedTarget,
+    is_vintage_aware,
     _model_default_name,
 )
 
@@ -108,6 +109,12 @@ def _run_one_arm_target(
         checkpoint_path=_cell_checkpoint_path(spec, arm, target),
     )
     frame = result.to_frame().copy()
+    if "vintage_boundary_audit" in result.metadata:
+        frame.attrs["macroforecast_vintage_boundary_audit"] = result.metadata[
+            "vintage_boundary_audit"
+        ]
+    if "vintage_source" in result.metadata:
+        frame.attrs["macroforecast_vintage_source"] = result.metadata["vintage_source"]
     frame["arm"] = arm.name
     # A contender IS exactly an arm (one model per arm), so the contender label is
     # always the arm name regardless of the underlying model row.
@@ -559,6 +566,20 @@ def _run_cells(
             )
 
         master = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        vintage_boundary_audits = [
+            frame.attrs["macroforecast_vintage_boundary_audit"]
+            for frame in results.values()
+            if "macroforecast_vintage_boundary_audit" in frame.attrs
+        ]
+        vintage_sources = [
+            frame.attrs["macroforecast_vintage_source"]
+            for frame in results.values()
+            if "macroforecast_vintage_source" in frame.attrs
+        ]
+        if vintage_boundary_audits:
+            master.attrs["macroforecast_vintage_boundary_audits"] = vintage_boundary_audits
+        if vintage_sources:
+            master.attrs["macroforecast_vintage_sources"] = vintage_sources
 
         # Surface (target, horizon) cells that RAN but produced zero rows. These are
         # a distinct, more granular signal from the per-(arm, target) empty-arm
@@ -822,7 +843,74 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
     }
 
 
-def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
+def _merge_vintage_boundary_audits(audits: Any) -> dict[str, Any]:
+    records = [dict(audit) for audit in audits if isinstance(audit, Mapping)]
+    violations: list[dict[str, Any]] = []
+    for audit in records:
+        violations.extend(
+            dict(value)
+            for value in audit.get("violations", [])
+            if isinstance(value, Mapping)
+        )
+    return {
+        "vintage_boundary_ok": not violations
+        and all(bool(audit.get("vintage_boundary_ok", True)) for audit in records),
+        "n_runs": len(records),
+        "n_origins": int(sum(int(audit.get("n_origins", 0)) for audit in records)),
+        "n_checked": int(sum(int(audit.get("n_checked", 0)) for audit in records)),
+        "n_violations": int(len(violations)),
+        "violations": violations,
+    }
+
+
+def _reference_calendar_summary(spec: PipelineSpec) -> dict[str, Any] | None:
+    if not is_vintage_aware(spec):
+        return None
+    calendar = getattr(spec.data, "reference_calendar", None)
+    if not isinstance(calendar, pd.DatetimeIndex) or calendar.empty:
+        return None
+    return {
+        "start": calendar[0].isoformat(),
+        "end": calendar[-1].isoformat(),
+        "n_origins": int(len(calendar)),
+    }
+
+
+def _merge_vintage_sources(spec: PipelineSpec, sources: Any) -> dict[str, Any]:
+    records = [dict(source) for source in sources if isinstance(source, Mapping)]
+    first = records[0] if records else {}
+    origin_map: dict[str, Any] = {}
+    for record in records:
+        mapping = record.get("origin_vintage_map", {})
+        if isinstance(mapping, Mapping):
+            origin_map.update({str(key): value for key, value in mapping.items()})
+    ordered_items = sorted(origin_map.items())
+    if len(ordered_items) <= 500:
+        map_payload: Any = {key: value for key, value in ordered_items}
+    elif ordered_items:
+        map_payload = {
+            "n_origins": int(len(ordered_items)),
+            "first": {ordered_items[0][0]: ordered_items[0][1]},
+            "last": {ordered_items[-1][0]: ordered_items[-1][1]},
+            "note": "map omitted; sidecar writer lands in Phase 3",
+        }
+    else:
+        map_payload = {}
+    return {
+        "kind": first.get("kind") or type(getattr(spec.data, "source", None)).__name__,
+        "actuals_vintage": first.get(
+            "actuals_vintage",
+            getattr(spec.data, "actuals_vintage", None),
+        ),
+        "reference_calendar": _reference_calendar_summary(spec),
+        "origin_vintage_map": map_payload,
+    }
+
+
+def _audit(
+    spec: PipelineSpec,
+    execution_metadata: Mapping[str, Any] | None = None,
+) -> tuple[dict, dict]:
     """Collect provenance and a leakage audit for the pipeline execution."""
     import macroforecast as _mf
 
@@ -848,6 +936,10 @@ def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
         provenance["environment"] = _environment_provenance()
         provenance["data"] = _data_identity(spec.data)
         provenance["spec_echo"] = _spec_echo(spec)
+    execution_metadata = dict(execution_metadata or {})
+    vintage_sources = execution_metadata.get("vintage_sources")
+    if vintage_sources:
+        provenance["vintage_source"] = _merge_vintage_sources(spec, vintage_sources)
     leakage: dict = {}
     # Surface window.validate() warnings (e.g. embargo < horizon-1) when available.
     # The runner injects each horizon into the window's test spec at execution
@@ -886,6 +978,11 @@ def _audit(spec: PipelineSpec) -> tuple[dict, dict]:
     leakage["preprocessing_policies"] = {
         a.name: str(a.preprocessing_policy) for a in spec.arms
     }
+    vintage_audits = execution_metadata.get("vintage_boundary_audits")
+    if vintage_audits:
+        leakage["vintage_boundary_audit"] = _merge_vintage_boundary_audits(
+            vintage_audits
+        )
     return provenance, leakage
 
 
@@ -896,7 +993,15 @@ def run_pipeline(spec: PipelineSpec):
 
     master, failed_cells, empty_cells = _run_cells(spec)
     results = evaluate(master, spec)
-    provenance, leakage = _audit(spec)
+    provenance, leakage = _audit(
+        spec,
+        execution_metadata={
+            "vintage_boundary_audits": master.attrs.get(
+                "macroforecast_vintage_boundary_audits"
+            ),
+            "vintage_sources": master.attrs.get("macroforecast_vintage_sources"),
+        },
+    )
     # Mirror per-cell failures and zero-row cells into the leakage audit so any
     # consumer that reads only the audit still sees that some arms failed to run or
     # that some (target, horizon) cells silently produced no forecasts.

@@ -38,7 +38,11 @@ class _PreparedStage:
     panel_metadata: dict[str, Any] | None = None
 
 
-def _preprocessing_cache_key(item: Mapping[str, Any]) -> Any:
+def _preprocessing_cache_key(
+    item: Mapping[str, Any],
+    *,
+    vintage_id: Any | None = None,
+) -> Any:
     """Horizon-independent key for the shared per-origin preprocessing cache.
 
     The spec-level EM/factor fit at one origin uses only the ``origin_available``
@@ -50,13 +54,21 @@ def _preprocessing_cache_key(item: Mapping[str, Any]) -> Any:
     """
     row = item.get("row")
     if isinstance(row, Mapping) and "origin_pos" in row:
-        return ("origin_pos", int(row["origin_pos"]))
+        key: Any = ("origin_pos", int(row["origin_pos"]))
+        return _with_vintage_cache_tag(key, vintage_id)
     # Fallback: estimation block identity (still horizon-independent).
     est = item.get("estimation_idx")
     if est is not None:
         arr = np.asarray(est, dtype=int)
-        return ("estimation_span", int(arr[0]), int(arr[-1])) if arr.size else ("empty",)
-    return ("origin_pos", item.get("origin_pos"))
+        key = ("estimation_span", int(arr[0]), int(arr[-1])) if arr.size else ("empty",)
+        return _with_vintage_cache_tag(key, vintage_id)
+    return _with_vintage_cache_tag(("origin_pos", item.get("origin_pos")), vintage_id)
+
+
+def _with_vintage_cache_tag(cache_key: Any, vintage_id: Any | None) -> Any:
+    if vintage_id is None:
+        return cache_key
+    return tuple(cache_key) + ("vintage", vintage_id)
 
 
 def _origin_pos_for_store_key(cache_key: Any, item: Mapping[str, Any]) -> int | None:

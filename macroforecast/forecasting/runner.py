@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, cast
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,7 @@ from pandas.tseries.offsets import DateOffset
 from macroforecast.data import (
     DataBundle,
     DataSpec,
+    VintagePanelSpec,
     as_panel,
     panel_info,
     validate_panel,
@@ -303,6 +305,33 @@ def run(
             model_store=model_store,
             forecast_policy=policy,
             future_feature_policy=future_policy,
+        )
+
+    if isinstance(data, VintagePanelSpec):
+        return _run_vintage_aware(
+            data,
+            target=target,
+            model_runs=model_runs,
+            window_spec=window_spec,
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_stage_policy,
+            features=features,
+            feature_policy=feature_stage_policy,
+            selection=selection,
+            selection_policy=selection_stage_policy,
+            selection_metric=selection_metric,
+            maximize_selection=maximize_selection,
+            config=config,
+            combination_specs=combination_specs,
+            save_models=save_models,
+            model_store=model_store,
+            forecast_policy=policy,
+            future_feature_policy=future_policy,
+            target_transform=target_transform,
+            horizon=int(horizon_values[0]),
+            preprocessing_cache=preprocessing_cache,
+            preprocessing_store=preprocessing_store,
+            checkpoint_path=checkpoint_path,
         )
 
     panel = _coerce_runner_panel(data)
@@ -1057,6 +1086,499 @@ def _run_panel_models(
         horizons=(int(window_spec.test.horizon),),
     )
     return ForecastResult(forecast_table, metadata=result_metadata)
+
+
+def _run_vintage_aware(
+    data: VintagePanelSpec,
+    *,
+    target: str | None,
+    model_runs: list[_ModelRun],
+    window_spec: WindowSpec,
+    preprocessing: PreprocessSpec | None,
+    preprocessing_policy: StagePolicy | None,
+    features: FeatureSpec | None,
+    feature_policy: StagePolicy,
+    selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
+    selection_policy: StagePolicy,
+    selection_metric: str | Callable[..., float],
+    maximize_selection: bool,
+    config: Mapping[str, Any],
+    combination_specs: Sequence[CombinationSpec],
+    save_models: bool,
+    model_store: str | Path,
+    forecast_policy: ForecastPolicy,
+    future_feature_policy: FutureFeaturePolicy | None,
+    target_transform: str | None,
+    horizon: int,
+    preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None,
+    preprocessing_store: PreprocessorStore | None,
+    checkpoint_path: str | Path | None,
+) -> ForecastResult:
+    """Run the feature-matrix direct policies against one resolved vintage per origin."""
+
+    _validate_vintage_runner_constraints(
+        data,
+        model_runs=model_runs,
+        window_spec=window_spec,
+        preprocessing_policy=preprocessing_policy,
+        feature_policy=feature_policy,
+        forecast_policy=forecast_policy,
+    )
+    _validate_feature_model_runs(model_runs)
+    features = _feature_spec_for_policy(
+        features,
+        target=target,
+        horizon=horizon,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        target_transform=target_transform,
+        model_input_kind=model_runs[0].spec.input_kind,
+        model_name=model_runs[0].spec.name,
+    )
+
+    reference_index = pd.DatetimeIndex(data.reference_calendar)
+    execution_window = _feature_window_for_policy(window_spec, horizon)
+    _validate_runner_window(execution_window, reference_index)
+    _warn_vintage_embargo(execution_window)
+
+    available_vintages = tuple(data.source.available_vintages())
+    if not available_vintages:
+        raise ValueError("vintage source reports no available vintages")
+    actual_bundle = data.source.resolve(pd.Timestamp(available_vintages[-1]))
+    actual_vintage_id = _bundle_vintage_id(actual_bundle)
+    actual_panel = _vintage_work_panel(actual_bundle, reference_index)
+
+    records: list[dict[str, Any]] = []
+    model_param_cache: dict[str, dict[str, Any]] = {}
+    selection_cache: dict[str, Any] = {}
+    stage_records: list[dict[str, Any]] = []
+    preprocessing_state = _StageUpdateState()
+    feature_state = _StageUpdateState()
+    fitted_preprocessing_cache: FittedPreprocessor | None = None
+    fitted_feature_cache: Any | None = None
+    origin_vintage_map: dict[str, Any] = {}
+    boundary_violations: list[dict[str, Any]] = []
+
+    origin_items = list(execution_window.iter_origins(reference_index))
+    audit_positions = _vintage_audit_positions(len(origin_items))
+
+    completed_positions: set[int] = set()
+    skip_computation = False
+    if checkpoint_path is not None:
+        completed_positions = completed_origin_positions(checkpoint_path)
+
+        def _stage_is_independent(policy: StagePolicy | None) -> bool:
+            if policy is None:
+                return True
+            return policy.update == "every_origin"
+
+        skip_computation = _stage_is_independent(
+            preprocessing_policy
+        ) and _stage_is_independent(feature_policy)
+
+    for origin_count, item in enumerate(origin_items):
+        row = item["row"]
+        origin = pd.Timestamp(row["origin"])
+        origin_pos = int(row["origin_pos"])
+        bundle = data.source.resolve(origin)
+        vintage_id = _bundle_vintage_id(bundle)
+        origin_vintage_map[origin.isoformat()] = vintage_id
+        if origin_count in audit_positions:
+            violation = _vintage_boundary_violation(
+                bundle,
+                origin=origin,
+                vintage_id=vintage_id,
+            )
+            if violation is not None:
+                boundary_violations.append(violation)
+
+        already_done = checkpoint_path is not None and origin_pos in completed_positions
+        if already_done and skip_computation:
+            continue
+
+        panel = _vintage_work_panel(bundle, reference_index)
+        cache_key = (
+            _preprocessing_cache_key(item, vintage_id=vintage_id)
+            if (preprocessing_cache is not None or preprocessing_store is not None)
+            else None
+        )
+        vintage_store = _vintage_preprocessing_store(preprocessing_store, vintage_id)
+        preprocessing_updated = False
+        preprocessing_updated = _stage_update_due(
+            preprocessing_policy,
+            item,
+            origin_count=origin_count,
+            state=preprocessing_state,
+        )
+        prepared = _prepare_origin_panel(
+            panel,
+            features=features,
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_policy,
+            item=item,
+            fitted_preprocessing=None
+            if preprocessing_updated
+            else fitted_preprocessing_cache,
+            preprocessing_cache=preprocessing_cache,
+            cache_key=cache_key,
+            preprocessing_store=vintage_store,
+            target=target,
+        )
+        if preprocessing_updated:
+            fitted_preprocessing_cache = prepared.fitted_preprocessing
+            _mark_stage_updated(preprocessing_state, item)
+        if prepared.metadata is not None:
+            stage_records.append(
+                _origin_stage_record(
+                    "preprocessing",
+                    item,
+                    prepared.metadata,
+                    updated=preprocessing_updated,
+                )
+            )
+
+        actual_prepared = _prepare_origin_panel(
+            actual_panel,
+            features=features,
+            preprocessing=preprocessing,
+            preprocessing_policy=preprocessing_policy,
+            item=item,
+            fitted_preprocessing=prepared.fitted_preprocessing,
+            preprocessing_cache=None,
+            cache_key=None,
+            preprocessing_store=None,
+            target=target,
+        )
+
+        prepared_metadata = prepared.panel_metadata
+        actual_metadata = actual_prepared.panel_metadata
+
+        fit_labels = reference_index[item["fit_idx"]]
+        test_labels = reference_index[[int(item["test_idx"][0])]]
+        selection_labels = stage_index(reference_index, item, selection_policy)
+
+        feature_updated = _stage_update_due(
+            feature_policy,
+            item,
+            origin_count=origin_count,
+            state=feature_state,
+        )
+        if feature_updated or fitted_feature_cache is None:
+            feature_fit_labels = stage_index(reference_index, item, feature_policy)
+            feature_fit_panel = prepared.panel.reindex(feature_fit_labels).dropna(
+                how="all"
+            )
+            fitted_feature_cache = _fitted_feature_builder_for_origin(
+                features,
+                feature_fit_panel,
+                prepared_metadata=prepared_metadata,
+                feature_stage_policy=feature_policy,
+                item=item,
+                preprocessing_cache=preprocessing_cache,
+                vintage_id=vintage_id,
+            )
+            feature_updated = True
+            _mark_stage_updated(feature_state, item)
+        fitted_features = fitted_feature_cache
+
+        feature_labels = _combined_feature_labels(
+            fit_labels,
+            selection_labels,
+            test_labels,
+        )
+        all_features = _test_feature_builder(fitted_features).transform(
+            prepared.panel,
+            index=feature_labels,
+            metadata=prepared_metadata,
+        )
+        actual_features = _test_feature_builder(fitted_features).transform(
+            actual_prepared.panel,
+            index=test_labels,
+            metadata=actual_metadata,
+        )
+        train_features = _slice_feature_set(
+            all_features,
+            fit_labels,
+            drop_missing=bool(getattr(fitted_features.spec, "drop_missing", True)),
+        )
+        test_features = _slice_feature_set(
+            all_features,
+            test_labels,
+            drop_missing=False,
+        )
+        actual_test_features = _slice_feature_set(
+            actual_features,
+            test_labels,
+            drop_missing=False,
+        )
+        selection_features = _slice_feature_set(
+            all_features,
+            selection_labels,
+            drop_missing=False,
+        )
+        X_selection, y_selection = _align_feature_xy(
+            selection_features.X,
+            _single_target(selection_features.y),
+        )
+        selection_splits = _relative_splits_for_index(
+            item.get("val_splits", []),
+            X_selection.index,
+            reference_index,
+            allow_degenerate=True,
+        )
+        stage_records.append(
+            _origin_stage_record(
+                "feature_engineering",
+                item,
+                fitted_features.to_metadata(),
+                updated=feature_updated,
+            )
+        )
+
+        vintage_row = {
+            **item["row"],
+            "vintage_id": vintage_id,
+            "actuals_vintage_id": actual_vintage_id,
+        }
+        origin_item = {
+            **item,
+            "row": vintage_row,
+            "base_index": reference_index,
+            "forecast_horizon": horizon,
+            "forecast_policy": forecast_policy,
+            "future_feature_policy": future_feature_policy,
+            "window_spec": execution_window,
+            "target_transform": features.target_transform,
+            "target_name": _feature_target_name(features),
+            "target_key": f"{forecast_policy}_h{horizon}",
+            "X_fit": train_features.X,
+            "y_fit": _single_target(train_features.y),
+            "X_selection": X_selection,
+            "y_selection": y_selection,
+            "selection_splits": selection_splits,
+            "absolute_val_splits": item.get("val_splits", []),
+            "recursive_panel": prepared.panel,
+            "actual_panel": actual_prepared.panel,
+            "recursive_builder": fitted_features,
+            "X_test": test_features.X,
+            "y_test": _single_target(actual_test_features.y),
+            "preprocessed": preprocessing is not None,
+        }
+        origin_records = _fit_predict_origin(
+            origin_item,
+            _OriginRunConfig(
+                model_runs=model_runs,
+                selection=selection,
+                selection_policy=selection_policy,
+                selection_metric=selection_metric,
+                maximize_selection=maximize_selection,
+                param_cache=model_param_cache,
+                selection_cache=selection_cache,
+                selection_random_state=config["random_seed"],
+                save_models=save_models,
+                model_store=model_store,
+            ),
+        )
+        for record in origin_records:
+            record["vintage_id"] = vintage_id
+            record["actuals_vintage_id"] = actual_vintage_id
+        if already_done:
+            continue
+        records.extend(origin_records)
+        if checkpoint_path is not None:
+            append_origin_records(checkpoint_path, origin_pos, origin_records)
+
+    if checkpoint_path is not None:
+        records = _merge_checkpoint_records(records, checkpoint_path)
+
+    _assert_selection_was_possible(selection_cache, target_step=horizon)
+    _warn_vintage_boundary_violations(boundary_violations)
+
+    forecast_table = _forecast_table(records)
+    combination_records = apply_combinations(forecast_table, combination_specs)
+    if combination_records:
+        records.extend(combination_records)
+        forecast_table = _forecast_table(records)
+
+    boundary_audit = _vintage_boundary_audit(
+        n_origins=len(origin_items),
+        n_checked=len(audit_positions),
+        violations=boundary_violations,
+    )
+    metadata = _result_metadata(
+        input_path="vintage_panel_to_features",
+        input_panel=actual_panel,
+        window_spec=execution_window,
+        model_runs=model_runs,
+        features=features.to_dict(),
+        preprocessing=preprocessing.to_dict() if preprocessing is not None else None,
+        preprocessing_policy=preprocessing_policy,
+        feature_policy=feature_policy,
+        selection=selection,
+        selection_policy=selection_policy,
+        combination_specs=combination_specs,
+        n_combination_forecasts=len(combination_records),
+        stage_records=stage_records,
+        n_forecasts=len(records),
+        config=config,
+        save_models=save_models,
+        model_store=model_store,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        horizons=(horizon,),
+    )
+    metadata["vintage_source"] = {
+        "kind": _vintage_source_kind(data.source),
+        "actuals_vintage": data.actuals_vintage,
+        "actuals_vintage_id": actual_vintage_id,
+        "origin_vintage_map": origin_vintage_map,
+    }
+    metadata["vintage_boundary_audit"] = boundary_audit
+    forecast_table.attrs["macroforecast_vintage_boundary_audit"] = boundary_audit
+    forecast_table.attrs["macroforecast_vintage_source"] = metadata["vintage_source"]
+    return ForecastResult(forecast_table, metadata=metadata)
+
+
+def _validate_vintage_runner_constraints(
+    data: VintagePanelSpec,
+    *,
+    model_runs: Sequence[_ModelRun],
+    window_spec: WindowSpec,
+    preprocessing_policy: StagePolicy | None,
+    feature_policy: StagePolicy,
+    forecast_policy: ForecastPolicy,
+) -> None:
+    if window_spec.estimation.retrain_every != 1:
+        raise ValueError("vintage-aware runs require retrain_every=1 in Phase 1")
+    if data.actuals_vintage != "latest":
+        raise NotImplementedError(
+            "actuals_vintage='first_release' is not implemented for vintage-aware "
+            "runs yet; Phase 3"
+        )
+    if forecast_policy not in {"direct", "direct_average"}:
+        raise NotImplementedError(
+            f"vintage-aware runs do not support forecast_policy={forecast_policy!r} "
+            "yet; Phase 2/3"
+        )
+    if _all_panel_model_runs(model_runs):
+        raise NotImplementedError(
+            "vintage-aware runs do not support panel-input models yet; Phase 2/3"
+        )
+    if preprocessing_policy is not None and preprocessing_policy.scope == "full_panel":
+        raise NotImplementedError(
+            "vintage-aware runs do not support full-panel preprocessing yet; Phase 2/3"
+        )
+    if feature_policy.scope in {"full_panel", "fixed_reference"}:
+        raise NotImplementedError(
+            "vintage-aware runs do not support full-panel or fixed-reference "
+            "feature fitting yet; Phase 2/3"
+        )
+
+
+def _warn_vintage_embargo(window_spec: WindowSpec) -> None:
+    if int(getattr(window_spec.estimation, "embargo", 0) or 0) == 0 and int(
+        getattr(window_spec, "embargo", 0) or 0
+    ) == 0:
+        return
+    warnings.warn(
+        "vintage-aware runs already resolve point-in-time panels; a nonzero "
+        "estimation/test embargo may double-purge observations unless it encodes "
+        "a dataset-specific publication lag",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
+def _vintage_work_panel(bundle: DataBundle, reference_index: pd.DatetimeIndex) -> pd.DataFrame:
+    validate_panel(bundle.panel)
+    panel = bundle.panel.reindex(reference_index).copy()
+    panel.index = pd.DatetimeIndex(panel.index, name="date")
+    panel.attrs.update(bundle.panel.attrs)
+    panel.attrs["macroforecast_metadata"] = dict(bundle.metadata)
+    return panel
+
+
+def _bundle_vintage_id(bundle: DataBundle) -> Any:
+    if "vintage" not in bundle.metadata:
+        raise ValueError('VintageSource.resolve() bundles must set metadata["vintage"]')
+    return bundle.metadata["vintage"]
+
+
+def _vintage_source_kind(source: Any) -> str:
+    kind = getattr(source, "kind", None)
+    if kind is not None:
+        return str(kind)
+    return type(source).__name__
+
+
+def _vintage_preprocessing_store(
+    preprocessing_store: PreprocessorStore | None,
+    vintage_id: Any,
+) -> PreprocessorStore | None:
+    if preprocessing_store is None:
+        return None
+    root = getattr(preprocessing_store, "_root", None)
+    if root is None:
+        return preprocessing_store
+    namespace = {
+        "base": getattr(preprocessing_store, "_namespace", None),
+        "vintage_id": vintage_id,
+    }
+    return PreprocessorStore(root, namespace=namespace)
+
+
+def _vintage_audit_positions(n_origins: int) -> set[int]:
+    if n_origins <= 500:
+        return set(range(n_origins))
+    step = max(1, n_origins // 500)
+    positions = set(range(0, n_origins, step))
+    positions.add(n_origins - 1)
+    return positions
+
+
+def _vintage_boundary_violation(
+    bundle: DataBundle,
+    *,
+    origin: pd.Timestamp,
+    vintage_id: Any,
+) -> dict[str, Any] | None:
+    max_date = pd.Timestamp(bundle.panel.index.max())
+    if max_date < origin:
+        return None
+    return {
+        "origin": origin.isoformat(),
+        "vintage_id": vintage_id,
+        "max_panel_date": max_date.isoformat(),
+        "message": "resolved vintage panel includes rows at or after the origin",
+    }
+
+
+def _warn_vintage_boundary_violations(violations: Sequence[Mapping[str, Any]]) -> None:
+    if not violations:
+        return
+    first = violations[0]
+    warnings.warn(
+        "vintage boundary audit found "
+        f"{len(violations)} origin(s) whose resolved panel reaches "
+        f"{first.get('max_panel_date')} for origin {first.get('origin')}",
+        RuntimeWarning,
+        stacklevel=3,
+    )
+
+
+def _vintage_boundary_audit(
+    *,
+    n_origins: int,
+    n_checked: int,
+    violations: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "vintage_boundary_ok": not violations,
+        "n_origins": int(n_origins),
+        "n_checked": int(n_checked),
+        "n_violations": int(len(violations)),
+        "violations": [dict(value) for value in violations],
+    }
 
 
 def _fit_predict_origin(

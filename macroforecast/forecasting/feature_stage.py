@@ -102,6 +102,8 @@ def _feature_cache_key(
     features: FeatureSpec,
     feature_stage_policy: StagePolicy,
     item: Mapping[str, Any],
+    *,
+    vintage_id: Any | None = None,
 ) -> tuple[Any, ...] | None:
     """Namespaced, content-addressed key for the shared feature-fit cache.
 
@@ -116,7 +118,10 @@ def _feature_cache_key(
     if bounds is None:
         return None
     digest = _feature_content_digest(features, feature_stage_policy)
-    return ("features", digest, bounds)
+    key = ("features", digest, bounds)
+    if vintage_id is None:
+        return key
+    return key + ("vintage", vintage_id)
 
 
 def _fitted_feature_builder_for_origin(
@@ -127,6 +132,7 @@ def _fitted_feature_builder_for_origin(
     feature_stage_policy: StagePolicy,
     item: Mapping[str, Any],
     preprocessing_cache: dict[Any, Any] | None,
+    vintage_id: Any | None = None,
 ) -> FittedFeatureBuilder:
     """Fit the per-origin feature builder, sharing it across arms when possible.
 
@@ -143,7 +149,12 @@ def _fitted_feature_builder_for_origin(
     byte-for-byte the pre-existing behavior.
     """
     cache_key = (
-        _feature_cache_key(features, feature_stage_policy, item)
+        _feature_cache_key(
+            features,
+            feature_stage_policy,
+            item,
+            vintage_id=vintage_id,
+        )
         if preprocessing_cache is not None
         else None
     )

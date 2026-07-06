@@ -27,3 +27,7 @@ class RawParseError(RawDataError):
 
 class RawManifestError(RawDataError):
     """Raised when manifest persistence fails."""
+
+
+class VintageUnavailableError(RawDataError):
+    """Raised when no point-in-time vintage is available for an origin."""
