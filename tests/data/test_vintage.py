@@ -208,3 +208,19 @@ def test_with_static_extras_fingerprint_changes_vintage_id() -> None:
     assert a_bundle.metadata["base_vintage"] == str(pd.Timestamp("2000-02-15"))
     assert a_bundle.metadata["vintage"] != b_bundle.metadata["vintage"]
     assert "static_extra_sha256=" in a_bundle.metadata["vintage"]
+
+
+def test_with_static_extras_appear_at_every_origin_without_revision() -> None:
+    frames = _custom_frames()
+    extra = pd.DataFrame(
+        {"z": [100.0, 200.0, 300.0]},
+        index=pd.date_range("2000-01-31", periods=3, freq="ME", name="date"),
+    )
+    source = mf.data.with_static_extras(mf.data.custom_vintages(frames), extra)
+
+    first = source.resolve(pd.Timestamp("2000-02-15"))
+    second = source.resolve(pd.Timestamp("2000-03-15"))
+
+    assert "z" in first.panel.columns
+    assert "z" in second.panel.columns
+    pdt.assert_series_equal(first.panel["z"], second.panel["z"], check_names=False)

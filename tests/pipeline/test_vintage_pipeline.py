@@ -7,6 +7,11 @@ import macroforecast as mf
 from macroforecast.pipeline import Arm, EvalSpec, pipeline_spec, run_pipeline
 
 
+def _latest_key(keys, origin):
+    origin = pd.Timestamp(origin)
+    return max(key for key in keys if key <= origin)
+
+
 class _Source:
     kind = "pipeline_synthetic"
 
@@ -74,6 +79,97 @@ def _spec(*, n_jobs=1, horizons=(1,), preprocessing_cache_dir=None, preprocessin
         n_jobs=n_jobs,
         preprocessing_cache_dir=preprocessing_cache_dir,
     )
+
+
+def _custom_shape_sources():
+    reference = pd.date_range("2000-01-31", periods=9, freq="ME", name="date")
+    base = pd.DataFrame(
+        {"A": [float(i) for i in range(1, 10)]},
+        index=reference,
+    )
+    frames = {
+        reference[i]: base.iloc[:i].copy()
+        for i in range(2, len(reference))
+    }
+
+    def vintage_label(key) -> str:
+        resolved = _latest_key(frames, key)
+        return f"v{reference.get_loc(resolved)}"
+
+    def callable_source(origin_date):
+        return frames[_latest_key(frames, origin_date)]
+
+    long = pd.concat(
+        [
+            frame.reset_index().assign(vintage=key)
+            for key, frame in frames.items()
+        ],
+        ignore_index=True,
+    )
+    return reference, (
+        mf.data.custom_vintages(callable_source, vintage_id=vintage_label),
+        mf.data.custom_vintages(frames, vintage_id=vintage_label),
+        mf.data.custom_vintages(
+            long,
+            vintage_column="vintage",
+            date_column="date",
+            vintage_id=vintage_label,
+        ),
+    )
+
+
+def _custom_shape_spec(source, reference):
+    data = mf.data.VintagePanelSpec(source, reference)
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=3),
+        val=mf.window.val_last_block(size=1),
+        test=mf.window.test_origins(
+            first_origin=reference[4],
+            last_origin=reference[6],
+            horizon=1,
+        ),
+    )
+    features = mf.feature_engineering.feature_spec(
+        target="A",
+        predictors=[],
+        lags=None,
+        target_lags=(1,),
+    )
+    return pipeline_spec(
+        data=data,
+        targets=[mf.pipeline.TargetSpec("A", transform="level")],
+        horizons=[1],
+        window=window,
+        arms=[Arm("AR", model="ols", features=features)],
+        evaluation=EvalSpec(benchmark="AR", tests=[]),
+        save_models=False,
+    )
+
+
+def test_custom_vintage_shapes_produce_identical_pipeline_output() -> None:
+    reference, sources = _custom_shape_sources()
+    frames = [
+        run_pipeline(_custom_shape_spec(source, reference))
+        .forecasts.sort_values(["origin", "date", "model"])
+        .reset_index(drop=True)
+        for source in sources
+    ]
+
+    columns = [
+        "target",
+        "horizon",
+        "origin",
+        "origin_pos",
+        "date",
+        "model",
+        "prediction",
+        "actual",
+        "vintage_id",
+        "actuals_vintage_id",
+    ]
+    assert not frames[0].empty
+    pdt.assert_frame_equal(frames[0][columns], frames[1][columns])
+    pdt.assert_frame_equal(frames[0][columns], frames[2][columns])
 
 
 def test_vintage_pipeline_parallel_equals_serial() -> None:
