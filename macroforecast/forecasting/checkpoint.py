@@ -65,6 +65,8 @@ LEAN_FORECAST_COLUMNS: tuple[str, ...] = (
     "forecast_policy",
     "target_transform",
     "variance_prediction",
+    "vintage_id",
+    "actuals_vintage_id",
 )
 
 _ORIGIN_FILE_RE = re.compile(r"^origin_(-?\d+)\.parquet$")

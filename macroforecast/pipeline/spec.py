@@ -414,6 +414,14 @@ def contender_names(arm: Arm) -> list[str]:
     return [arm.name]
 
 
+def is_vintage_aware(spec: PipelineSpec) -> bool:
+    """Return whether a pipeline spec runs against per-origin vintage data."""
+
+    from macroforecast.data import VintagePanelSpec
+
+    return isinstance(spec.data, VintagePanelSpec)
+
+
 # --------------------------------------------------------------------------- #
 # direct-policy guard for iterated/state-space models
 # --------------------------------------------------------------------------- #

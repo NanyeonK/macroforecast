@@ -21,6 +21,7 @@ from macroforecast.pipeline.spec import (
     Arm,
     PipelineSpec,
     ResolvedTarget,
+    is_vintage_aware,
     _model_default_name,
 )
 
@@ -862,6 +863,50 @@ def _merge_vintage_boundary_audits(audits: Any) -> dict[str, Any]:
     }
 
 
+def _reference_calendar_summary(spec: PipelineSpec) -> dict[str, Any] | None:
+    if not is_vintage_aware(spec):
+        return None
+    calendar = getattr(spec.data, "reference_calendar", None)
+    if not isinstance(calendar, pd.DatetimeIndex) or calendar.empty:
+        return None
+    return {
+        "start": calendar[0].isoformat(),
+        "end": calendar[-1].isoformat(),
+        "n_origins": int(len(calendar)),
+    }
+
+
+def _merge_vintage_sources(spec: PipelineSpec, sources: Any) -> dict[str, Any]:
+    records = [dict(source) for source in sources if isinstance(source, Mapping)]
+    first = records[0] if records else {}
+    origin_map: dict[str, Any] = {}
+    for record in records:
+        mapping = record.get("origin_vintage_map", {})
+        if isinstance(mapping, Mapping):
+            origin_map.update({str(key): value for key, value in mapping.items()})
+    ordered_items = sorted(origin_map.items())
+    if len(ordered_items) <= 500:
+        map_payload: Any = {key: value for key, value in ordered_items}
+    elif ordered_items:
+        map_payload = {
+            "n_origins": int(len(ordered_items)),
+            "first": {ordered_items[0][0]: ordered_items[0][1]},
+            "last": {ordered_items[-1][0]: ordered_items[-1][1]},
+            "note": "map omitted; sidecar writer lands in Phase 3",
+        }
+    else:
+        map_payload = {}
+    return {
+        "kind": first.get("kind") or type(getattr(spec.data, "source", None)).__name__,
+        "actuals_vintage": first.get(
+            "actuals_vintage",
+            getattr(spec.data, "actuals_vintage", None),
+        ),
+        "reference_calendar": _reference_calendar_summary(spec),
+        "origin_vintage_map": map_payload,
+    }
+
+
 def _audit(
     spec: PipelineSpec,
     execution_metadata: Mapping[str, Any] | None = None,
@@ -891,6 +936,10 @@ def _audit(
         provenance["environment"] = _environment_provenance()
         provenance["data"] = _data_identity(spec.data)
         provenance["spec_echo"] = _spec_echo(spec)
+    execution_metadata = dict(execution_metadata or {})
+    vintage_sources = execution_metadata.get("vintage_sources")
+    if vintage_sources:
+        provenance["vintage_source"] = _merge_vintage_sources(spec, vintage_sources)
     leakage: dict = {}
     # Surface window.validate() warnings (e.g. embargo < horizon-1) when available.
     # The runner injects each horizon into the window's test spec at execution
@@ -929,7 +978,6 @@ def _audit(
     leakage["preprocessing_policies"] = {
         a.name: str(a.preprocessing_policy) for a in spec.arms
     }
-    execution_metadata = dict(execution_metadata or {})
     vintage_audits = execution_metadata.get("vintage_boundary_audits")
     if vintage_audits:
         leakage["vintage_boundary_audit"] = _merge_vintage_boundary_audits(
