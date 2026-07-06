@@ -52,6 +52,8 @@ guessing which columns or horizons the run intended to use.
 | `custom_dataset` | Build a custom dataset from an in-memory `DataFrame`. | `DataBundle` |
 | `combine` | Concatenate loaded bundles and optionally align frequency. | `DataBundle` |
 | `list_vintages` | Generate supported monthly vintage labels for a dataset. | `list[str]` |
+| `fred_md_vintages` | Build a per-origin FRED-MD vintage source. | `VintageSource` |
+| `fred_qd_vintages` | Build a per-origin FRED-QD vintage source. | `VintageSource` |
 | `as_panel` | Normalize a `DataFrame` to the canonical panel contract. | `pandas.DataFrame` |
 | `validate_panel` | Validate the canonical panel contract. | `None` |
 | `panel_info` | Summarize panel shape, dates, missingness, and frequency. | `dict` |
@@ -73,6 +75,9 @@ guessing which columns or horizons the run intended to use.
 | --- | --- |
 | `DataBundle` | Canonical panel plus metadata returned by loaders and data-policy helpers. |
 | `DataSpec` | Canonical panel plus target, horizon, sample, and predictor choices for a run. |
+| `VintageSource` | Protocol for resolving one `DataBundle` observable at a forecast origin. |
+| `VintagePanelSpec` | Run-level wrapper for a `VintageSource`, reference calendar, and actuals policy. |
+| `VintageUnavailableError` | Raised when no vintage exists at or before an origin date. |
 | `RegimeDirection` | Stored threshold direction type: `"above"`, `"below"`, `"equal"`, or `"not_equal"`. |
 | `SamePeriodPolicy` | Stored same-period predictor policy type: `"allow"`, `"lag"`, `"drop"`, or `"forbid"`. |
 
@@ -1167,6 +1172,58 @@ Returns candidate monthly vintage labels. The selected vintage is passed to
 `load_fred_md`, `load_fred_qd`, or `load_fred_sd` through `vintage=`.
 
 `end` is required because the function does not inspect remote availability.
+
+### fred_md_vintages
+
+Build a `VintageSource` that resolves FRED-MD by forecast origin.
+
+```python
+macroforecast.data.fred_md_vintages(
+    *,
+    start: str | None = None,
+    end: str | None = None,
+    cache_root: str | pathlib.Path | None = None,
+    local_zip_source: str | pathlib.Path | None = None,
+    force: bool = False,
+) -> VintageSource
+```
+
+`resolve(origin_date)` chooses the latest FRED-MD vintage label at or before
+`origin_date`, then delegates to `load_fred_md(vintage=...)`. Resolved bundles
+are memoized by vintage label and must carry `metadata["vintage"]`.
+
+### fred_qd_vintages
+
+Build a `VintageSource` that resolves FRED-QD by forecast origin. Its arguments
+and behavior mirror `fred_md_vintages`, delegating to `load_fred_qd`.
+
+### VintageSource
+
+Runtime-checkable protocol for point-in-time data sources.
+
+| Method | Contract |
+| --- | --- |
+| `resolve(origin_date)` | Return the `DataBundle` observable at that origin, or raise `VintageUnavailableError`. The bundle must set `metadata["vintage"]` to a stable content identifier. |
+| `available_vintages()` | Return sorted canonical vintage identifiers the source can resolve. |
+
+### VintagePanelSpec
+
+```python
+macroforecast.data.VintagePanelSpec(
+    source: VintageSource,
+    reference_calendar: pandas.DatetimeIndex,
+    actuals_vintage: "latest" | "first_release" = "latest",
+)
+```
+
+Phase 1 supports `actuals_vintage="latest"` only in the runner. The reference
+calendar is required, non-empty, and monotonic; forecast target dates are derived
+from it while each origin's training data is resolved through `source`.
+
+### VintageUnavailableError
+
+Raised when a `VintageSource` cannot resolve any vintage at or before the
+requested origin date.
 
 ## Official Source Pages
 
