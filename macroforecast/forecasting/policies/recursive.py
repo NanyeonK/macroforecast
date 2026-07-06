@@ -53,7 +53,11 @@ def forecast_recursive_origin(
         "target_key": item.get("target_key"),
         "future_feature_policy": future_policy,
     }
-    origin_level = _target_level_at(recursive_panel, target, origin_label)
+    origin_level = (
+        float("nan")
+        if transform == "level"
+        else _target_level_at(recursive_panel, target, origin_label)
+    )
     actual_level = _target_level_at(pd.DataFrame(item.get("actual_panel", recursive_panel)), target, target_label)
     records: list[dict[str, Any]] = []
 

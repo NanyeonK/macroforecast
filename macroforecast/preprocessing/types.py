@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
-from typing import Any
+from typing import Any, TypeAlias
 
 import pandas as pd
 
@@ -31,7 +31,13 @@ class PreprocessedData:
         return replace(self, metadata=attach_metadata(self.metadata, stage, values))
 
 
-PreprocessInput = PreprocessedData | DataSpec | DataBundle | tuple[pd.DataFrame, Mapping[str, Any]] | pd.DataFrame
+PreprocessInput: TypeAlias = (
+    PreprocessedData
+    | DataSpec
+    | DataBundle
+    | tuple[pd.DataFrame, Mapping[str, Any]]
+    | pd.DataFrame
+)
 
 
 @dataclass(frozen=True)

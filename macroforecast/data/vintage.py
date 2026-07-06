@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from bisect import bisect_right
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, Protocol, Sequence, runtime_checkable
@@ -9,7 +10,7 @@ import pandas as pd
 
 from .errors import VintageUnavailableError
 from .loaders import list_vintages, load_fred_md, load_fred_qd
-from .panel import DataBundle
+from .panel import DataBundle, as_panel, custom_dataset, validate_panel
 
 
 @runtime_checkable
@@ -138,14 +139,306 @@ def fred_qd_vintages(
     )
 
 
+@dataclass
+class _ResolvedVintage:
+    key: Any
+    timestamp: pd.Timestamp
+    bundle: DataBundle | pd.DataFrame | None = None
+
+
+@dataclass
+class _CustomVintageSource:
+    source: Callable[[pd.Timestamp], DataBundle | pd.DataFrame] | None = None
+    vintages: tuple[_ResolvedVintage, ...] = ()
+    vintage_id: Callable[[Any], Any] | None = None
+    dataset: str = "custom_vintages"
+    frequency: str = "unknown"
+    strict: bool = True
+    _cache: dict[str, DataBundle] = field(default_factory=dict, init=False, repr=False)
+
+    @property
+    def kind(self) -> str:
+        return "custom_vintages"
+
+    def available_vintages(self) -> Sequence[Any]:
+        if self.source is not None:
+            return tuple(v.key for v in self.vintages)
+        return tuple(v.key for v in self.vintages)
+
+    def resolve(self, origin_date: pd.Timestamp) -> DataBundle:
+        origin = pd.Timestamp(origin_date)
+        if self.source is not None:
+            key = origin if not self.vintages else self._resolved_key(origin)
+            vintage_label = self._vintage_label(key)
+            cached = self._cache.get(vintage_label)
+            if cached is not None:
+                return cached
+            bundle = self._coerce(self.source(origin), vintage_label=vintage_label)
+            self._cache[vintage_label] = bundle
+            return bundle
+
+        resolved = self._resolved(origin)
+        vintage_label = self._vintage_label(resolved.key)
+        cached = self._cache.get(vintage_label)
+        if cached is not None:
+            return cached
+        if resolved.bundle is None:  # pragma: no cover - constructor invariant
+            raise VintageUnavailableError(f"no custom vintage is available at or before {origin.date()}")
+        bundle = self._coerce(resolved.bundle, vintage_label=vintage_label)
+        self._cache[vintage_label] = bundle
+        return bundle
+
+    def _resolved(self, origin: pd.Timestamp) -> _ResolvedVintage:
+        if not self.vintages:
+            raise VintageUnavailableError("custom vintage source reports no available vintages")
+        timestamps = [v.timestamp for v in self.vintages]
+        pos = bisect_right(timestamps, origin) - 1
+        if pos < 0:
+            raise VintageUnavailableError(
+                f"no custom vintage is available at or before {origin.date()}"
+            )
+        return self.vintages[pos]
+
+    def _resolved_key(self, origin: pd.Timestamp) -> Any:
+        if not self.vintages:
+            return origin
+        return self._resolved(origin).key
+
+    def _vintage_label(self, key: Any) -> str:
+        callback = self.vintage_id or (lambda value: str(value))
+        return str(callback(key))
+
+    def _coerce(
+        self,
+        value: DataBundle | pd.DataFrame,
+        *,
+        vintage_label: str,
+    ) -> DataBundle:
+        if isinstance(value, DataBundle):
+            metadata = {
+                **dict(value.metadata),
+                "dataset": value.metadata.get("dataset", self.dataset),
+                "frequency": value.metadata.get("frequency", self.frequency),
+                "vintage": vintage_label,
+            }
+            panel = as_panel(value.panel, metadata=metadata, strict=self.strict)
+            return DataBundle(panel, metadata)
+        if isinstance(value, pd.DataFrame):
+            return custom_dataset(
+                value,
+                dataset=self.dataset,
+                source_family="custom_vintages",
+                frequency=self.frequency,
+                metadata={"vintage": vintage_label},
+                strict=self.strict,
+            )
+        raise TypeError(
+            "custom_vintages sources must return DataBundle or pandas DataFrame"
+        )
+
+
+def custom_vintages(
+    source: (
+        Callable[[pd.Timestamp], DataBundle | pd.DataFrame]
+        | Mapping[Any, DataBundle | pd.DataFrame]
+        | pd.DataFrame
+    ),
+    *,
+    vintage_column: str | None = None,
+    date_column: str | None = None,
+    vintage_id: Callable[[Any], Any] | None = None,
+    dataset: str = "custom_vintages",
+    frequency: str = "unknown",
+    strict: bool = True,
+) -> VintageSource:
+    """Return a custom point-in-time source.
+
+    ``source`` may be a callable ``origin_date -> DataBundle | DataFrame``, a
+    mapping from date-like vintage keys to snapshots, or a long ALFRED-style
+    DataFrame with one row per ``(date, vintage, series...)``. Every snapshot is
+    normalized through :func:`as_panel` / :func:`custom_dataset` and then
+    validated. Resolved snapshots are memoized by the stable identifier produced
+    by ``vintage_id`` (default: ``str(resolved_key)``). If a callable reads from
+    a non-deterministic source whose content can change for the same identifier,
+    run the forecast with runner/pipeline preprocessing caching disabled.
+    """
+
+    if callable(source):
+        return _CustomVintageSource(
+            source=source,
+            vintage_id=vintage_id,
+            dataset=dataset,
+            frequency=frequency,
+            strict=strict,
+        )
+
+    if isinstance(source, Mapping):
+        vintages = tuple(
+            _ResolvedVintage(key=key, timestamp=_coerce_vintage_timestamp(key), bundle=value)
+            for key, value in source.items()
+        )
+        return _CustomVintageSource(
+            vintages=tuple(sorted(vintages, key=lambda v: v.timestamp)),
+            vintage_id=vintage_id,
+            dataset=dataset,
+            frequency=frequency,
+            strict=strict,
+        )
+
+    if isinstance(source, pd.DataFrame):
+        if vintage_column is None or date_column is None:
+            raise ValueError(
+                "vintage_column and date_column are required for long DataFrame custom_vintages"
+            )
+        if vintage_column not in source.columns:
+            raise ValueError(f"vintage column {vintage_column!r} is not in the DataFrame")
+        if date_column not in source.columns:
+            raise ValueError(f"date column {date_column!r} is not in the DataFrame")
+        vintages_list: list[_ResolvedVintage] = []
+        for key, group in source.groupby(vintage_column, sort=False):
+            frame = group.drop(columns=[vintage_column]).copy()
+            bundle = custom_dataset(
+                frame,
+                date=date_column,
+                dataset=dataset,
+                source_family="custom_vintages",
+                frequency=frequency,
+                metadata={"vintage": str(vintage_id(key) if vintage_id else key)},
+                strict=strict,
+            )
+            vintages_list.append(
+                _ResolvedVintage(
+                    key=key,
+                    timestamp=_coerce_vintage_timestamp(key),
+                    bundle=bundle,
+                )
+            )
+        return _CustomVintageSource(
+            vintages=tuple(sorted(vintages_list, key=lambda v: v.timestamp)),
+            vintage_id=vintage_id,
+            dataset=dataset,
+            frequency=frequency,
+            strict=strict,
+        )
+
+    raise TypeError("source must be callable, mapping, or pandas DataFrame")
+
+
+@dataclass
+class _StaticExtrasVintageSource:
+    source: VintageSource
+    extra: DataBundle
+    join: Literal["outer", "inner", "left"]
+    _extra_fingerprint: dict[str, Any] = field(init=False, repr=False)
+    _cache: dict[str, DataBundle] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        validate_panel(self.extra.panel)
+        self._extra_fingerprint = _panel_fingerprint_for_vintage(self.extra.panel)
+
+    @property
+    def kind(self) -> str:
+        return f"{_source_kind(self.source)}_with_static_extras"
+
+    def available_vintages(self) -> Sequence[Any]:
+        return self.source.available_vintages()
+
+    def resolve(self, origin_date: pd.Timestamp) -> DataBundle:
+        bundle = self.source.resolve(pd.Timestamp(origin_date))
+        base_id = _bundle_vintage_label(bundle)
+        vintage_label = _extra_vintage_label(base_id, self._extra_fingerprint)
+        cached = self._cache.get(vintage_label)
+        if cached is not None:
+            return cached
+        validate_panel(bundle.panel)
+        joined = bundle.panel.join(self.extra.panel, how=self.join)
+        metadata = {
+            **dict(bundle.metadata),
+            "vintage": vintage_label,
+            "base_vintage": base_id,
+            "static_extras": {
+                "join": self.join,
+                "fingerprint": self._extra_fingerprint,
+                "columns": [str(column) for column in self.extra.panel.columns],
+            },
+        }
+        panel = as_panel(joined, metadata=metadata)
+        out = DataBundle(panel, metadata)
+        self._cache[vintage_label] = out
+        return out
+
+
+def with_static_extras(
+    source: VintageSource,
+    extra: DataBundle | pd.DataFrame,
+    *,
+    join: Literal["outer", "inner", "left"] = "outer",
+) -> VintageSource:
+    """Join non-revised extra columns onto every resolved vintage bundle."""
+
+    if join not in {"outer", "inner", "left"}:
+        raise ValueError("join must be one of 'outer', 'inner', or 'left'")
+    if not isinstance(source, VintageSource):
+        raise TypeError("source must satisfy the VintageSource protocol")
+    extra_bundle = _coerce_static_extra(extra)
+    return _StaticExtrasVintageSource(source=source, extra=extra_bundle, join=join)
+
+
 def _vintage_label_timestamp(label: str) -> pd.Timestamp:
     return pd.Period(label, freq="M").start_time
+
+
+def _coerce_vintage_timestamp(value: Any) -> pd.Timestamp:
+    timestamp = pd.Timestamp(value)
+    if pd.isna(timestamp):
+        raise ValueError(f"vintage key {value!r} cannot be parsed as a timestamp")
+    return timestamp
+
+
+def _coerce_static_extra(value: DataBundle | pd.DataFrame) -> DataBundle:
+    if isinstance(value, DataBundle):
+        metadata = dict(value.metadata)
+        panel = as_panel(value.panel, metadata=metadata)
+        return DataBundle(panel, metadata)
+    if isinstance(value, pd.DataFrame):
+        return custom_dataset(
+            value,
+            dataset="static_extras",
+            source_family="static_extras",
+            frequency="unknown",
+        )
+    raise TypeError("extra must be a DataBundle or pandas DataFrame")
+
+
+def _panel_fingerprint_for_vintage(panel: pd.DataFrame) -> dict[str, Any]:
+    from macroforecast.pipeline.run import _panel_fingerprint
+
+    return _panel_fingerprint(panel)
+
+
+def _bundle_vintage_label(bundle: DataBundle) -> str:
+    if "vintage" not in bundle.metadata:
+        raise ValueError('wrapped VintageSource bundles must set metadata["vintage"]')
+    return str(bundle.metadata["vintage"])
+
+
+def _extra_vintage_label(base_id: str, fingerprint: Mapping[str, Any]) -> str:
+    return f"{base_id}|static_extra_sha256={fingerprint.get('value')}"
+
+
+def _source_kind(source: Any) -> str:
+    kind = getattr(source, "kind", None)
+    if kind is not None:
+        return str(kind)
+    return type(source).__name__
 
 
 __all__ = [
     "VintagePanelSpec",
     "VintageSource",
     "VintageUnavailableError",
+    "custom_vintages",
     "fred_md_vintages",
     "fred_qd_vintages",
+    "with_static_extras",
 ]
