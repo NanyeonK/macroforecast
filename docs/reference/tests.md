@@ -926,6 +926,13 @@ variance estimator from Algorithm 1. `hac_bandwidth="auto"` uses this module's
 standard automatic HAC bandwidth convention because the paper specifies the QS
 kernel but not a fixed bandwidth in Algorithm 1.
 
+Pipeline integration: request `"uspa"` or `"aspa"` in
+`macroforecast.pipeline.EvalSpec.tests` to run this test jointly across all
+horizons for each `(target, contender, benchmark)` triple. Pipeline rows land in
+`PipelineReport.significance` with `horizon="joint"` so per-horizon accuracy
+tables do not treat them as ordinary horizons. Requesting either name with a
+single-horizon spec raises at `pipeline_spec(...)` build time.
+
 ### model_confidence_set
 
 ```python

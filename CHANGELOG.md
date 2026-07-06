@@ -171,6 +171,11 @@ full per-version honesty-pass history embedded in repo documentation.
   or two aligned loss panels, uses a Quadratic Spectral HAC original statistic,
   and uses the moving-block bootstrap/natural block-variance Algorithm 1 path
   with paper simulation defaults `block_length=3`, `n_boot=999`.
+- `pipeline/spec.py`, `pipeline/evaluate.py` (feature): `EvalSpec.tests`
+  accepts `"uspa"`/`"aspa"` for joint multi-horizon pairwise comparison across
+  all horizons of each target/contender/benchmark triple. Results append
+  `PipelineReport.significance` rows with `horizon="joint"`; single-horizon
+  specs requesting either test fail fast at `pipeline_spec(...)` build time.
 - `deps` (WP-A4, torch install + Tier-1 anchor coverage completion): CPU-only
   `torch` (`pip install torch --index-url
   https://download.pytorch.org/whl/cpu`) installed into the shared dev

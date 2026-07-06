@@ -52,6 +52,7 @@ _DEFAULT_EVAL_TESTS: tuple[str, ...] = ("dm", "cw", "mcs")
 _PAIRWISE_LONG_TESTS = frozenset({"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"})
 _NESTED_QUADRATIC_TESTS = frozenset({"cw", "enc_new", "enc_t"})
 _SET_COMPARISON_TESTS = frozenset({"spa", "rc", "stepm"})
+_MULTI_HORIZON_TESTS = frozenset({"uspa", "aspa"})
 
 
 def _eval_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
@@ -116,6 +117,18 @@ def _failed_result_row(
         "reject": False,
         "n_obs": int(n_obs),
     }
+
+
+def _loss_values(
+    y: np.ndarray,
+    pred: np.ndarray,
+    loss_fn: Callable[[Any, Any], Any] | None,
+) -> np.ndarray:
+    return (
+        np.asarray(loss_fn(y, pred), dtype=float)
+        if loss_fn is not None
+        else (pred - y) ** 2
+    )
 
 
 # combination methods that need realised values (estimated weights), and their lag
@@ -372,6 +385,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
         enc_t_test,
         giacomini_white_test,
         henriksson_merton_test,
+        multi_horizon_spa_test,
         pesaran_timmermann_test,
     )
 
@@ -383,7 +397,8 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     want_dm = "dm" in requested
     want_cw = "cw" in requested and bool(spec.evaluation.cw_for_nested)
     requested_long = tuple(name for name in requested if name in _PAIRWISE_LONG_TESTS)
-    if not want_dm and not want_cw and not requested_long:
+    requested_joint = tuple(name for name in requested if name in _MULTI_HORIZON_TESTS)
+    if not want_dm and not want_cw and not requested_long and not requested_joint:
         return pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
 
     # Clark-West is only licensed where the benchmark is nested in the contender.
@@ -439,12 +454,8 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             y = actual[common].to_numpy(float)
             fb_vals = fb[common].to_numpy(float)
             fc_vals = fc[common].to_numpy(float)
-            if loss_fn is not None:
-                loss_b = np.asarray(loss_fn(y, fb_vals), dtype=float)
-                loss_c = np.asarray(loss_fn(y, fc_vals), dtype=float)
-            else:
-                loss_b = (fb_vals - y) ** 2
-                loss_c = (fc_vals - y) ** 2
+            loss_b = _loss_values(y, fb_vals, loss_fn)
+            loss_c = _loss_values(y, fc_vals, loss_fn)
             row: dict[str, Any] = {"target": target, "horizon": horizon, "contender": contender}
             has_result = False
             if want_dm:
@@ -572,6 +583,70 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         target=target, horizon=horizon, contender=str(contender),
                         test=test_name, n_obs=n_obs,
                     ))
+    if requested_joint:
+        for target, target_group in master.groupby("target", dropna=False):
+            contenders = [
+                contender
+                for contender in target_group["contender"].dropna().unique()
+                if contender != bench
+            ]
+            for contender in contenders:
+                horizon_diffs: dict[Any, pd.Series] = {}
+                for horizon, group in target_group.groupby("horizon", dropna=False):
+                    pivot_f = group.pivot_table(
+                        index="origin", columns="contender", values="prediction", aggfunc="mean"
+                    )
+                    if bench not in pivot_f.columns or contender not in pivot_f.columns:
+                        continue
+                    actual = group.groupby("origin")["actual"].first().reindex(pivot_f.index)
+                    fb = pivot_f[bench]
+                    fc = pivot_f[contender]
+                    common = actual.notna() & fb.notna() & fc.notna()
+                    if int(common.sum()) < 4:
+                        continue
+                    y = actual[common].to_numpy(float)
+                    loss_b = _loss_values(y, fb[common].to_numpy(float), loss_fn)
+                    loss_c = _loss_values(y, fc[common].to_numpy(float), loss_fn)
+                    horizon_diffs[horizon] = pd.Series(
+                        loss_b - loss_c,
+                        index=actual[common].index,
+                        name=horizon,
+                    )
+                if len(horizon_diffs) < 2:
+                    continue
+                diff_panel = pd.concat(horizon_diffs.values(), axis=1).dropna(axis=0, how="any")
+                if diff_panel.shape[0] < 4 or diff_panel.shape[1] < 2:
+                    continue
+                for test_name in requested_joint:
+                    try:
+                        res = multi_horizon_spa_test(
+                            diff_panel,
+                            **{
+                                **_eval_test_options(spec, test_name),
+                                "statistic": test_name,
+                            },
+                        )
+                        out.append({
+                            "target": target,
+                            "horizon": "joint",
+                            "contender": str(contender),
+                            "test": test_name,
+                            "statistic": res.statistic,
+                            "p_value": res.p_value,
+                            "reject": res.decision,
+                            "n_obs": res.n_obs,
+                            "critical_value": res.metadata.get("critical_value"),
+                            "n_horizons": res.metadata.get("n_horizons"),
+                            "horizons": res.metadata.get("horizons"),
+                        })
+                    except Exception:
+                        out.append(_failed_result_row(
+                            target=target,
+                            horizon="joint",
+                            contender=str(contender),
+                            test=test_name,
+                            n_obs=int(diff_panel.shape[0]),
+                        ))
     return pd.DataFrame(out) if out else pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
 
 

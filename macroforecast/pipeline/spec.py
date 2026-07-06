@@ -120,7 +120,8 @@ class CombinationContender:
 SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
     {
         "dm", "cw", "gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mcs",
-        "spa", "rc", "stepm", "berkowitz", "pit_autocorr", "coverage",
+        "spa", "rc", "stepm", "uspa", "aspa", "berkowitz", "pit_autocorr",
+        "coverage",
     }
 )
 
@@ -144,6 +145,8 @@ _EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
     "spa": ("macroforecast.tests", "superior_predictive_ability_test"),
     "rc": ("macroforecast.tests", "reality_check_test"),
     "stepm": ("macroforecast.tests", "stepm_test"),
+    "uspa": ("macroforecast.tests", "multi_horizon_spa_test"),
+    "aspa": ("macroforecast.tests", "multi_horizon_spa_test"),
     "berkowitz": ("macroforecast.tests", "density_interval_tests"),
     "pit_autocorr": ("macroforecast.tests", "density_interval_tests"),
     "coverage": ("macroforecast.tests", "interval_coverage_test"),
@@ -218,7 +221,9 @@ class EvalSpec:
     ``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
     ``"ag"`` are directional-accuracy tests for the contender's own sign
     forecasts, evaluated on the same benchmark-aligned sample for consistency
-    with the pairwise tests. Full-set benchmark comparisons are ``"mcs"``,
+    with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
+    and ``"aspa"``; they require at least two horizons and use ``"joint"`` as
+    their significance-table horizon sentinel. Full-set benchmark comparisons are ``"mcs"``,
     ``"spa"``, ``"rc"``, and ``"stepm"``; they populate ``PipelineReport.mcs``.
     ``"berkowitz"``/``"pit_autocorr"``/``"coverage"`` are PIT-based calibration
     diagnostics (Phase 1 density pipeline) -- they populate
@@ -879,6 +884,12 @@ def pipeline_spec(
         raise ValueError(
             f"evaluation.tests contains unsupported name(s) {sorted(unknown_tests)}; "
             f"supported tests are {sorted(SUPPORTED_EVAL_TESTS)}."
+        )
+    if {"uspa", "aspa"} & set(evaluation.tests) and len(horizon_tuple) < 2:
+        raise ValueError(
+            "evaluation.tests contains multi-horizon test(s) 'uspa'/'aspa', "
+            "but the spec has only one horizon; request at least two horizons "
+            "or remove the joint multi-horizon test."
         )
     _validate_eval_test_options(evaluation)
 

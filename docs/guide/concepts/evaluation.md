@@ -57,6 +57,10 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   `"enc_t"` (nested encompassing), or `"pt"` / `"hm"` / `"ag"` (directional
   accuracy). Directional tests evaluate the contender's own sign skill on the
   same benchmark-aligned origins.
+- **Joint multi-horizon tests**: `"uspa"` and `"aspa"` run Quaedvlieg-style
+  uniform and average SPA jointly across all horizons for each
+  target/contender/benchmark triple. They require at least two horizons and land
+  in `report.significance` with `horizon="joint"`.
 - **Model Confidence Set (MCS)**: identifies the set of models that cannot be
   statistically distinguished from the best model at a given significance level
   (`mcs_alpha`). Uses the iterative elimination algorithm by default.
@@ -147,8 +151,9 @@ from macroforecast.pipeline import EvalSpec
 evaluation = EvalSpec(
     benchmark="AR",
     metrics=("rmse", "relative_mse", "r2_oos"),
-    tests=("dm", "cw", "mcs", "spa"),
-    test_options={"spa": {"n_boot": 999, "block_length": 5}},
+    tests=("dm", "cw", "mcs", "spa", "uspa"),
+    test_options={"spa": {"n_boot": 999, "block_length": 5},
+                  "uspa": {"n_boot": 999, "block_length": 3}},
     by=("target", "horizon"),
     cw_for_nested=True,    # compute CW only for arms with nested_in_benchmark=True
     mcs_alpha=0.10,

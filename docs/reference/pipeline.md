@@ -368,20 +368,25 @@ metrics and tests actually named are computed, and unsupported names fail fast.
   DM only (`significance` carries no `cw_*` columns, `mcs` is empty);
   `tests=()` yields `accuracy` only. Supported significance names are
   `"dm"`, `"cw"`, `"gw"`, `"enc_new"`, `"enc_t"`, `"pt"`, `"hm"`, `"ag"`,
-  `"gr"`, `"mcs"`, `"spa"`, `"rc"`, and `"stepm"` plus the calibration names
-  below. Unsupported names raise `ValueError` at `pipeline_spec(...)` build time
+  `"gr"`, `"uspa"`, `"aspa"`, `"mcs"`, `"spa"`, `"rc"`, and `"stepm"` plus
+  the calibration names below. Unsupported names raise `ValueError` at `pipeline_spec(...)` build time
   rather than being silently dropped. The newly wired pairwise tests append
   long-form rows to `PipelineReport.significance` with `test`, `statistic`,
   `p_value`, `reject`, and `n_obs`; `pt`/`hm`/`ag` test the contender's own
-  directional skill on the benchmark-aligned sample. `"spa"`, `"rc"`, and
-  `"stepm"` compare the full contender set against the benchmark and append
-  rows to `PipelineReport.mcs`.
+  directional skill on the benchmark-aligned sample. `"uspa"` and `"aspa"`
+  run jointly across all horizons for each target/contender/benchmark triple
+  and write `horizon="joint"` rows to `PipelineReport.significance`; requesting
+  them with only one horizon raises at spec-build time. `"spa"`, `"rc"`, and
+  `"stepm"` compare the full contender set against the benchmark and append rows
+  to `PipelineReport.mcs`.
 - **`test_options: Mapping[str, Mapping[str, Any]]`** -- optional per-test keyword
   options. The outer key must be present in `tests`, and every option name is
   checked against that test's public callable when `pipeline_spec(...)` is
   built. Use this for bootstrap controls such as
   `{"spa": {"n_boot": 999, "block_length": 5, "random_state": 123}}` or GR
-  controls such as `{"gr": {"window_ratio": 0.4}}`.
+  controls such as `{"gr": {"window_ratio": 0.4}}`; `uspa`/`aspa` accept the
+  `multi_horizon_spa_test(...)` options, including `n_boot`, `block_length`,
+  `weights`, and `random_state`.
 - **`loss: Callable[[y_true, y_pred], ndarray] | None`** (default `None` = squared
   error) -- a per-observation loss threaded into the Diebold-Mariano loss
   differential and the Model Confidence Set's loss matrix, enabling asymmetric-

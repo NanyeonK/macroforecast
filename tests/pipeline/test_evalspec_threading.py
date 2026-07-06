@@ -35,6 +35,7 @@ pinned master and write its accuracy/significance/mcs -- never regenerate the
 "before" side from the code under test, that would defeat the point of the test.
 """
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -82,6 +83,37 @@ def _spec(**over):
 
 def _golden_master() -> pd.DataFrame:
     return pd.read_parquet(_GOLDEN_DIR / "evalspec_defaults_master.parquet")
+
+
+def _multi_horizon_master() -> pd.DataFrame:
+    rows = []
+    for origin in range(12):
+        for horizon in (1, 2):
+            actual = 10.0 + 0.2 * origin + 0.1 * horizon
+            rows.extend(
+                [
+                    {
+                        "target": "y", "horizon": horizon, "origin": origin,
+                        "date": pd.Timestamp("2000-01-31") + pd.offsets.MonthEnd(origin),
+                        "contender": "AR", "prediction": actual + 0.50 + 0.02 * horizon,
+                        "actual": actual,
+                    },
+                    {
+                        "target": "y", "horizon": horizon, "origin": origin,
+                        "date": pd.Timestamp("2000-01-31") + pd.offsets.MonthEnd(origin),
+                        "contender": "OLS", "prediction": actual + 0.15 + 0.01 * ((origin + horizon) % 3),
+                        "actual": actual,
+                    },
+                    {
+                        "target": "y", "horizon": horizon, "origin": origin,
+                        "date": pd.Timestamp("2000-01-31") + pd.offsets.MonthEnd(origin),
+                        "contender": "RIDGE",
+                        "prediction": actual + (0.18 if horizon == 1 else 0.46) + 0.01 * (origin % 2),
+                        "actual": actual,
+                    },
+                ]
+            )
+    return pd.DataFrame(rows)
 
 
 # --------------------------------------------------------------------------- #
@@ -361,6 +393,37 @@ def test_set_comparison_test_options_reach_underlying_callable(monkeypatch):
     assert set(mcs["test"]) == {"spa"}
     assert bool(mcs.loc[mcs["contender"] == "OLS", "superior"].iloc[0]) is True
     assert mcs.loc[mcs["contender"] == "RIDGE", "mean_loss_difference"].iloc[0] == -0.10
+
+
+def test_joint_multi_horizon_tests_emit_joint_significance_rows_and_do_not_affect_paper_table():
+    spec = _spec(
+        horizons=[1, 2],
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm", "uspa", "aspa"),
+            test_options={
+                "uspa": {"n_boot": 99, "block_length": 3, "random_state": 7},
+                "aspa": {"n_boot": 99, "block_length": 3, "random_state": 7},
+            },
+        ),
+    )
+    res = evaluate(_multi_horizon_master(), spec)
+    sig = res["significance"]
+    joint = sig.loc[sig["horizon"] == "joint"]
+
+    assert set(joint["test"]) == {"uspa", "aspa"}
+    for name in {"uspa", "aspa"}:
+        assert set(joint.loc[joint["test"] == name, "contender"]) == {"OLS", "RIDGE"}
+    assert set(joint["n_horizons"]) == {2}
+
+    table = mf.reporting.paper_accuracy_table(SimpleNamespace(**res))
+    assert "hjoint" not in table.data.columns
+    assert {"h1", "h2"} <= set(table.data.columns)
+
+
+def test_joint_multi_horizon_tests_require_multiple_horizons():
+    with pytest.raises(ValueError, match="multi-horizon"):
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("uspa",)))
 
 
 # --------------------------------------------------------------------------- #
