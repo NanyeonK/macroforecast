@@ -34,12 +34,22 @@ from .policies import (
     infer_frequencies,
     same_period_predictors,
 )
+from .vintage import (
+    VintagePanelSpec,
+    VintageSource,
+    VintageUnavailableError,
+    fred_md_vintages,
+    fred_qd_vintages,
+)
 
 __all__ = [
     "DataBundle",
     "DataSpec",
     "RegimeDirection",
     "SamePeriodPolicy",
+    "VintagePanelSpec",
+    "VintageSource",
+    "VintageUnavailableError",
     "as_panel",
     "attach_metadata",
     "custom_dataset",
@@ -63,5 +73,7 @@ __all__ = [
     "load_custom_csv",
     "load_custom_parquet",
     "list_vintages",
+    "fred_md_vintages",
+    "fred_qd_vintages",
     "same_period_predictors",
 ]
