@@ -23,6 +23,7 @@ import pandas as pd
 
 import macroforecast as mf
 from macroforecast.forecasting import runner as _runner
+from macroforecast.preprocessing import FittedPreprocessor
 from macroforecast.preprocessing.cache import PreprocessorStore
 from macroforecast.preprocessing.specs import PreprocessSpec
 from macroforecast.pipeline import (
@@ -200,6 +201,31 @@ def _count_fits(run_fn):
     return result, count["n"]
 
 
+def _count_prepared_base_transforms(run_fn):
+    """Count real horizon-independent prepared-base transform computations."""
+
+    original = FittedPreprocessor.transform
+    count = {"n": 0}
+
+    def _counting_transform(self, panel, *args, **kwargs):
+        available = kwargs.get("available")
+        policy = kwargs.get("policy")
+        if (
+            policy == "origin_available"
+            and available is not None
+            and len(panel) == len(available)
+        ):
+            count["n"] += 1
+        return original(self, panel, *args, **kwargs)
+
+    FittedPreprocessor.transform = _counting_transform  # type: ignore[method-assign]
+    try:
+        result = run_fn()
+    finally:
+        FittedPreprocessor.transform = original  # type: ignore[method-assign]
+    return result, count["n"]
+
+
 def test_disk_store_dedupes_preprocessing_fit(tmp_path):
     """A shared store makes the second run() perform ZERO new per-origin fits.
 
@@ -225,6 +251,35 @@ def test_disk_store_dedupes_preprocessing_fit(tmp_path):
     _, ctrl_second = _count_fits(lambda: _run_once(preprocessing_store=None))
     assert ctrl_first == first_fits
     assert ctrl_second == ctrl_first  # without the store the work is repeated
+
+
+def test_disk_store_dedupes_prepared_base_across_pipeline_runs(tmp_path):
+    """A shared preprocessing_cache_dir persists prepared-base panels across runs."""
+
+    cache_dir = tmp_path / "prepared"
+
+    _, first_base = _count_prepared_base_transforms(
+        lambda: run_pipeline(_toy(1, preprocessing_cache_dir=str(cache_dir)))
+    )
+    assert first_base > 0
+
+    _, second_base = _count_prepared_base_transforms(
+        lambda: run_pipeline(_toy(1, preprocessing_cache_dir=str(cache_dir)))
+    )
+    assert second_base == 0
+
+    changed = _toy(1, preprocessing_cache_dir=str(cache_dir))
+    changed_prep = mf.preprocessing.preprocess_spec(
+        transform="official",
+        impute="mean",
+        standardize="none",
+    )
+    import dataclasses as _dc
+
+    changed_arms = tuple(_dc.replace(arm, preprocessing=changed_prep) for arm in changed.arms)
+    changed = _dc.replace(changed, arms=changed_arms)
+    _, changed_base = _count_prepared_base_transforms(lambda: run_pipeline(changed))
+    assert changed_base > 0
 
 
 # --------------------------------------------------------------------------- #
@@ -315,18 +370,23 @@ def test_pipeline_cache_dir_dedupes_across_cells(tmp_path):
     leftover_tmp = [p for p in entries if p.name.endswith(".tmp") or ".tmp" in p.name]
     assert leftover_tmp == [], f"leftover temp files: {leftover_tmp}"
 
-    persisted = [p for p in entries if not (p.name.endswith(".tmp") or ".tmp" in p.name)]
-    n_files = len(persisted)
+    fit_files = [p for p in entries if p.suffix == ".pkl"]
+    frame_parquets = [p for p in entries if p.suffix == ".parquet"]
+    frame_meta = [p for p in entries if p.suffix == ".json"]
 
     n_arms = len(_toy(2).arms)
     n_horizons = len(_toy(2).horizons)
-    # One file per distinct origin -- NOT multiplied by arms or horizons.
-    assert n_files == expected, (
-        f"store holds {n_files} entries but expected {expected} distinct origins "
+    # One fitted-preprocessor file per distinct origin -- NOT multiplied by arms
+    # or horizons. The prepared-base frame tier is also one parquet/json pair per
+    # distinct origin.
+    assert len(fit_files) == expected, (
+        f"store holds {len(fit_files)} fit entries but expected {expected} distinct origins "
         f"(naive per-cell would write up to {expected * n_arms * n_horizons})"
     )
-    # And strictly fewer than the naive per-cell count, proving the dedup happened.
-    assert n_files < expected * n_arms * n_horizons
+    assert len(frame_parquets) == expected
+    assert len(frame_meta) == expected
+    # And strictly fewer fit files than the naive per-cell count, proving the dedup happened.
+    assert len(fit_files) < expected * n_arms * n_horizons
 
 
 # --------------------------------------------------------------------------- #
@@ -500,9 +560,14 @@ def test_auto_cache_dir_dedupes_across_cells_when_unset(monkeypatch, tmp_path):
 
     n_arms = len(spec.arms)
     n_horizons = len(spec.horizons)
-    assert len(captured["files"]) == expected, (
-        f"auto-managed store holds {len(captured['files'])} entries but expected "
+    fit_files = [p for p in captured["files"] if p.suffix == ".pkl"]
+    frame_parquets = [p for p in captured["files"] if p.suffix == ".parquet"]
+    frame_meta = [p for p in captured["files"] if p.suffix == ".json"]
+    assert len(fit_files) == expected, (
+        f"auto-managed store holds {len(fit_files)} fit entries but expected "
         f"{expected} distinct origins (naive per-cell would write up to "
         f"{expected * n_arms * n_horizons})"
     )
-    assert len(captured["files"]) < expected * n_arms * n_horizons
+    assert len(frame_parquets) == expected
+    assert len(frame_meta) == expected
+    assert len(fit_files) < expected * n_arms * n_horizons

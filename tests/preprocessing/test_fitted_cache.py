@@ -82,6 +82,38 @@ def test_store_put_get_roundtrip(tmp_path: Path) -> None:
     assert store.get(key) == payload
 
 
+def test_store_frame_roundtrip_preserves_index_columns_and_dtypes(tmp_path: Path) -> None:
+    """Prepared-base frame payloads round-trip through parquet + JSON metadata."""
+
+    store = PreprocessorStore(tmp_path)
+    spec = _make_spec(impute="mean", standardize="zscore")
+    key = store.frame_key(
+        spec,
+        target="y",
+        cache_key=("origin_pos", 4),
+        kind="prepared_base",
+    )
+    frame = pd.DataFrame(
+        {
+            "x": pd.Series([1.0, 2.5, 3.0], dtype="float64").to_numpy(),
+            "flag": pd.Series([1, 0, 1], dtype="int64").to_numpy(),
+        },
+        index=pd.date_range("2020-01-01", periods=3, freq="MS", name="date"),
+    )
+    frame.attrs["macroforecast_transform_codes"] = {"x": 1, "flag": 1}
+
+    store.put_frame(key, frame)
+    loaded = store.get_frame(key)
+
+    assert loaded is not None
+    pd.testing.assert_frame_equal(loaded, frame)
+    assert loaded.attrs == frame.attrs
+
+    # A torn/corrupt metadata sidecar is a miss, not an exception.
+    (tmp_path / f"{key}.json").write_text("{")
+    assert store.get_frame(key) is None
+
+
 # ---------------------------------------------------------------------------
 # 2. Spec-hash collision avoidance
 # ---------------------------------------------------------------------------

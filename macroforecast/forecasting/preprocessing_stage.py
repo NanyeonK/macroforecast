@@ -239,11 +239,7 @@ def _prepare_origin_panel(
         # the origin row exactly as the whole-window transform would. Numerical
         # identity vs the un-split whole-window path is pinned by the serial==parallel
         # golden -- the parallel backend (preprocessing_cache=None) keeps that path.
-        base_key = (
-            ("prepared_base",) + tuple(cache_key)
-            if (preprocessing_cache is not None and cache_key is not None)
-            else None
-        )
+        base_key = ("prepared_base",) + tuple(cache_key) if cache_key is not None else None
         if base_key is None:
             apply_panel = panel.reindex(apply_labels).loc[:, cols]
             transformed = fitted.transform(
@@ -254,18 +250,37 @@ def _prepare_origin_panel(
             )
             prepared_panel = transformed.panel
         else:
-            # base_key is non-None only when preprocessing_cache is non-None (see its
-            # definition above); assert it so the type checker narrows the Optional.
-            assert preprocessing_cache is not None
-            base_panel = preprocessing_cache.get(base_key)
+            base_panel = (
+                preprocessing_cache.get(base_key)
+                if preprocessing_cache is not None
+                else None
+            )
             if not isinstance(base_panel, pd.DataFrame):
-                base_panel = fitted.transform(
-                    panel.reindex(available_labels).loc[:, cols],
-                    history=fitted.fit_panel,
-                    policy="origin_available",
-                    available=available_labels,
-                ).panel
-                preprocessing_cache[base_key] = base_panel
+                base_store_key = (
+                    preprocessing_store.frame_key(
+                        preprocessing,
+                        target=str(target),
+                        cache_key=cache_key,
+                        kind="prepared_base",
+                    )
+                    if preprocessing_store is not None and target is not None
+                    else None
+                )
+                if base_store_key is not None and preprocessing_store is not None:
+                    loaded_base = preprocessing_store.get_frame(base_store_key)
+                    if isinstance(loaded_base, pd.DataFrame):
+                        base_panel = loaded_base
+                if not isinstance(base_panel, pd.DataFrame):
+                    base_panel = fitted.transform(
+                        panel.reindex(available_labels).loc[:, cols],
+                        history=fitted.fit_panel,
+                        policy="origin_available",
+                        available=available_labels,
+                    ).panel
+                    if base_store_key is not None and preprocessing_store is not None:
+                        preprocessing_store.put_frame(base_store_key, base_panel)
+                if preprocessing_cache is not None:
+                    preprocessing_cache[base_key] = base_panel
             fwd_labels = apply_labels[~apply_labels.isin(available_labels)]
             if len(fwd_labels):
                 fwd_panel = fitted.transform(

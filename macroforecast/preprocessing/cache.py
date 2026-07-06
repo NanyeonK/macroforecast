@@ -30,10 +30,13 @@ a reader in another. ``namespace=None`` (the default) reproduces the original,
 pre-namespace digest exactly, so existing stores built before this parameter
 existed keep working unchanged for callers that do not pass one.
 
-Dependencies
-------------
-stdlib only: ``hashlib``, ``json``, ``os``, ``pathlib``, ``pickle``,
-``tempfile``.  No third-party imports.
+Frame payloads
+--------------
+The same store also persists prepared-base DataFrame payloads used by the
+forecasting runner. They use the same content-addressed digest/namespace
+mechanics, with parquet for the frame and a JSON metadata sidecar for index,
+columns, dtypes, and lightweight attrs. This is an opt-in tier: callers reach it
+only by passing a store, normally through ``preprocessing_cache_dir``.
 """
 from __future__ import annotations
 
@@ -42,8 +45,11 @@ import json
 import os
 import pickle
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+
+import pandas as pd
 
 
 class PreprocessorStore:
@@ -142,6 +148,34 @@ class PreprocessorStore:
         canonical = json.dumps(payload, sort_keys=True, default=str)
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
+    def frame_key(
+        self,
+        prep_spec: Any,
+        *,
+        target: str,
+        cache_key: Any,
+        kind: str,
+    ) -> str:
+        """Return a SHA-256 digest for a stored frame payload.
+
+        ``cache_key`` is the same horizon-independent identity used by the
+        runner's in-memory cache (for prepared-base panels, this is
+        ``_preprocessing_cache_key(item, vintage_id=...)``). The store namespace
+        is folded in exactly as :meth:`key` does, so one shared directory remains
+        isolated across preprocessing-policy scopes and vintage tags.
+        """
+
+        payload: dict[str, Any] = {
+            "kind": str(kind),
+            "spec": prep_spec.to_dict(),
+            "target": str(target),
+            "cache_key": _json_ready(cache_key),
+        }
+        if self._namespace is not None:
+            payload["namespace"] = self._namespace
+        canonical = json.dumps(payload, sort_keys=True, default=str)
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
     # ------------------------------------------------------------------
     # Read
     # ------------------------------------------------------------------
@@ -170,6 +204,37 @@ class PreprocessorStore:
             data = path.read_bytes()
             return pickle.loads(data)  # noqa: S301 — trusted local filesystem
         except Exception:  # noqa: BLE001 — any unpickling / IO error → miss
+            return None
+
+    def get_frame(self, key: str) -> pd.DataFrame | None:
+        """Return a stored DataFrame payload for *key*, or ``None`` on a miss.
+
+        The JSON metadata must be readable and match the parquet payload shape;
+        corrupt/truncated files are treated as cache misses, mirroring
+        :meth:`get`.
+        """
+
+        parquet_path, meta_path = self._frame_paths(key)
+        if not parquet_path.exists() or not meta_path.exists():
+            return None
+        try:
+            meta = json.loads(meta_path.read_text())
+            frame = pd.read_parquet(parquet_path)
+            columns = list(meta.get("columns", []))
+            if columns and list(frame.columns) != columns:
+                frame = frame.loc[:, columns]
+            for column, dtype in dict(meta.get("dtypes", {})).items():
+                if column in frame.columns:
+                    frame[column] = frame[column].astype(dtype)
+            index_freq = meta.get("index_freq")
+            if index_freq and isinstance(frame.index, pd.DatetimeIndex):
+                try:
+                    frame.index.freq = index_freq
+                except ValueError:
+                    pass
+            frame.attrs = dict(meta.get("attrs", {}))
+            return frame
+        except Exception:  # noqa: BLE001 - corrupt frame/meta -> cache miss
             return None
 
     # ------------------------------------------------------------------
@@ -224,6 +289,57 @@ class PreprocessorStore:
         # Atomic rename — on POSIX this is guaranteed to be atomic.
         os.replace(tmp_path, str(final))
 
+    def put_frame(self, key: str, frame: pd.DataFrame) -> None:
+        """Store a DataFrame payload under *key* via atomic parquet/json writes."""
+
+        self._root.mkdir(parents=True, exist_ok=True)
+        parquet_path, meta_path = self._frame_paths(key)
+
+        fd, tmp_parquet = tempfile.mkstemp(
+            suffix=".parquet",
+            prefix=f"_{key}_",
+            dir=self._root,
+        )
+        os.close(fd)
+        try:
+            frame.to_parquet(tmp_parquet, index=True)
+            os.replace(tmp_parquet, str(parquet_path))
+        except Exception:
+            try:
+                os.unlink(tmp_parquet)
+            except OSError:
+                pass
+            raise
+
+        meta = {
+            "columns": [str(column) for column in frame.columns],
+            "dtypes": {str(column): str(dtype) for column, dtype in frame.dtypes.items()},
+            "index_names": list(frame.index.names),
+            "index_dtype": str(frame.index.dtype),
+            "index_freq": getattr(frame.index, "freqstr", None),
+            "attrs": _json_ready(dict(frame.attrs)),
+        }
+        fd, tmp_meta = tempfile.mkstemp(
+            suffix=".json",
+            prefix=f"_{key}_",
+            dir=self._root,
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump(meta, fh, sort_keys=True)
+                fh.write("\n")
+            os.replace(tmp_meta, str(meta_path))
+        except Exception:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            try:
+                os.unlink(tmp_meta)
+            except OSError:
+                pass
+            raise
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -231,6 +347,32 @@ class PreprocessorStore:
     def _path(self, key: str) -> Path:
         """Return the filesystem path for a given cache key."""
         return self._root / f"{key}.pkl"
+
+    def _frame_paths(self, key: str) -> tuple[Path, Path]:
+        """Return ``(parquet_path, meta_path)`` for a DataFrame payload."""
+
+        return self._root / f"{key}.parquet", self._root / f"{key}.json"
+
+
+def _json_ready(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, Mapping):
+        return {str(key): _json_ready(value[key]) for key in sorted(value, key=str)}
+    if isinstance(value, (list, tuple)):
+        return [_json_ready(item) for item in value]
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            pass
+    try:
+        json.dumps(value)
+    except TypeError:
+        return str(value)
+    return value
 
 
 __all__ = ["PreprocessorStore"]
