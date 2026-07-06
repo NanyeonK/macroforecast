@@ -57,14 +57,19 @@ def _oracle_bundles(leaky: bool = False) -> tuple[pd.DatetimeIndex, dict[pd.Time
     return reference, bundles
 
 
-def _window(reference: pd.DatetimeIndex) -> mf.window.WindowSpec:
+def _window(
+    reference: pd.DatetimeIndex,
+    *,
+    horizon: int = 1,
+    last_origin: pd.Timestamp | None = None,
+) -> mf.window.WindowSpec:
     return mf.window.spec(
         estimation=mf.window.estimation_expanding(min_size=3),
         val=mf.window.val_last_block(size=1),
         test=mf.window.test_origins(
             first_origin=reference[4],
-            last_origin=reference[6],
-            horizon=1,
+            last_origin=reference[6] if last_origin is None else last_origin,
+            horizon=horizon,
         ),
     )
 
@@ -91,6 +96,39 @@ def _recording_model(sink: list[dict[str, pd.DataFrame | pd.Series]]) -> mf.mode
         return Fit(X, y)
 
     return mf.models.custom_model("recording_vintage_oracle", fit)
+
+
+def _constant_model(value: float = 1.0) -> mf.models.ModelSpec:
+    class Fit:
+        def predict(self, X: pd.DataFrame) -> pd.Series:
+            return pd.Series(float(value), index=X.index)
+
+    def fit(X: pd.DataFrame, y: pd.Series):
+        return Fit()
+
+    return mf.models.custom_model("constant_vintage_oracle", fit)
+
+
+def _recording_panel_model(sink: list[dict[str, pd.DataFrame]]) -> mf.models.ModelSpec:
+    class Fit:
+        def __init__(self, bundle: mf.data.DataBundle, *, target: str) -> None:
+            panel = bundle.panel.copy()
+            sink.append({"fit_panel": panel})
+            self._last = float(panel[target].dropna().iloc[-1])
+
+        def predict(self, test_panel: pd.DataFrame) -> pd.Series:
+            sink[-1]["test_panel"] = test_panel.copy()
+            return pd.Series(self._last, index=test_panel.index)
+
+    def fit(bundle: mf.data.DataBundle, *, target: str):
+        return Fit(bundle, target=target)
+
+    return mf.models.custom_model(
+        "recording_panel_vintage_oracle",
+        fit,
+        default_params={"target": None},
+        input_kind="panel",
+    )
 
 
 def test_vintage_direct_oracle_uses_exact_real_time_fit_rows() -> None:
@@ -224,21 +262,121 @@ def test_vintage_runner_validations_and_embargo_warning() -> None:
         )
 
 
-@pytest.mark.parametrize("policy", ["path_average", "recursive"])
-def test_vintage_runner_rejects_unsupported_policies(policy: str) -> None:
+def test_vintage_recursive_policy_uses_per_origin_vintage_rows() -> None:
     reference, bundles = _oracle_bundles()
     spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
 
-    with pytest.raises(NotImplementedError, match="Phase 2/3"):
-        mf.forecasting.run(
-            spec,
-            "ols",
-            window=_window(reference),
-            target="A",
-            features=_features(),
-            forecast_policy=policy,
-            save_models=False,
-        )
+    result = mf.forecasting.run(
+        spec,
+        _recording_model([]),
+        window=_window(reference),
+        target="A",
+        features=_features(),
+        forecast_policy="recursive",
+        save_models=False,
+    )
+
+    table = result.to_frame()
+    assert list(table["forecast_policy"]) == ["recursive", "recursive", "recursive"]
+    assert list(table["vintage_id"]) == ["v4", "v5", "v6"]
+    np.testing.assert_allclose(table["prediction"].to_numpy(float), [4.0, 5.0, 6.0])
+    np.testing.assert_allclose(table["actual"].to_numpy(float), [6.0, 7.0, 8.0])
+
+
+def test_vintage_path_average_policy_runs_against_resolved_vintages() -> None:
+    reference, bundles = _oracle_bundles()
+    spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
+
+    result = mf.forecasting.run(
+        spec,
+        _constant_model(2.0),
+        window=_window(reference, horizon=2, last_origin=reference[5]),
+        target="A",
+        features=_features(),
+        horizon=2,
+        forecast_policy="path_average",
+        save_models=False,
+    )
+
+    table = result.to_frame()
+    assert list(table["forecast_policy"]) == ["path_average", "path_average"]
+    assert list(table["vintage_id"]) == ["v4", "v5"]
+    np.testing.assert_allclose(table["prediction"].to_numpy(float), [2.0, 2.0])
+
+
+def test_vintage_panel_model_uses_origin_bundle_fit_rows_and_latest_actuals() -> None:
+    reference, bundles = _oracle_bundles()
+    spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
+    records: list[dict[str, pd.DataFrame]] = []
+
+    result = mf.forecasting.run(
+        spec,
+        _recording_panel_model(records),
+        window=_window(reference),
+        target="A",
+        features=None,
+        save_models=False,
+    )
+
+    table = result.to_frame()
+    assert list(table["vintage_id"]) == ["v4", "v5", "v6"]
+    np.testing.assert_allclose(table["prediction"].to_numpy(float), [4.0, 5.0, 6.0])
+    np.testing.assert_allclose(table["actual"].to_numpy(float), [6.0, 7.0, 8.0])
+
+    expected_fit_indices = [
+        pd.DatetimeIndex(["2000-01-31", "2000-02-29", "2000-03-31", "2000-04-30"], name="date"),
+        pd.DatetimeIndex(
+            ["2000-01-31", "2000-02-29", "2000-03-31", "2000-04-30", "2000-05-31"],
+            name="date",
+        ),
+        pd.DatetimeIndex(
+            [
+                "2000-01-31",
+                "2000-02-29",
+                "2000-03-31",
+                "2000-04-30",
+                "2000-05-31",
+                "2000-06-30",
+            ],
+            name="date",
+        ),
+    ]
+    for record, expected_index in zip(records, expected_fit_indices, strict=True):
+        pdt.assert_index_equal(record["fit_panel"].index, expected_index)
+
+
+def test_vintage_full_panel_stage_scopes_resolve_per_origin() -> None:
+    reference, bundles = _oracle_bundles()
+    spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
+
+    feature_scope = mf.window.stage_policy("full_panel")
+    result = mf.forecasting.run(
+        spec,
+        _recording_model([]),
+        window=_window(reference),
+        target="A",
+        features=_features(),
+        feature_policy=feature_scope,
+        save_models=False,
+    )
+    assert not result.to_frame().empty
+
+    preprocessing = mf.preprocessing.preprocess_spec(
+        transform="none",
+        impute="none",
+        standardize="zscore",
+    )
+    preprocessed = mf.forecasting.run(
+        spec,
+        _constant_model(0.0),
+        window=_window(reference),
+        target="A",
+        features=_features(),
+        preprocessing=preprocessing,
+        preprocessing_policy=mf.window.stage_policy("full_panel"),
+        save_models=False,
+    )
+    assert not preprocessed.to_frame().empty
 
 
 def test_vintage_boundary_audit_warns_and_marks_result() -> None:
