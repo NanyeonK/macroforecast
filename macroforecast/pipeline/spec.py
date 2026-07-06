@@ -9,6 +9,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+import inspect
 from typing import Any, Literal, cast
 
 
@@ -126,6 +127,59 @@ SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
 CALIBRATION_EVAL_TESTS: frozenset[str] = frozenset({"berkowitz", "pit_autocorr", "coverage"})
 
 
+_EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
+    "dm": ("macroforecast.tests", "dm_test"),
+    "cw": ("macroforecast.tests", "clark_west_test"),
+    "mcs": ("macroforecast.tests", "model_confidence_set"),
+    "berkowitz": ("macroforecast.tests", "density_interval_tests"),
+    "pit_autocorr": ("macroforecast.tests", "density_interval_tests"),
+    "coverage": ("macroforecast.tests", "interval_coverage_test"),
+}
+
+
+def _accepted_eval_test_options(test_name: str) -> frozenset[str]:
+    """Keyword option names accepted by the public callable backing a pipeline test."""
+
+    import importlib
+
+    try:
+        module_name, function_name = _EVAL_TEST_OPTION_TARGETS[test_name]
+    except KeyError:
+        return frozenset()
+    function = getattr(importlib.import_module(module_name), function_name)
+    signature = inspect.signature(function)
+    if any(param.kind is inspect.Parameter.VAR_KEYWORD for param in signature.parameters.values()):
+        return frozenset()
+    return frozenset(
+        name
+        for name, param in signature.parameters.items()
+        if param.kind is inspect.Parameter.KEYWORD_ONLY
+    )
+
+
+def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
+    """Fail fast when ``EvalSpec.test_options`` cannot be consumed safely."""
+
+    requested = set(evaluation.tests)
+    option_tests = set(evaluation.test_options)
+    missing = option_tests - requested
+    if missing:
+        raise ValueError(
+            f"evaluation.test_options contains option block(s) for test(s) "
+            f"{sorted(missing)} that are not present in evaluation.tests "
+            f"{sorted(requested)}"
+        )
+    for test_name, options in evaluation.test_options.items():
+        accepted = _accepted_eval_test_options(str(test_name))
+        unknown = set(options) - accepted
+        if unknown:
+            raise ValueError(
+                f"evaluation.test_options[{test_name!r}] contains unsupported "
+                f"option name(s) {sorted(unknown)}; accepted options for "
+                f"{test_name!r} are {sorted(accepted)}"
+            )
+
+
 @dataclass(frozen=True)
 class EvalSpec:
     """Automatic evaluation and significance-testing configuration.
@@ -151,6 +205,10 @@ class EvalSpec:
     diagnostics (Phase 1 density pipeline) -- they populate
     ``PipelineReport.calibration`` rather than ``significance``/``mcs`` and,
     like every other test name, are opt-in only (absent from the default).
+    ``test_options`` maps a requested test name to keyword options for that
+    test's underlying public callable. Option blocks are validated when
+    :func:`pipeline_spec` is built: the key must appear in ``tests`` and every
+    option name must be accepted by that test's callable.
 
     Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
     ``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
@@ -181,6 +239,7 @@ class EvalSpec:
     subsamples: Mapping[str, tuple[Any, Any]] = field(default_factory=dict)
     dm_kwargs: Mapping[str, Any] = field(default_factory=dict)
     loss: Callable[[Any, Any], Any] | None = None
+    test_options: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     calibration_alpha: float = 0.05
 
 
@@ -804,6 +863,7 @@ def pipeline_spec(
             "recognized elsewhere in macroforecast.tests but not yet wired into "
             "the pipeline evaluator)."
         )
+    _validate_eval_test_options(evaluation)
 
     # Warn (never reject) when a guarded iterated/state-space model is combined
     # with a direct-like forecast policy -- see DIRECT_POLICY_GUARD_MODELS above.

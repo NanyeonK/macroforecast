@@ -178,7 +178,38 @@ def test_tests_empty_gives_accuracy_only():
 
 def test_unknown_test_name_raises_at_spec_build_time():
     with pytest.raises(ValueError, match="unsupported"):
-        _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "spa")))
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "not_a_real_test")))
+
+
+def test_test_options_must_reference_requested_tests():
+    with pytest.raises(ValueError, match="test_options"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("dm",),
+                test_options={"mcs": {"n_boot": 25}},
+            )
+        )
+
+
+def test_test_options_validate_underlying_callable_kwargs():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm",),
+            test_options={"dm": {"kernel": "bartlett", "correction": "hln"}},
+        )
+    )
+    assert spec.evaluation.test_options["dm"]["kernel"] == "bartlett"
+
+    with pytest.raises(ValueError, match="unsupported option"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("dm",),
+                test_options={"dm": {"not_a_dm_kwarg": True}},
+            )
+        )
 
 
 # --------------------------------------------------------------------------- #

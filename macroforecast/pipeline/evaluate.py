@@ -63,6 +63,11 @@ def _eval_loss(spec: PipelineSpec) -> Callable[[Any, Any], Any] | None:
     return getattr(spec.evaluation, "loss", None)
 
 
+def _eval_test_options(spec: PipelineSpec, test_name: str) -> dict[str, Any]:
+    options = getattr(spec.evaluation, "test_options", {}) or {}
+    return dict(options.get(test_name, {}))
+
+
 def _eval_calibration_alpha(spec: PipelineSpec) -> float:
     return float(getattr(spec.evaluation, "calibration_alpha", 0.05))
 
