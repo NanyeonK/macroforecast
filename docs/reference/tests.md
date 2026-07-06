@@ -894,6 +894,38 @@ backend and then applies the stepdown procedure. The objective is aligned, but
 the inputs are higher level in `macroforecast`: forecast-loss panel in,
 superior model names out.
 
+### multi_horizon_spa_test
+
+```python
+macroforecast.tests.multi_horizon_spa_test(
+    loss_a,
+    loss_b=None,
+    *,
+    statistic="uspa",
+    weights=None,
+    alpha=0.05,
+    n_boot=999,
+    block_length=3,
+    hac_bandwidth="auto",
+    random_state=0,
+    alternative="greater",
+) -> TestResult
+```
+
+Pairwise multi-horizon SPA test from Quaedvlieg (2021, JBES). The input is a
+loss-differential panel with one column per horizon, or two aligned loss panels
+where the differential is `loss_a - loss_b`. `statistic="uspa"` uses the
+minimum of the horizon-specific studentized statistics; `statistic="aspa"` uses
+the studentized weighted average, with equal weights by default. The test is
+one-sided: positive differentials favor `loss_b` under the two-panel contract.
+
+Defaults follow the paper's simulation section where possible:
+`block_length=3` and `n_boot=999`. The original statistic uses a Quadratic
+Spectral HAC estimator; bootstrap statistics use the natural block-mean
+variance estimator from Algorithm 1. `hac_bandwidth="auto"` uses this module's
+standard automatic HAC bandwidth convention because the paper specifies the QS
+kernel but not a fixed bandwidth in Algorithm 1.
+
 ### model_confidence_set
 
 ```python

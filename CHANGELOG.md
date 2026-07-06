@@ -165,6 +165,12 @@ full per-version honesty-pass history embedded in repo documentation.
   and threads bootstrap/window controls to the underlying public callables. The
   default `EvalSpec()` path remains byte-identical, pinned by the existing
   golden tests.
+- `tests.py` (feature): added public `multi_horizon_spa_test(...)` implementing
+  Quaedvlieg (2021) pairwise multi-horizon SPA in uniform (`"uspa"`) and
+  average (`"aspa"`) modes. It accepts a horizon-wise loss-differential panel
+  or two aligned loss panels, uses a Quadratic Spectral HAC original statistic,
+  and uses the moving-block bootstrap/natural block-variance Algorithm 1 path
+  with paper simulation defaults `block_length=3`, `n_boot=999`.
 - `deps` (WP-A4, torch install + Tier-1 anchor coverage completion): CPU-only
   `torch` (`pip install torch --index-url
   https://download.pytorch.org/whl/cpu`) installed into the shared dev
