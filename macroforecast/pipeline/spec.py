@@ -9,6 +9,8 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+import importlib.util
+import inspect
 from typing import Any, Literal, cast
 
 
@@ -108,22 +110,96 @@ class CombinationContender:
     shrink_to_equal: float | None = None
 
 
-#: Test names ``EvalSpec.tests`` currently wires into the evaluation. ``spa``/``gr``
-#: (superior predictive ability / Giacomini-Rossi) are recognized elsewhere in the
-#: package but not yet threaded through the pipeline evaluator -- passing them
-#: raises at :func:`pipeline_spec` build time rather than being silently dropped.
+#: Test names ``EvalSpec.tests`` currently wires into the evaluation. The pairwise
+#: benchmark-comparison names include the historical ``dm``/``cw`` plus GW,
+#: nested encompassing, directional-accuracy, and Giacomini-Rossi fluctuation
+#: tests.
 #: ``berkowitz``/``pit_autocorr``/``coverage`` are the PIT-based calibration tests
 #: (Phase 1 density pipeline): they populate ``report.calibration`` instead of
 #: ``report.significance`` and are never on by default (see ``EvalSpec.tests``'s
 #: docstring below).
 SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
-    {"dm", "cw", "mcs", "berkowitz", "pit_autocorr", "coverage"}
+    {
+        "dm", "cw", "gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mcs",
+        "spa", "rc", "stepm", "uspa", "aspa", "berkowitz", "pit_autocorr",
+        "coverage",
+    }
 )
+_ARCH_BACKED_EVAL_TESTS: frozenset[str] = frozenset({"spa", "rc", "stepm"})
 
 #: The subset of :data:`SUPPORTED_EVAL_TESTS` that are PIT-based calibration
 #: diagnostics: they run in ``pipeline/evaluate.py::calibration_table`` and land
 #: in ``PipelineReport.calibration``, not ``significance``/``mcs``.
 CALIBRATION_EVAL_TESTS: frozenset[str] = frozenset({"berkowitz", "pit_autocorr", "coverage"})
+
+
+def _arch_available() -> bool:
+    return importlib.util.find_spec("arch") is not None
+
+
+_EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
+    "dm": ("macroforecast.tests", "dm_test"),
+    "cw": ("macroforecast.tests", "clark_west_test"),
+    "gw": ("macroforecast.tests", "giacomini_white_test"),
+    "enc_new": ("macroforecast.tests", "enc_new_test"),
+    "enc_t": ("macroforecast.tests", "enc_t_test"),
+    "pt": ("macroforecast.tests", "directional_accuracy_test"),
+    "hm": ("macroforecast.tests", "directional_accuracy_test"),
+    "ag": ("macroforecast.tests", "directional_accuracy_test"),
+    "gr": ("macroforecast.tests", "conditional_predictive_ability_test"),
+    "mcs": ("macroforecast.tests", "model_confidence_set"),
+    "spa": ("macroforecast.tests", "superior_predictive_ability_test"),
+    "rc": ("macroforecast.tests", "reality_check_test"),
+    "stepm": ("macroforecast.tests", "stepm_test"),
+    "uspa": ("macroforecast.tests", "multi_horizon_spa_test"),
+    "aspa": ("macroforecast.tests", "multi_horizon_spa_test"),
+    "berkowitz": ("macroforecast.tests", "density_interval_tests"),
+    "pit_autocorr": ("macroforecast.tests", "density_interval_tests"),
+    "coverage": ("macroforecast.tests", "interval_coverage_test"),
+}
+
+
+def _accepted_eval_test_options(test_name: str) -> frozenset[str]:
+    """Keyword option names accepted by the public callable backing a pipeline test."""
+
+    import importlib
+
+    try:
+        module_name, function_name = _EVAL_TEST_OPTION_TARGETS[test_name]
+    except KeyError:
+        return frozenset()
+    function = getattr(importlib.import_module(module_name), function_name)
+    signature = inspect.signature(function)
+    if any(param.kind is inspect.Parameter.VAR_KEYWORD for param in signature.parameters.values()):
+        return frozenset()
+    return frozenset(
+        name
+        for name, param in signature.parameters.items()
+        if param.kind is inspect.Parameter.KEYWORD_ONLY
+    )
+
+
+def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
+    """Fail fast when ``EvalSpec.test_options`` cannot be consumed safely."""
+
+    requested = set(evaluation.tests)
+    option_tests = set(evaluation.test_options)
+    missing = option_tests - requested
+    if missing:
+        raise ValueError(
+            f"evaluation.test_options contains option block(s) for test(s) "
+            f"{sorted(missing)} that are not present in evaluation.tests "
+            f"{sorted(requested)}"
+        )
+    for test_name, options in evaluation.test_options.items():
+        accepted = _accepted_eval_test_options(str(test_name))
+        unknown = set(options) - accepted
+        if unknown:
+            raise ValueError(
+                f"evaluation.test_options[{test_name!r}] contains unsupported "
+                f"option name(s) {sorted(unknown)}; accepted options for "
+                f"{test_name!r} are {sorted(accepted)}"
+            )
 
 
 @dataclass(frozen=True)
@@ -147,10 +223,24 @@ class EvalSpec:
 
     ``tests`` lists which significance tests actually run; unsupported names
     raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
+    Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
+    ``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
+    ``"ag"`` are directional-accuracy tests for the contender's own sign
+    forecasts, evaluated on the same benchmark-aligned sample for consistency
+    with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
+    and ``"aspa"``; they require at least two horizons and use ``"joint"`` as
+    their significance-table horizon sentinel. Full-set benchmark comparisons are ``"mcs"``,
+    ``"spa"``, ``"rc"``, and ``"stepm"``; they populate ``PipelineReport.mcs``.
+    ``"spa"``, ``"rc"``, and ``"stepm"`` require the ``arch`` extra
+    (``pip install "macroforecast[arch]"``).
     ``"berkowitz"``/``"pit_autocorr"``/``"coverage"`` are PIT-based calibration
     diagnostics (Phase 1 density pipeline) -- they populate
     ``PipelineReport.calibration`` rather than ``significance``/``mcs`` and,
     like every other test name, are opt-in only (absent from the default).
+    ``test_options`` maps a requested test name to keyword options for that
+    test's underlying public callable. Option blocks are validated when
+    :func:`pipeline_spec` is built: the key must appear in ``tests`` and every
+    option name must be accepted by that test's callable.
 
     Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
     ``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
@@ -181,6 +271,7 @@ class EvalSpec:
     subsamples: Mapping[str, tuple[Any, Any]] = field(default_factory=dict)
     dm_kwargs: Mapping[str, Any] = field(default_factory=dict)
     loss: Callable[[Any, Any], Any] | None = None
+    test_options: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     calibration_alpha: float = 0.05
 
 
@@ -800,10 +891,22 @@ def pipeline_spec(
     if unknown_tests:
         raise ValueError(
             f"evaluation.tests contains unsupported name(s) {sorted(unknown_tests)}; "
-            f"supported tests are {sorted(SUPPORTED_EVAL_TESTS)} ('spa'/'gr' are "
-            "recognized elsewhere in macroforecast.tests but not yet wired into "
-            "the pipeline evaluator)."
+            f"supported tests are {sorted(SUPPORTED_EVAL_TESTS)}."
         )
+    requested_arch_tests = _ARCH_BACKED_EVAL_TESTS & set(evaluation.tests)
+    if requested_arch_tests and not _arch_available():
+        raise ImportError(
+            f"evaluation.tests contains arch-backed test(s) "
+            f"{sorted(requested_arch_tests)}, but the optional arch backend is "
+            'not installed; install it with pip install "macroforecast[arch]".'
+        )
+    if {"uspa", "aspa"} & set(evaluation.tests) and len(horizon_tuple) < 2:
+        raise ValueError(
+            "evaluation.tests contains multi-horizon test(s) 'uspa'/'aspa', "
+            "but the spec has only one horizon; request at least two horizons "
+            "or remove the joint multi-horizon test."
+        )
+    _validate_eval_test_options(evaluation)
 
     # Warn (never reject) when a guarded iterated/state-space model is combined
     # with a direct-like forecast policy -- see DIRECT_POLICY_GUARD_MODELS above.

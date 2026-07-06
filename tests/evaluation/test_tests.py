@@ -249,6 +249,50 @@ def test_nested_encompassing_statistics_match_reference_formulas() -> None:
     assert enc_new.metadata["external_reference"].startswith("Stata forecast encompassing example")
 
 
+def test_multi_horizon_spa_test_returns_uspa_and_aspa_results() -> None:
+    base = pd.DataFrame(
+        {
+            "h1": [1.20, 1.10, 1.30, 1.15, 1.25, 1.18, 1.22, 1.28, 1.12],
+            "h2": [1.05, 1.00, 1.10, 1.02, 1.08, 1.04, 1.09, 1.06, 1.03],
+        }
+    )
+    improved = base - pd.DataFrame(
+        {
+            "h1": [0.20, 0.15, 0.18, 0.16, 0.19, 0.17, 0.20, 0.18, 0.16],
+            "h2": [0.10, 0.11, 0.09, 0.12, 0.10, 0.11, 0.09, 0.10, 0.12],
+        }
+    )
+
+    uspa = mf.tests.multi_horizon_spa_test(
+        base,
+        improved,
+        statistic="uspa",
+        n_boot=99,
+        block_length=3,
+        random_state=11,
+    )
+    aspa = mf.tests.multi_horizon_spa_test(
+        base,
+        improved,
+        statistic="aspa",
+        weights=[0.25, 0.75],
+        n_boot=99,
+        block_length=3,
+        random_state=11,
+    )
+
+    assert isinstance(uspa, mf.tests.TestResult)
+    assert isinstance(aspa, mf.tests.TestResult)
+    assert uspa.statistic > 0
+    assert aspa.statistic > 0
+    assert 0.0 <= uspa.p_value <= 1.0
+    assert 0.0 <= aspa.p_value <= 1.0
+    assert uspa.metadata["statistic"] == "uspa"
+    assert aspa.metadata["statistic"] == "aspa"
+    assert uspa.metadata["block_length"] == 3
+    assert aspa.metadata["weights"] == [0.25, 0.75]
+
+
 def test_direction_density_and_residual_diagnostics() -> None:
     y_true = pd.Series([1.0, -1.0, 2.0, -0.5, 0.8, -0.2])
     y_pred = pd.Series([0.7, -0.8, 1.5, 0.1, 0.9, -0.3])
@@ -904,7 +948,7 @@ def test_model_confidence_set_is_exact_mcs_canonical_callable() -> None:
 
 
 def test_arch_multiple_comparison_callables_return_backend_results() -> None:
-    pytest.importorskip("arch.bootstrap")
+    pytest.importorskip("arch")
     loss_panel = pd.DataFrame(
         {
             "target": ["y"] * 36,

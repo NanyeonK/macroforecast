@@ -134,11 +134,9 @@ full per-version honesty-pass history embedded in repo documentation.
   `macroforecast.metrics.get_metric`, or a callable `metric(y_true, y_pred) ->
   float` named by `__name__`) per contender on the same pairwise-vs-benchmark
   sample it always used; `significance_table`/`mcs_table` run only the named
-  tests (`"dm"`/`"cw"`/`"mcs"`), with `"cw"` still additionally gated by
-  `cw_for_nested`. An unsupported test name (anything but `dm`/`cw`/`mcs` --
-  `spa`/`gr` are not yet wired into the pipeline evaluator) now raises
-  `ValueError` at `pipeline_spec(...)` build time instead of being silently
-  dropped. The three default metrics keep their existing benchmark-relative
+  tests, with `"cw"` still additionally gated by `cw_for_nested`. Unsupported
+  test names now raise `ValueError` at `pipeline_spec(...)` build time instead
+  of being silently dropped. The three default metrics keep their existing benchmark-relative
   formulas byte-for-byte, pinned by a golden test
   (`tests/pipeline/test_evalspec_threading.py`) captured from the pre-fix
   `evaluate()` output on a fixed master forecast frame. `rescore()` inherits
@@ -157,6 +155,27 @@ full per-version honesty-pass history embedded in repo documentation.
   silently computing it against the wrong loss -- DM and MCS are loss-agnostic
   and are unaffected. See `docs/reference/pipeline.md` ("Custom metrics,
   significance tests, and loss").
+- `pipeline/spec.py`, `pipeline/evaluate.py` (feature): `EvalSpec.tests` now
+  wires the existing standalone forecast-comparison library into pipeline
+  reports beyond the historical DM/CW/MCS trio. New opt-in pairwise
+  `PipelineReport.significance` rows cover `"gw"`, `"enc_new"`, `"enc_t"`,
+  `"pt"`, `"hm"`, `"ag"`, and `"gr"`; full-set benchmark comparisons
+  `"spa"`, `"rc"`, and `"stepm"` append rows to `PipelineReport.mcs`. New
+  `EvalSpec.test_options` validates per-test keyword options at spec-build time
+  and threads bootstrap/window controls to the underlying public callables. The
+  default `EvalSpec()` path remains byte-identical, pinned by the existing
+  golden tests.
+- `tests.py` (feature): added public `multi_horizon_spa_test(...)` implementing
+  Quaedvlieg (2021) pairwise multi-horizon SPA in uniform (`"uspa"`) and
+  average (`"aspa"`) modes. It accepts a horizon-wise loss-differential panel
+  or two aligned loss panels, uses a Quadratic Spectral HAC original statistic,
+  and uses the moving-block bootstrap/natural block-variance Algorithm 1 path
+  with paper simulation defaults `block_length=3`, `n_boot=999`.
+- `pipeline/spec.py`, `pipeline/evaluate.py` (feature): `EvalSpec.tests`
+  accepts `"uspa"`/`"aspa"` for joint multi-horizon pairwise comparison across
+  all horizons of each target/contender/benchmark triple. Results append
+  `PipelineReport.significance` rows with `horizon="joint"`; single-horizon
+  specs requesting either test fail fast at `pipeline_spec(...)` build time.
 - `deps` (WP-A4, torch install + Tier-1 anchor coverage completion): CPU-only
   `torch` (`pip install torch --index-url
   https://download.pytorch.org/whl/cpu`) installed into the shared dev

@@ -1165,6 +1165,145 @@ def conditional_predictive_ability_test(
     })
 
 
+def multi_horizon_spa_test(
+    loss_a: Any,
+    loss_b: Any | None = None,
+    *,
+    statistic: str = "uspa",
+    weights: Sequence[float] | None = None,
+    alpha: float = 0.05,
+    n_boot: int = 999,
+    block_length: int = 3,
+    hac_bandwidth: int | str = "auto",
+    random_state: int = 0,
+    alternative: str = "greater",
+) -> TestResult:
+    """Quaedvlieg (2021) multi-horizon SPA test for one pair of models.
+
+    The input is a loss-differential panel with one column per horizon. Pass a
+    single panel as ``loss_a`` to use it directly, or pass two aligned loss
+    panels and the differential is ``loss_a - loss_b``. With the two-panel
+    contract, positive means model ``loss_b`` has lower loss than model
+    ``loss_a``. ``statistic="uspa"`` tests uniform superior predictive ability
+    with the minimum horizon-specific studentized statistic; ``"aspa"`` tests
+    average superior predictive ability with the studentized weighted average.
+
+    Implementation notes
+    --------------------
+    Quaedvlieg's Algorithm 1 uses a moving-block bootstrap for studentized
+    statistics and, in the simulation section, sets block length to 3 and
+    ``B=999``. Those are the defaults here. The paper specifies a Quadratic
+    Spectral HAC estimator for the original statistic but does not pin the HAC
+    bandwidth in Algorithm 1; ``hac_bandwidth="auto"`` uses the same automatic
+    bandwidth convention as this module's other HAC helpers, while an integer
+    pins it. Bootstrap statistics use the paper's natural block-mean variance
+    estimator.
+    """
+
+    _validate_alpha(alpha)
+    n_boot = _validate_positive_int(n_boot, "n_boot")
+    block_length = _validate_positive_int(block_length, "block_length")
+    statistic_key = str(statistic).lower().replace("-", "_")
+    if statistic_key not in {"uspa", "uniform", "uniform_spa", "aspa", "average", "average_spa"}:
+        raise ValueError("statistic must be 'uspa' or 'aspa'")
+    statistic_key = "aspa" if statistic_key in {"aspa", "average", "average_spa"} else "uspa"
+    alternative = _normalize_alternative(alternative)
+    if alternative == "two_sided":
+        raise ValueError("multi_horizon_spa_test supports one-sided alternatives 'greater' or 'less'")
+
+    diff_frame = _multi_horizon_loss_differential_frame(loss_a, loss_b)
+    if alternative == "less":
+        diff_frame = -diff_frame
+    n_obs, n_horizons = diff_frame.shape
+    if n_horizons < 2:
+        raise ValueError("multi_horizon_spa_test requires at least two horizon columns")
+    if block_length > n_obs:
+        raise ValueError("block_length must be no larger than the number of aligned observations")
+    diff = diff_frame.to_numpy(dtype=float)
+    weights_arr = _multi_horizon_weights(weights, n_horizons)
+    means = diff.mean(axis=0)
+    sqrt_n = math.sqrt(n_obs)
+
+    horizon_denoms = np.array([
+        math.sqrt(max(_quadratic_spectral_lrv(diff[:, idx], hac_bandwidth), 1e-12))
+        for idx in range(n_horizons)
+    ])
+    horizon_stats = sqrt_n * means / horizon_denoms
+    if statistic_key == "uspa":
+        observed = float(np.min(horizon_stats))
+    else:
+        weighted = diff @ weights_arr
+        weighted_mean = float(weighted.mean())
+        weighted_denom = math.sqrt(max(_quadratic_spectral_lrv(weighted, hac_bandwidth), 1e-12))
+        observed = float(sqrt_n * weighted_mean / weighted_denom)
+
+    rng = np.random.default_rng(random_state)
+    boot_stats: np.ndarray = np.empty(n_boot, dtype=float)
+    for boot_id in range(n_boot):
+        indices = _moving_block_bootstrap_indices(n_obs, block_length, rng)
+        boot = diff[indices]
+        boot_means = boot.mean(axis=0)
+        if statistic_key == "uspa":
+            boot_denoms = _natural_block_std(boot, block_length)
+            boot_stats[boot_id] = float(np.min(sqrt_n * (boot_means - means) / boot_denoms))
+        else:
+            boot_weighted = boot @ weights_arr
+            boot_weighted_mean = float(boot_weighted.mean())
+            boot_denom = float(_natural_block_std(boot_weighted.reshape(-1, 1), block_length)[0])
+            original_weighted_mean = float(means @ weights_arr)
+            boot_stats[boot_id] = sqrt_n * (boot_weighted_mean - original_weighted_mean) / boot_denom
+
+    critical_value = float(np.quantile(boot_stats, 1.0 - alpha))
+    p_value = float(np.mean(boot_stats >= observed))
+    decision = bool(observed > critical_value)
+    mean_diff = float(means @ weights_arr) if statistic_key == "aspa" else float(np.min(means))
+    return TestResult(
+        statistic=observed,
+        p_value=p_value,
+        decision=decision,
+        alternative=alternative,
+        correction_policy="moving_block_bootstrap",
+        n_obs=int(n_obs),
+        metadata={
+            "name": "Multi-horizon SPA",
+            "statistic": statistic_key,
+            "horizons": [str(column) for column in diff_frame.columns],
+            "n_horizons": int(n_horizons),
+            "mean_loss_difference": mean_diff,
+            "horizon_mean_loss_differences": [float(value) for value in means],
+            "horizon_statistics": [float(value) for value in horizon_stats],
+            "weights": [float(value) for value in weights_arr],
+            "alpha": float(alpha),
+            "critical_value": critical_value,
+            "n_boot": int(n_boot),
+            "block_length": int(block_length),
+            "hac_kernel": "quadratic_spectral",
+            "hac_bandwidth": hac_bandwidth,
+            "random_state": int(random_state),
+            "p_value_reference": "moving-block bootstrap upper-tail p-value",
+            "null_hypothesis": (
+                "uniform multi-horizon SPA is <= 0"
+                if statistic_key == "uspa"
+                else "weighted-average multi-horizon SPA is <= 0"
+            ),
+            "loss_difference_orientation": (
+                "single-panel input is used as supplied; two-panel input uses "
+                "loss_a - loss_b, so positive values favor loss_b"
+            ),
+            "source_reference": (
+                "Quaedvlieg (2021), Journal of Business & Economic Statistics "
+                "39(1), Algorithm 1"
+            ),
+            "implementation_notes": (
+                "Original statistic uses a Quadratic Spectral HAC diagonal "
+                "estimator; bootstrap statistics use the natural block-mean "
+                "variance estimator. Defaults block_length=3 and n_boot=999 "
+                "follow the paper's simulation section."
+            ),
+        },
+    )
+
+
 def model_confidence_set(
     loss_panel: pd.DataFrame,
     *,
@@ -3984,6 +4123,94 @@ def _resolve_block_length(matrix: np.ndarray, value: int | str) -> int:
     return min(block, max(1, n // 2))
 
 
+def _multi_horizon_loss_differential_frame(loss_a: Any, loss_b: Any | None) -> pd.DataFrame:
+    left = pd.DataFrame(loss_a).copy()
+    if loss_b is None:
+        frame = left
+    else:
+        right = pd.DataFrame(loss_b).copy()
+        left, right = left.align(right, join="inner", axis=None)
+        if left.shape != right.shape:
+            raise ValueError("loss_a and loss_b must have the same aligned shape")
+        frame = left.astype(float) - right.astype(float)
+    frame = frame.apply(pd.to_numeric, errors="coerce").dropna(axis=0, how="any")
+    if frame.empty:
+        raise ValueError("loss panels must have aligned non-missing observations")
+    if frame.shape[0] < 4:
+        raise ValueError("multi_horizon_spa_test requires at least four aligned observations")
+    return frame
+
+
+def _multi_horizon_weights(weights: Sequence[float] | None, n_horizons: int) -> np.ndarray:
+    if weights is None:
+        return np.full(n_horizons, 1.0 / n_horizons, dtype=float)
+    arr = np.asarray(list(weights), dtype=float)
+    if arr.shape != (n_horizons,):
+        raise ValueError("weights must have one value per horizon column")
+    if not np.all(np.isfinite(arr)):
+        raise ValueError("weights must be finite")
+    total = float(arr.sum())
+    if abs(total) <= 1e-12:
+        raise ValueError("weights must sum to a non-zero value")
+    return arr / total
+
+
+def _quadratic_spectral_lrv(values: np.ndarray, bandwidth: int | str = "auto") -> float:
+    clean = np.asarray(values, dtype=float)
+    n = clean.size
+    centered = clean - clean.mean()
+    gamma0 = float(np.dot(centered, centered) / n)
+    if isinstance(bandwidth, (int, np.integer)) and int(bandwidth) > 0:
+        bw = float(int(bandwidth))
+    elif isinstance(bandwidth, str) and bandwidth.isdigit() and int(bandwidth) > 0:
+        bw = float(int(bandwidth))
+    elif str(bandwidth).lower() == "auto":
+        bw = float(max(1, int(np.floor(4.0 * (n / 100.0) ** (2.0 / 9.0)))))
+    else:
+        raise ValueError("hac_bandwidth must be a positive integer or 'auto'")
+    variance = gamma0
+    for lag in range(1, n):
+        gamma = float(np.dot(centered[:-lag], centered[lag:]) / n)
+        x = lag / bw
+        z = 6.0 * math.pi * x / 5.0
+        if abs(z) <= 1e-12:
+            weight = 1.0
+        else:
+            weight = (25.0 / (12.0 * math.pi**2 * x**2)) * (math.sin(z) / z - math.cos(z))
+        variance += 2.0 * weight * gamma
+    return float(max(variance, 0.0))
+
+
+def _moving_block_bootstrap_indices(
+    n_obs: int,
+    block_length: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    if block_length <= 1:
+        return rng.integers(0, n_obs, size=n_obs)
+    n_blocks = int(np.ceil(n_obs / block_length))
+    starts = rng.integers(0, n_obs - block_length + 1, size=n_blocks)
+    indices = np.concatenate([start + np.arange(block_length) for start in starts])
+    return indices[:n_obs].astype(np.int64)
+
+
+def _natural_block_std(values: np.ndarray, block_length: int) -> np.ndarray:
+    arr = np.asarray(values, dtype=float)
+    if arr.ndim == 1:
+        arr = arr.reshape(-1, 1)
+    n_obs, n_cols = arr.shape
+    usable = (n_obs // block_length) * block_length
+    if usable < block_length:
+        std = arr.std(axis=0, ddof=1)
+        return np.maximum(std, 1e-12)
+    trimmed = arr[:usable]
+    centered = trimmed - arr.mean(axis=0)
+    blocks = centered.reshape(usable // block_length, block_length, n_cols)
+    block_sums = blocks.sum(axis=1) / math.sqrt(block_length)
+    variances = np.mean(block_sums**2, axis=0)
+    return np.sqrt(np.maximum(variances, 1e-12))
+
+
 def _resolve_mcs_block_length(matrix: np.ndarray, value: int | str, *, min_k: int = 3) -> int:
     n = matrix.shape[0]
     if n <= 2:
@@ -4184,6 +4411,7 @@ __all__ = [
     "blocked_oob_reality_check",
     "iterative_model_confidence_set",
     "model_confidence_set",
+    "multi_horizon_spa_test",
     "nested_tests",
     "pesaran_timmermann_test",
     "pit_autocorrelation_test",

@@ -35,12 +35,14 @@ pinned master and write its accuracy/significance/mcs -- never regenerate the
 "before" side from the code under test, that would defeat the point of the test.
 """
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
 import pytest
 
 import macroforecast as mf
+import macroforecast.pipeline.spec as spec_mod
 from macroforecast.pipeline import (
     Arm, EvalSpec, TargetSpec, evaluate, pipeline_spec, rescore, run_pipeline,
 )
@@ -82,6 +84,37 @@ def _spec(**over):
 
 def _golden_master() -> pd.DataFrame:
     return pd.read_parquet(_GOLDEN_DIR / "evalspec_defaults_master.parquet")
+
+
+def _multi_horizon_master() -> pd.DataFrame:
+    rows = []
+    for origin in range(12):
+        for horizon in (1, 2):
+            actual = 10.0 + 0.2 * origin + 0.1 * horizon
+            rows.extend(
+                [
+                    {
+                        "target": "y", "horizon": horizon, "origin": origin,
+                        "date": pd.Timestamp("2000-01-31") + pd.offsets.MonthEnd(origin),
+                        "contender": "AR", "prediction": actual + 0.50 + 0.02 * horizon,
+                        "actual": actual,
+                    },
+                    {
+                        "target": "y", "horizon": horizon, "origin": origin,
+                        "date": pd.Timestamp("2000-01-31") + pd.offsets.MonthEnd(origin),
+                        "contender": "OLS", "prediction": actual + 0.15 + 0.01 * ((origin + horizon) % 3),
+                        "actual": actual,
+                    },
+                    {
+                        "target": "y", "horizon": horizon, "origin": origin,
+                        "date": pd.Timestamp("2000-01-31") + pd.offsets.MonthEnd(origin),
+                        "contender": "RIDGE",
+                        "prediction": actual + (0.18 if horizon == 1 else 0.46) + 0.01 * (origin % 2),
+                        "actual": actual,
+                    },
+                ]
+            )
+    return pd.DataFrame(rows)
 
 
 # --------------------------------------------------------------------------- #
@@ -178,7 +211,255 @@ def test_tests_empty_gives_accuracy_only():
 
 def test_unknown_test_name_raises_at_spec_build_time():
     with pytest.raises(ValueError, match="unsupported"):
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "not_a_real_test")))
+
+
+def test_arch_backed_tests_require_arch_extra(monkeypatch):
+    monkeypatch.setattr(spec_mod, "_arch_available", lambda: False)
+
+    with pytest.raises(ImportError) as excinfo:
         _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "spa")))
+
+    message = str(excinfo.value)
+    assert "spa" in message
+    assert 'pip install "macroforecast[arch]"' in message
+
+
+def test_test_options_must_reference_requested_tests():
+    with pytest.raises(ValueError, match="test_options"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("dm",),
+                test_options={"mcs": {"n_boot": 25}},
+            )
+        )
+
+
+def test_test_options_validate_underlying_callable_kwargs():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm",),
+            test_options={"dm": {"kernel": "bartlett", "correction": "hln"}},
+        )
+    )
+    assert spec.evaluation.test_options["dm"]["kernel"] == "bartlett"
+
+    with pytest.raises(ValueError, match="unsupported option"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("dm",),
+                test_options={"dm": {"not_a_dm_kwarg": True}},
+            )
+        )
+
+
+def test_wired_pairwise_tests_emit_long_significance_rows():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"),
+        )
+    )
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert {"target", "horizon", "contender", "test", "statistic", "p_value", "reject", "n_obs"} <= set(sig.columns)
+    rows = sig.dropna(subset=["test"])
+    assert set(rows["test"]) == {"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"}
+    for name in {"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"}:
+        assert set(rows.loc[rows["test"] == name, "contender"]) == {"OLS", "RIDGE"}
+
+
+def test_pairwise_test_options_reach_underlying_callable(monkeypatch):
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("gw",),
+            test_options={"gw": {"small_sample": False, "alpha": 0.2}},
+        )
+    )
+    calls = []
+
+    def spy(loss_a, loss_b, *, horizon=1, instruments=None, alpha=0.05, small_sample=True):
+        calls.append(
+            {
+                "horizon": horizon,
+                "alpha": alpha,
+                "small_sample": small_sample,
+                "n": len(loss_a),
+            }
+        )
+        return mf.tests.TestResult(
+            statistic=1.0,
+            p_value=0.5,
+            decision=False,
+            alternative="conditional_equal_predictive_ability",
+            n_obs=len(loss_a),
+        )
+
+    monkeypatch.setattr(mf.tests, "giacomini_white_test", spy)
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert len(calls) == 2
+    assert {call["small_sample"] for call in calls} == {False}
+    assert {call["alpha"] for call in calls} == {0.2}
+    assert set(sig["test"]) == {"gw"}
+    assert set(sig["statistic"]) == {1.0}
+
+
+def test_custom_loss_skips_nested_quadratic_pairwise_tests_with_warning():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("gw", "enc_new", "enc_t"),
+            loss=_abs_loss,
+        )
+    )
+    with pytest.warns(UserWarning, match="ENC-NEW"):
+        sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert set(sig["test"]) == {"gw"}
+
+
+def test_set_comparison_tests_land_in_mcs_report():
+    pytest.importorskip("arch")
+
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("spa", "rc", "stepm"),
+            test_options={
+                "spa": {"n_boot": 25, "block_length": 2},
+                "rc": {"n_boot": 25, "block_length": 2},
+                "stepm": {"n_boot": 25, "block_length": 2},
+            },
+        )
+    )
+    res = evaluate(_golden_master(), spec)
+
+    assert res["significance"].empty
+    mcs = res["mcs"]
+    assert {"target", "horizon", "contender", "test", "superior", "reject", "n_obs"} <= set(mcs.columns)
+    assert set(mcs["test"]) == {"spa", "rc", "stepm"}
+    for name in {"spa", "rc", "stepm"}:
+        assert set(mcs.loc[mcs["test"] == name, "contender"]) == {"OLS", "RIDGE"}
+
+
+def test_set_comparison_test_options_reach_underlying_callable(monkeypatch):
+    pytest.importorskip("arch")
+
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("spa",),
+            test_options={"spa": {"n_boot": 17, "block_length": 2, "random_state": 123}},
+        )
+    )
+    calls = []
+
+    def spy(loss_panel, *, benchmark, loss="squared_error", alpha=0.05, n_boot=1000,
+            block_length="auto", bootstrap_method="stationary_bootstrap",
+            p_value_type="consistent", studentize=True, nested=False,
+            random_state=0, target="target", horizon="horizon", origin="origin",
+            model="model_id"):
+        calls.append(
+            {
+                "benchmark": benchmark,
+                "loss": loss,
+                "n_boot": n_boot,
+                "block_length": block_length,
+                "random_state": random_state,
+                "rows": len(loss_panel),
+            }
+        )
+        return {
+            "records": [
+                {
+                    "target": "y",
+                    "horizon": 1,
+                    "benchmark": benchmark,
+                    "superior_models": ["OLS"],
+                    "decision": True,
+                    "p_value": 0.01,
+                    "n_obs": 9,
+                    "n_models": 2,
+                    "mean_loss_difference": {"OLS": 0.25, "RIDGE": -0.10},
+                    "status": "computed",
+                }
+            ]
+        }
+
+    monkeypatch.setattr(mf.tests, "superior_predictive_ability_test", spy)
+
+    mcs = evaluate(_golden_master(), spec)["mcs"]
+
+    assert calls == [
+        {
+            "benchmark": "AR",
+            "loss": "squared_error",
+            "n_boot": 17,
+            "block_length": 2,
+            "random_state": 123,
+            "rows": len(_golden_master()),
+        }
+    ]
+    assert set(mcs["test"]) == {"spa"}
+    assert bool(mcs.loc[mcs["contender"] == "OLS", "superior"].iloc[0]) is True
+    assert mcs.loc[mcs["contender"] == "RIDGE", "mean_loss_difference"].iloc[0] == -0.10
+
+
+def test_joint_multi_horizon_tests_emit_joint_significance_rows_and_do_not_affect_paper_table():
+    spec = _spec(
+        horizons=[1, 2],
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm", "uspa", "aspa"),
+            test_options={
+                "uspa": {"n_boot": 99, "block_length": 3, "random_state": 7},
+                "aspa": {"n_boot": 99, "block_length": 3, "random_state": 7},
+            },
+        ),
+    )
+    res = evaluate(_multi_horizon_master(), spec)
+    sig = res["significance"]
+    joint = sig.loc[sig["horizon"] == "joint"]
+
+    assert set(joint["test"]) == {"uspa", "aspa"}
+    for name in {"uspa", "aspa"}:
+        assert set(joint.loc[joint["test"] == name, "contender"]) == {"OLS", "RIDGE"}
+    assert set(joint["n_horizons"]) == {2}
+
+    table = mf.reporting.paper_accuracy_table(SimpleNamespace(**res))
+    assert "hjoint" not in table.data.columns
+    assert {"h1", "h2"} <= set(table.data.columns)
+
+
+def test_joint_multi_horizon_tests_require_multiple_horizons():
+    with pytest.raises(ValueError, match="multi-horizon"):
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("uspa",)))
+
+
+def test_end_to_end_report_with_dm_gw_gr_and_spa_is_coherent():
+    pytest.importorskip("arch")
+
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm", "gw", "gr", "spa"),
+            test_options={"spa": {"n_boot": 25, "block_length": 2}},
+        )
+    )
+    res = evaluate(_golden_master(), spec)
+
+    assert not res["accuracy"].empty
+    assert {"dm_stat", "dm_p"} <= set(res["significance"].columns)
+    long = res["significance"].dropna(subset=["test"])
+    assert set(long["test"]) == {"gw", "gr"}
+    assert set(res["mcs"]["test"]) == {"spa"}
+    assert set(res["mcs"]["contender"]) == {"OLS", "RIDGE"}
 
 
 # --------------------------------------------------------------------------- #
