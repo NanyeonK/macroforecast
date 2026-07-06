@@ -1197,6 +1197,12 @@ def _run_vintage_aware(
             continue
 
         panel = _vintage_work_panel(bundle, reference_index)
+        cache_key = (
+            _preprocessing_cache_key(item, vintage_id=vintage_id)
+            if (preprocessing_cache is not None or preprocessing_store is not None)
+            else None
+        )
+        vintage_store = _vintage_preprocessing_store(preprocessing_store, vintage_id)
         preprocessing_updated = False
         preprocessing_updated = _stage_update_due(
             preprocessing_policy,
@@ -1213,9 +1219,9 @@ def _run_vintage_aware(
             fitted_preprocessing=None
             if preprocessing_updated
             else fitted_preprocessing_cache,
-            preprocessing_cache=None,
-            cache_key=None,
-            preprocessing_store=None,
+            preprocessing_cache=preprocessing_cache,
+            cache_key=cache_key,
+            preprocessing_store=vintage_store,
             target=target,
         )
         if preprocessing_updated:
@@ -1268,7 +1274,8 @@ def _run_vintage_aware(
                 prepared_metadata=prepared_metadata,
                 feature_stage_policy=feature_policy,
                 item=item,
-                preprocessing_cache=None,
+                preprocessing_cache=preprocessing_cache,
+                vintage_id=vintage_id,
             )
             feature_updated = True
             _mark_stage_updated(feature_state, item)
@@ -1502,6 +1509,22 @@ def _vintage_source_kind(source: Any) -> str:
     if kind is not None:
         return str(kind)
     return type(source).__name__
+
+
+def _vintage_preprocessing_store(
+    preprocessing_store: PreprocessorStore | None,
+    vintage_id: Any,
+) -> PreprocessorStore | None:
+    if preprocessing_store is None:
+        return None
+    root = getattr(preprocessing_store, "_root", None)
+    if root is None:
+        return preprocessing_store
+    namespace = {
+        "base": getattr(preprocessing_store, "_namespace", None),
+        "vintage_id": vintage_id,
+    }
+    return PreprocessorStore(root, namespace=namespace)
 
 
 def _vintage_audit_positions(n_origins: int) -> set[int]:
