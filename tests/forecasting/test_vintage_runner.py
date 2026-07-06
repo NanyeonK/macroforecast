@@ -290,6 +290,28 @@ def test_vintage_first_release_actuals_are_resolved_per_target_date() -> None:
     assert latest_table["actual"].tolist() != first_table["actual"].tolist()
 
 
+def test_vintage_change_target_transform_warns_about_revision_footgun() -> None:
+    reference, bundles = _oracle_bundles()
+    spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
+    features = mf.feature_engineering.feature_spec(
+        target="A",
+        predictors=[],
+        lags=None,
+        target_lags=(1,),
+        target_transform="change",
+    )
+
+    with pytest.warns(UserWarning, match="pre-transform the target within each vintage"):
+        mf.forecasting.run(
+            spec,
+            _constant_model(),
+            window=_window(reference),
+            target="A",
+            features=features,
+            save_models=False,
+        )
+
+
 def test_vintage_recursive_policy_uses_per_origin_vintage_rows() -> None:
     reference, bundles = _oracle_bundles()
     spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)

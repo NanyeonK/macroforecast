@@ -132,6 +132,17 @@ _FORECAST_TABLE_COLUMNS = (
     "combination",
 )
 
+_VINTAGE_REVISION_SPANNING_TARGET_TRANSFORMS = frozenset(
+    {
+        "change",
+        "growth",
+        "log_growth",
+        "average_change",
+        "average_growth",
+        "average_log_growth",
+    }
+)
+
 _STAGE_RECORD_COLUMNS = (
     "stage",
     "origin",
@@ -1169,6 +1180,7 @@ def _run_vintage_aware(
         model_input_kind=model_runs[0].spec.input_kind,
         model_name=model_runs[0].spec.name,
     )
+    _warn_vintage_revision_spanning_target_transform(features.target_transform)
 
     reference_index = pd.DatetimeIndex(data.reference_calendar)
     execution_window = _feature_window_for_policy(window_spec, horizon)
@@ -1781,6 +1793,21 @@ def _warn_vintage_embargo(window_spec: WindowSpec) -> None:
         "vintage-aware runs already resolve point-in-time panels; a nonzero "
         "estimation/test embargo may double-purge observations unless it encodes "
         "a dataset-specific publication lag",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
+def _warn_vintage_revision_spanning_target_transform(transform: str | None) -> None:
+    if transform not in _VINTAGE_REVISION_SPANNING_TARGET_TRANSFORMS:
+        return
+    warnings.warn(
+        "vintage-aware run requested a macroforecast-side target_transform "
+        f"({transform!r}) whose construction spans multiple rows. With revised "
+        "data, constructing change/growth targets outside the source can make "
+        "the estimand sensitive to adjacent-date vintage conventions; "
+        "pre-transform the target within each vintage snapshot when that is the "
+        "intended real-time estimand. See docs/guide/vintages.md.",
         UserWarning,
         stacklevel=3,
     )
