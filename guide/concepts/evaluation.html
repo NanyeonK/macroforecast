@@ -513,9 +513,21 @@ predictive accuracy. Valid for any pair of forecasts (nested or non-nested).</p>
 a larger nested model. Valid only when the benchmark is nested within the
 contender (declare <code class="docutils literal notranslate"><span class="pre">nested_in_benchmark=True</span></code> on the arm). The pipeline emits
 CW only for arms that declare nesting; CW is silently invalid otherwise.</p></li>
+<li><p><strong>Additional pairwise tests</strong>: opt in with <code class="docutils literal notranslate"><span class="pre">&quot;gw&quot;</span></code> (Giacomini-White conditional
+predictive ability), <code class="docutils literal notranslate"><span class="pre">&quot;gr&quot;</span></code> (Giacomini-Rossi fluctuation), <code class="docutils literal notranslate"><span class="pre">&quot;enc_new&quot;</span></code> /
+<code class="docutils literal notranslate"><span class="pre">&quot;enc_t&quot;</span></code> (nested encompassing), or <code class="docutils literal notranslate"><span class="pre">&quot;pt&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;hm&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;ag&quot;</span></code> (directional
+accuracy). Directional tests evaluate the contender’s own sign skill on the
+same benchmark-aligned origins.</p></li>
+<li><p><strong>Joint multi-horizon tests</strong>: <code class="docutils literal notranslate"><span class="pre">&quot;uspa&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;aspa&quot;</span></code> run Quaedvlieg-style
+uniform and average SPA jointly across all horizons for each
+target/contender/benchmark triple. They require at least two horizons and land
+in <code class="docutils literal notranslate"><span class="pre">report.significance</span></code> with <code class="docutils literal notranslate"><span class="pre">horizon=&quot;joint&quot;</span></code>.</p></li>
 <li><p><strong>Model Confidence Set (MCS)</strong>: identifies the set of models that cannot be
 statistically distinguished from the best model at a given significance level
 (<code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code>). Uses the iterative elimination algorithm by default.</p></li>
+<li><p><strong>Full-set benchmark tests</strong>: <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rc&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;stepm&quot;</span></code> compare the full
+contender set against the benchmark and land in <code class="docutils literal notranslate"><span class="pre">report.mcs</span></code> alongside MCS.
+They require the <code class="docutils literal notranslate"><span class="pre">arch</span></code> extra (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;macroforecast[arch]&quot;</span></code>).</p></li>
 </ul>
 </section>
 <section id="choosing-the-benchmark">
@@ -593,7 +605,9 @@ MCS settings. Pass it to <code class="docutils literal notranslate"><span class=
 <span class="n">evaluation</span> <span class="o">=</span> <span class="n">EvalSpec</span><span class="p">(</span>
     <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
-    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;cw&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">),</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;cw&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">,</span> <span class="s2">&quot;spa&quot;</span><span class="p">,</span> <span class="s2">&quot;uspa&quot;</span><span class="p">),</span>
+    <span class="n">test_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;spa&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_boot&quot;</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="s2">&quot;block_length&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+                  <span class="s2">&quot;uspa&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_boot&quot;</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="s2">&quot;block_length&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}},</span>
     <span class="n">by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
     <span class="n">cw_for_nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>    <span class="c1"># compute CW only for arms with nested_in_benchmark=True</span>
     <span class="n">mcs_alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>

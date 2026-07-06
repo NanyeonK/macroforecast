@@ -571,7 +571,7 @@ are additional contenders.</p></li>
 <td><p>Execute every cell into the master forecast frame (lower-level; name retained for back-compat).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec)</span></code></p></td>
-<td><p>Accuracy + DM/CW + MCS + combinations on a master frame.</p></td>
+<td><p>Accuracy + requested forecast-comparison tests + combinations on a master frame.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">apply_combinations(master,</span> <span class="pre">spec)</span></code></p></td>
 <td><p>Append cross-arm combination contenders.</p></td>
@@ -901,7 +901,7 @@ each cell’s lean forecast records under
 <code class="docutils literal notranslate"><span class="pre">&lt;checkpoint_dir&gt;/&lt;target&gt;__&lt;arm&gt;/h&lt;h&gt;/origin_&lt;pos&gt;.parquet</span></code> as origins complete.
 Because the evaluation stage is pure-frame (<code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec)</span></code> needs the
 forecasts, not the fitted models), those saved records are sufficient to rebuild
-the full evaluation – accuracy, DM/CW significance, MCS, and combination
+the full evaluation – accuracy, requested significance/set tests, and combination
 contenders – without re-running a single fit. <code class="docutils literal notranslate"><span class="pre">rescore</span></code> is that glue:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">pipeline_spec</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">checkpoint_dir</span><span class="o">=</span><span class="s2">&quot;ckpt&quot;</span><span class="p">)</span>   <span class="c1"># the original spec</span>
 <span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">rescore</span><span class="p">(</span><span class="s2">&quot;ckpt&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>                     <span class="c1"># no refitting</span>
@@ -956,21 +956,37 @@ what was requested.</p></li>
 tests run. <code class="docutils literal notranslate"><span class="pre">&quot;cw&quot;</span></code> is additionally gated by <code class="docutils literal notranslate"><span class="pre">cw_for_nested</span></code> as before (Clark-West
 only for contenders whose <code class="docutils literal notranslate"><span class="pre">Arm.nested_in_benchmark=True</span></code>). <code class="docutils literal notranslate"><span class="pre">tests=(&quot;dm&quot;,)</span></code> runs
 DM only (<code class="docutils literal notranslate"><span class="pre">significance</span></code> carries no <code class="docutils literal notranslate"><span class="pre">cw_*</span></code> columns, <code class="docutils literal notranslate"><span class="pre">mcs</span></code> is empty);
-<code class="docutils literal notranslate"><span class="pre">tests=()</span></code> yields <code class="docutils literal notranslate"><span class="pre">accuracy</span></code> only. An unsupported name (anything other than
-<code class="docutils literal notranslate"><span class="pre">&quot;dm&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;cw&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;mcs&quot;</span></code>) raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> at <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> build time
-rather than being silently dropped. <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;gr&quot;</span></code> (superior predictive
-ability / Giacomini-Rossi) are implemented in <code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code> but not yet
-wired into the pipeline evaluator – a follow-up, not supported here.</p></li>
+<code class="docutils literal notranslate"><span class="pre">tests=()</span></code> yields <code class="docutils literal notranslate"><span class="pre">accuracy</span></code> only. Supported significance names are
+<code class="docutils literal notranslate"><span class="pre">&quot;dm&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;cw&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gw&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;enc_new&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;enc_t&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pt&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;hm&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ag&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;gr&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;uspa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;aspa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mcs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rc&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;stepm&quot;</span></code> plus
+the calibration names below. Unsupported names raise <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> at <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> build time
+rather than being silently dropped. The newly wired pairwise tests append
+long-form rows to <code class="docutils literal notranslate"><span class="pre">PipelineReport.significance</span></code> with <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">statistic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">p_value</span></code>, <code class="docutils literal notranslate"><span class="pre">reject</span></code>, and <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>; <code class="docutils literal notranslate"><span class="pre">pt</span></code>/<code class="docutils literal notranslate"><span class="pre">hm</span></code>/<code class="docutils literal notranslate"><span class="pre">ag</span></code> test the contender’s own
+directional skill on the benchmark-aligned sample. <code class="docutils literal notranslate"><span class="pre">&quot;uspa&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;aspa&quot;</span></code>
+run jointly across all horizons for each target/contender/benchmark triple
+and write <code class="docutils literal notranslate"><span class="pre">horizon=&quot;joint&quot;</span></code> rows to <code class="docutils literal notranslate"><span class="pre">PipelineReport.significance</span></code>; requesting
+them with only one horizon raises at spec-build time. <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rc&quot;</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">&quot;stepm&quot;</span></code> compare the full contender set against the benchmark and append rows
+to <code class="docutils literal notranslate"><span class="pre">PipelineReport.mcs</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rc&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;stepm&quot;</span></code> require the <code class="docutils literal notranslate"><span class="pre">arch</span></code>
+extra (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;macroforecast[arch]&quot;</span></code>).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">test_options:</span> <span class="pre">Mapping[str,</span> <span class="pre">Mapping[str,</span> <span class="pre">Any]]</span></code></strong> – optional per-test keyword
+options. The outer key must be present in <code class="docutils literal notranslate"><span class="pre">tests</span></code>, and every option name is
+checked against that test’s public callable when <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> is
+built. Use this for bootstrap controls such as
+<code class="docutils literal notranslate"><span class="pre">{&quot;spa&quot;:</span> <span class="pre">{&quot;n_boot&quot;:</span> <span class="pre">999,</span> <span class="pre">&quot;block_length&quot;:</span> <span class="pre">5,</span> <span class="pre">&quot;random_state&quot;:</span> <span class="pre">123}}</span></code> or GR
+controls such as <code class="docutils literal notranslate"><span class="pre">{&quot;gr&quot;:</span> <span class="pre">{&quot;window_ratio&quot;:</span> <span class="pre">0.4}}</span></code>; <code class="docutils literal notranslate"><span class="pre">uspa</span></code>/<code class="docutils literal notranslate"><span class="pre">aspa</span></code> accept the
+<code class="docutils literal notranslate"><span class="pre">multi_horizon_spa_test(...)</span></code> options, including <code class="docutils literal notranslate"><span class="pre">n_boot</span></code>, <code class="docutils literal notranslate"><span class="pre">block_length</span></code>,
+<code class="docutils literal notranslate"><span class="pre">weights</span></code>, and <code class="docutils literal notranslate"><span class="pre">random_state</span></code>.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">loss:</span> <span class="pre">Callable[[y_true,</span> <span class="pre">y_pred],</span> <span class="pre">ndarray]</span> <span class="pre">|</span> <span class="pre">None</span></code></strong> (default <code class="docutils literal notranslate"><span class="pre">None</span></code> = squared
 error) – a per-observation loss threaded into the Diebold-Mariano loss
 differential and the Model Confidence Set’s loss matrix, enabling asymmetric-
-loss horse races (e.g. linex, or an absolute-error DM/MCS instead of squared
-error). <strong>Clark-West is derived under quadratic loss</strong> and is not a valid test
-for an arbitrary loss function: when <code class="docutils literal notranslate"><span class="pre">loss</span></code> is set and CW would otherwise run
-(<code class="docutils literal notranslate"><span class="pre">&quot;cw&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">cw_for_nested</span></code> true, and at least one nested contender),
-<code class="docutils literal notranslate"><span class="pre">significance_table</span></code> skips CW entirely and emits a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> explaining why,
-instead of silently computing it against the wrong loss. DM and MCS are
-loss-agnostic and are unaffected.</p></li>
+loss horse races (e.g. linex, or an absolute-error DM/MCS/SPA instead of
+squared error). <strong>Clark-West, ENC-NEW, and ENC-T are derived under quadratic
+loss</strong> and are not valid tests for an arbitrary loss function: when <code class="docutils literal notranslate"><span class="pre">loss</span></code> is
+set and one of those tests would otherwise run, <code class="docutils literal notranslate"><span class="pre">significance_table</span></code> skips it
+and emits a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> instead of silently computing it against the wrong
+loss. DM, GW, GR, MCS, SPA, RC, and StepM are loss-agnostic and are unaffected.</p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvalSpec</span>
 

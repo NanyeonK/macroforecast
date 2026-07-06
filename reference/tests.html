@@ -1591,6 +1591,13 @@ before calling; the test helpers do not average duplicates silently.</p>
 </tbody>
 </table>
 </div>
+<p>Pipeline integration: request <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rc&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;stepm&quot;</span></code> in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.EvalSpec.tests</span></code> to run these full-set comparisons per
+<code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon)</span></code> against <code class="docutils literal notranslate"><span class="pre">EvalSpec.benchmark</span></code>. Per-test bootstrap controls
+enter through <code class="docutils literal notranslate"><span class="pre">EvalSpec.test_options</span></code>, for example
+<code class="docutils literal notranslate"><span class="pre">test_options={&quot;spa&quot;:</span> <span class="pre">{&quot;n_boot&quot;:</span> <span class="pre">999,</span> <span class="pre">&quot;block_length&quot;:</span> <span class="pre">5,</span> <span class="pre">&quot;random_state&quot;:</span> <span class="pre">123}}</span></code>.
+The results append rows to <code class="docutils literal notranslate"><span class="pre">PipelineReport.mcs</span></code> with <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">contender</span></code>,
+<code class="docutils literal notranslate"><span class="pre">superior</span></code>, <code class="docutils literal notranslate"><span class="pre">reject</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value</span></code>, and sample-size metadata.</p>
 </section>
 <section id="superior-predictive-ability-test">
 <h3>superior_predictive_ability_test<a class="headerlink" href="#superior-predictive-ability-test" title="Link to this heading">#</a></h3>
@@ -1727,6 +1734,42 @@ constructs the benchmark-vs-candidate loss-difference statistics using the SPA
 backend and then applies the stepdown procedure. The objective is aligned, but
 the inputs are higher level in <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code>: forecast-loss panel in,
 superior model names out.</p>
+</section>
+<section id="multi-horizon-spa-test">
+<h3>multi_horizon_spa_test<a class="headerlink" href="#multi-horizon-spa-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">multi_horizon_spa_test</span><span class="p">(</span>
+    <span class="n">loss_a</span><span class="p">,</span>
+    <span class="n">loss_b</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">statistic</span><span class="o">=</span><span class="s2">&quot;uspa&quot;</span><span class="p">,</span>
+    <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">n_boot</span><span class="o">=</span><span class="mi">999</span><span class="p">,</span>
+    <span class="n">block_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">hac_bandwidth</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">alternative</span><span class="o">=</span><span class="s2">&quot;greater&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span>
+</pre></div>
+</div>
+<p>Pairwise multi-horizon SPA test from Quaedvlieg (2021, JBES). The input is a
+loss-differential panel with one column per horizon, or two aligned loss panels
+where the differential is <code class="docutils literal notranslate"><span class="pre">loss_a</span> <span class="pre">-</span> <span class="pre">loss_b</span></code>. <code class="docutils literal notranslate"><span class="pre">statistic=&quot;uspa&quot;</span></code> uses the
+minimum of the horizon-specific studentized statistics; <code class="docutils literal notranslate"><span class="pre">statistic=&quot;aspa&quot;</span></code> uses
+the studentized weighted average, with equal weights by default. The test is
+one-sided: positive differentials favor <code class="docutils literal notranslate"><span class="pre">loss_b</span></code> under the two-panel contract.</p>
+<p>Defaults follow the paper’s simulation section where possible:
+<code class="docutils literal notranslate"><span class="pre">block_length=3</span></code> and <code class="docutils literal notranslate"><span class="pre">n_boot=999</span></code>. The original statistic uses a Quadratic
+Spectral HAC estimator; bootstrap statistics use the natural block-mean
+variance estimator from Algorithm 1. <code class="docutils literal notranslate"><span class="pre">hac_bandwidth=&quot;auto&quot;</span></code> uses this module’s
+standard automatic HAC bandwidth convention because the paper specifies the QS
+kernel but not a fixed bandwidth in Algorithm 1.</p>
+<p>Pipeline integration: request <code class="docutils literal notranslate"><span class="pre">&quot;uspa&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;aspa&quot;</span></code> in
+<code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.EvalSpec.tests</span></code> to run this test jointly across all
+horizons for each <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">contender,</span> <span class="pre">benchmark)</span></code> triple. Pipeline rows land in
+<code class="docutils literal notranslate"><span class="pre">PipelineReport.significance</span></code> with <code class="docutils literal notranslate"><span class="pre">horizon=&quot;joint&quot;</span></code> so per-horizon accuracy
+tables do not treat them as ordinary horizons. Requesting either name with a
+single-horizon spec raises at <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> build time.</p>
 </section>
 <section id="model-confidence-set">
 <h3>model_confidence_set<a class="headerlink" href="#model-confidence-set" title="Link to this heading">#</a></h3>
@@ -2105,6 +2148,7 @@ which callable produced the result.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#superior-predictive-ability-test">superior_predictive_ability_test</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reality-check-test">reality_check_test</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stepm-test">stepm_test</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-horizon-spa-test">multi_horizon_spa_test</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-confidence-set">model_confidence_set</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iterative-model-confidence-set">iterative_model_confidence_set</a></li>
 </ul>
