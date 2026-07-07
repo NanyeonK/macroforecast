@@ -32,7 +32,8 @@ def test_equal_predictive_accuracy_callables_return_test_results() -> None:
     assert dm.metadata["statistic_type"] == "t"
     assert dm.metadata["p_value_status"] == "available"
     assert dm.metadata["null_hypothesis"] == "equal predictive accuracy"
-    assert gw.metadata["name"] == "Giacomini-White"
+    assert gw.metadata["name"] == "GW-compatible DM-style loss differential"
+    assert "giacomini_white_test" in gw.metadata["see_also"]
     assert gw.metadata["r_reference"] is None
     assert "No exact R comparator" in gw.metadata["r_alignment"]
     assert dmp.n_obs == 12
@@ -247,6 +248,51 @@ def test_nested_encompassing_statistics_match_reference_formulas() -> None:
     assert np.isclose(enc_t.statistic, expected_enc_t)
     assert enc_t.metadata["p_value_note"].startswith("Default p_value is None")
     assert enc_new.metadata["external_reference"].startswith("Stata forecast encompassing example")
+
+
+def test_mincer_zarnowitz_matches_hand_computed_hc0_wald() -> None:
+    from scipy import stats as _stats
+
+    y_true = np.asarray([1.2, 1.8, 2.7, 3.1, 4.2, 5.0, 5.7, 6.3], dtype=float)
+    y_pred = np.asarray([1.0, 2.0, 2.5, 3.4, 4.0, 4.7, 5.8, 6.1], dtype=float)
+    x = np.column_stack([np.ones_like(y_pred), y_pred])
+    beta = np.linalg.lstsq(x, y_true, rcond=None)[0]
+    residual = y_true - x @ beta
+    xtx_inv = np.linalg.inv(x.T @ x)
+    meat = x.T @ np.diag(residual**2) @ x
+    cov = xtx_inv @ meat @ xtx_inv
+    restriction = beta - np.asarray([0.0, 1.0])
+    expected_wald = float(restriction @ np.linalg.pinv(cov) @ restriction)
+    expected_p = float(_stats.chi2.sf(expected_wald, df=2))
+
+    result = mf.tests.mincer_zarnowitz_test(y_true, y_pred, hac_lags=0)
+
+    assert np.allclose(
+        [result.metadata["intercept"], result.metadata["slope"]],
+        beta,
+    )
+    assert np.isclose(result.statistic, expected_wald)
+    assert np.isclose(result.p_value, expected_p)
+    assert result.metadata["null_hypothesis"] == "intercept=0 and slope=1"
+
+
+def test_mincer_zarnowitz_matches_statsmodels_hac_cross_check() -> None:
+    import statsmodels.api as sm
+    from scipy import stats as _stats
+
+    y_true = np.asarray([1.1, 1.9, 2.8, 3.0, 4.4, 5.1, 5.6, 6.4, 7.0, 7.8], dtype=float)
+    y_pred = np.asarray([1.0, 2.1, 2.4, 3.5, 4.1, 4.8, 5.9, 6.0, 7.2, 7.6], dtype=float)
+    x = np.column_stack([np.ones_like(y_pred), y_pred])
+    robust = sm.OLS(y_true, x).fit().get_robustcov_results(cov_type="HAC", maxlags=2)
+    restriction = np.asarray(robust.params) - np.asarray([0.0, 1.0])
+    expected_wald = float(restriction @ np.linalg.pinv(robust.cov_params()) @ restriction)
+    expected_p = float(_stats.chi2.sf(expected_wald, df=2))
+
+    result = mf.tests.mincer_zarnowitz_test(y_true, y_pred, hac_lags=2)
+
+    assert np.isclose(result.statistic, expected_wald)
+    assert np.isclose(result.p_value, expected_p)
+    assert result.metadata["hac_lags"] == 2
 
 
 def test_multi_horizon_spa_test_returns_uspa_and_aspa_results() -> None:
@@ -990,6 +1036,11 @@ def test_arch_multiple_comparison_callables_return_backend_results() -> None:
     assert spa["metadata_schema"]["kind"] == "superior_predictive_ability_test"
     assert rc["metadata_schema"]["kind"] == "reality_check_test"
     assert stepm["metadata_schema"]["kind"] == "stepm_test"
+    for result, record in [(spa, spa_record), (rc, rc_record), (stepm, stepm_record)]:
+        caveat = result["metadata"]["size_caveat"]
+        assert caveat["status"] == "known_dependent_loss_size_distortion"
+        assert "dependent-loss" in caveat["recommendation"]
+        assert record["size_caveat"]["status"] == caveat["status"]
     assert spa_record["backend"] == "arch.bootstrap.SPA"
     assert rc_record["backend"] == "arch.bootstrap.RealityCheck"
     assert stepm_record["backend"] == "arch.bootstrap.StepM"

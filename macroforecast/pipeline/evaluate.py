@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
 
 import numpy as np
@@ -12,6 +12,7 @@ from macroforecast.pipeline.spec import (
     CALIBRATION_EVAL_TESTS,
     CombinationContender,
     PipelineSpec,
+    SubsampleWindow,
     contender_names,
 )
 
@@ -49,10 +50,11 @@ def _has_groups(master: pd.DataFrame) -> bool:
 # with ``getattr`` defaults matching :class:`~macroforecast.pipeline.spec.EvalSpec`'s
 # own defaults, so such spec doubles keep the exact pre-threading behavior.
 _DEFAULT_EVAL_TESTS: tuple[str, ...] = ("dm", "cw", "mcs")
-_PAIRWISE_LONG_TESTS = frozenset({"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr"})
+_PAIRWISE_LONG_TESTS = frozenset({"gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mz"})
 _NESTED_QUADRATIC_TESTS = frozenset({"cw", "enc_new", "enc_t"})
 _SET_COMPARISON_TESTS = frozenset({"spa", "rc", "stepm"})
 _MULTI_HORIZON_TESTS = frozenset({"uspa", "aspa"})
+_SUBSAMPLE_DATE_COLUMN = "date"
 
 
 def _eval_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
@@ -76,6 +78,92 @@ def _eval_calibration_alpha(spec: PipelineSpec) -> float:
     return float(getattr(spec.evaluation, "calibration_alpha", 0.05))
 
 
+def _eval_subsamples(spec: PipelineSpec) -> Mapping[str, SubsampleWindow] | None:
+    subsamples = getattr(spec.evaluation, "subsamples", None)
+    return cast("Mapping[str, SubsampleWindow] | None", subsamples or None)
+
+
+def _parse_window_date(value: str | None) -> pd.Timestamp | None:
+    return None if value is None else pd.Timestamp(value).normalize()
+
+
+def _subsample_mask(master: pd.DataFrame, window: SubsampleWindow) -> pd.Series:
+    if _SUBSAMPLE_DATE_COLUMN not in master.columns:
+        raise ValueError(
+            "EvalSpec.subsamples filters forecast target dates, but the master "
+            f"forecast frame has no {_SUBSAMPLE_DATE_COLUMN!r} column"
+        )
+    dates = pd.to_datetime(master[_SUBSAMPLE_DATE_COLUMN], errors="coerce")
+    mask = pd.Series(True, index=master.index)
+    start = _parse_window_date(window.start)
+    end = _parse_window_date(window.end)
+    if start is not None:
+        mask &= dates >= start
+    if end is not None:
+        mask &= dates <= end
+    for raw_ex_start, raw_ex_end in window.exclude:
+        ex_start = _parse_window_date(raw_ex_start)
+        ex_end = _parse_window_date(raw_ex_end)
+        assert ex_start is not None and ex_end is not None
+        mask &= ~((dates >= ex_start) & (dates <= ex_end))
+    return mask
+
+
+def _subsample_frames(master: pd.DataFrame, spec: PipelineSpec) -> list[tuple[str, pd.DataFrame]] | None:
+    subsamples = _eval_subsamples(spec)
+    if subsamples is None:
+        return None
+    return [
+        (name, master.loc[_subsample_mask(master, window)].copy())
+        for name, window in subsamples.items()
+    ]
+
+
+def _with_subsample_column(frame: pd.DataFrame, name: str) -> pd.DataFrame:
+    out = frame.copy()
+    if "subsample" in out.columns:
+        out["subsample"] = name
+        return out
+    insert_at = 1 if "target" in out.columns else 0
+    out.insert(insert_at, "subsample", name)
+    return out
+
+
+def _concat_tables(frames: Sequence[pd.DataFrame]) -> pd.DataFrame:
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(list(frames), ignore_index=True, sort=False)
+
+
+def _warn_short_subsample(name: str, frame: pd.DataFrame) -> None:
+    if frame.empty:
+        warnings.warn(
+            f"EvalSpec.subsamples[{name!r}] leaves no forecast rows after "
+            "target-date filtering.",
+            RuntimeWarning,
+            stacklevel=3,
+        )
+        return
+    if not _has_groups(frame) or "origin" not in frame.columns:
+        return
+    cell_counts = (
+        frame.drop_duplicates(["target", "horizon", "origin"])
+        .groupby(["target", "horizon"], dropna=False)
+        .size()
+    )
+    short = cell_counts[cell_counts < 30]
+    if short.empty:
+        return
+    cells = ", ".join(f"{target} h{horizon}: {int(n)}" for (target, horizon), n in short.head(5).items())
+    more = "" if len(short) <= 5 else f" (+{len(short) - 5} more)"
+    warnings.warn(
+        f"EvalSpec.subsamples[{name!r}] leaves fewer than 30 forecast "
+        f"observations for {len(short)} (target, horizon) cell(s): {cells}{more}.",
+        RuntimeWarning,
+        stacklevel=3,
+    )
+
+
 def _result_row(
     *,
     target: Any,
@@ -87,15 +175,26 @@ def _result_row(
 ) -> dict[str, Any]:
     """Long-form significance row for a TestResult-like object."""
 
+    p_value = getattr(result, "p_value", None)
+    reject = getattr(result, "decision", None)
+    status = "computed"
+    reason = None
+    metadata = getattr(result, "metadata", {}) or {}
+    if test in {"enc_new", "enc_t"} and p_value is None and metadata.get("critical_value") is None:
+        reject = None
+        status = "inconclusive"
+        reason = "no p_value or critical_value available for this nonstandard nested test"
     return {
         "target": target,
         "horizon": horizon,
         "contender": contender,
         "test": test,
         "statistic": getattr(result, "statistic", None),
-        "p_value": getattr(result, "p_value", None),
-        "reject": getattr(result, "decision", None),
+        "p_value": p_value,
+        "reject": reject,
         "n_obs": getattr(result, "n_obs", n_obs),
+        "status": status,
+        "reason": reason,
     }
 
 
@@ -109,6 +208,46 @@ def _loss_values(
         if loss_fn is not None
         else (pred - y) ** 2
     )
+
+
+def _directional_degenerate_reason(
+    y: np.ndarray,
+    pred: np.ndarray,
+    *,
+    threshold: float,
+) -> str | None:
+    forecast_raw = np.asarray(pred, dtype=float) - float(threshold)
+    if forecast_raw.size < 2:
+        return "fewer_than_two_observations"
+    if float(np.linalg.norm(np.diff(forecast_raw))) <= 1e-12:
+        return "constant_forecast"
+    forecast_sign = forecast_raw > 0.0
+    if np.unique(forecast_sign).size < 2:
+        return "constant_forecast_sign"
+    return None
+
+
+def _degenerate_directional_row(
+    *,
+    target: Any,
+    horizon: Any,
+    contender: str,
+    test: str,
+    reason: str,
+    n_obs: int,
+) -> dict[str, Any]:
+    return {
+        "target": target,
+        "horizon": horizon,
+        "contender": contender,
+        "test": test,
+        "statistic": None,
+        "p_value": None,
+        "reject": None,
+        "n_obs": n_obs,
+        "status": "degenerate",
+        "reason": reason,
+    }
 
 
 # combination methods that need realised values (estimated weights), and their lag
@@ -365,6 +504,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
         enc_t_test,
         giacomini_white_test,
         henriksson_merton_test,
+        mincer_zarnowitz_test,
         multi_horizon_spa_test,
         pesaran_timmermann_test,
     )
@@ -507,41 +647,75 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         test="enc_t", result=res, n_obs=n_obs,
                     ))
                 elif test_name == "pt":
+                    options = _eval_test_options(spec, "pt")
+                    reason = _directional_degenerate_reason(
+                        y, fc_vals, threshold=float(options.get("threshold", 0.0))
+                    )
+                    if reason is not None:
+                        out.append(_degenerate_directional_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="pt", reason=reason, n_obs=n_obs,
+                        ))
+                        continue
                     res = pesaran_timmermann_test(
                         y,
                         fc_vals,
-                        **{**_eval_test_options(spec, "pt"), "method": "pesaran_timmermann"},
+                        **{**options, "method": "pesaran_timmermann"},
                     )
                     out.append(_result_row(
                         target=target, horizon=horizon, contender=str(contender),
                         test="pt", result=res, n_obs=n_obs,
                     ))
                 elif test_name == "hm":
+                    options = _eval_test_options(spec, "hm")
+                    reason = _directional_degenerate_reason(
+                        y, fc_vals, threshold=float(options.get("threshold", 0.0))
+                    )
+                    if reason is not None:
+                        out.append(_degenerate_directional_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="hm", reason=reason, n_obs=n_obs,
+                        ))
+                        continue
                     res = henriksson_merton_test(
                         y,
                         fc_vals,
-                        **{**_eval_test_options(spec, "hm"), "method": "henriksson_merton"},
+                        **{**options, "method": "henriksson_merton"},
                     )
                     out.append(_result_row(
                         target=target, horizon=horizon, contender=str(contender),
                         test="hm", result=res, n_obs=n_obs,
                     ))
                 elif test_name == "ag":
+                    options = _eval_test_options(spec, "ag")
+                    reason = _directional_degenerate_reason(
+                        y, fc_vals, threshold=float(options.get("threshold", 0.0))
+                    )
+                    if reason is not None:
+                        out.append(_degenerate_directional_row(
+                            target=target, horizon=horizon, contender=str(contender),
+                            test="ag", reason=reason, n_obs=n_obs,
+                        ))
+                        continue
                     res = anatolyev_gerko_test(
                         y,
                         fc_vals,
-                        **{**_eval_test_options(spec, "ag"), "method": "anatolyev_gerko"},
+                        **{**options, "method": "anatolyev_gerko"},
                     )
                     out.append(_result_row(
                         target=target, horizon=horizon, contender=str(contender),
                         test="ag", result=res, n_obs=n_obs,
                     ))
                 elif test_name == "gr":
+                    options = _eval_test_options(spec, "gr")
+                    default_lag_truncate = min(max(int(horizon) - 1, 0), 5)
+                    lag_truncate_source = "user" if "lag_truncate" in options else "default_min_h_minus_1_5"
+                    options.setdefault("lag_truncate", default_lag_truncate)
                     gr = conditional_predictive_ability_test(
                         loss_c,
                         loss_b,
                         **{
-                            **_eval_test_options(spec, "gr"),
+                            **options,
                             "method": "giacomini_rossi",
                         },
                     )
@@ -556,7 +730,31 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         "n_obs": gr.get("n_obs"),
                         "critical_value": gr.get("critical_value"),
                         "window_size": gr.get("window_size"),
+                        "lag_truncate": gr.get("lag_truncate"),
+                        "lag_truncate_source": lag_truncate_source,
+                        "status": "computed",
                     })
+                elif test_name == "mz":
+                    options = _eval_test_options(spec, "mz")
+                    default_hac_lags = max(int(horizon) - 1, 0)
+                    hac_lag_source = "user" if "hac_lags" in options else "default_h_minus_1"
+                    options.setdefault("hac_lags", default_hac_lags)
+                    res = mincer_zarnowitz_test(
+                        y,
+                        fc_vals,
+                        **options,
+                    )
+                    row = _result_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test="mz", result=res, n_obs=n_obs,
+                    )
+                    row.update({
+                        "intercept": res.metadata.get("intercept"),
+                        "slope": res.metadata.get("slope"),
+                        "hac_lags": res.metadata.get("hac_lags"),
+                        "hac_lag_source": hac_lag_source,
+                    })
+                    out.append(row)
     if requested_joint:
         for target, target_group in master.groupby("target", dropna=False):
             contenders = [
@@ -1094,6 +1292,28 @@ def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame
     ``mcs`` stay byte-identical to before these two keys existed.
     """
     full = apply_combinations(master, spec)
+    subsample_frames = _subsample_frames(full, spec)
+    if subsample_frames is not None:
+        accuracy_parts: list[pd.DataFrame] = []
+        significance_parts: list[pd.DataFrame] = []
+        mcs_parts: list[pd.DataFrame] = []
+        density_parts: list[pd.DataFrame] = []
+        calibration_parts: list[pd.DataFrame] = []
+        for name, frame in subsample_frames:
+            _warn_short_subsample(name, frame)
+            accuracy_parts.append(_with_subsample_column(accuracy_table(frame, spec), name))
+            significance_parts.append(_with_subsample_column(significance_table(frame, spec), name))
+            mcs_parts.append(_with_subsample_column(mcs_table(frame, spec), name))
+            density_parts.append(_with_subsample_column(density_table(frame, spec), name))
+            calibration_parts.append(_with_subsample_column(calibration_table(frame, spec), name))
+        return {
+            "forecasts": full,
+            "accuracy": _concat_tables(accuracy_parts),
+            "significance": _concat_tables(significance_parts),
+            "mcs": _concat_tables(mcs_parts),
+            "density": _concat_tables(density_parts),
+            "calibration": _concat_tables(calibration_parts),
+        }
     return {
         "forecasts": full,
         "accuracy": accuracy_table(full, spec),

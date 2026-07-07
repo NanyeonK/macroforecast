@@ -16,6 +16,7 @@ import macroforecast as mf
 from macroforecast.pipeline import (
     Arm,
     EvalSpec,
+    SubsampleWindow,
     TargetSpec,
     pipeline_spec,
     rescore,
@@ -23,7 +24,7 @@ from macroforecast.pipeline import (
 )
 
 
-def _toy(checkpoint_dir=None):
+def _toy(checkpoint_dir=None, *, evaluation=None):
     """A cheap 2-arm x 2-horizon pipeline spec with checkpointing optional."""
     idx = pd.date_range("1990-01-01", periods=140, freq="MS")
     rng = np.random.default_rng(5)
@@ -51,7 +52,7 @@ def _toy(checkpoint_dir=None):
             Arm(name="RIDGE", model="ridge", features=feats, is_benchmark=True),
             Arm(name="LASSO", model="lasso", features=feats),
         ],
-        evaluation=EvalSpec(benchmark="RIDGE", metrics=("rmse",)),
+        evaluation=evaluation or EvalSpec(benchmark="RIDGE", metrics=("rmse",)),
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
         save_models=False,
     )
@@ -147,3 +148,22 @@ def test_rescore_missing_arm_surfaces_in_empty_cells(tmp_path):
     rescored = rescore(ckpt, _toy(ckpt))
     assert set(rescored.forecasts["contender"].unique()) == {"RIDGE"}
     assert {c["arm"] for c in rescored.empty_cells} == {"LASSO"}
+
+
+def test_rescore_can_add_subsamples_to_checkpointed_run(tmp_path):
+    ckpt = tmp_path / "ckpt"
+    run_pipeline(_toy(ckpt))
+    evaluation = EvalSpec(
+        benchmark="RIDGE",
+        metrics=("rmse",),
+        tests=("dm",),
+        subsamples={
+            "full": SubsampleWindow(),
+            "early": SubsampleWindow(end="2000-12-31"),
+        },
+    )
+
+    rescored = rescore(ckpt, _toy(ckpt, evaluation=evaluation))
+
+    assert set(rescored.accuracy["subsample"]) == {"full", "early"}
+    assert set(rescored.significance["subsample"]) == {"full", "early"}

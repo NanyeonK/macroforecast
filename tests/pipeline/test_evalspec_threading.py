@@ -44,7 +44,7 @@ import pytest
 import macroforecast as mf
 import macroforecast.pipeline.spec as spec_mod
 from macroforecast.pipeline import (
-    Arm, EvalSpec, TargetSpec, evaluate, pipeline_spec, rescore, run_pipeline,
+    Arm, EvalSpec, SubsampleWindow, TargetSpec, evaluate, pipeline_spec, rescore, run_pipeline,
 )
 
 _GOLDEN_DIR = Path(__file__).parent / "_golden"
@@ -114,6 +114,26 @@ def _multi_horizon_master() -> pd.DataFrame:
                     },
                 ]
             )
+    return pd.DataFrame(rows)
+
+
+def _dated_master(n: int = 60) -> pd.DataFrame:
+    rows = []
+    dates = pd.date_range("2018-01-31", periods=n, freq="ME")
+    for origin, date in enumerate(dates):
+        actual = 1.0 + 0.03 * origin + 0.2 * np.sin(origin / 4.0)
+        rows.extend(
+            [
+                {
+                    "target": "y", "horizon": 1, "origin": origin, "date": date,
+                    "contender": "AR", "prediction": actual + 0.35, "actual": actual,
+                },
+                {
+                    "target": "y", "horizon": 1, "origin": origin, "date": date,
+                    "contender": "OLS", "prediction": actual + 0.10, "actual": actual,
+                },
+            ]
+        )
     return pd.DataFrame(rows)
 
 
@@ -460,6 +480,166 @@ def test_end_to_end_report_with_dm_gw_gr_and_spa_is_coherent():
     assert set(long["test"]) == {"gw", "gr"}
     assert set(res["mcs"]["test"]) == {"spa"}
     assert set(res["mcs"]["contender"]) == {"OLS", "RIDGE"}
+
+
+def test_paper_accuracy_table_ignores_long_form_significance_rows():
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "pt", "gw")))
+    res = evaluate(_golden_master(), spec)
+
+    table = mf.reporting.paper_accuracy_table(SimpleNamespace(**res))
+
+    assert list(table.data.columns) == ["Model", "h1"]
+    assert set(table.data["Model"]) == {"AR (benchmark)", "OLS", "RIDGE"}
+
+
+def test_gr_defaults_horizon_hac_lag_and_respects_override(monkeypatch):
+    calls = []
+
+    def spy(loss_a, loss_b, *, method="giacomini_rossi", window_ratio=0.5,
+            dmv_fullsample=True, lag_truncate=0, alpha=0.05):
+        calls.append({"lag_truncate": lag_truncate, "method": method, "n": len(loss_a)})
+        return {
+            "statistic": 1.0,
+            "decision": False,
+            "n_obs": len(loss_a),
+            "critical_value": 2.0,
+            "window_size": 5,
+            "lag_truncate": lag_truncate,
+        }
+
+    monkeypatch.setattr(mf.tests, "conditional_predictive_ability_test", spy)
+    master = _dated_master(n=40).assign(horizon=6)
+
+    default_spec = _spec(
+        horizons=[6],
+        evaluation=EvalSpec(benchmark="AR", tests=("gr",)),
+    )
+    default_sig = evaluate(master, default_spec)["significance"]
+    assert {call["lag_truncate"] for call in calls} == {5}
+    assert set(default_sig["lag_truncate"]) == {5}
+    assert set(default_sig["lag_truncate_source"]) == {"default_min_h_minus_1_5"}
+
+    calls.clear()
+    override_spec = _spec(
+        horizons=[6],
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("gr",),
+            test_options={"gr": {"lag_truncate": 2}},
+        ),
+    )
+    override_sig = evaluate(master, override_spec)["significance"]
+    assert {call["lag_truncate"] for call in calls} == {2}
+    assert set(override_sig["lag_truncate_source"]) == {"user"}
+
+
+def test_dm_kwargs_merge_into_test_options_with_test_options_precedence():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm",),
+            dm_kwargs={"kernel": "parzen", "alpha": 0.2},
+            test_options={"dm": {"kernel": "acf"}},
+        )
+    )
+
+    assert spec.evaluation.test_options["dm"] == {"kernel": "acf", "alpha": 0.2}
+
+
+def test_dead_evalspec_fields_raise_at_spec_build_time():
+    with pytest.raises(ValueError, match="evaluation.by is not implemented"):
+        _spec(evaluation=EvalSpec(benchmark="AR", by=("target",)))
+    with pytest.raises(ValueError, match="evaluation.primary_axis is not implemented"):
+        _spec(evaluation=EvalSpec(benchmark="AR", primary_axis="model"))
+    with pytest.raises(ValueError, match="evaluation.multiple_testing is not implemented"):
+        _spec(evaluation=EvalSpec(benchmark="AR", multiple_testing="holm"))
+
+
+def test_mcs_method_is_not_echoed_as_applied_provenance():
+    from macroforecast.pipeline.run import _spec_echo
+
+    echo = _spec_echo(_spec(evaluation=EvalSpec(benchmark="AR", mcs_method="stationary")))
+
+    assert "mcs_method" not in echo["evaluation"]
+
+
+def test_encompassing_rows_without_reference_values_are_inconclusive():
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", tests=("enc_new", "enc_t")))
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert set(sig["test"]) == {"enc_new", "enc_t"}
+    assert set(sig["status"]) == {"inconclusive"}
+    assert sig["reject"].isna().all()
+
+
+def test_directional_constant_contender_forecast_emits_degenerate_rows():
+    master = _dated_master(n=40)
+    master.loc[master["contender"] == "OLS", "prediction"] = 1.0
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", tests=("pt", "hm", "ag")))
+
+    sig = evaluate(master, spec)["significance"]
+
+    assert set(sig["test"]) == {"pt", "hm", "ag"}
+    assert set(sig["status"]) == {"degenerate"}
+    assert set(sig["reason"]) == {"constant_forecast"}
+    assert sig["reject"].isna().all()
+
+
+def test_mincer_zarnowitz_pipeline_row_appears_with_horizon_default_hac():
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", tests=("mz",)))
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert set(sig["test"]) == {"mz"}
+    assert {"intercept", "slope", "hac_lags"} <= set(sig.columns)
+    assert set(sig["hac_lags"]) == {0}
+    assert set(sig["hac_lag_source"]) == {"default_h_minus_1"}
+
+
+def test_subsamples_split_accuracy_and_significance_by_target_date():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm",),
+            subsamples={
+                "full": SubsampleWindow(),
+                "ex_covid": SubsampleWindow(exclude=(("2020-03-01", "2021-12-31"),)),
+                "post_gfc": SubsampleWindow(start="2019-01-01"),
+            },
+        )
+    )
+
+    res = evaluate(_dated_master(n=60), spec)
+
+    assert set(res["accuracy"]["subsample"]) == {"full", "ex_covid", "post_gfc"}
+    assert set(res["significance"]["subsample"]) == {"full", "ex_covid", "post_gfc"}
+    ex_covid = res["accuracy"].loc[
+        (res["accuracy"]["subsample"] == "ex_covid")
+        & (res["accuracy"]["contender"] == "OLS")
+    ].iloc[0]
+    assert int(ex_covid["n_common"]) == 38
+    for subsample in {"full", "ex_covid", "post_gfc"}:
+        rows = res["significance"].loc[res["significance"]["subsample"] == subsample]
+        assert set(rows["contender"]) == {"OLS"}
+        assert rows["dm_p"].notna().all()
+
+
+def test_subsample_validation_rejects_bad_windows():
+    with pytest.raises(ValueError, match="parseable date"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                subsamples={"bad": SubsampleWindow(start="not-a-date")},
+            )
+        )
+    with pytest.raises(ValueError, match="start must be before end"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                subsamples={"bad": SubsampleWindow(start="2021-01-01", end="2020-01-01")},
+            )
+        )
+    with pytest.raises(ValueError, match="names must be nonempty"):
+        _spec(evaluation=EvalSpec(benchmark="AR", subsamples={"": SubsampleWindow()}))
 
 
 # --------------------------------------------------------------------------- #

@@ -26,6 +26,36 @@ full per-version honesty-pass history embedded in repo documentation.
   uses the model's native multi-step prediction path and emits recursive row
   labels. Added the generated
   `docs/guide/model_policy_matrix.md` and CI drift check.
+- `pipeline/evaluate.py`, `pipeline/spec.py`, `tests.py`, `reporting`
+  (bugfix/feature, eval correctness lane): fixed mixed wide/long significance
+  rows duplicating `paper_accuracy_table` joins, made pipeline `"gr"` use
+  horizon-aware HAC lag defaults, wired `dm_kwargs` into `test_options["dm"]`,
+  rejected reserved EvalSpec fields (`by`, `primary_axis`, `multiple_testing`),
+  removed unapplied `mcs_method` from provenance echo, surfaced ENC-NEW/ENC-T
+  inconclusive rows and directional-test degeneracy with status metadata, and
+  corrected `gw_test` metadata to describe its legacy DM-style surface. Added
+  `mincer_zarnowitz_test` and EvalSpec test name `"mz"`. Added
+  `SubsampleWindow` / `EvalSpec.subsamples` for fixed-forecast evaluation-window
+  splits such as ex-COVID and post-GFC robustness, including rescore support and
+  paper-table subsample selection. SPA/RC/StepM now disclose the known
+  dependent-loss size caveat in result metadata and docs, with companion strict
+  xfail MC pins for RC/StepM.
+- `data/vintage.py`, `forecasting/runner.py`, `data/loaders.py`,
+  `data/panel.py` (fix, vintage correctness + custom-data onboarding):
+  vintage-aware runs now fail early when the resolved panel calendar has no
+  overlap with `reference_calendar` (including FRED month-start vs
+  month-end-label mistakes), `actuals_vintage="first_release"` walks forward
+  across delayed releases up to `VintagePanelSpec.first_release_max_vintages`
+  and records/warns on missing actuals, and `with_static_extras()` truncates
+  extras strictly before each origin so full-span deterministic calendars do
+  not create boundary-audit violations. Custom vintages now validate
+  timestamp-parsable mapping keys and reject callable-only first-release specs;
+  `combine()` points weekly users to `mf.data.align_frequency(...)`; duplicate
+  date errors for long-format custom panels name the pivot-to-wide fix; and
+  `load_custom_csv()` accepts `na_values`, `date_format`, and `dayfirst`
+  controls while preserving default parsing when unset. The vintage guide now
+  uses FRED month-start calendars and documents grouped-wide custom snapshots
+  plus static-extra truncation.
 
 - `pipeline/result_store.py`, `pipeline/run.py`, `pipeline/spec.py`,
   `preprocessing/cache.py`, `forecasting/preprocessing_stage.py` (feature, W9

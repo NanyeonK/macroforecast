@@ -1012,7 +1012,6 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
             "metrics": [_metric_name(m) for m in spec.evaluation.metrics],
             "tests": list(spec.evaluation.tests),
             "mcs_alpha": spec.evaluation.mcs_alpha,
-            "mcs_method": spec.evaluation.mcs_method,
         },
         "seed": spec.seed,
         "n_jobs": spec.n_jobs,

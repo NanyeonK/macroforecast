@@ -48,7 +48,7 @@ def _gcls_spec():
         arms=[Arm("AR", model="ar", features=ar),
               Arm("LAGS", model="ridge", features=t_lags, nested_in_benchmark=True),
               Arm("ROLL", model="ridge", features=t_roll, nested_in_benchmark=True)],
-        evaluation=EvalSpec(benchmark="AR", tests=["dm", "cw", "mcs"], primary_axis="transform"),
+        evaluation=EvalSpec(benchmark="AR", tests=["dm", "cw", "mcs"]),
         combinations=[CombinationContender("POOL", method="constrained_ls", params={"min_periods": 10})],
         save_models=False,
     )
@@ -75,6 +75,14 @@ def test_gcls_transformation_matrix_and_significance():
     assert "n_common" in acc.columns
 
 
-def test_primary_axis_recorded():
-    spec = _gcls_spec()
-    assert spec.evaluation.primary_axis == "transform"
+def test_primary_axis_transform_is_rejected_until_wired():
+    with pytest.raises(ValueError, match="primary_axis is not implemented"):
+        pipeline_spec(
+            data=_bundle(),
+            targets=[mf.pipeline.TargetSpec("INDPRO", transform="level")],
+            horizons=[1],
+            window=_window(),
+            arms=[Arm("AR", model="ar"), Arm("LAGS", model="ridge")],
+            evaluation=EvalSpec(benchmark="AR", primary_axis="transform"),
+            save_models=False,
+        )

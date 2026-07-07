@@ -54,9 +54,13 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   CW only for arms that declare nesting; CW is silently invalid otherwise.
 - **Additional pairwise tests**: opt in with `"gw"` (Giacomini-White conditional
   predictive ability), `"gr"` (Giacomini-Rossi fluctuation), `"enc_new"` /
-  `"enc_t"` (nested encompassing), or `"pt"` / `"hm"` / `"ag"` (directional
-  accuracy). Directional tests evaluate the contender's own sign skill on the
-  same benchmark-aligned origins.
+  `"enc_t"` (nested encompassing), `"mz"` (Mincer-Zarnowitz forecast-rationality
+  regression), or `"pt"` / `"hm"` / `"ag"` (directional accuracy). Directional
+  tests evaluate the contender's own sign skill on the same benchmark-aligned
+  origins. Degenerate directional forecasts are reported with
+  `status="degenerate"` rows rather than aborting evaluation; ENC-NEW/ENC-T rows
+  without a p-value or configured critical value are marked
+  `status="inconclusive"`.
 - **Joint multi-horizon tests**: `"uspa"` and `"aspa"` run Quaedvlieg-style
   uniform and average SPA jointly across all horizons for each
   target/contender/benchmark triple. They require at least two horizons and land
@@ -66,7 +70,9 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   (`mcs_alpha`). Uses the iterative elimination algorithm by default.
 - **Full-set benchmark tests**: `"spa"`, `"rc"`, and `"stepm"` compare the full
   contender set against the benchmark and land in `report.mcs` alongside MCS.
-  They require the `arch` extra (`pip install "macroforecast[arch]"`).
+  They require the `arch` extra (`pip install "macroforecast[arch]"`) and carry
+  a dependent-loss size caveat; prefer `model_confidence_set` or `uspa`/`aspa`
+  when serial dependence in losses is central to the inference.
 
 ## Choosing the benchmark
 
@@ -143,29 +149,36 @@ contender by `forecast_policy` for you and is the recommended path.
 
 ## Key Callable
 
-`EvalSpec` declares the benchmark arm, which metrics and tests to compute, and
-MCS settings. Pass it to `pipeline_spec`.
+`EvalSpec` declares the benchmark arm, which metrics and tests to compute,
+per-test options, MCS alpha, and optional evaluation-window subsamples. Pass it
+to `pipeline_spec`.
 
 ```python
-from macroforecast.pipeline import EvalSpec
+from macroforecast.pipeline import EvalSpec, SubsampleWindow
 
 evaluation = EvalSpec(
     benchmark="AR",
     metrics=("rmse", "relative_mse", "r2_oos"),
-    tests=("dm", "cw", "mcs", "spa", "uspa"),
+    tests=("dm", "cw", "mcs", "spa", "uspa", "mz"),
     test_options={"spa": {"n_boot": 999, "block_length": 5},
                   "uspa": {"n_boot": 999, "block_length": 3}},
-    by=("target", "horizon"),
     cw_for_nested=True,    # compute CW only for arms with nested_in_benchmark=True
     mcs_alpha=0.10,
-    mcs_method="iterative",
+    subsamples={
+        "full": SubsampleWindow(),
+        "ex_covid": SubsampleWindow(exclude=(("2020-03-01", "2021-12-31"),)),
+        "post_gfc": SubsampleWindow(start="2010-01-01"),
+    },
 )
 ```
 
 The accuracy table, significance tests, and Model Confidence Set are produced by
-`run_pipeline`. See the runnable [Getting Started](../getting_started.md) snippets
-and the [Replication Gallery](../gallery.md) for the full report objects in
-context.
+`run_pipeline`. Subsamples filter the already-produced forecast frame by target
+date before scoring; they do not refit models. When subsamples are configured,
+evaluation tables include a `subsample` column, and paper tables can select a
+window with `mf.reporting.paper_accuracy_table(report, subsample="ex_covid")`.
+See the runnable [Getting Started](../getting_started.md) snippets and the
+[Replication Gallery](../gallery.md) for the full report objects in context.
 
 ## Reference
 
