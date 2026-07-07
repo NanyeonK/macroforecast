@@ -39,21 +39,6 @@ _BLAS_THREAD_ENV_VARS = (
     "VECLIB_MAXIMUM_THREADS",
 )
 _WORKER_DATA_BY_TOKEN: dict[str, Any] = {}
-_CELL_FAILURE_TYPES = (
-    RuntimeError,
-    ValueError,
-    TypeError,
-    KeyError,
-    IndexError,
-    AttributeError,
-    OSError,
-    ImportError,
-    np.linalg.LinAlgError,
-    pd.errors.EmptyDataError,
-    pd.errors.ParserError,
-)
-
-
 def _safe_segment(value: str) -> str:
     """Make a target/arm name safe to use as a single filesystem path segment."""
     return re.sub(r"[^0-9A-Za-z._-]+", "_", str(value)).strip("_") or "x"
@@ -433,7 +418,12 @@ def _parallel_cell_worker(
         # in which case _execute_cell builds an on-disk PreprocessorStore the workers
         # share so each per-(spec, target, origin) fit is computed once overall.
         return cell, _execute_cell(spec, cell, preprocessing_cache=None), None
-    except _CELL_FAILURE_TYPES as exc:  # isolate expected run failures
+    except Exception as exc:
+        # Sanctioned broad boundary: per-cell isolation must match the serial
+        # path exactly (which also catches Exception) -- a custom model raising
+        # a user-defined exception type must fail its OWN cell, not the whole
+        # n_jobs run. The failure is recorded with its type and surfaced by the
+        # failed-cell warnings.
         return cell, None, f"{type(exc).__name__}: {exc}"
 
 
