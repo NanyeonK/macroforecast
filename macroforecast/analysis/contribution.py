@@ -30,7 +30,10 @@ def axis_contribution(
     ``"tag_NL"``). Each feature is expanded into treatment regressors, then OLS
     regresses the chosen error outcome on those regressors plus one joint fixed
     effect over ``fixed_effects``. The default therefore absorbs
-    target-horizon-date cells, matching the GCLS-style target-time-horizon
+    target-horizon-date cells, matching the treatment-regression design of
+    Goulet Coulombe, Leroux, Stevanovic & Surprenant (2022), "How is Machine
+    Learning Useful for Macroeconomic Forecasting?", Journal of Applied
+    Econometrics 37(5) ("GCLS 2022") — the GCLS-style target-time-horizon
     treatment-regression pattern.
 
     ``outcome="r2"`` implements the GCLS-style row pseudo-R2 transform
