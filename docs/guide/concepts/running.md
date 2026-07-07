@@ -161,6 +161,12 @@ second = run_pipeline(later)
 The second run reuses the stored `(target, horizon, arm)` cells for `AR` and `RF`
 and computes only `GBM`. The shared `preprocessing_cache_dir` also reuses the
 prepared per-origin preprocessing base when the preprocessing spec is unchanged.
+Result-store identities include the data content fingerprint, the effective
+selection seed, arm/model/features/preprocessing choices, and the backend package
+versions that own the arm's numerical fit. Vintage-aware specs additionally hash
+the enumerable vintage labels, reference calendar, and a bounded latest-vintage
+panel fingerprint. Stores created before this identity hardening will miss and
+recompute cells once, then reuse normally under the new digest.
 
 For custom code, reuse is opt-in. A custom model function, feature step,
 preprocessing step, metric, or loss must carry a stable `__mf_digest__` string to be
@@ -169,6 +175,13 @@ not trust old results unless you also update `__mf_digest__` and force a miss. T
 store is intended for a single writer; inspect it with
 `mf.pipeline.result_store_summary(...)` and delete cells with
 `mf.pipeline.purge_result_store(...)`.
+
+Checkpoint rescoring also verifies identity for new checkpoints. Each completed
+cell writes a small manifest next to its `h<h>/origin_*.parquet` files. `rescore()`
+refuses manifest-bearing cells whose stored digest no longer matches the current
+spec/data identity; pass `allow_stale=True` only when intentionally scoring stale
+forecasts. Older checkpoint directories that lack manifests still rescore, but
+emit a warning because they can only be matched by directory name.
 
 ## Reference
 

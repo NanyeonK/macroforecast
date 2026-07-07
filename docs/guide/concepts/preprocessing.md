@@ -76,6 +76,28 @@ the EM-factor step fills the 942 missing entries, leaving none remaining. This
 is the full-sample path for exploration; inside a runner, `preprocess_spec`
 refits these same steps on each origin's estimation rows only.
 
+## Custom Steps And Caches
+
+Custom preprocessing steps run after the built-in transform/outlier/impute/
+standardize/frame sequence. In the normal `origin_available` runner path, fitted
+standardization is applied before custom steps at transform time, matching the
+fit-time order, so scale-sensitive custom steps see the same units on train and
+test rows.
+
+Disk-backed preprocessing caches use content-derived identities. If a
+`preprocess_spec(custom_steps=...)` contains a custom callable, set a stable
+`func.__mf_digest__` string before using `preprocessing_cache_dir` or a
+`PreprocessorStore`; update the digest when the callable behavior changes. Named
+custom callables without a digest still run, but disk get/put is skipped and the
+runner recomputes instead of risking stale reuse. Anonymous lambda custom steps
+without `__mf_digest__` are rejected because they collide by qualified name.
+
+Under `policy="fit_window"`, built-in outlier/imputation/standardization state is
+fitted on the training window and applied to later rows, but custom steps are
+re-executed on the apply window. Keep those custom steps row-local/stateless; a
+custom step that computes statistics from all rows it receives can read
+post-origin rows and leak future information.
+
 ## Reference
 
 - [Preprocessing reference page](../../reference/preprocessing.md) — full function list including `plan`, `report`, `apply_transform_codes`, and individual step callables.
