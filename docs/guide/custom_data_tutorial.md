@@ -318,6 +318,12 @@ truth about a small sample, exactly as it would on a real study with a
 genuinely weak edge. `.to_html()` and `.to_markdown()` render the same
 `ReportTable` for a notebook or a README instead of a paper.
 
+For papers that report K-by-K pairwise DM/CW-style p-value matrices rather than
+one benchmark-vs-contender column, use
+`mf.reporting.pairwise_test_table(report, target=..., horizon=..., test="dm")`.
+See [Paper Tables](reporting.md) for the matrix form and fixed `hac_lags`
+replication knobs.
+
 The companion graphical layer uses the same `PipelineReport`:
 `mf.reporting.cumulative_loss_differential_plot`,
 `mf.reporting.fluctuation_test_plot`, `mf.reporting.pit_histogram_plot`, and
@@ -333,6 +339,8 @@ The companion graphical layer uses the same `PipelineReport`:
 - [paper_accuracy_table reference](../reference/reporting.md#paper_accuracy_table)
   -- every argument, including multi-target reports and dropping the
   benchmark row.
+- [Paper Tables](reporting.md) -- publication accuracy tables and pairwise
+  model-comparison matrices.
 - [Paper Figures](figures.md) -- the CSSED, fluctuation, PIT, and forecast-path
   exhibits that pair with the paper table.
 - [Getting Started](getting_started.md) and the

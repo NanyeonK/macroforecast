@@ -48,6 +48,12 @@ The pipeline runs statistical forecast comparison tests across all contenders:
 
 - **Diebold-Mariano (DM)**: tests whether contender and benchmark have equal
   predictive accuracy. Valid for any pair of forecasts (nested or non-nested).
+  The default applies the Harvey-Leybourne-Newbold small-sample correction and
+  uses a Student-t reference with `df=n_obs-1`, matching the package's
+  `forecast::dm.test` parity contract. Use `test_options={"dm":
+  {"small_sample": False}}` only when a replication design needs the plain
+  Diebold-Mariano (1995) statistic and asymptotic standard-normal p-value, such
+  as MATLAB oracles that report the uncorrected DM statistic.
 - **Clark-West (CW)**: adjusts the DM test for the finite-sample upward bias of
   a larger nested model. Valid only when the benchmark is nested within the
   contender (declare `nested_in_benchmark=True` on the arm). The pipeline emits
@@ -73,6 +79,29 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   They require the `arch` extra (`pip install "macroforecast[arch]"`) and carry
   a dependent-loss size caveat; prefer `model_confidence_set` or `uspa`/`aspa`
   when serial dependence in losses is central to the inference.
+
+Tests that estimate a HAC or lag-truncated long-run variance accept fixed lag
+overrides through `test_options`. Use `hac_lags` when a replication design pins a
+Newey-West bandwidth rather than deriving it from the forecast horizon:
+
+```python
+evaluation = mf.pipeline.EvalSpec(
+    benchmark="AR",
+    tests=("dm", "cw", "gw", "enc_t", "gr", "mz"),
+    test_options={
+        "dm": {"hac_lags": 4},
+        "cw": {"hac_lags": 4},
+        "gw": {"hac_lags": 4},
+        "enc_t": {"hac_lags": 4},
+        "gr": {"hac_lags": 4},
+        "mz": {"hac_lags": 4},
+    },
+)
+```
+
+`hac_lags` must be an integer greater than or equal to zero and is validated when
+`pipeline_spec` is built. For `"gr"`, `hac_lags` is the paper-facing alias for the
+legacy `lag_truncate` option and takes precedence if both are supplied.
 
 ## Choosing the benchmark
 
@@ -161,7 +190,8 @@ evaluation = EvalSpec(
     metrics=("rmse", "relative_mse", "r2_oos"),
     tests=("dm", "cw", "mcs", "spa", "uspa", "mz"),
     test_options={"spa": {"n_boot": 999, "block_length": 5},
-                  "uspa": {"n_boot": 999, "block_length": 3}},
+                  "uspa": {"n_boot": 999, "block_length": 3},
+                  "dm": {"hac_lags": 4}},
     cw_for_nested=True,    # compute CW only for arms with nested_in_benchmark=True
     mcs_alpha=0.10,
     subsamples={

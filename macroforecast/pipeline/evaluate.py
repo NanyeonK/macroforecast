@@ -1037,8 +1037,15 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                 elif test_name == "gr":
                     options = _eval_test_options(spec, "gr")
                     default_lag_truncate = min(max(int(horizon) - 1, 0), 5)
-                    lag_truncate_source = "user" if "lag_truncate" in options else "default_min_h_minus_1_5"
-                    options.setdefault("lag_truncate", default_lag_truncate)
+                    has_hac_lags = "hac_lags" in options
+                    has_lag_truncate = "lag_truncate" in options
+                    lag_truncate_source = (
+                        "user" if has_hac_lags or has_lag_truncate else "default_min_h_minus_1_5"
+                    )
+                    if has_hac_lags:
+                        options.pop("lag_truncate", None)
+                    else:
+                        options.setdefault("lag_truncate", default_lag_truncate)
                     gr = conditional_predictive_ability_test(
                         loss_c,
                         loss_b,
@@ -1059,6 +1066,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         "critical_value": gr.get("critical_value"),
                         "window_size": gr.get("window_size"),
                         "lag_truncate": gr.get("lag_truncate"),
+                        "hac_lags": gr.get("hac_lags", gr.get("lag_truncate")),
                         "lag_truncate_source": lag_truncate_source,
                         "status": "computed",
                     })

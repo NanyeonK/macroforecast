@@ -18,6 +18,14 @@ full per-version honesty-pass history embedded in repo documentation.
   by intersection with start/end/exclude windows, fail fast on missing/NaN or
   mis-anchored dates, reach accuracy/significance/MCS scoring, and are echoed in
   live-run and rescore provenance.
+- `pipeline/evaluate.py`, `pipeline/spec.py`, `tests.py`, `reporting`, docs/tests
+  (feature, A6 test knobs): added fixed `hac_lags` overrides for HAC-backed
+  evaluation tests (`dm`, `cw`, `gw`, `enc_t`, `gr`, `mz`) with spec-build
+  validation, and added `mf.reporting.pairwise_test_table(...)` for K-by-K
+  pairwise model-comparison p-value/statistic matrices from `PipelineReport`
+  forecasts. `dm` now also accepts `small_sample=False` through
+  `test_options` for the plain Diebold-Mariano statistic with asymptotic-normal
+  p-values while preserving the HLN/t default.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

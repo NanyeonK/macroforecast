@@ -259,10 +259,13 @@ def test_test_options_validate_underlying_callable_kwargs():
         evaluation=EvalSpec(
             benchmark="AR",
             tests=("dm",),
-            test_options={"dm": {"kernel": "bartlett", "correction": "hln"}},
+            test_options={
+                "dm": {"kernel": "bartlett", "correction": "hln", "small_sample": False}
+            },
         )
     )
     assert spec.evaluation.test_options["dm"]["kernel"] == "bartlett"
+    assert spec.evaluation.test_options["dm"]["small_sample"] is False
 
     with pytest.raises(ValueError, match="unsupported option"):
         _spec(
@@ -270,6 +273,30 @@ def test_test_options_validate_underlying_callable_kwargs():
                 benchmark="AR",
                 tests=("dm",),
                 test_options={"dm": {"not_a_dm_kwarg": True}},
+            )
+        )
+
+
+@pytest.mark.parametrize("bad_value", [-1, 1.5, True])
+def test_test_options_validate_hac_lags_int_nonnegative(bad_value):
+    with pytest.raises(ValueError, match="hac_lags"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("dm",),
+                test_options={"dm": {"hac_lags": bad_value}},
+            )
+        )
+
+
+@pytest.mark.parametrize("bad_value", [0, 1, "false", None])
+def test_test_options_validate_small_sample_bool_only(bad_value):
+    with pytest.raises(ValueError, match="small_sample"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("dm",),
+                test_options={"dm": {"small_sample": bad_value}},
             )
         )
 
@@ -326,6 +353,143 @@ def test_pairwise_test_options_reach_underlying_callable(monkeypatch):
     assert {call["alpha"] for call in calls} == {0.2}
     assert set(sig["test"]) == {"gw"}
     assert set(sig["statistic"]) == {1.0}
+
+
+def test_dm_small_sample_option_reaches_pipeline_callable(monkeypatch):
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm",),
+            test_options={"dm": {"small_sample": False, "alpha": 0.2}},
+        )
+    )
+    calls = []
+
+    def spy(loss_a, loss_b, *, horizon=1, hac_lags=None, small_sample=True,
+            correction="hln", kernel="acf", input_type="loss", power=2.0,
+            alternative="two_sided", alpha=0.05):
+        calls.append(
+            {
+                "horizon": horizon,
+                "alpha": alpha,
+                "small_sample": small_sample,
+                "input_type": input_type,
+                "n": len(loss_a),
+            }
+        )
+        return mf.tests.TestResult(
+            statistic=1.0,
+            p_value=0.5,
+            decision=False,
+            alternative=alternative,
+            n_obs=len(loss_a),
+            metadata={"name": "Diebold-Mariano"},
+        )
+
+    monkeypatch.setattr(mf.tests, "dm_test", spy)
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert len(calls) == 2
+    assert {call["small_sample"] for call in calls} == {False}
+    assert {call["alpha"] for call in calls} == {0.2}
+    assert {call["input_type"] for call in calls} == {"loss"}
+    assert set(sig["dm_stat"]) == {1.0}
+
+
+def test_hac_lags_options_reach_all_hac_backed_pipeline_tests(monkeypatch):
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm", "cw", "gw", "enc_t", "gr", "mz"),
+            test_options={
+                "dm": {"hac_lags": 4},
+                "cw": {"hac_lags": 4},
+                "gw": {"hac_lags": 4},
+                "enc_t": {"hac_lags": 4},
+                "gr": {"hac_lags": 4},
+                "mz": {"hac_lags": 4},
+            },
+        )
+    )
+    calls: dict[str, list[int | None]] = {
+        "dm": [],
+        "cw": [],
+        "gw": [],
+        "enc_t": [],
+        "gr": [],
+        "mz": [],
+    }
+
+    def result(name: str, n_obs: int) -> mf.tests.TestResult:
+        return mf.tests.TestResult(
+            statistic=1.0,
+            p_value=0.5,
+            decision=False,
+            alternative="two_sided",
+            n_obs=n_obs,
+            metadata={"name": name},
+        )
+
+    def dm_spy(loss_a, loss_b, *, horizon=1, hac_lags=None, correction="hln",
+               kernel="acf", input_type="loss", power=2.0, alternative="two_sided",
+               alpha=0.05):
+        calls["dm"].append(hac_lags)
+        return result("Diebold-Mariano", len(loss_a))
+
+    def cw_spy(loss_small, loss_large, forecast_small, forecast_large, *,
+               horizon=1, hac_lags=None, cw_adjustment=True,
+               kernel="newey_west", alpha=0.05):
+        calls["cw"].append(hac_lags)
+        return result("Clark-West", len(loss_small))
+
+    def gw_spy(loss_a, loss_b, *, horizon=1, hac_lags=None, instruments=None,
+               alpha=0.05, small_sample=True):
+        calls["gw"].append(hac_lags)
+        return result("Giacomini-White", len(loss_a))
+
+    def enc_t_spy(error_small, error_large, *, horizon=1, hac_lags=None,
+                  kernel="newey_west", critical_value=None,
+                  normal_approximation=False, alpha=0.05):
+        calls["enc_t"].append(hac_lags)
+        return result("Enc-T", len(error_small))
+
+    def gr_spy(loss_a, loss_b, *, method="giacomini_rossi", window_ratio=0.5,
+               dmv_fullsample=True, hac_lags=None, lag_truncate=0, alpha=0.05):
+        calls["gr"].append(hac_lags)
+        return {
+            "statistic": 1.0,
+            "decision": False,
+            "n_obs": len(loss_a),
+            "critical_value": 2.0,
+            "window_size": 5,
+            "lag_truncate": hac_lags,
+            "hac_lags": hac_lags,
+        }
+
+    def mz_spy(y_true, y_pred, *, hac_lags=0, alpha=0.05):
+        calls["mz"].append(hac_lags)
+        return mf.tests.TestResult(
+            statistic=1.0,
+            p_value=0.5,
+            decision=False,
+            alternative="forecast_rationality",
+            n_obs=len(y_true),
+            metadata={"name": "Mincer-Zarnowitz", "hac_lags": hac_lags},
+        )
+
+    monkeypatch.setattr(mf.tests, "dm_test", dm_spy)
+    monkeypatch.setattr(mf.tests, "clark_west_test", cw_spy)
+    monkeypatch.setattr(mf.tests, "giacomini_white_test", gw_spy)
+    monkeypatch.setattr(mf.tests, "enc_t_test", enc_t_spy)
+    monkeypatch.setattr(mf.tests, "conditional_predictive_ability_test", gr_spy)
+    monkeypatch.setattr(mf.tests, "mincer_zarnowitz_test", mz_spy)
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert all(values and set(values) == {4} for values in calls.values())
+    assert set(sig.loc[sig["test"] == "gr", "hac_lags"]) == {4}
+    assert set(sig.loc[sig["test"] == "mz", "hac_lags"]) == {4}
 
 
 def test_custom_loss_skips_nested_quadratic_pairwise_tests_with_warning():

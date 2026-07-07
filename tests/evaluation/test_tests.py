@@ -105,6 +105,138 @@ def test_dm_test_matches_forecast_package_formula_for_error_inputs() -> None:
     assert np.isclose(less_result.p_value, expected_less_p)
 
 
+def test_dm_test_small_sample_false_matches_plain_dm_normal_reference() -> None:
+    loss_a = pd.Series([0.30, 0.65, 0.25, 0.70, 0.32, 0.62, 0.28, 0.74])
+    loss_b = pd.Series([0.45, 0.40, 0.38, 0.50, 0.44, 0.42, 0.37, 0.48])
+    diff = loss_a - loss_b
+    centered = diff - diff.mean()
+    n = len(diff)
+    cov0 = float(np.dot(centered, centered) / n)
+    expected_stat = float(diff.mean() / math.sqrt(cov0 / n))
+    expected_p = math.erfc(abs(expected_stat) / math.sqrt(2.0))
+
+    result = mf.tests.dm_test(
+        loss_a,
+        loss_b,
+        horizon=3,
+        hac_lags=0,
+        input_type="loss",
+        small_sample=False,
+    )
+    hln_result = mf.tests.dm_test(
+        loss_a,
+        loss_b,
+        horizon=3,
+        hac_lags=0,
+        input_type="loss",
+    )
+
+    assert np.isclose(result.statistic, expected_stat)
+    assert np.isclose(result.p_value, expected_p)
+    assert not np.isclose(result.statistic, hln_result.statistic)
+    assert result.metadata["hln_correction"] is False
+    assert result.metadata["small_sample"] is False
+    assert result.metadata["statistic_type"] == "z"
+    assert result.metadata["p_value_reference"] == (
+        "standard normal reference (plain Diebold-Mariano 1995)"
+    )
+
+
+def test_dm_test_small_sample_default_matches_explicit_hln_behavior() -> None:
+    loss_a = pd.Series([0.2, 0.3, 0.1, 0.4, 0.2, 0.3, 0.5, 0.4])
+    loss_b = pd.Series([0.4, 0.5, 0.2, 0.5, 0.3, 0.6, 0.7, 0.5])
+
+    implicit = mf.tests.dm_test(loss_a, loss_b, horizon=2)
+    explicit = mf.tests.dm_test(loss_a, loss_b, horizon=2, small_sample=True)
+    legacy = mf.tests.dm_test(loss_a, loss_b, horizon=2, correction="hln")
+
+    assert implicit.statistic == explicit.statistic == legacy.statistic
+    assert implicit.p_value == explicit.p_value == legacy.p_value
+    assert implicit.metadata["hln_correction"] is True
+    assert implicit.metadata["small_sample"] is True
+    assert implicit.metadata["statistic_type"] == "t"
+    assert implicit.metadata["p_value_reference"] == "Student-t reference with df=n_obs-1"
+
+
+def test_dm_test_hac_lags_override_matches_hand_variance() -> None:
+    loss_a = pd.Series([0.30, 0.65, 0.25, 0.70, 0.32, 0.62, 0.28, 0.74])
+    loss_b = pd.Series([0.45, 0.40, 0.38, 0.50, 0.44, 0.42, 0.37, 0.48])
+    horizon = 3
+    diff = loss_a - loss_b
+    centered = diff - diff.mean()
+    n = len(diff)
+    cov0 = float(np.dot(centered, centered) / n)
+    hln = math.sqrt((n + 1 - 2 * horizon + horizon * (horizon - 1) / n) / n)
+    expected_stat = float((diff.mean() / math.sqrt(cov0 / n)) * hln)
+
+    default = mf.tests.dm_test(loss_a, loss_b, horizon=horizon, input_type="loss")
+    override = mf.tests.dm_test(
+        loss_a,
+        loss_b,
+        horizon=horizon,
+        hac_lags=0,
+        input_type="loss",
+    )
+
+    assert np.isclose(override.statistic, expected_stat)
+    assert not np.isclose(default.statistic, override.statistic)
+    assert override.metadata["hac_lags"] == 0
+    assert override.metadata["hac_lags_source"] == "user"
+
+
+@pytest.mark.parametrize("test_name", ["dm", "cw", "gw", "enc_t", "gr", "mz"])
+def test_hac_lags_override_changes_hac_backed_test_statistics(test_name: str) -> None:
+    x = np.arange(30, dtype=float)
+    y = 1.0 + 0.1 * x + 0.2 * np.sin(x / 2.0)
+    small = y + 0.4 * np.sin(x) + 0.1 * np.cos(x / 3.0)
+    large = y + 0.25 * np.cos(x / 2.0) - 0.08 * np.sin(x / 5.0)
+    loss_small = (small - y) ** 2
+    loss_large = (large - y) ** 2
+    error_small = small - y
+    error_large = large - y
+
+    if test_name == "dm":
+        default = mf.tests.dm_test(loss_large, loss_small, horizon=4)
+        fixed = mf.tests.dm_test(loss_large, loss_small, horizon=4, hac_lags=0)
+        default_stat, fixed_stat = default.statistic, fixed.statistic
+    elif test_name == "cw":
+        default = mf.tests.clark_west_test(loss_small, loss_large, small, large, horizon=4)
+        fixed = mf.tests.clark_west_test(
+            loss_small, loss_large, small, large, horizon=4, hac_lags=0
+        )
+        default_stat, fixed_stat = default.statistic, fixed.statistic
+    elif test_name == "gw":
+        default = mf.tests.giacomini_white_test(loss_large, loss_small, horizon=4)
+        fixed = mf.tests.giacomini_white_test(
+            loss_large, loss_small, horizon=4, hac_lags=0
+        )
+        default_stat, fixed_stat = default.statistic, fixed.statistic
+    elif test_name == "enc_t":
+        default = mf.tests.enc_t_test(
+            error_small, error_large, horizon=4, normal_approximation=True
+        )
+        fixed = mf.tests.enc_t_test(
+            error_small, error_large, horizon=4, hac_lags=0, normal_approximation=True
+        )
+        default_stat, fixed_stat = default.statistic, fixed.statistic
+    elif test_name == "gr":
+        default = mf.tests.conditional_predictive_ability_test(
+            loss_large, loss_small, lag_truncate=3
+        )
+        fixed = mf.tests.conditional_predictive_ability_test(
+            loss_large, loss_small, hac_lags=0
+        )
+        default_stat, fixed_stat = default["statistic"], fixed["statistic"]
+    else:
+        default = mf.tests.mincer_zarnowitz_test(y, large, hac_lags=3)
+        fixed = mf.tests.mincer_zarnowitz_test(y, large, hac_lags=0)
+        default_stat, fixed_stat = default.statistic, fixed.statistic
+
+    assert default_stat is not None
+    assert fixed_stat is not None
+    assert not np.isclose(default_stat, fixed_stat)
+
+
 def test_equal_predictive_metadata_distinguishes_dm_extensions() -> None:
     loss_a = pd.Series([0.2, 0.4, 0.3, 0.5, 0.6, 0.4])
     loss_b = pd.Series([0.3, 0.3, 0.2, 0.4, 0.5, 0.3])
