@@ -259,10 +259,13 @@ def test_test_options_validate_underlying_callable_kwargs():
         evaluation=EvalSpec(
             benchmark="AR",
             tests=("dm",),
-            test_options={"dm": {"kernel": "bartlett", "correction": "hln"}},
+            test_options={
+                "dm": {"kernel": "bartlett", "correction": "hln", "small_sample": False}
+            },
         )
     )
     assert spec.evaluation.test_options["dm"]["kernel"] == "bartlett"
+    assert spec.evaluation.test_options["dm"]["small_sample"] is False
 
     with pytest.raises(ValueError, match="unsupported option"):
         _spec(
@@ -282,6 +285,18 @@ def test_test_options_validate_hac_lags_int_nonnegative(bad_value):
                 benchmark="AR",
                 tests=("dm",),
                 test_options={"dm": {"hac_lags": bad_value}},
+            )
+        )
+
+
+@pytest.mark.parametrize("bad_value", [0, 1, "false", None])
+def test_test_options_validate_small_sample_bool_only(bad_value):
+    with pytest.raises(ValueError, match="small_sample"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("dm",),
+                test_options={"dm": {"small_sample": bad_value}},
             )
         )
 
@@ -338,6 +353,48 @@ def test_pairwise_test_options_reach_underlying_callable(monkeypatch):
     assert {call["alpha"] for call in calls} == {0.2}
     assert set(sig["test"]) == {"gw"}
     assert set(sig["statistic"]) == {1.0}
+
+
+def test_dm_small_sample_option_reaches_pipeline_callable(monkeypatch):
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm",),
+            test_options={"dm": {"small_sample": False, "alpha": 0.2}},
+        )
+    )
+    calls = []
+
+    def spy(loss_a, loss_b, *, horizon=1, hac_lags=None, small_sample=True,
+            correction="hln", kernel="acf", input_type="loss", power=2.0,
+            alternative="two_sided", alpha=0.05):
+        calls.append(
+            {
+                "horizon": horizon,
+                "alpha": alpha,
+                "small_sample": small_sample,
+                "input_type": input_type,
+                "n": len(loss_a),
+            }
+        )
+        return mf.tests.TestResult(
+            statistic=1.0,
+            p_value=0.5,
+            decision=False,
+            alternative=alternative,
+            n_obs=len(loss_a),
+            metadata={"name": "Diebold-Mariano"},
+        )
+
+    monkeypatch.setattr(mf.tests, "dm_test", spy)
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    assert len(calls) == 2
+    assert {call["small_sample"] for call in calls} == {False}
+    assert {call["alpha"] for call in calls} == {0.2}
+    assert {call["input_type"] for call in calls} == {"loss"}
+    assert set(sig["dm_stat"]) == {1.0}
 
 
 def test_hac_lags_options_reach_all_hac_backed_pipeline_tests(monkeypatch):

@@ -73,6 +73,7 @@ def dm_test(
     *,
     horizon: int = 1,
     hac_lags: int | None = None,
+    small_sample: bool = True,
     correction: str = "hln",
     kernel: str = "acf",
     input_type: str = "loss",
@@ -80,9 +81,19 @@ def dm_test(
     alternative: str = "two_sided",
     alpha: float = 0.05,
 ) -> TestResult:
-    """Diebold-Mariano equal predictive ability test."""
+    """Diebold-Mariano equal predictive ability test.
+
+    The default ``small_sample=True`` applies the Harvey-Leybourne-Newbold
+    finite-sample correction and uses a Student-t reference with ``df=n_obs-1``.
+    Set ``small_sample=False`` (or the legacy ``correction="none"``) for the
+    plain Diebold-Mariano (1995) statistic with an asymptotic standard-normal
+    reference, as used by replication or oracle designs that report uncorrected
+    DM statistics.
+    """
 
     _validate_alpha(alpha)
+    if not isinstance(small_sample, bool):
+        raise TypeError("small_sample must be a bool")
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
     hac_lag_count = _resolve_hac_lags(horizon, hac_lags)
@@ -95,7 +106,8 @@ def dm_test(
         diff = frame["series_a"].abs() ** float(power) - frame["series_b"].abs() ** float(power)
     else:
         diff = frame["series_a"] - frame["series_b"]
-    hln = _normalize_correction(correction) == "hln"
+    correction_mode = _normalize_correction(correction)
+    hln = bool(small_sample) and correction_mode == "hln"
     stat, p_value = _diebold_mariano_stat(
         diff,
         horizon=horizon,
@@ -119,14 +131,19 @@ def dm_test(
             "hac_lags": int(hac_lag_count),
             "hac_lags_source": "default_h_minus_1" if hac_lags is None else "user",
             "hln_correction": hln,
+            "small_sample": hln,
             "variance_estimator": variance_estimator,
             "input_type": input_type,
             "power": float(power),
             "mean_loss_difference": _float_or_none(diff.mean()),
-            "statistic_type": "t",
+            "statistic_type": "t" if hln else "z",
             "null_hypothesis": "equal predictive accuracy",
             "p_value_status": p_value_status,
-            "p_value_reference": "Student-t reference with df=n_obs-1",
+            "p_value_reference": (
+                "Student-t reference with df=n_obs-1"
+                if hln
+                else "standard normal reference (plain Diebold-Mariano 1995)"
+            ),
             "source_reference": "forecast/R/DM2.R::dm.test",
             "external_reference": "forecast::dm.test; Harvey-Leybourne-Newbold modified Diebold-Mariano",
             "r_reference": "forecast/R/DM2.R::dm.test",
@@ -2647,7 +2664,10 @@ def _dm_r_alignment(*, input_type: str, hln: bool, variance_estimator: str) -> s
             "of being computed from R forecast::dm.test e1/e2 errors"
         )
     if not hln:
-        notes.append("omits the HLN small-sample factor used by forecast::dm.test")
+        notes.append(
+            "omits the HLN small-sample factor used by forecast::dm.test and "
+            "uses the plain Diebold-Mariano asymptotic standard-normal reference"
+        )
     if not exact_variance:
         notes.append(
             f"uses the macroforecast-only {variance_estimator!r} HAC estimator rather than "
@@ -2796,7 +2816,8 @@ def _diebold_mariano_stat(
         horizon_lag = max(0, int(horizon) - 1)
         adjustment = math.sqrt((n + 1 - 2 * int(horizon) + int(horizon) * horizon_lag / n) / n)
         statistic *= adjustment if adjustment > 0 else 1.0
-    return float(statistic), _t_p_value(statistic, df=n - 1, alternative=alternative)
+        return float(statistic), _t_p_value(statistic, df=n - 1, alternative=alternative)
+    return float(statistic), _normal_p_value(statistic, alternative=alternative)
 
 
 def _mean_hac_test_statistic(
@@ -2831,14 +2852,7 @@ def _mean_hac_test_statistic(
     statistic = float(mean / math.sqrt(variance / n))
     reference = str(reference).lower().replace("-", "_")
     if reference in {"normal", "gaussian", "z"}:
-        if alternative == "greater":
-            p_value = _normal_one_sided_upper_p(statistic)
-        elif alternative == "less":
-            _upper = _normal_one_sided_upper_p(statistic)
-            p_value = None if _upper is None else 1.0 - _upper
-        else:
-            p_value = _normal_two_sided_p(statistic)
-        return statistic, p_value
+        return statistic, _normal_p_value(statistic, alternative=alternative)
     if reference in {"t", "student", "student_t"}:
         return statistic, _t_p_value(statistic, df=n - 1, alternative=alternative)
     raise ValueError("reference must be 'normal' or 't'")
@@ -2960,6 +2974,17 @@ def _normal_one_sided_upper_p(statistic: float | None) -> float | None:
     if math.isinf(statistic):
         return 0.0 if statistic > 0 else 1.0
     return max(0.0, min(1.0, 0.5 * math.erfc(statistic / math.sqrt(2.0))))
+
+
+def _normal_p_value(statistic: float | None, *, alternative: str) -> float | None:
+    if alternative == "two_sided":
+        return _normal_two_sided_p(statistic)
+    if alternative == "greater":
+        return _normal_one_sided_upper_p(statistic)
+    if alternative == "less":
+        upper = _normal_one_sided_upper_p(statistic)
+        return None if upper is None else 1.0 - upper
+    raise ValueError("alternative must be 'two_sided', 'less', or 'greater'")
 
 
 def _one_sided_from_two_sided(stat: float | None, p_two: float | None) -> float | None:

@@ -246,6 +246,11 @@ def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
                 options["hac_lags"],
                 label=f"evaluation.test_options[{test_name!r}]['hac_lags']",
             )
+        if "small_sample" in options:
+            _validate_bool_option(
+                options["small_sample"],
+                label=f"evaluation.test_options[{test_name!r}]['small_sample']",
+            )
 
 
 def _validate_hac_lags_option(value: Any, *, label: str) -> None:
@@ -253,6 +258,11 @@ def _validate_hac_lags_option(value: Any, *, label: str) -> None:
         raise ValueError(f"{label} must be an integer >= 0")
     if int(value) < 0:
         raise ValueError(f"{label} must be an integer >= 0")
+
+
+def _validate_bool_option(value: Any, *, label: str) -> None:
+    if not isinstance(value, bool):
+        raise ValueError(f"{label} must be a bool")
 
 
 _DEFAULT_EVAL_BY = ("target", "horizon")

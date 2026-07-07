@@ -105,6 +105,59 @@ def test_dm_test_matches_forecast_package_formula_for_error_inputs() -> None:
     assert np.isclose(less_result.p_value, expected_less_p)
 
 
+def test_dm_test_small_sample_false_matches_plain_dm_normal_reference() -> None:
+    loss_a = pd.Series([0.30, 0.65, 0.25, 0.70, 0.32, 0.62, 0.28, 0.74])
+    loss_b = pd.Series([0.45, 0.40, 0.38, 0.50, 0.44, 0.42, 0.37, 0.48])
+    diff = loss_a - loss_b
+    centered = diff - diff.mean()
+    n = len(diff)
+    cov0 = float(np.dot(centered, centered) / n)
+    expected_stat = float(diff.mean() / math.sqrt(cov0 / n))
+    expected_p = math.erfc(abs(expected_stat) / math.sqrt(2.0))
+
+    result = mf.tests.dm_test(
+        loss_a,
+        loss_b,
+        horizon=3,
+        hac_lags=0,
+        input_type="loss",
+        small_sample=False,
+    )
+    hln_result = mf.tests.dm_test(
+        loss_a,
+        loss_b,
+        horizon=3,
+        hac_lags=0,
+        input_type="loss",
+    )
+
+    assert np.isclose(result.statistic, expected_stat)
+    assert np.isclose(result.p_value, expected_p)
+    assert not np.isclose(result.statistic, hln_result.statistic)
+    assert result.metadata["hln_correction"] is False
+    assert result.metadata["small_sample"] is False
+    assert result.metadata["statistic_type"] == "z"
+    assert result.metadata["p_value_reference"] == (
+        "standard normal reference (plain Diebold-Mariano 1995)"
+    )
+
+
+def test_dm_test_small_sample_default_matches_explicit_hln_behavior() -> None:
+    loss_a = pd.Series([0.2, 0.3, 0.1, 0.4, 0.2, 0.3, 0.5, 0.4])
+    loss_b = pd.Series([0.4, 0.5, 0.2, 0.5, 0.3, 0.6, 0.7, 0.5])
+
+    implicit = mf.tests.dm_test(loss_a, loss_b, horizon=2)
+    explicit = mf.tests.dm_test(loss_a, loss_b, horizon=2, small_sample=True)
+    legacy = mf.tests.dm_test(loss_a, loss_b, horizon=2, correction="hln")
+
+    assert implicit.statistic == explicit.statistic == legacy.statistic
+    assert implicit.p_value == explicit.p_value == legacy.p_value
+    assert implicit.metadata["hln_correction"] is True
+    assert implicit.metadata["small_sample"] is True
+    assert implicit.metadata["statistic_type"] == "t"
+    assert implicit.metadata["p_value_reference"] == "Student-t reference with df=n_obs-1"
+
+
 def test_dm_test_hac_lags_override_matches_hand_variance() -> None:
     loss_a = pd.Series([0.30, 0.65, 0.25, 0.70, 0.32, 0.62, 0.28, 0.74])
     loss_b = pd.Series([0.45, 0.40, 0.38, 0.50, 0.44, 0.42, 0.37, 0.48])

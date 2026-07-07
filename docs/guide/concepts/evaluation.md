@@ -48,6 +48,12 @@ The pipeline runs statistical forecast comparison tests across all contenders:
 
 - **Diebold-Mariano (DM)**: tests whether contender and benchmark have equal
   predictive accuracy. Valid for any pair of forecasts (nested or non-nested).
+  The default applies the Harvey-Leybourne-Newbold small-sample correction and
+  uses a Student-t reference with `df=n_obs-1`, matching the package's
+  `forecast::dm.test` parity contract. Use `test_options={"dm":
+  {"small_sample": False}}` only when a replication design needs the plain
+  Diebold-Mariano (1995) statistic and asymptotic standard-normal p-value, such
+  as MATLAB oracles that report the uncorrected DM statistic.
 - **Clark-West (CW)**: adjusts the DM test for the finite-sample upward bias of
   a larger nested model. Valid only when the benchmark is nested within the
   contender (declare `nested_in_benchmark=True` on the arm). The pipeline emits

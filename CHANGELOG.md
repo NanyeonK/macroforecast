@@ -10,7 +10,9 @@ full per-version honesty-pass history embedded in repo documentation.
   evaluation tests (`dm`, `cw`, `gw`, `enc_t`, `gr`, `mz`) with spec-build
   validation, and added `mf.reporting.pairwise_test_table(...)` for K-by-K
   pairwise model-comparison p-value/statistic matrices from `PipelineReport`
-  forecasts.
+  forecasts. `dm` now also accepts `small_sample=False` through
+  `test_options` for the plain Diebold-Mariano statistic with asymptotic-normal
+  p-values while preserving the HLN/t default.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

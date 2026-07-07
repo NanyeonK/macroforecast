@@ -365,12 +365,19 @@ Qualified name: `macroforecast.tests.dm_test`
 #### Signature
 
 ```python
-macroforecast.tests.dm_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, hac_lags: int | None = None, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
+macroforecast.tests.dm_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, hac_lags: int | None = None, small_sample: bool = True, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
 ```
 
 #### Description
 
 Diebold-Mariano equal predictive ability test.
+
+The default ``small_sample=True`` applies the Harvey-Leybourne-Newbold
+finite-sample correction and uses a Student-t reference with ``df=n_obs-1``.
+Set ``small_sample=False`` (or the legacy ``correction="none"``) for the
+plain Diebold-Mariano (1995) statistic with an asymptotic standard-normal
+reference, as used by replication or oracle designs that report uncorrected
+DM statistics.
 
 #### Parameters
 
@@ -380,6 +387,7 @@ Diebold-Mariano equal predictive ability test.
 | `loss_b` | positional or keyword | `Any` | `required` |
 | `horizon` | keyword only | `int` | `1` |
 | `hac_lags` | keyword only | `int \| None` | `None` |
+| `small_sample` | keyword only | `bool` | `True` |
 | `correction` | keyword only | `str` | `"hln"` |
 | `kernel` | keyword only | `str` | `"acf"` |
 | `input_type` | keyword only | `str` | `"loss"` |
