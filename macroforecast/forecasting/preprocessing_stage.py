@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ import pandas as pd
 from macroforecast.data import DataBundle, spec as data_spec
 from macroforecast.feature_engineering import FeatureSpec, FittedFeatureBuilder
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
-from macroforecast.preprocessing.cache import PreprocessorStore
+from macroforecast.preprocessing.cache import PreprocessorStore, UndigestiblePreprocessorSpec
 from macroforecast.window import StagePolicy, stage_panel
 
 
@@ -36,6 +37,9 @@ class _PreparedStage:
     # multi-horizon runs that share the panel across many origins. Consumers read
     # the metadata from this field and re-attach it only where it is needed.
     panel_metadata: dict[str, Any] | None = None
+
+
+_UNDIGESTIBLE_PREPROCESSING_WARNED: set[int] = set()
 
 
 def _preprocessing_cache_key(
@@ -177,16 +181,21 @@ def _prepare_origin_panel(
     ):
         store_origin_pos = _origin_pos_for_store_key(cache_key, item)
         if store_origin_pos is not None:
-            store_key = preprocessing_store.key(
-                preprocessing,
-                target=str(target),
-                origin_pos=store_origin_pos,
-            )
-            loaded = preprocessing_store.get(store_key)
-            if isinstance(loaded, FittedPreprocessor):
-                fitted_preprocessing = loaded
-                if preprocessing_cache is not None:
-                    preprocessing_cache[cache_key] = loaded
+            try:
+                store_key = preprocessing_store.key(
+                    preprocessing,
+                    target=str(target),
+                    origin_pos=store_origin_pos,
+                )
+            except UndigestiblePreprocessorSpec as exc:
+                _warn_undigestible_preprocessing_spec(preprocessing, str(exc))
+                store_key = None
+            if store_key is not None:
+                loaded = preprocessing_store.get(store_key)
+                if isinstance(loaded, FittedPreprocessor):
+                    fitted_preprocessing = loaded
+                    if preprocessing_cache is not None:
+                        preprocessing_cache[cache_key] = loaded
     if fitted_preprocessing is None:
         fit_panel = stage_panel(panel, item, preprocessing_policy)
         fit_policy = (
@@ -256,16 +265,17 @@ def _prepare_origin_panel(
                 else None
             )
             if not isinstance(base_panel, pd.DataFrame):
-                base_store_key = (
-                    preprocessing_store.frame_key(
-                        preprocessing,
-                        target=str(target),
-                        cache_key=cache_key,
-                        kind="prepared_base",
-                    )
-                    if preprocessing_store is not None and target is not None
-                    else None
-                )
+                base_store_key = None
+                if preprocessing_store is not None and target is not None:
+                    try:
+                        base_store_key = preprocessing_store.frame_key(
+                            preprocessing,
+                            target=str(target),
+                            cache_key=cache_key,
+                            kind="prepared_base",
+                        )
+                    except UndigestiblePreprocessorSpec as exc:
+                        _warn_undigestible_preprocessing_spec(preprocessing, str(exc))
                 if base_store_key is not None and preprocessing_store is not None:
                     loaded_base = preprocessing_store.get_frame(base_store_key)
                     if isinstance(loaded_base, pd.DataFrame):
@@ -314,6 +324,19 @@ def _prepare_origin_panel(
     if prepared_key is not None and preprocessing_cache is not None:
         preprocessing_cache[prepared_key] = stage
     return stage
+
+
+def _warn_undigestible_preprocessing_spec(preprocessing: PreprocessSpec, reason: str) -> None:
+    key = id(preprocessing)
+    if key in _UNDIGESTIBLE_PREPROCESSING_WARNED:
+        return
+    _UNDIGESTIBLE_PREPROCESSING_WARNED.add(key)
+    warnings.warn(
+        "preprocessing disk cache disabled for this spec because its identity "
+        f"is undigestible: {reason}",
+        UserWarning,
+        stacklevel=3,
+    )
 
 
 # Small ``.attrs`` keys that are cheap to deep-copy and are read directly off the

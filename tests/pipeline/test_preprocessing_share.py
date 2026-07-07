@@ -20,6 +20,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 import macroforecast as mf
 from macroforecast.forecasting import runner as _runner
@@ -70,6 +71,38 @@ def _toy_run_inputs():
 def _run_once(*, preprocessing_store: PreprocessorStore | None = None) -> object:
     """Run one atomic forecast cell (single target/model/horizon)."""
     bundle, prep, win, feats = _toy_run_inputs()
+    return _runner.run(
+        bundle,
+        "ridge",
+        window=win,
+        preprocessing=prep,
+        features=feats,
+        target="Y",
+        horizon=1,
+        save_models=False,
+        preprocessing_store=preprocessing_store,
+    )
+
+
+def _custom_marker_step(panel: pd.DataFrame, metadata=None) -> pd.DataFrame:
+    out = panel.copy()
+    out["CUSTOM_MARKER"] = 1.0
+    return out
+
+
+def _run_custom_once(*, preprocessing_store: PreprocessorStore | None = None) -> object:
+    bundle, _prep, win, feats = _toy_run_inputs()
+    prep = mf.preprocessing.preprocess_spec(
+        transform="official",
+        impute="mean",
+        standardize="zscore",
+        custom_steps=[
+            mf.preprocessing.custom_preprocess_step(
+                "marker",
+                _custom_marker_step,
+            )
+        ],
+    )
     return _runner.run(
         bundle,
         "ridge",
@@ -251,6 +284,39 @@ def test_disk_store_dedupes_preprocessing_fit(tmp_path):
     _, ctrl_second = _count_fits(lambda: _run_once(preprocessing_store=None))
     assert ctrl_first == first_fits
     assert ctrl_second == ctrl_first  # without the store the work is repeated
+
+
+def test_disk_store_custom_callable_requires_digest_for_reuse(tmp_path):
+    if hasattr(_custom_marker_step, "__mf_digest__"):
+        delattr(_custom_marker_step, "__mf_digest__")
+    store = PreprocessorStore(tmp_path / "store")
+
+    with pytest.warns(UserWarning, match="disk cache disabled"):
+        _, first_fits = _count_fits(lambda: _run_custom_once(preprocessing_store=store))
+    assert first_fits > 0
+    with pytest.warns(UserWarning, match="disk cache disabled"):
+        _, second_fits = _count_fits(lambda: _run_custom_once(preprocessing_store=store))
+    assert second_fits == first_fits
+    assert not list((tmp_path / "store").glob("*.pkl"))
+    assert not list((tmp_path / "store").glob("*.parquet"))
+
+    _custom_marker_step.__mf_digest__ = "marker-v1"
+    digest_store = PreprocessorStore(tmp_path / "digest-store")
+    _, digest_first = _count_fits(
+        lambda: _run_custom_once(preprocessing_store=digest_store)
+    )
+    _, digest_second = _count_fits(
+        lambda: _run_custom_once(preprocessing_store=digest_store)
+    )
+    assert digest_first > 0
+    assert digest_second == 0
+
+    _custom_marker_step.__mf_digest__ = "marker-v2"
+    _, changed_digest = _count_fits(
+        lambda: _run_custom_once(preprocessing_store=digest_store)
+    )
+    assert changed_digest == digest_first
+    delattr(_custom_marker_step, "__mf_digest__")
 
 
 def test_disk_store_dedupes_prepared_base_across_pipeline_runs(tmp_path):

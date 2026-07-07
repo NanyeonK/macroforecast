@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from macroforecast.preprocessing.cache import PreprocessorStore
+from macroforecast.preprocessing.cache import PreprocessorStore, UndigestiblePreprocessorSpec
 from macroforecast.preprocessing.specs import PreprocessSpec, preprocess_spec
 
 
@@ -147,6 +147,40 @@ def test_store_distinguishes_spec_hash(tmp_path: Path) -> None:
     assert store.get(key_b) == "value_b"
     assert store.get(key_c) is None
     assert store.get(key_d) is None
+
+
+def test_store_uses_mf_digest_for_custom_callable_keys(tmp_path: Path) -> None:
+    store = PreprocessorStore(tmp_path)
+
+    func_a = lambda panel, metadata=None: panel  # noqa: E731
+    func_b = lambda panel, metadata=None: panel  # noqa: E731
+    func_a.__mf_digest__ = "lambda-a"
+    func_b.__mf_digest__ = "lambda-b"
+
+    spec_a = _make_spec(custom_steps=[{"name": "step", "func": func_a}])
+    spec_b = _make_spec(custom_steps=[{"name": "step", "func": func_b}])
+
+    assert store.key(spec_a, target="y", origin_pos=1) != store.key(
+        spec_b,
+        target="y",
+        origin_pos=1,
+    )
+
+
+def test_preprocess_spec_rejects_undigested_lambda_custom_step() -> None:
+    with pytest.raises(ValueError, match="anonymous lambda.*__mf_digest__"):
+        _make_spec(custom_steps=[lambda panel, metadata=None: panel])
+
+
+def test_store_refuses_named_custom_callable_without_digest(tmp_path: Path) -> None:
+    def custom_step(panel: pd.DataFrame, metadata=None) -> pd.DataFrame:
+        return panel
+
+    spec = _make_spec(custom_steps=[{"name": "custom", "func": custom_step}])
+    store = PreprocessorStore(tmp_path)
+
+    with pytest.raises(UndigestiblePreprocessorSpec, match="without __mf_digest__"):
+        store.key(spec, target="y", origin_pos=1)
 
 
 # ---------------------------------------------------------------------------
