@@ -7,13 +7,14 @@ execution (``run_pipeline``), interpretation, and reporting layers build on thes
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 import importlib.util
 import inspect
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Literal, TypeAlias, cast
 
+import numpy as np
 import pandas as pd
 
 
@@ -244,6 +245,8 @@ def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
 
 _DEFAULT_EVAL_BY = ("target", "horizon")
 _DEFAULT_PRIMARY_AXIS = "contender"
+_NAMED_SUBSAMPLE_MASKS = frozenset({"nber_recession", "nber_expansion"})
+SubsampleMaskInput: TypeAlias = str | pd.Series | Mapping[Any, Any] | Sequence[tuple[Any, Any]] | None
 
 
 def _validate_unimplemented_eval_fields(evaluation: "EvalSpec") -> None:
@@ -275,6 +278,85 @@ def _parse_subsample_date(value: Any, *, label: str) -> pd.Timestamp | None:
     if timestamp.tz is not None:
         timestamp = timestamp.tz_convert(None)
     return timestamp.normalize()
+
+
+def _coerce_subsample_mask_value(value: Any, *, label: str) -> bool:
+    try:
+        missing = bool(pd.isna(value))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"{label} values must be boolean or 0/1 without NaN; fill or drop "
+            "undecidable dates before passing"
+        ) from exc
+    if missing:
+        raise ValueError(
+            f"{label} values must be boolean or 0/1 without NaN; fill or drop "
+            "undecidable dates before passing"
+        )
+    if isinstance(value, (bool, np.bool_)):
+        return bool(value)
+    if isinstance(value, (int, float, np.integer, np.floating)):
+        numeric = float(value)
+        if numeric in {0.0, 1.0}:
+            return bool(int(numeric))
+    raise ValueError(
+        f"{label} values must be boolean or 0/1 without NaN; fill or drop "
+        "undecidable dates before passing"
+    )
+
+
+def _mask_items(mask: SubsampleMaskInput, *, label: str) -> Iterable[tuple[Any, Any]]:
+    if isinstance(mask, pd.Series):
+        return mask.items()
+    if isinstance(mask, Mapping):
+        return mask.items()
+    if isinstance(mask, Sequence) and not isinstance(mask, (str, bytes)):
+        return cast("Iterable[tuple[Any, Any]]", mask)
+    raise ValueError(
+        f"{label} must be a named indicator, boolean pandas Series, date->bool "
+        "mapping, or sequence of (date, bool) pairs"
+    )
+
+
+def _canonicalize_subsample_mask(
+    mask: SubsampleMaskInput,
+    *,
+    label: str = "SubsampleWindow.mask",
+) -> str | tuple[tuple[str, bool], ...] | None:
+    if mask is None:
+        return None
+    if isinstance(mask, str):
+        name = mask.strip()
+        if name not in _NAMED_SUBSAMPLE_MASKS:
+            allowed = sorted(_NAMED_SUBSAMPLE_MASKS)
+            raise ValueError(f"{label} must be one of {allowed}; got {mask!r}")
+        return name
+
+    parsed: list[tuple[str, bool]] = []
+    seen: set[pd.Timestamp] = set()
+    for idx, item in enumerate(_mask_items(mask, label=label)):
+        if (
+            not isinstance(item, Sequence)
+            or isinstance(item, (str, bytes))
+            or len(item) != 2
+        ):
+            raise ValueError(f"{label}[{idx}] must be a (date, bool) pair")
+        raw_date, raw_value = item
+        timestamp = _parse_subsample_date(raw_date, label=f"{label}[{idx}] date")
+        assert timestamp is not None
+        if timestamp in seen:
+            raise ValueError(f"{label} has duplicate normalized date {timestamp.strftime('%Y-%m-%d')}")
+        seen.add(timestamp)
+        parsed.append(
+            (
+                timestamp.strftime("%Y-%m-%d"),
+                _coerce_subsample_mask_value(raw_value, label=label),
+            )
+        )
+
+    if not parsed:
+        raise ValueError(f"{label} must contain at least one date")
+    return tuple(sorted(parsed, key=lambda item: item[0]))
 
 
 def _normalize_subsamples(
@@ -330,6 +412,7 @@ def _normalize_subsamples(
             start=None if window.start is None else str(window.start),
             end=None if window.end is None else str(window.end),
             exclude=tuple(excludes),
+            mask=window.mask,
         )
     return normalized
 
@@ -358,12 +441,19 @@ class SubsampleWindow:
     """Evaluation-window filter applied to forecast target dates.
 
     Bounds are inclusive date strings. ``exclude`` removes inclusive date ranges
-    after the optional start/end bounds are applied.
+    after the optional start/end bounds are applied. ``mask`` intersects the
+    window with dates where a boolean state indicator is true; it accepts a
+    date-indexed boolean Series, a date-to-bool mapping, or the named indicators
+    ``"nber_recession"`` and ``"nber_expansion"``.
     """
 
     start: str | None = None
     end: str | None = None
     exclude: tuple[tuple[str, str], ...] = ()
+    mask: SubsampleMaskInput = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "mask", _canonicalize_subsample_mask(self.mask))
 
 
 @dataclass(frozen=True)

@@ -1419,7 +1419,11 @@ def _calendar_identity(calendar: Any) -> dict[str, Any]:
     }
 
 
-def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
+def _spec_echo(
+    spec: PipelineSpec,
+    *,
+    subsamples: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """A plain, JSON-able echo of the resolved spec's key choices.
 
     Not a substitute for the spec itself -- ``preprocessing``/``features``
@@ -1438,6 +1442,14 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
 
     def _metric_name(metric: Any) -> str:
         return metric if isinstance(metric, str) else str(getattr(metric, "__name__", metric))
+
+    evaluation = {
+        "metrics": [_metric_name(m) for m in spec.evaluation.metrics],
+        "tests": list(spec.evaluation.tests),
+        "mcs_alpha": spec.evaluation.mcs_alpha,
+    }
+    if subsamples is not None:
+        evaluation["subsamples"] = dict(subsamples)
 
     return {
         "targets": [
@@ -1460,11 +1472,7 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
             for a in spec.arms
         ],
         "benchmark": spec.evaluation.benchmark,
-        "evaluation": {
-            "metrics": [_metric_name(m) for m in spec.evaluation.metrics],
-            "tests": list(spec.evaluation.tests),
-            "mcs_alpha": spec.evaluation.mcs_alpha,
-        },
+        "evaluation": evaluation,
         "seed": spec.seed,
         "n_jobs": spec.n_jobs,
         "model_threads": spec.model_threads,
@@ -1657,6 +1665,7 @@ def _audit(
     """Collect provenance and a leakage audit for the pipeline execution."""
     import macroforecast as _mf
 
+    execution_metadata = dict(execution_metadata or {})
     provenance: dict = dict(spec.provenance)
     provenance.update({
         "package_version": getattr(_mf, "__version__", "unknown"),
@@ -1679,8 +1688,11 @@ def _audit(
         provenance["effective_seeds"] = _effective_seed_metadata(spec)
         provenance["environment"] = _environment_provenance()
         provenance["data"] = _data_identity(spec.data)
-        provenance["spec_echo"] = _spec_echo(spec)
-    execution_metadata = dict(execution_metadata or {})
+        subsamples = execution_metadata.get("subsamples")
+        provenance["spec_echo"] = _spec_echo(
+            spec,
+            subsamples=subsamples if isinstance(subsamples, Mapping) else None,
+        )
     vintage_sources = execution_metadata.get("vintage_sources")
     if vintage_sources:
         provenance["vintage_source"] = _merge_vintage_sources(spec, vintage_sources)
@@ -1780,6 +1792,9 @@ def run_pipeline(spec: PipelineSpec):
                 ),
                 "vintage_sources": master.attrs.get("macroforecast_vintage_sources"),
                 "result_store": result_store_metadata,
+                "subsamples": results["forecasts"].attrs.get(
+                    "macroforecast_subsample_provenance"
+                ),
             },
         )
     # Mirror per-cell failures and zero-row cells into the leakage audit so any

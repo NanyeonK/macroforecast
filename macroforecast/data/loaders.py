@@ -37,6 +37,8 @@ from .panel import DataBundle, as_panel, set_frequencies
 DatasetId = Literal["fred_md", "fred_qd", "fred_sd", "fred_md+fred_sd", "fred_qd+fred_sd"]
 VersionMode = Literal["current", "vintage"]
 
+_FRED_SERIES_URL_TEMPLATE = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+_FRED_SERIES_ID_RE = re.compile(r"[A-Za-z0-9_.-]+")
 _CURRENT_MD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/current.csv"
 _VINTAGE_MD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/monthly/{vintage}.csv"
 _CURRENT_QD_URL = "https://www.stlouisfed.org/-/media/project/frbstl/stlouisfed/research/fred-md/quarterly/current.csv"
@@ -409,6 +411,75 @@ def load_fred_md(
         transform_codes=tcodes,
         cache_root=cache_root,
     )
+
+
+def load_fred_series(
+    series_id: str,
+    *,
+    frequency: str | None = None,
+    force: bool = False,
+    cache_root: str | Path | None = None,
+    local_source: str | Path | None = None,
+) -> DataBundle:
+    """Load one FRED graph series as a canonical ``DataBundle``.
+
+    The raw CSV is cached under ``<cache_root>/fred_series/<SERIES_ID>.csv`` and
+    recorded in the raw-artifact manifest. ``local_source`` copies a local CSV
+    into that cache path for deterministic tests and offline workflows.
+    """
+
+    normalized_id = _normalize_fred_series_id(series_id)
+    target = _fred_series_file_path(normalized_id, cache_root)
+    cache_hit = target.exists() and not force and local_source is None
+    source_url = _FRED_SERIES_URL_TEMPLATE.format(series_id=normalized_id)
+
+    if not cache_hit:
+        try:
+            if local_source is not None:
+                _atomic_copy(Path(local_source), target)
+                source_url = str(local_source)
+            else:
+                _atomic_write(
+                    _read_official_url(source_url, headers=_FRED_DATABASES_HEADERS),
+                    target,
+                )
+        except (OSError, RawDownloadError, RawNetworkError, HTTPError, URLError) as exc:
+            raise RawDownloadError(f"failed to obtain FRED series raw file for series_id={normalized_id!r}") from exc
+
+    try:
+        panel = _parse_fred_series_csv(target, normalized_id)
+    except (OSError, ValueError, pd.errors.ParserError) as exc:
+        raise RawParseError(f"failed to parse FRED series CSV at {target}") from exc
+
+    native_frequency = _normalize_fred_series_frequency(frequency) if frequency is not None else _infer_native_frequency(panel[normalized_id])
+    date_anchor = _infer_date_anchor(panel[normalized_id], native_frequency)
+    metadata = {
+        "dataset": "fred_series",
+        "source_family": "fred_graph",
+        "series_id": normalized_id,
+        "frequency": native_frequency,
+        "version_mode": "current",
+        "vintage": None,
+        "data_through": _data_through(panel),
+        "support_tier": "stable",
+        "parse_notes": (),
+        "artifact": _file_artifact(
+            dataset="fred_series",
+            request=None,
+            source_url=source_url,
+            local_path=target,
+            file_format="csv",
+            cache_hit=cache_hit,
+        ),
+        "transform_codes": {normalized_id: 1},
+        "native_frequency_by_column": {normalized_id: native_frequency},
+        "native_frequency_counts": {native_frequency: 1},
+        "date_anchor_by_column": {normalized_id: date_anchor},
+        "date_anchor_counts": {date_anchor: 1},
+    }
+    bundle = _bundle(panel, metadata)
+    _append_manifest_entry(bundle.metadata, cache_root=cache_root)
+    return bundle
 
 
 def load_fred_qd(
@@ -841,6 +912,50 @@ def _raw_file_path(request: _VersionRequest, cache_root: str | Path | None = Non
         path = root / request.dataset / "vintages" / f"{request.vintage}.{suffix}"
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def _normalize_fred_series_id(series_id: str) -> str:
+    normalized = str(series_id).strip().upper()
+    if not normalized or _FRED_SERIES_ID_RE.fullmatch(normalized) is None:
+        raise ValueError(
+            "series_id must be a nonempty FRED series id containing only "
+            "letters, numbers, underscore, hyphen, or dot"
+        )
+    return normalized
+
+
+def _fred_series_file_path(series_id: str, cache_root: str | Path | None = None) -> Path:
+    path = _raw_cache_root(cache_root) / "fred_series" / f"{series_id}.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _normalize_fred_series_frequency(frequency: str) -> str:
+    aliases = {
+        "d": "daily",
+        "day": "daily",
+        "daily": "daily",
+        "w": "weekly",
+        "week": "weekly",
+        "weekly": "weekly",
+        "m": "monthly",
+        "month": "monthly",
+        "monthly": "monthly",
+        "q": "quarterly",
+        "quarter": "quarterly",
+        "quarterly": "quarterly",
+        "a": "annual",
+        "y": "annual",
+        "year": "annual",
+        "annual": "annual",
+        "yearly": "annual",
+        "unknown": "unknown",
+        "irregular": "irregular",
+    }
+    key = str(frequency).strip().lower()
+    if key not in aliases:
+        raise ValueError("frequency must be one of daily, weekly, monthly, quarterly, annual, irregular, or unknown")
+    return aliases[key]
 
 
 def _atomic_copy(source: Path, target: Path) -> None:
@@ -1747,6 +1862,37 @@ def _parse_fred_csv(filepath: str | Path) -> tuple[pd.DataFrame, dict[str, int]]
     return data, tcodes
 
 
+def _parse_fred_series_csv(filepath: str | Path, series_id: str) -> pd.DataFrame:
+    path = Path(filepath)
+    raw = pd.read_csv(path, na_values=["", ".", " "])
+    if raw.shape[0] < 1 or raw.shape[1] < 2:
+        raise ValueError(f"file does not look like a FRED graph CSV: {path}")
+    date_col = str(raw.columns[0])
+    if series_id in raw.columns:
+        value_col = series_id
+    elif raw.shape[1] == 2:
+        value_col = str(raw.columns[1])
+    else:
+        raise ValueError(f"FRED graph CSV at {path} has no column {series_id!r}")
+
+    dates = pd.to_datetime(raw[date_col], errors="coerce")
+    invalid_dates = int(dates.isna().sum())
+    if invalid_dates:
+        raise ValueError(f"FRED graph CSV has {invalid_dates} invalid or missing date values")
+
+    panel = pd.DataFrame(
+        {series_id: pd.to_numeric(raw[value_col], errors="coerce").to_numpy()},
+        index=pd.DatetimeIndex(dates).normalize(),
+    )
+    panel.index.name = "date"
+    panel.sort_index(inplace=True)
+    if panel.index.has_duplicates:
+        duplicated = panel.index[panel.index.duplicated()].unique()
+        sample = ", ".join(ts.strftime("%Y-%m-%d") for ts in duplicated[:3])
+        raise ValueError(f"FRED graph CSV has duplicate dates: {sample}")
+    return panel
+
+
 def _fred_sd_local_source_format(local_source: str | Path | None) -> str:
     if local_source is None:
         return "xlsx"
@@ -2059,6 +2205,7 @@ def _fred_sd_state_summary(series: list[dict[str, object]]) -> list[dict[str, ob
 
 __all__ = [
     "combine",
+    "load_fred_series",
     "load_fred_md",
     "load_fred_qd",
     "load_fred_sd",

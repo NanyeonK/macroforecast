@@ -33,6 +33,7 @@ Guide context: [../guide/concepts/data.md](../guide/concepts/data.md).
 | `define_regime` | function | Attach a binary regime series to panel metadata. |
 | `frequency_hardening_issues` | function | Return frequency-classification issues that should be surfaced. |
 | `infer_frequencies` | function | Infer or read native frequency by panel column. |
+| `load_fred_series` | function | Load one FRED graph series as a canonical ``DataBundle``. |
 | `load_fred_md` | function | Load FRED-MD as a canonical monthly ``DataBundle``. |
 | `load_fred_qd` | function | No public docstring is available. |
 | `load_fred_sd` | function | No public docstring is available. |
@@ -919,6 +920,45 @@ preferred, then FRED-SD series reports, then observed-date spacing.
 import macroforecast as mf
 # Call with the signature above:
 # mf.data.infer_frequencies(...)
+```
+### load_fred_series
+
+Qualified name: `macroforecast.data.loaders.load_fred_series`
+
+#### Signature
+
+```python
+macroforecast.data.load_fred_series(series_id: str, *, frequency: str | None = None, force: bool = False, cache_root: str | Path | None = None, local_source: str | Path | None = None) -> DataBundle
+```
+
+#### Description
+
+Load one FRED graph series as a canonical ``DataBundle``.
+
+The raw CSV is cached under ``<cache_root>/fred_series/<SERIES_ID>.csv`` and
+recorded in the raw-artifact manifest. ``local_source`` copies a local CSV
+into that cache path for deterministic tests and offline workflows.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series_id` | positional or keyword | `str` | `required` |
+| `frequency` | keyword only | `str \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_source` | keyword only | `str \| Path \| None` | `None` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_fred_series(...)
 ```
 ### load_fred_md
 

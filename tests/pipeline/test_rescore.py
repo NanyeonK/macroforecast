@@ -9,6 +9,7 @@ produce the SAME accuracy table; an empty/missing/partial checkpoint dir must
 fail loudly with an actionable message, never return a silently-empty report.
 """
 import dataclasses as _dc
+import importlib
 
 import numpy as np
 import pandas as pd
@@ -24,6 +25,8 @@ from macroforecast.pipeline import (
     rescore,
     run_pipeline,
 )
+
+eval_mod = importlib.import_module("macroforecast.pipeline.evaluate")
 
 
 def _toy(checkpoint_dir=None, *, evaluation=None):
@@ -61,10 +64,24 @@ def _toy(checkpoint_dir=None, *, evaluation=None):
 
 
 def _sorted_accuracy(report):
+    sort_columns = [
+        column
+        for column in ["subsample", "target", "horizon", "contender"]
+        if column in report.accuracy.columns
+    ]
     return (
-        report.accuracy.sort_values(["target", "horizon", "contender"])
+        report.accuracy.sort_values(sort_columns)
         .reset_index(drop=True)
     )
+
+
+def _sorted_table(frame: pd.DataFrame) -> pd.DataFrame:
+    sort_columns = [
+        column
+        for column in ["subsample", "target", "horizon", "contender", "test"]
+        if column in frame.columns
+    ]
+    return frame.sort_values(sort_columns).reset_index(drop=True)
 
 
 def test_rescore_roundtrip_matches_live_run(tmp_path):
@@ -196,9 +213,32 @@ def test_rescore_missing_arm_surfaces_in_empty_cells(tmp_path):
     assert {c["arm"] for c in rescored.empty_cells} == {"LASSO"}
 
 
-def test_rescore_can_add_subsamples_to_checkpointed_run(tmp_path):
+def test_rescore_can_add_subsamples_to_checkpointed_run(monkeypatch, tmp_path):
     ckpt = tmp_path / "ckpt"
     run_pipeline(_toy(ckpt))
+
+    fred_dates = pd.date_range("1999-01-01", periods=60, freq="MS")
+
+    def fake_load_fred_series(series_id: str, *, frequency=None, **_kwargs):
+        assert series_id == "USREC"
+        assert frequency == "monthly"
+        panel = pd.DataFrame({series_id: [1] * len(fred_dates)}, index=fred_dates)
+        panel.index.name = "date"
+        return mf.data.DataBundle(
+            panel=panel,
+            metadata={
+                "dataset": "fred_series",
+                "series_id": series_id,
+                "artifact": {
+                    "source_url": "https://example.test/USREC.csv",
+                    "local_path": "/tmp/USREC.csv",
+                    "file_sha256": "sha-USREC",
+                    "cache_hit": True,
+                },
+            },
+        )
+
+    monkeypatch.setattr(eval_mod, "load_fred_series", fake_load_fred_series)
     evaluation = EvalSpec(
         benchmark="RIDGE",
         metrics=("rmse",),
@@ -206,10 +246,25 @@ def test_rescore_can_add_subsamples_to_checkpointed_run(tmp_path):
         subsamples={
             "full": SubsampleWindow(),
             "early": SubsampleWindow(end="2000-12-31"),
+            "nber": SubsampleWindow(mask="nber_recession"),
         },
     )
 
     rescored = rescore(ckpt, _toy(ckpt, evaluation=evaluation))
+    live = run_pipeline(_toy(tmp_path / "live_ckpt", evaluation=evaluation))
 
-    assert set(rescored.accuracy["subsample"]) == {"full", "early"}
-    assert set(rescored.significance["subsample"]) == {"full", "early"}
+    assert set(rescored.accuracy["subsample"]) == {"full", "early", "nber"}
+    assert set(rescored.significance["subsample"]) == {"full", "early", "nber"}
+    pd.testing.assert_frame_equal(_sorted_accuracy(rescored), _sorted_accuracy(live))
+    pd.testing.assert_frame_equal(
+        _sorted_table(rescored.significance),
+        _sorted_table(live.significance),
+    )
+    subsamples = rescored.provenance["evaluation"]["subsamples"]
+    assert subsamples["nber"]["mask_source"] == "nber_recession"
+    assert subsamples["nber"]["mask_summary"]["series_id"] == "USREC"
+    assert subsamples["nber"]["mask_summary"]["raw_sha256"] == "sha-USREC"
+    live_subsamples = live.provenance["spec_echo"]["evaluation"]["subsamples"]
+    assert live_subsamples["nber"]["mask_source"] == "nber_recession"
+    assert live_subsamples["nber"]["mask_summary"]["series_id"] == "USREC"
+    assert rescored.provenance["rescore_stale_cells"] == ()

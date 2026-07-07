@@ -10,6 +10,14 @@ full per-version honesty-pass history embedded in repo documentation.
   (prevailing) mean benchmark with optional rolling `window`, direct-safe policy
   matrix coverage, and Clark-West pipeline smoke coverage against nested AR
   contenders.
+- `data/loaders.py`, `pipeline/spec.py`, `pipeline/evaluate.py`,
+  `pipeline/run.py`, `pipeline/rescore.py`, docs/tests (feature, subsample mask
+  lane): added `load_fred_series(...)` with raw-cache/manifest support and
+  `SubsampleWindow(mask=...)` for boolean state subsamples, including named
+  NBER recession/expansion masks via `USREC`/`USRECQ`. Subsample masks compose
+  by intersection with start/end/exclude windows, fail fast on missing/NaN or
+  mis-anchored dates, reach accuracy/significance/MCS scoring, and are echoed in
+  live-run and rescore provenance.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now
