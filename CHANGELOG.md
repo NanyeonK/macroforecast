@@ -5,6 +5,17 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/run.py`, `pipeline/spec.py`, `pipeline/parallelism.py`,
+  `forecasting/runner.py`, `forecasting/policies`, `pipeline/model_store.py`
+  (runtime integrity lane): unified pipeline seeding so `PipelineSpec.seed`
+  drives model selection, parallel workers, and per-arm derived model
+  `random_state` values unless an explicit model param overrides it; reports now
+  record `provenance["effective_seeds"]`. `n_jobs="auto"` now falls back to
+  `os.cpu_count()` where CPU affinity is unavailable, parallel workers initialize
+  BLAS/OpenMP caps before cell work and receive `spec.data` once per process, and
+  vintage source caches persist per worker. Pipeline `save_models` now defaults
+  to `False`; opt-in large model stores warn before execution and
+  `mf.pipeline.purge_model_store(...)` deletes stored fit sidecars/pickles.
 - `tools/docgen`, `docs/reference`, `README.md`, `docs/conf.py` (docs,
   issue #421): replaced the broken layered-ops/OptionDoc generator with a
   current public-API reference renderer and restored

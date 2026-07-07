@@ -40,8 +40,11 @@ def auto_parallelism(
     """
     if cores is None:
         # Affinity count, not os.cpu_count(): respects cgroup / taskset pinning so
-        # we saturate only the cores this process is actually allowed to use.
-        cores = len(os.sched_getaffinity(0))
+        # we saturate only the cores this process is actually allowed to use. On
+        # platforms without sched_getaffinity (macOS/Windows), fall back to the
+        # visible CPU count.
+        get_affinity = getattr(os, "sched_getaffinity", None)
+        cores = len(get_affinity(0)) if get_affinity is not None else (os.cpu_count() or 1)
     cores = max(1, cores - reserve)
     # One worker per cell, capped at the core budget; at least one worker.
     workers = max(1, min(int(n_cells), cores))

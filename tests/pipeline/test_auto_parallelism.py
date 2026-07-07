@@ -50,10 +50,21 @@ def test_auto_parallelism_reserve_respected():
 
 
 def test_auto_parallelism_cores_default_is_affinity():
-    affinity = len(os.sched_getaffinity(0))
+    affinity = (
+        len(os.sched_getaffinity(0))
+        if hasattr(os, "sched_getaffinity")
+        else (os.cpu_count() or 1)
+    )
     workers, threads = auto_parallelism(1)  # one cell -> all cores to model threads
     assert workers == 1
     assert threads == affinity
+
+
+def test_auto_parallelism_default_falls_back_without_sched_getaffinity(monkeypatch):
+    monkeypatch.delattr(os, "sched_getaffinity", raising=False)
+    monkeypatch.setattr(os, "cpu_count", lambda: 6)
+
+    assert auto_parallelism(2) == (2, 3)
 
 
 # --------------------------------------------------------------------------- #
@@ -109,7 +120,12 @@ def test_pipeline_spec_auto_resolves_to_int_and_sets_model_threads():
     assert isinstance(spec.model_threads, int)
     assert spec.model_threads >= 1
     # Never oversubscribes the affinity budget.
-    assert spec.n_jobs * spec.model_threads <= len(os.sched_getaffinity(0))
+    core_budget = (
+        len(os.sched_getaffinity(0))
+        if hasattr(os, "sched_getaffinity")
+        else (os.cpu_count() or 1)
+    )
+    assert spec.n_jobs * spec.model_threads <= core_budget
     # 1 target x 3 arms x 2 horizons = 6 cells -> at most 6 workers.
     assert spec.n_jobs <= 6
 
