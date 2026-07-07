@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import pickle
 import re
 import tempfile
 import dataclasses as _dc
@@ -401,6 +402,49 @@ def _empty_cell_warning(target_name: str, horizon: int, arms: "Sequence[str]") -
     )
 
 
+def _failed_cell_warning(record: Mapping[str, Any]) -> str:
+    """Diagnostic emitted when a managed cell raised and was omitted."""
+
+    horizons = record.get("horizons", ())
+    error = str(record.get("error", ""))
+    if len(error) > 500:
+        error = error[:497] + "..."
+    return (
+        f"pipeline cell failed and will be absent from evaluation: "
+        f"target={record.get('target')!r}, arm={record.get('arm')!r}, "
+        f"horizons={list(horizons) if isinstance(horizons, Sequence) and not isinstance(horizons, (str, bytes)) else horizons!r}; "
+        f"error={error}"
+    )
+
+
+def _validate_parallel_picklable(spec: PipelineSpec) -> None:
+    """Fail before process dispatch when an arm carries unpicklable objects."""
+
+    if spec.n_jobs <= 1:
+        return
+    labels = (
+        ("model", "model"),
+        ("features", "features"),
+        ("preprocessing", "preprocessing"),
+        ("feature_policy", "feature_policy"),
+        ("preprocessing_policy", "preprocessing_policy"),
+        ("model_selection", "model_selection"),
+    )
+    for arm in spec.arms:
+        for attr, label in labels:
+            value = getattr(arm, attr, None)
+            if value is None:
+                continue
+            try:
+                pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+            except (pickle.PicklingError, TypeError, AttributeError) as exc:
+                raise ValueError(
+                    f"arm {arm.name!r} has an unpicklable {label} for n_jobs>1: "
+                    f"{type(exc).__name__}: {exc}. Use a module-level def or "
+                    "run with n_jobs=1."
+                ) from exc
+
+
 def _find_empty_cells(
     spec: PipelineSpec,
     master: pd.DataFrame,
@@ -528,6 +572,18 @@ def _result_store_load(
     identity = _result_store_identity(spec, cell, data_identity)
     if identity.digest is None:
         metadata["n_undigestible"] += 1
+        import warnings as _warnings
+
+        label = _result_store_cell_label(spec, cell)
+        _warnings.warn(
+            "result_store cannot digest cell "
+            f"{label['target']!r}/{label['arm']!r}/h{label['horizon']}: "
+            f"{identity.reason or 'missing digest'}. "
+            "For custom_model(), pass mf_digest='stable-id' or set "
+            "__mf_digest__ on custom callables.",
+            RuntimeWarning,
+            stacklevel=3,
+        )
         return None, identity
     hit = store.load(identity.digest, data_fingerprint=identity.data_fingerprint)
     if hit is None:
@@ -603,6 +659,7 @@ def _run_cells(
     result_store_metadata = _empty_result_store_metadata(spec)
     if not cells:
         return pd.DataFrame(), [], [], result_store_metadata
+    _validate_parallel_picklable(spec)
 
     # Auto-manage a run-scoped on-disk preprocessing cache dir when the caller
     # left preprocessing_cache_dir unset and n_jobs>1 (see _resolve_run_cache_dir).
@@ -766,8 +823,16 @@ def _run_cells(
                 RuntimeWarning,
                 stacklevel=2,
             )
+        for record in failed:
+            _warnings.warn(
+                _failed_cell_warning(record),
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
         _warn_result_store_version_mismatches(result_store_metadata)
+        master.attrs["macroforecast_failed_cells"] = list(failed)
+        master.attrs["macroforecast_empty_cells"] = list(empty_cells)
         return master, failed, empty_cells, result_store_metadata
     finally:
         if created_cache_dir is not None:
@@ -1228,12 +1293,39 @@ def _audit(
 
 
 def run_pipeline(spec: PipelineSpec):
-    """Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport."""
+    """Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport.
+
+    If evaluation raises a known validation/data error after forecast cells have
+    completed, the returned report carries the master forecast frame intact,
+    empty evaluation tables, and ``PipelineReport.evaluation_error`` with the
+    captured error text.
+    """
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.spec import PipelineReport
 
     master, failed_cells, empty_cells, result_store_metadata = _run_cells(spec)
-    results = evaluate(master, spec)
+    evaluation_error = None
+    try:
+        results = evaluate(master, spec)
+    except (ValueError, KeyError) as exc:
+        import warnings as _warnings
+
+        evaluation_error = f"{type(exc).__name__}: {exc}"
+        _warnings.warn(
+            "pipeline evaluation failed after forecast cells completed; returning "
+            "a partial PipelineReport with the master forecast frame intact and "
+            f"empty evaluation tables. Evaluation error: {evaluation_error}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        results = {
+            "forecasts": master,
+            "accuracy": pd.DataFrame(),
+            "significance": pd.DataFrame(),
+            "mcs": pd.DataFrame(),
+            "density": pd.DataFrame(),
+            "calibration": pd.DataFrame(),
+        }
     provenance, leakage = _audit(
         spec,
         execution_metadata={
@@ -1252,6 +1344,8 @@ def run_pipeline(spec: PipelineSpec):
         "failed_cells": list(failed_cells),
         "empty_cells": list(empty_cells),
     }
+    if evaluation_error is not None:
+        leakage = {**leakage, "evaluation_error": evaluation_error}
     return PipelineReport(
         forecasts=results["forecasts"],
         accuracy=results["accuracy"],
@@ -1266,4 +1360,5 @@ def run_pipeline(spec: PipelineSpec):
         empty_cells=tuple(empty_cells),
         density=results["density"],
         calibration=results["calibration"],
+        evaluation_error=evaluation_error,
     )

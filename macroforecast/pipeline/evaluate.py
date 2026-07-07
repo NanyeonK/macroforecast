@@ -37,11 +37,68 @@ _CALIBRATION_COLUMNS = [
     "target", "horizon", "contender", "test", "statistic", "p_value", "reject", "n_obs",
     "coverage_rate",
 ]
+_DEGRADATION_EXCEPTIONS = (
+    ValueError,
+    FloatingPointError,
+    ZeroDivisionError,
+    np.linalg.LinAlgError,
+)
 
 
 def _has_groups(master: pd.DataFrame) -> bool:
     """True when ``master`` is non-empty and carries the (target, horizon) keys."""
     return not master.empty and _GROUP_KEYS.issubset(master.columns)
+
+
+def _warn_failed_cells(master: pd.DataFrame) -> None:
+    failed = list(getattr(master, "attrs", {}).get("macroforecast_failed_cells", []))
+    if not failed:
+        return
+    first = failed[0]
+    warnings.warn(
+        f"evaluate() received a forecast frame with failed_cells={len(failed)}; "
+        "failed arms are absent from accuracy/significance/MCS outputs. First "
+        f"failed cell: target={first.get('target')!r}, arm={first.get('arm')!r}, "
+        f"horizons={first.get('horizons')!r}, error={first.get('error')!r}.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+
+
+def _degraded_mask(frame: pd.DataFrame) -> pd.Series:
+    if frame.empty:
+        return pd.Series(False, index=frame.index)
+    mask = pd.Series(False, index=frame.index)
+    if "status" in frame.columns:
+        status = frame["status"].astype("string")
+        mask |= status == "degraded"
+    if "reason" in frame.columns and "status" not in frame.columns:
+        mask |= frame["reason"].notna()
+    return mask
+
+
+def _warn_degraded_results(result: Mapping[str, pd.DataFrame]) -> None:
+    degraded = {
+        name: int(_degraded_mask(frame).sum())
+        for name, frame in result.items()
+        if name in {"significance", "mcs"} and isinstance(frame, pd.DataFrame)
+    }
+    degraded = {name: count for name, count in degraded.items() if count}
+    if not degraded:
+        return
+    details = ", ".join(f"{name}={count}" for name, count in sorted(degraded.items()))
+    warnings.warn(
+        "evaluation produced degraded significance/MCS row(s) with status/reason "
+        f"instead of dropping them: {details}.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+
+
+def _evaluation_result(**tables: pd.DataFrame) -> dict[str, pd.DataFrame]:
+    result = dict(tables)
+    _warn_degraded_results(result)
+    return result
 
 
 # ``evaluate``/``accuracy_table``/... are pure-frame and duck-type friendly: some
@@ -578,6 +635,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             loss_c = _loss_values(y, fc_vals, loss_fn)
             row: dict[str, Any] = {"target": target, "horizon": horizon, "contender": contender}
             has_result = False
+            degraded_reasons: list[str] = []
             if want_dm:
                 try:
                     dm = dm_test(
@@ -586,8 +644,9 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         **{**dm_options, "horizon": int(horizon), "input_type": "loss"},
                     )
                     row["dm_stat"] = float(cast(float, dm.statistic)); row["dm_p"] = float(cast(float, dm.p_value))
-                except Exception:
+                except _DEGRADATION_EXCEPTIONS as exc:
                     row["dm_stat"] = np.nan; row["dm_p"] = np.nan
+                    degraded_reasons.append(f"dm failed: {type(exc).__name__}: {exc}")
                 has_result = True
             if want_cw and not cw_blocked_by_custom_loss and contender in nested:
                 try:
@@ -599,10 +658,14 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         **{**cw_options, "horizon": int(horizon)},
                     )
                     row["cw_stat"] = float(cast(float, cw.statistic)); row["cw_p"] = float(cast(float, cw.p_value))
-                except Exception:
+                except _DEGRADATION_EXCEPTIONS as exc:
                     row["cw_stat"] = np.nan; row["cw_p"] = np.nan
+                    degraded_reasons.append(f"cw failed: {type(exc).__name__}: {exc}")
                 has_result = True
             if has_result:
+                if degraded_reasons:
+                    row["status"] = "degraded"
+                    row["reason"] = "; ".join(degraded_reasons)
                 out.append(row)
             n_obs = int(common.sum())
             for test_name in requested_long:
@@ -879,7 +942,17 @@ def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) ->
                     group[["origin", "model_id", "squared_error"]],
                     **mcs_options,
                 )
-            except Exception:
+            except _DEGRADATION_EXCEPTIONS as exc:
+                reason = f"mcs failed: {type(exc).__name__}: {exc}"
+                for contender in group["model_id"].unique():
+                    out.append({
+                        "target": target,
+                        "horizon": horizon,
+                        "contender": contender,
+                        "in_mcs": np.nan,
+                        "status": "degraded",
+                        "reason": reason,
+                    })
                 continue
             included = set()
             for entry in (res.get("mcs_inclusion") or []):
@@ -1291,6 +1364,7 @@ def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame
     computes them (empty frames), so ``forecasts``/``accuracy``/``significance``/
     ``mcs`` stay byte-identical to before these two keys existed.
     """
+    _warn_failed_cells(master)
     full = apply_combinations(master, spec)
     subsample_frames = _subsample_frames(full, spec)
     if subsample_frames is not None:
@@ -1306,19 +1380,19 @@ def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame
             mcs_parts.append(_with_subsample_column(mcs_table(frame, spec), name))
             density_parts.append(_with_subsample_column(density_table(frame, spec), name))
             calibration_parts.append(_with_subsample_column(calibration_table(frame, spec), name))
-        return {
-            "forecasts": full,
-            "accuracy": _concat_tables(accuracy_parts),
-            "significance": _concat_tables(significance_parts),
-            "mcs": _concat_tables(mcs_parts),
-            "density": _concat_tables(density_parts),
-            "calibration": _concat_tables(calibration_parts),
-        }
-    return {
-        "forecasts": full,
-        "accuracy": accuracy_table(full, spec),
-        "significance": significance_table(full, spec),
-        "mcs": mcs_table(full, spec),
-        "density": density_table(full, spec),
-        "calibration": calibration_table(full, spec),
-    }
+        return _evaluation_result(
+            forecasts=full,
+            accuracy=_concat_tables(accuracy_parts),
+            significance=_concat_tables(significance_parts),
+            mcs=_concat_tables(mcs_parts),
+            density=_concat_tables(density_parts),
+            calibration=_concat_tables(calibration_parts),
+        )
+    return _evaluation_result(
+        forecasts=full,
+        accuracy=accuracy_table(full, spec),
+        significance=significance_table(full, spec),
+        mcs=mcs_table(full, spec),
+        density=density_table(full, spec),
+        calibration=calibration_table(full, spec),
+    )

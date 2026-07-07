@@ -154,6 +154,22 @@ _ARCH_BACKED_EVAL_TESTS: frozenset[str] = frozenset({"spa", "rc", "stepm"})
 #: diagnostics: they run in ``pipeline/evaluate.py::calibration_table`` and land
 #: in ``PipelineReport.calibration``, not ``significance``/``mcs``.
 CALIBRATION_EVAL_TESTS: frozenset[str] = frozenset({"berkowitz", "pit_autocorr", "coverage"})
+SUPPORTED_COMBINATION_METHODS: frozenset[str] = frozenset(
+    {
+        "mean",
+        "median",
+        "trimmed_mean",
+        "winsorized_mean",
+        "inverse_mspe",
+        "dmspe",
+        "best_n",
+        "bates_granger",
+        "granger_ramanathan",
+        "constrained_ls",
+        "eigenvector",
+        "regularized",
+    }
+)
 
 
 def _arch_available() -> bool:
@@ -562,6 +578,10 @@ class PipelineReport:
     # ``pipeline/evaluate.py::calibration_table``. Same ``None``-default contract
     # as ``density`` above.
     calibration: "Any" = None
+    # Evaluation-stage error captured by run_pipeline after forecast cells were
+    # computed. None means evaluation completed; a string means the report carries
+    # the salvageable master forecast frame but empty evaluation tables.
+    evaluation_error: str | None = None
 
     def to_frame(self) -> "Any":
         """Return the master forecast frame."""
@@ -859,9 +879,133 @@ def _per_arm_or_shared(
     (whose keys are hyperparameter names, not arm names) is correctly shared, and
     per-arm variation requires keys that are *exactly* the arm names.
     """
-    if isinstance(value, Mapping) and set(value.keys()) == set(arm_names):
-        return {name: value[name] for name in arm_names}
+    if isinstance(value, Mapping):
+        keys = {str(key) for key in value.keys()}
+        arm_set = set(arm_names)
+        overlap = keys & arm_set
+        if overlap and keys != arm_set:
+            missing = sorted(arm_set - keys)
+            extra = sorted(keys - arm_set)
+            raise ValueError(
+                f"model_arms: {label} looks like a per-arm mapping but its keys "
+                f"do not exactly match arm names. Missing arm key(s): {missing}; "
+                f"extra key(s): {extra}."
+            )
+        if keys == arm_set:
+            return {name: value[name] for name in arm_names}
     return {name: value for name in arm_names}
+
+
+def _resolve_arm_models(arms: Sequence[Arm]) -> tuple[Arm, ...]:
+    """Resolve registry model names and reject bare callables at spec build time."""
+
+    from macroforecast.models import ModelSpec, get_model
+
+    resolved: list[Arm] = []
+    for arm in arms:
+        model = arm.model
+        if isinstance(model, str):
+            resolved.append(replace(arm, model=get_model(model)))
+            continue
+        if callable(model) and not isinstance(model, ModelSpec):
+            name = getattr(model, "__name__", repr(model))
+            raise ValueError(
+                f"arm {arm.name!r} uses bare callable model {name!r}; wrap it: "
+                f"mf.models.custom_model('my_model', {name})"
+            )
+        resolved.append(arm)
+    return tuple(resolved)
+
+
+def _validate_eval_metrics(evaluation: "EvalSpec") -> None:
+    """Resolve metric names during spec construction so typos fail before running."""
+
+    from macroforecast.metrics import get_metric
+
+    for metric in evaluation.metrics:
+        if isinstance(metric, str):
+            get_metric(metric)
+
+
+def _validate_combinations(
+    combinations: Sequence[CombinationContender],
+    *,
+    arm_names: Sequence[str],
+) -> None:
+    """Fail fast on unsupported combination dispatch and typoed over= arms."""
+
+    base_contenders = set(arm_names)
+    for combo in combinations:
+        method = str(combo.method).lower()
+        if method not in SUPPORTED_COMBINATION_METHODS:
+            raise ValueError(
+                f"combination {combo.name!r} uses unsupported method "
+                f"{combo.method!r}; supported methods are "
+                f"{sorted(SUPPORTED_COMBINATION_METHODS)}."
+            )
+        if isinstance(combo.over, str):
+            if combo.over != "all":
+                raise ValueError(
+                    f"combination {combo.name!r} has over={combo.over!r}; use "
+                    "'all' or a sequence of arm contender names from "
+                    f"{sorted(base_contenders)}."
+                )
+            continue
+        requested = {str(name) for name in combo.over}
+        unknown = requested - base_contenders
+        if unknown:
+            raise ValueError(
+                f"combination {combo.name!r} over contains unknown contender "
+                f"name(s) {sorted(unknown)}; available arm contenders are "
+                f"{sorted(base_contenders)}."
+            )
+
+
+def _feature_spec_has_exogenous_features(features: Any) -> bool:
+    if features is None:
+        return False
+    predictors = getattr(features, "predictors", None)
+    if predictors == "all":
+        return True
+    if isinstance(predictors, Sequence) and not isinstance(predictors, (str, bytes)):
+        if len(predictors) > 0:
+            return True
+    return bool(getattr(features, "feature_steps", ()))
+
+
+def _warn_recursive_exogenous_custom_models(
+    arms: Sequence[Arm],
+    targets: Sequence[ResolvedTarget],
+) -> None:
+    from macroforecast.models import ModelSpec
+
+    if not any(target.policy == "recursive" for target in targets):
+        return
+    for arm in arms:
+        model = arm.model
+        if (
+            isinstance(model, ModelSpec)
+            and model.backend == "custom"
+            and model.input_kind == "supervised"
+            and _feature_spec_has_exogenous_features(arm.features)
+        ):
+            warnings.warn(
+                f"arm {arm.name!r} uses a custom supervised model with exogenous "
+                "features under a recursive forecast policy; recursive policies "
+                "cannot know future exogenous predictor values unless they are "
+                "lagged/available at each recursive step.",
+                UserWarning,
+                stacklevel=3,
+            )
+
+
+def _normalize_combinations(
+    combinations: Sequence[CombinationContender],
+) -> tuple[CombinationContender, ...]:
+    return tuple(
+        replace(combo, method=str(combo.method).lower())
+        for combo in combinations
+    )
 
 
 def model_arms(
@@ -1040,7 +1184,16 @@ def pipeline_spec(
     (``len(targets) * len(arms) * len(horizons)`` cells) via
     :func:`auto_parallelism` and splits the cores between cell workers
     (stored as the resolved ``PipelineSpec.n_jobs``) and per-cell model-internal
-    threads (stored as ``PipelineSpec.model_threads``).
+    threads (stored as ``PipelineSpec.model_threads``). When ``n_jobs > 1``,
+    every arm's model, features, preprocessing, policies, and model-selection
+    objects must be pickleable because cells run in worker processes. Define
+    custom callables at module scope, or use ``n_jobs=1`` for local closures.
+
+    Model names, evaluation metric names, combination methods, and combination
+    ``over=`` contenders are resolved during spec construction. Unknown names
+    fail here, before any forecast cell is computed. Bare callable arm models are
+    rejected; wrap them with ``mf.models.custom_model(...)`` so the runner has a
+    stable ``ModelSpec``.
 
     ``preprocessing_cache_dir`` is a path, ``None``, or ``False`` -- see the field
     docstring on :class:`PipelineSpec` for the full three-state contract. In short:
@@ -1101,6 +1254,9 @@ def pipeline_spec(
                 "models, but an Arm is exactly ONE model. Use one Arm per model "
                 "(identical arms differing only in 'model') to compare models."
             )
+    arms = _resolve_arm_models(arms)
+    combinations = _normalize_combinations(combinations)
+    _validate_combinations(combinations, arm_names=names)
 
     horizon_tuple = (
         (int(horizons),) if isinstance(horizons, int) else tuple(int(h) for h in horizons)
@@ -1138,6 +1294,7 @@ def pipeline_spec(
             f"contenders {sorted(all_contenders)}"
         )
     evaluation = _normalize_eval_spec(evaluation)
+    _validate_eval_metrics(evaluation)
 
     # evaluation.tests must be names the evaluator actually wires; a typo or an
     # aspirational test name raises here rather than being silently ignored.
@@ -1167,6 +1324,7 @@ def pipeline_spec(
         resolved,
         mode=on_unsupported_direct,
     )
+    _warn_recursive_exogenous_custom_models(arms, resolved)
 
     notes = dict(provenance or {})
     if not save_models and any(a.interpret for a in arms):
@@ -1179,7 +1337,7 @@ def pipeline_spec(
 
     return PipelineSpec(
         data=data, targets=resolved, horizons=horizon_tuple, window=window,
-        arms=arms, evaluation=evaluation, combinations=tuple(combinations),
+        arms=arms, evaluation=evaluation, combinations=combinations,
         preprocessing=preprocessing, preprocessing_policy=preprocessing_policy,
         save_models=bool(save_models), model_store=str(model_store),
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),

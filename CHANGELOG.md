@@ -5,6 +5,14 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
+  `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
+  model names, custom models, evaluation metrics, and combination contenders now
+  fail at spec construction when invalid; failed forecast cells, undigestible
+  result-store cells, degraded significance/MCS rows, and evaluation-stage
+  salvage are surfaced with warnings/status metadata instead of silent omission.
+  `custom_model(..., mf_digest=...)` stamps the fit callable for result-store
+  reuse and validates input kind, signature, and presets up front.
 - `tools/docgen`, `docs/reference`, `README.md`, `docs/conf.py` (docs,
   issue #421): replaced the broken layered-ops/OptionDoc generator with a
   current public-API reference renderer and restored
