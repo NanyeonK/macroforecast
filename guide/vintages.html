@@ -486,7 +486,7 @@ can observe.</p>
 <span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
 <span class="n">source</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fred_md_vintages</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s2">&quot;1999-01&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2024-12&quot;</span><span class="p">)</span>
-<span class="n">reference</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;1999-01-31&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-12-31&quot;</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;ME&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">)</span>
+<span class="n">reference</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;1999-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-12-01&quot;</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">)</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">VintagePanelSpec</span><span class="p">(</span>
     <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
@@ -500,7 +500,7 @@ can observe.</p>
     <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
     <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">],</span>
     <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
-    <span class="n">window</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span><span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;2005-01-31&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span><span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;2005-01-01&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
     <span class="n">arms</span><span class="o">=</span><span class="p">[</span><span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">Arm</span><span class="p">(</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ar&quot;</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
     <span class="n">evaluation</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">),</span>
     <span class="n">checkpoint_dir</span><span class="o">=</span><span class="s2">&quot;ckpt/vintage_indpro&quot;</span><span class="p">,</span>
@@ -511,6 +511,11 @@ can observe.</p>
 </div>
 <p>Forecast rows include <code class="docutils literal notranslate"><span class="pre">vintage_id</span></code>, the snapshot used for the origin, and
 <code class="docutils literal notranslate"><span class="pre">actuals_vintage_id</span></code>, the snapshot used for the realized value.</p>
+<p>FRED-MD and FRED-QD source files date observations at the start of the month or
+quarter. Build the reference calendar with matching labels (<code class="docutils literal notranslate"><span class="pre">freq=&quot;MS&quot;</span></code> for
+monthly FRED-MD, <code class="docutils literal notranslate"><span class="pre">freq=&quot;QS&quot;</span></code> for quarterly FRED-QD). A month-end calendar such
+as <code class="docutils literal notranslate"><span class="pre">freq=&quot;ME&quot;</span></code> has no labels in common with FRED-MD vintages and the vintage
+runner raises a calendar-anchor error before feature construction.</p>
 </section>
 <section id="custom-vintages">
 <h2>Custom vintages<a class="headerlink" href="#custom-vintages" title="Link to this heading">#</a></h2>
@@ -531,7 +536,9 @@ can observe.</p>
 <span class="n">source</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_vintages</span><span class="p">(</span><span class="n">snapshots</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="s2">&quot;my_archive&quot;</span><span class="p">,</span> <span class="n">frequency</span><span class="o">=</span><span class="s2">&quot;monthly&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>A long ALFRED-style frame can be grouped by vintage:</p>
+<p>A grouped-wide ALFRED-style frame can be grouped by vintage. It must contain a
+vintage column, a date column, and one numeric column per series within each
+vintage snapshot:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">custom_vintages</span><span class="p">(</span>
     <span class="n">realtime_frame</span><span class="p">,</span>
     <span class="n">vintage_column</span><span class="o">=</span><span class="s2">&quot;realtime_start&quot;</span><span class="p">,</span>
@@ -545,6 +552,10 @@ can observe.</p>
 Sources are memoized by the resolved vintage identifier. If a callable source is
 non-deterministic, run without persistent preprocessing cache so stale fitted
 state cannot be reused against changing content.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">actuals_vintage=&quot;first_release&quot;</span></code>, the source must report timestamp-parsable
+<code class="docutils literal notranslate"><span class="pre">available_vintages()</span></code>. Callable-only custom sources do not provide a release
+calendar, so use a mapping or grouped-wide frame when first-release scoring is
+needed.</p>
 </section>
 <section id="static-extras">
 <h2>Static extras<a class="headerlink" href="#static-extras" title="Link to this heading">#</a></h2>
@@ -563,7 +574,11 @@ the source once:</p>
 </pre></div>
 </div>
 <p>The static panel’s SHA-256 fingerprint is included in each resolved vintage ID.
-Changing the extras therefore changes cache identity and provenance.</p>
+Changing the extras therefore changes cache identity and provenance. Static
+extras are truncated to rows strictly before the forecast origin before joining,
+so a full-span calendar dummy panel does not create post-origin rows. Only use
+this wrapper for deterministic columns or columns genuinely known in advance at
+the origin.</p>
 </section>
 <section id="latest-vs-first-release-actuals">
 <h2>Latest vs first-release actuals<a class="headerlink" href="#latest-vs-first-release-actuals" title="Link to this heading">#</a></h2>
@@ -571,9 +586,13 @@ Changing the extras therefore changes cache identity and provenance.</p>
 available to the run. This is the usual referee convention when the target is
 defined as the current best measurement.</p>
 <p><code class="docutils literal notranslate"><span class="pre">actuals_vintage=&quot;first_release&quot;</span></code> scores each target date <code class="docutils literal notranslate"><span class="pre">d</span></code> against the first
-available vintage strictly after <code class="docutils literal notranslate"><span class="pre">d</span></code>. This is useful when the estimand is the
-initial public release. It also makes <code class="docutils literal notranslate"><span class="pre">actuals_vintage_id</span></code> row-varying because
-each realized date can come from a different release.</p>
+available vintage strictly after <code class="docutils literal notranslate"><span class="pre">d</span></code> that contains a non-missing value for that
+observation. The resolver walks forward across later vintages when the first
+post-date vintage does not yet contain the release, up to
+<code class="docutils literal notranslate"><span class="pre">first_release_max_vintages</span></code> probes on <code class="docutils literal notranslate"><span class="pre">VintagePanelSpec</span></code> (default <code class="docutils literal notranslate"><span class="pre">12</span></code>). This is
+useful when the estimand is the initial public release. It also makes
+<code class="docutils literal notranslate"><span class="pre">actuals_vintage_id</span></code> row-varying because each realized date can come from a
+different release.</p>
 <p>Choose the convention before running the pipeline. <code class="docutils literal notranslate"><span class="pre">rescore()</span></code> re-evaluates the
 forecast rows already written to checkpoints; it cannot retroactively switch
 <code class="docutils literal notranslate"><span class="pre">actuals_vintage</span></code>. To compare latest and first-release scoring, run two specs
