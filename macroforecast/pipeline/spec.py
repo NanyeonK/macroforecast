@@ -716,7 +716,9 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 # "panel" and lacks a validated direct point-projection mode, PLUS "favar" (its
 # input_kind is "supervised" -- the same bucket as ar/far -- because FAVAR's own
 # factor-VAR update is still an iterated dynamics model; ar/far/var are excluded
-# from this set because they have validated direct point-projection modes). This
+# from this set because they have validated direct point-projection modes).
+# ``hist_mean`` is also excluded: it is a horizon-invariant constant projection
+# of the already transformed target, not an iterated dynamic forecast. This
 # set is cross-checked against
 # ``macroforecast.list_model_specs()`` by
 # ``tests/pipeline/test_direct_policy_guard.py`` so it cannot silently rot as

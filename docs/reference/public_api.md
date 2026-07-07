@@ -185,6 +185,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `hamilton_filter_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `hamilton_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `hemisphere_nn` | [`macroforecast.models`](models.md) | function |
+| `hist_mean` | [`macroforecast.models`](models.md) | function |
 | `holt_winters` | [`macroforecast.models`](models.md) | function |
 | `hp_filter_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `huber` | [`macroforecast.models`](models.md) | function |

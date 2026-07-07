@@ -78,7 +78,7 @@ Each family has a detail page with a per-model table of inputs, optional depende
 
 - [Linear and regularized](models/linear.md) — 16 models
 - [Factor models](models/factor.md) — 2 models
-- [Classical time series](models/timeseries.md) — 13 models
+- [Classical time series](models/timeseries.md) — 14 models
 - [Tree ensembles](models/tree.md) — 11 models
 - [Support vector](models/support_vector.md) — 3 models
 - [Nonparametric](models/nonparametric.md) — 2 models

@@ -14,6 +14,7 @@ Pass any model string below as `Arm(model=...)`. Extra names an optional depende
 | `bvar_minnesota` | FAVAR::BVAR / bvartools Minnesota-prior Bayesian VAR posterior sampler. | panel | none | no | default | 3 |
 | `bvar_normal_inverse_wishart` | FAVAR::BVAR-aligned Bayesian VAR with normal/inverse-Wishart prior controls. | panel | none | no | default | 1 |
 | `ets` | Statsmodels ETS target-only forecasting model. | target | none | no | default | 0 |
+| `hist_mean` | Historical (prevailing) mean benchmark of the transformed target. | target | none | no | default | 0 |
 | `holt_winters` | Holt-Winters exponential smoothing target-only forecasting model. | target | none | no | default | 0 |
 | `naive` | Random-walk (naive) baseline: carry the last value forward (forecast::naive). | target | none | no | default | 0 |
 | `random_walk_drift` | Random-walk-with-drift baseline (forecast::rwf(drift=TRUE)). | target | none | no | default | 0 |

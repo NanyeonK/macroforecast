@@ -5,6 +5,11 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/timeseries.py`, `models/specs.py`, `pipeline/spec.py`, docs/tests
+  (feature, A1 benchmark lane): added the target-only `hist_mean` historical
+  (prevailing) mean benchmark with optional rolling `window`, direct-safe policy
+  matrix coverage, and Clark-West pipeline smoke coverage against nested AR
+  contenders.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

@@ -166,6 +166,7 @@ _LAZY_EXPORTS = {
     "albacore_ranks": ".models",
     "ar": ".models",
     "naive": ".models",
+    "hist_mean": ".models",
     "seasonal_naive": ".models",
     "random_walk_drift": ".models",
     "stlf": ".models",
