@@ -17,6 +17,7 @@ from macroforecast.models.assemblage import (
     rank_aggregation,
     supervised_aggregation,
 )
+from macroforecast.models.bayesian import ucsv
 from macroforecast.models.linear import (
     adaptive_elastic_net,
     adaptive_lasso,
@@ -1023,6 +1024,33 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         method="none",
         backend="internal numpy.linalg + scipy.optimize.minimize(SLSQP)",
         description="Jackknife Model Averaging with simplex weights chosen by OLS leave-one-out CV.",
+    ),
+    "ucsv": _spec(
+        "ucsv",
+        "bayesian",
+        ucsv,
+        default_params={
+            "n_draws": 5000,
+            "burn": 1000,
+            "gamma": 0.2,
+            "random_state": 1071,
+        },
+        parameters=(
+            _p("n_draws", 5000, "int", "Total Gibbs sampler draws.", False),
+            _p("burn", 1000, "int", "Initial draws discarded as burn-in.", False),
+            _p(
+                "gamma",
+                0.2,
+                "float",
+                "Random-walk innovation variance for both log-volatility states.",
+                False,
+            ),
+            _p("random_state", 1071, "int | None", "Gibbs sampler seed.", False),
+        ),
+        method="none",
+        input_kind="target",
+        backend="internal Gibbs sampler",
+        description="Stock-Watson UCSV target-only benchmark with horizon-invariant final-trend forecasts.",
     ),
     "random_walk_ridge": _spec(
         "random_walk_ridge",

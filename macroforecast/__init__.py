@@ -247,6 +247,7 @@ _LAZY_EXPORTS = {
     "theta_method": ".models",
     "transformer": ".models",
     "tvp_ridge": ".models",
+    "ucsv": ".models",
     "unrestricted_midas": ".models",
     "var": ".models",
     "xgboost": ".models",

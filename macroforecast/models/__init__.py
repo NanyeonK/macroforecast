@@ -14,6 +14,7 @@ from .assemblage import (
     solve_target_shrinkage_ridge,
     supervised_aggregation,
 )
+from .bayesian import ucsv
 from .linear import (
     ScaledPCARegressor,
     SupervisedPCARegressor,
@@ -133,6 +134,7 @@ __all__ = [
     "SupervisedPCARegressor",
     "SupervisedScaledPCARegressor",
     "TVPRidgeRegressor",
+    "ucsv",
     "VolatilityFit",
     "adaptive_elastic_net",
     "adaptive_lasso",

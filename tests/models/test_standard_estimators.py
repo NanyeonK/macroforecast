@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import combinations
+import time
 
 import numpy as np
 import pandas as pd
@@ -156,3 +157,76 @@ def test_jma_model_spec_uses_nested_candidates() -> None:
 
     assert spec.input_kind == "supervised"
     assert spec.default_params["candidates"] == "nested"
+
+
+def _local_level_sv(seed: int = 0, n: int = 120) -> tuple[pd.Series, pd.Series]:
+    rng = np.random.default_rng(seed)
+    idx = pd.date_range("2000-01-31", periods=n, freq="ME")
+    phase = np.linspace(0.0, 3.0 * np.pi, n)
+    obs_log_vol = -1.7 + 0.4 * np.sin(phase)
+    level_log_vol = -5.0 + 0.3 * np.cos(phase)
+    tau = np.zeros(n, dtype=float)
+    tau[0] = 2.0
+    for pos in range(1, n):
+        tau[pos] = tau[pos - 1] + rng.normal(scale=float(np.sqrt(np.exp(level_log_vol[pos - 1]))))
+    y = tau + rng.normal(scale=np.sqrt(np.exp(obs_log_vol)), size=n)
+    return pd.Series(y, index=idx, name="y"), pd.Series(tau, index=idx, name="tau")
+
+
+def test_ucsv_tracks_synthetic_local_level_sv_trend() -> None:
+    y, tau = _local_level_sv(seed=11, n=100)
+
+    fit = mf.models.ucsv(y, n_draws=220, burn=80, gamma=0.05, random_state=123)
+    trend = fit.diagnostics["trend"]
+
+    noisy_rmse = float(np.sqrt(np.mean((y.to_numpy(dtype=float) - tau.to_numpy(dtype=float)) ** 2)))
+    trend_rmse = float(
+        np.sqrt(np.mean((trend.to_numpy(dtype=float) - tau.to_numpy(dtype=float)) ** 2))
+    )
+    assert trend_rmse < noisy_rmse
+    assert fit.metadata["forecast_is_final_trend"] is True
+
+
+def test_ucsv_is_deterministic_given_random_state() -> None:
+    y, _tau = _local_level_sv(seed=13, n=80)
+
+    first = mf.models.ucsv(y, n_draws=120, burn=40, gamma=0.05, random_state=7)
+    second = mf.models.ucsv(y, n_draws=120, burn=40, gamma=0.05, random_state=7)
+
+    np.testing.assert_allclose(
+        first.diagnostics["trend"].to_numpy(dtype=float),
+        second.diagnostics["trend"].to_numpy(dtype=float),
+    )
+    np.testing.assert_allclose(
+        first.predict(pd.DataFrame(index=range(3))).to_numpy(dtype=float),
+        second.predict(pd.DataFrame(index=range(3))).to_numpy(dtype=float),
+    )
+
+
+def test_ucsv_forecast_is_horizon_invariant_final_trend() -> None:
+    y, _tau = _local_level_sv(seed=17, n=70)
+
+    fit = mf.models.ucsv(y, n_draws=100, burn=30, gamma=0.05, random_state=5)
+    pred = fit.predict(pd.DataFrame({"h": range(6)}))
+
+    assert pred.nunique() == 1
+    assert pred.iloc[0] == pytest.approx(float(fit.diagnostics["trend"].iloc[-1]))
+
+
+@pytest.mark.slow
+def test_ucsv_default_draws_runtime_guard_on_500_obs() -> None:
+    y, _tau = _local_level_sv(seed=19, n=500)
+
+    start = time.perf_counter()
+    fit = mf.models.ucsv(y, random_state=0)
+    elapsed = time.perf_counter() - start
+
+    assert np.isfinite(fit.predict(pd.DataFrame(index=range(1))).iloc[0])
+    assert elapsed < 60.0
+
+
+def test_ucsv_model_spec_is_target_kind_and_exposes_random_state() -> None:
+    spec = mf.models.get_model("ucsv")
+
+    assert spec.input_kind == "target"
+    assert spec.default_params["random_state"] == 1071
