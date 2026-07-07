@@ -520,6 +520,7 @@ def paper_accuracy_table(
     report: Any,
     *,
     target: str | None = None,
+    subsample: str | None = None,
     metric: str = "rel_rmse",
     star_levels: PValueStarLevels = ((0.01, "***"), (0.05, "**"), (0.10, "*")),
     mcs_mark: str = "†",
@@ -576,6 +577,11 @@ def paper_accuracy_table(
     explicit ``target=...``, or a report that only has one target, returns that
     target's ``ReportTable`` directly (no dict wrapping) so the common case is
     truly one line to LaTeX.
+
+    If the report was produced with ``EvalSpec.subsamples``, pass
+    ``subsample=...`` to select the evaluation window. When omitted,
+    ``"full"`` is selected if present; otherwise a report with multiple
+    subsamples raises so the table cannot accidentally mix windows.
     """
 
     accuracy = _report_component_frame(report, "accuracy")
@@ -585,6 +591,13 @@ def paper_accuracy_table(
         )
     significance = _report_component_frame(report, "significance")
     mcs = _report_component_frame(report, "mcs")
+    accuracy, selected_subsample = _filter_report_subsample(
+        accuracy, subsample, component="accuracy"
+    )
+    significance, _ = _filter_report_subsample(
+        significance, selected_subsample, component="significance"
+    )
+    mcs, _ = _filter_report_subsample(mcs, selected_subsample, component="mcs")
 
     if target is not None and target not in set(accuracy["target"]):
         raise ValueError(f"target {target!r} is not present in report.accuracy")
@@ -605,7 +618,10 @@ def paper_accuracy_table(
             caption=caption,
             label=label,
             notes=notes,
-            metadata=metadata,
+            metadata={
+                **({"subsample": selected_subsample} if selected_subsample is not None else {}),
+                **dict(metadata or {}),
+            },
         )
         for one_target in targets
     }
@@ -621,6 +637,41 @@ def _report_component_frame(report: Any, name: str) -> pd.DataFrame:
     if value is None:
         return pd.DataFrame()
     return pd.DataFrame(value).copy()
+
+
+def _filter_report_subsample(
+    frame: pd.DataFrame,
+    subsample: str | None,
+    *,
+    component: str,
+) -> tuple[pd.DataFrame, str | None]:
+    if frame.empty:
+        return frame, subsample
+    if "subsample" not in frame.columns:
+        if subsample is not None:
+            raise ValueError(
+                f"subsample={subsample!r} was requested, but report.{component} "
+                "has no 'subsample' column"
+            )
+        return frame, None
+    values = [str(value) for value in dict.fromkeys(frame["subsample"].dropna())]
+    selected = subsample
+    if selected is None:
+        if "full" in values:
+            selected = "full"
+        elif len(values) == 1:
+            selected = values[0]
+        else:
+            raise ValueError(
+                "report contains multiple subsamples; pass subsample=... to "
+                "paper_accuracy_table"
+            )
+    if selected not in values:
+        raise ValueError(
+            f"subsample {selected!r} is not present in report.{component}; "
+            f"available subsamples are {values}"
+        )
+    return frame.loc[frame["subsample"].astype(str) == selected].copy(), selected
 
 
 def _ensure_columns(frame: pd.DataFrame, columns: Sequence[str]) -> pd.DataFrame:
@@ -672,6 +723,10 @@ def _paper_accuracy_table_one_target(
         if not significance.empty and "target" in significance.columns
         else pd.DataFrame(columns=["horizon", "contender", "dm_p"])
     )
+    if not sig.empty:
+        sig = sig.loc[sig["dm_p"].notna()].drop_duplicates(
+            ["horizon", "contender"], keep="first"
+        )
     merged = acc.merge(
         sig[["horizon", "contender", "dm_p"]], on=["horizon", "contender"], how="left"
     )
@@ -680,6 +735,10 @@ def _paper_accuracy_table_one_target(
         if not mcs.empty and "target" in mcs.columns
         else pd.DataFrame(columns=["horizon", "contender", "in_mcs"])
     )
+    if not mcs_t.empty:
+        mcs_t = mcs_t.loc[mcs_t["in_mcs"].notna()].drop_duplicates(
+            ["horizon", "contender"], keep="first"
+        )
     merged = merged.merge(
         mcs_t[["horizon", "contender", "in_mcs"]], on=["horizon", "contender"], how="left"
     )

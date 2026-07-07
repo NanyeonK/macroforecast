@@ -31,13 +31,14 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 | `equal_predictive_tests` | function | Run multiple equal-predictive-ability tests and stack results. |
 | `enc_new_test` | function | ENC-NEW nested forecast encompassing test. |
 | `enc_t_test` | function | ENC-T nested forecast encompassing test. |
-| `gw_test` | function | Giacomini-White-style equal predictive ability callable. |
+| `gw_test` | function | Legacy GW-compatible DM-style equal predictive ability callable. |
 | `harvey_newbold_test` | function | Legacy forecast-encompassing covariance t approximation. |
 | `henriksson_merton_test` | function | Henriksson-Merton directional accuracy test. |
 | `hn_test` | function | Alias for :func:`harvey_newbold_test`. |
 | `interval_coverage_test` | function | Kupiec, Christoffersen, and duration diagnostics for forecast intervals. |
 | `blocked_oob_reality_check` | function | Legacy block-bootstrap benchmark-superiority screen. |
 | `iterative_model_confidence_set` | function | Descriptive alias for :func:`model_confidence_set`. |
+| `mincer_zarnowitz_test` | function | Mincer-Zarnowitz forecast-rationality regression. |
 | `model_confidence_set` | function | Exact Hansen-Lunde-Nason model confidence set. |
 | `multi_horizon_spa_test` | function | Quaedvlieg (2021) multi-horizon SPA test for one pair of models. |
 | `nested_tests` | function | Run multiple nested-model forecast tests and stack results. |
@@ -905,10 +906,11 @@ macroforecast.tests.gw_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, corre
 
 #### Description
 
-Giacomini-White-style equal predictive ability callable.
+Legacy GW-compatible DM-style equal predictive ability callable.
 
-This callable keeps the legacy GW surface. It uses the same HAC loss
-differential statistic as the legacy implementation.
+This callable keeps the public ``gw_test`` surface but computes the same HAC
+loss-differential statistic as :func:`dm_test`. For the conditional
+Giacomini-White Wald test, use :func:`giacomini_white_test`.
 
 #### Parameters
 
@@ -1159,6 +1161,43 @@ Descriptive alias for :func:`model_confidence_set`.
 import macroforecast as mf
 # Call with the signature above:
 # mf.tests.iterative_model_confidence_set(...)
+```
+### mincer_zarnowitz_test
+
+Qualified name: `macroforecast.tests.mincer_zarnowitz_test`
+
+#### Signature
+
+```python
+macroforecast.tests.mincer_zarnowitz_test(y_true: Any, y_pred: Any, *, hac_lags: int = 0, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Mincer-Zarnowitz forecast-rationality regression.
+
+Regresses actual values on a constant and the forecast, then tests the joint
+null ``intercept = 0`` and ``slope = 1`` using a HAC covariance matrix.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `y_pred` | positional or keyword | `Any` | `required` |
+| `hac_lags` | keyword only | `int` | `0` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.mincer_zarnowitz_test(...)
 ```
 ### model_confidence_set
 
@@ -1418,6 +1457,11 @@ macroforecast.tests.reality_check_test(loss_panel: pd.DataFrame, *, benchmark: s
 
 White reality check against a benchmark via ``arch.bootstrap``.
 
+Size caveat: this shares the arch-backed SPA path's dependent-loss
+over-rejection disclosure. The return payload includes
+``metadata.size_caveat``; prefer ``model_confidence_set`` under dependent
+losses.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -1536,6 +1580,11 @@ macroforecast.tests.stepm_test(loss_panel: pd.DataFrame, *, benchmark: str, loss
 
 Stepwise multiple-comparison test against a benchmark via ``arch.bootstrap``.
 
+Size caveat: dependent-null Monte Carlo diagnostics mirror the arch-backed
+SPA/RC over-rejection disclosure. The return payload includes
+``metadata.size_caveat``; prefer ``model_confidence_set`` under dependent
+losses.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -1579,6 +1628,11 @@ macroforecast.tests.superior_predictive_ability_test(loss_panel: pd.DataFrame, *
 #### Description
 
 White-Hansen superior predictive ability test via ``arch.bootstrap``.
+
+Size caveat: dependent-null Monte Carlo diagnostics currently show roughly
+1.5-2x nominal over-rejection when losses are serially correlated. The return
+payload includes ``metadata.size_caveat``; prefer ``multi_horizon_spa_test``
+(``uspa``/``aspa``) or ``model_confidence_set`` under dependent losses.
 
 #### Parameters
 

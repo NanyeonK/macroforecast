@@ -148,3 +148,58 @@ def test_spa_size_equal_benchmark_dependent_losses() -> None:
         f"superior_predictive_ability_test size distortion (dependent): rate="
         f"{n_reject / N_REPS:.4f} CI99=[{lo:.4f},{hi:.4f}]"
     )
+
+
+_RC_STEPM_DEPENDENT_DISTORTION_REASON = (
+    "Companion diagnostic for the arch-backed multiple-comparison family: the "
+    "same dependent-null AR(1) design that oversizes SPA is expected to oversize "
+    "Reality Check and StepM because the wrapper delegates their serially "
+    "dependent benchmark/candidate loss matrix to arch.bootstrap with the same "
+    "block-length resolution path. Keep strict xfail until the dependent-loss "
+    "size distortion is fixed or disproved by the full MC gate."
+)
+
+
+@pytest.mark.mc
+@pytest.mark.timeout(180)
+@pytest.mark.parametrize(
+    ("callable_name", "seed_offset"),
+    [
+        ("reality_check_test", 19_000_000),
+        ("stepm_test", 20_000_000),
+    ],
+)
+@pytest.mark.xfail(reason=_RC_STEPM_DEPENDENT_DISTORTION_REASON, strict=True)
+def test_arch_set_comparison_size_equal_benchmark_dependent_losses(
+    callable_name: str,
+    seed_offset: int,
+) -> None:
+    n = 100
+    gens = spawn_generators(N_REPS, salt=6_000_003 + seed_offset)
+    n_reject = 0
+    test_callable = getattr(mf.tests, callable_name)
+    for i, rng in enumerate(gens):
+        panel = _make_panel_dependent(
+            rng, n=n, common_rho=0.5, idio_rho=0.3, common_sd=0.15, idio_sd=0.3
+        )
+        res = test_callable(
+            panel, benchmark="benchmark", alpha=ALPHA, n_boot=N_BOOT,
+            block_length="auto", random_state=seed_offset + i,
+        )
+        if res["records"][0]["decision"]:
+            n_reject += 1
+
+    lo, hi = clopper_pearson(n_reject, N_REPS, conf=0.99)
+    in_band = lo <= ALPHA <= hi
+    record(
+        test=callable_name,
+        design=f"K=5, benchmark==all candidates (AR(1) common+idio losses), n={n}",
+        nominal_alpha=ALPHA,
+        n_reps=N_REPS,
+        n_rejections=n_reject,
+        verdict="PASS (in band)" if in_band else "OVERSIZED",
+    )
+    assert in_band, (
+        f"{callable_name} size distortion (dependent): rate="
+        f"{n_reject / N_REPS:.4f} CI99=[{lo:.4f},{hi:.4f}]"
+    )

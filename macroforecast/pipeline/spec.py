@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import importlib.util
 import inspect
 from pathlib import Path
 from typing import Any, Literal, cast
+
+import pandas as pd
 
 
 # t-code (FRED-MD/QD integration order) -> (forecast_policy, target_transform).
@@ -141,7 +143,7 @@ class CombinationContender:
 #: docstring below).
 SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
     {
-        "dm", "cw", "gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mcs",
+        "dm", "cw", "gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mz", "mcs",
         "spa", "rc", "stepm", "uspa", "aspa", "berkowitz", "pit_autocorr",
         "coverage",
     }
@@ -168,6 +170,7 @@ _EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
     "hm": ("macroforecast.tests", "directional_accuracy_test"),
     "ag": ("macroforecast.tests", "directional_accuracy_test"),
     "gr": ("macroforecast.tests", "conditional_predictive_ability_test"),
+    "mz": ("macroforecast.tests", "mincer_zarnowitz_test"),
     "mcs": ("macroforecast.tests", "model_confidence_set"),
     "spa": ("macroforecast.tests", "superior_predictive_ability_test"),
     "rc": ("macroforecast.tests", "reality_check_test"),
@@ -223,6 +226,130 @@ def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
             )
 
 
+_DEFAULT_EVAL_BY = ("target", "horizon")
+_DEFAULT_PRIMARY_AXIS = "contender"
+
+
+def _validate_unimplemented_eval_fields(evaluation: "EvalSpec") -> None:
+    """Reject declared EvalSpec fields that are not wired into evaluation yet."""
+
+    if tuple(evaluation.by) != _DEFAULT_EVAL_BY:
+        raise ValueError(
+            "evaluation.by is not implemented; use test_options / file an issue"
+        )
+    if str(evaluation.primary_axis) != _DEFAULT_PRIMARY_AXIS:
+        raise ValueError(
+            "evaluation.primary_axis is not implemented; use test_options / file an issue"
+        )
+    if evaluation.multiple_testing is not None:
+        raise ValueError(
+            "evaluation.multiple_testing is not implemented; use test_options / file an issue"
+        )
+
+
+def _parse_subsample_date(value: Any, *, label: str) -> pd.Timestamp | None:
+    if value is None:
+        return None
+    try:
+        timestamp = pd.Timestamp(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a parseable date string") from exc
+    if pd.isna(timestamp):
+        raise ValueError(f"{label} must be a parseable date string")
+    if timestamp.tz is not None:
+        timestamp = timestamp.tz_convert(None)
+    return timestamp.normalize()
+
+
+def _normalize_subsamples(
+    subsamples: Mapping[str, "SubsampleWindow"] | None,
+) -> Mapping[str, "SubsampleWindow"] | None:
+    if not subsamples:
+        return None
+    names = [str(name) for name in subsamples]
+    if any(not name for name in names):
+        raise ValueError("evaluation.subsamples names must be nonempty")
+    if len(set(names)) != len(names):
+        raise ValueError("evaluation.subsamples names must be unique")
+
+    normalized: dict[str, SubsampleWindow] = {}
+    for raw_name, window in subsamples.items():
+        name = str(raw_name)
+        if not isinstance(window, SubsampleWindow):
+            raise ValueError(
+                "evaluation.subsamples values must be SubsampleWindow instances"
+            )
+        start = _parse_subsample_date(window.start, label=f"subsample {name!r} start")
+        end = _parse_subsample_date(window.end, label=f"subsample {name!r} end")
+        if start is not None and end is not None and start >= end:
+            raise ValueError(
+                f"evaluation.subsamples[{name!r}] start must be before end"
+            )
+        excludes: list[tuple[str, str]] = []
+        for idx, bounds in enumerate(window.exclude):
+            if (
+                not isinstance(bounds, Sequence)
+                or isinstance(bounds, (str, bytes))
+                or len(bounds) != 2
+            ):
+                raise ValueError(
+                    f"evaluation.subsamples[{name!r}].exclude[{idx}] must have "
+                    "exactly two date bounds"
+                )
+            raw_ex_start, raw_ex_end = bounds
+            ex_start = _parse_subsample_date(
+                raw_ex_start, label=f"subsample {name!r} exclude[{idx}] start"
+            )
+            ex_end = _parse_subsample_date(
+                raw_ex_end, label=f"subsample {name!r} exclude[{idx}] end"
+            )
+            assert ex_start is not None and ex_end is not None
+            if ex_start >= ex_end:
+                raise ValueError(
+                    f"evaluation.subsamples[{name!r}].exclude[{idx}] start "
+                    "must be before end"
+                )
+            excludes.append((str(raw_ex_start), str(raw_ex_end)))
+        normalized[name] = SubsampleWindow(
+            start=None if window.start is None else str(window.start),
+            end=None if window.end is None else str(window.end),
+            exclude=tuple(excludes),
+        )
+    return normalized
+
+
+def _normalize_eval_spec(evaluation: "EvalSpec") -> "EvalSpec":
+    """Return the EvalSpec shape consumed by the evaluator."""
+
+    _validate_unimplemented_eval_fields(evaluation)
+    test_options = {
+        str(test_name): dict(options)
+        for test_name, options in (evaluation.test_options or {}).items()
+    }
+    if evaluation.dm_kwargs:
+        dm_options = dict(evaluation.dm_kwargs)
+        dm_options.update(test_options.get("dm", {}))
+        test_options["dm"] = dm_options
+    return replace(
+        evaluation,
+        test_options=test_options,
+        subsamples=_normalize_subsamples(evaluation.subsamples),
+    )
+
+
+@dataclass(frozen=True)
+class SubsampleWindow:
+    """Evaluation-window filter applied to forecast target dates.
+
+    Bounds are inclusive date strings. ``exclude`` removes inclusive date ranges
+    after the optional start/end bounds are applied.
+    """
+
+    start: str | None = None
+    end: str | None = None
+    exclude: tuple[tuple[str, str], ...] = ()
+
+
 @dataclass(frozen=True)
 class EvalSpec:
     """Automatic evaluation and significance-testing configuration.
@@ -245,7 +372,8 @@ class EvalSpec:
     ``tests`` lists which significance tests actually run; unsupported names
     raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
     Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
-    ``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
+    ``"enc_new"``, ``"enc_t"``, ``"gr"``, and ``"mz"``. ``"mz"`` is the
+    Mincer-Zarnowitz actual-on-forecast rationality regression. ``"pt"``, ``"hm"``, and
     ``"ag"`` are directional-accuracy tests for the contender's own sign
     forecasts, evaluated on the same benchmark-aligned sample for consistency
     with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
@@ -278,6 +406,11 @@ class EvalSpec:
     ``calibration_alpha`` is the significance level for the calibration tests
     above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
     checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
+
+    ``subsamples`` optionally maps names to :class:`SubsampleWindow` values.
+    These are evaluation-window splits of an already-produced POOS forecast
+    frame: target-date rows are filtered before scoring and testing, without
+    refitting models or creating new forecast cells.
     """
 
     benchmark: str
@@ -289,7 +422,7 @@ class EvalSpec:
     mcs_alpha: float = 0.10
     mcs_method: str = "iterative"
     multiple_testing: str | None = None
-    subsamples: Mapping[str, tuple[Any, Any]] = field(default_factory=dict)
+    subsamples: Mapping[str, SubsampleWindow] | None = None
     dm_kwargs: Mapping[str, Any] = field(default_factory=dict)
     loss: Callable[[Any, Any], Any] | None = None
     test_options: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
@@ -386,6 +519,10 @@ class PipelineSpec:
     # produces -- ``provenance`` is the mapping payload, ``provenance_level``
     # is only the additive-blocks toggle.
     provenance_level: Literal["full", "basic"] = "full"
+    # Per-(arm, target) forecast-policy overrides, currently used by
+    # on_unsupported_direct="reroute" to run guarded direct-like cells as recursive
+    # without mutating the target policy for direct-capable arms.
+    policy_overrides: Mapping[tuple[str, str], str] = field(default_factory=dict)
 
 
 
@@ -553,10 +690,11 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 # direct-projection mode and are DELIBERATELY excluded here).
 #
 # The set below is every model whose ``ModelSpec.input_kind`` is "target" or
-# "panel", PLUS "favar" (its input_kind is "supervised" -- the same bucket as
-# ar/far -- because FAVAR's own factor-VAR update is still an iterated
-# dynamics model; ar/far are excluded from this set by name because they now
-# have a validated direct-projection mode). This set is cross-checked against
+# "panel" and lacks a validated direct point-projection mode, PLUS "favar" (its
+# input_kind is "supervised" -- the same bucket as ar/far -- because FAVAR's own
+# factor-VAR update is still an iterated dynamics model; ar/far/var are excluded
+# from this set because they have validated direct point-projection modes). This
+# set is cross-checked against
 # ``macroforecast.list_model_specs()`` by
 # ``tests/pipeline/test_direct_policy_guard.py`` so it cannot silently rot as
 # the models lane adds or removes models -- update it there, not just here, if
@@ -566,51 +704,130 @@ DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
     "arima", "auto_arima", "ets", "holt_winters", "naive", "random_walk_drift",
     "seasonal_naive", "stlf", "theta_method",
     # input_kind == "panel": iterate their own dynamics at the panel level.
-    "var", "bvar_minnesota", "bvar_normal_inverse_wishart",
+    "bvar_minnesota", "bvar_normal_inverse_wishart",
     "dfm_mixed_mariano_murasawa", "dfm_unrestricted_midas",
     # input_kind == "supervised" but genuinely iterated internally (unlike
     # ar/far, deliberately excluded -- see module docstring above).
     "favar",
 })
 
+# Models that support ``forecast_policy="direct"`` as an h-step point projection
+# but not ``forecast_policy="direct_average"`` as a horizon-average target. Keep
+# this policy-specific extension separate from ``DIRECT_POLICY_GUARD_MODELS`` so
+# ``var`` remains valid under plain direct point forecasts.
+DIRECT_AVERAGE_GUARD_MODELS: frozenset[str] = frozenset({"var"})
+
 _DIRECT_LIKE_POLICIES = frozenset({"direct", "direct_average"})
 
 
 def _direct_policy_guard_message(arm: Arm, model_name: str, policies: "Sequence[str]") -> str:
-    """The ``UserWarning`` text for one guarded arm under a direct-like policy."""
+    """The guard text for one guarded arm under a direct-like policy."""
     policies_txt = ", ".join(sorted(set(policies)))
+    if (
+        model_name in DIRECT_AVERAGE_GUARD_MODELS
+        and set(policies) == {"direct_average"}
+    ):
+        return (
+            f"arm {arm.name!r} (model {model_name!r}) is run under forecast "
+            f"policy/policies {{{policies_txt}}}: {model_name!r} supports "
+            "forecast_policy='direct' as an h-step POINT projection, but it does "
+            "not fit the horizon-average target required by "
+            "forecast_policy='direct_average'. Labeling that point projection as "
+            "direct_average would misstate the forecast object (see CHANGELOG "
+            "[Unreleased] and docs/guide/model_policy_matrix.md). Prefer "
+            "forecast_policy='recursive' or 'path_average' for "
+            f"{model_name!r}, or give this target an explicit TargetSpec(policy=...) "
+            "override if only some targets should differ. To opt out deliberately, "
+            "set on_unsupported_direct='warn'; to reroute affected cells to "
+            "recursive, set on_unsupported_direct='reroute'."
+        )
     return (
         f"arm {arm.name!r} (model {model_name!r}) is run under forecast "
         f"policy/policies {{{policies_txt}}}: {model_name!r} forecasts by "
         "ITERATING its own dynamics rather than fitting a genuine h-step-ahead "
         "projection, so direct-policy semantics do not apply to it -- long-horizon "
         "forecasts may silently degrade toward a stale/persistence-like forecast "
-        "(see CHANGELOG [Unreleased], GCLS replication Bug 3). This is a warning, "
-        "not a rejection: deliberate use (e.g. an intentionally weak benchmark) "
-        "stays possible. Prefer forecast_policy='recursive' or 'path_average' for "
+        "(see CHANGELOG [Unreleased], GCLS replication Bug 3, and "
+        "docs/guide/model_policy_matrix.md). Prefer forecast_policy='recursive' "
+        "or 'path_average' for "
         f"{model_name!r}, or give this target an explicit "
-        "TargetSpec(policy=...) override if only some targets should differ."
+        "TargetSpec(policy=...) override if only some targets should differ. "
+        "To opt out deliberately, set on_unsupported_direct='warn'; to reroute "
+        "affected cells to recursive, set on_unsupported_direct='reroute'."
     )
 
 
-def _warn_direct_policy_guard(arms: "Sequence[Arm]", targets: "Sequence[ResolvedTarget]") -> None:
-    """Emit one ``UserWarning`` per guarded arm whose target(s) use direct/direct_average.
+def _is_unsupported_direct_cell(model_name: str, policy: str) -> bool:
+    if policy == "direct_average" and model_name in DIRECT_AVERAGE_GUARD_MODELS:
+        return True
+    return policy in _DIRECT_LIKE_POLICIES and model_name in DIRECT_POLICY_GUARD_MODELS
 
-    Grouped per-arm (not per (arm, target)) so a pipeline with many targets that
-    all resolve to the same policy produces ONE informative warning per affected
-    arm rather than one per target.
-    """
+
+def _unsupported_direct_cells(
+    arms: "Sequence[Arm]",
+    targets: "Sequence[ResolvedTarget]",
+) -> list[tuple[Arm, str, list[ResolvedTarget]]]:
+    cells: list[tuple[Arm, str, list[ResolvedTarget]]] = []
     for arm in arms:
         model_name = _arm_model_name(arm)
-        if model_name not in DIRECT_POLICY_GUARD_MODELS:
-            continue
-        affected = [t.policy for t in targets if t.policy in _DIRECT_LIKE_POLICIES]
+        affected = [
+            target
+            for target in targets
+            if _is_unsupported_direct_cell(model_name, target.policy)
+        ]
         if affected:
+            cells.append((arm, model_name, affected))
+    return cells
+
+
+def _resolve_unsupported_direct_policy(
+    arms: "Sequence[Arm]",
+    targets: "Sequence[ResolvedTarget]",
+    *,
+    mode: Literal["error", "warn", "reroute"],
+) -> dict[tuple[str, str], str]:
+    """Validate/warn/reroute guarded models under direct/direct_average.
+
+    Grouped per-arm (not per (arm, target)) so a pipeline with many targets that
+    all resolve to the same policy produces ONE informative diagnostic per
+    affected arm rather than one per target.
+    """
+    affected_cells = _unsupported_direct_cells(arms, targets)
+    if not affected_cells:
+        return {}
+    if mode == "error":
+        details = "\n".join(
+            "- " + _direct_policy_guard_message(
+                arm,
+                model_name,
+                [target.policy for target in affected],
+            )
+            for arm, model_name, affected in affected_cells
+        )
+        raise ValueError(
+            "unsupported direct-like forecast policy for iterated/state-space "
+            f"model(s):\n{details}"
+        )
+    overrides: dict[tuple[str, str], str] = {}
+    for arm, model_name, affected in affected_cells:
+        policies = [target.policy for target in affected]
+        if mode == "warn":
             warnings.warn(
-                _direct_policy_guard_message(arm, model_name, affected),
+                _direct_policy_guard_message(arm, model_name, policies),
                 UserWarning,
                 stacklevel=2,
             )
+            continue
+        for target in affected:
+            overrides[(arm.name, target.name)] = "recursive"
+        warnings.warn(
+            _direct_policy_guard_message(arm, model_name, policies)
+            + " Rerouting affected arm-target cell(s) to forecast_policy='recursive'; "
+            "emitted rows will be labeled recursive.",
+            UserWarning,
+            stacklevel=2,
+        )
+    return overrides
 
 
 
@@ -814,6 +1031,7 @@ def pipeline_spec(
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
     provenance_level: Literal["full", "basic"] = "full",
+    on_unsupported_direct: Literal["error", "warn", "reroute"] = "error",
 ) -> PipelineSpec:
     """Validate and build a :class:`PipelineSpec`.
 
@@ -841,10 +1059,20 @@ def pipeline_spec(
     ``result_store`` is an optional directory for cross-run reuse of completed
     forecast cells. When left at ``None`` (the default), the runner follows the
     original execution path exactly.
+
+    ``on_unsupported_direct`` controls what happens when a model that only
+    iterates its own dynamics is combined with ``direct`` or ``direct_average``:
+    ``"error"`` (default) rejects the spec, ``"warn"`` preserves the old weak
+    benchmark behavior, and ``"reroute"`` runs only the affected arm-target
+    cells as ``recursive``.
     """
     arms = tuple(arms)
     if not arms:
         raise ValueError("pipeline requires at least one arm")
+    if on_unsupported_direct not in ("error", "warn", "reroute"):
+        raise ValueError(
+            "on_unsupported_direct must be one of 'error', 'warn', or 'reroute'"
+        )
     if provenance_level not in ("full", "basic"):
         raise ValueError(
             f"provenance_level must be 'full' or 'basic', got {provenance_level!r}"
@@ -909,10 +1137,10 @@ def pipeline_spec(
             f"evaluation.benchmark {evaluation.benchmark!r} is not among the "
             f"contenders {sorted(all_contenders)}"
         )
+    evaluation = _normalize_eval_spec(evaluation)
 
-    # evaluation.tests: only "dm"/"cw"/"mcs" are wired into the evaluator today;
-    # a typo or an aspirational "spa"/"gr" must raise here rather than be
-    # silently ignored (the historical bug this validation replaces).
+    # evaluation.tests must be names the evaluator actually wires; a typo or an
+    # aspirational test name raises here rather than being silently ignored.
     unknown_tests = set(evaluation.tests) - SUPPORTED_EVAL_TESTS
     if unknown_tests:
         raise ValueError(
@@ -934,9 +1162,11 @@ def pipeline_spec(
         )
     _validate_eval_test_options(evaluation)
 
-    # Warn (never reject) when a guarded iterated/state-space model is combined
-    # with a direct-like forecast policy -- see DIRECT_POLICY_GUARD_MODELS above.
-    _warn_direct_policy_guard(arms, resolved)
+    policy_overrides = _resolve_unsupported_direct_policy(
+        arms,
+        resolved,
+        mode=on_unsupported_direct,
+    )
 
     notes = dict(provenance or {})
     if not save_models and any(a.interpret for a in arms):
@@ -960,4 +1190,5 @@ def pipeline_spec(
         seed=seed,
         provenance=notes,
         provenance_level=provenance_level,
+        policy_overrides=policy_overrides,
     )

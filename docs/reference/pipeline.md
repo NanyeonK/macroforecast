@@ -29,6 +29,7 @@ Guide context: [../guide/index.md](../guide/index.md).
 | `InterpretSpec` | class | ML interpretation request for an arm (deferred, multi-method). |
 | `PipelineSpec` | class | Validated, frozen configuration produced by :func:`pipeline_spec`. |
 | `ResolvedTarget` | class | A target with its forecast policy and transform resolved. |
+| `SubsampleWindow` | class | Evaluation-window filter applied to forecast target dates. |
 | `TargetSpec` | class | A forecast target and how its forecast object is defined. |
 | `contender_names` | function | Display contender labels for an arm. A contender IS exactly an arm. |
 | `is_vintage_aware` | function | Return whether a pipeline spec runs against per-origin vintage data. |
@@ -698,7 +699,7 @@ Qualified name: `macroforecast.pipeline.spec.EvalSpec`
 #### Signature
 
 ```python
-macroforecast.pipeline.EvalSpec(benchmark: str, metrics: tuple[str | Callable[..., float], ...] = ('rmse', 'relative_mse', 'r2_oos'), tests: tuple[str, ...] = ('dm', 'cw', 'mcs'), by: tuple[str, ...] = ('target', 'horizon'), primary_axis: str = "contender", cw_for_nested: bool = True, mcs_alpha: float = 0.1, mcs_method: str = "iterative", multiple_testing: str | None = None, subsamples: Mapping[str, tuple[Any, Any]] = <factory>, dm_kwargs: Mapping[str, Any] = <factory>, loss: Callable[[Any, Any], Any] | None = None, test_options: Mapping[str, Mapping[str, Any]] = <factory>, calibration_alpha: float = 0.05) -> None
+macroforecast.pipeline.EvalSpec(benchmark: str, metrics: tuple[str | Callable[..., float], ...] = ('rmse', 'relative_mse', 'r2_oos'), tests: tuple[str, ...] = ('dm', 'cw', 'mcs'), by: tuple[str, ...] = ('target', 'horizon'), primary_axis: str = "contender", cw_for_nested: bool = True, mcs_alpha: float = 0.1, mcs_method: str = "iterative", multiple_testing: str | None = None, subsamples: Mapping[str, SubsampleWindow] | None = None, dm_kwargs: Mapping[str, Any] = <factory>, loss: Callable[[Any, Any], Any] | None = None, test_options: Mapping[str, Mapping[str, Any]] = <factory>, calibration_alpha: float = 0.05) -> None
 ```
 
 #### Description
@@ -723,7 +724,8 @@ rather than compute it against the wrong loss.
 ``tests`` lists which significance tests actually run; unsupported names
 raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
 Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
-``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
+``"enc_new"``, ``"enc_t"``, ``"gr"``, and ``"mz"``. ``"mz"`` is the
+Mincer-Zarnowitz actual-on-forecast rationality regression. ``"pt"``, ``"hm"``, and
 ``"ag"`` are directional-accuracy tests for the contender's own sign
 forecasts, evaluated on the same benchmark-aligned sample for consistency
 with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
@@ -757,6 +759,11 @@ computes them.
 above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
 checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
 
+``subsamples`` optionally maps names to :class:`SubsampleWindow` values.
+These are evaluation-window splits of an already-produced POOS forecast
+frame: target-date rows are filtered before scoring and testing, without
+refitting models or creating new forecast cells.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -770,7 +777,7 @@ checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
 | `mcs_alpha` | positional or keyword | `float` | `0.1` |
 | `mcs_method` | positional or keyword | `str` | `"iterative"` |
 | `multiple_testing` | positional or keyword | `str \| None` | `None` |
-| `subsamples` | positional or keyword | `Mapping[str, tuple[Any, Any]]` | `<factory>` |
+| `subsamples` | positional or keyword | `Mapping[str, SubsampleWindow] \| None` | `None` |
 | `dm_kwargs` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
 | `loss` | positional or keyword | `Callable[[Any, Any], Any] \| None` | `None` |
 | `test_options` | positional or keyword | `Mapping[str, Mapping[str, Any]]` | `<factory>` |
@@ -801,7 +808,7 @@ import macroforecast as mf
 | `mcs_alpha` | `float` | `0.1` |
 | `mcs_method` | `str` | `"iterative"` |
 | `multiple_testing` | `str \| None` | `None` |
-| `subsamples` | `Mapping[str, tuple[Any, Any]]` | `default_factory` |
+| `subsamples` | `Mapping[str, SubsampleWindow] \| None` | `None` |
 | `dm_kwargs` | `Mapping[str, Any]` | `default_factory` |
 | `loss` | `Callable[[Any, Any], Any] \| None` | `None` |
 | `test_options` | `Mapping[str, Mapping[str, Any]]` | `default_factory` |
@@ -860,7 +867,7 @@ Qualified name: `macroforecast.pipeline.spec.PipelineSpec`
 #### Signature
 
 ```python
-macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full") -> None
+macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
 ```
 
 #### Description
@@ -890,6 +897,7 @@ Validated, frozen configuration produced by :func:`pipeline_spec`.
 | `seed` | positional or keyword | `int \| None` | `42` |
 | `provenance` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
 | `provenance_level` | positional or keyword | `Literal['full', 'basic']` | `"full"` |
+| `policy_overrides` | positional or keyword | `Mapping[tuple[str, str], str]` | `<factory>` |
 
 #### Returns
 
@@ -926,6 +934,7 @@ import macroforecast as mf
 | `seed` | `int \| None` | `42` |
 | `provenance` | `Mapping[str, Any]` | `default_factory` |
 | `provenance_level` | `Literal['full', 'basic']` | `"full"` |
+| `policy_overrides` | `Mapping[tuple[str, str], str]` | `default_factory` |
 ### ResolvedTarget
 
 Qualified name: `macroforecast.pipeline.spec.ResolvedTarget`
@@ -971,6 +980,50 @@ import macroforecast as mf
 | `transform` | `str` | `required` |
 | `tcode` | `int \| None` | `required` |
 | `annualize` | `bool` | `required` |
+### SubsampleWindow
+
+Qualified name: `macroforecast.pipeline.spec.SubsampleWindow`
+
+#### Signature
+
+```python
+macroforecast.pipeline.SubsampleWindow(start: str | None = None, end: str | None = None, exclude: tuple[tuple[str, str], ...] = ()) -> None
+```
+
+#### Description
+
+Evaluation-window filter applied to forecast target dates.
+
+Bounds are inclusive date strings. ``exclude`` removes inclusive date ranges
+after the optional start/end bounds are applied.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `start` | positional or keyword | `str \| None` | `None` |
+| `end` | positional or keyword | `str \| None` | `None` |
+| `exclude` | positional or keyword | `tuple[tuple[str, str], ...]` | `()` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.SubsampleWindow(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `start` | `str \| None` | `None` |
+| `end` | `str \| None` | `None` |
+| `exclude` | `tuple[tuple[str, str], ...]` | `()` |
 ### TargetSpec
 
 Qualified name: `macroforecast.pipeline.spec.TargetSpec`
@@ -1169,7 +1222,7 @@ Qualified name: `macroforecast.pipeline.spec.pipeline_spec`
 #### Signature
 
 ```python
-macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full") -> PipelineSpec
+macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
 ```
 
 #### Description
@@ -1201,6 +1254,12 @@ only omits the "environment"/"data"/"spec_echo" blocks.
 forecast cells. When left at ``None`` (the default), the runner follows the
 original execution path exactly.
 
+``on_unsupported_direct`` controls what happens when a model that only
+iterates its own dynamics is combined with ``direct`` or ``direct_average``:
+``"error"`` (default) rejects the spec, ``"warn"`` preserves the old weak
+benchmark behavior, and ``"reroute"`` runs only the affected arm-target
+cells as ``recursive``.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -1224,6 +1283,7 @@ original execution path exactly.
 | `seed` | keyword only | `int \| None` | `42` |
 | `provenance` | keyword only | `Mapping[str, Any] \| None` | `None` |
 | `provenance_level` | keyword only | `Literal['full', 'basic']` | `"full"` |
+| `on_unsupported_direct` | keyword only | `Literal['error', 'warn', 'reroute']` | `"error"` |
 
 #### Returns
 

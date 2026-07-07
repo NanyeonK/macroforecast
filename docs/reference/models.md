@@ -3127,7 +3127,7 @@ Family: `timeseries`
 #### Fit Signature
 
 ```python
-macroforecast.models.var(panel: Any, *, target: str | None = None, n_lag: int = 1, type: str = "const", season: int | None = None) -> ModelFit
+macroforecast.models.var(panel: Any, *, target: str | None = None, n_lag: int = 1, type: str = "const", season: int | None = None, direct: bool = False, direct_horizon: int = 1) -> ModelFit
 ```
 
 | Field | Value |
@@ -3149,6 +3149,8 @@ R vars::VAR-aligned vector autoregression point forecast.
 | `n_lag` | `1` | `int` | True | VAR lag order. |
 | `type` | `"const"` | `str` | False | R vars::VAR deterministic terms: const, trend, both, or none. |
 | `season` | `None` | `int \| None` | False | Optional centered seasonal dummies, matching vars::VAR(season=...). |
+| `direct` | `False` | `bool` | False | Internal: fit a horizon-specific point direct projection. |
+| `direct_horizon` | `1` | `int` | False | Internal: horizon used when direct=True. |
 
 #### Search Spaces
 

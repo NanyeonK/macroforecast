@@ -344,6 +344,41 @@ def test_paper_accuracy_table_missing_significance_and_mcs_frames() -> None:
     assert rf_row["h3"] == "0.800"
 
 
+def test_paper_accuracy_table_selects_subsample_window() -> None:
+    report = _paper_report()
+
+    class _Report:
+        accuracy = pd.concat(
+            [
+                report.accuracy.assign(subsample="full"),
+                report.accuracy.assign(subsample="ex_covid", relative_mse=lambda x: x["relative_mse"] * 1.21),
+            ],
+            ignore_index=True,
+        )
+        significance = pd.concat(
+            [
+                report.significance.assign(subsample="full"),
+                report.significance.assign(subsample="ex_covid"),
+            ],
+            ignore_index=True,
+        )
+        mcs = pd.concat(
+            [
+                report.mcs.assign(subsample="full"),
+                report.mcs.assign(subsample="ex_covid"),
+            ],
+            ignore_index=True,
+        )
+
+    default_table = mf.reporting.paper_accuracy_table(_Report())
+    covid_table = mf.reporting.paper_accuracy_table(_Report(), subsample="ex_covid")
+
+    assert default_table.metadata["subsample"] == "full"
+    assert covid_table.metadata["subsample"] == "ex_covid"
+    rf_row = covid_table.data.loc[covid_table.data["Model"] == "RF"].iloc[0]
+    assert rf_row["h1"].startswith("0.990")
+
+
 def test_paper_accuracy_table_missing_benchmark_edge_case() -> None:
     # The named benchmark never appears as a contender for this target (e.g. it
     # failed to run / was never included): accuracy has RF only, and

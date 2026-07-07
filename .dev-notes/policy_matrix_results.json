@@ -1,0 +1,1726 @@
+{
+  "adaptive_elastic_net": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.22
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.27
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.28
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.06
+    }
+  },
+  "adaptive_lasso": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.4
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.39
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.62
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    }
+  },
+  "albacore_components": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.5
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.42
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.67
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.36
+    }
+  },
+  "albacore_ranks": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.39
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.38
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.64
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.37
+    }
+  },
+  "ar": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.22
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.22
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.28
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.29
+    }
+  },
+  "arima": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.32
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.3
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.39
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    }
+  },
+  "assemblage_regression": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.65
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.35
+    }
+  },
+  "auto_arima": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 9.2
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 9.87
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 17.95
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 9.17
+    }
+  },
+  "bayesian_ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.18
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.17
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.2
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    }
+  },
+  "bvar_minnesota": {
+    "input_kind": "panel",
+    "direct": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "direct_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "path_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "recursive": {
+      "status": "TIMEOUT",
+      "secs": 150
+    }
+  },
+  "bvar_normal_inverse_wishart": {
+    "input_kind": "panel",
+    "direct": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "direct_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "path_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "recursive": {
+      "status": "TIMEOUT",
+      "secs": 150
+    }
+  },
+  "catboost": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 8.45
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 8.51
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 16.36
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 7.58
+    }
+  },
+  "component_aggregation": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.66
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.35
+    }
+  },
+  "decision_tree": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.34
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.32
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.48
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.38
+    }
+  },
+  "density_hnn": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.06,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    }
+  },
+  "dfm_mixed_mariano_murasawa": {
+    "input_kind": "panel",
+    "direct": {
+      "status": "OK",
+      "rows": 8,
+      "secs": 0.48
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 8,
+      "secs": 0.46
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 8,
+      "secs": 0.48
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.01,
+      "msg": "ValueError: recursive forecasting is only defined for feature-matrix models; panel-input models own their own multi-step prediction logic"
+    }
+  },
+  "dfm_unrestricted_midas": {
+    "input_kind": "panel",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.25,
+      "msg": "ValueError: DFM unrestricted MIDAS prediction design contains missing values; missing columns: ['dfm_factor1_lag0']"
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.22,
+      "msg": "ValueError: DFM unrestricted MIDAS prediction design contains missing values; missing columns: ['dfm_factor1_lag0']"
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.22,
+      "msg": "ValueError: DFM unrestricted MIDAS prediction design contains missing values; missing columns: ['dfm_factor1_lag0']"
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.01,
+      "msg": "ValueError: recursive forecasting is only defined for feature-matrix models; panel-input models own their own multi-step prediction logic"
+    }
+  },
+  "egarch": {
+    "input_kind": "volatility",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.59
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.21
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.56
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.61
+    }
+  },
+  "elastic_net": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.46
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.46
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.77
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.51
+    }
+  },
+  "ets": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.22
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.22
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.29
+    }
+  },
+  "extra_trees": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 9.37
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 9.36
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 18.39
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 8.24
+    }
+  },
+  "far": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.62
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.6
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.09
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.93
+    }
+  },
+  "favar": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.09,
+      "msg": "SearchError: All parameter trials failed: slowcode is required when fctmethod='BBE', matching FAVAR::FAVAR"
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: slowcode is required when fctmethod='BBE', matching FAVAR::FAVAR"
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: slowcode is required when fctmethod='BBE', matching FAVAR::FAVAR"
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: slowcode is required when fctmethod='BBE', matching FAVAR::FAVAR"
+    }
+  },
+  "fused_difference_ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.36
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.34
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.55
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.33
+    }
+  },
+  "garch11": {
+    "input_kind": "volatility",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.89
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.67
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.12
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.79
+    }
+  },
+  "gjr_garch": {
+    "input_kind": "volatility",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.8
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.38
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.8
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.6
+    }
+  },
+  "glmboost": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.38
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.36
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.58
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.44
+    }
+  },
+  "gradient_boosting": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 8.38
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 8.53
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 16.72
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 5.1
+    }
+  },
+  "group_lasso": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.7
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.53
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.15
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.3
+    }
+  },
+  "gru": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.06,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    }
+  },
+  "hemisphere_nn": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.06,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    }
+  },
+  "holt_winters": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.23
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.3
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.33
+    }
+  },
+  "huber": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.74
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.8
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.31
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    }
+  },
+  "kernel_ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.42
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.42
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.68
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.49
+    }
+  },
+  "knn": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.56
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.64
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.05
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.53
+    }
+  },
+  "lasso": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.24
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.24
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.32
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.3
+    }
+  },
+  "lgb_plus": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "direct_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "path_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "recursive": {
+      "status": "TIMEOUT",
+      "secs": 150
+    }
+  },
+  "lgba_plus": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 12.75
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 12.75
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 26.84
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 7.88
+    }
+  },
+  "lightgbm": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.38
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.22
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 4.24
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.15
+    }
+  },
+  "linear_svr": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.11
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.03
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.09
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.49
+    }
+  },
+  "lstm": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.06,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    }
+  },
+  "macro_random_forest": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "direct_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "path_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "recursive": {
+      "status": "TIMEOUT",
+      "secs": 150
+    }
+  },
+  "mars": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "direct_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "path_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "recursive": {
+      "status": "TIMEOUT",
+      "secs": 150
+    }
+  },
+  "midas_almon": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.91
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.87
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.57
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.5
+    }
+  },
+  "midas_beta": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.13
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.08
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.99
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.59
+    }
+  },
+  "midas_step": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.94
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.9
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.62
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.49
+    }
+  },
+  "naive": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.18
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.17
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.18
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    }
+  },
+  "nn": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.06,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    }
+  },
+  "nonneg_ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.3
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.29
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.41
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.33
+    }
+  },
+  "nu_svr": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.62
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.63
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.05
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.85
+    }
+  },
+  "ols": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.18
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.17
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.19
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    }
+  },
+  "pls": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.3
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.29
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.42
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.37
+    }
+  },
+  "quantile_regression_forest": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 15.71
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 15.16
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 30.9
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 13.01
+    }
+  },
+  "random_forest": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 14.29
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 13.87
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 28.21
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 11.77
+    }
+  },
+  "random_walk_drift": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.18
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.17
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.18
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    }
+  },
+  "random_walk_ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 20.98
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 19.47
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 33.43
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.88
+    }
+  },
+  "rank_aggregation": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.39
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.38
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.63
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.38
+    }
+  },
+  "realized_garch": {
+    "input_kind": "volatility",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 23.36
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 35.93
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 49.46
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 27.68
+    }
+  },
+  "restricted_midas": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "direct_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "path_average": {
+      "status": "TIMEOUT",
+      "secs": 150
+    },
+    "recursive": {
+      "status": "TIMEOUT",
+      "secs": 150
+    }
+  },
+  "ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.24
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.23
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.31
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.31
+    }
+  },
+  "scaled_pca": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.28
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.27
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.39
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.35
+    }
+  },
+  "seasonal_naive": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.18
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.17
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.19
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    }
+  },
+  "shrink_to_target_ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.37
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.35
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.54
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.34
+    }
+  },
+  "sparse_group_lasso": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.57
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.8
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 4.23
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.5
+    }
+  },
+  "stlf": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.25
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.23
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.31
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.34
+    }
+  },
+  "supervised_aggregation": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.39
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.38
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.58
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.34
+    }
+  },
+  "supervised_pca": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.97
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.95
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.8
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.01
+    }
+  },
+  "supervised_scaled_pca": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.97
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.96
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.82
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.01
+    }
+  },
+  "svr": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.4
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.39
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.63
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.46
+    }
+  },
+  "tgarch": {
+    "input_kind": "volatility",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.87
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.33
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.95
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.58
+    }
+  },
+  "theta_method": {
+    "input_kind": "target",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.22
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.21
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.22
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.26
+    }
+  },
+  "transformer": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "EMPTY",
+      "secs": 0.08,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "direct_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "path_average": {
+      "status": "EMPTY",
+      "secs": 0.07,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.06,
+      "msg": "SearchError: All parameter trials failed: 'torch' is required for this model. Install with `pip install 'macroforecast[deep]'`."
+    }
+  },
+  "tvp_ridge": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.76
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 1.74
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 3.2
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 2.08
+    }
+  },
+  "unrestricted_midas": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.24
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.22
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.31
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 0.3
+    }
+  },
+  "var": {
+    "input_kind": "panel",
+    "direct": {
+      "status": "OK",
+      "rows": 8,
+      "secs": 0.06
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 8,
+      "secs": 0.05
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 8,
+      "secs": 0.05
+    },
+    "recursive": {
+      "status": "EMPTY",
+      "secs": 0.01,
+      "msg": "ValueError: recursive forecasting is only defined for feature-matrix models; panel-input models own their own multi-step prediction logic"
+    }
+  },
+  "xgboost": {
+    "input_kind": "supervised",
+    "direct": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 14.61
+    },
+    "direct_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 15.65
+    },
+    "path_average": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 25.05
+    },
+    "recursive": {
+      "status": "OK",
+      "rows": 4,
+      "secs": 10.48
+    }
+  }
+}

@@ -641,12 +641,30 @@ def load_custom_csv(
     transform_codes: Mapping[str, int] | None = None,
     cache_root: str | Path | None = None,
     strict: bool = True,
+    na_values: str | Sequence[str] | Mapping[str, str | Sequence[str]] | None = None,
+    date_format: str | None = None,
+    dayfirst: bool = False,
 ) -> DataBundle:
+    """Load a user CSV into a canonical ``DataBundle``.
+
+    By default the CSV is read with pandas' normal parsing behavior and then
+    normalized through :func:`as_panel`. ``na_values`` is passed to
+    :func:`pandas.read_csv` when supplied. ``date_format`` and ``dayfirst`` parse
+    the resolved date column before panel normalization, which is useful for
+    strict loads with non-ISO or ambiguous dates.
+    """
+
     csv_path = Path(path)
     if not csv_path.exists():
         raise RawParseError(f"custom CSV source path does not exist: {csv_path}")
     try:
-        raw = pd.read_csv(csv_path)
+        read_kwargs: dict[str, Any] = {}
+        if na_values is not None:
+            read_kwargs["na_values"] = na_values
+        raw = pd.read_csv(csv_path, **read_kwargs)
+    except (OSError, UnicodeDecodeError, pd.errors.ParserError) as exc:
+        raise RawParseError(f"failed to read custom CSV at {csv_path}: {exc}") from exc
+    try:
         resolved_date, resolved_columns = _normalize_custom_loader_columns(
             raw,
             date=date,
@@ -654,9 +672,16 @@ def load_custom_csv(
             columns=columns,
             series_columns=series_columns,
         )
+        if date_format is not None or dayfirst:
+            raw = _parse_custom_loader_date_column(
+                raw,
+                resolved_date=resolved_date,
+                date_format=date_format,
+                dayfirst=dayfirst,
+            )
         panel = as_panel(raw, date=resolved_date, columns=resolved_columns, rename=rename, strict=strict)
-    except Exception as exc:
-        raise RawParseError(f"failed to normalize custom CSV at {csv_path}") from exc
+    except (TypeError, ValueError) as exc:
+        raise RawParseError(f"failed to normalize custom CSV at {csv_path}: {exc}") from exc
     return _custom_bundle(
         panel,
         dataset=dataset,
@@ -743,6 +768,28 @@ def _normalize_custom_loader_columns(
         resolved_date = str(date_col)
     resolved_columns = columns if columns is not None else series_columns
     return resolved_date, resolved_columns
+
+
+def _parse_custom_loader_date_column(
+    raw: pd.DataFrame,
+    *,
+    resolved_date: str | None,
+    date_format: str | None,
+    dayfirst: bool,
+) -> pd.DataFrame:
+    if raw.empty and not len(raw.columns):
+        return raw
+    date_column = resolved_date if resolved_date is not None else str(raw.columns[0])
+    if date_column not in raw.columns:
+        raise ValueError(f"date column {date_column!r} is not in the DataFrame")
+    out = raw.copy()
+    out[date_column] = pd.to_datetime(
+        out[date_column],
+        errors="coerce",
+        format=date_format,
+        dayfirst=bool(dayfirst),
+    )
+    return out
 
 
 def _dataset_id(dataset: str) -> DatasetId:
@@ -1346,7 +1393,10 @@ def _align_bundle_for_combination(
         sample = list(unsupported.items())[:5]
         raise ValueError(
             "combined monthly/quarterly output supports only monthly and quarterly native columns; "
-            f"unsupported columns include {sample}. Use frequency='native' to inspect them first."
+            f"unsupported columns include {sample}. Use frequency='native' to inspect them first, "
+            "or pre-align weekly/irregular panels with "
+            "mf.data.align_frequency(bundle, method='monthly', weekly_to_monthly='mean') "
+            "before combine(...)."
         )
     if frequency == "monthly":
         conversions = _frequency_conversion_records(

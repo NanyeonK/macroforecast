@@ -38,12 +38,12 @@ Guide context: [../guide/concepts/data.md](../guide/concepts/data.md).
 | `load_fred_sd` | function | No public docstring is available. |
 | `load_fred_md_sd` | function | Load FRED-MD plus FRED-SD as one canonical data bundle. |
 | `load_fred_qd_sd` | function | Load FRED-QD plus FRED-SD as one canonical data bundle. |
-| `load_custom_csv` | function | No public docstring is available. |
+| `load_custom_csv` | function | Load a user CSV into a canonical ``DataBundle``. |
 | `load_custom_parquet` | function | No public docstring is available. |
 | `list_vintages` | function | Return monthly vintage labels between ``start`` and ``end`` inclusive. |
 | `fred_md_vintages` | function | Return a FRED-MD point-in-time source resolved by forecast origin. |
 | `fred_qd_vintages` | function | Return a FRED-QD point-in-time source resolved by origin date. |
-| `with_static_extras` | function | Join non-revised extra columns onto every resolved vintage bundle. |
+| `with_static_extras` | function | Join non-revised extra columns observable before each origin. |
 | `same_period_predictors` | function | Apply a same-period predictor policy to a run-level data spec. |
 
 ## Callable And Class Reference
@@ -221,7 +221,7 @@ Qualified name: `macroforecast.data.vintage.VintagePanelSpec`
 #### Signature
 
 ```python
-macroforecast.data.VintagePanelSpec(source: VintageSource, reference_calendar: pd.DatetimeIndex, actuals_vintage: "Literal['latest', 'first_release']" = "latest") -> None
+macroforecast.data.VintagePanelSpec(source: VintageSource, reference_calendar: pd.DatetimeIndex, actuals_vintage: "Literal['latest', 'first_release']" = "latest", first_release_max_vintages: int = 12) -> None
 ```
 
 #### Description
@@ -235,6 +235,7 @@ Run-level wrapper for a point-in-time vintage source.
 | `source` | positional or keyword | `VintageSource` | `required` |
 | `reference_calendar` | positional or keyword | `pd.DatetimeIndex` | `required` |
 | `actuals_vintage` | positional or keyword | `Literal['latest', 'first_release']` | `"latest"` |
+| `first_release_max_vintages` | positional or keyword | `int` | `12` |
 
 #### Returns
 
@@ -255,6 +256,7 @@ import macroforecast as mf
 | `source` | `VintageSource` | `required` |
 | `reference_calendar` | `pd.DatetimeIndex` | `required` |
 | `actuals_vintage` | `Literal['latest', 'first_release']` | `"latest"` |
+| `first_release_max_vintages` | `int` | `12` |
 ### VintageSource
 
 Qualified name: `macroforecast.data.vintage.VintageSource`
@@ -457,12 +459,14 @@ macroforecast.data.custom_vintages(source: Callable[[pd.Timestamp], DataBundle |
 Return a custom point-in-time source.
 
 ``source`` may be a callable ``origin_date -> DataBundle | DataFrame``, a
-mapping from date-like vintage keys to snapshots, or a long ALFRED-style
-DataFrame with one row per ``(date, vintage, series...)``. Every snapshot is
-normalized through :func:`as_panel` / :func:`custom_dataset` and then
-validated. Resolved snapshots are memoized by the stable identifier produced
-by ``vintage_id`` (default: ``str(resolved_key)``). If a callable reads from
-a non-deterministic source whose content can change for the same identifier,
+mapping from timestamp-parsable vintage keys to snapshots, or a grouped-wide
+DataFrame. The grouped-wide form has one ``vintage_column``, one
+``date_column``, and one numeric column per series; each vintage group is a
+complete wide snapshot. Every snapshot is normalized through
+:func:`as_panel` / :func:`custom_dataset` and then validated. Resolved
+snapshots are memoized by the stable identifier produced by ``vintage_id``
+(default: ``str(resolved_key)``). If a callable reads from a
+non-deterministic source whose content can change for the same identifier,
 run the forecast with runner/pipeline preprocessing caching disabled.
 
 #### Parameters
@@ -1145,12 +1149,18 @@ Qualified name: `macroforecast.data.loaders.load_custom_csv`
 #### Signature
 
 ```python
-macroforecast.data.load_custom_csv(path: str | Path, *, date: str | None = None, date_col: str | int | None = None, columns: Iterable[str] | None = None, series_columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, default_frequency: str | None = None, metadata: Mapping[str, Any] | None = None, transform_codes: Mapping[str, int] | None = None, cache_root: str | Path | None = None, strict: bool = True) -> DataBundle
+macroforecast.data.load_custom_csv(path: str | Path, *, date: str | None = None, date_col: str | int | None = None, columns: Iterable[str] | None = None, series_columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, default_frequency: str | None = None, metadata: Mapping[str, Any] | None = None, transform_codes: Mapping[str, int] | None = None, cache_root: str | Path | None = None, strict: bool = True, na_values: str | Sequence[str] | Mapping[str, str | Sequence[str]] | None = None, date_format: str | None = None, dayfirst: bool = False) -> DataBundle
 ```
 
 #### Description
 
-No public docstring is available.
+Load a user CSV into a canonical ``DataBundle``.
+
+By default the CSV is read with pandas' normal parsing behavior and then
+normalized through :func:`as_panel`. ``na_values`` is passed to
+:func:`pandas.read_csv` when supplied. ``date_format`` and ``dayfirst`` parse
+the resolved date column before panel normalization, which is useful for
+strict loads with non-ISO or ambiguous dates.
 
 #### Parameters
 
@@ -1170,6 +1180,9 @@ No public docstring is available.
 | `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
 | `cache_root` | keyword only | `str \| Path \| None` | `None` |
 | `strict` | keyword only | `bool` | `True` |
+| `na_values` | keyword only | `str \| Sequence[str] \| Mapping[str, str \| Sequence[str]] \| None` | `None` |
+| `date_format` | keyword only | `str \| None` | `None` |
+| `dayfirst` | keyword only | `bool` | `False` |
 
 #### Returns
 
@@ -1362,7 +1375,7 @@ macroforecast.data.with_static_extras(source: VintageSource, extra: DataBundle |
 
 #### Description
 
-Join non-revised extra columns onto every resolved vintage bundle.
+Join non-revised extra columns observable before each origin.
 
 #### Parameters
 

@@ -54,6 +54,12 @@ jobs:
           # the committed pages no longer match the installed package.
           python tools/gen_model_overview.py --check docs/guide
 
+      - name: Model policy matrix drift check
+        run: |
+          # The model x forecast-policy matrix is generated from the package
+          # registry and direct-policy guard. Fail if the committed page drifts.
+          python tools/gen_policy_matrix.py --check docs/guide
+
       - name: Build Sphinx HTML (fail on warning)
         run: |
           sphinx-build -W -b html docs docs/_build/html

@@ -52,7 +52,7 @@ Qualified name: `macroforecast.pipeline.spec.EvalSpec`
 #### Signature
 
 ```python
-macroforecast.pipeline.EvalSpec(benchmark: str, metrics: tuple[str | Callable[..., float], ...] = ('rmse', 'relative_mse', 'r2_oos'), tests: tuple[str, ...] = ('dm', 'cw', 'mcs'), by: tuple[str, ...] = ('target', 'horizon'), primary_axis: str = "contender", cw_for_nested: bool = True, mcs_alpha: float = 0.1, mcs_method: str = "iterative", multiple_testing: str | None = None, subsamples: Mapping[str, tuple[Any, Any]] = <factory>, dm_kwargs: Mapping[str, Any] = <factory>, loss: Callable[[Any, Any], Any] | None = None, test_options: Mapping[str, Mapping[str, Any]] = <factory>, calibration_alpha: float = 0.05) -> None
+macroforecast.pipeline.EvalSpec(benchmark: str, metrics: tuple[str | Callable[..., float], ...] = ('rmse', 'relative_mse', 'r2_oos'), tests: tuple[str, ...] = ('dm', 'cw', 'mcs'), by: tuple[str, ...] = ('target', 'horizon'), primary_axis: str = "contender", cw_for_nested: bool = True, mcs_alpha: float = 0.1, mcs_method: str = "iterative", multiple_testing: str | None = None, subsamples: Mapping[str, SubsampleWindow] | None = None, dm_kwargs: Mapping[str, Any] = <factory>, loss: Callable[[Any, Any], Any] | None = None, test_options: Mapping[str, Mapping[str, Any]] = <factory>, calibration_alpha: float = 0.05) -> None
 ```
 
 #### Description
@@ -77,7 +77,8 @@ rather than compute it against the wrong loss.
 ``tests`` lists which significance tests actually run; unsupported names
 raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
 Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
-``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
+``"enc_new"``, ``"enc_t"``, ``"gr"``, and ``"mz"``. ``"mz"`` is the
+Mincer-Zarnowitz actual-on-forecast rationality regression. ``"pt"``, ``"hm"``, and
 ``"ag"`` are directional-accuracy tests for the contender's own sign
 forecasts, evaluated on the same benchmark-aligned sample for consistency
 with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
@@ -111,6 +112,11 @@ computes them.
 above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
 checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
 
+``subsamples`` optionally maps names to :class:`SubsampleWindow` values.
+These are evaluation-window splits of an already-produced POOS forecast
+frame: target-date rows are filtered before scoring and testing, without
+refitting models or creating new forecast cells.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -124,7 +130,7 @@ checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
 | `mcs_alpha` | positional or keyword | `float` | `0.1` |
 | `mcs_method` | positional or keyword | `str` | `"iterative"` |
 | `multiple_testing` | positional or keyword | `str \| None` | `None` |
-| `subsamples` | positional or keyword | `Mapping[str, tuple[Any, Any]]` | `<factory>` |
+| `subsamples` | positional or keyword | `Mapping[str, SubsampleWindow] \| None` | `None` |
 | `dm_kwargs` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
 | `loss` | positional or keyword | `Callable[[Any, Any], Any] \| None` | `None` |
 | `test_options` | positional or keyword | `Mapping[str, Mapping[str, Any]]` | `<factory>` |
@@ -155,7 +161,7 @@ import macroforecast as mf
 | `mcs_alpha` | `float` | `0.1` |
 | `mcs_method` | `str` | `"iterative"` |
 | `multiple_testing` | `str \| None` | `None` |
-| `subsamples` | `Mapping[str, tuple[Any, Any]]` | `default_factory` |
+| `subsamples` | `Mapping[str, SubsampleWindow] \| None` | `None` |
 | `dm_kwargs` | `Mapping[str, Any]` | `default_factory` |
 | `loss` | `Callable[[Any, Any], Any] \| None` | `None` |
 | `test_options` | `Mapping[str, Mapping[str, Any]]` | `default_factory` |

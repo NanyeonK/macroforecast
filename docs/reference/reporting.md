@@ -481,7 +481,7 @@ Qualified name: `macroforecast.reporting.core.paper_accuracy_table`
 #### Signature
 
 ```python
-macroforecast.reporting.paper_accuracy_table(report: Any, *, target: str | None = None, metric: str = "rel_rmse", star_levels: PValueStarLevels = ((0.01, '***'), (0.05, '**'), (0.1, '*')), mcs_mark: str = "†", benchmark_row: bool = True, precision: int = 3, missing: str = "--", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable | dict[str, ReportTable]
+macroforecast.reporting.paper_accuracy_table(report: Any, *, target: str | None = None, subsample: str | None = None, metric: str = "rel_rmse", star_levels: PValueStarLevels = ((0.01, '***'), (0.05, '**'), (0.1, '*')), mcs_mark: str = "†", benchmark_row: bool = True, precision: int = 3, missing: str = "--", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable | dict[str, ReportTable]
 ```
 
 #### Description
@@ -532,12 +532,18 @@ explicit ``target=...``, or a report that only has one target, returns that
 target's ``ReportTable`` directly (no dict wrapping) so the common case is
 truly one line to LaTeX.
 
+If the report was produced with ``EvalSpec.subsamples``, pass
+``subsample=...`` to select the evaluation window. When omitted,
+``"full"`` is selected if present; otherwise a report with multiple
+subsamples raises so the table cannot accidentally mix windows.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
 | --- | --- | --- | --- |
 | `report` | positional or keyword | `Any` | `required` |
 | `target` | keyword only | `str \| None` | `None` |
+| `subsample` | keyword only | `str \| None` | `None` |
 | `metric` | keyword only | `str` | `"rel_rmse"` |
 | `star_levels` | keyword only | `PValueStarLevels` | `((0.01, "***"), (0.05, "**"), (0.1, "*"))` |
 | `mcs_mark` | keyword only | `str` | `"†"` |
