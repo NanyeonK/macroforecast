@@ -82,6 +82,19 @@ def medae(y_true: Any, y_pred: Any) -> float:
     return float(np.median(np.abs(truth - pred)))
 
 
+def mad(y_true: Any, y_pred: Any) -> float:
+    """Median absolute forecast error.
+
+    ``mad`` is the median of ``|actual - prediction|`` over the evaluation
+    window. Inflation-forecasting accuracy tables such as Medeiros,
+    Vasconcelos, Veiga, and Zilberman (2021, JBES) report MAD alongside RMSE
+    and MAE as a robust absolute-error summary.
+    """
+
+    truth, pred = _aligned_values(y_true, y_pred)
+    return float(np.median(np.abs(truth - pred)))
+
+
 def mape(y_true: Any, y_pred: Any, *, eps: float = 1e-10) -> float:
     """Mean absolute percentage error on the 0-100 scale."""
 
@@ -1049,6 +1062,7 @@ _METRICS: dict[str, Callable[..., float]] = {
     "bias": bias,
     "mean_error": bias,
     "me": bias,
+    "mad": mad,
     "medae": medae,
     "median_absolute_error": medae,
     "mape": mape,
@@ -1488,6 +1502,7 @@ def _metric_ascending(metric: str) -> bool:
         "validation_rmse",
         "mae",
         "validation_mae",
+        "mad",
         "medae",
         "median_absolute_error",
         "mape",
@@ -1933,6 +1948,7 @@ __all__ = [
     "interval_width",
     "log_score",
     "mae",
+    "mad",
     "mape",
     "max_drawdown",
     "medae",

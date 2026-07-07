@@ -180,6 +180,23 @@ def test_metrics_reduced_to_one_name_drops_the_other_defaults():
         assert np.isclose(got, expected)
 
 
+def test_mad_metric_appears_in_accuracy_table_with_hand_oracle():
+    from macroforecast.metrics import mad as mad_fn
+
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", metrics=("mad",)))
+    master = _golden_master()
+    acc = evaluate(master, spec)["accuracy"]
+
+    assert list(acc.columns) == [
+        "target", "horizon", "contender", "mad", "n_common", "is_benchmark", "benchmark_present",
+    ]
+    for contender in ["AR", "OLS", "RIDGE"]:
+        sub = master[master["contender"] == contender]
+        expected = mad_fn(sub["actual"].to_numpy(dtype=float), sub["prediction"].to_numpy(dtype=float))
+        got = acc.loc[acc["contender"] == contender, "mad"].iloc[0]
+        assert np.isclose(got, expected)
+
+
 def test_custom_callable_metric_appears_as_its_own_column():
     def double_absolute_error(y_true, y_pred):
         return float(np.mean(2.0 * np.abs(np.asarray(y_true) - np.asarray(y_pred))))
