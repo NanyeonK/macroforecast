@@ -52,7 +52,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Models and Features" href="model_overview.html" />
-    <link rel="prev" title="Evaluation" href="concepts/evaluation.html" />
+    <link rel="prev" title="Paper Figures" href="figures.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
@@ -161,6 +161,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="gallery.html">
     Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="figures.html">
+    Paper Figures
   </a>
 </li>
 
@@ -320,6 +327,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="figures.html">
+    Paper Figures
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="../reference/index.html">
     Reference
   </a>
@@ -417,6 +431,7 @@
 <li class="toctree-l1"><a class="reference internal" href="concepts/windows.html">Windows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts/running.html">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts/evaluation.html">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="figures.html">Paper Figures</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Your Data, Your Model, One Table</a></li>
 </ul>
 </div>
@@ -744,6 +759,11 @@ Model Confidence Set (the † marker on every cell) – the table is telling the
 truth about a small sample, exactly as it would on a real study with a
 genuinely weak edge. <code class="docutils literal notranslate"><span class="pre">.to_html()</span></code> and <code class="docutils literal notranslate"><span class="pre">.to_markdown()</span></code> render the same
 <code class="docutils literal notranslate"><span class="pre">ReportTable</span></code> for a notebook or a README instead of a paper.</p>
+<p>The companion graphical layer uses the same <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code>:
+<code class="docutils literal notranslate"><span class="pre">mf.reporting.cumulative_loss_differential_plot</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mf.reporting.fluctuation_test_plot</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.reporting.pit_histogram_plot</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">mf.reporting.forecast_path_plot</span></code> are covered in
+<a class="reference internal" href="figures.html"><span class="std std-doc">Paper Figures</span></a>.</p>
 </section>
 <section id="where-to-go-next">
 <h2>Where to go next<a class="headerlink" href="#where-to-go-next" title="Link to this heading">#</a></h2>
@@ -755,6 +775,8 @@ variants.</p></li>
 <li><p><a class="reference internal" href="../reference/reporting.html#paper-accuracy-table"><span class="std std-ref">paper_accuracy_table reference</span></a>
 – every argument, including multi-target reports and dropping the
 benchmark row.</p></li>
+<li><p><a class="reference internal" href="figures.html"><span class="std std-doc">Paper Figures</span></a> – the CSSED, fluctuation, PIT, and forecast-path
+exhibits that pair with the paper table.</p></li>
 <li><p><a class="reference internal" href="getting_started.html"><span class="std std-doc">Getting Started</span></a> and the
 <a class="reference internal" href="gallery.html"><span class="std std-doc">Replication Gallery</span></a> – the same shape of study on FRED-MD with
 built-in models and richer feature engineering.</p></li>
@@ -784,12 +806,12 @@ default feature spec actually resolves to, and when the runner warns about it.</
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="concepts/evaluation.html"
+       href="figures.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Evaluation</p>
+        <p class="prev-next-title">Paper Figures</p>
       </div>
     </a>
     <a class="right-next"

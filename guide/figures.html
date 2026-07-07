@@ -2,13 +2,13 @@
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="../../" data-theme="auto">
+<html lang="en" data-content_root="../" data-theme="auto">
 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Volatility and GARCH &#8212; macroforecast</title>
+    <title>Paper Figures &#8212; macroforecast</title>
   
   
   
@@ -27,40 +27,40 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
-    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=68cfb861" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../../_static/documentation_options.js?v=c9f84ce7"></script>
-    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
-    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/models/volatility';</script>
+    <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guide/figures';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
-    <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Mixed frequency" href="mixed_frequency.html" />
-    <link rel="prev" title="Neural networks" href="neural.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Your Data, Your Model, One Table" href="custom_data_tutorial.html" />
+    <link rel="prev" title="Evaluation" href="concepts/evaluation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
   
     
-    <script src="../../_static/searchtools.js"></script>
-    <script src="../../_static/language_data.js"></script>
-    <script src="../../searchindex.js"></script>
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
   
   </head>
   <body data-default-mode="auto">
@@ -80,7 +80,7 @@
   <dialog id="pst-search-dialog">
     
 <form class="bd-search d-flex align-items-center"
-      action="../../search.html"
+      action="../search.html"
       method="get">
   <i class="fa-solid fa-magnifying-glass"></i>
   <input type="search"
@@ -116,7 +116,7 @@
     
   
 
-<a class="navbar-brand logo" href="../../index.html">
+<a class="navbar-brand logo" href="../index.html">
   
   
   
@@ -138,56 +138,56 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../index.html">
+  <a class="nav-link nav-internal" href="index.html">
     User Guide
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="../model_overview.html">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="model_overview.html">
     Models and Features
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../datasets/index.html">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
     FRED Datasets
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../gallery.html">
+  <a class="nav-link nav-internal" href="gallery.html">
     Replication Gallery
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../figures.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
     Paper Figures
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../reference/index.html">
+  <a class="nav-link nav-internal" href="../reference/index.html">
     Reference
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../glossary.html">
+  <a class="nav-link nav-internal" href="glossary.html">
     Glossary
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../citing.html">
+  <a class="nav-link nav-internal" href="citing.html">
     Citing
   </a>
 </li>
@@ -299,56 +299,56 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../index.html">
+  <a class="nav-link nav-internal" href="index.html">
     User Guide
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="../model_overview.html">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="model_overview.html">
     Models and Features
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../datasets/index.html">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
     FRED Datasets
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../gallery.html">
+  <a class="nav-link nav-internal" href="gallery.html">
     Replication Gallery
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../figures.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
     Paper Figures
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../reference/index.html">
+  <a class="nav-link nav-internal" href="../reference/index.html">
     Reference
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../glossary.html">
+  <a class="nav-link nav-internal" href="glossary.html">
     Glossary
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="../citing.html">
+  <a class="nav-link nav-internal" href="citing.html">
     Citing
   </a>
 </li>
@@ -420,22 +420,7 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="linear.html">Linear and regularized</a></li>
-<li class="toctree-l1"><a class="reference internal" href="factor.html">Factor models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="timeseries.html">Classical time series</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tree.html">Tree ensembles</a></li>
-<li class="toctree-l1"><a class="reference internal" href="support_vector.html">Support vector</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nonparametric.html">Nonparametric</a></li>
-<li class="toctree-l1"><a class="reference internal" href="neural.html">Neural networks</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Volatility and GARCH</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mixed_frequency.html">Mixed frequency</a></li>
-<li class="toctree-l1"><a class="reference internal" href="assemblage.html">Assemblage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="composite.html">Composite</a></li>
-<li class="toctree-l1"><a class="reference internal" href="spline.html">Spline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../model_policy_matrix.html">Model x Forecast Policy Matrix</a></li>
-</ul>
-</div>
+  <div class="bd-toc-item navbar-nav"></div>
 </nav></div>
     </div>
   
@@ -470,14 +455,14 @@
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
-      <a href="../../index.html" class="nav-link" aria-label="Home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
     
-    <li class="breadcrumb-item"><a href="../model_overview.html" class="nav-link">Models and Features</a></li>
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Volatility and GARCH</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Paper Figures</span></li>
   </ul>
 </nav>
 </div>
@@ -494,71 +479,97 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="volatility-and-garch">
-<h1>Volatility and GARCH<a class="headerlink" href="#volatility-and-garch" title="Link to this heading">#</a></h1>
-<p><a class="reference internal" href="../model_overview.html"><span class="std std-doc">Back to Models and Features</span></a></p>
-<p>Volatility models forecast conditional variance rather than the level, using the GARCH family and its asymmetric and realized extensions.</p>
-<p>Pass any model string below as <code class="docutils literal notranslate"><span class="pre">Arm(model=...)</span></code>. Extra names an optional dependency, Scaling flags whether predictors should be standardized, and Tunable counts the hyperparameters the search space exposes.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Model string</p></th>
-<th class="head"><p>Description</p></th>
-<th class="head"><p>Input</p></th>
-<th class="head"><p>Extra</p></th>
-<th class="head"><p>Scaling</p></th>
-<th class="head"><p>Recommended preprocessing</p></th>
-<th class="head"><p>Tunable</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">egarch</span></code></p></td>
-<td><p>EGARCH volatility model.</p></td>
-<td><p>volatility</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">arch</span></code></p></td>
-<td><p>no</p></td>
-<td><p>default</p></td>
-<td><p>4</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">garch11</span></code></p></td>
-<td><p>GARCH volatility model.</p></td>
-<td><p>volatility</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">arch</span></code></p></td>
-<td><p>no</p></td>
-<td><p>default</p></td>
-<td><p>3</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gjr_garch</span></code></p></td>
-<td><p>GJR-GARCH asymmetric volatility model.</p></td>
-<td><p>volatility</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">arch</span></code></p></td>
-<td><p>no</p></td>
-<td><p>default</p></td>
-<td><p>4</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code></p></td>
-<td><p>Compact realized GARCH volatility model.</p></td>
-<td><p>volatility</p></td>
-<td><p>none</p></td>
-<td><p>no</p></td>
-<td><p>default</p></td>
-<td><p>1</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tgarch</span></code></p></td>
-<td><p>Threshold GARCH (TGARCH/Zakoian) volatility model.</p></td>
-<td><p>volatility</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">arch</span></code></p></td>
-<td><p>no</p></td>
-<td><p>default</p></td>
-<td><p>4</p></td>
-</tr>
-</tbody>
-</table>
+  <section class="tex2jax_ignore mathjax_ignore" id="paper-figures">
+<h1>Paper Figures<a class="headerlink" href="#paper-figures" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to User Guide</span></a></p>
+<p>Install the plotting extra before using these helpers:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[plots]&quot;</span>
+</pre></div>
 </div>
-<section id="reference">
-<h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="../../reference/models.html"><span class="std std-doc">Models reference page</span></a> for <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code>, and fit conventions.</p></li>
-</ul>
+<p>The plotting helpers live under <code class="docutils literal notranslate"><span class="pre">mf.reporting</span></code> and take the same
+<code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> surface as <code class="docutils literal notranslate"><span class="pre">paper_accuracy_table</span></code>: the master forecast frame
+from <code class="docutils literal notranslate"><span class="pre">report.forecasts</span></code>, plus the benchmark metadata recorded by the pipeline.
+Each helper accepts <code class="docutils literal notranslate"><span class="pre">ax=</span></code> when you want to draw into an existing matplotlib
+axis, and <code class="docutils literal notranslate"><span class="pre">savefig=&quot;figure.pdf&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">savefig=&quot;figure.png&quot;</span></code> when the paper
+artifact should be written directly.</p>
+<section id="cumulative-loss-differential">
+<h2>Cumulative loss differential<a class="headerlink" href="#cumulative-loss-differential" title="Link to this heading">#</a></h2>
+<p>The cumulative squared-error differential (CSSED) plot is the standard horse-race
+companion to a relative-accuracy table. It cumulates benchmark loss minus
+contender loss over forecast target dates, so sustained upward movement means
+the contender is reducing loss relative to the benchmark. Referees look for
+whether the advantage is persistent, concentrated in a short episode, or
+reversed outside the period emphasized by the table.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">cumulative_loss_differential_plot</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span>
+    <span class="n">contenders</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;RF&quot;</span><span class="p">,</span> <span class="s2">&quot;Ridge&quot;</span><span class="p">],</span>
+    <span class="n">shade</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;2007-12-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2009-06-01&quot;</span><span class="p">)],</span>
+    <span class="n">savefig</span><span class="o">=</span><span class="s2">&quot;cssed_indpro_h1.pdf&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="giacomini-rossi-fluctuation">
+<h2>Giacomini-Rossi fluctuation<a class="headerlink" href="#giacomini-rossi-fluctuation" title="Link to this heading">#</a></h2>
+<p>The Giacomini-Rossi fluctuation plot shows the rolling loss-differential test
+path with the two-sided Table 1 critical-value bands. It is useful when an
+average test statistic hides time variation in forecast performance. Referees
+usually check whether the path crosses the bands, whether the crossing is
+isolated, and whether the window ratio and horizon-aware HAC lag choice are
+reported consistently with the study design.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">fluctuation_test_plot</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span>
+    <span class="n">contender</span><span class="o">=</span><span class="s2">&quot;RF&quot;</span><span class="p">,</span>
+    <span class="n">window_ratio</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">savefig</span><span class="o">=</span><span class="s2">&quot;gr_fluctuation_indpro_h3.pdf&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="pit-histogram">
+<h2>PIT histogram<a class="headerlink" href="#pit-histogram" title="Link to this heading">#</a></h2>
+<p>The probability integral transform (PIT) histogram is the basic density-forecast
+calibration exhibit. Under a calibrated Gaussian predictive density, the PITs
+should look uniform; the plotted band is the binomial sampling range around the
+uniform count. Referees look for U-shapes, spikes near zero or one, and other
+departures that imply under-dispersion, over-dispersion, or biased predictive
+distributions. The run must include variance-emitting forecasts.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">pit_histogram_plot</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;DensityHNN&quot;</span><span class="p">,</span>
+    <span class="n">bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">savefig</span><span class="o">=</span><span class="s2">&quot;pit_densityhnn_indpro_h1.png&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="forecast-path">
+<h2>Forecast path<a class="headerlink" href="#forecast-path" title="Link to this heading">#</a></h2>
+<p>The actual-versus-forecast path plot is the sanity-check exhibit: it overlays
+the realized target series with one or more model forecasts over the same target
+dates. This plot is not a formal test, but referees use it to spot phase shifts,
+stale forecasts, scale mistakes, and episodes where a table average is driven by
+one break. When the selected model emits <code class="docutils literal notranslate"><span class="pre">variance_prediction</span></code>, <code class="docutils literal notranslate"><span class="pre">variance_band=</span></code>
+adds an approximate 95 percent Gaussian band.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">forecast_path_plot</span><span class="p">(</span>
+    <span class="n">report</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span> <span class="s2">&quot;RF&quot;</span><span class="p">,</span> <span class="s2">&quot;DensityHNN&quot;</span><span class="p">],</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;2000-01-01&quot;</span><span class="p">,</span>
+    <span class="n">variance_band</span><span class="o">=</span><span class="s2">&quot;DensityHNN&quot;</span><span class="p">,</span>
+    <span class="n">savefig</span><span class="o">=</span><span class="s2">&quot;forecast_path_indpro_h1.pdf&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -573,20 +584,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="neural.html"
+       href="concepts/evaluation.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Neural networks</p>
+        <p class="prev-next-title">Evaluation</p>
       </div>
     </a>
     <a class="right-next"
-       href="mixed_frequency.html"
+       href="custom_data_tutorial.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Mixed frequency</p>
+        <p class="prev-next-title">Your Data, Your Model, One Table</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -609,7 +620,10 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cumulative-loss-differential">Cumulative loss differential</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#giacomini-rossi-fluctuation">Giacomini-Rossi fluctuation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pit-histogram">PIT histogram</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-path">Forecast path</a></li>
 </ul>
   </nav></div>
 
@@ -617,7 +631,7 @@
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/guide/models/volatility.md">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/guide/figures.md">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -632,7 +646,7 @@
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/guide/models/volatility.md.txt">
+    <a href="../_sources/guide/figures.md.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
@@ -651,8 +665,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
