@@ -2,841 +2,1405 @@
 
 [Back to reference](index.md)
 
-## Purpose
+Transform-code application, outlier handling, imputation, frame-edge handling, and reusable preprocessing specs.
 
-`macroforecast.preprocessing` turns a canonical pandas panel from
-[`macroforecast.data`](data.md) into a processed panel plus metadata. It accepts
-a `DataSpec`, `DataBundle`, `(panel, metadata)` tuple, or `pandas.DataFrame`,
-then returns a `PreprocessedData` object. The preferred input is a
-`DataBundle` or `DataSpec` produced by `macroforecast.data`; if preprocessing
-receives a plain panel without data-generated metadata, it emits a warning.
+Guide context: [../guide/concepts/preprocessing.md](../guide/concepts/preprocessing.md).
 
-The default `reprocess()` path follows the public McCracken-Ng FRED-MD Matlab
-workflow for FRED-MD/FRED-QD style panels. FRED-SD has no official t-code map,
-so the user must explicitly choose `transform="none"` or pass custom codes.
+## Public Symbols
 
-Preprocessing fails closed on transformation metadata. If
-`transform="official"` is selected but no t-code map is available from
-`transform_codes`, `metadata["transform_codes"]`, or
-`panel.attrs["macroforecast_transform_codes"]`, `reprocess()` raises
-`ValueError`. If explicit transform-code keys do not match panel columns, it
-also raises. This prevents accidental no-op preprocessing.
-
-## Public Functions
-
-| Function | Purpose | Output |
+| Symbol | Kind | Summary |
 | --- | --- | --- |
-| `reprocess` | Run the full-sample preprocessing sequence. | `PreprocessedData` |
-| `preprocess_spec` | Store preprocessing choices for runner-fitted execution. | `PreprocessSpec` |
-| `custom_preprocess` | Apply one user callable directly to data. | `PreprocessedData` |
-| `custom_preprocess_step` | Build a custom step for `preprocess_spec(custom_steps=[...])`. | `dict` |
-| `plan` | Validate and summarize configured preprocessing choices without changing data. | `dict` |
-| `report` | Summarize a completed preprocessing result. | `dict` |
-| `apply_transform_codes` | Apply McCracken-Ng t-code formulas to matching panel columns. | `pandas.DataFrame` |
-| `fred_sd_transform_codes` | Expand FRED-SD variable/state t-code choices and suggestions. | `dict` or `(dict, DataFrame)` |
-| `handle_tcode_lag` | Keep or remove transform-induced leading missing rows. | `pandas.DataFrame` |
-| `handle_outliers` | Apply one outlier rule. | `pandas.DataFrame` |
-| `impute_missing` | Fill missing panel values with one imputation rule. | `pandas.DataFrame` |
-| `standardize_panel` | Fit and apply one full-panel scaling rule. | `pandas.DataFrame` |
-| `handle_frame_edges` | Keep, truncate, drop, or fill remaining unbalanced edges. | `pandas.DataFrame` |
+| `reprocess` | function | Preprocess a canonical macroforecast panel. |
+| `plan` | function | Return a dry-run summary of preprocessing choices and metadata provenance. |
+| `report` | function | Return a compact preprocessing report from a processed object. |
+| `PreprocessedData` | class | Cleaned macroforecast panel plus metadata and data-spec choices. |
+| `PreprocessInput` | data | Represent a PEP 604 union type |
+| `PreprocessSpec` | class | Reusable preprocessing callable for window-local forecasting runners. |
+| `FittedPreprocessor` | class | Preprocessing spec fitted on a training window. |
+| `preprocess_spec` | function | Create a reusable preprocessing specification. |
+| `custom_preprocess` | function | Apply a user supplied preprocessing callable to a canonical panel. |
+| `custom_preprocess_step` | function | Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``. |
+| `apply_transform_codes` | function | Apply McCracken-Ng transform codes to matching panel columns. |
+| `fred_sd_transform_codes` | function | Build FRED-SD t-code choices for state-series columns. |
+| `handle_tcode_lag` | function | Handle missing values introduced by stationarity transforms. |
+| `handle_outliers` | function | Apply one outlier policy to a panel. |
+| `impute_missing` | function | Fill missing panel values with the selected imputation method. |
+| `standardize_panel` | function | Standardize numeric columns with full-panel fitted parameters. |
+| `handle_frame_edges` | function | Handle remaining unbalanced panel edges. |
+| `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | data | dict() -> new empty dictionary |
+| `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | data | dict() -> new empty dictionary |
+| `iqr_outlier_clean` | function | Flag or replace outliers with a per-column IQR rule. |
+| `zscore_outlier_clean` | function | Flag or replace outliers with a per-column z-score rule. |
+| `winsorize_clean` | function | Clip numeric columns to quantile bounds. |
+| `em_factor_impute_clean` | function | Impute missing numeric cells with PCA-EM factor reconstruction. |
+| `em_multivariate_impute_clean` | function | Impute missing numeric cells with an uncapped PCA-EM rank rule. |
+| `mean_impute_clean` | function | Replace missing numeric cells with full-column means. |
+| `forward_fill_clean` | function | Carry each series' most recent observed value forward. |
+| `linear_interpolate_clean` | function | Fill interior missing values by linear interpolation. |
+| `truncate_to_balanced_clean` | function | Keep only rows with no missing values. |
+| `drop_unbalanced_series_clean` | function | Keep only columns with no missing values. |
+| `zero_fill_leading_clean` | function | Replace remaining missing cells with zero. |
+| `fit_standardization_state` | function | Fit column-wise scaling parameters on a numeric panel. |
+| `apply_standardization_state` | function | Apply fitted column-wise scaling parameters to a panel. |
+| `box_cox_clean` | function | Apply a Box-Cox variance-stabilising transform to each numeric column. |
+| `box_cox_lambda` | function | Select a Box-Cox transformation parameter ``lambda`` for one series. |
+| `inverse_box_cox` | function | Invert a Box-Cox transform with parameter ``lmbda``. |
+| `standardize_clean` | function | Standardize numeric columns with full-sample fitted parameters. |
+| `apply_tcode_transform` | function | Apply McCracken-Ng transformation codes to matching columns. |
+| `freq_align_quarterly_to_monthly_clean` | function | Align selected quarterly columns on the panel's monthly grid. |
+| `freq_align_monthly_to_quarterly_clean` | function | Aggregate selected monthly columns to a quarterly grid. |
 
-Low-level clean helpers are also public for exact single-operation use. They
-are listed in [Low-Level Clean Helpers](#low-level-clean-helpers).
+## Data And Module Values
 
-## Public Flow
+### `PreprocessInput`
+
+Kind: `data`
+
+```python
+PreprocessInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.DataFrame
+```
+### `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES`
+
+Kind: `data`
+
+```python
+FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES = dict(13 entries: CONS, FIRE, GOVT, ICLAIMS, INFO, LF, MFG, MFGHRS, MINNG, NA, PARTRATE, PSERV, ...)
+```
+### `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES`
+
+Kind: `data`
+
+```python
+FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES = dict(15 entries: BPPRIVSA, CONSTNQGSP, EXPORTS, FIRENQGSP, GOVNQGSP, IMPORTS, INFONQGSP, MANNQGSP, NATURNQGSP, NQGSP, OTOT, PSERVNQGSP, ...)
+```
+
+## Callable And Class Reference
+
+### reprocess
+
+Qualified name: `macroforecast.preprocessing.preprocess.reprocess`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.reprocess(data: PreprocessInput, *, metadata: Mapping[str, Any] | None = None, frequency: str = "keep", quarterly_to_monthly: str = "step_forward", weekly_to_monthly: str = "mean", monthly_to_quarterly: str = "quarterly_average", weekly_to_quarterly: str = "mean", transform_order: str = "after_frequency", transform: str = "official", transform_codes: Mapping[str, int] | None = None, transform_code_overrides: Mapping[str, int] | None = None, tcode_lag: str = "drop", outliers: str = "iqr", outlier_action: str = "flag_as_nan", iqr_threshold: float = 10.0, zscore_threshold: float = 3.0, winsorize_quantiles: tuple[float, float] = (0.01, 0.99), impute: str = "em_factor", em_n_factors: int = 8, em_factor_selection: str = "baing_p2", em_demean: int = 2, em_max_iter: int = 50, em_tolerance: float = 1e-06, standardize: str = "none", standardize_columns: str | Sequence[str] = "all", standardize_ddof: int = 0, frame: str = "keep", warn_metadata: bool = True) -> PreprocessedData
+```
+
+#### Description
+
+Preprocess a canonical macroforecast panel.
+
+Parameters use user-facing names. Common legacy aliases such as
+``apply_official_tcode`` and ``truncate_to_balanced`` are accepted, but
+returned metadata records the canonical direct-call names.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PreprocessInput` | `required` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `frequency` | keyword only | `str` | `"keep"` |
+| `quarterly_to_monthly` | keyword only | `str` | `"step_forward"` |
+| `weekly_to_monthly` | keyword only | `str` | `"mean"` |
+| `monthly_to_quarterly` | keyword only | `str` | `"quarterly_average"` |
+| `weekly_to_quarterly` | keyword only | `str` | `"mean"` |
+| `transform_order` | keyword only | `str` | `"after_frequency"` |
+| `transform` | keyword only | `str` | `"official"` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `transform_code_overrides` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `tcode_lag` | keyword only | `str` | `"drop"` |
+| `outliers` | keyword only | `str` | `"iqr"` |
+| `outlier_action` | keyword only | `str` | `"flag_as_nan"` |
+| `iqr_threshold` | keyword only | `float` | `10.0` |
+| `zscore_threshold` | keyword only | `float` | `3.0` |
+| `winsorize_quantiles` | keyword only | `tuple[float, float]` | `(0.01, 0.99)` |
+| `impute` | keyword only | `str` | `"em_factor"` |
+| `em_n_factors` | keyword only | `int` | `8` |
+| `em_factor_selection` | keyword only | `str` | `"baing_p2"` |
+| `em_demean` | keyword only | `int` | `2` |
+| `em_max_iter` | keyword only | `int` | `50` |
+| `em_tolerance` | keyword only | `float` | `1e-06` |
+| `standardize` | keyword only | `str` | `"none"` |
+| `standardize_columns` | keyword only | `str \| Sequence[str]` | `"all"` |
+| `standardize_ddof` | keyword only | `int` | `0` |
+| `frame` | keyword only | `str` | `"keep"` |
+| `warn_metadata` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`PreprocessedData`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-bundle = mf.data.load_fred_md()
-data_spec = mf.data.spec(bundle, target="INDPRO", horizons=[1, 3, 6, 12])
-
-processed = mf.preprocessing.reprocess(data_spec)
-
-panel = processed.panel
-metadata = processed.metadata
+# Call with the signature above:
+# mf.preprocessing.reprocess(...)
 ```
+### plan
 
-## Public Classes And Values
+Qualified name: `macroforecast.preprocessing.preprocess.plan`
 
-| Symbol | Meaning |
-| --- | --- |
-| `PreprocessedData` | Output object returned by `reprocess(...)` and `custom_preprocess(...)`. |
-| `PreprocessInput` | Accepted direct preprocessing input type: `DataSpec`, `DataBundle`, `(panel, metadata)`, or `DataFrame`. |
-| `PreprocessSpec` | Runner-compatible fit/transform preprocessing contract. |
-| `FittedPreprocessor` | Fitted preprocessing state used by the runner for fit-window or fixed-reference policies. |
-| `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | High-confidence package t-code suggestions for FRED-SD variables with national analogs. |
-| `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | Broader provisional FRED-SD t-code suggestions. |
-
-## PreprocessedData
+#### Signature
 
 ```python
-macroforecast.preprocessing.PreprocessedData(
-    panel: pandas.DataFrame,
-    metadata: dict,
-    target: str | None = None,
-    targets: tuple[str, ...] = (),
-    horizons: tuple[int, ...] = (),
-    start: str | None = None,
-    end: str | None = None,
-    predictors = "all",
-    steps: tuple[dict, ...] = (),
-)
+macroforecast.preprocessing.plan(data: PreprocessInput, *, metadata: Mapping[str, Any] | None = None, frequency: str = "keep", transform_order: str = "after_frequency", transform: str = "official", transform_codes: Mapping[str, int] | None = None, transform_code_overrides: Mapping[str, int] | None = None, tcode_lag: str = "drop", outliers: str = "iqr", impute: str = "em_factor", standardize: str = "none", standardize_columns: str | Sequence[str] = "all", standardize_ddof: int = 0, frame: str = "keep") -> dict[str, Any]
 ```
 
-### Output Schema
+#### Description
 
-| Field | Type | Meaning |
+Return a dry-run summary of preprocessing choices and metadata provenance.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PreprocessInput` | `required` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `frequency` | keyword only | `str` | `"keep"` |
+| `transform_order` | keyword only | `str` | `"after_frequency"` |
+| `transform` | keyword only | `str` | `"official"` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `transform_code_overrides` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `tcode_lag` | keyword only | `str` | `"drop"` |
+| `outliers` | keyword only | `str` | `"iqr"` |
+| `impute` | keyword only | `str` | `"em_factor"` |
+| `standardize` | keyword only | `str` | `"none"` |
+| `standardize_columns` | keyword only | `str \| Sequence[str]` | `"all"` |
+| `standardize_ddof` | keyword only | `int` | `0` |
+| `frame` | keyword only | `str` | `"keep"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.plan(...)
+```
+### report
+
+Qualified name: `macroforecast.preprocessing.preprocess.report`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.report(processed: PreprocessedData) -> dict[str, Any]
+```
+
+#### Description
+
+Return a compact preprocessing report from a processed object.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `processed` | positional or keyword | `PreprocessedData` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.report(...)
+```
+### PreprocessedData
+
+Qualified name: `macroforecast.preprocessing.types.PreprocessedData`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.PreprocessedData(panel: pd.DataFrame, metadata: dict[str, Any] = <factory>, target: str | None = None, targets: tuple[str, ...] = (), horizons: tuple[int, ...] = (), start: str | None = None, end: str | None = None, predictors: Any = "all", steps: tuple[dict[str, Any], ...] = ()) -> None
+```
+
+#### Description
+
+Cleaned macroforecast panel plus metadata and data-spec choices.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `target` | positional or keyword | `str \| None` | `None` |
+| `targets` | positional or keyword | `tuple[str, ...]` | `()` |
+| `horizons` | positional or keyword | `tuple[int, ...]` | `()` |
+| `start` | positional or keyword | `str \| None` | `None` |
+| `end` | positional or keyword | `str \| None` | `None` |
+| `predictors` | positional or keyword | `Any` | `"all"` |
+| `steps` | positional or keyword | `tuple[dict[str, Any], ...]` | `()` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.preprocessing.PreprocessedData(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
 | --- | --- | --- |
-| `panel` | `pandas.DataFrame` | Processed canonical date-indexed panel. |
-| `metadata` | `dict` | Input metadata plus preprocessing stages and transform/standardization state. |
-| `target`, `targets`, `horizons`, `start`, `end`, `predictors` | copied from `DataSpec` when supplied | Run-level data choices preserved for downstream stages. |
-| `steps` | `tuple[dict, ...]` | Ordered preprocessing step log. |
+| `panel` | `pd.DataFrame` | `required` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `target` | `str \| None` | `None` |
+| `targets` | `tuple[str, ...]` | `()` |
+| `horizons` | `tuple[int, ...]` | `()` |
+| `start` | `str \| None` | `None` |
+| `end` | `str \| None` | `None` |
+| `predictors` | `Any` | `"all"` |
+| `steps` | `tuple[dict[str, Any], ...]` | `()` |
 
-### Methods
+#### Public Methods
 
-| Method | Input | Output | Meaning |
-| --- | --- | --- | --- |
-| `attach(stage, values)` | `stage: str`, `values: Mapping` | `PreprocessedData` | Return a new object with one metadata stage added. |
-
-`PreprocessedData` also supports tuple unpacking:
-
-```python
-panel, metadata = processed
-```
-
-## Default Order
-
-| Step | Default | Meaning |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| 1. Frequency | `frequency="keep"` | Keep the input frequency unless the user asks for monthly/quarterly alignment. |
-| 2. Transform | `transform="official"` | Apply official t-code transforms from FRED-MD/FRED-QD metadata. |
-| 3. T-code lag | `tcode_lag="drop"` | Remove leading rows implied by the largest t-code lag. This is two rows for full FRED-MD. |
-| 4. Outliers | `outliers="iqr"`, `outlier_action="flag_as_nan"`, `iqr_threshold=10.0` | Flag observations with `abs(x - median) > 10 * IQR` and set them to missing. |
-| 5. Imputation | `impute="em_factor"` | Run FRED-MD style PCA-EM with Bai-Ng `PC_p2`, `kmax=8`, `DEMEAN=2`, `max_iter=50`, `tol=1e-6`. |
-| 6. Standardize | `standardize="none"` | Optional column-wise scaling after imputation. Choices are `"zscore"`, `"robust"`, and `"minmax"`. |
-| 7. Frame | `frame="keep"` | Keep the post-EM frame. No final balanced-panel truncation is applied by default. |
+| `attach` | `attach(self, stage: str, values: Mapping[str, Any]) -> PreprocessedData` | No public docstring is available. |
+### PreprocessSpec
 
-Set `transform_order="before_frequency"` when a mixed-frequency panel should be
-transformed in each native frequency before monthly or quarterly alignment. The
-default is `transform_order="after_frequency"`, which first aligns frequency and
-then applies t-codes.
+Qualified name: `macroforecast.preprocessing.specs.PreprocessSpec`
 
-## T-Code Formulas
-
-The official FRED-MD/FRED-QD t-code map uses these formulas for a raw series
-`x_t`.
-
-| T-code | Formula | Leading missing values | Log-domain rule |
-| --- | --- | --- | --- |
-| `1` | `x_t` | `0` | none |
-| `2` | `x_t - x_{t-1}` | `1` | none |
-| `3` | `(x_t - x_{t-1}) - (x_{t-1} - x_{t-2})` | `2` | none |
-| `4` | `log(x_t)` | `0` | if `min(x) < 1e-6`, the transformed series is all missing |
-| `5` | `log(x_t) - log(x_{t-1})` | `1` | requires `min(x) > 1e-6`; otherwise all missing |
-| `6` | `(log(x_t) - log(x_{t-1})) - (log(x_{t-1}) - log(x_{t-2}))` | `2` | requires `min(x) > 1e-6`; otherwise all missing |
-| `7` | `(x_t / x_{t-1} - 1) - (x_{t-1} / x_{t-2} - 1)` | `2` | none |
-
-There is no `preprocess(...)` compatibility alias in the clean public API. Use
-`reprocess(...)` for full-sample preprocessing and `preprocess_spec(...)` for a
-runner-fitted preprocessing contract.
-
-Most empirical macro papers preprocess the full panel once before fitting
-models. That is supported by `reprocess(...)`. For a real-time forecast design,
-where each origin should only use information available at that origin, use
-`preprocess_spec(...)` inside `macroforecast.forecasting.run(...)`.
-`preprocess_spec(...)` only stores what preprocessing should do; the runner
-receives `preprocessing_policy=mf.window.stage_policy(...)` and decides where
-the spec may fit.
-
-Common runner policies:
-
-| Policy scope | Meaning |
-| --- | --- |
-| `"full_panel"` | Fit preprocessing once on the full panel. This is useful for retrospective replication designs. |
-| `"origin_available"` | Re-run preprocessing on observations available at each origin plus requested test rows. This supports EM imputation on variables observed by that origin. |
-| `"fit_window"` | Fit outlier, imputation, and standardization state on the model fit window, then apply that state to validation/test rows. It currently supports `impute="none"`, `"mean"`, and `"forward_fill"`; use `"origin_available"` for EM or linear imputation. |
-| `"fixed_reference"` | Fit supported preprocessing state on a fixed reference period, then apply that state to later windows. |
+#### Signature
 
 ```python
-pre = macroforecast.preprocessing.preprocess_spec(
-    transform="official",
-    outliers="iqr",
-    impute="em_factor",
-    frame="keep",
-)
-
-result = macroforecast.forecasting.run(
-    panel,
-    "ridge",
-    preprocessing=pre,
-    preprocessing_policy=macroforecast.window.stage_policy("origin_available"),
-    features=features,
-    window=window,
-)
+macroforecast.preprocessing.PreprocessSpec(options: dict[str, Any] = <factory>) -> None
 ```
 
-## reprocess
+#### Description
+
+Reusable preprocessing callable for window-local forecasting runners.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `options` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.preprocessing.reprocess(
-    data,
-    *,
-    metadata: Mapping[str, object] | None = None,
-    frequency: str = "keep",
-    quarterly_to_monthly: str = "step_backward",
-    weekly_to_monthly: str = "mean",
-    monthly_to_quarterly: str = "quarterly_average",
-    weekly_to_quarterly: str = "mean",
-    transform_order: str = "after_frequency",
-    transform: str = "official",
-    transform_codes: Mapping[str, int] | None = None,
-    transform_code_overrides: Mapping[str, int] | None = None,
-    tcode_lag: str = "drop",
-    outliers: str = "iqr",
-    outlier_action: str = "flag_as_nan",
-    iqr_threshold: float = 10.0,
-    zscore_threshold: float = 3.0,
-    winsorize_quantiles: tuple[float, float] = (0.01, 0.99),
-    impute: str = "em_factor",
-    em_n_factors: int = 8,
-    em_factor_selection: str = "baing_p2",
-    em_demean: int = 2,
-    em_max_iter: int = 50,
-    em_tolerance: float = 1e-6,
-    standardize: str = "none",
-    standardize_columns: str | Sequence[str] = "all",
-    standardize_ddof: int = 0,
-    frame: str = "keep",
-    warn_metadata: bool = True,
-) -> PreprocessedData
+import macroforecast as mf
+# Construct with the signature above:
+# mf.preprocessing.PreprocessSpec(...)
 ```
 
-### Input
+#### Dataclass Fields
 
-| Name | Type | Default | Choices |
-| --- | --- | --- | --- |
-| `data` | `DataSpec`, `DataBundle`, `(panel, metadata)`, or `DataFrame` | required | Canonical data input. |
-| `metadata` | mapping or `None` | `None` | Extra metadata to merge before preprocessing. |
-| `frequency` | `str` | `"keep"` | `"keep"`, `"monthly"`, `"quarterly"`, `"drop_non_monthly"`, `"drop_non_quarterly"`. |
-| `quarterly_to_monthly` | `str` | `"step_backward"` | `"step_backward"`, `"repeat_within_quarter"`, `"step_forward"`, `"quarter_end_ffill"`, `"linear_interpolation"`. |
-| `weekly_to_monthly` | `str` | `"mean"` | `"mean"`, `"last"`, `"sum"`. |
-| `monthly_to_quarterly` | `str` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"`. |
-| `weekly_to_quarterly` | `str` | `"mean"` | `"mean"`, `"last"`, `"sum"`. |
-| `transform_order` | `str` | `"after_frequency"` | `"after_frequency"`/`"frequency_then_transform"` or `"before_frequency"`/`"transform_then_frequency"`. |
-| `transform` | `str` | `"official"` | `"official"`, `"custom"`, `"none"`; accepts aliases `apply_official_tcode`, `custom_tcode`, `no_transform`. |
-| `transform_codes` | mapping or `None` | from metadata | Full t-code map. Required for `transform="custom"` and required for `transform="official"` when metadata does not provide codes. Explicit keys must match panel columns. |
-| `transform_code_overrides` | mapping or `None` | `None` | Per-series override applied on top of official or custom codes. Override keys must match panel columns. |
-| `tcode_lag` | `str` | `"drop"` | `"drop"`, `"keep"`, `"drop_all_missing_rows"`, `"drop_any_missing_rows"`. |
-| `outliers` | `str` | `"iqr"` | `"iqr"`, `"zscore"`, `"winsorize"`, `"none"`. |
-| `outlier_action` | `str` | `"flag_as_nan"` | `"flag_as_nan"`, `"replace_with_median"`, `"replace_with_cap_value"` for IQR/z-score methods. |
-| `impute` | `str` | `"em_factor"` | `"em_factor"`, `"em_multivariate"`, `"mean"`, `"forward_fill"`, `"linear"`, `"none"`. |
-| `em_factor_selection` | `str` | `"baing_p2"` | `"baing_p1"`, `"baing_p2"`, `"baing_p3"`, `"fixed"`. |
-| `em_demean` | `int` | `2` | `0`, `1`, `2`, `3`, matching `factors_em.m`. |
-| `standardize` | `str` | `"none"` | `"none"`, `"zscore"`, `"robust"`, `"minmax"`. Aliases include `"standard"` and `"standardize"` for z-score. |
-| `standardize_columns` | `str` or sequence | `"all"` | `"all"`, `"predictors"`, `"targets"`, or explicit column names. `"predictors"` and `"targets"` use `DataSpec` choices when available. |
-| `standardize_ddof` | `int` | `0` | Degrees of freedom used by z-score scaling. |
-| `frame` | `str` | `"keep"` | `"keep"`, `"truncate"`, `"drop_unbalanced_series"`, `"zero_fill"`. |
-| `warn_metadata` | `bool` | `True` | Warn when plain panels lack metadata from `macroforecast.data`. `preprocess_spec(...)` defaults this to `False` unless explicitly overridden. |
-
-### Output
-
-Returns `PreprocessedData`.
-
-| Field | Type | Meaning |
+| Field | Type | Default |
 | --- | --- | --- |
-| `panel` | `pandas.DataFrame` | Processed canonical date-indexed panel. |
-| `metadata` | `dict` | Original data metadata plus a `preprocessing` stage. |
-| `target`, `targets`, `horizons`, `start`, `end`, `predictors` | copied from `DataSpec` when supplied | Run-level data choices preserved for downstream stages. |
-| `steps` | `tuple[dict, ...]` | Ordered preprocessing log. |
+| `options` | `dict[str, Any]` | `default_factory` |
 
-`metadata["preprocessing"]["transform_state"]` stores inverse-transform support
-metadata for every transformed series: t-code, log-domain requirement, lag
-count, and the last observed raw values/dates available before transformation.
-`metadata["preprocessing"]["standardization_state"]` stores the fitted center
-and scale values when `standardize != "none"`.
+#### Public Methods
 
-When transforms are applied, the final post-override t-code map is also stored
-in `metadata["transform_codes_applied"]` and
-`processed.panel.attrs["macroforecast_transform_codes"]`. This is the map that
-actually ran, not just the raw loader metadata.
-
-### Error Conditions
-
-| Condition | Result |
-| --- | --- |
-| Plain `DataFrame` without data metadata | `UserWarning`; preprocessing still runs if the panel is canonical. |
-| `transform="official"` with no t-code map | `ValueError`. |
-| `transform="custom"` with no t-code map | `ValueError`. |
-| Explicit transform-code or override key not in the panel | `ValueError`. |
-| FRED-SD with default `transform="official"` | `ValueError`; choose `transform="none"` or custom FRED-SD codes. |
-| Frequency inference finds sparse unknown columns during alignment | `UserWarning`; supply data metadata when the source frequency is known. |
-| EM imputation sees an all-missing row or column | `ValueError`. |
-| Standardization sees a zero-variance numeric column | `ValueError`. |
-
-`PreprocessedData` supports tuple unpacking:
-
-```python
-panel, metadata = processed
-```
-
-## preprocess_spec
-
-`preprocess_spec(...)` stores the same preprocessing options accepted by
-`reprocess(...)`, excluding input-only arguments such as `data` and `metadata`.
-It rejects unknown options immediately, so stage timing options must be passed
-to `forecasting.run(..., preprocessing_policy=...)`, not hidden inside the
-preprocessing spec.
-
-```python
-macroforecast.preprocessing.preprocess_spec(
-    **options,
-) -> PreprocessSpec
-```
-
-### Input
-
-`**options` may include any `reprocess(...)` option except `data` and
-`metadata`. It also accepts:
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `custom_steps` | sequence or omitted | omitted | Custom preprocessing steps created by `custom_preprocess_step(...)`. |
-| `warn_metadata` | `bool` | `False` inside runner specs unless supplied | Whether to warn when input lacks `macroforecast.data` metadata. |
-
-Do not pass window timing, stage scope, or split choices here. Those belong to
-`forecasting.run(..., preprocessing_policy=...)`.
-
-### Output
-
-Returns `PreprocessSpec`.
-
-| Method | Input | Output | Meaning |
-| --- | --- | --- | --- |
-| `fit(data, metadata=None, policy="origin_available")` | preprocessing input | `FittedPreprocessor` | Fit preprocessing choices on a training/history panel. |
-| `fit_transform(data, metadata=None, policy="origin_available")` | preprocessing input | `PreprocessedData` | Fit and return the processed training panel. |
-| `to_dict()` | none | `dict` | JSON-ready preprocessing options. |
-| `to_metadata()` | none | `dict` | Compact runner metadata. |
-
-`FittedPreprocessor.transform(data, metadata=None, history=None, policy=None)`
-returns `PreprocessedData` for new rows. `policy="origin_available"` replays
-preprocessing on `history + data`; `policy="fit_window"` applies state fitted
-on the training window where supported.
-
-```python
-pre = mf.preprocessing.preprocess_spec(
-    transform="official",
-    outliers="iqr",
-    impute="em_factor",
-    standardize="zscore",
-    frame="keep",
-)
-```
-
-For direct advanced use:
-
-```python
-fitted = pre.fit(train_panel, policy="origin_available")
-processed_test = fitted.transform(test_panel, history=train_panel)
-```
-
-The fitted and transformed metadata records `fit_period`, `history_period`,
-`transform_period`, and `output_period`. `policy="fit_window"` applies
-fit-window outlier, imputation, and standardization state; it currently supports
-`impute="none"`, `"mean"`, and `"forward_fill"`.
-
-`preprocess_spec(...)` also accepts `custom_steps=[...]`. These steps run after
-the built-in preprocessing options. Inside `forecasting.run(...)`, the custom
-steps are fitted or applied inside the same stage policy as the rest of the
-preprocessing spec.
-
-```python
-def add_spread(panel, *, metadata=None, scale=1.0):
-    out = panel.copy()
-    out["spread"] = (out["long_rate"] - out["short_rate"]) * scale
-    return out
-
-pre = mf.preprocessing.preprocess_spec(
-    transform="none",
-    impute="mean",
-    custom_steps=[
-        mf.preprocessing.custom_preprocess_step("spread", add_spread, scale=100.0),
-    ],
-)
-```
-
-## custom_preprocess
-
-Apply one user-supplied preprocessing callable directly to a panel or bundle.
-
-```python
-macroforecast.preprocessing.custom_preprocess(
-    data,
-    func,
-    *,
-    metadata: Mapping[str, object] | None = None,
-    name: str | None = None,
-    **params,
-) -> PreprocessedData
-```
-
-### Callable Contract
-
-The callable receives:
-
-```python
-func(panel: pandas.DataFrame, *, metadata: dict, **params)
-```
-
-It must return one of:
-
-| Return type | Meaning |
-| --- | --- |
-| `pandas.DataFrame` | New canonical or normalizable panel. Existing `attrs["macroforecast_metadata"]` is merged with input metadata. |
-| `DataBundle` | Panel plus metadata to continue with. |
-| `PreprocessedData` | Full preprocessing object to continue with. |
-| `(DataFrame, metadata)` | Explicit panel and metadata pair. |
-
-### Output
-
-Returns `PreprocessedData`. Metadata gains `metadata["custom_preprocess"]`,
-including callable name, parameters, input panel summary, and output panel
-summary. The output panel also carries
-`panel.attrs["macroforecast_metadata"]`.
-
-## custom_preprocess_step
-
-Create a runner-compatible preprocessing step for
-`preprocess_spec(custom_steps=[...])`.
-
-```python
-macroforecast.preprocessing.custom_preprocess_step(
-    name: str,
-    func,
-    **params,
-) -> dict
-```
-
-| Input | Meaning |
-| --- | --- |
-| `name` | Stable step name stored in metadata. |
-| `func` | Callable following the `custom_preprocess()` callable contract. |
-| `**params` | JSON-ready parameters passed to `func`. |
-
-The returned dictionary keeps the callable for Python execution, but
-`PreprocessSpec.to_dict()` records only the callable name so runner metadata is
-JSON-ready.
-
-## Step Helpers
-
-These helpers return `pandas.DataFrame` unless noted.
-
-| Function | Input | Output | Meaning |
-| --- | --- | --- | --- |
-| `plan(data, ...)` | DataFrame/bundle/spec | `dict` | Dry-run summary of configured choices, transform codes, metadata warning, and detected native frequencies. |
-| `report(processed)` | `PreprocessedData` | `dict` | Compact report from a completed preprocessing result. |
-| `custom_preprocess(data, func, ...)` | DataFrame/bundle/spec and callable | `PreprocessedData` | Apply one custom preprocessing function directly. |
-| `custom_preprocess_step(name, func, **params)` | name and callable | `dict` | Build a custom step for `preprocess_spec(custom_steps=[...])`. |
-| `apply_transform_codes(panel, codes)` | DataFrame, t-code map | DataFrame | Apply McCracken-Ng t-code formulas. |
-| `fred_sd_transform_codes(data, ...)` | FRED-SD panel/bundle/spec | `dict[str, int]`, or `(dict, DataFrame)` with `return_table=True` | Build FRED-SD state-series t-codes from user choices and optional national-analog suggestions. |
-| `handle_tcode_lag(panel, method=..., codes=...)` | DataFrame | DataFrame | Handle missing rows introduced by t-code transforms. |
-| `handle_outliers(panel, method=...)` | DataFrame | DataFrame | Apply one outlier policy. |
-| `impute_missing(panel, method=...)` | DataFrame | DataFrame | Fill missing values. |
-| `standardize_panel(panel, method=...)` | DataFrame | DataFrame | Apply one full-panel standardization policy. |
-| `handle_frame_edges(panel, method=...)` | DataFrame | DataFrame | Keep/drop/truncate/fill remaining unbalanced edges. |
-
-Low-level callable variants are public for users who want one exact operation
-without the full `reprocess(...)` sequence.
-
-## Low-Level Clean Helpers
-
-These helpers accept a `pandas.DataFrame` and return a new `pandas.DataFrame`
-unless the output column says otherwise.
-
-| Function | Key options | Output | Meaning |
-| --- | --- | --- | --- |
-| `iqr_outlier_clean(panel, threshold=10.0, action="flag_as_nan")` | `threshold`, `action` | DataFrame | IQR outlier rule used by `handle_outliers(method="iqr")`. |
-| `zscore_outlier_clean(panel, threshold=3.0, action="flag_as_nan")` | `threshold`, `action` | DataFrame | Z-score outlier rule used by `handle_outliers(method="zscore")`. |
-| `winsorize_clean(panel, lower_quantile=0.01, upper_quantile=0.99)` | quantile bounds | DataFrame | Winsorization rule used by `handle_outliers(method="winsorize")`. |
-| `em_factor_impute_clean(panel, n_factors=8, max_iter=50, tol=1e-6, factor_selection="baing_p2", demean=2)` | EM factor controls | DataFrame | PCA-EM imputation used by `impute_missing(method="em_factor")`. |
-| `em_multivariate_impute_clean(panel, max_iter=20, tol=1e-4)` | EM controls | DataFrame | Multivariate EM imputation used by `impute_missing(method="em_multivariate")`. |
-| `mean_impute_clean(panel)` | none | DataFrame | Column-mean imputation. |
-| `forward_fill_clean(panel)` | none | DataFrame | Forward-fill imputation. |
-| `linear_interpolate_clean(panel)` | none | DataFrame | Time interpolation imputation. |
-| `truncate_to_balanced_clean(panel)` | none | DataFrame | Keep the largest balanced sample. |
-| `drop_unbalanced_series_clean(panel)` | none | DataFrame | Drop series that keep unbalanced sample edges. |
-| `zero_fill_leading_clean(panel)` | none | DataFrame | Fill leading missing values with zero. |
-| `fit_standardization_state(panel, method="zscore", ddof=0)` | scaling method | `dict` | Fit reusable scaling state. |
-| `apply_standardization_state(panel, state)` | fitted state | DataFrame | Apply previously fitted scaling state. |
-| `standardize_clean(panel, method="zscore", ddof=0)` | scaling method | DataFrame | One-shot panel standardization. |
-| `apply_tcode_transform(panel, tcode_map)` | t-code map | DataFrame | Apply McCracken-Ng t-code formulas to matching panel columns. |
-| `freq_align_quarterly_to_monthly_clean(panel, quarterly_columns, rule="step_backward")` | column list, rule | DataFrame | Low-level quarterly-to-monthly alignment helper. |
-| `freq_align_monthly_to_quarterly_clean(panel, monthly_columns, rule="quarterly_average")` | column list, rule | DataFrame | Low-level monthly-to-quarterly alignment helper. |
-
-## plan
-
-```python
-macroforecast.preprocessing.plan(
-    data,
-    *,
-    metadata: Mapping[str, object] | None = None,
-    frequency: str = "keep",
-    transform_order: str = "after_frequency",
-    transform: str = "official",
-    transform_codes: Mapping[str, int] | None = None,
-    transform_code_overrides: Mapping[str, int] | None = None,
-    tcode_lag: str = "drop",
-    outliers: str = "iqr",
-    impute: str = "em_factor",
-    standardize: str = "none",
-    standardize_columns: str | Sequence[str] = "all",
-    standardize_ddof: int = 0,
-    frame: str = "keep",
-) -> dict
-```
-
-### Input
-
-Same data input contract as `reprocess()`. `plan()` validates the panel and
-normalizes choices, but it does not transform, impute, or mutate the panel.
-
-### Output
-
-| Key | Meaning |
-| --- | --- |
-| `input_panel` | Shape, date range, columns, missing count, and inferred index frequency. |
-| `metadata_warning` | Warning text that would matter for a panel without data-generated metadata, or `None`. |
-| `steps` | Ordered step names implied by `transform_order`. |
-| `frequency` | Requested frequency policy plus native-frequency map and metadata source. |
-| `frequency["issues"]` | Native-frequency inference concerns such as sparse `unknown`, `irregular`, or `annual` columns. |
-| `transform` | Transform method, applied t-code map, ignored metadata-only codes, and any no-code/no-match error note. |
-| `tcode_lag`, `outliers`, `impute`, `standardize`, `frame` | Normalized choice values. |
-
-## report
-
-```python
-macroforecast.preprocessing.report(processed: PreprocessedData) -> dict
-```
-
-### Input
-
-`processed` must be the object returned by `reprocess()`.
-
-### Output
-
-| Key | Meaning |
-| --- | --- |
-| `input_panel` | Panel summary before preprocessing. |
-| `output_panel` | Panel summary after preprocessing. |
-| `steps` | Ordered execution log with input/output shapes where relevant. |
-| `choices` | Final normalized preprocessing choices. |
-| `transform_state` | Inverse-transform support metadata saved during the transform step. |
-| `standardization_state` | Fitted scaling metadata saved during the standardization step. |
-
-## apply_transform_codes
-
-```python
-macroforecast.preprocessing.apply_transform_codes(
-    panel: pandas.DataFrame,
-    codes: Mapping[str, int],
-) -> pandas.DataFrame
-```
-
-### Input
-
-| Name | Type | Required | Choices |
-| --- | --- | --- | --- |
-| `panel` | `pandas.DataFrame` | yes | Canonical date-indexed numeric panel. |
-| `codes` | mapping from column name to integer | yes | T-codes `1` through `7`. Columns absent from the panel are ignored. |
-
-### Output
-
-Returns a new `pandas.DataFrame` with matching columns transformed by the
-McCracken-Ng formulas above. Columns without a matching t-code are copied
-unchanged. Leading missing values are not removed here; call
-`handle_tcode_lag()` or use `reprocess(tcode_lag=...)`.
-
-Note the distinction between this low-level helper and `reprocess()`.
-`apply_transform_codes()` ignores absent code keys for convenience when used
-interactively. `reprocess()` is stricter: explicit transform-code keys must
-match panel columns so a production run cannot silently miss a requested
-series.
-
-## handle_tcode_lag
-
-```python
-macroforecast.preprocessing.handle_tcode_lag(
-    panel: pandas.DataFrame,
-    *,
-    method: str = "drop",
-    codes: Mapping[str, int] | None = None,
-) -> pandas.DataFrame
-```
-
-### Input
-
-| `method` | Meaning |
-| --- | --- |
-| `"drop"` | Drop the first `max(t-code lag)` rows. This is the FRED-MD default path after applying official t-codes. |
-| `"keep"` | Keep all rows, including transform-induced leading missing values. |
-| `"drop_all_missing_rows"` | Drop only rows where every column is missing. |
-| `"drop_any_missing_rows"` | Drop every row with at least one missing value. This is strict and often removes too much data. |
-
-### Output
-
-Returns a new `pandas.DataFrame`. The function does not impute; it only handles
-missing rows introduced by transformations.
-
-## handle_outliers
-
-```python
-macroforecast.preprocessing.handle_outliers(
-    panel: pandas.DataFrame,
-    *,
-    method: str = "iqr",
-    action: str = "flag_as_nan",
-    iqr_threshold: float = 10.0,
-    zscore_threshold: float = 3.0,
-    winsorize_quantiles: tuple[float, float] = (0.01, 0.99),
-) -> pandas.DataFrame
-```
-
-### Input
-
-| Name | Default | Choices |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| `method` | `"iqr"` | `"iqr"`, `"zscore"`, `"winsorize"`, `"none"` |
-| `action` | `"flag_as_nan"` | `"flag_as_nan"`, `"replace_with_median"`, `"replace_with_cap_value"` for IQR/z-score methods |
-| `iqr_threshold` | `10.0` | Positive float. McCracken-Ng default is `10.0`. |
-| `zscore_threshold` | `3.0` | Positive float. |
-| `winsorize_quantiles` | `(0.01, 0.99)` | Lower and upper quantiles for winsorization. |
+| `fit` | `fit(self, data: PreprocessInput, *, metadata: dict[str, Any] \| None = None, policy: str = "origin_available") -> FittedPreprocessor` | Fit preprocessing choices on a training panel. |
+| `fit_transform` | `fit_transform(self, data: PreprocessInput, *, metadata: dict[str, Any] \| None = None, policy: str = "origin_available") -> PreprocessedData` | Fit on ``data`` and return the processed training panel. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | Return JSON-ready preprocessing choices. |
+| `to_metadata` | `to_metadata(self) -> dict[str, Any]` | Return compact metadata for runners. |
+### FittedPreprocessor
 
-### Output
+Qualified name: `macroforecast.preprocessing.specs.FittedPreprocessor`
 
-Returns a new `pandas.DataFrame`. The default marks IQR outliers as `NaN`, so
-the next imputation step can fill them.
-
-## impute_missing
+#### Signature
 
 ```python
-macroforecast.preprocessing.impute_missing(
-    panel: pandas.DataFrame,
-    *,
-    method: str = "em_factor",
-    em_n_factors: int = 8,
-    em_factor_selection: str = "baing_p2",
-    em_demean: int = 2,
-    em_max_iter: int = 50,
-    em_tolerance: float = 1e-6,
-) -> pandas.DataFrame
+macroforecast.preprocessing.FittedPreprocessor(spec: PreprocessSpec, fit_panel: pd.DataFrame, fit_metadata: dict[str, Any], processed_train: PreprocessedData, preprocessing_scope: str = "origin_available", standardization_state: dict[str, Any] | None = None, state_panel: pd.DataFrame | None = None, outlier_state: dict[str, Any] | None = None, impute_state: dict[str, Any] | None = None, train_after_outlier: pd.DataFrame | None = None) -> None
 ```
 
-### Input
+#### Description
 
-| Name | Default | Choices |
-| --- | --- | --- |
-| `method` | `"em_factor"` | `"em_factor"`, `"em_multivariate"`, `"mean"`, `"forward_fill"`, `"linear"`, `"none"` |
-| `em_n_factors` | `8` | Maximum factor count for `em_factor`; fixed rank when `em_factor_selection="fixed"`. |
-| `em_factor_selection` | `"baing_p2"` | `"baing_p1"`, `"baing_p2"`, `"baing_p3"`, `"fixed"` |
-| `em_demean` | `2` | `0`, `1`, `2`, `3`, matching `factors_em.m` standardization modes. |
-| `em_max_iter` | `50` | Positive integer. |
-| `em_tolerance` | `1e-6` | Positive float. |
+Preprocessing spec fitted on a training window.
 
-### Output
+#### Parameters
 
-Returns a new `pandas.DataFrame`. The default `em_factor` path uses the
-FRED-MD-style PCA-EM algorithm. It raises if the panel contains an all-missing
-row or all-missing column; use `handle_tcode_lag()` before this step for the
-usual FRED-MD transform-induced leading missing rows.
-
-`method="linear"` fills only interior missing values bracketed by observed
-data. It does not extrapolate leading or trailing missing values, because those
-edges usually encode unavailable source observations.
-
-`method="em_multivariate"` uses the same all-missing row/column guard as
-`em_factor`.
-
-## standardize_panel
-
-```python
-macroforecast.preprocessing.standardize_panel(
-    panel: pandas.DataFrame,
-    *,
-    method: str = "zscore",
-    ddof: int = 0,
-) -> pandas.DataFrame
-```
-
-### Input
-
-| Name | Default | Choices |
-| --- | --- | --- |
-| `method` | `"zscore"` | `"zscore"`, `"robust"`, `"minmax"` |
-| `ddof` | `0` | Non-negative integer used only for z-score standardization. |
-
-### Output
-
-Returns a new `pandas.DataFrame` with numeric columns scaled. `zscore` uses
-column means and standard deviations, `robust` uses median and IQR, and
-`minmax` uses minimum and range. The helper fits scaling parameters on the full
-panel supplied to it.
-
-For forecasting experiments that require origin-by-origin information sets,
-prefer `preprocess_spec(standardize=...)` through the forecasting runner. In
-that path, scaling parameters are fitted on the train window and reused for the
-test rows.
-
-Inside `reprocess(...)`, use `standardize_columns="predictors"` when a
-`DataSpec` should scale predictor columns while leaving the target in its
-post-transform units.
-
-## handle_frame_edges
-
-```python
-macroforecast.preprocessing.handle_frame_edges(
-    panel: pandas.DataFrame,
-    *,
-    method: str = "keep",
-) -> pandas.DataFrame
-```
-
-### Input
-
-| `method` | Meaning |
-| --- | --- |
-| `"keep"` | Keep the panel as-is. This is the default after EM imputation. |
-| `"truncate"` | Truncate to the largest balanced sample. |
-| `"drop_unbalanced_series"` | Drop columns that keep unbalanced edges. |
-| `"zero_fill"` | Fill leading missing values with zero. |
-
-### Output
-
-Returns a new `pandas.DataFrame`.
-
-## FRED-SD
-
-FRED-SD does not provide official t-codes. `reprocess(fred_sd_bundle)` with
-the default `transform="official"` raises an error. The user must choose one
-of these paths.
-
-Package suggestion tables are exposed as constants for inspection:
-
-| Symbol | Meaning |
-| --- | --- |
-| `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | High-confidence t-code suggestions based on national FRED-MD/FRED-QD analogs. |
-| `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | Broader provisional t-code suggestions; opt in with `include_medium_confidence=True`. |
-
-## fred_sd_transform_codes
-
-```python
-macroforecast.preprocessing.fred_sd_transform_codes(
-    data,
-    *,
-    variable_codes: Mapping[str, int] | None = None,
-    state_series_codes: Mapping[str, int] | None = None,
-    use_national_analog_suggestions: bool = True,
-    include_medium_confidence: bool = False,
-    return_table: bool = False,
-) -> dict[str, int] | tuple[dict[str, int], pandas.DataFrame]
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `data` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | required | FRED-SD wide state-series panel. |
-| `variable_codes` | mapping or `None` | `None` | User t-code choices by FRED-SD variable, such as `{"UR": 2}`. Expanded to every matching state series. |
-| `state_series_codes` | mapping or `None` | `None` | User t-code choices by exact column, such as `{"UR_CA": 2}`. Overrides variable-level choices. |
-| `use_national_analog_suggestions` | `bool` | `True` | Include high-confidence package suggestions based on national FRED-MD/FRED-QD analogs. |
-| `include_medium_confidence` | `bool` | `False` | Include broader provisional suggestions. |
-| `return_table` | `bool` | `False` | Return a provenance table with the expanded code map. |
+| `spec` | positional or keyword | `PreprocessSpec` | `required` |
+| `fit_panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `fit_metadata` | positional or keyword | `dict[str, Any]` | `required` |
+| `processed_train` | positional or keyword | `PreprocessedData` | `required` |
+| `preprocessing_scope` | positional or keyword | `str` | `"origin_available"` |
+| `standardization_state` | positional or keyword | `dict[str, Any] \| None` | `None` |
+| `state_panel` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `outlier_state` | positional or keyword | `dict[str, Any] \| None` | `None` |
+| `impute_state` | positional or keyword | `dict[str, Any] \| None` | `None` |
+| `train_after_outlier` | positional or keyword | `pd.DataFrame \| None` | `None` |
 
-### Output
+#### Returns
 
-By default, returns `dict[str, int]` mapping FRED-SD state-series columns to
-t-codes. With `return_table=True`, returns `(codes, table)`. The table columns
-are `column`, `sd_variable`, `state`, `tcode`, `source`, and
-`suggestion_confidence`.
+`None`
 
-`suggestion_confidence` is not a statistical confidence interval. It records
-whether the t-code came from a user state-series override, user variable-level
-choice, high-confidence package suggestion, medium-confidence package
-suggestion, or no assignment.
-
-No transform:
+#### Minimal Use
 
 ```python
-processed = mf.preprocessing.reprocess(fred_sd_bundle, transform="none")
+import macroforecast as mf
+# Construct with the signature above:
+# mf.preprocessing.FittedPreprocessor(...)
 ```
 
-Variable-level t-codes expanded to all state series:
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `spec` | `PreprocessSpec` | `required` |
+| `fit_panel` | `pd.DataFrame` | `required` |
+| `fit_metadata` | `dict[str, Any]` | `required` |
+| `processed_train` | `PreprocessedData` | `required` |
+| `preprocessing_scope` | `str` | `"origin_available"` |
+| `standardization_state` | `dict[str, Any] \| None` | `None` |
+| `state_panel` | `pd.DataFrame \| None` | `None` |
+| `outlier_state` | `dict[str, Any] \| None` | `None` |
+| `impute_state` | `dict[str, Any] \| None` | `None` |
+| `train_after_outlier` | `pd.DataFrame \| None` | `None` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_metadata` | `to_metadata(self) -> dict[str, Any]` | Return fit metadata for forecasting records. |
+| `transform` | `transform(self, data: PreprocessInput, *, metadata: dict[str, Any] \| None = None, history: pd.DataFrame \| None = None, policy: str \| None = None, available: pd.Index \| None = None) -> PreprocessedData` | Transform new rows using the fitted training history. |
+### preprocess_spec
+
+Qualified name: `macroforecast.preprocessing.specs.preprocess_spec`
+
+#### Signature
 
 ```python
-codes = mf.preprocessing.fred_sd_transform_codes(
-    fred_sd_bundle,
-    variable_codes={"UR": 2, "ICLAIMS": 5},
-)
-
-processed = mf.preprocessing.reprocess(
-    fred_sd_bundle,
-    frequency="monthly",
-    transform="custom",
-    transform_codes=codes,
-)
+macroforecast.preprocessing.preprocess_spec(**options: Any) -> PreprocessSpec
 ```
 
-Built-in national-analog suggestions are offered for high-confidence FRED-SD
-variables such as `UR`, `PARTRATE`, `ICLAIMS`, `LF`, `NA`, and major employment
-sector variables. These are suggestions, not official FRED-SD metadata. Pass
-`include_medium_confidence=True` to also include broader output, housing, trade,
-and income analogs.
+#### Description
 
-To inspect provenance:
+Create a reusable preprocessing specification.
+
+Keyword options are the same data-cleaning choices accepted by
+``reprocess(...)``: frequency alignment, transform-code handling,
+outlier policy, imputation policy, standardization, frame-edge handling,
+and optional custom preprocessing steps. Stage timing and metadata are not
+accepted here; they are supplied later through ``PreprocessSpec.fit(...)``
+or by the forecasting/pipeline runner.
+
+Returns
+PreprocessSpec
+    Frozen preprocessing configuration. Call ``fit(data)`` to get a
+    ``FittedPreprocessor`` or ``fit_transform(data)`` to obtain a
+    ``PreprocessedData`` object for the training panel.
+
+Example
+>>> import macroforecast as mf
+>>> prep = mf.preprocessing.preprocess_spec(
+...     transform="official",
+...     outliers="iqr",
+...     impute="em_factor",
+...     standardize="zscore",
+... )
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `options` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`PreprocessSpec`
+
+#### Minimal Use
 
 ```python
-codes, table = mf.preprocessing.fred_sd_transform_codes(
-    fred_sd_bundle,
-    variable_codes={"UR": 2},
-    return_table=True,
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.preprocess_spec(...)
 ```
+### custom_preprocess
 
-`table` has columns `column`, `sd_variable`, `state`, `tcode`, `source`, and
-`suggestion_confidence`. Sources distinguish user state-series overrides, user
-variable-level choices, high- or medium-confidence national-analog suggestions,
-and unassigned columns. `suggestion_confidence` is not a statistical confidence
-interval; it is a provenance label for non-official package suggestions.
+Qualified name: `macroforecast.preprocessing.preprocess.custom_preprocess`
 
-For FRED-SD frequency alignment, preprocessing reads the data-generated
-`fred_sd_series_metadata` report first. Observed-date inference is only a
-fallback. FRED-SD is mixed monthly/quarterly data; combined dataset frequency
-alignment belongs in `macroforecast.data`, not in preprocessing.
-
-## FRED-QD and Dataset Combination
-
-`mf.data.load_fred_qd()` returns a quarterly panel with
-`metadata["frequency"] == "quarterly"` and official FRED-QD t-codes. FRED-QD is
-not mixed-frequency in the same sense as FRED-SD.
-
-Combinations such as FRED-MD + FRED-SD or FRED-QD + FRED-SD should be built in
-`macroforecast.data`, not in preprocessing. Dataset composition decides which
-sources to load, how to align indices before a run, how to merge metadata, and
-how to record frequency-conversion provenance. Preprocessing then operates on
-the combined canonical panel it receives.
-
-Use:
+#### Signature
 
 ```python
-monthly_bundle = mf.data.load_fred_md_sd(states=["CA"], variables=["UR"])
-quarterly_bundle = mf.data.load_fred_qd_sd(states=["CA"], variables=["UR"])
+macroforecast.preprocessing.custom_preprocess(data: PreprocessInput, func: Callable[..., Any], *, metadata: Mapping[str, Any] | None = None, name: str | None = None, **params: Any) -> PreprocessedData
 ```
 
-## Source
+#### Description
 
-The FRED-MD/FRED-QD defaults are based on the public FRED-Databases Matlab code
-linked from the St. Louis Fed FRED-MD/FRED-QD page, specifically
-`fredfactors.m`, `prepare_missing.m`, `remove_outliers.m`, and `factors_em.m`.
+Apply a user supplied preprocessing callable to a canonical panel.
 
-- `box_cox_lambda` -- select a Box-Cox lambda for one series ('loglik' MLE or 'guerrero'; forecast::BoxCox.lambda).
-- `box_cox_clean` -- apply a Box-Cox variance-stabilising transform per numeric column (lambda selected or supplied).
-- `inverse_box_cox` -- invert a Box-Cox transform given lambda.
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PreprocessInput` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `name` | keyword only | `str \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`PreprocessedData`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.custom_preprocess(...)
+```
+### custom_preprocess_step
+
+Qualified name: `macroforecast.preprocessing.specs.custom_preprocess_step`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any], **params: Any) -> dict[str, Any]
+```
+
+#### Description
+
+Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.custom_preprocess_step(...)
+```
+### apply_transform_codes
+
+Qualified name: `macroforecast.preprocessing.preprocess.apply_transform_codes`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.apply_transform_codes(panel: pd.DataFrame, codes: Mapping[str, int]) -> pd.DataFrame
+```
+
+#### Description
+
+Apply McCracken-Ng transform codes to matching panel columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `codes` | positional or keyword | `Mapping[str, int]` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.apply_transform_codes(...)
+```
+### fred_sd_transform_codes
+
+Qualified name: `macroforecast.preprocessing.preprocess.fred_sd_transform_codes`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.fred_sd_transform_codes(data: PreprocessInput, *, variable_codes: Mapping[str, int] | None = None, state_series_codes: Mapping[str, int] | None = None, use_national_analog_suggestions: bool = True, include_medium_confidence: bool = False, return_table: bool = False) -> dict[str, int] | tuple[dict[str, int], pd.DataFrame]
+```
+
+#### Description
+
+Build FRED-SD t-code choices for state-series columns.
+
+FRED-SD does not publish official t-codes. The built-in suggestions are
+national-analog defaults, not official transformations.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PreprocessInput` | `required` |
+| `variable_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `state_series_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `use_national_analog_suggestions` | keyword only | `bool` | `True` |
+| `include_medium_confidence` | keyword only | `bool` | `False` |
+| `return_table` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`dict[str, int] | tuple[dict[str, int], pd.DataFrame]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.fred_sd_transform_codes(...)
+```
+### handle_tcode_lag
+
+Qualified name: `macroforecast.preprocessing.preprocess.handle_tcode_lag`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.handle_tcode_lag(panel: pd.DataFrame, *, method: str = "drop", codes: Mapping[str, int] | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Handle missing values introduced by stationarity transforms.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `str` | `"drop"` |
+| `codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.handle_tcode_lag(...)
+```
+### handle_outliers
+
+Qualified name: `macroforecast.preprocessing.preprocess.handle_outliers`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.handle_outliers(panel: pd.DataFrame, *, method: str = "iqr", action: str = "flag_as_nan", iqr_threshold: float = 10.0, zscore_threshold: float = 3.0, winsorize_quantiles: tuple[float, float] = (0.01, 0.99)) -> pd.DataFrame
+```
+
+#### Description
+
+Apply one outlier policy to a panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `str` | `"iqr"` |
+| `action` | keyword only | `str` | `"flag_as_nan"` |
+| `iqr_threshold` | keyword only | `float` | `10.0` |
+| `zscore_threshold` | keyword only | `float` | `3.0` |
+| `winsorize_quantiles` | keyword only | `tuple[float, float]` | `(0.01, 0.99)` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.handle_outliers(...)
+```
+### impute_missing
+
+Qualified name: `macroforecast.preprocessing.preprocess.impute_missing`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.impute_missing(panel: pd.DataFrame, *, method: str = "em_factor", em_n_factors: int = 8, em_factor_selection: str = "baing_p2", em_demean: int = 2, em_max_iter: int = 50, em_tolerance: float = 1e-06) -> pd.DataFrame
+```
+
+#### Description
+
+Fill missing panel values with the selected imputation method.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `str` | `"em_factor"` |
+| `em_n_factors` | keyword only | `int` | `8` |
+| `em_factor_selection` | keyword only | `str` | `"baing_p2"` |
+| `em_demean` | keyword only | `int` | `2` |
+| `em_max_iter` | keyword only | `int` | `50` |
+| `em_tolerance` | keyword only | `float` | `1e-06` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.impute_missing(...)
+```
+### standardize_panel
+
+Qualified name: `macroforecast.preprocessing.preprocess.standardize_panel`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.standardize_panel(panel: pd.DataFrame, *, method: str = "zscore", ddof: int = 0) -> pd.DataFrame
+```
+
+#### Description
+
+Standardize numeric columns with full-panel fitted parameters.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `str` | `"zscore"` |
+| `ddof` | keyword only | `int` | `0` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.standardize_panel(...)
+```
+### handle_frame_edges
+
+Qualified name: `macroforecast.preprocessing.preprocess.handle_frame_edges`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.handle_frame_edges(panel: pd.DataFrame, *, method: str = "keep") -> pd.DataFrame
+```
+
+#### Description
+
+Handle remaining unbalanced panel edges.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `str` | `"keep"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.handle_frame_edges(...)
+```
+### iqr_outlier_clean
+
+Qualified name: `macroforecast.preprocessing.clean.iqr_outlier_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.iqr_outlier_clean(panel: pd.DataFrame, *, threshold: float = 10.0, action: str = "flag_as_nan") -> pd.DataFrame
+```
+
+#### Description
+
+Flag or replace outliers with a per-column IQR rule.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `threshold` | keyword only | `float` | `10.0` |
+| `action` | keyword only | `str` | `"flag_as_nan"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.iqr_outlier_clean(...)
+```
+### zscore_outlier_clean
+
+Qualified name: `macroforecast.preprocessing.clean.zscore_outlier_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.zscore_outlier_clean(panel: pd.DataFrame, *, threshold: float = 3.0, action: str = "flag_as_nan") -> pd.DataFrame
+```
+
+#### Description
+
+Flag or replace outliers with a per-column z-score rule.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `threshold` | keyword only | `float` | `3.0` |
+| `action` | keyword only | `str` | `"flag_as_nan"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.zscore_outlier_clean(...)
+```
+### winsorize_clean
+
+Qualified name: `macroforecast.preprocessing.clean.winsorize_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.winsorize_clean(panel: pd.DataFrame, *, lower_quantile: float = 0.01, upper_quantile: float = 0.99) -> pd.DataFrame
+```
+
+#### Description
+
+Clip numeric columns to quantile bounds.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `lower_quantile` | keyword only | `float` | `0.01` |
+| `upper_quantile` | keyword only | `float` | `0.99` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.winsorize_clean(...)
+```
+### em_factor_impute_clean
+
+Qualified name: `macroforecast.preprocessing.clean.em_factor_impute_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.em_factor_impute_clean(panel: pd.DataFrame, *, n_factors: int = 8, max_iter: int = 50, tol: float = 1e-06, factor_selection: str = "baing_p2", demean: int = 2) -> pd.DataFrame
+```
+
+#### Description
+
+Impute missing numeric cells with PCA-EM factor reconstruction.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `n_factors` | keyword only | `int` | `8` |
+| `max_iter` | keyword only | `int` | `50` |
+| `tol` | keyword only | `float` | `1e-06` |
+| `factor_selection` | keyword only | `str` | `"baing_p2"` |
+| `demean` | keyword only | `int` | `2` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.em_factor_impute_clean(...)
+```
+### em_multivariate_impute_clean
+
+Qualified name: `macroforecast.preprocessing.clean.em_multivariate_impute_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.em_multivariate_impute_clean(panel: pd.DataFrame, *, max_iter: int = 20, tol: float = 0.0001) -> pd.DataFrame
+```
+
+#### Description
+
+Impute missing numeric cells with an uncapped PCA-EM rank rule.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `max_iter` | keyword only | `int` | `20` |
+| `tol` | keyword only | `float` | `0.0001` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.em_multivariate_impute_clean(...)
+```
+### mean_impute_clean
+
+Qualified name: `macroforecast.preprocessing.clean.mean_impute_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.mean_impute_clean(panel: pd.DataFrame) -> pd.DataFrame
+```
+
+#### Description
+
+Replace missing numeric cells with full-column means.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.mean_impute_clean(...)
+```
+### forward_fill_clean
+
+Qualified name: `macroforecast.preprocessing.clean.forward_fill_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.forward_fill_clean(panel: pd.DataFrame) -> pd.DataFrame
+```
+
+#### Description
+
+Carry each series' most recent observed value forward.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.forward_fill_clean(...)
+```
+### linear_interpolate_clean
+
+Qualified name: `macroforecast.preprocessing.clean.linear_interpolate_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.linear_interpolate_clean(panel: pd.DataFrame) -> pd.DataFrame
+```
+
+#### Description
+
+Fill interior missing values by linear interpolation.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.linear_interpolate_clean(...)
+```
+### truncate_to_balanced_clean
+
+Qualified name: `macroforecast.preprocessing.clean.truncate_to_balanced_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.truncate_to_balanced_clean(panel: pd.DataFrame) -> pd.DataFrame
+```
+
+#### Description
+
+Keep only rows with no missing values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.truncate_to_balanced_clean(...)
+```
+### drop_unbalanced_series_clean
+
+Qualified name: `macroforecast.preprocessing.clean.drop_unbalanced_series_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.drop_unbalanced_series_clean(panel: pd.DataFrame) -> pd.DataFrame
+```
+
+#### Description
+
+Keep only columns with no missing values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.drop_unbalanced_series_clean(...)
+```
+### zero_fill_leading_clean
+
+Qualified name: `macroforecast.preprocessing.clean.zero_fill_leading_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.zero_fill_leading_clean(panel: pd.DataFrame) -> pd.DataFrame
+```
+
+#### Description
+
+Replace remaining missing cells with zero.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.zero_fill_leading_clean(...)
+```
+### fit_standardization_state
+
+Qualified name: `macroforecast.preprocessing.clean.fit_standardization_state`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.fit_standardization_state(panel: pd.DataFrame, *, method: str = "zscore", ddof: int = 0) -> dict[str, object]
+```
+
+#### Description
+
+Fit column-wise scaling parameters on a numeric panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `str` | `"zscore"` |
+| `ddof` | keyword only | `int` | `0` |
+
+#### Returns
+
+`dict[str, object]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.fit_standardization_state(...)
+```
+### apply_standardization_state
+
+Qualified name: `macroforecast.preprocessing.clean.apply_standardization_state`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.apply_standardization_state(panel: pd.DataFrame, state: Mapping[str, object]) -> pd.DataFrame
+```
+
+#### Description
+
+Apply fitted column-wise scaling parameters to a panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `state` | positional or keyword | `Mapping[str, object]` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.apply_standardization_state(...)
+```
+### box_cox_clean
+
+Qualified name: `macroforecast.preprocessing.clean.box_cox_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.box_cox_clean(panel: pd.DataFrame, *, lmbda: float | None = None, method: str = "loglik", period: int | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Apply a Box-Cox variance-stabilising transform to each numeric column.
+
+When ``lmbda`` is None the parameter is selected per column by ``method``
+('loglik' or 'guerrero'); the chosen lambdas are recorded in
+``panel.attrs['macroforecast_box_cox_lambda']``. Columns must be strictly
+positive.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `lmbda` | keyword only | `float \| None` | `None` |
+| `method` | keyword only | `str` | `"loglik"` |
+| `period` | keyword only | `int \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.box_cox_clean(...)
+```
+### box_cox_lambda
+
+Qualified name: `macroforecast.preprocessing.clean.box_cox_lambda`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.box_cox_lambda(series: Any, *, method: str = "loglik", period: int | None = None, bounds: tuple[float, float] = (-1.0, 2.0)) -> float
+```
+
+#### Description
+
+Select a Box-Cox transformation parameter ``lambda`` for one series.
+
+``method='loglik'`` uses the profile-likelihood (Box-Cox MLE, via scipy);
+``method='guerrero'`` minimises the coefficient of variation of the
+subseries dispersion (Guerrero 1993), the ``forecast::BoxCox.lambda`` default.
+Requires strictly positive values (use a signed/Yeo-Johnson transform for
+series with non-positive values).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `method` | keyword only | `str` | `"loglik"` |
+| `period` | keyword only | `int \| None` | `None` |
+| `bounds` | keyword only | `tuple[float, float]` | `(-1.0, 2.0)` |
+
+#### Returns
+
+`float`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.box_cox_lambda(...)
+```
+### inverse_box_cox
+
+Qualified name: `macroforecast.preprocessing.clean.inverse_box_cox`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.inverse_box_cox(values: Any, lmbda: float) -> np.ndarray
+```
+
+#### Description
+
+Invert a Box-Cox transform with parameter ``lmbda``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `values` | positional or keyword | `Any` | `required` |
+| `lmbda` | positional or keyword | `float` | `required` |
+
+#### Returns
+
+`np.ndarray`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.inverse_box_cox(...)
+```
+### standardize_clean
+
+Qualified name: `macroforecast.preprocessing.clean.standardize_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.standardize_clean(panel: pd.DataFrame, *, method: str = "zscore", ddof: int = 0) -> pd.DataFrame
+```
+
+#### Description
+
+Standardize numeric columns with full-sample fitted parameters.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `str` | `"zscore"` |
+| `ddof` | keyword only | `int` | `0` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.standardize_clean(...)
+```
+### apply_tcode_transform
+
+Qualified name: `macroforecast.preprocessing.clean.apply_tcode_transform`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.apply_tcode_transform(panel: pd.DataFrame, tcode_map: Mapping[str, int]) -> pd.DataFrame
+```
+
+#### Description
+
+Apply McCracken-Ng transformation codes to matching columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `tcode_map` | positional or keyword | `Mapping[str, int]` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.apply_tcode_transform(...)
+```
+### freq_align_quarterly_to_monthly_clean
+
+Qualified name: `macroforecast.preprocessing.clean.freq_align_quarterly_to_monthly_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.freq_align_quarterly_to_monthly_clean(panel: pd.DataFrame, quarterly_columns: Sequence[str], *, rule: str = "step_forward") -> pd.DataFrame
+```
+
+#### Description
+
+Align selected quarterly columns on the panel's monthly grid.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `quarterly_columns` | positional or keyword | `Sequence[str]` | `required` |
+| `rule` | keyword only | `str` | `"step_forward"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.freq_align_quarterly_to_monthly_clean(...)
+```
+### freq_align_monthly_to_quarterly_clean
+
+Qualified name: `macroforecast.preprocessing.clean.freq_align_monthly_to_quarterly_clean`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.freq_align_monthly_to_quarterly_clean(panel: pd.DataFrame, monthly_columns: Sequence[str], *, rule: str = "quarterly_average") -> pd.DataFrame
+```
+
+#### Description
+
+Aggregate selected monthly columns to a quarterly grid.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `monthly_columns` | positional or keyword | `Sequence[str]` | `required` |
+| `rule` | keyword only | `str` | `"quarterly_average"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.freq_align_monthly_to_quarterly_clean(...)
+```

@@ -321,6 +321,41 @@ def load_fred_md(
     local_source: str | Path | None = None,
     local_zip_source: str | Path | None = None,
 ) -> DataBundle:
+    """Load FRED-MD as a canonical monthly ``DataBundle``.
+
+    Parameters
+    ----------
+    vintage
+        Vintage label in ``YYYY-MM`` form. ``None`` loads the current official
+        CSV. A vintage request is resolved from the official historical-vintage
+        archive unless ``local_zip_source`` supplies that archive locally.
+    force
+        Redownload or recopy the raw CSV even when the cache target already
+        exists.
+    cache_root
+        Optional cache directory for raw FRED files. ``None`` uses the package
+        cache policy.
+    local_source
+        Local CSV file to copy into the cache instead of downloading. This is
+        for deterministic tests and offline workflows.
+    local_zip_source
+        Local official historical-vintage ZIP file used with an explicit
+        ``vintage``.
+
+    Returns
+    -------
+    DataBundle
+        Canonical date-indexed panel plus metadata containing dataset,
+        frequency, source, and vintage information.
+
+    Example
+    -------
+    >>> import macroforecast as mf
+    >>> bundle = mf.data.load_fred_md(vintage="2020-01")
+    >>> bundle.panel.index.name
+    'date'
+    """
+
     request = _version_request("fred_md", vintage=vintage)
     target = _raw_file_path(request, cache_root, suffix="csv")
     cache_hit = target.exists() and not force and local_source is None and local_zip_source is None

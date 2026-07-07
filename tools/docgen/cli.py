@@ -1,226 +1,47 @@
-"""``python -m macroforecast`` entry point.
+"""CLI for regenerating and checking ``docs/reference``."""
 
-Subcommands:
-
-* ``scaffold`` -- generate a recipe from a template.
-* ``run`` -- execute a recipe YAML end-to-end (forwards to
-  ``macroforecast.run``); writes manifest + per-cell artifacts.
-* ``replicate`` -- re-run a stored manifest and verify per-cell sink
-  hashes match bit-for-bit (forwards to ``macroforecast.replicate``).
-* ``validate`` -- parse + schema-validate a recipe without executing.
-"""
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
-
-def _cmd_scaffold(args: argparse.Namespace) -> int:
-    """The interactive scaffold has been removed. Use a recipe template instead."""
-    print(
-        "The interactive scaffold has been removed in v0.10 (Phase 0 restructure).\n"
-        "To start from a template: python -c \"import macroforecast.scaffold; "
-        "print(macroforecast.scaffold.list_templates())\"",
-        file=sys.stderr,
-    )
-    return 1
-
-
-def _cmd_encyclopedia(args: argparse.Namespace) -> int:
-    """Emit the source-committed encyclopedia tree under ``out_dir``.
-
-    Lives under ``scaffold`` because the encyclopedia is the schema
-    catalogue (every layer / sub-layer / axis / option) -- the same
-    introspection surface used at recipe-authoring time."""
-
-    from . import render_encyclopedia
-
-    written = render_encyclopedia.write_all(Path(args.output))
-    print(
-        f"[macroforecast scaffold encyclopedia] wrote "
-        f"{len(written)} pages to {args.output}",
-        file=sys.stderr,
-    )
-    return 0
-
-
-def _cmd_run(args: argparse.Namespace) -> int:
-    # print manifest path on success; show clean error for bad YAML/path (v0.8.x)
-    import macroforecast
-    import yaml
-
-    recipe_path = Path(args.recipe).resolve()
-    if not recipe_path.exists():
-        print(f"error: recipe not found: {recipe_path}", file=sys.stderr)
-        return 2
-    output_dir = Path(args.output_directory).resolve()
-    print(f"[macroforecast run] {recipe_path} -> {output_dir}", file=sys.stderr)
-    try:
-        result = macroforecast.run(recipe_path, output_directory=output_dir)
-    except yaml.YAMLError as exc:
-        # Show first line of yaml error only; full multi-line yaml error is noisy
-        first_line = str(exc).splitlines()[0] if str(exc) else str(exc)
-        print(f"Error: invalid YAML in {recipe_path}: {first_line}", file=sys.stderr)
-        return 2
-    except FileNotFoundError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
-        return 2
-    except Exception as exc:  # noqa: BLE001
-        print(f"Error: {type(exc).__name__}: {exc}", file=sys.stderr)
-        return 1
-    failed = [c for c in result.cells if c.error is not None]
-    print(
-        f"[macroforecast run] {len(result.cells)} cells "
-        f"({len(result.cells) - len(failed)} ok, {len(failed)} failed)",
-        file=sys.stderr,
-    )
-    # Print manifest path and forecasts.csv path on success (v0.8.x)
-    manifest_path = output_dir / "manifest.json"
-    if manifest_path.exists():
-        print(f"\nManifest: {manifest_path}\n", file=sys.stderr)
-    forecasts_path = output_dir / "forecasts.csv"
-    if forecasts_path.exists():
-        print(f"Forecasts: {forecasts_path}\n", file=sys.stderr)
-    if failed:
-        for cell in failed:
-            print(f"  ! {cell.cell_id}: {cell.error}", file=sys.stderr)
-        return 1
-    return 0
-
-
-def _cmd_replicate(args: argparse.Namespace) -> int:
-    import macroforecast
-
-    manifest_path = Path(args.manifest).resolve()
-    if not manifest_path.exists():
-        print(f"error: manifest not found: {manifest_path}", file=sys.stderr)
-        return 2
-    print(f"[macroforecast replicate] {manifest_path}", file=sys.stderr)
-    result = macroforecast.replicate(manifest_path)
-    summary = {
-        "recipe_match": bool(getattr(result, "recipe_match", False)),
-        "sink_hashes_match": bool(getattr(result, "sink_hashes_match", False)),
-        "per_cell_match": getattr(result, "per_cell_match", None),
-    }
-    print(json.dumps(summary, indent=2))
-    return 0 if summary["sink_hashes_match"] else 1
-
-
-def _cmd_validate(args: argparse.Namespace) -> int:
-    """Pre-flight schema check: parse + per-layer ``validate_layer``
-    walk. Catches schema-level mistakes (unknown axis, missing required
-    leaf_config field, gate violation) before the user pays for an
-    end-to-end run."""
-
-    import importlib
-
-    import yaml
-
-    recipe_path = Path(args.recipe).resolve()
-    if not recipe_path.exists():
-        print(f"error: recipe not found: {recipe_path}", file=sys.stderr)
-        return 2
-    with recipe_path.open(encoding="utf-8") as fh:
-        recipe = yaml.safe_load(fh)
-    if not isinstance(recipe, dict):
-        print(f"error: {recipe_path} is not a YAML mapping", file=sys.stderr)
-        return 2
-
-    layer_validators = (
-        ("3_feature_engineering", "macroforecast.features.schema"),
-        ("4_forecasting_model", "macroforecast.models.schema"),
-        ("5_evaluation", "macroforecast.core.layers.l5"),
-        ("6_statistical_tests", "macroforecast.core.layers.l6"),
-        ("7_interpretation", "macroforecast.core.layers.l7"),
-        ("8_output", "macroforecast.core.layers.l8"),
-    )
-    hard_errors: list[str] = []
-    for key, module_name in layer_validators:
-        block = recipe.get(key)
-        if block is None:
-            continue
-        try:
-            module = importlib.import_module(module_name)
-        except ImportError:
-            continue
-        validator = getattr(module, "validate_layer", None)
-        if validator is None:
-            continue
-        try:
-            report = validator(block)
-        except Exception as exc:  # noqa: BLE001
-            hard_errors.append(f"{key}: {type(exc).__name__}: {exc}")
-            continue
-        for issue in getattr(report, "hard_errors", ()) or ():
-            hard_errors.append(f"{key}.{issue.location}: {issue.message}")
-    if hard_errors:
-        print(f"[macroforecast validate] {recipe_path}: {len(hard_errors)} error(s)", file=sys.stderr)
-        for err in hard_errors:
-            print(f"  ! {err}", file=sys.stderr)
-        return 1
-    print(f"[macroforecast validate] {recipe_path}: OK", file=sys.stderr)
-    return 0
+from .renderer import check_all, write_all
 
 
 def main(argv: list[str] | None = None) -> int:
+    args_in = list(sys.argv[1:] if argv is None else argv)
+    if args_in and args_in[0] == "encyclopedia":
+        args_in.pop(0)
+
     parser = argparse.ArgumentParser(
-        prog="macroforecast",
-        description="macroforecast CLI -- recipe scaffold, runner, replicator, validator.",
+        prog="python -m tools.docgen",
+        description="Regenerate or check the committed docs/reference tree.",
     )
-    sub = parser.add_subparsers(dest="command")
-
-    scaffold = sub.add_parser("scaffold", help="Generate a recipe from a template.")
-    scaffold.add_argument(
-        "-o", "--output",
-        default="recipe.yaml",
-        help="Where to write the generated recipe (default: ./recipe.yaml).",
-    )
-    scaffold.add_argument(
-        "--include-diagnostics",
-        action="store_true",
-        help="Also walk diagnostic layers.",
-    )
-    scaffold.set_defaults(func=_cmd_scaffold)
-
-    encyc_p = sub.add_parser(
-        "encyclopedia",
-        help=(
-            "Emit the source-committed encyclopedia tree under <output>. "
-            "Used to refresh ``docs/reference/`` after editing the "
-            "OptionDoc registry; CI diffs the output to enforce sync."
-        ),
-    )
-    encyc_p.add_argument(
+    parser.add_argument(
         "output",
-        help="Output directory (e.g. ``docs/reference``).",
+        nargs="?",
+        default="docs/reference",
+        help="Reference output directory (default: docs/reference).",
     )
-    encyc_p.set_defaults(func=_cmd_encyclopedia)
-
-    run_p = sub.add_parser("run", help="Execute a recipe end-to-end.")
-    run_p.add_argument("recipe", help="Path to the recipe YAML.")
-    run_p.add_argument(
-        "-o", "--output-directory",
-        default="out/",
-        help="Output directory (default: ./out/).",
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Exit non-zero if output differs from generated reference pages.",
     )
-    run_p.set_defaults(func=_cmd_run)
+    args = parser.parse_args(args_in)
 
-    rep_p = sub.add_parser("replicate", help="Replicate a stored manifest.")
-    rep_p.add_argument("manifest", help="Path to manifest.json from a prior run.")
-    rep_p.set_defaults(func=_cmd_replicate)
+    output = Path(args.output)
+    if args.check:
+        ok, messages = check_all(output)
+        if ok:
+            print(f"[tools.docgen] {output} is up to date")
+            return 0
+        print(f"[tools.docgen] {output} is out of date", file=sys.stderr)
+        for message in messages:
+            print(message, file=sys.stderr)
+        return 1
 
-    val_p = sub.add_parser("validate", help="Parse + schema-validate a recipe (no execution).")
-    val_p.add_argument("recipe", help="Path to the recipe YAML.")
-    val_p.set_defaults(func=_cmd_validate)
-
-    args = parser.parse_args(argv)
-    if not getattr(args, "command", None):
-        parser.print_help()
-        return 0
-    return args.func(args)
-
-
-if __name__ == "__main__":  # pragma: no cover
-    sys.exit(main())
+    written = write_all(output)
+    print(f"[tools.docgen] wrote {len(written)} pages to {output}", file=sys.stderr)
+    return 0

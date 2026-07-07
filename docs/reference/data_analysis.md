@@ -2,588 +2,1643 @@
 
 [Back to reference](index.md)
 
-## Purpose
+One-panel summaries and before/after preprocessing diagnostics.
 
-`macroforecast.data_analysis` is the read-only inspection module for canonical
-pandas panels. It covers two related tasks:
+## Public Symbols
 
-| Task | Main function | Input count | Use case |
-| --- | --- | ---: | --- |
-| Single-panel summary | `summarize_data(data)` | 1 | Inspect one raw, processed, or custom panel. |
-| Raw-vs-processed comparison | `analyze_data(raw, clean)` | 2 | Inspect what changed after preprocessing. |
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `DEFAULT_DISTRIBUTION_METRICS` | data | Built-in immutable sequence. |
+| `DEFAULT_SUMMARY_METRICS` | data | Built-in immutable sequence. |
+| `DataAnalysisReport` | class | Container returned by :func:`analyze_data`. |
+| `DataSummaryReport` | class | Container returned by :func:`summarize_data`. |
+| `changed_cell_count` | function | Return the number of changed common-index/common-column cells. |
+| `changed_cell_summary` | function | Return changed-cell count and rate for the common sample. |
+| `changed_cells` | function | Return a boolean mask of changed common-index/common-column cells. |
+| `cleaning_effect_summary` | function | Normalize preprocessing metadata into a compact data analysis summary. |
+| `compare_panels` | function | Compare raw and cleaned panels at panel, column, index, and cell level. |
+| `correlation_matrix` | function | Return a numeric correlation matrix for one panel. |
+| `correlation_shift` | function | Return cleaned-minus-raw correlation matrix for common numeric columns. |
+| `mackinnon_pp_pvalue` | function | Approximate MacKinnon p-value for the Phillips-Perron Z_tau statistic. |
+| `analyze_data` | function | Run the standard data analysis suite on raw and cleaned panels. |
+| `distribution_shift` | function | Return per-series distribution changes from raw to cleaned data. |
+| `missing_rates` | function | Return per-series missing rates. |
+| `missing_summary` | function | Return per-series missing-count, missing-rate, and longest-gap summary. |
+| `missing_shift` | function | Return per-column missing-count and missing-rate changes. |
+| `observation_counts` | function | Return per-series non-missing observation counts. |
+| `outlier_summary` | function | Return per-series outlier counts and rates for one panel. |
+| `panel_overview` | function | Return panel-level shape, date range, frequency, and missingness. |
+| `panel_snapshot` | function | Return a compact single-panel snapshot for reports and provenance. |
+| `panel_snapshots` | function | Return compact before/after panel snapshots. |
+| `adf_test` | function | Augmented Dickey-Fuller unit-root test for a single series. |
+| `kpss_test` | function | KPSS stationarity test for a single series. |
+| `acf` | function | Sample autocorrelation function (stats::acf / forecast::Acf). |
+| `johansen_cointegration` | function | Johansen cointegration test (R urca::ca.jo / statsmodels coint_johansen). |
+| `engle_granger` | function | Engle-Granger two-step residual-based cointegration test. |
+| `phillips_ouliaris` | function | Phillips-Ouliaris residual-based cointegration test. |
+| `variance_ratio` | function | Lo-MacKinlay variance-ratio test of the random-walk null. |
+| `structural_stability` | function | OLS-CUSUM test for parameter stability of a regression. |
+| `newey_west` | function | Newey-West HAC covariance for an OLS regression. |
+| `vcov_hc` | function | Heteroskedasticity-consistent (White) covariance for an OLS regression. |
+| `breusch_pagan_test` | function | Breusch-Pagan test for heteroskedasticity in an OLS regression. |
+| `pacf` | function | Sample partial autocorrelation function (stats::pacf / forecast::Pacf). |
+| `ndiffs` | function | Number of first differences to make a series stationary (forecast::ndiffs). |
+| `nsdiffs` | function | Number of seasonal differences via seasonal strength (forecast::nsdiffs). |
+| `phillips_perron_test` | function | Run the native Phillips-Perron Z_tau unit-root test. |
+| `dfgls_test` | function | Elliott-Rothenberg-Stock DF-GLS unit-root test for a single series. |
+| `zivot_andrews_test` | function | Zivot-Andrews unit-root test allowing one endogenous structural break. |
+| `sample_coverage` | function | Return per-series sample start, end, observation count, and missingness. |
+| `stationarity_tests` | function | Run ADF, Phillips-Perron, KPSS, or all three on one panel. |
+| `summarize_data` | function | Run the standard single-panel summary suite. |
+| `univariate_summary` | function | Return per-series descriptive statistics for numeric panel columns. |
 
-This module validates inputs, computes tables, and returns report objects. It
-does not load data, transform values, impute missing observations, create
-features, fit models, evaluate forecasts, or write files.
+## Data And Module Values
 
-Inputs must satisfy the canonical panel contract used by
-[`macroforecast.data`](data.md): `pandas.DataFrame`, `DatetimeIndex` named
-`"date"`, ascending dates, no duplicate dates, no duplicate columns, numeric
-values or `NaN`, no infinite values, and non-empty shape. `summarize_data(...)`
-also accepts `DataBundle`, `DataSpec`, `(panel, metadata)`, and
-`PreprocessedData`-style objects with `.panel` and `.metadata`.
+### `DEFAULT_DISTRIBUTION_METRICS`
 
-## Public Functions
+Kind: `data`
 
-| Function | Kind | Output | Purpose |
+```python
+DEFAULT_DISTRIBUTION_METRICS = ("mean_change", "sd_change", "sd_ratio", "skew_change", "kurtosis_change", "ks_statistic")
+```
+### `DEFAULT_SUMMARY_METRICS`
+
+Kind: `data`
+
+```python
+DEFAULT_SUMMARY_METRICS = ("mean", "sd", "min", "max", "n_obs", "n_missing")
+```
+
+## Callable And Class Reference
+
+### DataAnalysisReport
+
+Qualified name: `macroforecast.data_analysis.core.DataAnalysisReport`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.DataAnalysisReport(comparison: dict[str, Any], missing_shift: pd.DataFrame, distribution_shift: pd.DataFrame, correlation_shift: pd.DataFrame | None = None, cleaning_effect_summary: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Container returned by :func:`analyze_data`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `summarize_data(data, ...)` | single-panel report | `DataSummaryReport` | Standard summary suite for one panel. |
-| `panel_overview(data)` | single-panel helper | `dict` | Shape, dates, frequency, missingness, metadata keys. |
-| `panel_snapshot(data)` | single-panel helper | `dict` | Compact rows/columns/dates/missingness/frequency snapshot. |
-| `sample_coverage(data)` | single-panel helper | `DataFrame` | Per-series first/last valid dates, observation counts, missing rates. |
-| `observation_counts(data)` | single-panel helper | `Series` | Per-series non-missing observation counts. |
-| `missing_rates(data)` | single-panel helper | `Series` | Per-series missing rates. |
-| `univariate_summary(data, ...)` | single-panel helper | `DataFrame` | Per-series numeric descriptive statistics. |
-| `missing_summary(data)` | single-panel helper | `DataFrame` | Missing count, missing rate, longest missing run. |
-| `correlation_matrix(data, ...)` | single-panel helper | `DataFrame` | Pairwise numeric correlation matrix. |
-| `outlier_summary(data, ...)` | single-panel helper | `DataFrame` | IQR and/or z-score outlier counts and rates. |
-| `stationarity_tests(data, ...)` | single-panel helper | `dict` | ADF, Phillips-Perron, KPSS, or all three. |
-| `phillips_perron_test(values, ...)` | statistic helper | `dict` | Native PP fallback used when `arch` is unavailable. |
-| `mackinnon_pp_pvalue(z_tau, ...)` | statistic helper | `float` | Approximate p-value helper for native PP. |
-| `analyze_data(raw, clean, ...)` | before/after report | `DataAnalysisReport` | Standard comparison suite for raw and processed panels. |
-| `compare_panels(raw, clean, ...)` | before/after helper | `dict` | Shape/date/column/index comparison plus changed-cell count. |
-| `panel_snapshots(raw, clean)` | before/after helper | `dict` | Compact before/after snapshots. |
-| `changed_cells(raw, clean, ...)` | before/after helper | `DataFrame` | Boolean changed-cell mask on common dates and columns. |
-| `changed_cell_count(raw, clean, ...)` | before/after helper | `int` | Count changed common cells. |
-| `changed_cell_summary(raw, clean, ...)` | before/after helper | `dict` | Changed-cell denominator, count, rate, and tolerance. |
-| `missing_shift(raw, clean)` | before/after helper | `DataFrame` | Missing-count and missing-rate changes. |
-| `distribution_shift(raw, clean, ...)` | before/after helper | `DataFrame` | Mean, scale, tail-shape, and KS-style shifts. |
-| `correlation_shift(raw, clean, ...)` | before/after helper | `DataFrame` | Cleaned-minus-raw correlation differences. |
-| `cleaning_effect_summary(...)` | metadata helper | `dict` | Normalize preprocessing metadata and counters. |
+| `comparison` | positional or keyword | `dict[str, Any]` | `required` |
+| `missing_shift` | positional or keyword | `pd.DataFrame` | `required` |
+| `distribution_shift` | positional or keyword | `pd.DataFrame` | `required` |
+| `correlation_shift` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `cleaning_effect_summary` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
 
-## Public Flow
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-bundle = mf.data.load_fred_md()
-summary = mf.data_analysis.summarize_data(
-    bundle,
-    include_outliers=True,
-    include_stationarity=True,
-)
-
-spec = mf.data.spec(bundle, target="INDPRO", horizons=[1, 3, 6, 12])
-processed = mf.preprocessing.reprocess(spec)
-
-analysis = mf.data_analysis.analyze_data(
-    spec.panel,
-    processed.panel,
-    include_correlation=True,
-)
+# Construct with the signature above:
+# mf.data_analysis.DataAnalysisReport(...)
 ```
 
-Example single-panel output:
+#### Dataclass Fields
 
-```python
-summary.overview
-```
-
-```python
-{
-    "n_rows": 4,
-    "n_columns": 2,
-    "start": "2020-01-01",
-    "end": "2020-04-01",
-    "missing_values": 1,
-    "frequency": "monthly",
-    "metadata_keys": ["dataset", "frequency"],
-}
-```
-
-Example raw-vs-processed output:
-
-```python
-analysis.comparison
-```
-
-```python
-{
-    "raw_shape": (4, 3),
-    "clean_shape": (4, 3),
-    "raw_missing_total": 1,
-    "clean_missing_total": 0,
-    "common_columns": ["y", "x1", "x2"],
-    "common_index_count": 4,
-    "changed_cell_count": 2,
-}
-```
-
-## summarize_data
-
-Run the standard one-panel summary suite.
-
-### Signature
-
-```python
-macroforecast.data_analysis.summarize_data(
-    data,
-    *,
-    metrics: Sequence[str] | None = None,
-    include_correlation: bool = False,
-    correlation_method: str = "pearson",
-    include_outliers: bool = False,
-    outlier_method: str = "iqr",
-    include_stationarity: bool = False,
-    stationarity_test: str = "multi",
-    stationarity_scope: str = "all",
-) -> DataSummaryReport
-```
-
-### Input
-
-| Name | Type | Default | Allowed values | Meaning |
-| --- | --- | --- | --- | --- |
-| `data` | `DataBundle`, `DataSpec`, `PreprocessedData`, `(panel, metadata)`, or `DataFrame` | required | canonical panel input | Panel to summarize. |
-| `metrics` | sequence or `None` | default summary metrics | `mean`, `sd`, `min`, `max`, `skew`, `kurtosis`, `n_obs`, `n_missing` | Univariate statistics to compute. |
-| `include_correlation` | `bool` | `False` | `True`, `False` | Include `correlation_matrix(...)`. |
-| `correlation_method` | `str` | `"pearson"` | `"pearson"`, `"spearman"`, `"kendall"` | Correlation method when correlation is included. |
-| `include_outliers` | `bool` | `False` | `True`, `False` | Include `outlier_summary(...)`. |
-| `outlier_method` | `str` | `"iqr"` | `"iqr"`, `"zscore"`, `"multi"`, `"both"` | Outlier rule when outliers are included. |
-| `include_stationarity` | `bool` | `False` | `True`, `False` | Include `stationarity_tests(...)`. |
-| `stationarity_test` | `str` | `"multi"` | `"adf"`, `"pp"`, `"kpss"`, `"multi"`, `"none"` | Unit-root/stationarity test choice. |
-| `stationarity_scope` | `str` | `"all"` | `"all"`, `"target_and_predictors"`, `"target_only"`, `"predictors_only"` | Columns to test. |
-
-### Defaults
-
-| Default | Value |
-| --- | --- |
-| Summary metrics | `DEFAULT_SUMMARY_METRICS = ("mean", "sd", "min", "max", "n_obs", "n_missing")` |
-| Correlation included | `False` |
-| Outlier summary included | `False` |
-| Stationarity tests included | `False` |
-| Metadata stage | `metadata["data_analysis"]` with `analysis_type="single_panel"` |
-
-### Output
-
-Returns `DataSummaryReport`.
-
-| Field | Type | Meaning |
+| Field | Type | Default |
 | --- | --- | --- |
-| `overview` | `dict` | Panel row/column count, date range, missing total, inferred frequency, metadata keys. |
-| `coverage` | `DataFrame` | Per-series first/last observed date, `n_obs`, `n_missing`, missing rate. |
-| `univariate` | `DataFrame` | Per-series descriptive statistics selected by `metrics`. |
-| `missing` | `DataFrame` | Per-series missing count, missing rate, longest missing run. |
-| `correlation` | `DataFrame` or `None` | Numeric correlation matrix when requested. |
-| `outliers` | `DataFrame` or `None` | IQR and/or z-score outlier counts and rates when requested. |
-| `stationarity` | `dict` or `None` | ADF/PP/KPSS results when requested. |
-| `metadata` | `dict` | Input metadata plus compact `data_analysis` run metadata. |
+| `comparison` | `dict[str, Any]` | `required` |
+| `missing_shift` | `pd.DataFrame` | `required` |
+| `distribution_shift` | `pd.DataFrame` | `required` |
+| `correlation_shift` | `pd.DataFrame \| None` | `None` |
+| `cleaning_effect_summary` | `dict[str, Any]` | `default_factory` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
 
-`DataSummaryReport.to_dict()` converts DataFrame fields into nested
-dictionaries for serialization.
+#### Public Methods
 
-The returned `coverage`, `univariate`, `missing`, `correlation`, and `outliers`
-tables carry `attrs["macroforecast_metadata"] == summary.metadata` when the
-table is present.
-
-### Metadata
-
-`summarize_data(...)` stores run-level facts, not duplicate result tables:
-
-```python
-summary.metadata["data_analysis"]
-```
-
-| Key | Meaning |
-| --- | --- |
-| `analysis_type` | `"single_panel"`. |
-| `metrics` | Univariate metrics requested. |
-| `include_correlation`, `correlation_method` | Correlation option state. |
-| `include_outliers`, `outlier_method` | Outlier option state. |
-| `include_stationarity`, `stationarity_test`, `stationarity_scope` | Stationarity option state. |
-| `panel` | Compact panel snapshot. |
-| `input` | Source metadata snapshot and metadata-key list. |
-| `outputs` | Boolean flags for report fields included. |
-
-## Single-Panel Helpers
-
-### panel_overview
-
-```python
-macroforecast.data_analysis.panel_overview(data) -> dict
-```
-
-Input is the same canonical one-panel input accepted by `summarize_data(...)`.
-Output includes the full `panel_info(...)` dictionary plus `metadata_keys`.
-
-### panel_snapshot
-
-```python
-macroforecast.data_analysis.panel_snapshot(data) -> dict
-```
-
-Returns a compact dictionary with `n_rows`, `n_columns`, `start`, `end`,
-`missing_values`, and `frequency`.
-
-### sample_coverage
-
-```python
-macroforecast.data_analysis.sample_coverage(data) -> pandas.DataFrame
-```
-
-Output columns:
-
-| Column | Meaning |
-| --- | --- |
-| `first_valid` | First non-missing date for the series. |
-| `last_valid` | Last non-missing date for the series. |
-| `n_obs` | Non-missing observation count. |
-| `n_missing` | Missing observation count. |
-| `missing_rate` | `n_missing / n_panel_rows`. |
-
-`observation_counts(data)` returns `sample_coverage(data)["n_obs"]`.
-`missing_rates(data)` returns `sample_coverage(data)["missing_rate"]`.
-
-### univariate_summary
-
-```python
-macroforecast.data_analysis.univariate_summary(
-    data,
-    *,
-    metrics: Sequence[str] | None = None,
-) -> pandas.DataFrame
-```
-
-| Input | Default | Allowed values |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| `metrics` | default summary metrics | `mean`, `sd`, `min`, `max`, `skew`, `kurtosis`, `n_obs`, `n_missing` |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### DataSummaryReport
 
-Returns one row per numeric column. Unknown metrics raise `ValueError`.
+Qualified name: `macroforecast.data_analysis.summary.DataSummaryReport`
 
-### missing_summary
-
-```python
-macroforecast.data_analysis.missing_summary(data) -> pandas.DataFrame
-```
-
-Returns `n_missing`, `missing_rate`, and `longest_missing_run` for each
-series.
-
-### correlation_matrix
+#### Signature
 
 ```python
-macroforecast.data_analysis.correlation_matrix(
-    data,
-    *,
-    method: str = "pearson",
-    min_periods: int = 1,
-) -> pandas.DataFrame
+macroforecast.data_analysis.DataSummaryReport(overview: dict[str, Any], coverage: pd.DataFrame, univariate: pd.DataFrame, missing: pd.DataFrame, correlation: pd.DataFrame | None = None, outliers: pd.DataFrame | None = None, stationarity: dict[str, Any] | None = None, metadata: dict[str, Any] = <factory>) -> None
 ```
 
-| Input | Default | Allowed values |
+#### Description
+
+Container returned by :func:`summarize_data`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `overview` | positional or keyword | `dict[str, Any]` | `required` |
+| `coverage` | positional or keyword | `pd.DataFrame` | `required` |
+| `univariate` | positional or keyword | `pd.DataFrame` | `required` |
+| `missing` | positional or keyword | `pd.DataFrame` | `required` |
+| `correlation` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `outliers` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `stationarity` | positional or keyword | `dict[str, Any] \| None` | `None` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.data_analysis.DataSummaryReport(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
 | --- | --- | --- |
-| `method` | `"pearson"` | `"pearson"`, `"spearman"`, `"kendall"` |
-| `min_periods` | `1` | positive integer |
+| `overview` | `dict[str, Any]` | `required` |
+| `coverage` | `pd.DataFrame` | `required` |
+| `univariate` | `pd.DataFrame` | `required` |
+| `missing` | `pd.DataFrame` | `required` |
+| `correlation` | `pd.DataFrame \| None` | `None` |
+| `outliers` | `pd.DataFrame \| None` | `None` |
+| `stationarity` | `dict[str, Any] \| None` | `None` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
 
-Invalid methods or `min_periods < 1` raise `ValueError`.
+#### Public Methods
 
-### outlier_summary
-
-```python
-macroforecast.data_analysis.outlier_summary(
-    data,
-    *,
-    method: str = "iqr",
-    iqr_threshold: float = 10.0,
-    zscore_threshold: float = 3.0,
-) -> pandas.DataFrame
-```
-
-| Input | Default | Allowed values |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| `method` | `"iqr"` | `"iqr"`, `"zscore"`, `"multi"`, `"both"` |
-| `iqr_threshold` | `10.0` | positive float |
-| `zscore_threshold` | `3.0` | positive float |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### changed_cell_count
 
-The IQR default matches the McCracken-Ng/FRED-MD outlier multiplier used by
-preprocessing defaults. The z-score path uses population standard deviation
-(`ddof=0`) to match `macroforecast.preprocessing.zscore_outlier_clean(...)`.
-Non-positive thresholds raise `ValueError`.
+Qualified name: `macroforecast.data_analysis.core.changed_cell_count`
 
-### stationarity_tests
+#### Signature
 
 ```python
-macroforecast.data_analysis.stationarity_tests(
-    data,
-    *,
-    test: str = "multi",
-    scope: str = "all",
-    target: str | None = None,
-    targets: Sequence[str] | None = None,
-    alpha: float = 0.05,
-) -> dict
+macroforecast.data_analysis.changed_cell_count(raw: pd.DataFrame, clean: pd.DataFrame, *, tolerance: float = 0.0) -> int
 ```
 
-| Input | Default | Allowed values |
-| --- | --- | --- |
-| `test` | `"multi"` | `"adf"`, `"pp"`, `"kpss"`, `"multi"`, `"none"` |
-| `scope` | `"all"` | `"all"`, `"target_and_predictors"`, `"target_only"`, `"predictors_only"` |
-| `target`, `targets` | `None` | target names in the panel |
-| `alpha` | `0.05` | float strictly between `0` and `1` |
+#### Description
 
-For `scope="target_only"` and `scope="predictors_only"`, target names must be
-known from arguments or from a `DataSpec`. Missing target columns raise
-`ValueError`.
+Return the number of changed common-index/common-column cells.
 
-Output dictionary:
+#### Parameters
 
-| Key | Meaning |
-| --- | --- |
-| `test`, `scope`, `alpha` | Requested test settings. |
-| `n_series` | Number of tested series. |
-| `by_series` | Per-series test results. |
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+| `tolerance` | keyword only | `float` | `0.0` |
 
-Per-test outputs:
+#### Returns
 
-| Test | Key outputs |
-| --- | --- |
-| `adf` | `statistic`, `p_value`, `reject_unit_root` |
-| `pp` | `statistic`, `p_value`, `reject_unit_root`, `implementation`, `bandwidth_lags` when native |
-| `kpss` | `statistic`, `p_value`, `reject_stationarity` |
+`int`
 
-`pp` uses `arch.unitroot.PhillipsPerron` when available. Otherwise it falls
-back to macroforecast's native Newey-West/MacKinnon implementation.
-
-### Phillips-Perron Helpers
+#### Minimal Use
 
 ```python
-macroforecast.data_analysis.phillips_perron_test(values, *, alpha=0.05) -> dict
-macroforecast.data_analysis.mackinnon_pp_pvalue(z_tau, *, n, regression="c") -> float
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.changed_cell_count(...)
 ```
+### changed_cell_summary
 
-`phillips_perron_test(...)` drops non-finite values, requires at least eight
-finite observations, and returns `status="insufficient_data"` or
-`status="singular_design"` instead of raising for those data conditions.
+Qualified name: `macroforecast.data_analysis.core.changed_cell_summary`
 
-`mackinnon_pp_pvalue(...)` approximates the MacKinnon p-value for the constant
-case (`regression="c"`) using the internal critical-value table. For other
-regression labels it falls back to a normal CDF approximation. Non-finite
-statistics and non-positive sample sizes raise `ValueError`.
-
-## analyze_data
-
-Run the standard before/after data analysis suite.
-
-### Signature
+#### Signature
 
 ```python
-macroforecast.data_analysis.analyze_data(
-    raw,
-    clean,
-    *,
-    distribution_metrics: Sequence[str] | None = None,
-    include_correlation: bool = False,
-    correlation_method: str = "pearson",
-    sample: str = "common_index",
-    cleaning_metadata: Mapping[str, object] | None = None,
-    cleaning_log: Mapping[str, object] | None = None,
-    transform_map_applied: Mapping[str, int] | None = None,
-    n_imputed_cells: int | None = None,
-    n_outliers_flagged: int | None = None,
-    n_truncated_obs: int | None = None,
-    column_metadata: Mapping[str, object] | None = None,
-    tolerance: float = 0.0,
-) -> DataAnalysisReport
+macroforecast.data_analysis.changed_cell_summary(raw: pd.DataFrame, clean: pd.DataFrame, *, tolerance: float = 0.0) -> dict[str, Any]
 ```
 
-### Input
+#### Description
 
-| Name | Type | Default | Allowed values | Meaning |
-| --- | --- | --- | --- | --- |
-| `raw` | `DataFrame` | required | canonical panel | Before/preprocessing panel. |
-| `clean` | `DataFrame` | required | canonical panel | After/preprocessing panel. |
-| `distribution_metrics` | sequence or `None` | all defaults | `mean_change`, `sd_change`, `sd_ratio`, `skew_change`, `kurtosis_change`, `ks_statistic` | Distribution-shift columns to compute. |
-| `include_correlation` | `bool` | `False` | `True`, `False` | Include cleaned-minus-raw correlations. |
-| `correlation_method` | `str` | `"pearson"` | `"pearson"`, `"spearman"`, `"kendall"` | Correlation method. |
-| `sample` | `str` | `"common_index"` | `"common_index"`, `"full"` | Date sample used by distribution and correlation shifts. |
-| `cleaning_metadata` | mapping or `None` | auto from clean panel metadata | preprocessing metadata mapping | Source for effect counters and logs. |
-| `cleaning_log` | mapping or `None` | from metadata when available | mapping | Optional explicit cleaning log. |
-| `transform_map_applied` | mapping or `None` | from metadata when available | mapping from column to t-code | Optional explicit transform-code map. |
-| `n_imputed_cells` | int or `None` | from metadata when available | non-negative count | Optional imputation counter. |
-| `n_outliers_flagged` | int or `None` | from metadata when available | non-negative count | Optional outlier counter. |
-| `n_truncated_obs` | int or `None` | from metadata when available | non-negative count | Optional truncation counter. |
-| `column_metadata` | mapping or `None` | from metadata when available | mapping | Optional per-column preprocessing metadata. |
-| `tolerance` | `float` | `0.0` | non-negative float | Absolute tolerance for changed-cell counting. |
+Return changed-cell count and rate for the common sample.
 
-### Defaults
+#### Parameters
 
-| Default | Value |
-| --- | --- |
-| Distribution metrics | all six `DEFAULT_DISTRIBUTION_METRICS` values |
-| Correlation included | `False` |
-| Comparison sample | `"common_index"` |
-| Changed-cell tolerance | `0.0` |
-| Metadata stage | `metadata["data_analysis"]` with `analysis_type="raw_vs_processed"` |
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+| `tolerance` | keyword only | `float` | `0.0` |
 
-### Output
+#### Returns
 
-Returns `DataAnalysisReport`.
+`dict[str, Any]`
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `comparison` | `dict` | Shape, date range, common columns/index, missing totals, changed-cell count. |
-| `missing_shift` | `DataFrame` | Per-column raw/clean missing counts and rate changes. |
-| `distribution_shift` | `DataFrame` | Per-column distribution changes for common numeric columns. |
-| `correlation_shift` | `DataFrame` or `None` | Cleaned-minus-raw correlation matrix when requested. |
-| `cleaning_effect_summary` | `dict` | Normalized preprocessing counters, transform map, cleaning log, column metadata. |
-| `metadata` | `dict` | Input metadata plus compact `data_analysis` run metadata. |
-
-`DataAnalysisReport.to_dict()` converts DataFrame fields into nested
-dictionaries for serialization.
-
-The returned `missing_shift`, `distribution_shift`, and `correlation_shift`
-tables carry `attrs["macroforecast_metadata"] == analysis.metadata` when the
-table is present.
-
-### Metadata
+#### Minimal Use
 
 ```python
-analysis.metadata["data_analysis"]
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.changed_cell_summary(...)
 ```
+### changed_cells
 
-| Key | Meaning |
-| --- | --- |
-| `analysis_type` | `"raw_vs_processed"`. |
-| `before` | Raw panel snapshot: rows, columns, start, end, missing count. |
-| `after` | Processed panel snapshot with the same fields. |
-| `common` | Common row/column counts and changed-cell count. |
-| `options` | Distribution metrics, correlation option, sample, and tolerance. |
-| `effects` | Compact preprocessing counters and metadata presence flags. |
-| `metadata_keys` | Metadata keys detected on raw and processed panels. |
+Qualified name: `macroforecast.data_analysis.core.changed_cells`
 
-### Sample Choice
-
-`distribution_shift(...)` and `correlation_shift(...)` default to
-`sample="common_index"`. This avoids mixing distribution changes with dates
-that only exist before or after preprocessing. Use `sample="full"` only when
-the full available sample of each panel is the intended comparison.
-
-`ks_statistic` is the two-sample KS statistic only; it does not compute a
-p-value.
-
-## Before/After Helpers
-
-### compare_panels
+#### Signature
 
 ```python
-macroforecast.data_analysis.compare_panels(
-    raw,
-    clean,
-    *,
-    tolerance: float = 0.0,
-) -> dict
+macroforecast.data_analysis.changed_cells(raw: pd.DataFrame, clean: pd.DataFrame, *, tolerance: float = 0.0) -> pd.DataFrame
 ```
 
-Output keys include `raw_shape`, `clean_shape`, raw/clean index types, date
-ranges, missing totals, `common_columns`, raw-only and clean-only columns,
-common/raw-only/clean-only index counts, and `changed_cell_count`.
+#### Description
 
-### panel_snapshots
+Return a boolean mask of changed common-index/common-column cells.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+| `tolerance` | keyword only | `float` | `0.0` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-macroforecast.data_analysis.panel_snapshots(raw, clean) -> dict
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.changed_cells(...)
 ```
-
-Returns `{"before": ..., "after": ...}` using compact snapshots.
-
-### changed_cells, changed_cell_count, changed_cell_summary
-
-```python
-macroforecast.data_analysis.changed_cells(raw, clean, *, tolerance=0.0) -> pandas.DataFrame
-macroforecast.data_analysis.changed_cell_count(raw, clean, *, tolerance=0.0) -> int
-macroforecast.data_analysis.changed_cell_summary(raw, clean, *, tolerance=0.0) -> dict
-```
-
-All three use common dates and common columns. Numeric cells whose absolute
-difference is less than or equal to `tolerance` are treated as unchanged.
-Negative tolerance raises `ValueError`.
-
-### missing_shift
-
-```python
-macroforecast.data_analysis.missing_shift(raw, clean) -> pandas.DataFrame
-```
-
-Returns one row per unioned column with `column_status`, raw and clean sample
-sizes, raw and clean missing counts, missing-count change, missing rates, and
-missing-rate change.
-
-### distribution_shift
-
-```python
-macroforecast.data_analysis.distribution_shift(
-    raw,
-    clean,
-    *,
-    metrics: Sequence[str] | None = None,
-    sample: str = "common_index",
-) -> pandas.DataFrame
-```
-
-Allowed metrics are `mean_change`, `sd_change`, `sd_ratio`, `skew_change`,
-`kurtosis_change`, and `ks_statistic`. Unknown metrics raise `ValueError`.
-
-### correlation_shift
-
-```python
-macroforecast.data_analysis.correlation_shift(
-    raw,
-    clean,
-    *,
-    method: str = "pearson",
-    fill_value: float | None = None,
-    sample: str = "common_index",
-) -> pandas.DataFrame
-```
-
-Returns the cleaned-minus-raw correlation matrix for common numeric columns.
-If fewer than two common numeric columns exist, returns an empty square
-DataFrame indexed by the available common numeric columns.
-
 ### cleaning_effect_summary
 
+Qualified name: `macroforecast.data_analysis.core.cleaning_effect_summary`
+
+#### Signature
+
 ```python
-macroforecast.data_analysis.cleaning_effect_summary(
-    *,
-    cleaning_metadata: Mapping[str, object] | None = None,
-    cleaning_log: Mapping[str, object] | None = None,
-    transform_map_applied: Mapping[str, int] | None = None,
-    n_imputed_cells: int | None = None,
-    n_outliers_flagged: int | None = None,
-    n_truncated_obs: int | None = None,
-    column_metadata: Mapping[str, object] | None = None,
-) -> dict
+macroforecast.data_analysis.cleaning_effect_summary(*, cleaning_metadata: Mapping[str, Any] | None = None, cleaning_log: Mapping[str, Any] | None = None, transform_map_applied: Mapping[str, int] | None = None, n_imputed_cells: int | None = None, n_outliers_flagged: int | None = None, n_truncated_obs: int | None = None, column_metadata: Mapping[str, Any] | None = None) -> dict[str, Any]
 ```
 
-This helper normalizes preprocessing metadata into one compact dictionary. If
-explicit counters are not supplied, it tries to derive them from preprocessing
-step metadata.
+#### Description
 
-## Boundaries
+Normalize preprocessing metadata into a compact data analysis summary.
 
-| Question | Use | Why |
-| --- | --- | --- |
-| What does this one panel look like? | `mf.data_analysis.summarize_data(panel)` | One input, level summary. |
-| What changed from raw to processed? | `mf.data_analysis.analyze_data(raw, processed)` | Two inputs, before/after deltas. |
-| Which preprocessing choices ran? | `mf.preprocessing.report(processed)` | Execution log rather than statistical summary. |
-| Should this table be written to disk? | `mf.output` or `mf.reporting` | Output/rendering is separate from analysis. |
+#### Parameters
 
-- `adf_test` -- Augmented Dickey-Fuller unit-root test for a single series (flat result).
-- `kpss_test` -- KPSS stationarity test for a single series (flat result).
-- `dfgls_test` -- Elliott-Rothenberg-Stock DF-GLS GLS-detrended unit-root test (urca::ur.ers).
-- `zivot_andrews_test` -- Zivot-Andrews unit-root test with one endogenous structural break (urca::ur.za).
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `cleaning_metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `cleaning_log` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `transform_map_applied` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `n_imputed_cells` | keyword only | `int \| None` | `None` |
+| `n_outliers_flagged` | keyword only | `int \| None` | `None` |
+| `n_truncated_obs` | keyword only | `int \| None` | `None` |
+| `column_metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
 
-- `ndiffs` -- number of first differences for stationarity (KPSS/ADF/PP; forecast::ndiffs).
-- `nsdiffs` -- number of seasonal differences via STL seasonal strength (forecast::nsdiffs).
+#### Returns
 
-- `acf` -- sample autocorrelation function with confidence bands (stats::acf / forecast::Acf).
-- `pacf` -- sample partial autocorrelation function with confidence bands (stats::pacf / forecast::Pacf).
+`dict[str, Any]`
 
-- `johansen_cointegration` -- Johansen cointegration test (trace + max-eigenvalue, rank selection, cointegrating vectors; urca::ca.jo).
-- `engle_granger` -- Engle-Granger two-step residual-based cointegration test with cointegrating coefficients (statsmodels coint).
-- `phillips_ouliaris` -- Phillips-Ouliaris residual-based cointegration test, non-parametric LRV-corrected (urca::ca.po / tseries::po.test).
-- `variance_ratio` -- Lo-MacKinlay variance-ratio test of the random-walk null (arch VarianceRatio).
-- `structural_stability` -- OLS-CUSUM parameter-stability test with break-point estimate (strucchange::efp / vars::stability).
-- `newey_west` -- Newey-West HAC covariance for OLS coefficients with Bartlett kernel and coefficient table (sandwich::NeweyWest + lmtest::coeftest).
-- `vcov_hc` -- heteroskedasticity-consistent (White HC0-HC3) covariance for OLS coefficients with coefficient table (sandwich::vcovHC + lmtest::coeftest).
-- `breusch_pagan_test` -- Breusch-Pagan test for heteroskedasticity, Koenker studentized or classic variant (lmtest::bptest).
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.cleaning_effect_summary(...)
+```
+### compare_panels
+
+Qualified name: `macroforecast.data_analysis.core.compare_panels`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.compare_panels(raw: pd.DataFrame, clean: pd.DataFrame, *, tolerance: float = 0.0) -> dict[str, Any]
+```
+
+#### Description
+
+Compare raw and cleaned panels at panel, column, index, and cell level.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+| `tolerance` | keyword only | `float` | `0.0` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.compare_panels(...)
+```
+### correlation_matrix
+
+Qualified name: `macroforecast.data_analysis.summary.correlation_matrix`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.correlation_matrix(data: Any, *, method: CorrelationMethod = "pearson", min_periods: int = 1) -> pd.DataFrame
+```
+
+#### Description
+
+Return a numeric correlation matrix for one panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `min_periods` | keyword only | `int` | `1` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.correlation_matrix(...)
+```
+### correlation_shift
+
+Qualified name: `macroforecast.data_analysis.core.correlation_shift`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.correlation_shift(raw: pd.DataFrame, clean: pd.DataFrame, *, method: CorrelationMethod = "pearson", fill_value: float | None = None, sample: AnalysisSample = "common_index") -> pd.DataFrame
+```
+
+#### Description
+
+Return cleaned-minus-raw correlation matrix for common numeric columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `fill_value` | keyword only | `float \| None` | `None` |
+| `sample` | keyword only | `AnalysisSample` | `"common_index"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.correlation_shift(...)
+```
+### mackinnon_pp_pvalue
+
+Qualified name: `macroforecast.data_analysis.summary.mackinnon_pp_pvalue`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.mackinnon_pp_pvalue(z_tau: float, *, n: int, regression: str = "c") -> float
+```
+
+#### Description
+
+Approximate MacKinnon p-value for the Phillips-Perron Z_tau statistic.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `z_tau` | positional or keyword | `float` | `required` |
+| `n` | keyword only | `int` | `required` |
+| `regression` | keyword only | `str` | `"c"` |
+
+#### Returns
+
+`float`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.mackinnon_pp_pvalue(...)
+```
+### analyze_data
+
+Qualified name: `macroforecast.data_analysis.core.analyze_data`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.analyze_data(raw: pd.DataFrame, clean: pd.DataFrame, *, distribution_metrics: Sequence[DistributionMetric] | None = None, include_correlation: bool = False, correlation_method: CorrelationMethod = "pearson", sample: AnalysisSample = "common_index", cleaning_metadata: Mapping[str, Any] | None = None, cleaning_log: Mapping[str, Any] | None = None, transform_map_applied: Mapping[str, int] | None = None, n_imputed_cells: int | None = None, n_outliers_flagged: int | None = None, n_truncated_obs: int | None = None, column_metadata: Mapping[str, Any] | None = None, tolerance: float = 0.0) -> DataAnalysisReport
+```
+
+#### Description
+
+Run the standard data analysis suite on raw and cleaned panels.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+| `distribution_metrics` | keyword only | `Sequence[DistributionMetric] \| None` | `None` |
+| `include_correlation` | keyword only | `bool` | `False` |
+| `correlation_method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `sample` | keyword only | `AnalysisSample` | `"common_index"` |
+| `cleaning_metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `cleaning_log` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `transform_map_applied` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `n_imputed_cells` | keyword only | `int \| None` | `None` |
+| `n_outliers_flagged` | keyword only | `int \| None` | `None` |
+| `n_truncated_obs` | keyword only | `int \| None` | `None` |
+| `column_metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `tolerance` | keyword only | `float` | `0.0` |
+
+#### Returns
+
+`DataAnalysisReport`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.analyze_data(...)
+```
+### distribution_shift
+
+Qualified name: `macroforecast.data_analysis.core.distribution_shift`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.distribution_shift(raw: pd.DataFrame, clean: pd.DataFrame, *, metrics: Sequence[DistributionMetric] | None = None, sample: AnalysisSample = "common_index") -> pd.DataFrame
+```
+
+#### Description
+
+Return per-series distribution changes from raw to cleaned data.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+| `metrics` | keyword only | `Sequence[DistributionMetric] \| None` | `None` |
+| `sample` | keyword only | `AnalysisSample` | `"common_index"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.distribution_shift(...)
+```
+### missing_rates
+
+Qualified name: `macroforecast.data_analysis.summary.missing_rates`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.missing_rates(data: Any) -> pd.Series
+```
+
+#### Description
+
+Return per-series missing rates.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.missing_rates(...)
+```
+### missing_summary
+
+Qualified name: `macroforecast.data_analysis.summary.missing_summary`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.missing_summary(data: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return per-series missing-count, missing-rate, and longest-gap summary.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.missing_summary(...)
+```
+### missing_shift
+
+Qualified name: `macroforecast.data_analysis.core.missing_shift`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.missing_shift(raw: pd.DataFrame, clean: pd.DataFrame) -> pd.DataFrame
+```
+
+#### Description
+
+Return per-column missing-count and missing-rate changes.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.missing_shift(...)
+```
+### observation_counts
+
+Qualified name: `macroforecast.data_analysis.summary.observation_counts`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.observation_counts(data: Any) -> pd.Series
+```
+
+#### Description
+
+Return per-series non-missing observation counts.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.observation_counts(...)
+```
+### outlier_summary
+
+Qualified name: `macroforecast.data_analysis.summary.outlier_summary`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.outlier_summary(data: Any, *, method: OutlierMethod = "iqr", iqr_threshold: float = 10.0, zscore_threshold: float = 3.0) -> pd.DataFrame
+```
+
+#### Description
+
+Return per-series outlier counts and rates for one panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `method` | keyword only | `OutlierMethod` | `"iqr"` |
+| `iqr_threshold` | keyword only | `float` | `10.0` |
+| `zscore_threshold` | keyword only | `float` | `3.0` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.outlier_summary(...)
+```
+### panel_overview
+
+Qualified name: `macroforecast.data_analysis.summary.panel_overview`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.panel_overview(data: Any) -> dict[str, Any]
+```
+
+#### Description
+
+Return panel-level shape, date range, frequency, and missingness.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.panel_overview(...)
+```
+### panel_snapshot
+
+Qualified name: `macroforecast.data_analysis.summary.panel_snapshot`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.panel_snapshot(data: Any) -> dict[str, Any]
+```
+
+#### Description
+
+Return a compact single-panel snapshot for reports and provenance.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.panel_snapshot(...)
+```
+### panel_snapshots
+
+Qualified name: `macroforecast.data_analysis.core.panel_snapshots`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.panel_snapshots(raw: pd.DataFrame, clean: pd.DataFrame) -> dict[str, dict[str, Any]]
+```
+
+#### Description
+
+Return compact before/after panel snapshots.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `raw` | positional or keyword | `pd.DataFrame` | `required` |
+| `clean` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`dict[str, dict[str, Any]]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.panel_snapshots(...)
+```
+### adf_test
+
+Qualified name: `macroforecast.data_analysis.summary.adf_test`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.adf_test(series: Any, *, regression: str = "c", autolag: str | None = "AIC", alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Augmented Dickey-Fuller unit-root test for a single series.
+
+``regression`` is the deterministic spec ('n','c','ct','ctt'); default 'c'
+follows statsmodels (``tseries::adf.test`` defaults to 'ct'). Returns a flat
+result dict (the multi-series entry point is ``stationarity_tests``).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `regression` | keyword only | `str` | `"c"` |
+| `autolag` | keyword only | `str \| None` | `"AIC"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.adf_test(...)
+```
+### kpss_test
+
+Qualified name: `macroforecast.data_analysis.summary.kpss_test`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.kpss_test(series: Any, *, regression: str = "c", nlags: Any = "auto", alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+KPSS stationarity test for a single series.
+
+``regression='c'`` tests level stationarity (the ``tseries::kpss.test``
+'Level' default); ``'ct'`` tests trend stationarity. Returns a flat result
+dict (the multi-series entry point is ``stationarity_tests``).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `regression` | keyword only | `str` | `"c"` |
+| `nlags` | keyword only | `Any` | `"auto"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.kpss_test(...)
+```
+### acf
+
+Qualified name: `macroforecast.data_analysis.summary.acf`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.acf(series: Any, *, nlags: int = 20, alpha: float = 0.05, adjusted: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Sample autocorrelation function (stats::acf / forecast::Acf).
+
+Returns a tidy table with the autocorrelation at lags 0..nlags and the
+approximate ``1 - alpha`` confidence band (statsmodels acf). ``adjusted``
+selects the n-k (unbiased) divisor instead of the biased 1/n estimator.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `nlags` | keyword only | `int` | `20` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `adjusted` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.acf(...)
+```
+### johansen_cointegration
+
+Qualified name: `macroforecast.data_analysis.summary.johansen_cointegration`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.johansen_cointegration(panel: Any, *, det_order: int = 0, k_ar_diff: int = 1, significance: str = "95") -> dict[str, Any]
+```
+
+#### Description
+
+Johansen cointegration test (R urca::ca.jo / statsmodels coint_johansen).
+
+Tests the cointegration rank of a multivariate system via the trace and
+maximum-eigenvalue statistics. ``det_order`` is the deterministic term
+(-1 none, 0 constant, 1 linear trend); ``k_ar_diff`` the number of lagged
+differences in the VECM. Returns, for each null rank r, the trace and
+max-eigenvalue statistics with their 90/95/99% critical values, the selected
+cointegration rank under each statistic (sequential test at ``significance``),
+the eigenvalues, and the estimated cointegrating vectors.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `Any` | `required` |
+| `det_order` | keyword only | `int` | `0` |
+| `k_ar_diff` | keyword only | `int` | `1` |
+| `significance` | keyword only | `str` | `"95"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.johansen_cointegration(...)
+```
+### engle_granger
+
+Qualified name: `macroforecast.data_analysis.summary.engle_granger`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.engle_granger(y: Any, x: Any | None = None, *, trend: str = "c", max_lag: int | None = None, autolag: str | None = "aic", alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Engle-Granger two-step residual-based cointegration test.
+
+R analogue of the two-step Engle-Granger procedure (statsmodels
+``tsa.stattools.coint``): regress ``y`` on ``x`` by OLS and apply an
+augmented Dickey-Fuller test to the residuals. A rejection indicates the
+residuals are stationary, i.e. ``y`` and ``x`` are cointegrated. ``trend`` is
+the deterministic term in the cointegrating regression ('c', 'ct', or 'n');
+``max_lag``/``autolag`` control the ADF lag length on the residuals.
+
+Pass ``y`` and ``x`` separately, or a single panel whose first numeric column
+is the dependent series and the remaining columns the regressors. Returns the
+ADF statistic on the residuals, the MacKinnon ``p`` value, the 1/5/10%
+critical values, the cointegrating-regression coefficients, and the
+cointegration flag at ``alpha``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `x` | positional or keyword | `Any \| None` | `None` |
+| `trend` | keyword only | `str` | `"c"` |
+| `max_lag` | keyword only | `int \| None` | `None` |
+| `autolag` | keyword only | `str \| None` | `"aic"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.engle_granger(...)
+```
+### phillips_ouliaris
+
+Qualified name: `macroforecast.data_analysis.summary.phillips_ouliaris`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.phillips_ouliaris(y: Any, x: Any | None = None, *, trend: str = "c", test_type: str = "Zt", alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Phillips-Ouliaris residual-based cointegration test.
+
+R analogue of ``urca::ca.po`` / ``tseries::po.test`` (arch
+``unitroot.cointegration.phillips_ouliaris``). Like Engle-Granger it tests
+the stationarity of the cointegrating-regression residuals, but uses a
+non-parametric (long-run-variance corrected) statistic that does not require
+choosing an ADF lag length, so it is robust to residual autocorrelation.
+``trend`` is the deterministic term ('n', 'c', 'ct', 'ctt'); ``test_type`` is
+the statistic variant ('Zt' or 'Za' for the t-/rho-type, 'Pu'/'Pz' for the
+variance-ratio forms). Returns the statistic, ``p`` value, 1/5/10% critical
+values, the cointegrating vector, and the cointegration flag at ``alpha``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `x` | positional or keyword | `Any \| None` | `None` |
+| `trend` | keyword only | `str` | `"c"` |
+| `test_type` | keyword only | `str` | `"Zt"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.phillips_ouliaris(...)
+```
+### variance_ratio
+
+Qualified name: `macroforecast.data_analysis.summary.variance_ratio`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.variance_ratio(series: Any, *, lags: int = 2, trend: str = "c", robust: bool = True, overlap: bool = True, alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Lo-MacKinlay variance-ratio test of the random-walk null.
+
+R analogue of ``vrtest``/``DescTools::VarianceRatioTest`` (arch
+``unitroot.VarianceRatio``). Under a random walk the variance of ``lags``-period
+returns grows linearly, so the variance ratio is one; values below one signal
+mean reversion and above one signal momentum/positive autocorrelation.
+``lags`` is the aggregation horizon ``q``; ``robust=True`` uses the
+heteroskedasticity-robust standard error. Returns the variance ratio, the
+standardised statistic, the ``p`` value, and the random-walk rejection flag at
+``alpha`` (rejection means the series is NOT a random walk).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `lags` | keyword only | `int` | `2` |
+| `trend` | keyword only | `str` | `"c"` |
+| `robust` | keyword only | `bool` | `True` |
+| `overlap` | keyword only | `bool` | `True` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.variance_ratio(...)
+```
+### structural_stability
+
+Qualified name: `macroforecast.data_analysis.summary.structural_stability`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.structural_stability(y: Any, x: Any | None = None, *, add_intercept: bool = True, alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+OLS-CUSUM test for parameter stability of a regression.
+
+R analogue of ``strucchange::efp(type="OLS-CUSUM")`` / ``vars::stability``.
+Fits ``y = X b + e`` by OLS and forms the empirical fluctuation process of the
+cumulated standardised residuals, which converges to a Brownian bridge under
+the null of constant coefficients. A large maximal fluctuation signals a
+structural break. The supremum statistic has the Kolmogorov (sup Brownian
+bridge) distribution.
+
+Pass ``y`` and ``x`` separately, or a single panel whose first numeric column
+is the dependent series. Returns the supremum statistic, the ``p`` value, the
+10/5/1% critical values, the estimated break position (index of maximal
+fluctuation), and the stability-rejection flag at ``alpha``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `x` | positional or keyword | `Any \| None` | `None` |
+| `add_intercept` | keyword only | `bool` | `True` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.structural_stability(...)
+```
+### newey_west
+
+Qualified name: `macroforecast.data_analysis.summary.newey_west`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.newey_west(X: Any, y: Any | None = None, *, lags: int | str = "auto", add_intercept: bool = True, small_sample: bool = False) -> dict[str, Any]
+```
+
+#### Description
+
+Newey-West HAC covariance for an OLS regression.
+
+R analogue of ``sandwich::NeweyWest`` combined with ``lmtest::coeftest``:
+fit ``y = X b + e`` by ordinary least squares, then form the
+heteroskedasticity- and autocorrelation-consistent (HAC) covariance of the
+coefficients using a Bartlett (Newey-West) kernel. ``lags`` is the bandwidth
+``L``; ``"auto"`` uses the Newey-West fixed rule ``floor(4 (T/100)^(2/9))``.
+With ``small_sample=True`` the meat is scaled by ``T / (T - k)`` (the
+finite-sample adjustment used by ``lmtest::coeftest`` defaults).
+
+Returns the coefficient estimates, HAC standard errors, ``t`` statistics,
+two-sided ``p`` values (Student-``t`` with ``T - k`` degrees of freedom), the
+HAC covariance matrix, the bandwidth, and the regressor names.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `X` | positional or keyword | `Any` | `required` |
+| `y` | positional or keyword | `Any \| None` | `None` |
+| `lags` | keyword only | `int \| str` | `"auto"` |
+| `add_intercept` | keyword only | `bool` | `True` |
+| `small_sample` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.newey_west(...)
+```
+### vcov_hc
+
+Qualified name: `macroforecast.data_analysis.summary.vcov_hc`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.vcov_hc(X: Any, y: Any | None = None, *, cov_type: str = "HC1", add_intercept: bool = True) -> dict[str, Any]
+```
+
+#### Description
+
+Heteroskedasticity-consistent (White) covariance for an OLS regression.
+
+R analogue of ``sandwich::vcovHC`` with ``lmtest::coeftest``. Fits
+``y = X b + e`` by OLS and forms a robust covariance that is consistent
+under heteroskedasticity but assumes no autocorrelation (for serial
+correlation use :func:`newey_west`). ``cov_type`` selects the small-sample
+weighting of the squared residuals:
+
+- ``"HC0"`` -- White (1980), ``u_i^2``;
+- ``"HC1"`` -- MacKinnon-White degrees-of-freedom scaling ``u_i^2 T/(T-k)``;
+- ``"HC2"`` -- leverage-adjusted ``u_i^2/(1-h_i)``;
+- ``"HC3"`` -- jackknife approximation ``u_i^2/(1-h_i)^2`` (default in R for
+  small samples).
+
+Returns the coefficient table (estimate, robust SE, ``t``, two-sided ``p``
+with ``T - k`` degrees of freedom), the robust covariance matrix, and the
+regressor names.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `X` | positional or keyword | `Any` | `required` |
+| `y` | positional or keyword | `Any \| None` | `None` |
+| `cov_type` | keyword only | `str` | `"HC1"` |
+| `add_intercept` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.vcov_hc(...)
+```
+### breusch_pagan_test
+
+Qualified name: `macroforecast.data_analysis.summary.breusch_pagan_test`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.breusch_pagan_test(X: Any, y: Any | None = None, *, studentize: bool = True, add_intercept: bool = True) -> dict[str, Any]
+```
+
+#### Description
+
+Breusch-Pagan test for heteroskedasticity in an OLS regression.
+
+R analogue of ``lmtest::bptest``. Fits ``y = X b + e`` by OLS and tests the
+null of homoskedasticity by an auxiliary regression of the squared residuals
+on the regressors. With ``studentize=True`` (the ``lmtest`` default) the
+Koenker robust version ``LM = n R^2`` is used, valid without normality; with
+``studentize=False`` the classic Breusch-Pagan-Godfrey statistic
+``0.5 * explained-SS`` of the scaled squared residuals is returned. Both are
+chi-squared with ``p`` degrees of freedom (the number of regressors excluding
+the intercept). Returns the statistic, degrees of freedom, ``p`` value, and
+the auxiliary-regression R-squared.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `X` | positional or keyword | `Any` | `required` |
+| `y` | positional or keyword | `Any \| None` | `None` |
+| `studentize` | keyword only | `bool` | `True` |
+| `add_intercept` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.breusch_pagan_test(...)
+```
+### pacf
+
+Qualified name: `macroforecast.data_analysis.summary.pacf`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.pacf(series: Any, *, nlags: int = 20, alpha: float = 0.05, method: str = "ywadjusted") -> pd.DataFrame
+```
+
+#### Description
+
+Sample partial autocorrelation function (stats::pacf / forecast::Pacf).
+
+Returns a tidy table with the partial autocorrelation at lags 0..nlags and
+the approximate ``1 - alpha`` confidence band (statsmodels pacf). ``method``
+is the statsmodels PACF estimator ('ywadjusted','ols','ld', ...).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `nlags` | keyword only | `int` | `20` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `method` | keyword only | `str` | `"ywadjusted"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.pacf(...)
+```
+### ndiffs
+
+Qualified name: `macroforecast.data_analysis.summary.ndiffs`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.ndiffs(series: Any, *, test: str = "kpss", max_d: int = 2, alpha: float = 0.05) -> int
+```
+
+#### Description
+
+Number of first differences to make a series stationary (forecast::ndiffs).
+
+Repeatedly applies a unit-root / stationarity test until the differenced
+series is judged stationary (KPSS: fail to reject; ADF/PP: reject the unit
+root), up to ``max_d``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `test` | keyword only | `str` | `"kpss"` |
+| `max_d` | keyword only | `int` | `2` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`int`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.ndiffs(...)
+```
+### nsdiffs
+
+Qualified name: `macroforecast.data_analysis.summary.nsdiffs`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.nsdiffs(series: Any, *, m: int, max_D: int = 1, threshold: float = 0.64) -> int
+```
+
+#### Description
+
+Number of seasonal differences via seasonal strength (forecast::nsdiffs).
+
+Uses the Wang-Smyth-Hyndman seasonal strength F_s = max(0, 1 - Var(remainder)
+/ Var(seasonal + remainder)) from an STL decomposition; a seasonal difference
+is applied while F_s exceeds ``threshold`` (default 0.64), up to ``max_D``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `m` | keyword only | `int` | `required` |
+| `max_D` | keyword only | `int` | `1` |
+| `threshold` | keyword only | `float` | `0.64` |
+
+#### Returns
+
+`int`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.nsdiffs(...)
+```
+### phillips_perron_test
+
+Qualified name: `macroforecast.data_analysis.summary.phillips_perron_test`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.phillips_perron_test(values: Sequence[float] | np.ndarray, *, alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Run the native Phillips-Perron Z_tau unit-root test.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `values` | positional or keyword | `Sequence[float] \| np.ndarray` | `required` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.phillips_perron_test(...)
+```
+### dfgls_test
+
+Qualified name: `macroforecast.data_analysis.summary.dfgls_test`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.dfgls_test(series: Any, *, trend: str = "c", method: str = "aic", alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Elliott-Rothenberg-Stock DF-GLS unit-root test for a single series.
+
+R analogue of ``urca::ur.ers`` (type ``"DF-GLS"``). The series is locally
+GLS-detrended before an augmented Dickey-Fuller regression, giving higher
+power than the standard ADF test against persistent stationary alternatives.
+``trend`` is the deterministic specification, ``'c'`` (demeaned) or ``'ct'``
+(de-trended); ``method`` selects the lag length ('aic', 'bic', or 't-stat').
+Returns the statistic, the MacKinnon ``p`` value, the selected lag, the 1/5/10%
+critical values, and the unit-root rejection flag at ``alpha``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `trend` | keyword only | `str` | `"c"` |
+| `method` | keyword only | `str` | `"aic"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.dfgls_test(...)
+```
+### zivot_andrews_test
+
+Qualified name: `macroforecast.data_analysis.summary.zivot_andrews_test`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.zivot_andrews_test(series: Any, *, regression: str = "c", trim: float = 0.15, maxlag: int | None = None, autolag: str | None = "AIC", alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Zivot-Andrews unit-root test allowing one endogenous structural break.
+
+R analogue of ``urca::ur.za``. Tests the unit-root null against a
+trend-stationary alternative with a single break whose date is chosen
+endogenously to be least favourable to the null. ``regression`` places the
+break in the intercept ('c'), the trend ('t'), or both ('ct'); ``trim`` is
+the fraction of the sample excluded at each end when searching for the break.
+Returns the minimised statistic, the ``p`` value, the 1/5/10% critical
+values, the selected lag, the estimated break position (index and label), and
+the unit-root rejection flag at ``alpha``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `regression` | keyword only | `str` | `"c"` |
+| `trim` | keyword only | `float` | `0.15` |
+| `maxlag` | keyword only | `int \| None` | `None` |
+| `autolag` | keyword only | `str \| None` | `"AIC"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.zivot_andrews_test(...)
+```
+### sample_coverage
+
+Qualified name: `macroforecast.data_analysis.summary.sample_coverage`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.sample_coverage(data: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return per-series sample start, end, observation count, and missingness.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.sample_coverage(...)
+```
+### stationarity_tests
+
+Qualified name: `macroforecast.data_analysis.summary.stationarity_tests`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.stationarity_tests(data: Any, *, test: StationarityTest = "multi", scope: StationarityScope = "all", target: str | None = None, targets: Sequence[str] | None = None, alpha: float = 0.05, adf_regression: str = "c") -> dict[str, Any]
+```
+
+#### Description
+
+Run ADF, Phillips-Perron, KPSS, or all three on one panel.
+
+``adf_regression`` is the ADF deterministic specification passed to
+statsmodels ``adfuller`` ('n', 'c', 'ct', 'ctt'); the default 'c' (constant
+only) follows statsmodels. Note ``tseries::adf.test`` instead defaults to 'ct'
+(constant + linear trend) with a fixed lag, so pass ``adf_regression='ct'`` to
+reproduce that reference.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `test` | keyword only | `StationarityTest` | `"multi"` |
+| `scope` | keyword only | `StationarityScope` | `"all"` |
+| `target` | keyword only | `str \| None` | `None` |
+| `targets` | keyword only | `Sequence[str] \| None` | `None` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `adf_regression` | keyword only | `str` | `"c"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.stationarity_tests(...)
+```
+### summarize_data
+
+Qualified name: `macroforecast.data_analysis.summary.summarize_data`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.summarize_data(data: Any, *, metrics: Sequence[SummaryMetric] | None = None, include_correlation: bool = False, correlation_method: CorrelationMethod = "pearson", include_outliers: bool = False, outlier_method: OutlierMethod = "iqr", include_stationarity: bool = False, stationarity_test: StationarityTest = "multi", stationarity_scope: StationarityScope = "all") -> DataSummaryReport
+```
+
+#### Description
+
+Run the standard single-panel summary suite.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `metrics` | keyword only | `Sequence[SummaryMetric] \| None` | `None` |
+| `include_correlation` | keyword only | `bool` | `False` |
+| `correlation_method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `include_outliers` | keyword only | `bool` | `False` |
+| `outlier_method` | keyword only | `OutlierMethod` | `"iqr"` |
+| `include_stationarity` | keyword only | `bool` | `False` |
+| `stationarity_test` | keyword only | `StationarityTest` | `"multi"` |
+| `stationarity_scope` | keyword only | `StationarityScope` | `"all"` |
+
+#### Returns
+
+`DataSummaryReport`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.summarize_data(...)
+```
+### univariate_summary
+
+Qualified name: `macroforecast.data_analysis.summary.univariate_summary`
+
+#### Signature
+
+```python
+macroforecast.data_analysis.univariate_summary(data: Any, *, metrics: Sequence[SummaryMetric] | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Return per-series descriptive statistics for numeric panel columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `metrics` | keyword only | `Sequence[SummaryMetric] \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data_analysis.univariate_summary(...)
+```

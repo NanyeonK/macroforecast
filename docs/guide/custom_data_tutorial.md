@@ -296,7 +296,7 @@ genuinely weak edge. `.to_html()` and `.to_markdown()` render the same
   [custom_model](../reference/custom/custom_model.md) -- the full contract for
   each stage used above, including `custom_model_ensemble` and the file-loader
   variants.
-- [paper_accuracy_table reference](../reference/reporting.md#paper-accuracy-table)
+- [paper_accuracy_table reference](../reference/reporting.md#paper_accuracy_table)
   -- every argument, including multi-target reports and dropping the
   benchmark row.
 - [Getting Started](getting_started.md) and the

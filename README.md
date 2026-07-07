@@ -1,78 +1,114 @@
 # macroforecast
 
-`macroforecast` is being rebuilt as a pandas-first macro forecasting workflow
-package. The current public surface is intentionally small:
+`macroforecast` is a pandas-first framework for reproducible macroeconomic
+forecasting studies. It loads canonical macro panels, builds leak-aware
+preprocessing and feature pipelines, fits competing model arms, evaluates them
+with forecast-comparison tests, and renders research-ready outputs.
 
-- `macroforecast.meta`: package-wide defaults such as random seed and worker count.
-- `macroforecast.data`: canonical date-indexed panels, metadata, FRED/custom loaders, and study data specs.
-- `macroforecast.preprocessing`: direct pandas preprocessing callables.
-- `macroforecast.data_summary`: one-panel summary tables.
-- `macroforecast.data_analysis`: before/after preprocessing analysis.
-- `macroforecast.metrics`: scoring metrics and forecast-table ranking.
-- `macroforecast.tests`: forecast-comparison tests and diagnostics.
-- `macroforecast.evaluation`: namespace wrapper for `metrics` and `tests`.
-
-The old YAML/runtime implementation is no longer part of the clean importable
-package. A reference copy is preserved on the `legacy-runtime-reference` branch.
+Hosted documentation: <https://macroforecast.readthedocs.io/>
 
 ## Install
 
+From PyPI:
+
 ```bash
+pip install "macroforecast"
+pip install "macroforecast[all]"      # common optional model/reporting extras
+```
+
+From a clone:
+
+```bash
+git clone https://github.com/NanyeonK/macroforecast.git
+cd macroforecast
 pip install -e ".[dev]"
 ```
 
-Torch is not installed by default in this rebuild.
+Useful extras: `parquet`, `xgboost`, `lightgbm`, `catboost`, `arch`,
+`macro_random_forest`, `interpretation`, `deep`, `docs`, `typecheck`,
+`markdown`, `ci`, `dev`, and `all`.
 
 ## Quick Use
 
 ```python
 import macroforecast as mf
+from macroforecast.pipeline import Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline
 
 mf.configure(random_seed=42, n_jobs=1)
 
-bundle = mf.data.load_custom_csv(
-    "panel.csv",
-    date="date",
-    dataset="my_panel",
-    frequency="monthly",
+bundle = mf.data.load_fred_md()
+window = mf.window.from_cutoffs(test_start="2010-01-01", test_end="2019-12-01")
+
+arms = [
+    Arm(
+        name="AR",
+        model="ar",
+        is_benchmark=True,
+        features=mf.feature_engineering.feature_spec(
+            target="INDPRO",
+            predictors=[],
+            lags=None,
+            target_lags=(1, 2, 3),
+        ),
+    ),
+    Arm(
+        name="RF",
+        model="random_forest",
+        features=mf.feature_engineering.feature_spec(
+            target="INDPRO",
+            predictors=["UNRATE", "CPIAUCSL", "FEDFUNDS", "HOUST", "PAYEMS"],
+            lags=(0, 1),
+        ),
+        model_selection={"random_forest": None},
+    ),
+]
+
+spec = pipeline_spec(
+    data=bundle,
+    targets=[TargetSpec(name="INDPRO")],
+    horizons=[1],
+    window=window,
+    arms=arms,
+    evaluation=EvalSpec(benchmark="AR"),
 )
 
-data_spec = mf.data.spec(
-    bundle,
-    target="INDPRO",
-    horizons=[1, 3, 6],
-    start="1990-01-01",
-    end="2024-12-01",
-)
-
-processed = mf.preprocessing.reprocess(
-    data_spec,
-    transform="custom",
-    transform_codes={"INDPRO": 5},
-    outliers="iqr",
-    impute="em_factor",
-)
-
-summary = mf.data_analysis.summarize_data(processed.panel)
-analysis = mf.data_analysis.analyze_data(bundle.panel, processed.panel)
+report = run_pipeline(spec)
+print(report.accuracy)
 ```
 
-## Data Shape
+This is the shortest real study path. The
+[Getting Started guide](https://macroforecast.readthedocs.io/guide/getting_started.html)
+walks through the same flow, and
+[Your Data, Your Model, One Table](https://macroforecast.readthedocs.io/guide/custom_data_tutorial.html)
+shows the custom-data/custom-model path.
 
-The standard panel is a `pandas.DataFrame` with:
+## What It Covers
 
-- a `DatetimeIndex` named `date`
-- one macro series per column
-- numeric values in the cells
-- dataset metadata stored separately and mirrored in `panel.attrs["macroforecast_metadata"]`
+- Data: FRED-MD, FRED-QD, FRED-SD, custom CSV/parquet panels, metadata, and
+  real-time vintages.
+- Preprocessing and features: official transform codes, outliers, EM
+  imputation, standardization, lags, MARX, factors, filters, and feature
+  selection.
+- Models and arms: benchmarks, linear/regularized models, time-series models,
+  tree/boosting models, neural models, volatility models, model ensembles, and
+  custom `ModelSpec` hooks.
+- Evaluation: RMSE and relative scores, Diebold-Mariano, Clark-West,
+  Giacomini-White, MCS, SPA/uSPA/aSPA, and custom loss/test hooks.
+- Output: result stores, provenance, checkpoints, artifact manifests, Markdown,
+  HTML, and LaTeX reporting.
 
-`macroforecast.data.load_*()` returns a `DataBundle(panel, metadata)`.
-`macroforecast.data.spec(...)` attaches target, horizon, sample-window, and
-predictor choices to that panel.
+## Check A Wheel Install
 
-## Documentation
+This smoke check does not require a repository checkout:
 
-Function-level documentation lives under `docs/reference/`.
+```bash
+python - <<'PY'
+import macroforecast as mf
+
+print("macroforecast", mf.__version__)
+print(mf.models.list_model_specs()[["name", "family", "default_preset"]].head())
+PY
+```
 
 ## License
 

@@ -120,7 +120,28 @@ def result_cell_identity(
 
 
 class ResultStore:
-    """Directory-backed store for pipeline cell forecast frames."""
+    """Directory-backed store for pipeline cell forecast frames.
+
+    ``root_dir`` is owned by the caller. The store writes one parquet forecast
+    payload and one JSON manifest per digest under ``<root_dir>/cells`` using
+    atomic file replacement. ``load(...)`` returns a hit only when the digest,
+    data fingerprint, manifest, and parquet payload all agree; otherwise it
+    returns ``None`` so the pipeline recomputes the cell.
+
+    Returns
+    -------
+    ResultStore
+        File-backed cache object with ``load`` and ``write`` methods. The
+        higher-level helpers ``result_store_summary(...)`` and
+        ``purge_result_store(...)`` inspect and maintain the same directory.
+
+    Example
+    -------
+    >>> from macroforecast.pipeline.result_store import ResultStore
+    >>> store = ResultStore("cache/results")
+    >>> store.load("abc123", data_fingerprint={"sha256": "..."}) is None
+    True
+    """
 
     def __init__(self, root_dir: str | Path) -> None:
         self.root = Path(root_dir)

@@ -1,85 +1,131 @@
-# custom_preprocess
+# Custom Preprocess
 
 [Back to custom extensions](index.md)
 
-Use custom preprocessing when a user cleaning operation belongs before feature
-engineering. The callable should transform the canonical panel, not build
-targets, lags, models, or forecast diagnostics.
+This page is generated from the live callable signatures.
 
-## Direct Function
+## Callable Reference
 
-```python
-mf.preprocessing.custom_preprocess(
-    data,
-    func,
-    *,
-    name=None,
-    **params,
-) -> mf.preprocessing.PreprocessedData
-```
+### preprocess_spec
 
-### Callable Signature
+Qualified name: `macroforecast.preprocessing.specs.preprocess_spec`
+
+#### Signature
 
 ```python
-func(panel: pandas.DataFrame, *, metadata: dict, **params)
+macroforecast.preprocessing.preprocess_spec(**options: Any) -> PreprocessSpec
 ```
 
-### Accepted Return Types
+#### Description
 
-| Return type | Meaning |
-| --- | --- |
-| `DataFrame` | Re-normalized as the new processed panel. |
-| `DataBundle` | Uses the returned bundle panel and metadata. |
-| `PreprocessedData` | Uses the returned preprocessing object directly. |
-| `(DataFrame, metadata)` | Uses explicit panel and metadata pair. |
+Create a reusable preprocessing specification.
 
-### Output
+Keyword options are the same data-cleaning choices accepted by
+``reprocess(...)``: frequency alignment, transform-code handling,
+outlier policy, imputation policy, standardization, frame-edge handling,
+and optional custom preprocessing steps. Stage timing and metadata are not
+accepted here; they are supplied later through ``PreprocessSpec.fit(...)``
+or by the forecasting/pipeline runner.
 
-| Field | Meaning |
-| --- | --- |
-| `processed.panel` | Processed canonical panel. |
-| `processed.metadata["custom_preprocess"]` | Custom step name, callable name, parameters, and inherited metadata. |
-| `processed.steps` | Includes `{"step": "custom_preprocess", "name": ...}`. |
+Returns
+PreprocessSpec
+    Frozen preprocessing configuration. Call ``fit(data)`` to get a
+    ``FittedPreprocessor`` or ``fit_transform(data)`` to obtain a
+    ``PreprocessedData`` object for the training panel.
 
-## Runner-Safe Step
+Example
+>>> import macroforecast as mf
+>>> prep = mf.preprocessing.preprocess_spec(
+...     transform="official",
+...     outliers="iqr",
+...     impute="em_factor",
+...     standardize="zscore",
+... )
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `options` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`PreprocessSpec`
+
+#### Minimal Use
 
 ```python
-mf.preprocessing.custom_preprocess_step(
-    name,
-    func,
-    **params,
-) -> dict
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.preprocess_spec(...)
 ```
 
-Use this inside `preprocess_spec(custom_steps=[...])`:
+### custom_preprocess
+
+Qualified name: `macroforecast.preprocessing.preprocess.custom_preprocess`
+
+#### Signature
 
 ```python
-def add_spread(panel, *, metadata=None, scale=1.0):
-    out = panel.copy()
-    out["spread"] = (out["long_rate"] - out["short_rate"]) * scale
-    return out
-
-preprocessing = mf.preprocessing.preprocess_spec(
-    transform="none",
-    outliers="none",
-    impute="none",
-    standardize="none",
-    custom_steps=[
-        mf.preprocessing.custom_preprocess_step(
-            "spread",
-            add_spread,
-            scale=100.0,
-        ),
-    ],
-)
+macroforecast.preprocessing.custom_preprocess(data: PreprocessInput, func: Callable[..., Any], *, metadata: Mapping[str, Any] | None = None, name: str | None = None, **params: Any) -> PreprocessedData
 ```
 
-The runner applies this under its preprocessing policy. That means the same
-callable can be used in full-sample, origin-available, fit-window, or
-fixed-reference preprocessing depending on runner configuration.
+#### Description
 
-## Boundary
+Apply a user supplied preprocessing callable to a canonical panel.
 
-| Put here | Put elsewhere |
-| --- | --- |
-| cleaning, deterministic variable recoding, adding raw derived series before feature creation | target creation, lags, rolling features, PCA, model fitting, forecast diagnostics |
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PreprocessInput` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `name` | keyword only | `str \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`PreprocessedData`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.custom_preprocess(...)
+```
+
+### custom_preprocess_step
+
+Qualified name: `macroforecast.preprocessing.specs.custom_preprocess_step`
+
+#### Signature
+
+```python
+macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any], **params: Any) -> dict[str, Any]
+```
+
+#### Description
+
+Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.preprocessing.custom_preprocess_step(...)
+```

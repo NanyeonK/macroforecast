@@ -10,18 +10,56 @@ takes you from install to a first result, then to a full study.
 
 ## Installation
 
-Install the package in editable mode:
+For normal use, install the published package from PyPI:
 
 ```bash
-pip install -e "."          # minimal
-pip install -e ".[dev]"     # development extras
-pip install -e ".[docs]"    # documentation tools
+pip install "macroforecast"
+```
+
+Install optional extras only when you need the corresponding backends:
+
+| Extra | Adds |
+| --- | --- |
+| `parquet` | Parquet checkpoint/result-store support through `pyarrow`. |
+| `xgboost` | XGBoost model family. |
+| `lightgbm` | LightGBM model family. |
+| `catboost` | CatBoost model family. |
+| `arch` | ARCH/GARCH volatility backends. |
+| `macro_random_forest` | Macro Random Forest support utilities. |
+| `interpretation` | SHAP/anatomy interpretation backends. |
+| `deep` | Torch and Captum neural/attribution backends. |
+| `markdown` | Markdown/table rendering helpers. |
+| `docs` | Sphinx documentation build dependencies. |
+| `all` | Common optional model, reporting, and interpretation extras. |
+
+For example:
+
+```bash
+pip install "macroforecast[all]"
+pip install "macroforecast[xgboost,arch]"
+```
+
+From a source checkout, use an editable install:
+
+```bash
+git clone https://github.com/NanyeonK/macroforecast.git
+cd macroforecast
+pip install -e ".[dev]"
 ```
 
 Python 3.10 or later is required. Torch is not installed by default and is only
-needed for the neural-network model families. The project uses `uv` as the
-environment manager in development, and all dependency groups are defined in
-`pyproject.toml`.
+needed for the neural-network model families.
+
+Check a PyPI or wheel install without a repository checkout:
+
+```bash
+python - <<'PY'
+import macroforecast as mf
+
+print("macroforecast", mf.__version__)
+print(mf.models.list_model_specs()[["name", "family", "default_preset"]].head())
+PY
+```
 
 ## Key concepts
 

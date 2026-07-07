@@ -1,96 +1,162 @@
-# Custom Evaluation and Tests
+# Custom Evaluation Tests
 
 [Back to custom extensions](index.md)
 
-Use custom metrics when the output is a scalar forecast score. Use
-`custom_test()` when the output is a statistical forecast-comparison result.
-Use custom aggregation mappings when the evaluation report needs project-local
-slices.
+This page is generated from the live callable signatures.
 
-## Custom Metrics
+## Callable Reference
 
-Custom point metrics are plain callables:
+### custom_test
 
-```python
-def mean_bias(y_true, y_pred):
-    return float(pandas.Series(y_pred).sub(pandas.Series(y_true)).mean())
+Qualified name: `macroforecast.tests.custom_test`
 
-scores = mf.metrics.evaluate_forecasts(
-    forecast_table,
-    metrics=("mse", mean_bias),
-)
-```
-
-### Metric Callable Contract
+#### Signature
 
 ```python
-metric(y_true, y_pred) -> float
+macroforecast.tests.custom_test(name: str, func: Callable[..., Any], *args: Any, alternative: str = "two_sided", alpha: float = 0.05, correction_policy: str | None = None, metadata: Mapping[str, Any] | None = None, **params: Any) -> TestResult
 ```
 
-The callable must return one scalar. The output column uses the callable name
-unless the surrounding evaluation function renames it.
+#### Description
 
-## custom_test
+Run a user-supplied forecast test and coerce it to ``TestResult``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `args` | var positional | `Any` | `required` |
+| `alternative` | keyword only | `str` | `"two_sided"` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `correction_policy` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
 
 ```python
-mf.tests.custom_test(
-    name,
-    func,
-    *args,
-    alternative="two-sided",
-    **params,
-) -> mf.tests.TestResult
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.custom_test(...)
 ```
 
-### Test Callable Contract
+### EvalSpec
 
-The callable receives `*args` plus `**params` and should return either a
-mapping or a `TestResult`-like object containing:
+Qualified name: `macroforecast.pipeline.spec.EvalSpec`
 
-| Field | Meaning |
-| --- | --- |
-| `statistic` | Test statistic. |
-| `p_value` | P-value, or `None` if unavailable. |
-| `decision` | Optional reject flag. |
-| `n_obs` | Number of aligned observations. |
-| `metadata` | Optional source, null hypothesis, reference distribution, or warning metadata. |
-
-### Example
+#### Signature
 
 ```python
-def my_loss_test(loss_a, loss_b):
-    diff = pandas.Series(loss_a).sub(pandas.Series(loss_b)).dropna()
-    return {
-        "statistic": float(diff.mean()),
-        "p_value": 0.04,
-        "n_obs": len(diff),
-    }
-
-test = mf.tests.custom_test("my_loss_test", my_loss_test, loss_a, loss_b)
+macroforecast.pipeline.EvalSpec(benchmark: str, metrics: tuple[str | Callable[..., float], ...] = ('rmse', 'relative_mse', 'r2_oos'), tests: tuple[str, ...] = ('dm', 'cw', 'mcs'), by: tuple[str, ...] = ('target', 'horizon'), primary_axis: str = "contender", cw_for_nested: bool = True, mcs_alpha: float = 0.1, mcs_method: str = "iterative", multiple_testing: str | None = None, subsamples: Mapping[str, tuple[Any, Any]] = <factory>, dm_kwargs: Mapping[str, Any] = <factory>, loss: Callable[[Any, Any], Any] | None = None, test_options: Mapping[str, Mapping[str, Any]] = <factory>, calibration_alpha: float = 0.05) -> None
 ```
 
-## Custom Evaluation Slices
+#### Description
+
+Automatic evaluation and significance-testing configuration.
+
+``metrics`` entries are either a name resolved through the metric registry
+(:func:`macroforecast.metrics.get_metric`, e.g. ``"mae"``, ``"mape"``) or a
+callable ``metric(y_true, y_pred) -> float`` named by its ``__name__``.
+``accuracy_table`` computes one column per listed metric, per contender, on
+the same pairwise-vs-benchmark sample it always has. The three defaults
+(``"rmse"``, ``"relative_mse"``, ``"r2_oos"``) keep their existing
+benchmark-relative formulas regardless of how they are requested.
+
+``loss`` is a per-observation loss ``loss(y_true, y_pred) -> ndarray`` used
+by the Diebold-Mariano loss differential and the Model Confidence Set's loss
+matrix; ``None`` (default) is squared error, the prior, only behavior. Since
+the Clark-West adjustment is derived under quadratic loss, setting a custom
+``loss`` makes ``significance_table`` skip CW (with a ``UserWarning``)
+rather than compute it against the wrong loss.
+
+``tests`` lists which significance tests actually run; unsupported names
+raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
+Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
+``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
+``"ag"`` are directional-accuracy tests for the contender's own sign
+forecasts, evaluated on the same benchmark-aligned sample for consistency
+with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
+and ``"aspa"``; they require at least two horizons and use ``"joint"`` as
+their significance-table horizon sentinel. Full-set benchmark comparisons are ``"mcs"``,
+``"spa"``, ``"rc"``, and ``"stepm"``; they populate ``PipelineReport.mcs``.
+``"spa"``, ``"rc"``, and ``"stepm"`` require the ``arch`` extra
+(``pip install "macroforecast[arch]"``).
+``"berkowitz"``/``"pit_autocorr"``/``"coverage"`` are PIT-based calibration
+diagnostics (Phase 1 density pipeline) -- they populate
+``PipelineReport.calibration`` rather than ``significance``/``mcs`` and,
+like every other test name, are opt-in only (absent from the default).
+``test_options`` maps a requested test name to keyword options for that
+test's underlying public callable. Option blocks are validated when
+:func:`pipeline_spec` is built: the key must appear in ``tests`` and every
+option name must be accepted by that test's callable.
+
+Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
+``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
+``"coverage_rate"``, ``"interval_width"``, ``"interval_score"`` -- are
+requested the SAME way as any other ``metrics`` entry; they land in
+``PipelineReport.density`` instead of ``accuracy`` because they need a
+``variance_prediction``/``quantile_predictions`` column rather than plain
+``(y_true, y_pred)`` (see ``macroforecast.metrics.metric_kind``). Requesting
+one on a forecast frame that carries no such column raises the same
+actionable ``ValueError`` :func:`macroforecast.metrics.evaluate_forecasts`
+already raises. Absent from the defaults, so a default-EvalSpec run never
+computes them.
+
+``calibration_alpha`` is the significance level for the calibration tests
+above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
+checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `benchmark` | positional or keyword | `str` | `required` |
+| `metrics` | positional or keyword | `tuple[str \| Callable[..., float], ...]` | `("rmse", "relative_mse", "r2_oos")` |
+| `tests` | positional or keyword | `tuple[str, ...]` | `("dm", "cw", "mcs")` |
+| `by` | positional or keyword | `tuple[str, ...]` | `("target", "horizon")` |
+| `primary_axis` | positional or keyword | `str` | `"contender"` |
+| `cw_for_nested` | positional or keyword | `bool` | `True` |
+| `mcs_alpha` | positional or keyword | `float` | `0.1` |
+| `mcs_method` | positional or keyword | `str` | `"iterative"` |
+| `multiple_testing` | positional or keyword | `str \| None` | `None` |
+| `subsamples` | positional or keyword | `Mapping[str, tuple[Any, Any]]` | `<factory>` |
+| `dm_kwargs` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+| `loss` | positional or keyword | `Callable[[Any, Any], Any] \| None` | `None` |
+| `test_options` | positional or keyword | `Mapping[str, Mapping[str, Any]]` | `<factory>` |
+| `calibration_alpha` | positional or keyword | `float` | `0.05` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-report = mf.evaluation.evaluate_report(
-    forecast_result,
-    metrics=("mse", mean_bias),
-    aggregations={
-        "model_target": ("model", "target"),
-        "model_regime": ("model", "regime"),
-    },
-)
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.EvalSpec(...)
 ```
 
-Custom aggregations create additional `EvaluationReport.aggregations` tables.
-They do not change raw metric definitions.
+#### Dataclass Fields
 
-## Output Flow
-
-```python
-main_table = mf.reporting.test_report_table({"custom": test})
-manifest = mf.output.write_artifacts(
-    {"scores": scores, "custom_test": test.to_dict()},
-    "results/custom_eval",
-)
-```
+| Field | Type | Default |
+| --- | --- | --- |
+| `benchmark` | `str` | `required` |
+| `metrics` | `tuple[str \| Callable[..., float], ...]` | `("rmse", "relative_mse", "r2_oos")` |
+| `tests` | `tuple[str, ...]` | `("dm", "cw", "mcs")` |
+| `by` | `tuple[str, ...]` | `("target", "horizon")` |
+| `primary_axis` | `str` | `"contender"` |
+| `cw_for_nested` | `bool` | `True` |
+| `mcs_alpha` | `float` | `0.1` |
+| `mcs_method` | `str` | `"iterative"` |
+| `multiple_testing` | `str \| None` | `None` |
+| `subsamples` | `Mapping[str, tuple[Any, Any]]` | `default_factory` |
+| `dm_kwargs` | `Mapping[str, Any]` | `default_factory` |
+| `loss` | `Callable[[Any, Any], Any] \| None` | `None` |
+| `test_options` | `Mapping[str, Mapping[str, Any]]` | `default_factory` |
+| `calibration_alpha` | `float` | `0.05` |

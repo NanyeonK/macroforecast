@@ -2,585 +2,842 @@
 
 [Back to reference](index.md)
 
-`macroforecast.output` writes callable-stage artifacts and a schema-aware
-provenance manifest. It replaces the old output stage with direct Python
-functions. It does not decide which models, windows, metrics, or tests belong
-in a study.
+Artifact manifests, output bundles, provenance collection, and table/record builders.
 
-Call these functions through the namespace, for example
-`mf.output.write_artifacts(...)`. Output helpers are not exported as
-top-level shortcuts.
+## Public Symbols
 
-The output API is split into two parts:
-
-| Part | Functions | Role |
+| Symbol | Kind | Summary |
 | --- | --- | --- |
-| Output generation | `forecast_table`, `metric_table`, `ranking_table`, `test_table`, `model_table`, `model_selection_table`, `interpretation_table`, `interpretation_outputs`, `forecast_shapley_tables`, `anatomy_tables`, `metadata_table`, `run_summary`, `bundle_outputs`, `select_outputs`, `name_outputs`, `artifact_index` | Convert package objects into named pandas/JSON outputs. No files are written. |
-| Artifact writing | `write_artifacts`, `collect_provenance`, `ArtifactManifest`, `ArtifactRecord`, `ArtifactLayout` | Write selected outputs to disk and record file metadata. |
+| `ArtifactManifest` | class | Manifest returned by ``write_artifacts``. |
+| `ArtifactRecord` | class | One written artifact in a manifest. |
+| `ArtifactLayout` | callable | No public docstring is available. |
+| `CompressionFormat` | callable | No public docstring is available. |
+| `OutputBundle` | class | Named output objects produced before artifact writing. |
+| `anatomy_tables` | function | Return anatomy sidecar tables for output bundling or artifact writing. |
+| `artifact_index` | function | Return an index table for a manifest, output bundle, or artifact mapping. |
+| `bundle_outputs` | function | Build a named bundle of output tables and JSON-ready summaries. |
+| `collect_provenance` | function | Collect lightweight package, Python, platform, and git provenance. |
+| `forecast_shapley_tables` | function | Return oShapley/PBSV sidecar tables for output writing. |
+| `forecast_table` | function | Return the standard forecast table output. |
+| `interpretation_outputs` | function | Build output-ready artifacts from one or more interpretation results. |
+| `interpretation_table` | function | Return a standardized interpretation output table. |
+| `metadata_table` | function | Flatten metadata from a result, report, bundle, mapping, or object. |
+| `metric_table` | function | Return the main metric score table from an evaluation output. |
+| `model_selection_table` | function | Return model-selection trial or metadata output. |
+| `model_table` | function | Return a compact table of fitted model metadata or stored model paths. |
+| `name_outputs` | function | Rename output objects before writing artifacts. |
+| `ranking_table` | function | Return a ranking table from an evaluation output. |
+| `run_summary` | function | Return a compact JSON output summary for a study run. |
+| `select_outputs` | function | Select named outputs from a bundle or mapping. |
+| `test_table` | function | Return a flat table from one or more forecast test results. |
+| `write_artifacts` | function | Write forecast/package artifacts and a reproducibility manifest. |
 
-This means a workflow can first build all candidate outputs, inspect or rename
-them, then write only the objects needed for a paper, replication package, or
-notebook appendix.
+## Callable And Class Reference
 
-## Output generation
+### ArtifactManifest
 
-### forecast_table
+Qualified name: `macroforecast.output.core.ArtifactManifest`
 
-```python
-macroforecast.output.forecast_table(result) -> pandas.DataFrame
-```
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `result` | `ForecastResult` or `DataFrame` | Forecast runner output or an already materialized forecast table. |
-
-Returns a `DataFrame` with
-`attrs["macroforecast_metadata_schema"]["kind"] == "forecast_table"`.
-Function-specific source metadata is stored separately in
-`attrs["macroforecast_metadata"]`.
-
-### metric_table
-
-```python
-macroforecast.output.metric_table(report) -> pandas.DataFrame
-```
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `report` | `EvaluationReport`, `ForecastResult`, or `DataFrame` | Evaluation report, forecast result to evaluate with defaults, or metric table. |
-
-Returns the main metric score table. For `EvaluationReport`, this is
-`report.scores`.
-
-### ranking_table
+#### Signature
 
 ```python
-macroforecast.output.ranking_table(report) -> pandas.DataFrame
+macroforecast.output.ArtifactManifest(output_dir: str, artifacts: dict[str, str] = <factory>, records: list[ArtifactRecord] = <factory>, provenance: dict[str, Any] = <factory>, created_at: str = <factory>, metadata_schema: dict[str, Any] = <factory>) -> None
 ```
 
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `report` | `EvaluationReport` or `DataFrame` | Evaluation report or a ranking table. |
+#### Description
 
-Returns the model ranking table. For `EvaluationReport`, this is
-`report.ranking`.
+Manifest returned by ``write_artifacts``.
 
-### test_table
+#### Parameters
 
-```python
-macroforecast.output.test_table(results) -> pandas.DataFrame
-```
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `results` | `TestResult`, mapping, sequence, or `DataFrame` | One or more forecast-comparison test outputs. |
-
-Returns a flat raw table with `name`, `statistic`, `p_value`, `decision`,
-`alternative`, `correction_policy`, `n_obs`, `metadata`, and any promoted
-test metadata fields such as `statistic_type`, `p_value_status`,
-`p_value_reference`, `null_hypothesis`, `source_reference`, `r_reference`, and
-`r_alignment`.
-
-Use `macroforecast.reporting.test_report_table(...)` for a compact paper table
-and `macroforecast.reporting.test_provenance_table(...)` for the source
-alignment appendix table.
-
-### model_table
-
-```python
-macroforecast.output.model_table(models) -> pandas.DataFrame
-```
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `models` | `ForecastResult`, `DataFrame`, `ModelFit`, mapping, sequence, or object | Fitted model metadata or forecast rows containing model columns. |
-
-For forecast results, returns one row per model/model-spec group with forecast
-counts, horizon counts, and stored-model counts. For `ModelFit` objects, returns
-compact fit metadata without serializing the estimator.
-
-### model_selection_table
-
-```python
-macroforecast.output.model_selection_table(model_selection) -> pandas.DataFrame
-```
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `model_selection` | `SearchResult`, search-like object, `DataFrame`, or mapping | Model-selection result or trial table. |
-
-Returns the model-selection trial table when available. Best parameter metadata is
-stored in the DataFrame attrs.
-
-### interpretation_table
-
-```python
-macroforecast.output.interpretation_table(value) -> pandas.DataFrame
-```
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `value` | `DataFrame` or mapping | Interpretation output such as importances, SHAP summaries, attribution tables, or custom mappings. |
-
-Returns a schema-tagged interpretation table.
-
-### interpretation_outputs
-
-```python
-macroforecast.output.interpretation_outputs(
-    interpretation,
-    *,
-    prefix="interpretation",
-) -> OutputBundle
-```
-
-Use this when several interpretation results belong to the same run. It keeps
-prediction output separate from interpretation output while preserving a single
-manifest later.
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `interpretation` | `DataFrame`, mapping, `DualInterpretationResult`, or `ForecastShapleyResult` | One interpretation table, named interpretation tables, a dual interpretation result, or an oShapley/PBSV sidecar. |
-| `prefix` | str | Prefix applied to generated artifact names. |
-
-Examples:
-
-```python
-interpretation = mf.output.interpretation_outputs(
-    {
-        "shap": shap_importance,
-        "dual": dual_result,
-    },
-    prefix="postpandemic",
-)
-
-manifest = mf.output.write_artifacts(
-    interpretation,
-    "results/interpretation_only",
-    layout="grouped",
-)
-```
-
-If a value is a `DualInterpretationResult`, the helper expands it into
-observation-weight, observation-contribution, forecast-diagnostic,
-top-observation, group-observation-weight, and metadata tables. If a value is
-an oShapley/PBSV result, the helper expands it into forecast Shapley
-explanation, variable-importance, PBSV/loss, and metadata tables. For ordinary
-`DataFrame` objects it attaches the standard `interpretation_table` schema.
-
-### forecast_shapley_tables / anatomy_tables
-
-```python
-macroforecast.output.forecast_shapley_tables(value, *, prefix="oshapley") -> dict[str, pandas.DataFrame]
-macroforecast.output.anatomy_tables(value, *, prefix="anatomy") -> dict[str, pandas.DataFrame]
-```
-
-| Input | Type | Meaning |
-| --- | --- | --- |
-| `value` | `ForecastShapleyResult` | oShapley/PBSV sidecar from `macroforecast.interpretation`. |
-| `prefix` | str | Prefix for generated output names. |
-
-Returns named tables for raw forecast Shapley explanations, oShapley-VI,
-PBSV/loss tables, and metadata. `anatomy_tables(...)` is the backend alias;
-prefer `forecast_shapley_tables(...)` in user code.
-
-### metadata_table
-
-```python
-macroforecast.output.metadata_table(value, *, prefix="") -> pandas.DataFrame
-```
-
-| Input | Type | Default | Meaning |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `value` | result/report/bundle/manifest/mapping/object | required | Object whose metadata should be flattened. |
-| `prefix` | str | `""` | Optional path prefix. |
+| `output_dir` | positional or keyword | `str` | `required` |
+| `artifacts` | positional or keyword | `dict[str, str]` | `<factory>` |
+| `records` | positional or keyword | `list[ArtifactRecord]` | `<factory>` |
+| `provenance` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `created_at` | positional or keyword | `str` | `<factory>` |
+| `metadata_schema` | positional or keyword | `dict[str, Any]` | `<factory>` |
 
-Returns a long table with `path`, `value`, and `type`. Nested dictionaries use
-dot paths such as `data.source`; sequences use indexed paths such as
-`stages[0]`.
+#### Returns
 
-### run_summary
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.output.run_summary(
-    result=None,
-    *,
-    evaluation=None,
-    tests=None,
-    model_selection=None,
-    models=None,
-    metadata=None,
-) -> dict
+import macroforecast as mf
+# Construct with the signature above:
+# mf.output.ArtifactManifest(...)
 ```
 
-Returns a JSON-ready summary with `metadata_schema.kind == "run_summary"`.
-It records row counts, forecast models, horizons, evaluation rows, test rows,
-model-selection best-score fields, model rows, and user metadata when supplied.
+#### Dataclass Fields
 
+| Field | Type | Default |
+| --- | --- | --- |
+| `output_dir` | `str` | `required` |
+| `artifacts` | `dict[str, str]` | `default_factory` |
+| `records` | `list[ArtifactRecord]` | `default_factory` |
+| `provenance` | `dict[str, Any]` | `default_factory` |
+| `created_at` | `str` | `default_factory` |
+| `metadata_schema` | `dict[str, Any]` | `default_factory` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+| `to_frame` | `to_frame(self) -> pd.DataFrame` | Return artifact records as a table. |
+| `to_json` | `to_json(self, path: str \| Path \| None = None, *, indent: int \| None = 2) -> str` | Return JSON text, and optionally write it to ``path``. |
+### ArtifactRecord
+
+Qualified name: `macroforecast.output.core.ArtifactRecord`
+
+#### Signature
+
+```python
+macroforecast.output.ArtifactRecord(name: str, path: str, kind: str, format: str, source: str, metadata: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+One written artifact in a manifest.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `path` | positional or keyword | `str` | `required` |
+| `kind` | positional or keyword | `str` | `required` |
+| `format` | positional or keyword | `str` | `required` |
+| `source` | positional or keyword | `str` | `required` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.output.ArtifactRecord(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `name` | `str` | `required` |
+| `path` | `str` | `required` |
+| `kind` | `str` | `required` |
+| `format` | `str` | `required` |
+| `source` | `str` | `required` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### ArtifactLayout
+
+Qualified name: `typing.Literal`
+
+#### Signature
+
+```python
+macroforecast.output.ArtifactLayout(*args, **kwargs)
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.ArtifactLayout(...)
+```
+### CompressionFormat
+
+Qualified name: `typing.Literal`
+
+#### Signature
+
+```python
+macroforecast.output.CompressionFormat(*args, **kwargs)
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.CompressionFormat(...)
+```
 ### OutputBundle
 
-```python
-bundle = macroforecast.output.bundle_outputs(
-    forecasts=None,
-    evaluation=None,
-    tests=None,
-    models=None,
-    model_selection=None,
-    interpretation=None,
-    metadata=None,
-    include_summary=True,
-    extra=None,
-)
-```
+Qualified name: `macroforecast.output.core.OutputBundle`
 
-`OutputBundle` is a named in-memory artifact collection. It is the preferred
-object to pass from the runner/evaluation/interpretation stages into output
-writing.
-
-| Field | Meaning |
-| --- | --- |
-| `artifacts` | Mapping from output name to `DataFrame`, `ForecastResult`, or JSON-ready object. |
-| `metadata` | Bundle-level metadata such as artifact count and selected objects. |
-| `metadata_schema` | `{"kind": "output_bundle", "version": 1}`. |
-
-Methods:
-
-| Method | Output |
-| --- | --- |
-| `to_artifacts()` | Shallow artifact mapping suitable for `write_artifacts`. |
-| `select(objects)` | New `OutputBundle` with only selected artifact names. |
-| `to_dict()` | JSON-ready bundle description, not the full DataFrame data. |
-
-### select_outputs
+#### Signature
 
 ```python
-macroforecast.output.select_outputs(bundle, *, objects=("forecasts", "metrics")) -> OutputBundle
+macroforecast.output.OutputBundle(artifacts: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>, metadata_schema: dict[str, Any] = <factory>) -> None
 ```
 
-Selects named outputs from an `OutputBundle` or mapping. Missing names raise
-`KeyError`. This is how a workflow can generate many outputs and save only the
-tables required by a paper section.
+#### Description
 
-### name_outputs
+Named output objects produced before artifact writing.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `artifacts` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `metadata_schema` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.output.name_outputs(
-    bundle,
-    *,
-    convention="descriptive",
-    prefix=None,
-) -> OutputBundle
+import macroforecast as mf
+# Construct with the signature above:
+# mf.output.OutputBundle(...)
 ```
 
-| `convention` | Name rule |
-| --- | --- |
-| `"identity"` | Keep the original artifact names. |
-| `"descriptive"` | Use `<object_kind>_<original_name>`, optionally prefixed. |
-| `"kind"` | Use the object kind only, with suffixes added for uniqueness. |
-| `"prefixed"` | Use `<prefix>_<original_name>`, or `output_<original_name>` when no prefix is given. |
+#### Dataclass Fields
 
+| Field | Type | Default |
+| --- | --- | --- |
+| `artifacts` | `dict[str, Any]` | `default_factory` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `metadata_schema` | `dict[str, Any]` | `default_factory` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `select` | `select(self, objects: tuple[str, ...] \| list[str]) -> "'OutputBundle'"` | Return a bundle with selected artifact names. |
+| `to_artifacts` | `to_artifacts(self) -> dict[str, Any]` | Return a shallow copy suitable for ``write_artifacts``. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | Return a JSON-ready description of the bundle. |
+### anatomy_tables
+
+Qualified name: `macroforecast.output.core.anatomy_tables`
+
+#### Signature
+
+```python
+macroforecast.output.anatomy_tables(value: Any, *, prefix: str = "anatomy") -> dict[str, pd.DataFrame]
+```
+
+#### Description
+
+Return anatomy sidecar tables for output bundling or artifact writing.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `Any` | `required` |
+| `prefix` | keyword only | `str` | `"anatomy"` |
+
+#### Returns
+
+`dict[str, pd.DataFrame]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.anatomy_tables(...)
+```
 ### artifact_index
 
-```python
-macroforecast.output.artifact_index(value) -> pandas.DataFrame
-```
+Qualified name: `macroforecast.output.core.artifact_index`
 
-Accepts an `ArtifactManifest`, `OutputBundle`, or artifact mapping. Returns one
-row per artifact with name, kind, object type, and metadata schema.
-
-### Example: generate then write
+#### Signature
 
 ```python
-result = mf.forecasting.run(panel, "ridge", features=features)
-report = mf.evaluation.evaluate_report(result)
-
-bundle = mf.output.bundle_outputs(
-    forecasts=result,
-    evaluation=report,
-    metadata={"study": "baseline"},
-)
-paper_outputs = mf.output.select_outputs(
-    bundle,
-    objects=("forecasts", "metrics", "ranking", "summary"),
-)
-paper_outputs = mf.output.name_outputs(
-    paper_outputs,
-    convention="prefixed",
-    prefix="baseline",
-)
-
-manifest = mf.output.write_artifacts(paper_outputs, "results/baseline")
+macroforecast.output.artifact_index(value: Any) -> pd.DataFrame
 ```
 
-## write_artifacts
+#### Description
 
-```python
-macroforecast.output.write_artifacts(
-    artifacts,
-    output_dir,
-    *,
-    formats=("json", "csv"),
-    manifest_format="json",
-    include_provenance=True,
-    provenance_fields=None,
-    compression="none",
-    layout="flat",
-) -> ArtifactManifest
-```
+Return an index table for a manifest, output bundle, or artifact mapping.
 
-### Input
+#### Parameters
 
-| Name | Type | Default | Meaning |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `artifacts` | `OutputBundle`, `ForecastResult`, `DataFrame`, or mapping | required | Object or named objects to write. |
-| `output_dir` | path-like | required | Output directory. Created if missing. |
-| `formats` | tuple | `("json", "csv")` | DataFrame export formats: `"json"`, `"csv"`, `"parquet"`, or `"markdown"`. |
-| `manifest_format` | str | `"json"` | Manifest format: `"json"`, `"csv"`, or `"parquet"`. |
-| `include_provenance` | bool | `True` | Include package, Python, platform, and git provenance. |
-| `provenance_fields` | tuple or `None` | `None` | Optional top-level provenance keys to keep, e.g. `("macroforecast_version", "git")`. |
-| `compression` | str | `"none"` | Artifact compression: `"none"`, `"gzip"`, or `"zip"`. |
-| `layout` | str | `"flat"` | Artifact layout: `"flat"` writes all artifacts in `output_dir`; `"grouped"` writes files under logical subdirectories. |
+| `value` | positional or keyword | `Any` | `required` |
 
-### Output
+#### Returns
 
-Returns `ArtifactManifest(output_dir, artifacts, records, provenance)`.
+`pd.DataFrame`
 
-`ArtifactManifest.to_dict()` returns:
-
-| Field | Meaning |
-| --- | --- |
-| `metadata_schema` | `{"kind": "artifact_manifest", "version": 1}`. |
-| `created_at` | UTC ISO timestamp for the write operation. |
-| `output_dir` | Directory where artifacts were written. |
-| `artifacts` | Backward-compatible mapping from file name to path. |
-| `records` | List of `ArtifactRecord` dictionaries, one per written study artifact. |
-| `provenance` | Package, Python, platform, git, and package-version provenance. |
-
-Each `ArtifactRecord` has:
-
-| Field | Meaning |
-| --- | --- |
-| `name` | File name, such as `metrics.csv`. |
-| `path` | Written path. |
-| `kind` | Logical artifact kind: `forecast_result`, `forecast_table`, `dataframe`, or `json`. |
-| `format` | Physical format: `json`, `csv`, `parquet`, or `markdown`. |
-| `source` | Input mapping key that produced the file. |
-| `metadata` | Shape, columns, object type, metadata schema, file size, SHA-256 hash, path existence, and compression. |
-
-`ArtifactLayout` is the public type alias for `"flat"` and `"grouped"`.
-
-### Grouped layout
-
-Use `layout="grouped"` when one run has many outputs: prediction tables,
-metric tables, forecast tests, stored models, oShapley/PBSV outputs, dual
-data-portfolio interpretation, and metadata. The manifest remains at the root,
-but artifacts are written into logical folders:
-
-| Folder | Typical artifacts |
-| --- | --- |
-| `forecasts/` | ForecastResult JSON and forecast table. |
-| `evaluation/` | Metric, ranking, benchmark, regime, and decomposition tables. |
-| `tests/` | Forecast-comparison test tables. |
-| `models/` | Model table, model-selection table, and stored-model records. |
-| `interpretation/` | SHAP, PDP/ICE/ALE, and general interpretation outputs. |
-| `interpretation/dual/` | `DualInterpretationResult` tables: observation weights, observation contributions, forecast diagnostics, top observations, group observation weights, and metadata. |
-| `interpretation/oshapley/` | oShapley/PBSV/anatomy sidecar tables. |
-| `metadata/` | Run summary and metadata tables. |
-| `other/` | Custom objects that do not match a known group. |
-
-Example:
+#### Minimal Use
 
 ```python
-result = mf.forecasting.run(panel, "ridge", features=features)
-report = mf.evaluation.evaluate_report(result)
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.artifact_index(...)
+```
+### bundle_outputs
 
-interpretation = mf.output.interpretation_outputs(
-    {
-        "shap": shap_importance,
-        "dual": dual_result,
-    },
-    prefix="inflation",
-)
+Qualified name: `macroforecast.output.core.bundle_outputs`
 
-bundle = mf.output.bundle_outputs(
-    forecasts=result,
-    evaluation=report,
-    interpretation=interpretation.artifacts,
-    metadata={"study": "inflation_dual_interpretation"},
-)
+#### Signature
 
-manifest = mf.output.write_artifacts(
-    bundle,
-    "results/inflation_run",
-    layout="grouped",
-)
+```python
+macroforecast.output.bundle_outputs(*, forecasts: ForecastResult | pd.DataFrame | None = None, evaluation: Any | None = None, tests: Any | None = None, models: Any | None = None, model_selection: Any | None = None, interpretation: Mapping[str, Any] | pd.DataFrame | None = None, metadata: Mapping[str, Any] | None = None, include_summary: bool = True, extra: Mapping[str, Any] | None = None) -> OutputBundle
 ```
 
-If `dual_result` is a `macroforecast.interpretation.dual.DualInterpretationResult`,
-`interpretation_outputs(...)` expands it through `dual_result.to_tables(...)`.
-With grouped output, these files are written below `interpretation/dual/`.
+#### Description
 
-The manifest records both the physical path and the logical group. Each record
-metadata includes `layout`, `group`, and `relative_path`, so a notebook,
-replication package, or paper-output script can select all interpretation
-files without guessing file names.
+Build a named bundle of output tables and JSON-ready summaries.
 
-`ForecastResult` writes:
+#### Parameters
 
-| File | Meaning |
-| --- | --- |
-| `forecast_result.json` | Forecast rows and runner metadata. |
-| `forecast_result_forecasts.csv` | Forecast table. |
-| `manifest.json` | Artifact paths and provenance. |
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | keyword only | `ForecastResult \| pd.DataFrame \| None` | `None` |
+| `evaluation` | keyword only | `Any \| None` | `None` |
+| `tests` | keyword only | `Any \| None` | `None` |
+| `models` | keyword only | `Any \| None` | `None` |
+| `model_selection` | keyword only | `Any \| None` | `None` |
+| `interpretation` | keyword only | `Mapping[str, Any] \| pd.DataFrame \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `include_summary` | keyword only | `bool` | `True` |
+| `extra` | keyword only | `Mapping[str, Any] \| None` | `None` |
 
-If a `ForecastResult` has runtime sidecars, `write_artifacts()` writes those
-sidecars as additional artifacts. For a dual interpretation sidecar, grouped
-layout writes files under `interpretation/dual/`:
+#### Returns
 
-| Sidecar artifact | Meaning |
-| --- | --- |
-| `<result>_dual_summary.json` | JSON-ready dual sidecar metadata and table summaries. |
-| `<result>_dual_observation_weights.*` | Observation/data-portfolio weight table. |
-| `<result>_dual_observation_contributions.*` | Observation contribution table when requested. |
-| `<result>_dual_forecast_diagnostics.*` | Concentration, short-position, leverage, gross-leverage, and turnover table. |
-| `<result>_dual_top_observations.*` | Top historical observations per forecast row. |
-| `<result>_dual_group_observation_weights.*` | Grouped observation weights/contributions when groups are supplied. |
-| `<result>_dual_metadata.*` | Flattened dual metadata table. |
+`OutputBundle`
 
-For an anatomy sidecar, the writer emits:
-
-| Sidecar artifact | Meaning |
-| --- | --- |
-| `<result>_anatomy_<name>_summary.json` | JSON-ready anatomy sidecar metadata and table records. |
-| `<result>_anatomy_<name>_explanation_forecast.*` | Raw forecast anatomy explanations. |
-| `<result>_anatomy_<name>_variable_importance.*` | oShapley-VI table. |
-| `<result>_anatomy_<name>_performance_<loss>.*` | PBSV/loss decomposition table. |
-| `<result>_anatomy_<name>_metadata.*` | Flattened anatomy metadata table. |
-
-If the forecast table contains runner-created `stored_model` dictionaries,
-`write_artifacts()` also records those model artifacts in the manifest. It does
-not copy or rewrite the model files. It records the existing paths so the
-forecast table, model pickle, and model sidecar can be audited together.
-Stored model files are not gzip-rewritten even when `compression="gzip"`;
-the manifest records their existing paths and hashes.
-
-Stored-model records use:
-
-| `kind` | `format` | Path source |
-| --- | --- | --- |
-| `stored_model_pickle` | `pickle` | `stored_model["model_path"]` when present. |
-| `stored_model_metadata` | `json` | `stored_model["metadata_path"]` when present. |
-
-The record metadata includes the model alias, model spec, origin, horizon,
-`save_error`, the original `stored_model` dictionary, and `path_exists`.
-
-### Hashing and compression
-
-Every written artifact record includes:
-
-| Metadata field | Meaning |
-| --- | --- |
-| `path_exists` | Whether the file existed when the manifest record was created. |
-| `size_bytes` | File size in bytes, or `None` when missing. |
-| `sha256` | SHA-256 hash of the recorded file, or `None` when missing. |
-| `compression` | `"none"`, `"gzip"`, or `"zip"`. |
-
-`CompressionFormat` is the public type for supported compression choices:
-`"none"`, `"gzip"`, or `"zip"`.
-
-`compression="gzip"` rewrites each newly written study artifact as
-`<name>.<ext>.gz` and records the compressed path. Existing stored-model
-sidecars are not modified.
-
-`compression="zip"` leaves individual artifacts in place and adds
-`artifact_bundle.zip` to the manifest. The manifest itself is kept outside the
-zip so it remains directly inspectable.
-
-For a `DataFrame`, JSON export is not a bare list of records. It preserves
-metadata:
+#### Minimal Use
 
 ```python
-{
-    "metadata_schema": {"kind": "dataframe_artifact", "version": 1},
-    "shape": [n_rows, n_columns],
-    "columns": [...],
-    "index": [...],
-    "attrs": frame.attrs,
-    "data": [...]
-}
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.bundle_outputs(...)
+```
+### collect_provenance
+
+Qualified name: `macroforecast.output.core.collect_provenance`
+
+#### Signature
+
+```python
+macroforecast.output.collect_provenance(*, cwd: str | Path | None = None, fields: tuple[str, ...] | None = None) -> dict[str, Any]
 ```
 
-This is important for outputs from `metrics`, `tests`, `feature_engineering`,
-and `interpretation`. `attrs["macroforecast_metadata_schema"]` records table
-structure and schema version; `attrs["macroforecast_metadata"]` records source
-and function-specific metadata. CSV and markdown are human-readable views; the
-manifest still records the DataFrame attrs so metadata is not lost silently.
+#### Description
 
-### Custom artifacts
+Collect lightweight package, Python, platform, and git provenance.
 
-Custom outputs do not need a separate registry. Pass a mapping of names to
-objects:
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `cwd` | keyword only | `str \| Path \| None` | `None` |
+| `fields` | keyword only | `tuple[str, ...] \| None` | `None` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
 
 ```python
-mf.output.write_artifacts(
-    {
-        "forecast_result": result,
-        "custom_diagnostic": diagnostic_table,
-        "run_notes": {"design": "local robustness check", "accepted": True},
-    },
-    "results/my_run",
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.collect_provenance(...)
+```
+### forecast_shapley_tables
+
+Qualified name: `macroforecast.output.core.forecast_shapley_tables`
+
+#### Signature
+
+```python
+macroforecast.output.forecast_shapley_tables(value: Any, *, prefix: str = "oshapley") -> dict[str, pd.DataFrame]
 ```
 
-| Input object | Written as | Metadata behavior |
-| --- | --- | --- |
-| `DataFrame` | One file per requested `formats` entry. | `attrs` are stored in JSON and in the manifest record. |
-| `ForecastResult` | Forecast JSON plus forecast CSV. | Runner metadata and stored-model sidecars are recorded. |
-| Mapping/list/scalar | JSON. | Manifest records object type, mapping keys, or sequence length. |
+#### Description
 
-This is the preferred path for project-local custom diagnostics,
-interpretation tables, robustness notes, and manually curated metadata that do
-not belong in a model, feature, or evaluation contract.
+Return oShapley/PBSV sidecar tables for output writing.
 
-## collect_provenance
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `Any` | `required` |
+| `prefix` | keyword only | `str` | `"oshapley"` |
+
+#### Returns
+
+`dict[str, pd.DataFrame]`
+
+#### Minimal Use
 
 ```python
-macroforecast.output.collect_provenance(cwd=None) -> dict
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.forecast_shapley_tables(...)
+```
+### forecast_table
+
+Qualified name: `macroforecast.output.core.forecast_table`
+
+#### Signature
+
+```python
+macroforecast.output.forecast_table(result: ForecastResult | pd.DataFrame) -> pd.DataFrame
 ```
 
-Returns a dictionary containing `macroforecast_version`, Python version,
-Python executable, current working directory, platform string,
-git commit/branch/dirty flag, and core package versions.
+#### Description
 
-Use `fields=(...)` to keep only selected top-level fields:
+Return the standard forecast table output.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `result` | positional or keyword | `ForecastResult \| pd.DataFrame` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-macroforecast.output.collect_provenance(
-    fields=("macroforecast_version", "git", "packages")
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.forecast_table(...)
+```
+### interpretation_outputs
+
+Qualified name: `macroforecast.output.core.interpretation_outputs`
+
+#### Signature
+
+```python
+macroforecast.output.interpretation_outputs(interpretation: Mapping[str, Any] | pd.DataFrame | Any, *, prefix: str = "interpretation") -> OutputBundle
 ```
 
-## ArtifactManifest
+#### Description
+
+Build output-ready artifacts from one or more interpretation results.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `interpretation` | positional or keyword | `Mapping[str, Any] \| pd.DataFrame \| Any` | `required` |
+| `prefix` | keyword only | `str` | `"interpretation"` |
+
+#### Returns
+
+`OutputBundle`
+
+#### Minimal Use
 
 ```python
-manifest.to_dict() -> dict
-manifest.to_frame() -> pandas.DataFrame
-manifest.to_json(path=None, indent=2) -> str
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.interpretation_outputs(...)
+```
+### interpretation_table
+
+Qualified name: `macroforecast.output.core.interpretation_table`
+
+#### Signature
+
+```python
+macroforecast.output.interpretation_table(value: Any) -> pd.DataFrame
 ```
 
-Use `to_frame()` when reviewing output in a notebook and `to_json()` when
-persisting a manifest object produced elsewhere.
+#### Description
 
-## Example
+Return a standardized interpretation output table.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-result = mf.forecasting.run(panel, "ridge", features=features)
-manifest = mf.output.write_artifacts(result, "results/ridge_run")
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.interpretation_table(...)
+```
+### metadata_table
 
-metrics = result.evaluate(metrics=["rmse", "mae"])
-mf.output.write_artifacts(
-    {"forecasts": result, "metrics": metrics},
-    "results/ridge_run",
-    formats=("json", "csv"),
-)
+Qualified name: `macroforecast.output.core.metadata_table`
+
+#### Signature
+
+```python
+macroforecast.output.metadata_table(value: Any, *, prefix: str = "") -> pd.DataFrame
+```
+
+#### Description
+
+Flatten metadata from a result, report, bundle, mapping, or object.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `Any` | `required` |
+| `prefix` | keyword only | `str` | `""` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.metadata_table(...)
+```
+### metric_table
+
+Qualified name: `macroforecast.output.core.metric_table`
+
+#### Signature
+
+```python
+macroforecast.output.metric_table(report: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return the main metric score table from an evaluation output.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.metric_table(...)
+```
+### model_selection_table
+
+Qualified name: `macroforecast.output.core.model_selection_table`
+
+#### Signature
+
+```python
+macroforecast.output.model_selection_table(model_selection: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return model-selection trial or metadata output.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `model_selection` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.model_selection_table(...)
+```
+### model_table
+
+Qualified name: `macroforecast.output.core.model_table`
+
+#### Signature
+
+```python
+macroforecast.output.model_table(models: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return a compact table of fitted model metadata or stored model paths.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `models` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.model_table(...)
+```
+### name_outputs
+
+Qualified name: `macroforecast.output.core.name_outputs`
+
+#### Signature
+
+```python
+macroforecast.output.name_outputs(bundle: OutputBundle | Mapping[str, Any], *, convention: "Literal['identity', 'descriptive', 'kind', 'prefixed']" = "descriptive", prefix: str | None = None) -> OutputBundle
+```
+
+#### Description
+
+Rename output objects before writing artifacts.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `bundle` | positional or keyword | `OutputBundle \| Mapping[str, Any]` | `required` |
+| `convention` | keyword only | `Literal['identity', 'descriptive', 'kind', 'prefixed']` | `"descriptive"` |
+| `prefix` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`OutputBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.name_outputs(...)
+```
+### ranking_table
+
+Qualified name: `macroforecast.output.core.ranking_table`
+
+#### Signature
+
+```python
+macroforecast.output.ranking_table(report: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return a ranking table from an evaluation output.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.ranking_table(...)
+```
+### run_summary
+
+Qualified name: `macroforecast.output.core.run_summary`
+
+#### Signature
+
+```python
+macroforecast.output.run_summary(result: ForecastResult | pd.DataFrame | None = None, *, evaluation: Any | None = None, tests: Any | None = None, model_selection: Any | None = None, models: Any | None = None, metadata: Mapping[str, Any] | None = None) -> dict[str, Any]
+```
+
+#### Description
+
+Return a compact JSON output summary for a study run.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `result` | positional or keyword | `ForecastResult \| pd.DataFrame \| None` | `None` |
+| `evaluation` | keyword only | `Any \| None` | `None` |
+| `tests` | keyword only | `Any \| None` | `None` |
+| `model_selection` | keyword only | `Any \| None` | `None` |
+| `models` | keyword only | `Any \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.run_summary(...)
+```
+### select_outputs
+
+Qualified name: `macroforecast.output.core.select_outputs`
+
+#### Signature
+
+```python
+macroforecast.output.select_outputs(bundle: OutputBundle | Mapping[str, Any], *, objects: tuple[str, ...] | list[str]) -> OutputBundle
+```
+
+#### Description
+
+Select named outputs from a bundle or mapping.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `bundle` | positional or keyword | `OutputBundle \| Mapping[str, Any]` | `required` |
+| `objects` | keyword only | `tuple[str, ...] \| list[str]` | `required` |
+
+#### Returns
+
+`OutputBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.select_outputs(...)
+```
+### test_table
+
+Qualified name: `macroforecast.output.core.test_table`
+
+#### Signature
+
+```python
+macroforecast.output.test_table(results: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return a flat table from one or more forecast test results.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `results` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.test_table(...)
+```
+### write_artifacts
+
+Qualified name: `macroforecast.output.core.write_artifacts`
+
+#### Signature
+
+```python
+macroforecast.output.write_artifacts(artifacts: Mapping[str, Any] | ForecastResult | pd.DataFrame | OutputBundle, output_dir: str | Path, *, formats: tuple[ExportFormat, ...] = ('json', 'csv'), manifest_format: ManifestFormat = "json", include_provenance: bool = True, provenance_fields: tuple[str, ...] | None = None, compression: CompressionFormat = "none", layout: ArtifactLayout = "flat") -> ArtifactManifest
+```
+
+#### Description
+
+Write forecast/package artifacts and a reproducibility manifest.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `artifacts` | positional or keyword | `Mapping[str, Any] \| ForecastResult \| pd.DataFrame \| OutputBundle` | `required` |
+| `output_dir` | positional or keyword | `str \| Path` | `required` |
+| `formats` | keyword only | `tuple[ExportFormat, ...]` | `("json", "csv")` |
+| `manifest_format` | keyword only | `ManifestFormat` | `"json"` |
+| `include_provenance` | keyword only | `bool` | `True` |
+| `provenance_fields` | keyword only | `tuple[str, ...] \| None` | `None` |
+| `compression` | keyword only | `CompressionFormat` | `"none"` |
+| `layout` | keyword only | `ArtifactLayout` | `"flat"` |
+
+#### Returns
+
+`ArtifactManifest`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.write_artifacts(...)
 ```

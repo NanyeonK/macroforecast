@@ -34,7 +34,27 @@ TCODE_TARGET_MAP: dict[int, tuple[str, str]] = {
 
 @dataclass(frozen=True)
 class TargetSpec:
-    """A forecast target and how its forecast object is defined."""
+    """A forecast target and how its forecast object is defined.
+
+    ``name`` is the panel column to forecast. ``transform`` and ``policy`` may
+    be left as ``None`` so FRED transformation-code metadata chooses the
+    conventional forecast object. For example, a FRED-MD growth-rate target
+    resolves to a direct-average growth forecast rather than a raw level
+    forecast. ``annualize`` affects reporting scale only, while ``reduce_i2``
+    keeps the package's convention for I(2) series by forecasting the
+    first-difference object.
+
+    Returns
+    -------
+    TargetSpec
+        Immutable target declaration consumed by ``pipeline_spec(...)`` and
+        resolved to ``ResolvedTarget`` during execution.
+
+    Example
+    -------
+    >>> from macroforecast.pipeline import TargetSpec
+    >>> target = TargetSpec(name="INDPRO", annualize=True)
+    """
 
     name: str
     transform: str | None = None  # None -> derive from the t-code

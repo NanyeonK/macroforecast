@@ -2,468 +2,748 @@
 
 [Back to reference](index.md)
 
-`macroforecast.reporting` is separate from `macroforecast.output`.
+Markdown, HTML, and LaTeX report-table rendering.
 
-| Module | Owns | Does not own |
+## Public Symbols
+
+| Symbol | Kind | Summary |
 | --- | --- | --- |
-| `macroforecast.output` | Generate output tables/JSON summaries and write artifacts. | Paper/table presentation style. |
-| `macroforecast.reporting` | Format tables, render LaTeX/HTML/Markdown, create figure-ready data, and produce paper-facing metric/test tables. | Model fitting, evaluation, testing, or artifact writing. |
+| `ReportBundle` | class | Named in-memory report outputs. |
+| `ReportTable` | class | Presentation-ready table that has not been written to disk. |
+| `accuracy_table` | function | Return the default paper-facing forecast accuracy table. |
+| `evaluation_report_tables` | function | Return named paper-facing tables from an evaluation report. |
+| `figure_data` | function | Return a tidy frame intended for plotting or figure export. |
+| `forecast_test_table` | function | Return the default paper-facing forecast-comparison test table. |
+| `html_table` | function | Render a report table as HTML text. |
+| `latex_table` | function | Render a report table as LaTeX text. |
+| `markdown_table` | function | Render a report table as GitHub-flavored Markdown text. |
+| `metric_report_table` | function | Return a paper-facing metric/evaluation table. |
+| `model_comparison_table` | function | Return the default paper-facing model ranking/comparison table. |
+| `paper_accuracy_table` | function | One line from a ``PipelineReport`` to a referee-ready horse-race table. |
+| `render_tables` | function | Render all tables in a bundle or mapping. |
+| `report_bundle` | function | Collect named reporting tables and figure data without writing files. |
+| `report_table` | function | Return a presentation-ready table without writing files. |
+| `test_provenance_table` | function | Return a source-alignment table for forecast-test outputs. |
+| `test_report_table` | function | Return a paper-facing forecast-test result table. |
 
-The reporting functions are callable and in-memory. They do not write files.
-Call them through the namespace, for example `mf.reporting.report_table(...)`.
-Reporting helpers are not exported as top-level shortcuts.
+## Callable And Class Reference
 
-## report_table
+### ReportBundle
+
+Qualified name: `macroforecast.reporting.core.ReportBundle`
+
+#### Signature
 
 ```python
-macroforecast.reporting.report_table(
-    table,
-    *,
-    columns=None,
-    rename=None,
-    sort_by=None,
-    ascending=True,
-    index=False,
-    precision=3,
-    percent_columns=(),
-    missing="",
-    caption=None,
-    label=None,
-    notes=(),
-    metadata=None,
-) -> ReportTable
+macroforecast.reporting.ReportBundle(tables: dict[str, ReportTable] = <factory>, figures: dict[str, pd.DataFrame] = <factory>, metadata: dict[str, Any] = <factory>, metadata_schema: dict[str, Any] = <factory>) -> None
 ```
 
-Creates a presentation-ready table from a pandas-like object.
+#### Description
 
-| Argument | Default | Meaning |
+Named in-memory report outputs.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `tables` | positional or keyword | `dict[str, ReportTable]` | `<factory>` |
+| `figures` | positional or keyword | `dict[str, pd.DataFrame]` | `<factory>` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `metadata_schema` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.reporting.ReportBundle(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
 | --- | --- | --- |
-| `columns` | `None` | Optional selected column order. Missing columns raise `KeyError`. |
-| `rename` | `None` | Mapping from source names to display names. |
-| `sort_by` | `None` | Optional sort column or columns. |
-| `ascending` | `True` | Sort direction. |
-| `index` | `False` | Whether to include the original index as columns. |
-| `precision` | `3` | Digits after the decimal for numeric values. |
-| `percent_columns` | `()` | Display columns as percentages after renaming. |
-| `missing` | `""` | Display value for missing or non-finite numeric values. |
-| `caption`, `label`, `notes` | `None`, `None`, `()` | Presentation metadata for rendered output. |
-| `metadata` | `None` | User metadata stored on the `ReportTable`. |
+| `tables` | `dict[str, ReportTable]` | `default_factory` |
+| `figures` | `dict[str, pd.DataFrame]` | `default_factory` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `metadata_schema` | `dict[str, Any]` | `default_factory` |
 
-Output: `ReportTable(data, caption, label, notes, metadata)`.
+#### Public Methods
 
-`ReportTable.data` is a formatted `DataFrame` and carries
-`attrs["macroforecast_metadata_schema"]["kind"] = "report_table"`.
-Formatting metadata such as source shape, precision, and percentage columns is
-stored separately in `attrs["macroforecast_metadata"]`.
-
-## metric_report_table
-
-```python
-macroforecast.reporting.metric_report_table(
-    results,
-    *,
-    table="scores",
-    columns=None,
-    rename=None,
-    sort_by=None,
-    ascending=True,
-    precision=3,
-    percent_columns=(),
-    missing="",
-    caption=None,
-    label=None,
-    notes=(),
-    metadata=None,
-) -> ReportTable
-```
-
-Creates a paper-facing metric table from an `EvaluationReport` or a raw
-metric-like `DataFrame`. For an `EvaluationReport`, `table` selects which
-component to display:
-
-| `table` | Source |
-| --- | --- |
-| `"scores"` | `report.scores` |
-| `"ranking"` | `report.ranking` |
-| `"benchmark"` | `report.benchmark` |
-| `"regime"` | `report.regime` |
-| `"decomposition"` | `report.decomposition` |
-
-Default display labels convert common columns such as `model`, `horizon`,
-`rmse`, `relative_mse`, and `r2_oos` to `Model`, `H`, `RMSE`,
-`Relative MSE`, and `R2 OOS`. Use `columns` to choose the paper table spine,
-`rename` to override labels, and `percent_columns` when a column should be
-displayed as a percentage.
-
-## evaluation_report_tables
-
-```python
-macroforecast.reporting.evaluation_report_tables(
-    report,
-    *,
-    include=("scores", "ranking", "benchmark", "regime", "decomposition"),
-    include_aggregations=False,
-    captions=None,
-    labels=None,
-    precision=3,
-    percent_columns=(),
-    missing="",
-    metadata=None,
-) -> ReportBundle
-```
-
-Creates a named `ReportBundle` from an `EvaluationReport`. Unavailable optional
-tables are skipped. Set `include_aggregations=True` or include `"aggregations"`
-in `include` to add all `report.aggregations` under names like
-`aggregation_model_horizon_target`.
-
-## accuracy_table
-
-```python
-macroforecast.reporting.accuracy_table(
-    results,
-    *,
-    columns=None,
-    sort_by=("horizon", "rmse"),
-    ascending=True,
-    precision=3,
-    percent_columns=("r2_oos", "mse_reduction", "success_ratio"),
-    missing="",
-    caption="Forecast accuracy",
-    label=None,
-    notes=("Lower error metrics and higher R2 OOS are better.",),
-    metadata=None,
-) -> ReportTable
-```
-
-Paper-table preset for forecast accuracy. Input is an `EvaluationReport` or a
-raw score `DataFrame`. Output is a `ReportTable`. If `columns=None`, the preset
-uses available columns from `model`, `horizon`, `rmse`, `mae`, `r2_oos`, and
-`relative_mse`; missing optional columns are skipped rather than raising.
-
-## model_comparison_table
-
-```python
-macroforecast.reporting.model_comparison_table(
-    results,
-    *,
-    columns=None,
-    sort_by=("horizon", "rank"),
-    ascending=True,
-    precision=3,
-    percent_columns=("r2_oos",),
-    missing="",
-    caption="Model comparison",
-    label=None,
-    notes=("Ranks are computed by the evaluation report rank metric.",),
-    metadata=None,
-) -> ReportTable
-```
-
-Paper-table preset for model ranking/comparison. Input is an
-`EvaluationReport` or ranking-like `DataFrame`. Output is a `ReportTable`. If
-`columns=None`, the preset uses available columns from `rank`, `model`,
-`horizon`, `rmse`, `mae`, `r2_oos`, and `relative_mse`.
-
-## forecast_test_table
-
-```python
-macroforecast.reporting.forecast_test_table(
-    results,
-    *,
-    columns=None,
-    include_reference=False,
-    stars=True,
-    star_levels=((0.01, "***"), (0.05, "**"), (0.1, "*")),
-    precision=3,
-    p_value_precision=3,
-    missing="",
-    caption="Forecast comparison tests",
-    label=None,
-    notes=(),
-    metadata=None,
-) -> ReportTable
-```
-
-Paper-table preset for forecast-comparison tests. Input is a `TestResult`, a
-mapping of named `TestResult` objects, or any object accepted by
-`test_report_table(...)`. Output is a `ReportTable`. Use this preset when the
-paper needs the standard test statistic, p-value, rejection, and sample-size
-columns; use `test_provenance_table(...)` for source-alignment details.
-
-## paper_accuracy_table
-
-```python
-macroforecast.reporting.paper_accuracy_table(
-    report,
-    *,
-    target=None,
-    metric="rel_rmse",
-    star_levels=((0.01, "***"), (0.05, "**"), (0.10, "*")),
-    mcs_mark="†",
-    benchmark_row=True,
-    precision=3,
-    missing="--",
-    caption=None,
-    label=None,
-    notes=(),
-    metadata=None,
-) -> ReportTable | dict[str, ReportTable]
-```
-
-One line from a `PipelineReport` to the wide models-by-horizons table ("Table
-3") that almost every macro forecasting paper publishes: rel-RMSE with
-Diebold-Mariano significance stars and a Model Confidence Set marker, joined
-from the three separate long frames `run_pipeline` returns.
-
-| Argument | Default | Meaning |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| `report` | — | A `PipelineReport`, or anything exposing `.accuracy` (required) and optionally `.significance`/`.mcs` with the same column contract as `macroforecast.pipeline.evaluate`'s output. A mapping with `"accuracy"`/`"significance"`/`"mcs"` keys also works. |
-| `target` | `None` | Restrict to one target. With `None` and more than one target present, returns `dict[target, ReportTable]` instead of a single table (see below). |
-| `metric` | `"rel_rmse"` | The accuracy column to display. `"rel_rmse"` is computed here as `sqrt(relative_mse)` (not itself a column of `report.accuracy`). Any other column already on the accuracy frame (`"relative_mse"`, `"rmse"`, `"r2_oos"`, ...) is used as-is. |
-| `star_levels` | `((0.01,"***"),(0.05,"**"),(0.10,"*"))` | `(p_value_threshold, marker)` pairs for the DM significance stars, smallest threshold first. |
-| `mcs_mark` | `"†"` | Marker appended where `report.mcs.in_mcs` is True for that `(target, horizon, contender)`. |
-| `benchmark_row` | `True` | Set `False` to drop the benchmark's own row (always `1.000` by construction). |
-| `precision` | `3` | Digits after the decimal for the metric value. |
-| `missing` | `"--"` | Display value where the metric could not be computed. |
-| `caption`, `label`, `notes`, `metadata` | — | Same presentation fields as the other preset builders. |
+| `render` | `render(self, *, format: RenderFormat = "latex") -> dict[str, str]` | No public docstring is available. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### ReportTable
 
-Output rows are models (the benchmark first, when `benchmark_row=True`),
-columns are horizons (`h1`, `h3`, ...). DM stars are joined on `(target,
-horizon, contender)` from `report.significance`; the benchmark's own row is
-never starred. Missing `significance`/`mcs` frames (or missing rows within
-them) contribute no stars/marker rather than raising -- not every
-`PipelineReport` carries them.
+Qualified name: `macroforecast.reporting.core.ReportTable`
 
-Multi-target reports return `dict[target, ReportTable]` rather than one
-stacked frame: different targets can have different available horizons and a
-different benchmark-present status, and a `ReportTable` is a single flat 2-D
-grid, so folding targets together would either force a ragged union of
-horizons or break the "one line to `\begin{tabular}`" contract this function
-exists to provide. Passing an explicit `target=...`, or a report that only has
-one target, returns that target's `ReportTable` directly.
+#### Signature
 
 ```python
-report = run_pipeline(spec)  # PipelineReport: AR benchmark vs. RF, one target
-
-table = mf.reporting.paper_accuracy_table(report)
-print(table.to_latex(booktabs=True))
+macroforecast.reporting.ReportTable(data: pd.DataFrame, caption: str | None = None, label: str | None = None, notes: tuple[str, ...] = (), metadata: dict[str, Any] = <factory>, metadata_schema: dict[str, Any] = <factory>) -> None
 ```
 
-```text
-\begin{table}[!htbp]
-\centering
-\caption{Forecast accuracy — demand\_index}
-\begin{tabular}{lll}
-\toprule
-Model & h1 & h3 \\
-\midrule
-AR (benchmark) & 1.000† & 1.000† \\
-Ridge & 0.997† & 1.016† \\
-\bottomrule
-\end{tabular}
-\\[-0.2em]{\footnotesize Entries are rel-RMSE relative to the benchmark (AR); the benchmark's own value is 1.000 by construction.}
-\\[-0.2em]{\footnotesize Significance markers: *** p<=0.01, ** p<=0.05, * p<=0.1. (Diebold-Mariano test vs. the benchmark).}
-\\[-0.2em]{\footnotesize † denotes inclusion in the Model Confidence Set.}
-\end{table}
-```
+#### Description
 
-For the full worked example -- your own CSV, your own model, a horse race, and
-this table -- see
-[Your Data, Your Model, One Table](../guide/custom_data_tutorial.md).
+Presentation-ready table that has not been written to disk.
 
-## test_report_table
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `pd.DataFrame` | `required` |
+| `caption` | positional or keyword | `str \| None` | `None` |
+| `label` | positional or keyword | `str \| None` | `None` |
+| `notes` | positional or keyword | `tuple[str, ...]` | `()` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `metadata_schema` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.reporting.test_report_table(
-    results,
-    *,
-    columns=None,
-    include_reference=False,
-    stars=True,
-    star_levels=((0.01, "***"), (0.05, "**"), (0.1, "*")),
-    precision=3,
-    p_value_precision=3,
-    missing="",
-    caption=None,
-    label=None,
-    notes=(),
-    metadata=None,
-) -> ReportTable
+import macroforecast as mf
+# Construct with the signature above:
+# mf.reporting.ReportTable(...)
 ```
 
-Creates a paper-facing table from one or more forecast-test outputs. Input can
-be a `TestResult`, a mapping or sequence of `TestResult` objects, a raw
-`macroforecast.output.test_table(...)`, or a stacked table from functions such
-as `macroforecast.tests.equal_predictive_tests(...)`.
+#### Dataclass Fields
 
-Default output columns:
+| Field | Type | Default |
+| --- | --- | --- |
+| `data` | `pd.DataFrame` | `required` |
+| `caption` | `str \| None` | `None` |
+| `label` | `str \| None` | `None` |
+| `notes` | `tuple[str, ...]` | `()` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `metadata_schema` | `dict[str, Any]` | `default_factory` |
 
-| Column | Meaning |
-| --- | --- |
-| `Test` | Requested key, such as `dm`, `gw`, `dmp`, or `hn`. |
-| `Name` | Display name from component metadata. |
-| `Ref.` | Statistic reference family, such as `t` or `z`. |
-| `Statistic` | Formatted test statistic. |
-| `p-value` | Formatted p-value, optionally with significance markers. |
-| `Reject` | `Yes` or `No` based on the component decision flag. |
-| `N` | Number of aligned observations used by the component test. |
+#### Public Methods
 
-Set `include_reference=True` to add a compact `Source` column. For detailed
-R/source alignment, use `test_provenance_table(...)` instead of placing long
-source text in the main paper table.
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+| `to_html` | `to_html(self) -> str` | No public docstring is available. |
+| `to_latex` | `to_latex(self, *, booktabs: bool = True) -> str` | No public docstring is available. |
+| `to_markdown` | `to_markdown(self) -> str` | No public docstring is available. |
+### accuracy_table
 
-## test_provenance_table
+Qualified name: `macroforecast.reporting.core.accuracy_table`
+
+#### Signature
 
 ```python
-macroforecast.reporting.test_provenance_table(
-    results,
-    *,
-    columns=None,
-    missing="",
-    caption=None,
-    label=None,
-    notes=(),
-    metadata=None,
-) -> ReportTable
+macroforecast.reporting.accuracy_table(results: Any, *, columns: Sequence[str] | None = None, sort_by: str | Sequence[str] | None = ('horizon', 'rmse'), ascending: bool | Sequence[bool] = True, precision: int = 3, percent_columns: Sequence[str] = ('r2_oos', 'mse_reduction', 'success_ratio'), missing: str = "", caption: str | None = "Forecast accuracy", label: str | None = None, notes: Sequence[str] = ('Lower error metrics and higher R2 OOS are better.',), metadata: Mapping[str, Any] | None = None) -> ReportTable
 ```
 
-Creates a source-alignment table for appendices, replication packages, or audit
-logs. It keeps the null hypothesis, p-value reference distribution, source
-reference, R reference, and alignment note separate from the compact paper
-table.
+#### Description
 
-Default output columns:
+Return the default paper-facing forecast accuracy table.
 
-| Column | Meaning |
-| --- | --- |
-| `Test`, `Name` | Requested key and display name. |
-| `Null` | Null hypothesis recorded by the component test. |
-| `P-value ref.` | Reference distribution for the p-value. |
-| `Status` | P-value availability flag. |
-| `Source` | Package/source formula reference. |
-| `R reference` | Exact R comparator when one is claimed; blank otherwise. |
-| `Alignment` | Text description of exact, partial, or unavailable source alignment. |
+#### Parameters
 
-## Renderers
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `results` | positional or keyword | `Any` | `required` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `sort_by` | keyword only | `str \| Sequence[str] \| None` | `("horizon", "rmse")` |
+| `ascending` | keyword only | `bool \| Sequence[bool]` | `True` |
+| `precision` | keyword only | `int` | `3` |
+| `percent_columns` | keyword only | `Sequence[str]` | `("r2_oos", "mse_reduction", "success_ratio")` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `"Forecast accuracy"` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `("Lower error metrics and higher R2 OOS are better.",)` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
 
 ```python
-macroforecast.reporting.latex_table(table, *, booktabs=True) -> str
-macroforecast.reporting.html_table(table) -> str
-macroforecast.reporting.markdown_table(table) -> str
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.accuracy_table(...)
+```
+### evaluation_report_tables
+
+Qualified name: `macroforecast.reporting.core.evaluation_report_tables`
+
+#### Signature
+
+```python
+macroforecast.reporting.evaluation_report_tables(report: Any, *, include: Sequence[str] = ('scores', 'ranking', 'benchmark', 'regime', 'decomposition'), include_aggregations: bool = False, captions: Mapping[str, str] | None = None, labels: Mapping[str, str] | None = None, precision: int = 3, percent_columns: Sequence[str] = (), missing: str = "", metadata: Mapping[str, Any] | None = None) -> ReportBundle
 ```
 
-Each renderer accepts either a `ReportTable` or a raw table-like object. Raw
-objects are passed through `report_table()` first.
+#### Description
 
-`latex_table(..., booktabs=True)` uses `\toprule`, `\midrule`, and
-`\bottomrule`. Set `booktabs=False` to use `\hline`.
+Return named paper-facing tables from an evaluation report.
 
-## figure_data
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+| `include` | keyword only | `Sequence[str]` | `("scores", "ranking", "benchmark", "regime", "decomposition")` |
+| `include_aggregations` | keyword only | `bool` | `False` |
+| `captions` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `labels` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `precision` | keyword only | `int` | `3` |
+| `percent_columns` | keyword only | `Sequence[str]` | `()` |
+| `missing` | keyword only | `str` | `""` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportBundle`
+
+#### Minimal Use
 
 ```python
-macroforecast.reporting.figure_data(
-    data,
-    *,
-    x=None,
-    y=None,
-    group=None,
-    columns=None,
-    rename=None,
-    dropna=True,
-) -> pandas.DataFrame
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.evaluation_report_tables(...)
+```
+### figure_data
+
+Qualified name: `macroforecast.reporting.core.figure_data`
+
+#### Signature
+
+```python
+macroforecast.reporting.figure_data(data: Any, *, x: str | None = None, y: str | Sequence[str] | None = None, group: str | None = None, columns: Sequence[str] | None = None, rename: Mapping[str, str] | None = None, dropna: bool = True) -> pd.DataFrame
 ```
 
-Creates a tidy plotting/export frame. Use `columns` for an explicit selected
-column set, or use `x`, `y`, and `group` to select plot roles.
+#### Description
 
-Output: `DataFrame` with
-`attrs["macroforecast_metadata_schema"]["kind"] = "figure_data"`.
-Figure-role metadata such as `x`, `y`, `group`, `dropna`, and source shape is
-stored in `attrs["macroforecast_metadata"]`.
+Return a tidy frame intended for plotting or figure export.
 
-## report_bundle
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `x` | keyword only | `str \| None` | `None` |
+| `y` | keyword only | `str \| Sequence[str] \| None` | `None` |
+| `group` | keyword only | `str \| None` | `None` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `dropna` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-macroforecast.reporting.report_bundle(
-    *,
-    tables=None,
-    figures=None,
-    metadata=None,
-) -> ReportBundle
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.figure_data(...)
+```
+### forecast_test_table
+
+Qualified name: `macroforecast.reporting.core.forecast_test_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.forecast_test_table(results: Any, *, columns: Sequence[str] | None = None, include_reference: bool = False, stars: bool = True, star_levels: PValueStarLevels = ((0.01, '***'), (0.05, '**'), (0.1, '*')), precision: int = 3, p_value_precision: int = 3, missing: str = "", caption: str | None = "Forecast comparison tests", label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable
 ```
 
-Collects named report tables and figure data without writing files.
+#### Description
 
-| Field | Meaning |
-| --- | --- |
-| `tables` | Mapping from name to `ReportTable`. Raw table-like objects are converted with `report_table()`. |
-| `figures` | Mapping from name to figure-ready `DataFrame`. Raw objects are converted with `figure_data()`. |
-| `metadata` | Bundle-level metadata. |
+Return the default paper-facing forecast-comparison test table.
 
-## render_tables
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `results` | positional or keyword | `Any` | `required` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `include_reference` | keyword only | `bool` | `False` |
+| `stars` | keyword only | `bool` | `True` |
+| `star_levels` | keyword only | `PValueStarLevels` | `((0.01, "***"), (0.05, "**"), (0.1, "*"))` |
+| `precision` | keyword only | `int` | `3` |
+| `p_value_precision` | keyword only | `int` | `3` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `"Forecast comparison tests"` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `()` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
 
 ```python
-macroforecast.reporting.render_tables(bundle, *, format="latex") -> dict[str, str]
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.forecast_test_table(...)
+```
+### html_table
+
+Qualified name: `macroforecast.reporting.core.html_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.html_table(value: ReportTable | Any, **kwargs: Any) -> str
 ```
 
-Renders every table in a `ReportBundle` or table mapping. Supported formats:
-`"latex"`, `"html"`, and `"markdown"`.
+#### Description
 
-## Example
+Render a report table as HTML text.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `ReportTable \| Any` | `required` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`str`
+
+#### Minimal Use
 
 ```python
-report = mf.reporting.report_table(
-    scores,
-    columns=("model", "horizon", "rmse", "r2_oos"),
-    rename={"model": "Model", "rmse": "RMSE", "r2_oos": "R2 OOS"},
-    sort_by="rmse",
-    precision=3,
-    percent_columns=("R2 OOS",),
-    caption="Forecast accuracy",
-    label="tab:forecast_accuracy",
-    notes=("Lower RMSE is better.",),
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.html_table(...)
+```
+### latex_table
 
-latex = report.to_latex()
+Qualified name: `macroforecast.reporting.core.latex_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.latex_table(value: ReportTable | Any, *, booktabs: bool = True, **kwargs: Any) -> str
 ```
 
-Evaluation reporting example:
+#### Description
+
+Render a report table as LaTeX text.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `ReportTable \| Any` | `required` |
+| `booktabs` | keyword only | `bool` | `True` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`str`
+
+#### Minimal Use
 
 ```python
-report = mf.evaluation.evaluate_report(
-    forecast_result,
-    metrics=("rmse", "mae", "relative_mse", "r2_oos"),
-    benchmark_model="historical_mean",
-    include_decomposition=True,
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.latex_table(...)
+```
+### markdown_table
 
-accuracy_table = mf.reporting.accuracy_table(report)
-model_table = mf.reporting.model_comparison_table(report)
+Qualified name: `macroforecast.reporting.core.markdown_table`
 
-paper_tables = mf.reporting.evaluation_report_tables(
-    report,
-    include=("scores", "ranking", "benchmark", "decomposition"),
-    percent_columns=("r2_oos",),
-)
+#### Signature
+
+```python
+macroforecast.reporting.markdown_table(value: ReportTable | Any, **kwargs: Any) -> str
 ```
 
-Forecast-test reporting example:
+#### Description
+
+Render a report table as GitHub-flavored Markdown text.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `ReportTable \| Any` | `required` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`str`
+
+#### Minimal Use
 
 ```python
-tests = mf.tests.equal_predictive_tests(
-    loss_a,
-    loss_b,
-    tests=("dm", "gw", "dmp", "hn"),
-    error_a=error_a,
-    error_b=error_b,
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.markdown_table(...)
+```
+### metric_report_table
 
-main_table = mf.reporting.forecast_test_table(
-    tests,
-    label="tab:equal_predictive_tests",
-)
-appendix_table = mf.reporting.test_provenance_table(tests)
+Qualified name: `macroforecast.reporting.core.metric_report_table`
 
-latex = main_table.to_latex()
+#### Signature
+
+```python
+macroforecast.reporting.metric_report_table(results: Any, *, table: EvaluationTableName = "scores", columns: Sequence[str] | None = None, rename: Mapping[str, str] | None = None, sort_by: str | Sequence[str] | None = None, ascending: bool | Sequence[bool] = True, precision: int = 3, percent_columns: Sequence[str] = (), missing: str = "", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable
+```
+
+#### Description
+
+Return a paper-facing metric/evaluation table.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `results` | positional or keyword | `Any` | `required` |
+| `table` | keyword only | `EvaluationTableName` | `"scores"` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `sort_by` | keyword only | `str \| Sequence[str] \| None` | `None` |
+| `ascending` | keyword only | `bool \| Sequence[bool]` | `True` |
+| `precision` | keyword only | `int` | `3` |
+| `percent_columns` | keyword only | `Sequence[str]` | `()` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `None` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `()` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.metric_report_table(...)
+```
+### model_comparison_table
+
+Qualified name: `macroforecast.reporting.core.model_comparison_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.model_comparison_table(results: Any, *, columns: Sequence[str] | None = None, sort_by: str | Sequence[str] | None = ('horizon', 'rank'), ascending: bool | Sequence[bool] = True, precision: int = 3, percent_columns: Sequence[str] = ('r2_oos',), missing: str = "", caption: str | None = "Model comparison", label: str | None = None, notes: Sequence[str] = ('Ranks are computed by the evaluation report rank metric.',), metadata: Mapping[str, Any] | None = None) -> ReportTable
+```
+
+#### Description
+
+Return the default paper-facing model ranking/comparison table.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `results` | positional or keyword | `Any` | `required` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `sort_by` | keyword only | `str \| Sequence[str] \| None` | `("horizon", "rank")` |
+| `ascending` | keyword only | `bool \| Sequence[bool]` | `True` |
+| `precision` | keyword only | `int` | `3` |
+| `percent_columns` | keyword only | `Sequence[str]` | `("r2_oos",)` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `"Model comparison"` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `("Ranks are computed by the evaluation report rank metric.",)` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.model_comparison_table(...)
+```
+### paper_accuracy_table
+
+Qualified name: `macroforecast.reporting.core.paper_accuracy_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.paper_accuracy_table(report: Any, *, target: str | None = None, metric: str = "rel_rmse", star_levels: PValueStarLevels = ((0.01, '***'), (0.05, '**'), (0.1, '*')), mcs_mark: str = "†", benchmark_row: bool = True, precision: int = 3, missing: str = "--", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable | dict[str, ReportTable]
+```
+
+#### Description
+
+One line from a ``PipelineReport`` to a referee-ready horse-race table.
+
+``run_pipeline`` returns three separate long frames -- ``.accuracy`` (RMSE /
+relative MSE / R2 OOS per target/horizon/contender), ``.significance`` (DM/CW
+p-values per target/horizon/contender), and ``.mcs`` (Model Confidence Set
+membership per target/horizon/contender). Nothing joined them into the wide
+models-by-horizons table that is "Table 3" of almost every macro forecasting
+paper -- rel-RMSE with significance stars and an MCS marker, one row per
+model, one column per horizon. This does that join.
+
+Accepts a ``PipelineReport`` (or any object/mapping exposing ``accuracy``,
+and optionally ``significance``/``mcs``, with the same column contract as
+``macroforecast.pipeline.evaluate``'s output).
+
+``metric``: the accuracy column to display. ``"rel_rmse"`` (the default) is
+computed here as ``sqrt(relative_mse)`` -- rel-RMSE is a common paper
+convention that is not itself a column of the accuracy frame. Any other
+column already on ``report.accuracy`` (``"relative_mse"``, ``"rmse"``,
+``"r2_oos"``, ...) may be passed instead and is used as-is.
+
+DM significance stars are joined from ``report.significance`` on
+``(target, horizon, contender)`` and rendered with ``star_levels``
+(``(threshold, marker)`` pairs, smallest threshold first); the benchmark row
+itself is never starred (DM never compares a contender to itself). The MCS
+marker (``mcs_mark``) is appended wherever ``report.mcs.in_mcs`` is True for
+that ``(target, horizon, contender)``. Missing significance/MCS frames (or
+missing rows within them) simply contribute no stars/marker rather than
+raising, since not every ``PipelineReport`` carries them.
+
+``benchmark_row=False`` drops the benchmark's own row (always rel-RMSE
+1.000 by construction, since it is scored against itself).
+
+Multi-target reports: with ``target=None`` and more than one distinct
+target in ``report.accuracy``, this returns ``dict[target, ReportTable]``
+rather than stacking targets into one frame. A ``ReportTable`` is one flat
+2-D presentation grid (see ``ReportTable.to_latex()``); different targets
+can have different available horizons and a different benchmark-present
+status, so folding them into one MultiIndex-columned or MultiIndex-rowed
+frame would either force a ragged union of horizons or break the plain
+"one line to ``\begin{tabular}``" contract this function exists to provide.
+A dict keeps each target's table independently well-formed and still lets a
+caller do ``paper_accuracy_table(report)["INDPRO"].to_latex()``. Passing an
+explicit ``target=...``, or a report that only has one target, returns that
+target's ``ReportTable`` directly (no dict wrapping) so the common case is
+truly one line to LaTeX.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+| `target` | keyword only | `str \| None` | `None` |
+| `metric` | keyword only | `str` | `"rel_rmse"` |
+| `star_levels` | keyword only | `PValueStarLevels` | `((0.01, "***"), (0.05, "**"), (0.1, "*"))` |
+| `mcs_mark` | keyword only | `str` | `"†"` |
+| `benchmark_row` | keyword only | `bool` | `True` |
+| `precision` | keyword only | `int` | `3` |
+| `missing` | keyword only | `str` | `"--"` |
+| `caption` | keyword only | `str \| None` | `None` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `()` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable | dict[str, ReportTable]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.paper_accuracy_table(...)
+```
+### render_tables
+
+Qualified name: `macroforecast.reporting.core.render_tables`
+
+#### Signature
+
+```python
+macroforecast.reporting.render_tables(value: ReportBundle | Mapping[str, ReportTable | Any], *, format: RenderFormat = "latex") -> dict[str, str]
+```
+
+#### Description
+
+Render all tables in a bundle or mapping.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `ReportBundle \| Mapping[str, ReportTable \| Any]` | `required` |
+| `format` | keyword only | `RenderFormat` | `"latex"` |
+
+#### Returns
+
+`dict[str, str]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.render_tables(...)
+```
+### report_bundle
+
+Qualified name: `macroforecast.reporting.core.report_bundle`
+
+#### Signature
+
+```python
+macroforecast.reporting.report_bundle(*, tables: Mapping[str, ReportTable | Any] | None = None, figures: Mapping[str, Any] | None = None, metadata: Mapping[str, Any] | None = None) -> ReportBundle
+```
+
+#### Description
+
+Collect named reporting tables and figure data without writing files.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `tables` | keyword only | `Mapping[str, ReportTable \| Any] \| None` | `None` |
+| `figures` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.report_bundle(...)
+```
+### report_table
+
+Qualified name: `macroforecast.reporting.core.report_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.report_table(table: Any, *, columns: Sequence[str] | None = None, rename: Mapping[str, str] | None = None, sort_by: str | Sequence[str] | None = None, ascending: bool | Sequence[bool] = True, index: bool = False, precision: int = 3, percent_columns: Sequence[str] = (), missing: str = "", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable
+```
+
+#### Description
+
+Return a presentation-ready table without writing files.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `table` | positional or keyword | `Any` | `required` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `sort_by` | keyword only | `str \| Sequence[str] \| None` | `None` |
+| `ascending` | keyword only | `bool \| Sequence[bool]` | `True` |
+| `index` | keyword only | `bool` | `False` |
+| `precision` | keyword only | `int` | `3` |
+| `percent_columns` | keyword only | `Sequence[str]` | `()` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `None` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `()` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.report_table(...)
+```
+### test_provenance_table
+
+Qualified name: `macroforecast.reporting.core.test_provenance_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.test_provenance_table(results: Any, *, columns: Sequence[str] | None = None, missing: str = "", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable
+```
+
+#### Description
+
+Return a source-alignment table for forecast-test outputs.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `results` | positional or keyword | `Any` | `required` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `None` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `()` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.test_provenance_table(...)
+```
+### test_report_table
+
+Qualified name: `macroforecast.reporting.core.test_report_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.test_report_table(results: Any, *, columns: Sequence[str] | None = None, include_reference: bool = False, stars: bool = True, star_levels: PValueStarLevels = ((0.01, '***'), (0.05, '**'), (0.1, '*')), precision: int = 3, p_value_precision: int = 3, missing: str = "", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable
+```
+
+#### Description
+
+Return a paper-facing forecast-test result table.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `results` | positional or keyword | `Any` | `required` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `include_reference` | keyword only | `bool` | `False` |
+| `stars` | keyword only | `bool` | `True` |
+| `star_levels` | keyword only | `PValueStarLevels` | `((0.01, "***"), (0.05, "**"), (0.1, "*"))` |
+| `precision` | keyword only | `int` | `3` |
+| `p_value_precision` | keyword only | `int` | `3` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `None` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `()` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.test_report_table(...)
 ```

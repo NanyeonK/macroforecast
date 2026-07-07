@@ -965,7 +965,38 @@ def feature_spec(
     drop_missing: bool = True,
     metadata: Mapping[str, Any] | None = None,
 ) -> FeatureSpec:
-    """Create a reusable feature-building specification."""
+    """Create a reusable feature-building specification.
+
+    Parameters define the target columns, horizons, predictor columns, simple
+    lag/rolling/PCA shortcuts, or an explicit ``feature_steps`` pipeline. The
+    returned spec is inert until a runner calls ``fit(...)`` or
+    ``fit_transform(...)`` on a training panel, so stateful steps such as PCA,
+    sparse PCA, scaling, and feature selection are fitted inside the training
+    window rather than on the full sample.
+
+    ``target``/``targets`` select the source series to forecast.
+    ``horizon``/``horizons`` select direct forecast horizons. ``predictors`` may
+    be ``"all"``, an iterable of column names, ``None`` for metadata/default
+    resolution, or an empty iterable for target-only designs. ``lags`` and
+    ``target_lags`` build simple lag matrices when no explicit step pipeline is
+    supplied. ``steps`` is an alias for ``feature_steps``.
+
+    Returns
+    -------
+    FeatureSpec
+        Frozen feature-builder configuration with ``fit``, ``fit_transform``,
+        ``to_dict``, and ``to_metadata`` methods.
+
+    Example
+    -------
+    >>> import macroforecast as mf
+    >>> features = mf.feature_engineering.feature_spec(
+    ...     target="INDPRO",
+    ...     predictors=["UNRATE", "CPIAUCSL"],
+    ...     horizons=[1, 3],
+    ...     lags=(0, 1, 2),
+    ... )
+    """
 
     if steps is not None and feature_steps is not None:
         raise ValueError("provide either steps or feature_steps, not both")
