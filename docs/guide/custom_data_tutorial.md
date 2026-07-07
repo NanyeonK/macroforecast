@@ -290,6 +290,12 @@ truth about a small sample, exactly as it would on a real study with a
 genuinely weak edge. `.to_html()` and `.to_markdown()` render the same
 `ReportTable` for a notebook or a README instead of a paper.
 
+The companion graphical layer uses the same `PipelineReport`:
+`mf.reporting.cumulative_loss_differential_plot`,
+`mf.reporting.fluctuation_test_plot`, `mf.reporting.pit_histogram_plot`, and
+`mf.reporting.forecast_path_plot` are covered in
+[Paper Figures](figures.md).
+
 ## Where to go next
 
 - [custom_dataset](../reference/custom/custom_dataset.md) and
@@ -299,6 +305,8 @@ genuinely weak edge. `.to_html()` and `.to_markdown()` render the same
 - [paper_accuracy_table reference](../reference/reporting.md#paper_accuracy_table)
   -- every argument, including multi-target reports and dropping the
   benchmark row.
+- [Paper Figures](figures.md) -- the CSSED, fluctuation, PIT, and forecast-path
+  exhibits that pair with the paper table.
 - [Getting Started](getting_started.md) and the
   [Replication Gallery](gallery.md) -- the same shape of study on FRED-MD with
   built-in models and richer feature engineering.

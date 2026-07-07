@@ -1196,6 +1196,9 @@ markdown = [
 parquet = [
     { name = "pyarrow" },
 ]
+plots = [
+    { name = "matplotlib" },
+]
 typecheck = [
     { name = "mypy" },
 ]
@@ -1218,8 +1221,9 @@ requires-dist = [
     { name = "lightgbm", marker = "extra == 'lightgbm'", specifier = ">=4.0" },
     { name = "macroforecast", extras = ["all"], marker = "extra == 'dev'" },
     { name = "macroforecast", extras = ["parquet", "markdown"], marker = "extra == 'ci'" },
-    { name = "macroforecast", extras = ["parquet", "markdown", "xgboost", "lightgbm", "catboost", "arch", "macro-random-forest", "interpretation"], marker = "extra == 'all'" },
+    { name = "macroforecast", extras = ["parquet", "markdown", "xgboost", "lightgbm", "catboost", "arch", "plots", "macro-random-forest", "interpretation"], marker = "extra == 'all'" },
     { name = "matplotlib", marker = "extra == 'macro-random-forest'", specifier = ">=3.8" },
+    { name = "matplotlib", marker = "extra == 'plots'", specifier = ">=3.7" },
     { name = "mypy", marker = "extra == 'typecheck'", specifier = ">=1.13" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0" },
     { name = "numpy", specifier = ">=2.0" },
@@ -1241,7 +1245,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'deep'", specifier = ">=2.2" },
     { name = "xgboost", marker = "extra == 'xgboost'", specifier = ">=3.0,<3.1" },
 ]
-provides-extras = ["parquet", "xgboost", "lightgbm", "catboost", "arch", "macro-random-forest", "interpretation", "deep", "docs", "typecheck", "markdown", "all", "ci", "dev"]
+provides-extras = ["parquet", "xgboost", "lightgbm", "catboost", "arch", "plots", "macro-random-forest", "interpretation", "deep", "docs", "typecheck", "markdown", "all", "ci", "dev"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest-timeout", specifier = ">=2.4.0" }]
