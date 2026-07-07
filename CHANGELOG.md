@@ -5,6 +5,12 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/evaluate.py`, `pipeline/spec.py`, `tests.py`, `reporting`, docs/tests
+  (feature, A6 test knobs): added fixed `hac_lags` overrides for HAC-backed
+  evaluation tests (`dm`, `cw`, `gw`, `enc_t`, `gr`, `mz`) with spec-build
+  validation, and added `mf.reporting.pairwise_test_table(...)` for K-by-K
+  pairwise model-comparison p-value/statistic matrices from `PipelineReport`
+  forecasts.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now
