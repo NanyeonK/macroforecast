@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish; must be vX.Y.Z and match pyproject.toml (e.g. v0.9.5)'
+        description: 'Version to publish; vX.Y.Z or vX.Y.Z{a|b|rc}N, must match pyproject.toml (e.g. v0.9.5, v0.9.6b1)'
         required: true
         type: string
 
@@ -50,9 +50,9 @@ jobs:
           import tomllib
 
           release_version = os.environ["RELEASE_VERSION"].strip()
-          if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", release_version):
+          if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?", release_version):
               sys.exit(
-                  "release version must use final-release form vX.Y.Z "
+                  "release version must be vX.Y.Z or a vX.Y.Z{a|b|rc}N pre-release "
                   f"(got {release_version!r})"
               )
 
