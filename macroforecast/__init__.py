@@ -201,6 +201,7 @@ _LAZY_EXPORTS = {
     "gru": ".models",
     "hemisphere_nn": ".models",
     "huber": ".models",
+    "jma": ".models",
     "holt_winters": ".models",
     "kernel_ridge": ".models",
     "knn": ".models",

@@ -38,7 +38,7 @@ from macroforecast.models.linear import (
     supervised_pca,
     supervised_scaled_pca,
 )
-from macroforecast.models.model_averaging import csr
+from macroforecast.models.model_averaging import csr, jma
 from macroforecast.models.neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
 from macroforecast.models.nonparametric import kernel_ridge, knn
 from macroforecast.models.spline import mars
@@ -1003,6 +1003,26 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         method="none",
         backend="internal numpy.linalg.lstsq",
         description="Complete Subset Regression; averages OLS forecasts over k-predictor subsets.",
+    ),
+    "jma": _spec(
+        "jma",
+        "model_averaging",
+        jma,
+        default_params={"candidates": "nested", "max_iter": 1000, "tol": 1e-9},
+        parameters=(
+            _p(
+                "candidates",
+                "nested",
+                "nested",
+                "Candidate model family; currently nested ordered OLS models.",
+                False,
+            ),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        method="none",
+        backend="internal numpy.linalg + scipy.optimize.minimize(SLSQP)",
+        description="Jackknife Model Averaging with simplex weights chosen by OLS leave-one-out CV.",
     ),
     "random_walk_ridge": _spec(
         "random_walk_ridge",

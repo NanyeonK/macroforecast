@@ -38,7 +38,7 @@ from .linear import (
     supervised_pca,
     supervised_scaled_pca,
 )
-from .model_averaging import csr
+from .model_averaging import csr, jma
 from .neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
 from .nonparametric import kernel_ridge, knn
 from .persistence import SavedModel, load_fit, save_fit
@@ -175,6 +175,7 @@ __all__ = [
     "gru",
     "hemisphere_nn",
     "huber",
+    "jma",
     "holt_winters",
     "kernel_ridge",
     "knn",
