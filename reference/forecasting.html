@@ -843,6 +843,9 @@ written to the forecast table.</p>
 </tbody>
 </table>
 </div>
+<p>For panel-input models, <code class="docutils literal notranslate"><span class="pre">recursive</span></code> uses the model’s native panel multi-step
+prediction path and labels the emitted rows <code class="docutils literal notranslate"><span class="pre">recursive</span></code>; it does not build a
+feature-matrix recursive panel.</p>
 <p>Examples:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Fit separate direct models for h=1, 3, and 12.</span>
 <span class="n">direct</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
@@ -1040,18 +1043,18 @@ h-step-ahead projection: the target itself is constructed as the h-step object
 (<code class="docutils literal notranslate"><span class="pre">y[t+h]</span></code>, or its h-period average), and the model regresses directly onto it.
 Most models in <code class="docutils literal notranslate"><span class="pre">list_model_specs()</span></code> are built for exactly this (any
 <code class="docutils literal notranslate"><span class="pre">input_kind=&quot;supervised&quot;</span></code> feature-matrix model such as <code class="docutils literal notranslate"><span class="pre">ols</span></code>/<code class="docutils literal notranslate"><span class="pre">ridge</span></code>/<code class="docutils literal notranslate"><span class="pre">lasso</span></code>/tree
-models/nets, plus <code class="docutils literal notranslate"><span class="pre">ar</span></code>/<code class="docutils literal notranslate"><span class="pre">far</span></code>, which have a validated direct-projection mode).</p>
+models/nets, plus <code class="docutils literal notranslate"><span class="pre">ar</span></code>/<code class="docutils literal notranslate"><span class="pre">far</span></code>, which have validated direct/direct-average
+projection modes). <code class="docutils literal notranslate"><span class="pre">var</span></code> has a validated direct POINT projection for
+<code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;direct&quot;</span></code> only; it is not a horizon-average direct target.</p>
 <p>A subset of models instead forecast a horizon by ITERATING their own one-step
-dynamics – an ARIMA/ETS/Theta-style recursion, a panel VAR/DFM update, or FAVAR’s
-internal factor-VAR – rather than fitting a direct h-step regression. Asking one
-of these for a <code class="docutils literal notranslate"><span class="pre">direct</span></code>/<code class="docutils literal notranslate"><span class="pre">direct_average</span></code> forecast does not raise: the runner still
-constructs the h-step target and fits it, but because the model’s own recursion is
-bypassed, the result can silently degrade toward a stale/persistence-like forecast
-at longer horizons (the defect documented in CHANGELOG <code class="docutils literal notranslate"><span class="pre">[Unreleased]</span></code>, originally
-found in <code class="docutils literal notranslate"><span class="pre">ar</span></code>/<code class="docutils literal notranslate"><span class="pre">far</span></code> and fixed there; the other iterated models below still carry
-it). <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> therefore emits a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> (never a rejection –
-deliberate use, e.g. an intentionally weak benchmark, stays possible) whenever one
-of these models is combined with <code class="docutils literal notranslate"><span class="pre">direct</span></code>/<code class="docutils literal notranslate"><span class="pre">direct_average</span></code>:</p>
+dynamics – an ARIMA/ETS/Theta-style recursion, a panel BVAR/DFM update, or
+FAVAR’s internal factor-VAR – rather than fitting a direct h-step regression.
+Asking one of these for a <code class="docutils literal notranslate"><span class="pre">direct</span></code>/<code class="docutils literal notranslate"><span class="pre">direct_average</span></code> forecast can silently degrade
+toward a stale/persistence-like forecast at longer horizons. <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code>
+therefore rejects these combinations by default. Set
+<code class="docutils literal notranslate"><span class="pre">on_unsupported_direct=&quot;warn&quot;</span></code> only for an intentional weak benchmark, or
+<code class="docutils literal notranslate"><span class="pre">on_unsupported_direct=&quot;reroute&quot;</span></code> to run affected arm-target cells as
+<code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;recursive&quot;</span></code> with rows labeled <code class="docutils literal notranslate"><span class="pre">recursive</span></code>.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Bucket (<code class="docutils literal notranslate"><span class="pre">ModelSpec.input_kind</span></code>)</p></th>
@@ -1063,7 +1066,7 @@ of these models is combined with <code class="docutils literal notranslate"><spa
 <td><p><code class="docutils literal notranslate"><span class="pre">arima</span></code>, <code class="docutils literal notranslate"><span class="pre">auto_arima</span></code>, <code class="docutils literal notranslate"><span class="pre">ets</span></code>, <code class="docutils literal notranslate"><span class="pre">holt_winters</span></code>, <code class="docutils literal notranslate"><span class="pre">naive</span></code>, <code class="docutils literal notranslate"><span class="pre">random_walk_drift</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_naive</span></code>, <code class="docutils literal notranslate"><span class="pre">stlf</span></code>, <code class="docutils literal notranslate"><span class="pre">theta_method</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">panel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">var</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code> (iterated internally)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">favar</span></code></p></td>
@@ -1071,15 +1074,17 @@ of these models is combined with <code class="docutils literal notranslate"><spa
 </tbody>
 </table>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">ar</span></code> and <code class="docutils literal notranslate"><span class="pre">far</span></code> share the <code class="docutils literal notranslate"><span class="pre">supervised</span></code> <code class="docutils literal notranslate"><span class="pre">input_kind</span></code> bucket with <code class="docutils literal notranslate"><span class="pre">favar</span></code> but are
-deliberately EXCLUDED from the warning: they now have a true direct-projection
-mode (regress the h-ahead target on the fresh one-period lags), so direct-policy
-semantics genuinely apply to them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ar</span></code> and <code class="docutils literal notranslate"><span class="pre">far</span></code> are deliberately excluded from the guard: they have true
+direct-projection modes that regress the h-ahead or horizon-average target on the
+fresh origin-dated lag block, so direct-policy semantics apply to them. <code class="docutils literal notranslate"><span class="pre">var</span></code> is
+excluded from the plain <code class="docutils literal notranslate"><span class="pre">direct</span></code> guard for the same point-target reason, but it
+is guarded under <code class="docutils literal notranslate"><span class="pre">direct_average</span></code> because its direct VAR equation regresses
+<code class="docutils literal notranslate"><span class="pre">y[t+h]</span></code>, not the average object over steps <code class="docutils literal notranslate"><span class="pre">1..h</span></code>.</p>
 <p>For any guarded model, prefer <code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;recursive&quot;</span></code> (iterate the model’s
 own one-step dynamics out to h, the design it is built for) or <code class="docutils literal notranslate"><span class="pre">&quot;path_average&quot;</span></code>
-(fit one model per step, then average). The guarded-model set is derived
-programmatically from <code class="docutils literal notranslate"><span class="pre">list_model_specs()</span></code> (<code class="docutils literal notranslate"><span class="pre">input_kind</span> <span class="pre">in</span> <span class="pre">{&quot;target&quot;,</span> <span class="pre">&quot;panel&quot;}</span></code>
-plus <code class="docutils literal notranslate"><span class="pre">&quot;favar&quot;</span></code>) and is cross-checked against it by
+(fit one model per step, then average). See the generated
+<a class="reference internal" href="../guide/model_policy_matrix.html"><span class="std std-doc">Model x Forecast Policy Matrix</span></a> for the full
+registry-derived table. The guarded-model set is cross-checked by
 <code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_direct_policy_guard.py</span></code>, so it tracks the models lane rather
 than drifting out of sync as models are added or removed.</p>
 </section>

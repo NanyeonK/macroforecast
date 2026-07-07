@@ -655,6 +655,11 @@ I(2) price/level series are reduced to the first-difference object (<code class=
 </tbody>
 </table>
 </div>
+<p>Unsupported direct-like model combinations are rejected at spec-build time by
+default. <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">on_unsupported_direct=&quot;warn&quot;)</span></code> preserves the old
+warning-only weak-benchmark behavior, and
+<code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">on_unsupported_direct=&quot;reroute&quot;)</span></code> runs only the affected
+arm-target cells as <code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;recursive&quot;</span></code>.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h2>
