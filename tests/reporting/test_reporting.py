@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 import pandas as pd
 
 import macroforecast as mf
@@ -307,6 +308,7 @@ def test_pairwise_test_table_honors_test_options_and_renders_latex() -> None:
     assert not np.isclose(default.loc["AR", "RF"], fixed_lag.loc["AR", "RF"])
     assert starred.loc["AR", "AR"] == ""
     assert isinstance(starred.loc["AR", "RF"], str)
+    pytest.importorskip("jinja2")  # pandas>=2 DataFrame.to_latex delegates to Styler
     latex = starred.to_latex()
     assert "\\begin{tabular}" in latex
     assert "AR" in latex

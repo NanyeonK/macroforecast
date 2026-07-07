@@ -535,6 +535,9 @@ def pairwise_test_table(
 ) -> pd.DataFrame:
     """Return a square pairwise forecast-comparison table.
 
+    Rendering the returned frame with ``DataFrame.to_latex()`` requires the
+    optional ``jinja2`` package (a pandas>=2 Styler dependency).
+
     ``report_or_master`` may be a ``PipelineReport`` or a master forecast frame
     with ``target``, ``horizon``, ``origin``, ``contender``, ``prediction``, and
     ``actual`` columns. Rows are the first model in the comparison and columns
