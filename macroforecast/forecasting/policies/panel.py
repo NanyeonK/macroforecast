@@ -167,7 +167,7 @@ def _panel_fit_params(
         params["target"] = target
     if (
         model_spec.name == "var"
-        and forecast_policy in {"direct", "direct_average"}
+        and forecast_policy == "direct"
         and "direct" in model_spec.default_params
     ):
         params["direct"] = True

@@ -1,12 +1,13 @@
 """WP5: direct-policy guard for iterated/state-space models.
 
-``ar``/``far``/``var`` had a CRITICAL stale-persistence defect under the
-``direct``/``direct_average`` forecast policy (see CHANGELOG [Unreleased], GCLS
-replication Bug 3), fixed by giving them a true direct-projection mode. The other
-iterated/state-space models -- target-kind statsmodels forecasters, panel BVAR/DFM
-models, and ``favar`` -- still forecast a horizon by ITERATING their own dynamics,
-so the same defect remains latent for them under direct-like policies.
-``pipeline_spec`` now rejects those combinations by default, with explicit
+``ar``/``far``/``var`` had a CRITICAL stale-persistence defect under direct-like
+forecast policies (see CHANGELOG [Unreleased], GCLS replication Bug 3). ``ar``
+and ``far`` support true direct/direct_average projections; ``var`` supports a
+true direct POINT projection only. The other iterated/state-space models --
+target-kind statsmodels forecasters, panel BVAR/DFM models, and ``favar`` --
+still forecast a horizon by ITERATING their own dynamics, so the same defect
+remains latent for them under direct-like policies.
+``pipeline_spec`` now rejects unsupported combinations by default, with explicit
 ``warn`` and ``reroute`` opt-outs.
 
 These tests pin: (1) default ``error`` rejects; (2) ``warn`` preserves the old
@@ -25,7 +26,10 @@ import pytest
 
 import macroforecast as mf
 from macroforecast.pipeline import Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline
-from macroforecast.pipeline.spec import DIRECT_POLICY_GUARD_MODELS
+from macroforecast.pipeline.spec import (
+    DIRECT_AVERAGE_GUARD_MODELS,
+    DIRECT_POLICY_GUARD_MODELS,
+)
 
 
 def _toy_inputs():
@@ -73,15 +77,21 @@ def test_guard_set_matches_model_specs():
     } | {"favar"}
     assert DIRECT_POLICY_GUARD_MODELS == expected
     # ar/far deliberately excluded even though they share favar's input_kind;
-    # var deliberately excluded from the panel bucket after issue #442.
+    # var deliberately excluded from the plain-direct panel bucket after issue #442.
     assert "ar" not in DIRECT_POLICY_GUARD_MODELS
     assert "far" not in DIRECT_POLICY_GUARD_MODELS
     assert "var" not in DIRECT_POLICY_GUARD_MODELS
+    assert DIRECT_AVERAGE_GUARD_MODELS == frozenset({"var"})
 
 
 def test_default_errors_for_guarded_model_under_direct():
     with pytest.raises(ValueError, match="on_unsupported_direct='warn'"):
         _spec("arima", "direct")
+
+
+def test_default_errors_for_var_under_direct_average():
+    with pytest.raises(ValueError, match="horizon-average target"):
+        _spec("var", "direct_average")
 
 
 @pytest.mark.parametrize("model_name", ["arima", "ets", "theta_method"])
@@ -101,14 +111,29 @@ def test_warns_for_favar_under_direct():
         _spec("favar", "direct", on_unsupported_direct="warn")
 
 
-@pytest.mark.parametrize("model_name", ["ar", "far", "var"])
+def test_warns_for_var_under_direct_average():
+    with pytest.warns(UserWarning, match="horizon-average target"):
+        spec = _spec("var", "direct_average", on_unsupported_direct="warn")
+    assert spec.policy_overrides == {}
+
+
+@pytest.mark.parametrize("model_name", ["ar", "far"])
 @pytest.mark.parametrize("policy", ["direct", "direct_average"])
 def test_no_warning_for_direct_projection_models(model_name, policy):
-    """ar/far/var are EXCLUDED: they have validated direct-projection modes."""
+    """ar/far are EXCLUDED: they have validated direct-projection modes."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         _spec(model_name, policy)
     guard_hits = [w for w in caught if "iterat" in str(w.message)]
+    assert not guard_hits, [str(w.message) for w in guard_hits]
+
+
+def test_no_warning_for_var_under_direct():
+    """var is supported under point-direct forecasts, but not direct_average."""
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        _spec("var", "direct")
+    guard_hits = [w for w in caught if "direct_average" in str(w.message)]
     assert not guard_hits, [str(w.message) for w in guard_hits]
 
 
@@ -175,3 +200,12 @@ def test_reroute_mode_labels_rows_recursive():
     assert not out.empty
     assert set(out["forecast_policy"]) == {"recursive"}
     assert spec.policy_overrides == {("NAIVE", "Y"): "recursive"}
+
+
+def test_var_direct_average_reroute_labels_rows_recursive():
+    with pytest.warns(UserWarning, match="Rerouting"):
+        spec = _spec("var", "direct_average", on_unsupported_direct="reroute")
+    out = run_pipeline(spec).forecasts
+    assert not out.empty
+    assert set(out["forecast_policy"]) == {"recursive"}
+    assert spec.policy_overrides == {("VAR", "Y"): "recursive"}

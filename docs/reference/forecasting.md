@@ -342,8 +342,9 @@ h-step-ahead projection: the target itself is constructed as the h-step object
 (`y[t+h]`, or its h-period average), and the model regresses directly onto it.
 Most models in `list_model_specs()` are built for exactly this (any
 `input_kind="supervised"` feature-matrix model such as `ols`/`ridge`/`lasso`/tree
-models/nets, plus `ar`/`far`/`var`, which have validated direct-projection
-modes).
+models/nets, plus `ar`/`far`, which have validated direct/direct-average
+projection modes). `var` has a validated direct POINT projection for
+`forecast_policy="direct"` only; it is not a horizon-average direct target.
 
 A subset of models instead forecast a horizon by ITERATING their own one-step
 dynamics -- an ARIMA/ETS/Theta-style recursion, a panel BVAR/DFM update, or
@@ -361,9 +362,12 @@ therefore rejects these combinations by default. Set
 | `panel` | `bvar_minnesota`, `bvar_normal_inverse_wishart`, `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas` |
 | `supervised` (iterated internally) | `favar` |
 
-`ar`, `far`, and `var` are deliberately excluded from the guard: they have true
-direct-projection modes that regress the h-ahead target on the fresh origin-dated
-lag block, so direct-policy semantics apply to them.
+`ar` and `far` are deliberately excluded from the guard: they have true
+direct-projection modes that regress the h-ahead or horizon-average target on the
+fresh origin-dated lag block, so direct-policy semantics apply to them. `var` is
+excluded from the plain `direct` guard for the same point-target reason, but it
+is guarded under `direct_average` because its direct VAR equation regresses
+`y[t+h]`, not the average object over steps `1..h`.
 
 For any guarded model, prefer `forecast_policy="recursive"` (iterate the model's
 own one-step dynamics out to h, the design it is built for) or `"path_average"`

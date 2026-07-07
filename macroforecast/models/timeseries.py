@@ -702,8 +702,10 @@ def var(
 ) -> ModelFit:
     """Fit a vector autoregression on a multivariate panel.
 
-    With ``direct=True``, fit the target equation as an h-step direct projection
-    on the same panel lag block the VAR uses at the forecast origin.
+    With ``direct=True``, fit the target equation as an h-step POINT projection
+    on the same panel lag block the VAR uses at the forecast origin. This is the
+    runner's ``forecast_policy="direct"`` target, not the horizon-average object
+    required by ``forecast_policy="direct_average"``.
     """
 
     frame = as_frame(panel)
@@ -732,7 +734,7 @@ def var(
             "implementation_note": (
                 "R vars::VAR-aligned OLS design and predict.varest-style "
                 "recursive point forecasts; direct=True fits a target-equation "
-                "h-step projection on the same lag block."
+                "h-step point projection on the same lag block."
             ),
         },
     )

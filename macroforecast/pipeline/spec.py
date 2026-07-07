@@ -537,10 +537,10 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 # direct-projection mode and are DELIBERATELY excluded here).
 #
 # The set below is every model whose ``ModelSpec.input_kind`` is "target" or
-# "panel" and lacks a validated direct-projection mode, PLUS "favar" (its
+# "panel" and lacks a validated direct point-projection mode, PLUS "favar" (its
 # input_kind is "supervised" -- the same bucket as ar/far -- because FAVAR's own
 # factor-VAR update is still an iterated dynamics model; ar/far/var are excluded
-# from this set because they now have validated direct-projection modes). This
+# from this set because they have validated direct point-projection modes). This
 # set is cross-checked against
 # ``macroforecast.list_model_specs()`` by
 # ``tests/pipeline/test_direct_policy_guard.py`` so it cannot silently rot as
@@ -558,12 +558,36 @@ DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
     "favar",
 })
 
+# Models that support ``forecast_policy="direct"`` as an h-step point projection
+# but not ``forecast_policy="direct_average"`` as a horizon-average target. Keep
+# this policy-specific extension separate from ``DIRECT_POLICY_GUARD_MODELS`` so
+# ``var`` remains valid under plain direct point forecasts.
+DIRECT_AVERAGE_GUARD_MODELS: frozenset[str] = frozenset({"var"})
+
 _DIRECT_LIKE_POLICIES = frozenset({"direct", "direct_average"})
 
 
 def _direct_policy_guard_message(arm: Arm, model_name: str, policies: "Sequence[str]") -> str:
     """The guard text for one guarded arm under a direct-like policy."""
     policies_txt = ", ".join(sorted(set(policies)))
+    if (
+        model_name in DIRECT_AVERAGE_GUARD_MODELS
+        and set(policies) == {"direct_average"}
+    ):
+        return (
+            f"arm {arm.name!r} (model {model_name!r}) is run under forecast "
+            f"policy/policies {{{policies_txt}}}: {model_name!r} supports "
+            "forecast_policy='direct' as an h-step POINT projection, but it does "
+            "not fit the horizon-average target required by "
+            "forecast_policy='direct_average'. Labeling that point projection as "
+            "direct_average would misstate the forecast object (see CHANGELOG "
+            "[Unreleased] and docs/guide/model_policy_matrix.md). Prefer "
+            "forecast_policy='recursive' or 'path_average' for "
+            f"{model_name!r}, or give this target an explicit TargetSpec(policy=...) "
+            "override if only some targets should differ. To opt out deliberately, "
+            "set on_unsupported_direct='warn'; to reroute affected cells to "
+            "recursive, set on_unsupported_direct='reroute'."
+        )
     return (
         f"arm {arm.name!r} (model {model_name!r}) is run under forecast "
         f"policy/policies {{{policies_txt}}}: {model_name!r} forecasts by "
@@ -580,6 +604,12 @@ def _direct_policy_guard_message(arm: Arm, model_name: str, policies: "Sequence[
     )
 
 
+def _is_unsupported_direct_cell(model_name: str, policy: str) -> bool:
+    if policy == "direct_average" and model_name in DIRECT_AVERAGE_GUARD_MODELS:
+        return True
+    return policy in _DIRECT_LIKE_POLICIES and model_name in DIRECT_POLICY_GUARD_MODELS
+
+
 def _unsupported_direct_cells(
     arms: "Sequence[Arm]",
     targets: "Sequence[ResolvedTarget]",
@@ -587,9 +617,11 @@ def _unsupported_direct_cells(
     cells: list[tuple[Arm, str, list[ResolvedTarget]]] = []
     for arm in arms:
         model_name = _arm_model_name(arm)
-        if model_name not in DIRECT_POLICY_GUARD_MODELS:
-            continue
-        affected = [t for t in targets if t.policy in _DIRECT_LIKE_POLICIES]
+        affected = [
+            target
+            for target in targets
+            if _is_unsupported_direct_cell(model_name, target.policy)
+        ]
         if affected:
             cells.append((arm, model_name, affected))
     return cells

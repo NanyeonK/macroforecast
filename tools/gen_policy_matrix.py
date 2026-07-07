@@ -27,7 +27,10 @@ if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
 import macroforecast as mf  # noqa: E402
-from macroforecast.pipeline.spec import DIRECT_POLICY_GUARD_MODELS  # noqa: E402
+from macroforecast.pipeline.spec import (  # noqa: E402
+    DIRECT_AVERAGE_GUARD_MODELS,
+    DIRECT_POLICY_GUARD_MODELS,
+)
 
 _POLICIES = ("direct", "direct_average", "path_average", "recursive")
 _DIRECT_LIKE = frozenset({"direct", "direct_average"})
@@ -45,12 +48,11 @@ Status meanings:
 
 - `supported`: the runner policy applies to this model family.
 - `supported-via-direct-projection`: the model has an explicit validated direct
-  projection mode, used for `direct` and `direct_average`.
+  projection mode for this policy.
 - `guarded-unsupported`: the combination is blocked by default because the model
   forecasts by iterating its own dynamics rather than by fitting an h-step direct
-  projection.
-- `unsupported`: the runner does not define this policy for the model's input
-  contract.
+  projection, or because the model's direct projection is a point target rather
+  than the requested horizon-average target.
 
 The measured-scan column is only a point-in-time runtime smoke scan. `OK` means a
 combination ran, not that its forecast object has the right statistical meaning.
@@ -67,6 +69,9 @@ def _has_direct_projection(model_name: str) -> bool:
 
 
 def _policy_status(model_name: str, input_kind: str, policy: str) -> str:
+    del input_kind
+    if policy == "direct_average" and model_name in DIRECT_AVERAGE_GUARD_MODELS:
+        return "guarded-unsupported"
     if policy in _DIRECT_LIKE:
         if model_name in DIRECT_POLICY_GUARD_MODELS:
             return "guarded-unsupported"
@@ -74,6 +79,13 @@ def _policy_status(model_name: str, input_kind: str, policy: str) -> str:
             return "supported-via-direct-projection"
         return "supported"
     return "supported"
+
+
+def _scan_status(value: Any) -> str | None:
+    if isinstance(value, Mapping):
+        status = value.get("status") or value.get("runtime_status") or value.get("result")
+        return None if status is None else str(status)
+    return str(value)
 
 
 def _load_scan(path: Path = _SCAN_PATH) -> dict[str, dict[str, str]]:
@@ -91,11 +103,13 @@ def _load_scan(path: Path = _SCAN_PATH) -> dict[str, dict[str, str]]:
             for model_name, per_policy in data.items():
                 if not isinstance(per_policy, Mapping):
                     continue
-                parsed[str(model_name)] = {
-                    str(policy): str(status)
-                    for policy, status in per_policy.items()
-                    if str(policy) in _POLICIES
-                }
+                parsed[str(model_name)] = {}
+                for policy, status in per_policy.items():
+                    if str(policy) not in _POLICIES:
+                        continue
+                    parsed_status = _scan_status(status)
+                    if parsed_status is not None:
+                        parsed[str(model_name)][str(policy)] = parsed_status
             return parsed
     parsed: dict[str, dict[str, str]] = {}
     for row in rows:

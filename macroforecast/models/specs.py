@@ -2498,7 +2498,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "direct",
                 False,
                 "bool",
-                "Internal: fit a horizon-specific direct projection.",
+                "Internal: fit a horizon-specific point direct projection.",
                 False,
             ),
             _p(

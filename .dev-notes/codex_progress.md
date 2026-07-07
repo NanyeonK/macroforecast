@@ -34,3 +34,31 @@
   - `~/project/macroforecast/.venv/bin/python -m pytest tests/pipeline --timeout=300 --timeout-method=thread -q -p no:cacheprovider` — PASS (207 passed; expected runtime/deprecation/statsmodels warnings).
   - `git diff --check` — PASS.
   - `git diff -U0 -- macroforecast tools tests docs .github CHANGELOG.md | rg -n "^\\+.*except (Exception|:)|^\\+.*except Exception|^\\+\\s*except:" || true` — PASS (no output).
+
+## Follow-up fixbrief #442 corrections
+
+- Decision: keep `var` out of `DIRECT_POLICY_GUARD_MODELS` for plain
+  `forecast_policy="direct"`, but add `DIRECT_AVERAGE_GUARD_MODELS={"var"}` so
+  only `var` + `direct_average` uses the `on_unsupported_direct`
+  error/warn/reroute path. The reason is semantic: VAR direct mode fits the
+  point target `y[t+h]`, not the horizon-average target.
+- Decision: panel `_panel_fit_params` now injects `direct=True` for `var` only
+  under `forecast_policy="direct"`. Under `direct_average`, the pipeline guard
+  stops/reroutes before that cell is run by `run_pipeline`.
+- Deviation update: the earlier matrix-scan absence was caused by the artifact
+  being untracked in this worktree. Per the follow-up brief, copied the
+  authorized read-only artifact from
+  `~/project/macroforecast/.dev-notes/policy_matrix_results.json` to
+  `.dev-notes/policy_matrix_results.json` and regenerated
+  `docs/guide/model_policy_matrix.md`.
+
+## Follow-up gate log
+
+- `~/project/macroforecast/.venv/bin/python -m pytest tests/pipeline/test_direct_policy_guard.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` — PASS (21 passed; statsmodels frequency warnings only).
+- `~/project/macroforecast/.venv/bin/python -m pytest tests/forecasting/test_var_direct_projection.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` — PASS (4 passed).
+- `~/project/macroforecast/.venv/bin/python -m pytest tests/forecasting/test_panel_input_runner.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` — PASS (3 passed).
+- `~/project/macroforecast/.venv/bin/python -m pytest tests/forecasting/test_panel_horizon_labeling.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` — PASS (3 passed; expected statsmodels DFM warnings).
+- `~/project/macroforecast/.venv/bin/python tools/gen_policy_matrix.py --check docs/guide` — PASS (`1 policy matrix page in sync with the package`).
+- `~/project/macroforecast/.venv/bin/python -m mypy macroforecast` — PASS (`Success: no issues found in 109 source files`).
+- `git diff --check` — PASS.
+- `git diff -U0 -- macroforecast tools tests docs CHANGELOG.md | rg -n "^\\+.*except (Exception|:)|^\\+.*except Exception|^\\+\\s*except:" || true` — PASS (no output).
