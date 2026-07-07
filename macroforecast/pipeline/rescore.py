@@ -177,6 +177,7 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
 
     master = pd.concat(frames, ignore_index=True)
     results = evaluate(master, spec)
+    subsamples = results["forecasts"].attrs.get("macroforecast_subsample_provenance")
 
     provenance = {
         **dict(spec.provenance),
@@ -191,6 +192,10 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
         "rescore_stale_cells": tuple(stale_cells),
         "rescore_allow_stale": bool(allow_stale),
     }
+    if isinstance(subsamples, dict):
+        evaluation = dict(provenance.get("evaluation", {}) or {})
+        evaluation["subsamples"] = subsamples
+        provenance["evaluation"] = evaluation
     # Same "full" (default) / "basic" opt-out as a live run_pipeline() report --
     # a rescored report still benefits from knowing WHERE the re-scoring ran
     # (this is a fresh evaluate() call, so its own environment is real

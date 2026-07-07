@@ -168,15 +168,27 @@ evaluation = EvalSpec(
         "full": SubsampleWindow(),
         "ex_covid": SubsampleWindow(exclude=(("2020-03-01", "2021-12-31"),)),
         "post_gfc": SubsampleWindow(start="2010-01-01"),
+        "nber_recession": SubsampleWindow(mask="nber_recession"),
+        "nber_expansion": SubsampleWindow(mask="nber_expansion"),
     },
 )
 ```
 
 The accuracy table, significance tests, and Model Confidence Set are produced by
 `run_pipeline`. Subsamples filter the already-produced forecast frame by target
-date before scoring; they do not refit models. When subsamples are configured,
-evaluation tables include a `subsample` column, and paper tables can select a
-window with `mf.reporting.paper_accuracy_table(report, subsample="ex_covid")`.
+date before scoring; they do not refit models. `SubsampleWindow(mask=...)`
+intersects the date window with a boolean state series. Pass a date-indexed
+boolean `Series`, a `{date: bool}` mapping, or the named masks
+`"nber_recession"` / `"nber_expansion"`. The NBER masks fetch `USREC` for
+month-start targets and `USRECQ` for quarter-start targets through the raw FRED
+cache, then record the raw-file hash in report provenance.
+
+Mask dates must exactly cover the forecast target dates being evaluated. A
+month-end mask will not be silently shifted onto month-start forecasts, and
+missing mask dates or `NaN` states raise with the first missing target dates.
+When subsamples are configured, evaluation tables include a `subsample` column,
+and paper tables can select a window with
+`mf.reporting.paper_accuracy_table(report, subsample="ex_covid")`.
 See the runnable [Getting Started](../getting_started.md) snippets and the
 [Replication Gallery](../gallery.md) for the full report objects in context.
 
