@@ -75,6 +75,13 @@ Workflow reference grouped by responsibility.
 Definitions of every core abstraction.
 :::
 
+:::{grid-item-card} {octicon}`quote;1.5em;sd-mr-1` Citing
+:link: guide/citing
+:link-type: doc
+
+Citation metadata for papers, reports, and replication packages.
+:::
+
 ::::
 
 ```{toctree}
@@ -87,4 +94,5 @@ guide/gallery
 guide/figures
 reference/index
 guide/glossary
+guide/citing
 ```
