@@ -759,7 +759,7 @@ split. <code class="docutils literal notranslate"><span class="pre">cores</span>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.rescore.rescore</span></code></p>
 <section id="id1">
 <h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">rescore</span><span class="p">(</span><span class="n">checkpoint_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">rescore</span><span class="p">(</span><span class="n">checkpoint_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">allow_stale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -784,7 +784,12 @@ The <code class="docutils literal notranslate"><span class="pre">PipelineSpec</s
 object with <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> set to this path; <code class="docutils literal notranslate"><span class="pre">rescore</span></code> reads records
 from <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> regardless of what <code class="docutils literal notranslate"><span class="pre">spec.checkpoint_dir</span></code> says.
 Every field that determines a cell’s identity (targets, arms, horizons)
-must match the original run, or cells will not be found.</p>
+must match the original run, or cells will not be found.
+allow_stale:
+By default, checkpoint cells that carry a manifest are reused only when
+the current spec/data identity digest matches the stored digest. Set
+<code class="docutils literal notranslate"><span class="pre">allow_stale=True</span></code> to intentionally score stale checkpoint cells after
+changing a model, feature, preprocessing, or data identity.</p>
 <p>Returns
 PipelineReport
 The same report type <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> returns, with the evaluation fields
@@ -813,7 +818,9 @@ having actually EXECUTED the run are explicitly absent/best-effort:</p>
 ValueError
 If no cell under <code class="docutils literal notranslate"><span class="pre">checkpoint_dir</span></code> yields any checkpoint records at all
 (an empty or entirely-mismatched directory) – a clear, actionable error
-instead of a silently-empty report.</p>
+instead of a silently-empty report.
+Also raised when manifest-bearing checkpoint cells do not match the
+current spec identity and <code class="docutils literal notranslate"><span class="pre">allow_stale</span></code> is false.</p>
 </section>
 <section id="id3">
 <h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
@@ -835,6 +842,11 @@ instead of a silently-empty report.</p>
 <td><p>positional or keyword</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'Any'</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">allow_stale</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
 </tbody>
 </table>

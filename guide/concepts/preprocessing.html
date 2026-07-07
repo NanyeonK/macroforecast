@@ -563,6 +563,26 @@ the EM-factor step fills the 942 missing entries, leaving none remaining. This
 is the full-sample path for exploration; inside a runner, <code class="docutils literal notranslate"><span class="pre">preprocess_spec</span></code>
 refits these same steps on each origin’s estimation rows only.</p>
 </section>
+<section id="custom-steps-and-caches">
+<h2>Custom Steps And Caches<a class="headerlink" href="#custom-steps-and-caches" title="Link to this heading">#</a></h2>
+<p>Custom preprocessing steps run after the built-in transform/outlier/impute/
+standardize/frame sequence. In the normal <code class="docutils literal notranslate"><span class="pre">origin_available</span></code> runner path, fitted
+standardization is applied before custom steps at transform time, matching the
+fit-time order, so scale-sensitive custom steps see the same units on train and
+test rows.</p>
+<p>Disk-backed preprocessing caches use content-derived identities. If a
+<code class="docutils literal notranslate"><span class="pre">preprocess_spec(custom_steps=...)</span></code> contains a custom callable, set a stable
+<code class="docutils literal notranslate"><span class="pre">func.__mf_digest__</span></code> string before using <code class="docutils literal notranslate"><span class="pre">preprocessing_cache_dir</span></code> or a
+<code class="docutils literal notranslate"><span class="pre">PreprocessorStore</span></code>; update the digest when the callable behavior changes. Named
+custom callables without a digest still run, but disk get/put is skipped and the
+runner recomputes instead of risking stale reuse. Anonymous lambda custom steps
+without <code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code> are rejected because they collide by qualified name.</p>
+<p>Under <code class="docutils literal notranslate"><span class="pre">policy=&quot;fit_window&quot;</span></code>, built-in outlier/imputation/standardization state is
+fitted on the training window and applied to later rows, but custom steps are
+re-executed on the apply window. Keep those custom steps row-local/stateless; a
+custom step that computes statistics from all rows it receives can read
+post-origin rows and leak future information.</p>
+</section>
 <section id="reference">
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -620,6 +640,7 @@ refits these same steps on each origin’s estimation rows only.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callables">Key Callables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#executed-walkthrough">Executed walkthrough</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-steps-and-caches">Custom Steps And Caches</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
 </ul>
   </nav></div>

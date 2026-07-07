@@ -568,6 +568,15 @@ outlier policy, imputation policy, standardization, frame-edge handling,
 and optional custom preprocessing steps. Stage timing and metadata are not
 accepted here; they are supplied later through <code class="docutils literal notranslate"><span class="pre">PreprocessSpec.fit(...)</span></code>
 or by the forecasting/pipeline runner.</p>
+<p>Custom preprocessing callables are safe for in-memory use. Disk-backed
+preprocessing caches require a stable callable identity: use named
+functions and set <code class="docutils literal notranslate"><span class="pre">func.__mf_digest__</span></code> whenever cached reuse should span
+processes or runs. Anonymous lambdas without <code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code> are rejected
+because they cannot be distinguished by a stable content identity.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">policy=&quot;fit_window&quot;</span></code>, custom steps are re-executed on the apply
+window at each origin. Those steps must be row-local/stateless; a custom
+step that computes statistics from its whole input can read post-origin
+rows and leak future information.</p>
 <p>Returns
 PreprocessSpec
 Frozen preprocessing configuration. Call <code class="docutils literal notranslate"><span class="pre">fit(data)</span></code> to get a
@@ -699,6 +708,10 @@ prep = mf.preprocessing.preprocess_spec(
 <section id="id8">
 <h4>Description<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
 <p>Return a custom preprocessing step for <code class="docutils literal notranslate"><span class="pre">preprocess_spec(custom_steps=...)</span></code>.</p>
+<p>For disk-backed preprocessing caches, set <code class="docutils literal notranslate"><span class="pre">func.__mf_digest__</span></code> to a stable
+string and update it when the callable’s behavior changes. Without that
+opt-in digest, the runner skips disk get/put for specs containing the
+callable and recomputes instead of risking stale reuse.</p>
 </section>
 <section id="id9">
 <h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
