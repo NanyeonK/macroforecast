@@ -125,7 +125,7 @@ def as_panel(
     if panel.index.has_duplicates:
         duplicated = panel.index[panel.index.duplicated()].unique()
         sample = ", ".join(ts.strftime("%Y-%m-%d") for ts in duplicated[:3])
-        raise ValueError(f"panel has duplicate dates: {sample}")
+        raise ValueError(f"panel has duplicate dates: {sample}{_long_format_hint(panel)}")
 
     coercion_report = _numeric_coercion_report(panel)
     for column in panel.columns:
@@ -439,6 +439,24 @@ def _numeric_coercion_report(panel: pd.DataFrame) -> dict[str, Any]:
                     }
                 )
     return {"coerced_cells": int(coerced_cells), "examples": examples}
+
+
+def _long_format_hint(panel: pd.DataFrame) -> str:
+    if panel.empty:
+        return ""
+    max_unique = max(2, min(20, int(len(panel) * 0.5)))
+    for column in panel.columns:
+        series = panel[column]
+        if pd.api.types.is_numeric_dtype(series):
+            continue
+        unique_values = int(series.nunique(dropna=True))
+        if 1 < unique_values <= max_unique:
+            return (
+                "; data appears to be in long format; pivot to wide "
+                "(one column per series) - e.g. "
+                "df.pivot(index=..., columns=..., values=...)"
+            )
+    return ""
 
 
 def _infinite_value_report(panel: pd.DataFrame) -> dict[str, Any]:

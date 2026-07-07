@@ -145,6 +145,28 @@ def test_custom_vintages_mapping_resolves_latest_available_and_memoizes() -> Non
         source.resolve(pd.Timestamp("2000-01-01"))
 
 
+def test_custom_vintages_mapping_rejects_unparseable_vintage_key() -> None:
+    with pytest.raises(ValueError, match="not-a-date.*timestamp"):
+        mf.data.custom_vintages({"not-a-date": pd.DataFrame({"x": [1.0]})})
+
+
+def test_vintage_panel_spec_rejects_first_release_callable_without_vintages() -> None:
+    def callable_source(origin_date: pd.Timestamp) -> pd.DataFrame:
+        return pd.DataFrame(
+            {"x": [1.0]},
+            index=pd.DatetimeIndex([pd.Timestamp(origin_date)], name="date"),
+        )
+
+    source = mf.data.custom_vintages(callable_source)
+
+    with pytest.raises(ValueError, match="available_vintages.*first-release actuals"):
+        mf.data.VintagePanelSpec(
+            source,
+            pd.date_range("2000-01-31", periods=2, freq="ME", name="date"),
+            actuals_vintage="first_release",
+        )
+
+
 def test_custom_vintages_callable_memoizes_by_vintage_id() -> None:
     frames = _custom_frames()
     calls: list[pd.Timestamp] = []
@@ -167,7 +189,7 @@ def test_custom_vintages_long_frame_requires_columns() -> None:
 @pytest.mark.parametrize(
     ("join", "expected_index"),
     [
-        ("outer", ["2000-01-31", "2000-02-29", "2000-03-31"]),
+        ("outer", ["2000-01-31", "2000-02-29"]),
         ("inner", ["2000-02-29"]),
         ("left", ["2000-01-31", "2000-02-29"]),
     ],
@@ -210,7 +232,7 @@ def test_with_static_extras_fingerprint_changes_vintage_id() -> None:
     assert "static_extra_sha256=" in a_bundle.metadata["vintage"]
 
 
-def test_with_static_extras_appear_at_every_origin_without_revision() -> None:
+def test_with_static_extras_truncate_rows_at_each_origin() -> None:
     frames = _custom_frames()
     extra = pd.DataFrame(
         {"z": [100.0, 200.0, 300.0]},
@@ -223,4 +245,7 @@ def test_with_static_extras_appear_at_every_origin_without_revision() -> None:
 
     assert "z" in first.panel.columns
     assert "z" in second.panel.columns
-    pdt.assert_series_equal(first.panel["z"], second.panel["z"], check_names=False)
+    assert first.panel.loc[pd.Timestamp("2000-01-31"), "z"] == 100.0
+    assert pd.isna(first.panel.loc[pd.Timestamp("2000-02-29"), "z"])
+    assert second.panel.loc[pd.Timestamp("2000-02-29"), "z"] == 200.0
+    assert pd.isna(second.panel.loc[pd.Timestamp("2000-03-31"), "z"])
