@@ -5,6 +5,11 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `reporting/figures.py`, `docs/guide/figures.md` (feature, paper figures
+  lane): added optional-matplotlib paper figure helpers for cumulative
+  loss-differential/CSSED plots, Giacomini-Rossi fluctuation paths, PIT
+  histograms, and actual-vs-forecast paths. The plotting extra is exposed as
+  `macroforecast[plots]`, while the `ci` extra remains point/table-only.
 - `.github/workflows`, `.github/RELEASE_CHECKLIST.md`, `CITATION.cff`,
   `THIRD_PARTY_NOTICES.md`, `docs/guide/citing.md`, `.readthedocs.yaml`,
   `CONTRIBUTING.md` (CI/release hygiene): repaired stale CI trust checks,
