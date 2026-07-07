@@ -198,6 +198,7 @@ macroforecast.reporting.paper_accuracy_table(
     report,
     *,
     target=None,
+    subsample=None,
     metric="rel_rmse",
     star_levels=((0.01, "***"), (0.05, "**"), (0.10, "*")),
     mcs_mark="†",
@@ -220,6 +221,7 @@ from the three separate long frames `run_pipeline` returns.
 | --- | --- | --- |
 | `report` | — | A `PipelineReport`, or anything exposing `.accuracy` (required) and optionally `.significance`/`.mcs` with the same column contract as `macroforecast.pipeline.evaluate`'s output. A mapping with `"accuracy"`/`"significance"`/`"mcs"` keys also works. |
 | `target` | `None` | Restrict to one target. With `None` and more than one target present, returns `dict[target, ReportTable]` instead of a single table (see below). |
+| `subsample` | `None` | Select one `EvalSpec.subsamples` window when the report has a `subsample` column. `None` selects `"full"` when present; otherwise multiple windows require an explicit value. |
 | `metric` | `"rel_rmse"` | The accuracy column to display. `"rel_rmse"` is computed here as `sqrt(relative_mse)` (not itself a column of `report.accuracy`). Any other column already on the accuracy frame (`"relative_mse"`, `"rmse"`, `"r2_oos"`, ...) is used as-is. |
 | `star_levels` | `((0.01,"***"),(0.05,"**"),(0.10,"*"))` | `(p_value_threshold, marker)` pairs for the DM significance stars, smallest threshold first. |
 | `mcs_mark` | `"†"` | Marker appended where `report.mcs.in_mcs` is True for that `(target, horizon, contender)`. |
@@ -230,10 +232,12 @@ from the three separate long frames `run_pipeline` returns.
 
 Output rows are models (the benchmark first, when `benchmark_row=True`),
 columns are horizons (`h1`, `h3`, ...). DM stars are joined on `(target,
-horizon, contender)` from `report.significance`; the benchmark's own row is
-never starred. Missing `significance`/`mcs` frames (or missing rows within
-them) contribute no stars/marker rather than raising -- not every
-`PipelineReport` carries them.
+horizon, contender)` from the wide DM rows of `report.significance`; long-form
+rows for tests such as GW, GR, MZ, ENC, or directional accuracy are ignored so
+they cannot duplicate table cells. MCS markers are joined only from rows with
+`in_mcs` membership. The benchmark's own row is never starred. Missing
+`significance`/`mcs` frames (or missing rows within them) contribute no
+stars/marker rather than raising -- not every `PipelineReport` carries them.
 
 Multi-target reports return `dict[target, ReportTable]` rather than one
 stacked frame: different targets can have different available horizons and a
@@ -248,6 +252,12 @@ report = run_pipeline(spec)  # PipelineReport: AR benchmark vs. RF, one target
 
 table = mf.reporting.paper_accuracy_table(report)
 print(table.to_latex(booktabs=True))
+```
+
+For an ex-COVID robustness table from `EvalSpec.subsamples`:
+
+```python
+table = mf.reporting.paper_accuracy_table(report, subsample="ex_covid")
 ```
 
 ```text

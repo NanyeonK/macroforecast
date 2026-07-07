@@ -725,15 +725,16 @@ matching the R <code class="docutils literal notranslate"><span class="pre">vare
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Input: two aligned loss series. Output: <code class="docutils literal notranslate"><span class="pre">TestResult</span></code> using the package’s
-Giacomini-White-compatible loss differential surface. This callable uses the
-same aligned DM-style loss-differential statistic; conditional predictive
-ability with time-varying fluctuation paths is exposed separately through
+<p>Input: two aligned loss series. Output: <code class="docutils literal notranslate"><span class="pre">TestResult</span></code> using the package’s legacy
+GW-compatible DM-style loss-differential surface. This callable preserves the
+public <code class="docutils literal notranslate"><span class="pre">gw_test</span></code> name but computes the same aligned HAC loss-differential
+statistic as <code class="docutils literal notranslate"><span class="pre">dm_test</span></code>. The conditional Giacomini-White Wald test is
+<code class="docutils literal notranslate"><span class="pre">giacomini_white_test(...)</span></code>; the Giacomini-Rossi fluctuation path is
 <code class="docutils literal notranslate"><span class="pre">conditional_predictive_ability_test(...)</span></code>.</p>
 <p>Source boundary: <code class="docutils literal notranslate"><span class="pre">gw_test()</span></code> does not claim exact R-package alignment. It
 preserves the legacy callable surface by reusing the DM/HLN loss-differential
-statistic on aligned inputs. For the package’s time-varying conditional
-predictive-ability path, use <code class="docutils literal notranslate"><span class="pre">conditional_predictive_ability_test(...)</span></code>.</p>
+statistic on aligned inputs. See also <code class="docutils literal notranslate"><span class="pre">giacomini_white_test(...)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">conditional_predictive_ability_test(...)</span></code>.</p>
 </section>
 <section id="dmp-test">
 <h3>dmp_test<a class="headerlink" href="#dmp-test" title="Link to this heading">#</a></h3>
@@ -1084,6 +1085,31 @@ values equal to <code class="docutils literal notranslate"><span class="pre">thr
 </tbody>
 </table>
 </div>
+</section>
+</section>
+<section id="forecast-rationality">
+<h2>Forecast Rationality<a class="headerlink" href="#forecast-rationality" title="Link to this heading">#</a></h2>
+<section id="mincer-zarnowitz-test">
+<h3>mincer_zarnowitz_test<a class="headerlink" href="#mincer-zarnowitz-test" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">mincer_zarnowitz_test</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">,</span>
+    <span class="n">y_pred</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">hac_lags</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TestResult</span>
+</pre></div>
+</div>
+<p>Runs the Mincer-Zarnowitz actual-on-forecast regression
+<code class="docutils literal notranslate"><span class="pre">actual</span> <span class="pre">=</span> <span class="pre">intercept</span> <span class="pre">+</span> <span class="pre">slope</span> <span class="pre">*</span> <span class="pre">forecast</span> <span class="pre">+</span> <span class="pre">error</span></code> and tests the joint null
+<code class="docutils literal notranslate"><span class="pre">intercept</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">slope</span> <span class="pre">=</span> <span class="pre">1</span></code>. The covariance matrix is the statsmodels OLS
+HAC covariance with <code class="docutils literal notranslate"><span class="pre">maxlags=hac_lags</span></code>; the reported statistic is the two-
+constraint Wald statistic with a chi-square reference.</p>
+<p>Returned metadata includes <code class="docutils literal notranslate"><span class="pre">intercept</span></code>, <code class="docutils literal notranslate"><span class="pre">slope</span></code>, <code class="docutils literal notranslate"><span class="pre">wald_statistic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">f_statistic</span></code>, <code class="docutils literal notranslate"><span class="pre">hac_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">null_hypothesis</span></code>, and the regression/covariance
+contract. In the pipeline, request <code class="docutils literal notranslate"><span class="pre">&quot;mz&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">EvalSpec.tests</span></code>; the evaluator
+uses <code class="docutils literal notranslate"><span class="pre">hac_lags=horizon-1</span></code> by default unless overridden with
+<code class="docutils literal notranslate"><span class="pre">test_options={&quot;mz&quot;:</span> <span class="pre">{&quot;hac_lags&quot;:</span> <span class="pre">...}}</span></code>.</p>
 </section>
 </section>
 <section id="density-and-interval-diagnostics">
@@ -1437,6 +1463,11 @@ two-sided because it uses the supremum absolute path.</p>
 </tbody>
 </table>
 </div>
+<p>Pipeline note: when <code class="docutils literal notranslate"><span class="pre">&quot;gr&quot;</span></code> is requested through <code class="docutils literal notranslate"><span class="pre">EvalSpec.tests</span></code>, the evaluator
+sets <code class="docutils literal notranslate"><span class="pre">lag_truncate=min(horizon</span> <span class="pre">-</span> <span class="pre">1,</span> <span class="pre">5)</span></code> unless the user supplies
+<code class="docutils literal notranslate"><span class="pre">test_options={&quot;gr&quot;:</span> <span class="pre">{&quot;lag_truncate&quot;:</span> <span class="pre">...}}</span></code>. This accounts for the MA(h-1)
+dependence of h-step loss differentials while preserving the public callable’s
+standalone default.</p>
 <p>Output fields:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -1598,6 +1629,13 @@ enter through <code class="docutils literal notranslate"><span class="pre">EvalS
 <code class="docutils literal notranslate"><span class="pre">test_options={&quot;spa&quot;:</span> <span class="pre">{&quot;n_boot&quot;:</span> <span class="pre">999,</span> <span class="pre">&quot;block_length&quot;:</span> <span class="pre">5,</span> <span class="pre">&quot;random_state&quot;:</span> <span class="pre">123}}</span></code>.
 The results append rows to <code class="docutils literal notranslate"><span class="pre">PipelineReport.mcs</span></code> with <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">contender</span></code>,
 <code class="docutils literal notranslate"><span class="pre">superior</span></code>, <code class="docutils literal notranslate"><span class="pre">reject</span></code>, <code class="docutils literal notranslate"><span class="pre">p_value</span></code>, and sample-size metadata.</p>
+<p>Size caveat: MC diagnostics currently show that the arch-backed SPA/RC/StepM
+family is correctly sized for iid equal-loss nulls but over-rejects by roughly
+1.5-2x nominal size when losses have serial dependence. Result dictionaries
+carry <code class="docutils literal notranslate"><span class="pre">metadata[&quot;size_caveat&quot;]</span></code> and each computed record carries the same
+machine-readable payload. Treat these as diagnostic under dependent losses;
+prefer <code class="docutils literal notranslate"><span class="pre">multi_horizon_spa_test</span></code> (<code class="docutils literal notranslate"><span class="pre">&quot;uspa&quot;</span></code>/<code class="docutils literal notranslate"><span class="pre">&quot;aspa&quot;</span></code>) for pairwise multi-horizon
+questions or <code class="docutils literal notranslate"><span class="pre">model_confidence_set</span></code> for dependent-loss set comparisons.</p>
 </section>
 <section id="superior-predictive-ability-test">
 <h3>superior_predictive_ability_test<a class="headerlink" href="#superior-predictive-ability-test" title="Link to this heading">#</a></h3>
@@ -1632,6 +1670,8 @@ benchmark losses and candidate losses, forms loss differentials internally as
 <code class="docutils literal notranslate"><span class="pre">upper</span></code> p-values from Hansen’s recentering choices. Positive
 <code class="docutils literal notranslate"><span class="pre">mean_loss_difference</span></code> in the output means the candidate has lower average loss
 than the benchmark.</p>
+<p>The returned dictionary includes <code class="docutils literal notranslate"><span class="pre">metadata[&quot;size_caveat&quot;]</span></code> documenting the
+dependent-loss over-rejection caveat above.</p>
 <p>R/source comparison: archived R <code class="docutils literal notranslate"><span class="pre">ttrTests/R/dataSnoop.R::dataSnoop(test=&quot;SPA&quot;)</span></code>
 implements Hansen SPA for technical-trading rule parameter grids. It recomputes
 strategy performance on each bootstrapped price sample, so it is not a direct
@@ -1698,6 +1738,8 @@ contract and records this as conceptual R alignment in each output record.</p>
 Reality Check alias over the same SPA machinery, with the same p-value fields.
 Use this when the research design calls for the White Reality Check against a
 benchmark model.</p>
+<p>The returned dictionary includes the same <code class="docutils literal notranslate"><span class="pre">metadata[&quot;size_caveat&quot;]</span></code> dependent-
+loss disclosure as SPA.</p>
 <p>R/source comparison: archived R <code class="docutils literal notranslate"><span class="pre">ttrTests/R/dataSnoop.R::dataSnoop(test=&quot;RC&quot;)</span></code>
 implements White’s Reality Check for technical-trading rule grids. As with SPA,
 the R function is strategy-generator specific; <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> uses
@@ -1727,6 +1769,8 @@ precomputed benchmark and candidate forecast-loss series.</p>
 <p>Input: long or wide loss panel with a named benchmark model. Output:
 JSON-ready dictionary with <code class="docutils literal notranslate"><span class="pre">superior_models</span></code> for each target/horizon group.
 Backend: <code class="docutils literal notranslate"><span class="pre">arch.bootstrap.StepM</span></code>.</p>
+<p>The returned dictionary includes the same <code class="docutils literal notranslate"><span class="pre">metadata[&quot;size_caveat&quot;]</span></code> dependent-
+loss disclosure as SPA and RC.</p>
 <p>R/source comparison: <code class="docutils literal notranslate"><span class="pre">oosanalysis-R-library/R/stepm.R::stepm</span></code> implements a
 generic Romano-Wolf stepdown loop from supplied test statistics and bootstrap
 test-statistic draws. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> delegates to <code class="docutils literal notranslate"><span class="pre">arch.bootstrap.StepM</span></code>, which
@@ -2128,6 +2172,10 @@ which callable produced the result.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#directional-accuracy-tests">Directional Accuracy Tests</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#directional-accuracy-test">directional_accuracy_test</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-rationality">Forecast Rationality</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mincer-zarnowitz-test">mincer_zarnowitz_test</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#density-and-interval-diagnostics">Density And Interval Diagnostics</a><ul class="pst-show_toc_level nav section-nav flex-column">

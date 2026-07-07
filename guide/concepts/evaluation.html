@@ -516,9 +516,13 @@ contender (declare <code class="docutils literal notranslate"><span class="pre">
 CW only for arms that declare nesting; CW is silently invalid otherwise.</p></li>
 <li><p><strong>Additional pairwise tests</strong>: opt in with <code class="docutils literal notranslate"><span class="pre">&quot;gw&quot;</span></code> (Giacomini-White conditional
 predictive ability), <code class="docutils literal notranslate"><span class="pre">&quot;gr&quot;</span></code> (Giacomini-Rossi fluctuation), <code class="docutils literal notranslate"><span class="pre">&quot;enc_new&quot;</span></code> /
-<code class="docutils literal notranslate"><span class="pre">&quot;enc_t&quot;</span></code> (nested encompassing), or <code class="docutils literal notranslate"><span class="pre">&quot;pt&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;hm&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;ag&quot;</span></code> (directional
-accuracy). Directional tests evaluate the contender’s own sign skill on the
-same benchmark-aligned origins.</p></li>
+<code class="docutils literal notranslate"><span class="pre">&quot;enc_t&quot;</span></code> (nested encompassing), <code class="docutils literal notranslate"><span class="pre">&quot;mz&quot;</span></code> (Mincer-Zarnowitz forecast-rationality
+regression), or <code class="docutils literal notranslate"><span class="pre">&quot;pt&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;hm&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;ag&quot;</span></code> (directional accuracy). Directional
+tests evaluate the contender’s own sign skill on the same benchmark-aligned
+origins. Degenerate directional forecasts are reported with
+<code class="docutils literal notranslate"><span class="pre">status=&quot;degenerate&quot;</span></code> rows rather than aborting evaluation; ENC-NEW/ENC-T rows
+without a p-value or configured critical value are marked
+<code class="docutils literal notranslate"><span class="pre">status=&quot;inconclusive&quot;</span></code>.</p></li>
 <li><p><strong>Joint multi-horizon tests</strong>: <code class="docutils literal notranslate"><span class="pre">&quot;uspa&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;aspa&quot;</span></code> run Quaedvlieg-style
 uniform and average SPA jointly across all horizons for each
 target/contender/benchmark triple. They require at least two horizons and land
@@ -528,7 +532,9 @@ statistically distinguished from the best model at a given significance level
 (<code class="docutils literal notranslate"><span class="pre">mcs_alpha</span></code>). Uses the iterative elimination algorithm by default.</p></li>
 <li><p><strong>Full-set benchmark tests</strong>: <code class="docutils literal notranslate"><span class="pre">&quot;spa&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rc&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;stepm&quot;</span></code> compare the full
 contender set against the benchmark and land in <code class="docutils literal notranslate"><span class="pre">report.mcs</span></code> alongside MCS.
-They require the <code class="docutils literal notranslate"><span class="pre">arch</span></code> extra (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;macroforecast[arch]&quot;</span></code>).</p></li>
+They require the <code class="docutils literal notranslate"><span class="pre">arch</span></code> extra (<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;macroforecast[arch]&quot;</span></code>) and carry
+a dependent-loss size caveat; prefer <code class="docutils literal notranslate"><span class="pre">model_confidence_set</span></code> or <code class="docutils literal notranslate"><span class="pre">uspa</span></code>/<code class="docutils literal notranslate"><span class="pre">aspa</span></code>
+when serial dependence in losses is central to the inference.</p></li>
 </ul>
 </section>
 <section id="choosing-the-benchmark">
@@ -599,27 +605,34 @@ contender by <code class="docutils literal notranslate"><span class="pre">foreca
 </section>
 <section id="key-callable">
 <h2>Key Callable<a class="headerlink" href="#key-callable" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> declares the benchmark arm, which metrics and tests to compute, and
-MCS settings. Pass it to <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvalSpec</span>
+<p><code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> declares the benchmark arm, which metrics and tests to compute,
+per-test options, MCS alpha, and optional evaluation-window subsamples. Pass it
+to <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">macroforecast.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">SubsampleWindow</span>
 
 <span class="n">evaluation</span> <span class="o">=</span> <span class="n">EvalSpec</span><span class="p">(</span>
     <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span>
     <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
-    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;cw&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">,</span> <span class="s2">&quot;spa&quot;</span><span class="p">,</span> <span class="s2">&quot;uspa&quot;</span><span class="p">),</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;cw&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">,</span> <span class="s2">&quot;spa&quot;</span><span class="p">,</span> <span class="s2">&quot;uspa&quot;</span><span class="p">,</span> <span class="s2">&quot;mz&quot;</span><span class="p">),</span>
     <span class="n">test_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;spa&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_boot&quot;</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="s2">&quot;block_length&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
                   <span class="s2">&quot;uspa&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_boot&quot;</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="s2">&quot;block_length&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}},</span>
-    <span class="n">by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
     <span class="n">cw_for_nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>    <span class="c1"># compute CW only for arms with nested_in_benchmark=True</span>
     <span class="n">mcs_alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
-    <span class="n">mcs_method</span><span class="o">=</span><span class="s2">&quot;iterative&quot;</span><span class="p">,</span>
+    <span class="n">subsamples</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;full&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(),</span>
+        <span class="s2">&quot;ex_covid&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">((</span><span class="s2">&quot;2020-03-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2021-12-31&quot;</span><span class="p">),)),</span>
+        <span class="s2">&quot;post_gfc&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s2">&quot;2010-01-01&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>The accuracy table, significance tests, and Model Confidence Set are produced by
-<code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>. See the runnable <a class="reference internal" href="../getting_started.html"><span class="std std-doc">Getting Started</span></a> snippets
-and the <a class="reference internal" href="../gallery.html"><span class="std std-doc">Replication Gallery</span></a> for the full report objects in
-context.</p>
+<code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>. Subsamples filter the already-produced forecast frame by target
+date before scoring; they do not refit models. When subsamples are configured,
+evaluation tables include a <code class="docutils literal notranslate"><span class="pre">subsample</span></code> column, and paper tables can select a
+window with <code class="docutils literal notranslate"><span class="pre">mf.reporting.paper_accuracy_table(report,</span> <span class="pre">subsample=&quot;ex_covid&quot;)</span></code>.
+See the runnable <a class="reference internal" href="../getting_started.html"><span class="std std-doc">Getting Started</span></a> snippets and the
+<a class="reference internal" href="../gallery.html"><span class="std std-doc">Replication Gallery</span></a> for the full report objects in context.</p>
 </section>
 <section id="reference">
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>

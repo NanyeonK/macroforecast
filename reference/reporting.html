@@ -769,6 +769,7 @@ columns; use <code class="docutils literal notranslate"><span class="pre">test_p
     <span class="n">report</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">subsample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;rel_rmse&quot;</span><span class="p">,</span>
     <span class="n">star_levels</span><span class="o">=</span><span class="p">((</span><span class="mf">0.01</span><span class="p">,</span> <span class="s2">&quot;***&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.10</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">)),</span>
     <span class="n">mcs_mark</span><span class="o">=</span><span class="s2">&quot;†&quot;</span><span class="p">,</span>
@@ -802,31 +803,35 @@ from the three separate long frames <code class="docutils literal notranslate"><
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p>Restrict to one target. With <code class="docutils literal notranslate"><span class="pre">None</span></code> and more than one target present, returns <code class="docutils literal notranslate"><span class="pre">dict[target,</span> <span class="pre">ReportTable]</span></code> instead of a single table (see below).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metric</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subsample</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Select one <code class="docutils literal notranslate"><span class="pre">EvalSpec.subsamples</span></code> window when the report has a <code class="docutils literal notranslate"><span class="pre">subsample</span></code> column. <code class="docutils literal notranslate"><span class="pre">None</span></code> selects <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code> when present; otherwise multiple windows require an explicit value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metric</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;rel_rmse&quot;</span></code></p></td>
 <td><p>The accuracy column to display. <code class="docutils literal notranslate"><span class="pre">&quot;rel_rmse&quot;</span></code> is computed here as <code class="docutils literal notranslate"><span class="pre">sqrt(relative_mse)</span></code> (not itself a column of <code class="docutils literal notranslate"><span class="pre">report.accuracy</span></code>). Any other column already on the accuracy frame (<code class="docutils literal notranslate"><span class="pre">&quot;relative_mse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;rmse&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;r2_oos&quot;</span></code>, …) is used as-is.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">star_levels</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">star_levels</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">((0.01,&quot;***&quot;),(0.05,&quot;**&quot;),(0.10,&quot;*&quot;))</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(p_value_threshold,</span> <span class="pre">marker)</span></code> pairs for the DM significance stars, smallest threshold first.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mcs_mark</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mcs_mark</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;†&quot;</span></code></p></td>
 <td><p>Marker appended where <code class="docutils literal notranslate"><span class="pre">report.mcs.in_mcs</span></code> is True for that <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">contender)</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_row</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_row</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 <td><p>Set <code class="docutils literal notranslate"><span class="pre">False</span></code> to drop the benchmark’s own row (always <code class="docutils literal notranslate"><span class="pre">1.000</span></code> by construction).</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">precision</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">precision</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">3</span></code></p></td>
 <td><p>Digits after the decimal for the metric value.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">missing</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">missing</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;--&quot;</span></code></p></td>
 <td><p>Display value where the metric could not be computed.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">caption</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">notes</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">caption</span></code>, <code class="docutils literal notranslate"><span class="pre">label</span></code>, <code class="docutils literal notranslate"><span class="pre">notes</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
 <td><p>—</p></td>
 <td><p>Same presentation fields as the other preset builders.</p></td>
 </tr>
@@ -834,10 +839,12 @@ from the three separate long frames <code class="docutils literal notranslate"><
 </table>
 </div>
 <p>Output rows are models (the benchmark first, when <code class="docutils literal notranslate"><span class="pre">benchmark_row=True</span></code>),
-columns are horizons (<code class="docutils literal notranslate"><span class="pre">h1</span></code>, <code class="docutils literal notranslate"><span class="pre">h3</span></code>, …). DM stars are joined on <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">contender)</span></code> from <code class="docutils literal notranslate"><span class="pre">report.significance</span></code>; the benchmark’s own row is
-never starred. Missing <code class="docutils literal notranslate"><span class="pre">significance</span></code>/<code class="docutils literal notranslate"><span class="pre">mcs</span></code> frames (or missing rows within
-them) contribute no stars/marker rather than raising – not every
-<code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> carries them.</p>
+columns are horizons (<code class="docutils literal notranslate"><span class="pre">h1</span></code>, <code class="docutils literal notranslate"><span class="pre">h3</span></code>, …). DM stars are joined on <code class="docutils literal notranslate"><span class="pre">(target,</span> <span class="pre">horizon,</span> <span class="pre">contender)</span></code> from the wide DM rows of <code class="docutils literal notranslate"><span class="pre">report.significance</span></code>; long-form
+rows for tests such as GW, GR, MZ, ENC, or directional accuracy are ignored so
+they cannot duplicate table cells. MCS markers are joined only from rows with
+<code class="docutils literal notranslate"><span class="pre">in_mcs</span></code> membership. The benchmark’s own row is never starred. Missing
+<code class="docutils literal notranslate"><span class="pre">significance</span></code>/<code class="docutils literal notranslate"><span class="pre">mcs</span></code> frames (or missing rows within them) contribute no
+stars/marker rather than raising – not every <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code> carries them.</p>
 <p>Multi-target reports return <code class="docutils literal notranslate"><span class="pre">dict[target,</span> <span class="pre">ReportTable]</span></code> rather than one
 stacked frame: different targets can have different available horizons and a
 different benchmark-present status, and a <code class="docutils literal notranslate"><span class="pre">ReportTable</span></code> is a single flat 2-D
@@ -849,6 +856,10 @@ one target, returns that target’s <code class="docutils literal notranslate"><
 
 <span class="n">table</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">paper_accuracy_table</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">booktabs</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>For an ex-COVID robustness table from <code class="docutils literal notranslate"><span class="pre">EvalSpec.subsamples</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">table</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">paper_accuracy_table</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">subsample</span><span class="o">=</span><span class="s2">&quot;ex_covid&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>\begin{table}[!htbp]
