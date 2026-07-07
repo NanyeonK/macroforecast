@@ -9,7 +9,11 @@ import numpy as np
 from macroforecast.model_ensemble import get_model_ensemble
 from macroforecast.models.specs import ModelSpec, get_model
 from macroforecast.model_selection.optimizers import sample_params
-from macroforecast.model_selection.types import ParamDistribution, SearchSpec
+from macroforecast.model_selection.types import (
+    ParamDistribution,
+    SearchSpec,
+    ValidationSplitterSpec,
+)
 
 
 def uniform(low: float, high: float) -> ParamDistribution:
@@ -77,12 +81,17 @@ def search_spec(
     )
 
 
-def grid(param_grid: dict[str, Iterable[Any] | Any]) -> SearchSpec:
+def grid(
+    param_grid: dict[str, Iterable[Any] | Any],
+    *,
+    validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None,
+) -> SearchSpec:
     """Grid-search over explicit parameter values."""
 
     return SearchSpec(
         method="grid",
         param_grid={key: _as_tuple(value) for key, value in param_grid.items()},
+        validation_splitter=validation_splitter,
     )
 
 
@@ -276,6 +285,8 @@ def _normalize_method(method: str) -> str:
         "custom_search": "custom",
         "cvpath": "cv_path",
         "path": "cv_path",
+        "ic": "information_criterion",
+        "informationcriterion": "information_criterion",
     }
     return aliases.get(key, key)
 
@@ -331,7 +342,7 @@ def _callable_name(func: Callable[..., Any]) -> str:
 
 
 def _candidates(spec: SearchSpec, rng: np.random.Generator) -> list[dict[str, Any]]:
-    if spec.method in {"fixed", "grid", "cv_path"}:
+    if spec.method in {"fixed", "grid", "cv_path", "information_criterion"}:
         if not spec.param_grid:
             return [{}]
         keys = list(spec.param_grid)
