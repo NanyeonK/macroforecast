@@ -7,14 +7,77 @@ execution (``run_pipeline``), interpretation, and reporting layers build on thes
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 import importlib.util
 import inspect
+import math
 from pathlib import Path
 from typing import Any, Literal, cast
 
 import pandas as pd
+
+
+ArmTagValue = str | int | float | bool
+
+
+class _FrozenTagMapping(Mapping[str, ArmTagValue]):
+    """Small immutable, pickleable mapping used for ``Arm.tags``."""
+
+    def __init__(self, items: Sequence[tuple[str, ArmTagValue]]) -> None:
+        self._items = tuple(items)
+        self._dict = dict(self._items)
+
+    def __getitem__(self, key: str) -> ArmTagValue:
+        return self._dict[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._dict)
+
+    def __len__(self) -> int:
+        return len(self._dict)
+
+    def __repr__(self) -> str:
+        return repr(self._dict)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Mapping):
+            return dict(self._items) == dict(other)
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self._items)
+
+
+def _canonical_tags(tags: Mapping[str, ArmTagValue] | None) -> Mapping[str, ArmTagValue]:
+    if tags is None:
+        return _FrozenTagMapping(())
+    if not isinstance(tags, Mapping):
+        raise TypeError("Arm.tags must be a mapping of identifier keys to scalar values")
+    items: list[tuple[str, ArmTagValue]] = []
+    for key, value in tags.items():
+        if not isinstance(key, str) or not key.isidentifier():
+            raise ValueError(
+                "Arm.tags keys must be valid identifiers so they can become "
+                f"'tag_<key>' columns, got {key!r}"
+            )
+        if isinstance(value, bool):
+            canonical: ArmTagValue = bool(value)
+        elif isinstance(value, str):
+            canonical = str(value)
+        elif isinstance(value, int):
+            canonical = int(value)
+        elif isinstance(value, float):
+            if not math.isfinite(value):
+                raise ValueError(f"Arm.tags value for {key!r} must be finite")
+            canonical = float(value)
+        else:
+            raise TypeError(
+                "Arm.tags values must be scalar str, int, float, or bool; "
+                f"{key!r} has {type(value).__name__}"
+            )
+        items.append((key, canonical))
+    return _FrozenTagMapping(sorted(items, key=lambda item: item[0]))
 
 
 # t-code (FRED-MD/QD integration order) -> (forecast_policy, target_transform).
@@ -94,7 +157,9 @@ class Arm:
 
     An arm is NOT itself a cell. Applied to a target and a horizon it forms one
     cell (executed by one ``run()`` call); in the evaluation it appears as exactly
-    one contender (one arm = one contender).
+    one contender (one arm = one contender). ``tags`` are descriptive scalar
+    labels for post-run designs; they become ``tag_<key>`` columns in the master
+    forecast frame but do not affect result-store cell digests.
     """
 
     name: str
@@ -118,6 +183,14 @@ class Arm:
     # otherwise CW is silently invalid. Diebold-Mariano is reported regardless.
     nested_in_benchmark: bool = False
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    # Free-form scalar labels for post-run designs. The runner exposes each tag
+    # as a flat ``tag_<key>`` forecast column; tags are descriptive metadata and
+    # are intentionally excluded from result-store cell digests. Placed after
+    # ``metadata`` so existing positional ``Arm(...)`` calls keep their meaning.
+    tags: Mapping[str, ArmTagValue] | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "tags", _canonical_tags(self.tags))
 
 
 @dataclass(frozen=True)

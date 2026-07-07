@@ -163,6 +163,14 @@ CSSED, Giacomini-Rossi fluctuation, PIT, and forecast-path exhibits from a
 `PipelineReport`.
 :::
 
+:::{grid-item-card} Multi-Axis Comparisons
+:link: multi_axis_comparison
+:link-type: doc
+
+Tag arms by design axis, run the normal pipeline, and estimate descriptive
+axis-contribution regressions from the master forecast frame.
+:::
+
 :::{grid-item-card} Your Data, Your Model, One Table
 :link: custom_data_tutorial
 :link-type: doc
@@ -188,5 +196,6 @@ concepts/windows
 concepts/running
 concepts/evaluation
 figures
+multi_axis_comparison
 custom_data_tutorial
 ```

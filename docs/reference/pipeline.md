@@ -321,7 +321,9 @@ applied to one target over the window for a horizon-group -- not an arm.)
 Columns include arm, model, contender, target, horizon, origin, date,
 prediction, actual, target_transform, forecast_policy. Each cell runs its arm
 with its own preprocessing/features/model against its target's resolved
-(forecast_policy, target_transform).
+(forecast_policy, target_transform). Arm tags are emitted as flat
+``tag_<key>`` columns; if that name already exists in a forecast frame, the
+run raises rather than overwriting a compute-produced column.
 
 The pipeline MANAGES atomic ``run()`` calls over (target, arm, horizon-group)
 cells. When ``spec.n_jobs > 1`` the cells run across a process pool, one horizon
@@ -638,7 +640,7 @@ Qualified name: `macroforecast.pipeline.spec.Arm`
 #### Signature
 
 ```python
-macroforecast.pipeline.Arm(name: str, model: Any, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, features: Any | None = None, feature_policy: Any | None = None, params: Mapping[str, Any] | None = None, model_selection: Any | None = None, model_selection_metric: str = "mse", window: Any | None = None, interpret: InterpretSpec | tuple[str, ...] | None = None, is_benchmark: bool = False, nested_in_benchmark: bool = False, metadata: Mapping[str, Any] = <factory>) -> None
+macroforecast.pipeline.Arm(name: str, model: Any, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, features: Any | None = None, feature_policy: Any | None = None, params: Mapping[str, Any] | None = None, model_selection: Any | None = None, model_selection_metric: str = "mse", window: Any | None = None, interpret: InterpretSpec | tuple[str, ...] | None = None, is_benchmark: bool = False, nested_in_benchmark: bool = False, metadata: Mapping[str, Any] = <factory>, tags: Mapping[str, ArmTagValue] | None = None) -> None
 ```
 
 #### Description
@@ -647,7 +649,9 @@ A target-agnostic configuration: preprocessing + features + a single model.
 
 An arm is NOT itself a cell. Applied to a target and a horizon it forms one
 cell (executed by one ``run()`` call); in the evaluation it appears as exactly
-one contender (one arm = one contender).
+one contender (one arm = one contender). ``tags`` are descriptive scalar
+labels for post-run designs; they become ``tag_<key>`` columns in the master
+forecast frame but do not affect result-store cell digests.
 
 #### Parameters
 
@@ -667,6 +671,7 @@ one contender (one arm = one contender).
 | `is_benchmark` | positional or keyword | `bool` | `False` |
 | `nested_in_benchmark` | positional or keyword | `bool` | `False` |
 | `metadata` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+| `tags` | positional or keyword | `Mapping[str, ArmTagValue] \| None` | `None` |
 
 #### Returns
 
@@ -698,6 +703,7 @@ import macroforecast as mf
 | `is_benchmark` | `bool` | `False` |
 | `nested_in_benchmark` | `bool` | `False` |
 | `metadata` | `Mapping[str, Any]` | `default_factory` |
+| `tags` | `Mapping[str, ArmTagValue] \| None` | `None` |
 ### CombinationContender
 
 Qualified name: `macroforecast.pipeline.spec.CombinationContender`

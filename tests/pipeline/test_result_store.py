@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses as _dc
 import json
 
 import numpy as np
@@ -131,6 +132,45 @@ def test_result_store_incremental_horse_race_reuses_existing_arms(tmp_path):
         a = first.accuracy[first.accuracy["contender"] == contender].reset_index(drop=True)
         b = second.accuracy[second.accuracy["contender"] == contender].reset_index(drop=True)
         pd.testing.assert_frame_equal(a, b)
+
+
+def test_result_store_reuses_cells_when_only_arm_tags_change(tmp_path):
+    FIT_COUNTS.clear()
+    base = _spec(tmp_path)
+    first = run_pipeline(base)
+    assert first.provenance["result_store"]["n_computed"] == 2
+
+    tagged_arms = [
+        _dc.replace(arm, tags={"axis": idx, "tagged": True})
+        for idx, arm in enumerate(base.arms)
+    ]
+    tagged = _spec(tmp_path, arms=tagged_arms)
+
+    base_identity = result_cell_identity(
+        base,
+        base.arms[0],
+        base.targets[0],
+        horizon=1,
+        data_identity=_data_identity(base.data),
+    )
+    tagged_identity = result_cell_identity(
+        tagged,
+        tagged.arms[0],
+        tagged.targets[0],
+        horizon=1,
+        data_identity=_data_identity(tagged.data),
+    )
+    assert tagged_identity.digest == base_identity.digest
+
+    FIT_COUNTS.clear()
+    second = run_pipeline(tagged)
+
+    assert second.provenance["result_store"]["n_reused"] == 2
+    assert second.provenance["result_store"]["n_computed"] == 0
+    assert FIT_COUNTS.get("recording", 0) == 0
+    assert {"tag_axis", "tag_tagged"} <= set(second.forecasts.columns)
+    assert set(second.forecasts.loc[second.forecasts["arm"] == "A", "tag_axis"]) == {0}
+    assert set(second.forecasts.loc[second.forecasts["arm"] == "B", "tag_axis"]) == {1}
 
 
 def test_result_store_digest_sensitivity_oracle(tmp_path):
