@@ -34,6 +34,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `albacore_ranks` | function | Fit the inflation-specific rank-space Albacore wrapper. |
 | `ar` | function | Fit a fixed-order AR(``n_lag``) by OLS. |
 | `naive` | function | Random-walk (naive) forecaster: carry the last observed value forward. |
+| `hist_mean` | function | Historical (prevailing) mean benchmark for the transformed target. |
 | `seasonal_naive` | function | Seasonal-naive forecaster: repeat the last full seasonal cycle. |
 | `random_walk_drift` | function | Random-walk-with-drift forecaster. |
 | `stlf` | function | STL + forecast: seasonally adjust, forecast, re-seasonalize (R forecast::stlf). |
@@ -162,6 +163,7 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `group_lasso` | `linear` | `supervised` | `standard` | none | no | Package-native group lasso with group-level sparsity. |
 | `gru` | `neural` | `supervised` | `standard` | `deep` | no | Torch-backed GRU regressor. |
 | `hemisphere_nn` | `neural` | `supervised` | `standard` | `deep` | no | Bagged Hemisphere neural network with mean and variance heads. |
+| `hist_mean` | `timeseries` | `target` | `standard` | none | no | Historical (prevailing) mean benchmark of the transformed target. |
 | `holt_winters` | `timeseries` | `target` | `standard` | none | no | Holt-Winters exponential smoothing target-only forecasting model. |
 | `huber` | `linear` | `supervised` | `standard` | none | no | Robust Huber regression. |
 | `kernel_ridge` | `nonparametric` | `supervised` | `standard` | none | yes | Kernel ridge regression. |
@@ -1453,6 +1455,33 @@ Bagged Hemisphere neural network with mean and variance heads.
 | `small` | `learning_rate`: `(0.001,)`, `n_estimators`: `(3, 5)`, `neurons`: `(16, 32)` |
 | `standard` | `learning_rate`: `(0.0005, 0.001)`, `n_estimators`: `(3, 5)`, `neurons`: `(16, 32)` |
 | `wide` | `learning_rate`: `(0.0001, 0.0005, 0.001)`, `n_estimators`: `(5, 10, 25)`, `neurons`: `(32, 64, 128)` |
+
+### hist_mean
+
+Family: `timeseries`
+
+#### Fit Signature
+
+```python
+macroforecast.models.hist_mean(y: Any, *, window: int | None = None, **kwargs: Any) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `target` |
+| `default_preset` | `standard` |
+| `default_search_method` | `grid` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Historical (prevailing) mean benchmark of the transformed target.
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `window` | `None` | `int \| None` | False | Rolling target-mean window; None uses the expanding fit sample. |
 
 ### holt_winters
 
@@ -3207,7 +3236,7 @@ XGBoost regressor.
 Kind: `data`
 
 ```python
-MODEL_SPECS = dict(76 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, catboost, ...)
+MODEL_SPECS = dict(77 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, catboost, ...)
 ```
 
 ## Callable And Class Reference

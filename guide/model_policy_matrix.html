@@ -1002,7 +1002,16 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hist_mean</span></code></p></td>
+<td><p>timeseries</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>not available</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code></p></td>
 <td><p>timeseries</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
 <td><p>guarded-unsupported</p></td>
@@ -1011,7 +1020,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">naive</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">naive</span></code></p></td>
 <td><p>timeseries</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
 <td><p>guarded-unsupported</p></td>
@@ -1020,7 +1029,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_walk_drift</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_walk_drift</span></code></p></td>
 <td><p>timeseries</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
 <td><p>guarded-unsupported</p></td>
@@ -1029,7 +1038,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_naive</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_naive</span></code></p></td>
 <td><p>timeseries</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
 <td><p>guarded-unsupported</p></td>
@@ -1038,7 +1047,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stlf</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stlf</span></code></p></td>
 <td><p>timeseries</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
 <td><p>guarded-unsupported</p></td>
@@ -1047,7 +1056,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></p></td>
 <td><p>timeseries</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">target</span></code></p></td>
 <td><p>guarded-unsupported</p></td>
@@ -1056,7 +1065,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">var</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">var</span></code></p></td>
 <td><p>timeseries</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">panel</span></code></p></td>
 <td><p>supported-via-direct-projection</p></td>
@@ -1065,7 +1074,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: EMPTY</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">catboost</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">catboost</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1074,7 +1083,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1083,7 +1092,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1092,7 +1101,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1101,34 +1110,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lgb_plus</span></code></p></td>
-<td><p>tree</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lgba_plus</span></code></p></td>
-<td><p>tree</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></p></td>
-<td><p>tree</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>supported</p></td>
-<td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macro_random_forest</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lgb_plus</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1137,7 +1119,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lgba_plus</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1146,7 +1128,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1155,7 +1137,16 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macro_random_forest</span></code></p></td>
+<td><p>tree</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></p></td>
 <td><p>tree</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
 <td><p>supported</p></td>
@@ -1164,7 +1155,25 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">egarch</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></p></td>
+<td><p>tree</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></p></td>
+<td><p>tree</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supervised</span></code></p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>supported</p></td>
+<td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">egarch</span></code></p></td>
 <td><p>volatility</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">volatility</span></code></p></td>
 <td><p>supported</p></td>
@@ -1173,7 +1182,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">garch11</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">garch11</span></code></p></td>
 <td><p>volatility</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">volatility</span></code></p></td>
 <td><p>supported</p></td>
@@ -1182,7 +1191,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gjr_garch</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gjr_garch</span></code></p></td>
 <td><p>volatility</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">volatility</span></code></p></td>
 <td><p>supported</p></td>
@@ -1191,7 +1200,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code></p></td>
 <td><p>volatility</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">volatility</span></code></p></td>
 <td><p>supported</p></td>
@@ -1200,7 +1209,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 <td><p>supported</p></td>
 <td><p>direct: OK, direct_average: OK, path_average: OK, recursive: OK</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tgarch</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tgarch</span></code></p></td>
 <td><p>volatility</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">volatility</span></code></p></td>
 <td><p>supported</p></td>

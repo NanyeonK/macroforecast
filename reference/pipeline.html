@@ -2604,7 +2604,7 @@ refitting models or creating new forecast cells.</p>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.SubsampleWindow</span></code></p>
 <section id="id92">
 <h4>Signature<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">mask</span><span class="p">:</span> <span class="n">SubsampleMaskInput</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
@@ -2612,7 +2612,10 @@ refitting models or creating new forecast cells.</p>
 <h4>Description<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
 <p>Evaluation-window filter applied to forecast target dates.</p>
 <p>Bounds are inclusive date strings. <code class="docutils literal notranslate"><span class="pre">exclude</span></code> removes inclusive date ranges
-after the optional start/end bounds are applied.</p>
+after the optional start/end bounds are applied. <code class="docutils literal notranslate"><span class="pre">mask</span></code> intersects the
+window with dates where a boolean state indicator is true; it accepts a
+date-indexed boolean Series, a date-to-bool mapping, or the named indicators
+<code class="docutils literal notranslate"><span class="pre">&quot;nber_recession&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;nber_expansion&quot;</span></code>.</p>
 </section>
 <section id="id94">
 <h4>Parameters<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
@@ -2639,6 +2642,11 @@ after the optional start/end bounds are applied.</p>
 <td><p>positional or keyword</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tuple[tuple[str,</span> <span class="pre">str],</span> <span class="pre">...]</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mask</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SubsampleMaskInput</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -2677,6 +2685,10 @@ after the optional start/end bounds are applied.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">exclude</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">tuple[tuple[str,</span> <span class="pre">str],</span> <span class="pre">...]</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">()</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mask</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SubsampleMaskInput</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
 </table>

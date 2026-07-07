@@ -559,7 +559,15 @@
 <td><p>default</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hist_mean</span></code></p></td>
+<td><p>Historical (prevailing) mean benchmark of the transformed target.</p></td>
+<td><p>target</p></td>
+<td><p>none</p></td>
+<td><p>no</p></td>
+<td><p>default</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code></p></td>
 <td><p>Holt-Winters exponential smoothing target-only forecasting model.</p></td>
 <td><p>target</p></td>
 <td><p>none</p></td>
@@ -567,7 +575,7 @@
 <td><p>default</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">naive</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">naive</span></code></p></td>
 <td><p>Random-walk (naive) baseline: carry the last value forward (forecast::naive).</p></td>
 <td><p>target</p></td>
 <td><p>none</p></td>
@@ -575,7 +583,7 @@
 <td><p>default</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_walk_drift</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_walk_drift</span></code></p></td>
 <td><p>Random-walk-with-drift baseline (forecast::rwf(drift=TRUE)).</p></td>
 <td><p>target</p></td>
 <td><p>none</p></td>
@@ -583,7 +591,7 @@
 <td><p>default</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_naive</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_naive</span></code></p></td>
 <td><p>Seasonal-naive baseline: repeat the last seasonal cycle (forecast::snaive).</p></td>
 <td><p>target</p></td>
 <td><p>none</p></td>
@@ -591,7 +599,7 @@
 <td><p>default</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stlf</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stlf</span></code></p></td>
 <td><p>STL decomposition + forecast of the seasonally-adjusted series (forecast::stlf).</p></td>
 <td><p>target</p></td>
 <td><p>none</p></td>
@@ -599,7 +607,7 @@
 <td><p>default</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></p></td>
 <td><p>Theta method target-only forecasting model.</p></td>
 <td><p>target</p></td>
 <td><p>none</p></td>
@@ -607,7 +615,7 @@
 <td><p>default</p></td>
 <td><p>0</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">var</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">var</span></code></p></td>
 <td><p>R vars::VAR-aligned vector autoregression point forecast.</p></td>
 <td><p>panel</p></td>
 <td><p>none</p></td>

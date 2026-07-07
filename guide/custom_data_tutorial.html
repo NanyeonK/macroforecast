@@ -431,6 +431,7 @@
 <li class="toctree-l1"><a class="reference internal" href="concepts/windows.html">Windows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts/running.html">Running</a></li>
 <li class="toctree-l1"><a class="reference internal" href="concepts/evaluation.html">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reporting.html">Paper Tables</a></li>
 <li class="toctree-l1"><a class="reference internal" href="figures.html">Paper Figures</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Your Data, Your Model, One Table</a></li>
 </ul>
@@ -782,6 +783,11 @@ Model Confidence Set (the † marker on every cell) – the table is telling the
 truth about a small sample, exactly as it would on a real study with a
 genuinely weak edge. <code class="docutils literal notranslate"><span class="pre">.to_html()</span></code> and <code class="docutils literal notranslate"><span class="pre">.to_markdown()</span></code> render the same
 <code class="docutils literal notranslate"><span class="pre">ReportTable</span></code> for a notebook or a README instead of a paper.</p>
+<p>For papers that report K-by-K pairwise DM/CW-style p-value matrices rather than
+one benchmark-vs-contender column, use
+<code class="docutils literal notranslate"><span class="pre">mf.reporting.pairwise_test_table(report,</span> <span class="pre">target=...,</span> <span class="pre">horizon=...,</span> <span class="pre">test=&quot;dm&quot;)</span></code>.
+See <a class="reference internal" href="reporting.html"><span class="std std-doc">Paper Tables</span></a> for the matrix form and fixed <code class="docutils literal notranslate"><span class="pre">hac_lags</span></code>
+replication knobs.</p>
 <p>The companion graphical layer uses the same <code class="docutils literal notranslate"><span class="pre">PipelineReport</span></code>:
 <code class="docutils literal notranslate"><span class="pre">mf.reporting.cumulative_loss_differential_plot</span></code>,
 <code class="docutils literal notranslate"><span class="pre">mf.reporting.fluctuation_test_plot</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.reporting.pit_histogram_plot</span></code>, and
@@ -798,6 +804,8 @@ variants.</p></li>
 <li><p><a class="reference internal" href="../reference/reporting.html#paper-accuracy-table"><span class="std std-ref">paper_accuracy_table reference</span></a>
 – every argument, including multi-target reports and dropping the
 benchmark row.</p></li>
+<li><p><a class="reference internal" href="reporting.html"><span class="std std-doc">Paper Tables</span></a> – publication accuracy tables and pairwise
+model-comparison matrices.</p></li>
 <li><p><a class="reference internal" href="figures.html"><span class="std std-doc">Paper Figures</span></a> – the CSSED, fluctuation, PIT, and forecast-path
 exhibits that pair with the paper table.</p></li>
 <li><p><a class="reference internal" href="getting_started.html"><span class="std std-doc">Getting Started</span></a> and the

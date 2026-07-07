@@ -74,6 +74,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `bvar_minnesota` | timeseries | `panel` | guarded-unsupported | guarded-unsupported | supported | supported | direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT |
 | `bvar_normal_inverse_wishart` | timeseries | `panel` | guarded-unsupported | guarded-unsupported | supported | supported | direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT |
 | `ets` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
+| `hist_mean` | timeseries | `target` | supported | supported | supported | supported | not available |
 | `holt_winters` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `naive` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `random_walk_drift` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |

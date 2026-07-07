@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Paper Figures" href="../figures.html" />
+    <link rel="next" title="Paper Tables" href="../reporting.html" />
     <link rel="prev" title="Running" href="running.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -431,6 +431,7 @@
 <li class="toctree-l1"><a class="reference internal" href="windows.html">Windows</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reporting.html">Paper Tables</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../figures.html">Paper Figures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../custom_data_tutorial.html">Your Data, Your Model, One Table</a></li>
 </ul>
@@ -539,7 +540,12 @@ joint MCS needs origins common to every candidate.</p>
 <p>The pipeline runs statistical forecast comparison tests across all contenders:</p>
 <ul class="simple">
 <li><p><strong>Diebold-Mariano (DM)</strong>: tests whether contender and benchmark have equal
-predictive accuracy. Valid for any pair of forecasts (nested or non-nested).</p></li>
+predictive accuracy. Valid for any pair of forecasts (nested or non-nested).
+The default applies the Harvey-Leybourne-Newbold small-sample correction and
+uses a Student-t reference with <code class="docutils literal notranslate"><span class="pre">df=n_obs-1</span></code>, matching the package’s
+<code class="docutils literal notranslate"><span class="pre">forecast::dm.test</span></code> parity contract. Use <code class="docutils literal notranslate"><span class="pre">test_options={&quot;dm&quot;:</span> <span class="pre">{&quot;small_sample&quot;:</span> <span class="pre">False}}</span></code> only when a replication design needs the plain
+Diebold-Mariano (1995) statistic and asymptotic standard-normal p-value, such
+as MATLAB oracles that report the uncorrected DM statistic.</p></li>
 <li><p><strong>Clark-West (CW)</strong>: adjusts the DM test for the finite-sample upward bias of
 a larger nested model. Valid only when the benchmark is nested within the
 contender (declare <code class="docutils literal notranslate"><span class="pre">nested_in_benchmark=True</span></code> on the arm). The pipeline emits
@@ -566,6 +572,26 @@ They require the <code class="docutils literal notranslate"><span class="pre">ar
 a dependent-loss size caveat; prefer <code class="docutils literal notranslate"><span class="pre">model_confidence_set</span></code> or <code class="docutils literal notranslate"><span class="pre">uspa</span></code>/<code class="docutils literal notranslate"><span class="pre">aspa</span></code>
 when serial dependence in losses is central to the inference.</p></li>
 </ul>
+<p>Tests that estimate a HAC or lag-truncated long-run variance accept fixed lag
+overrides through <code class="docutils literal notranslate"><span class="pre">test_options</span></code>. Use <code class="docutils literal notranslate"><span class="pre">hac_lags</span></code> when a replication design pins a
+Newey-West bandwidth rather than deriving it from the forecast horizon:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">evaluation</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">EvalSpec</span><span class="p">(</span>
+    <span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;AR&quot;</span><span class="p">,</span>
+    <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;cw&quot;</span><span class="p">,</span> <span class="s2">&quot;gw&quot;</span><span class="p">,</span> <span class="s2">&quot;enc_t&quot;</span><span class="p">,</span> <span class="s2">&quot;gr&quot;</span><span class="p">,</span> <span class="s2">&quot;mz&quot;</span><span class="p">),</span>
+    <span class="n">test_options</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;dm&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hac_lags&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="s2">&quot;cw&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hac_lags&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="s2">&quot;gw&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hac_lags&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="s2">&quot;enc_t&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hac_lags&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="s2">&quot;gr&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hac_lags&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+        <span class="s2">&quot;mz&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hac_lags&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">hac_lags</span></code> must be an integer greater than or equal to zero and is validated when
+<code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code> is built. For <code class="docutils literal notranslate"><span class="pre">&quot;gr&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">hac_lags</span></code> is the paper-facing alias for the
+legacy <code class="docutils literal notranslate"><span class="pre">lag_truncate</span></code> option and takes precedence if both are supplied.</p>
 </section>
 <section id="choosing-the-benchmark">
 <h2>Choosing the benchmark<a class="headerlink" href="#choosing-the-benchmark" title="Link to this heading">#</a></h2>
@@ -645,22 +671,34 @@ to <code class="docutils literal notranslate"><span class="pre">pipeline_spec</s
     <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
     <span class="n">tests</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;dm&quot;</span><span class="p">,</span> <span class="s2">&quot;cw&quot;</span><span class="p">,</span> <span class="s2">&quot;mcs&quot;</span><span class="p">,</span> <span class="s2">&quot;spa&quot;</span><span class="p">,</span> <span class="s2">&quot;uspa&quot;</span><span class="p">,</span> <span class="s2">&quot;mz&quot;</span><span class="p">),</span>
     <span class="n">test_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;spa&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_boot&quot;</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="s2">&quot;block_length&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
-                  <span class="s2">&quot;uspa&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_boot&quot;</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="s2">&quot;block_length&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}},</span>
+                  <span class="s2">&quot;uspa&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_boot&quot;</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="s2">&quot;block_length&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+                  <span class="s2">&quot;dm&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;hac_lags&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">}},</span>
     <span class="n">cw_for_nested</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>    <span class="c1"># compute CW only for arms with nested_in_benchmark=True</span>
     <span class="n">mcs_alpha</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
     <span class="n">subsamples</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">&quot;full&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(),</span>
         <span class="s2">&quot;ex_covid&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">((</span><span class="s2">&quot;2020-03-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2021-12-31&quot;</span><span class="p">),)),</span>
         <span class="s2">&quot;post_gfc&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s2">&quot;2010-01-01&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;nber_recession&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><span class="s2">&quot;nber_recession&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;nber_expansion&quot;</span><span class="p">:</span> <span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">mask</span><span class="o">=</span><span class="s2">&quot;nber_expansion&quot;</span><span class="p">),</span>
     <span class="p">},</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>The accuracy table, significance tests, and Model Confidence Set are produced by
 <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code>. Subsamples filter the already-produced forecast frame by target
-date before scoring; they do not refit models. When subsamples are configured,
-evaluation tables include a <code class="docutils literal notranslate"><span class="pre">subsample</span></code> column, and paper tables can select a
-window with <code class="docutils literal notranslate"><span class="pre">mf.reporting.paper_accuracy_table(report,</span> <span class="pre">subsample=&quot;ex_covid&quot;)</span></code>.
+date before scoring; they do not refit models. <code class="docutils literal notranslate"><span class="pre">SubsampleWindow(mask=...)</span></code>
+intersects the date window with a boolean state series. Pass a date-indexed
+boolean <code class="docutils literal notranslate"><span class="pre">Series</span></code>, a <code class="docutils literal notranslate"><span class="pre">{date:</span> <span class="pre">bool}</span></code> mapping, or the named masks
+<code class="docutils literal notranslate"><span class="pre">&quot;nber_recession&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;nber_expansion&quot;</span></code>. The NBER masks fetch <code class="docutils literal notranslate"><span class="pre">USREC</span></code> for
+month-start targets and <code class="docutils literal notranslate"><span class="pre">USRECQ</span></code> for quarter-start targets through the raw FRED
+cache, then record the raw-file hash in report provenance.</p>
+<p>Mask dates must exactly cover the forecast target dates being evaluated. A
+month-end mask will not be silently shifted onto month-start forecasts, and
+missing mask dates or <code class="docutils literal notranslate"><span class="pre">NaN</span></code> states raise with the first missing target dates.
+When subsamples are configured, evaluation tables include a <code class="docutils literal notranslate"><span class="pre">subsample</span></code> column,
+and paper tables can select a window with
+<code class="docutils literal notranslate"><span class="pre">mf.reporting.paper_accuracy_table(report,</span> <span class="pre">subsample=&quot;ex_covid&quot;)</span></code>.
 See the runnable <a class="reference internal" href="../getting_started.html"><span class="std std-doc">Getting Started</span></a> snippets and the
 <a class="reference internal" href="../gallery.html"><span class="std std-doc">Replication Gallery</span></a> for the full report objects in context.</p>
 </section>
@@ -694,11 +732,11 @@ See the runnable <a class="reference internal" href="../getting_started.html"><s
       </div>
     </a>
     <a class="right-next"
-       href="../figures.html"
+       href="../reporting.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Paper Figures</p>
+        <p class="prev-next-title">Paper Tables</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

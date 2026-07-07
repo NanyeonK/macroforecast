@@ -23,6 +23,7 @@ Markdown, HTML, and LaTeX report-table rendering.
 | `metric_report_table` | function | Return a paper-facing metric/evaluation table. |
 | `model_comparison_table` | function | Return the default paper-facing model ranking/comparison table. |
 | `paper_accuracy_table` | function | One line from a ``PipelineReport`` to a referee-ready horse-race table. |
+| `pairwise_test_table` | function | Return a square pairwise forecast-comparison table. |
 | `pit_histogram_plot` | function | Plot a probability integral transform histogram with a binomial band. |
 | `render_tables` | function | Render all tables in a bundle or mapping. |
 | `report_bundle` | function | Collect named reporting tables and figure data without writing files. |
@@ -704,6 +705,58 @@ subsamples raises so the table cannot accidentally mix windows.
 import macroforecast as mf
 # Call with the signature above:
 # mf.reporting.paper_accuracy_table(...)
+```
+### pairwise_test_table
+
+Qualified name: `macroforecast.reporting.core.pairwise_test_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.pairwise_test_table(report_or_master: Any, *, test: str = "dm", target: Any, horizon: Any, models: Sequence[str] | None = None, value: "Literal['p_value', 'stat']" = "p_value", loss: str | Callable[[Any, Any], Any] = "squared", test_options: Mapping[str, Any] | None = None, stars: bool = False, star_levels: PValueStarLevels = ((0.01, '***'), (0.05, '**'), (0.1, '*')), precision: int = 3, p_value_precision: int = 3, missing: str = "") -> pd.DataFrame
+```
+
+#### Description
+
+Return a square pairwise forecast-comparison table.
+
+Rendering the returned frame with ``DataFrame.to_latex()`` requires the
+optional ``jinja2`` package (a pandas>=2 Styler dependency).
+
+``report_or_master`` may be a ``PipelineReport`` or a master forecast frame
+with ``target``, ``horizon``, ``origin``, ``contender``, ``prediction``, and
+``actual`` columns. Rows are the first model in the comparison and columns
+are the second. For ``test="dm"``, for example, the cell ``(A, B)`` calls
+:func:`macroforecast.tests.dm_test` on A's loss minus B's loss.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report_or_master` | positional or keyword | `Any` | `required` |
+| `test` | keyword only | `str` | `"dm"` |
+| `target` | keyword only | `Any` | `required` |
+| `horizon` | keyword only | `Any` | `required` |
+| `models` | keyword only | `Sequence[str] \| None` | `None` |
+| `value` | keyword only | `Literal['p_value', 'stat']` | `"p_value"` |
+| `loss` | keyword only | `str \| Callable[[Any, Any], Any]` | `"squared"` |
+| `test_options` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `stars` | keyword only | `bool` | `False` |
+| `star_levels` | keyword only | `PValueStarLevels` | `((0.01, "***"), (0.05, "**"), (0.1, "*"))` |
+| `precision` | keyword only | `int` | `3` |
+| `p_value_precision` | keyword only | `int` | `3` |
+| `missing` | keyword only | `str` | `""` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.pairwise_test_table(...)
 ```
 ### pit_histogram_plot
 
