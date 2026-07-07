@@ -8,11 +8,13 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import importlib.util
 import inspect
 from pathlib import Path
 from typing import Any, Literal, cast
+
+import pandas as pd
 
 
 # t-code (FRED-MD/QD integration order) -> (forecast_policy, target_transform).
@@ -121,7 +123,7 @@ class CombinationContender:
 #: docstring below).
 SUPPORTED_EVAL_TESTS: frozenset[str] = frozenset(
     {
-        "dm", "cw", "gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mcs",
+        "dm", "cw", "gw", "enc_new", "enc_t", "pt", "hm", "ag", "gr", "mz", "mcs",
         "spa", "rc", "stepm", "uspa", "aspa", "berkowitz", "pit_autocorr",
         "coverage",
     }
@@ -148,6 +150,7 @@ _EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
     "hm": ("macroforecast.tests", "directional_accuracy_test"),
     "ag": ("macroforecast.tests", "directional_accuracy_test"),
     "gr": ("macroforecast.tests", "conditional_predictive_ability_test"),
+    "mz": ("macroforecast.tests", "mincer_zarnowitz_test"),
     "mcs": ("macroforecast.tests", "model_confidence_set"),
     "spa": ("macroforecast.tests", "superior_predictive_ability_test"),
     "rc": ("macroforecast.tests", "reality_check_test"),
@@ -203,6 +206,130 @@ def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
             )
 
 
+_DEFAULT_EVAL_BY = ("target", "horizon")
+_DEFAULT_PRIMARY_AXIS = "contender"
+
+
+def _validate_unimplemented_eval_fields(evaluation: "EvalSpec") -> None:
+    """Reject declared EvalSpec fields that are not wired into evaluation yet."""
+
+    if tuple(evaluation.by) != _DEFAULT_EVAL_BY:
+        raise ValueError(
+            "evaluation.by is not implemented; use test_options / file an issue"
+        )
+    if str(evaluation.primary_axis) != _DEFAULT_PRIMARY_AXIS:
+        raise ValueError(
+            "evaluation.primary_axis is not implemented; use test_options / file an issue"
+        )
+    if evaluation.multiple_testing is not None:
+        raise ValueError(
+            "evaluation.multiple_testing is not implemented; use test_options / file an issue"
+        )
+
+
+def _parse_subsample_date(value: Any, *, label: str) -> pd.Timestamp | None:
+    if value is None:
+        return None
+    try:
+        timestamp = pd.Timestamp(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a parseable date string") from exc
+    if pd.isna(timestamp):
+        raise ValueError(f"{label} must be a parseable date string")
+    if timestamp.tz is not None:
+        timestamp = timestamp.tz_convert(None)
+    return timestamp.normalize()
+
+
+def _normalize_subsamples(
+    subsamples: Mapping[str, "SubsampleWindow"] | None,
+) -> Mapping[str, "SubsampleWindow"] | None:
+    if not subsamples:
+        return None
+    names = [str(name) for name in subsamples]
+    if any(not name for name in names):
+        raise ValueError("evaluation.subsamples names must be nonempty")
+    if len(set(names)) != len(names):
+        raise ValueError("evaluation.subsamples names must be unique")
+
+    normalized: dict[str, SubsampleWindow] = {}
+    for raw_name, window in subsamples.items():
+        name = str(raw_name)
+        if not isinstance(window, SubsampleWindow):
+            raise ValueError(
+                "evaluation.subsamples values must be SubsampleWindow instances"
+            )
+        start = _parse_subsample_date(window.start, label=f"subsample {name!r} start")
+        end = _parse_subsample_date(window.end, label=f"subsample {name!r} end")
+        if start is not None and end is not None and start >= end:
+            raise ValueError(
+                f"evaluation.subsamples[{name!r}] start must be before end"
+            )
+        excludes: list[tuple[str, str]] = []
+        for idx, bounds in enumerate(window.exclude):
+            if (
+                not isinstance(bounds, Sequence)
+                or isinstance(bounds, (str, bytes))
+                or len(bounds) != 2
+            ):
+                raise ValueError(
+                    f"evaluation.subsamples[{name!r}].exclude[{idx}] must have "
+                    "exactly two date bounds"
+                )
+            raw_ex_start, raw_ex_end = bounds
+            ex_start = _parse_subsample_date(
+                raw_ex_start, label=f"subsample {name!r} exclude[{idx}] start"
+            )
+            ex_end = _parse_subsample_date(
+                raw_ex_end, label=f"subsample {name!r} exclude[{idx}] end"
+            )
+            assert ex_start is not None and ex_end is not None
+            if ex_start >= ex_end:
+                raise ValueError(
+                    f"evaluation.subsamples[{name!r}].exclude[{idx}] start "
+                    "must be before end"
+                )
+            excludes.append((str(raw_ex_start), str(raw_ex_end)))
+        normalized[name] = SubsampleWindow(
+            start=None if window.start is None else str(window.start),
+            end=None if window.end is None else str(window.end),
+            exclude=tuple(excludes),
+        )
+    return normalized
+
+
+def _normalize_eval_spec(evaluation: "EvalSpec") -> "EvalSpec":
+    """Return the EvalSpec shape consumed by the evaluator."""
+
+    _validate_unimplemented_eval_fields(evaluation)
+    test_options = {
+        str(test_name): dict(options)
+        for test_name, options in (evaluation.test_options or {}).items()
+    }
+    if evaluation.dm_kwargs:
+        dm_options = dict(evaluation.dm_kwargs)
+        dm_options.update(test_options.get("dm", {}))
+        test_options["dm"] = dm_options
+    return replace(
+        evaluation,
+        test_options=test_options,
+        subsamples=_normalize_subsamples(evaluation.subsamples),
+    )
+
+
+@dataclass(frozen=True)
+class SubsampleWindow:
+    """Evaluation-window filter applied to forecast target dates.
+
+    Bounds are inclusive date strings. ``exclude`` removes inclusive date ranges
+    after the optional start/end bounds are applied.
+    """
+
+    start: str | None = None
+    end: str | None = None
+    exclude: tuple[tuple[str, str], ...] = ()
+
+
 @dataclass(frozen=True)
 class EvalSpec:
     """Automatic evaluation and significance-testing configuration.
@@ -225,7 +352,8 @@ class EvalSpec:
     ``tests`` lists which significance tests actually run; unsupported names
     raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
     Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
-    ``"enc_new"``, ``"enc_t"``, and ``"gr"``. ``"pt"``, ``"hm"``, and
+    ``"enc_new"``, ``"enc_t"``, ``"gr"``, and ``"mz"``. ``"mz"`` is the
+    Mincer-Zarnowitz actual-on-forecast rationality regression. ``"pt"``, ``"hm"``, and
     ``"ag"`` are directional-accuracy tests for the contender's own sign
     forecasts, evaluated on the same benchmark-aligned sample for consistency
     with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
@@ -258,6 +386,11 @@ class EvalSpec:
     ``calibration_alpha`` is the significance level for the calibration tests
     above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
     checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
+
+    ``subsamples`` optionally maps names to :class:`SubsampleWindow` values.
+    These are evaluation-window splits of an already-produced POOS forecast
+    frame: target-date rows are filtered before scoring and testing, without
+    refitting models or creating new forecast cells.
     """
 
     benchmark: str
@@ -269,7 +402,7 @@ class EvalSpec:
     mcs_alpha: float = 0.10
     mcs_method: str = "iterative"
     multiple_testing: str | None = None
-    subsamples: Mapping[str, tuple[Any, Any]] = field(default_factory=dict)
+    subsamples: Mapping[str, SubsampleWindow] | None = None
     dm_kwargs: Mapping[str, Any] = field(default_factory=dict)
     loss: Callable[[Any, Any], Any] | None = None
     test_options: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
@@ -889,10 +1022,10 @@ def pipeline_spec(
             f"evaluation.benchmark {evaluation.benchmark!r} is not among the "
             f"contenders {sorted(all_contenders)}"
         )
+    evaluation = _normalize_eval_spec(evaluation)
 
-    # evaluation.tests: only "dm"/"cw"/"mcs" are wired into the evaluator today;
-    # a typo or an aspirational "spa"/"gr" must raise here rather than be
-    # silently ignored (the historical bug this validation replaces).
+    # evaluation.tests must be names the evaluator actually wires; a typo or an
+    # aspirational test name raises here rather than being silently ignored.
     unknown_tests = set(evaluation.tests) - SUPPORTED_EVAL_TESTS
     if unknown_tests:
         raise ValueError(
