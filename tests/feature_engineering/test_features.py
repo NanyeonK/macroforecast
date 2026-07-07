@@ -159,6 +159,21 @@ def test_average_target_supports_average_value_for_pretransformed_series() -> No
     pd.testing.assert_frame_equal(target, same)
 
 
+def test_direct_target_supports_log_average_value() -> None:
+    target = mf.feature_engineering.direct_target(
+        _processed(),
+        horizon=2,
+        transform="log_average_value",
+    )
+
+    assert list(target.columns) == ["target_log_average_value_h2"]
+    assert target["target_log_average_value_h2"].iloc[0] == pytest.approx(np.log(3.0))
+    target_meta = target.attrs["macroforecast_target_metadata"].set_index("target_column")
+    assert target_meta.loc["target_log_average_value_h2", "operation"] == "direct_average_target"
+    assert target_meta.loc["target_log_average_value_h2", "aggregation"] == "log_mean_step_value"
+    assert target_meta.loc["target_log_average_value_h2", "formula"] == "log(mean(target[t+s] for s=1..2))"
+
+
 def test_direct_target_supports_value_for_pretransformed_series() -> None:
     target = mf.feature_engineering.direct_target(_processed(), horizon=2, transform="value")
 
@@ -1372,6 +1387,158 @@ def test_target_aware_feature_spec_steps_do_not_refit_on_transform_panel() -> No
     _assert_same_values(base.X, changed_future.X)
 
 
+def test_predictor_screen_t_stat_uses_fit_window_and_retains_controls() -> None:
+    periods = 36
+    dates = pd.date_range("2000-01-01", periods=periods, freq="MS")
+    t = np.arange(periods, dtype=float)
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": dates,
+                "target": np.r_[0.0, t[:-1]] + 0.01 * np.sin(t),
+                "x1": t,
+                "x2": np.tile([1.0, -1.0], periods // 2),
+                "ctrl": np.cos(t / 3.0),
+            }
+        ),
+        date="date",
+        metadata={"dataset": "custom", "source_family": "custom", "frequency": "monthly"},
+    )
+    data_spec = mf.data.spec(
+        mf.data.DataBundle(panel, {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}),
+        target="target",
+        horizons=[1],
+        predictors=["x1", "x2", "ctrl"],
+    )
+    processed = mf.preprocessing.reprocess(
+        data_spec,
+        transform="none",
+        outliers="none",
+        impute="none",
+        frame="keep",
+    )
+    spec = mf.feature_engineering.feature_spec(
+        target="target",
+        horizon=1,
+        predictors=["x1", "x2", "ctrl"],
+        steps=[
+            mf.feature_engineering.predictor_screen(
+                method="t_stat",
+                threshold=100.0,
+                min_k=1,
+                controls=["ctrl"],
+            )
+        ],
+        drop_missing=False,
+    )
+
+    fitted = spec.fit(replace(processed, panel=processed.panel.iloc[:30]))
+    spiked = replace(processed, panel=processed.panel.copy())
+    spiked.panel.loc[spiked.panel.index[30:], "x2"] = 1_000_000.0
+    base = fitted.transform(processed, index=processed.panel.index[:30])
+    changed_future = fitted.transform(spiked, index=processed.panel.index[:30])
+
+    assert list(base.X.columns) == ["x1", "ctrl"]
+    _assert_same_values(base.X, changed_future.X)
+    state = fitted.to_metadata()["feature_steps"][0]["fit_state"]
+    assert state["method"] == "t_stat"
+    assert state["selected_columns"] == ["x1", "ctrl"]
+    assert state["controls"] == ["ctrl"]
+    assert state["scores"]["x1"] > state["scores"]["x2"]
+
+
+@pytest.mark.parametrize("method", ["delta_r2", "lasso", "elastic_net"])
+def test_predictor_screen_methods_select_signal(method: str) -> None:
+    from macroforecast.feature_engineering.screening import fit_predictor_screen
+
+    periods = 50
+    t = np.arange(periods, dtype=float)
+    X = pd.DataFrame(
+        {
+            "x1": t,
+            "x2": np.tile([1.0, -1.0], periods // 2),
+        }
+    )
+    y = pd.Series(2.0 * t + 0.01 * np.sin(t))
+
+    result = fit_predictor_screen(
+        X,
+        y,
+        method=method,
+        top_k=1,
+        min_k=1,
+        threshold=0.0,
+        alpha=0.001,
+    )
+
+    assert result.selected_columns == ("x1",)
+    assert result.scores["x1"] >= result.scores["x2"]
+
+
+def test_feature_spec_composes_predictor_screen_then_pca() -> None:
+    periods = 40
+    dates = pd.date_range("2000-01-01", periods=periods, freq="MS")
+    t = np.arange(periods, dtype=float)
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": dates,
+                "target": np.r_[0.0, t[:-1] + 0.5 * np.sin(t[:-1] / 2.0)],
+                "x1": t,
+                "x2": np.sin(t / 2.0),
+                "noise": np.tile([1.0, -1.0], periods // 2),
+            }
+        ),
+        date="date",
+        metadata={"dataset": "custom", "source_family": "custom", "frequency": "monthly"},
+    )
+    data_spec = mf.data.spec(
+        mf.data.DataBundle(panel, {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}),
+        target="target",
+        horizons=[1],
+        predictors=["x1", "x2", "noise"],
+    )
+    processed = mf.preprocessing.reprocess(
+        data_spec,
+        transform="none",
+        outliers="none",
+        impute="none",
+        frame="keep",
+    )
+    spec = mf.feature_engineering.feature_spec(
+        target="target",
+        horizon=1,
+        predictors=["x1", "x2", "noise"],
+        steps=[
+            mf.feature_engineering.predictor_screen(
+                name="screen",
+                method="t_stat",
+                top_k=2,
+                min_k=2,
+                include=False,
+            ),
+            mf.feature_engineering.pca_step(
+                name="screen_pc",
+                input="screen",
+                n_components=1,
+                min_train_size=10,
+            ),
+        ],
+        drop_missing=False,
+    )
+
+    fitted = spec.fit(processed)
+    features = fitted.transform(processed)
+
+    assert list(features.X.columns) == ["screen_pc1"]
+    step_meta = fitted.to_metadata()["feature_steps"]
+    assert step_meta[0]["fit_state"]["selected_columns"] == ["x1", "x2"]
+    assert step_meta[1]["fit_state"]["columns"] == ["x1", "x2"]
+    feature_meta = features.feature_metadata.set_index("feature")
+    assert not bool(feature_meta.loc["x1", "included"])
+    assert feature_meta.loc["screen_pc1", "operation"] == "pca"
+
+
 def test_feature_spec_supports_individual_selection_methods() -> None:
     processed = _long_processed(periods=48)
     methods = [
@@ -2157,6 +2324,7 @@ def test_top_level_exports_features() -> None:
     assert mf.interaction_step is mf.feature_engineering.interaction_step
     assert mf.path_targets is mf.feature_engineering.path_targets
     assert mf.pca_then_lags is mf.feature_engineering.pca_then_lags
+    assert mf.predictor_screen is mf.feature_engineering.predictor_screen
     assert not hasattr(mf.feature_engineering, "make_target")
     assert not hasattr(mf.feature_engineering, "make_feature_matrix")
     assert not hasattr(mf.feature_engineering, "feature_selection_features")
@@ -2192,6 +2360,7 @@ def test_feature_engineering_runner_safe_coverage_is_explicit() -> None:
         "nystroem_step",
         "partial_least_squares_step",
         "sliced_inverse_regression_step",
+        "predictor_screen",
     }
     runner_safe_step_methods = {
         "variance_selection",

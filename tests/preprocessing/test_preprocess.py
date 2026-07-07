@@ -265,6 +265,28 @@ def test_reprocess_can_standardize_after_imputation():
     assert set(stage["standardization_state"]["columns"]) == {"target", "x"}
 
 
+def test_reprocess_zero_impute_runs_before_standardization():
+    metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
+    bundle = mf.data.DataBundle(mf.data.as_panel(_panel(), date="date", metadata=metadata), metadata)
+
+    result = mf.preprocessing.reprocess(
+        bundle,
+        transform="none",
+        outliers="none",
+        impute="zero",
+        standardize="zscore",
+        frame="keep",
+    )
+
+    filled = mf.data.as_panel(_panel(), date="date", metadata=metadata).fillna(0)
+    expected_mean = filled["x"].mean()
+    expected_std = filled["x"].std(ddof=0)
+    impute_step = next(step for step in result.metadata["preprocessing"]["steps"] if step["step"] == "impute")
+    assert result.metadata["preprocessing"]["impute"] == "zero"
+    assert impute_step["method"] == "zero"
+    assert result.panel["x"].iloc[2] == pytest.approx((0.0 - expected_mean) / expected_std)
+
+
 def test_reprocess_can_standardize_predictors_only_from_data_spec():
     metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
     bundle = mf.data.DataBundle(mf.data.as_panel(_panel(), date="date", metadata=metadata), metadata)
@@ -379,6 +401,39 @@ def test_preprocess_spec_fit_window_policy_applies_outlier_and_mean_state():
     assert transform_stage["fit_period"]["end"] == "2020-04-01"
     assert transform_stage["transform_period"]["start"] == "2020-05-01"
     assert transform_stage["output_period"]["n_rows"] == 1
+
+
+def test_preprocess_spec_fit_window_zero_impute_precedes_standardization():
+    metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=5, freq="MS"),
+                "x": [1.0, np.nan, 3.0, 4.0, np.nan],
+            }
+        ),
+        date="date",
+        metadata=metadata,
+    )
+    pre = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="zero",
+        standardize="zscore",
+        frame="keep",
+    )
+
+    fitted = pre.fit((panel.iloc[:4], metadata), policy="fit_window")
+    transformed = fitted.transform((panel.iloc[4:], metadata), policy="fit_window")
+    train_filled = panel.iloc[:4].fillna(0)
+    expected_mean = train_filled["x"].mean()
+    expected_std = train_filled["x"].std(ddof=0)
+
+    assert fitted.to_metadata()["impute_state"]["method"] == "zero"
+    assert fitted.standardization_state is not None
+    assert fitted.standardization_state["center"]["x"] == pytest.approx(expected_mean)
+    assert fitted.standardization_state["scale"]["x"] == pytest.approx(expected_std)
+    assert transformed.panel["x"].iloc[0] == pytest.approx((0.0 - expected_mean) / expected_std)
 
 
 def _copy_x_custom_step(panel: pd.DataFrame, metadata=None) -> pd.DataFrame:

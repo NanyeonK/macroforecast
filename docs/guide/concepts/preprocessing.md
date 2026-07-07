@@ -44,6 +44,12 @@ prep_spec = mf.preprocessing.preprocess_spec(
 # Pass prep_spec to Arm(..., preprocessing=prep_spec) or forecasting.run(...).
 ```
 
+For deterministic missing-value handling, `impute="zero"` replaces remaining
+missing cells with zero before standardization. The same option is available in
+`preprocess_spec(...)`; under `policy="fit_window"` the zero-imputation state is
+fit on the training window and then applied before the fitted standardization
+state.
+
 ## Executed walkthrough
 
 Running the full-sample path on the loaded `data_spec` applies the t-code

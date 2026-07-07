@@ -73,6 +73,36 @@ maf_features = mf.feature_engineering.feature_spec(
 )
 ```
 
+Target-aware feature steps can also screen predictors inside each runner fit
+window before downstream projections:
+
+```python
+screened_factors = mf.feature_engineering.feature_spec(
+    target="INDPRO",
+    horizon=1,
+    predictors="all",
+    feature_steps=[
+        mf.feature_engineering.predictor_screen(
+            method="t_stat",       # "delta_r2", "lasso", and "elastic_net" also work
+            top_k=40,
+            min_k=5,
+            controls=["INDPRO"],
+            include=False,
+        ),
+        mf.feature_engineering.pca_step(name="F_screen", input="screen", n_components=4),
+    ],
+)
+```
+
+`predictor_screen(...)` is fitted only on the feature-stage training panel and
+the resolved direct target. `controls` are partialled out for scoring and always
+retained in the transformed feature set; `min_k` provides a deterministic
+fallback when the threshold is too strict.
+
+Direct-average targets include `transform="log_average_value"` for cases where
+the forecast object is `log(mean(y[t+1], ..., y[t+h]))` rather than the mean of
+log changes.
+
 ## Executed walkthrough
 
 For exploration, `mf.build_features` materializes a feature matrix immediately.

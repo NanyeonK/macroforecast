@@ -47,6 +47,9 @@ from macroforecast.feature_engineering.feature_selection import (
     normalize_feature_selection_method,
     select_features,
 )
+from macroforecast.feature_engineering.screening import (
+    fit_predictor_screen,
+)
 from macroforecast.feature_engineering.targets import direct_target, path_targets
 from macroforecast.feature_engineering.transforms import (
     fourier_features,
@@ -87,6 +90,7 @@ _FEATURE_SPEC_METHODS = frozenset(
         "nystroem",
         "partial_least_squares",
         "sliced_inverse_regression",
+        "predictor_screen",
         "variance_selection",
         "correlation_selection",
         "lasso_selection",
@@ -771,6 +775,46 @@ class _SlicedInverseRegressionState:
 
 
 @dataclass(frozen=True)
+class _PredictorScreenState:
+    columns: tuple[str, ...]
+    selected_columns: tuple[str, ...]
+    candidate_columns: tuple[str, ...]
+    controls: tuple[str, ...]
+    target: str
+    method: str
+    threshold: float
+    top_k: int | None
+    min_k: int | None
+    scores: dict[str, float]
+    selection_params: dict[str, Any]
+    min_train_size: int | None
+    n_fit_rows: int
+
+    def transform(self, panel: pd.DataFrame) -> pd.DataFrame:
+        result = panel.loc[:, self.selected_columns].copy()
+        result.index.name = "date"
+        return result
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "columns": list(self.columns),
+            "selected_columns": list(self.selected_columns),
+            "candidate_columns": list(self.candidate_columns),
+            "controls": list(self.controls),
+            "target": self.target,
+            "method": self.method,
+            "threshold": self.threshold,
+            "top_k": self.top_k,
+            "min_k": self.min_k,
+            "scores": dict(self.scores),
+            "selection_params": dict(self.selection_params),
+            "min_train_size": self.min_train_size,
+            "fit_policy": "fixed_fit_panel_target_aligned_rows",
+            "n_fit_rows": self.n_fit_rows,
+        }
+
+
+@dataclass(frozen=True)
 class _FeatureSelectionState:
     columns: tuple[str, ...]
     selected_columns: tuple[str, ...]
@@ -914,6 +958,7 @@ class _FittedFeatureStep:
         | _NystroemState
         | _PartialLeastSquaresState
         | _SlicedInverseRegressionState
+        | _PredictorScreenState
         | _FeatureSelectionState
         | _CustomFeatureState
         | None
@@ -2318,6 +2363,85 @@ def _fit_feature_step(
             },
             state=sir_state,
         )
+    if plan.method == "predictor_screen":
+        selected = _resolve_columns(source, columns=columns)
+        screen_method = str(params.pop("screen_method", "t_stat"))
+        threshold = params.pop("threshold", None)
+        top_k = params.pop("top_k", None)
+        min_k = params.pop("min_k", None)
+        controls = params.pop("controls", None)
+        alpha = float(params.pop("alpha", 0.001))
+        l1_ratio = float(params.pop("l1_ratio", 0.5))
+        max_iter = int(params.pop("max_iter", 20000))
+        min_train_size = params.pop("min_train_size", None)
+        drop_missing = bool(params.pop("drop_missing", False))
+        random_state = params.pop("random_state", 0)
+        params.pop("fit_policy", None)
+        params.pop("warn_full_sample", None)
+        _reject_extra_params(params, plan.name)
+        target_name, target_series = _single_feature_step_target(
+            target_frame,
+            step_name=plan.name,
+            method=plan.method,
+        )
+        screen = fit_predictor_screen(
+            source,
+            target_series,
+            columns=selected,
+            method=screen_method,
+            threshold=None if threshold is None else float(threshold),
+            top_k=None if top_k is None else int(top_k),
+            min_k=None if min_k is None else int(min_k),
+            controls=None if controls is None else tuple(str(value) for value in controls),
+            alpha=alpha,
+            l1_ratio=l1_ratio,
+            max_iter=max_iter,
+            random_state=None if random_state is None else int(random_state),
+            min_train_size=min_train_size,
+        )
+        screen_columns = tuple(
+            column
+            for column in source.columns
+            if column in set(screen.candidate_columns).union(screen.controls)
+        )
+        screen_state = _PredictorScreenState(
+            columns=screen_columns,
+            selected_columns=screen.selected_columns,
+            candidate_columns=screen.candidate_columns,
+            controls=screen.controls,
+            target=target_name,
+            method=screen.method,
+            threshold=screen.threshold,
+            top_k=screen.top_k,
+            min_k=screen.min_k,
+            scores=screen.scores,
+            selection_params=screen.metadata,
+            min_train_size=min_train_size,
+            n_fit_rows=screen.n_fit_rows,
+        )
+        return _FittedFeatureStep(
+            name=plan.name,
+            method=plan.method,
+            input_name=plan.input_name,
+            include=plan.include,
+            params={
+                "columns": selected,
+                "selected_columns": screen.selected_columns,
+                "candidate_columns": screen.candidate_columns,
+                "controls": screen.controls,
+                "target": target_name,
+                "screen_method": screen.method,
+                "threshold": screen.threshold,
+                "top_k": screen.top_k,
+                "min_k": screen.min_k,
+                "selection_params": screen.metadata,
+                "min_train_size": min_train_size,
+                "drop_missing": drop_missing,
+                "random_state": None if random_state is None else int(random_state),
+                "fit_policy": "fixed_fit_panel_target_aligned_rows",
+            },
+            state=screen_state,
+        )
     if plan.method in {
         "variance_selection",
         "correlation_selection",
@@ -2583,6 +2707,8 @@ def _transform_feature_step(step: _FittedFeatureStep, source: pd.DataFrame) -> p
         out = step.state.transform(source)
     elif isinstance(step.state, _SlicedInverseRegressionState):
         out = step.state.transform(source)
+    elif isinstance(step.state, _PredictorScreenState):
+        out = step.state.transform(source)
     elif isinstance(step.state, _FeatureSelectionState):
         out = step.state.transform(source)
     elif isinstance(step.state, _CustomFeatureState):
@@ -2789,6 +2915,26 @@ def _feature_records_for_step(
             )
             record["target"] = step.state.target
             record["n_fit_rows"] = step.state.n_fit_rows
+    elif isinstance(step.state, _PredictorScreenState):
+        records = []
+        control_set = set(step.state.controls)
+        for rank, column in enumerate(step.state.selected_columns, start=1):
+            records.append(
+                {
+                    "feature": column,
+                    "operation": "predictor_screen",
+                    "source": column,
+                    "parameter": f"method={step.state.method};rank={rank};threshold={step.state.threshold}",
+                    "fit_policy": "fixed_fit_panel_target_aligned_rows",
+                    "inputs": ",".join(step.state.columns),
+                    "included": step.include,
+                    "target": step.state.target,
+                    "score": step.state.scores.get(column),
+                    "selection_method": step.state.method,
+                    "screen_control": column in control_set,
+                    "n_fit_rows": step.state.n_fit_rows,
+                }
+            )
     elif isinstance(step.state, _FeatureSelectionState):
         records = []
         for rank, column in enumerate(step.state.selected_columns, start=1):
@@ -3014,6 +3160,7 @@ def _normalize_feature_steps(
             "nystroem",
             "partial_least_squares",
             "sliced_inverse_regression",
+            "predictor_screen",
             "variance_selection",
             "correlation_selection",
             "lasso_selection",

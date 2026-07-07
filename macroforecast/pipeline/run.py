@@ -143,6 +143,7 @@ def _run_one_arm_target(
         preprocessing_cache=preprocessing_cache,
         preprocessing_store=preprocessing_store,
         checkpoint_path=_cell_checkpoint_path(spec, arm, target),
+        selection_history=bool(spec.selection_history),
     )
     _write_checkpoint_cell_manifests(
         spec,
@@ -1470,6 +1471,7 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
         "model_threads": spec.model_threads,
         "preprocessing_cache_dir": spec.preprocessing_cache_dir,
         "checkpoint_dir": spec.checkpoint_dir,
+        "selection_history": bool(spec.selection_history),
     }
 
 

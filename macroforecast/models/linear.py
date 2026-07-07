@@ -6,6 +6,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from macroforecast.feature_engineering.screening import marginal_t_stats as _screen_marginal_t_stats
 from macroforecast.models.types import ModelFit
 from macroforecast.models.utils import fit_estimator, resolve_xy
 
@@ -2009,19 +2010,7 @@ def _preselect_columns(
 
 
 def _marginal_t_stats(X: np.ndarray, y: np.ndarray) -> np.ndarray:
-    n = X.shape[0]
-    out = np.zeros(X.shape[1], dtype=float)
-    if n <= 2:
-        return out
-    for idx in range(X.shape[1]):
-        design = np.column_stack([np.ones(n, dtype=float), X[:, idx]])
-        coef = np.linalg.pinv(design) @ y
-        resid = y - design @ coef
-        sigma2 = float(resid @ resid) / max(n - 2, 1)
-        cov = sigma2 * np.linalg.pinv(design.T @ design)
-        se = float(np.sqrt(max(cov[1, 1], 0.0)))
-        out[idx] = 0.0 if se <= 1e-12 else float(coef[1] / se)
-    return np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
+    return _screen_marginal_t_stats(X, y)
 
 
 def _extract_supervised_components(

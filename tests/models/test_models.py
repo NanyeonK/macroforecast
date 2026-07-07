@@ -1815,6 +1815,21 @@ def test_supervised_pca_matches_matlab_style_spca_recursion() -> None:
     np.testing.assert_allclose(fit.predict(X_test).to_numpy(), expected, atol=1e-10)
 
 
+def test_supervised_pca_t_stat_screening_matches_extracted_helper() -> None:
+    from macroforecast.feature_engineering.screening import marginal_t_stats
+    from macroforecast.models.linear import _marginal_t_stats
+
+    X, y = _xy(42)
+    X_values = X.iloc[:30].to_numpy(dtype=float)
+    y_values = y.iloc[:30].to_numpy(dtype=float)
+
+    np.testing.assert_allclose(
+        _marginal_t_stats(X_values, y_values),
+        marginal_t_stats(X_values, y_values),
+        atol=0.0,
+    )
+
+
 def test_supervised_scaled_pca_matches_matlab_style_sspca_recursion() -> None:
     X, y = _xy(42)
     X_train = X.iloc[:34]

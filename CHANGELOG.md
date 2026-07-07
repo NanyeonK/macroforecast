@@ -5,6 +5,16 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `feature_engineering`, `forecasting/checkpoint.py`, `pipeline`, `preprocessing`,
+  docs/tests (feature, A5 screening/logging lane): added runner-safe
+  `predictor_screen(...)` feature steps with `t_stat`, `delta_r2`, `lasso`, and
+  `elastic_net` scoring, fit-window-only selection, always-retained controls,
+  and deterministic `min_k` fallback. Checkpointed pipelines can now opt into
+  per-origin selection sidecars via `pipeline_spec(..., selection_history=True)`
+  and inspect them with `selection_history(...)` and
+  `selection_frequency_table(...)`; opt-out remains the default and writes no
+  sidecars. Added `direct_target(..., transform="log_average_value")` and
+  `impute="zero"` for direct and fit-window preprocessing.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

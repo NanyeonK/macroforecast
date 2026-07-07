@@ -71,6 +71,9 @@ def direct_target(
             elif transform_method == "log_growth":
                 valid = (future > 0) & (series > 0)
                 result[column] = np.where(valid, np.log(future) - np.log(series), np.nan)
+            elif transform_method == "log_average_value":
+                averaged = _average_future_path(series, horizon=h, transform="value")
+                result[column] = np.where(averaged > 0, np.log(averaged), np.nan)
             elif transform_method.startswith("average_"):
                 path_transform = _normalize_path_transform(transform_method.removeprefix("average_"))
                 result[column] = _average_future_path(series, horizon=h, transform=path_transform)
@@ -85,10 +88,14 @@ def direct_target(
                     operation=(
                         "direct_average_target"
                         if transform_method.startswith("average_")
+                        or transform_method == "log_average_value"
                         else "direct_target"
                     ),
                     formula=_target_formula(name, horizon=h, transform=transform_method),
                     aggregation=(
+                        "log_mean_step_value"
+                        if transform_method == "log_average_value"
+                        else
                         f"mean_step_{transform_method.removeprefix('average_')}"
                         if transform_method.startswith("average_")
                         else None
