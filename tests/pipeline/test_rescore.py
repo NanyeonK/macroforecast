@@ -8,6 +8,8 @@ themselves. ``rescore`` is that glue. These tests pin the round trip: a live
 produce the SAME accuracy table; an empty/missing/partial checkpoint dir must
 fail loudly with an actionable message, never return a silently-empty report.
 """
+import dataclasses as _dc
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -95,6 +97,50 @@ def test_rescore_roundtrip_matches_live_run(tmp_path):
     assert rescored.interpretation is None
     assert rescored.failed_cells == ()
     assert rescored.provenance.get("rescored_from") == str(ckpt)
+
+
+def test_rescore_refuses_stale_manifest_cells_by_default(tmp_path):
+    ckpt = tmp_path / "ckpt"
+    run_pipeline(_toy(ckpt))
+    spec = _toy(ckpt)
+    changed_arms = tuple(
+        _dc.replace(arm, params={"alpha": 99.0}) if arm.name == "RIDGE" else arm
+        for arm in spec.arms
+    )
+    changed = _dc.replace(spec, arms=changed_arms)
+
+    with pytest.raises(ValueError, match="stale_cells=.*Y/RIDGE/h1"):
+        rescore(ckpt, changed)
+
+
+def test_rescore_allow_stale_overrides_manifest_refusal(tmp_path):
+    ckpt = tmp_path / "ckpt"
+    run_pipeline(_toy(ckpt))
+    spec = _toy(ckpt)
+    changed_arms = tuple(
+        _dc.replace(arm, params={"alpha": 99.0}) if arm.name == "RIDGE" else arm
+        for arm in spec.arms
+    )
+    changed = _dc.replace(spec, arms=changed_arms)
+
+    with pytest.warns(UserWarning, match="allow_stale=True"):
+        rescored = rescore(ckpt, changed, allow_stale=True)
+
+    assert not rescored.forecasts.empty
+    assert "Y/RIDGE/h1" in rescored.provenance["rescore_stale_cells"]
+
+
+def test_rescore_warns_for_legacy_cells_without_manifest(tmp_path):
+    ckpt = tmp_path / "ckpt"
+    run_pipeline(_toy(ckpt))
+    for path in ckpt.glob("*__*/h*/cell_manifest.json"):
+        path.unlink()
+
+    with pytest.warns(UserWarning, match="could not verify checkpoint cell identity"):
+        rescored = rescore(ckpt, _toy(ckpt))
+
+    assert not rescored.forecasts.empty
+    assert rescored.provenance["rescore_unverified_cells"]
 
 
 def test_rescore_works_when_spec_has_no_checkpoint_dir(tmp_path):
