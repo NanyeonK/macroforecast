@@ -121,7 +121,31 @@ def fred_md_vintages(
     local_zip_source: str | Path | None = None,
     force: bool = False,
 ) -> VintageSource:
-    """Return a FRED-MD point-in-time source resolved by origin date."""
+    """Return a FRED-MD point-in-time source resolved by forecast origin.
+
+    Parameters bound the available monthly vintage labels and cache/download
+    behavior. ``start`` and ``end`` use ``YYYY-MM`` labels. ``cache_root``
+    controls where raw vintage CSVs are stored. ``local_zip_source`` points to
+    an official historical-vintage ZIP for offline or deterministic runs.
+    ``force=True`` refreshes cached vintage files.
+
+    Returns
+    -------
+    VintageSource
+        Source object with ``resolve(origin_date)`` and
+        ``available_vintages()``. Resolving an origin returns the latest
+        FRED-MD vintage available at or before that origin and raises
+        ``VintageUnavailableError`` when no eligible vintage exists.
+
+    Example
+    -------
+    >>> import pandas as pd
+    >>> import macroforecast as mf
+    >>> source = mf.data.fred_md_vintages(start="2020-01", end="2020-03")
+    >>> labels = source.available_vintages()
+    >>> isinstance(labels, tuple)
+    True
+    """
 
     return _FredVintageSource(
         "fred_md",

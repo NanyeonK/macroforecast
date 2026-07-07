@@ -2,1278 +2,1431 @@
 
 [Back to reference](index.md)
 
-## Purpose
+Canonical date-indexed panels, metadata, FRED loaders, custom loaders, and real-time vintage sources.
 
-`macroforecast.data` is the data entry point for the package. It loads official
-or user-supplied data, normalizes it to one pandas panel contract, and attaches
-source metadata. It also creates run-level data specifications and combines
-national FRED-MD/FRED-QD data with state-level FRED-SD panels.
+Guide context: [../guide/concepts/data.md](../guide/concepts/data.md).
 
-This module does not apply stationarity transforms, outlier rules, imputation,
-feature engineering, model fitting, or evaluation. Those steps happen later.
-The main output is always a `DataBundle` or `DataSpec`.
+## Public Symbols
 
-The usual flow is:
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `DataBundle` | class | Canonical data payload: a pandas panel plus explicit metadata. |
+| `DataSpec` | class | Panel plus target, horizon, sample, and predictor choices for a run. |
+| `RegimeDirection` | callable | No public docstring is available. |
+| `SamePeriodPolicy` | callable | No public docstring is available. |
+| `VintagePanelSpec` | class | Run-level wrapper for a point-in-time vintage source. |
+| `VintageSource` | class | A lazily-resolved source of point-in-time data, one bundle per real-time origin. |
+| `VintageUnavailableError` | class | Raised when no point-in-time vintage is available for an origin. |
+| `as_panel` | function | Return ``frame`` as macroforecast's canonical date-indexed panel. |
+| `attach_metadata` | function | No public docstring is available. |
+| `custom_dataset` | function | Build a canonical custom ``DataBundle`` from an in-memory DataFrame. |
+| `custom_vintages` | function | Return a custom point-in-time source. |
+| `metadata` | function | Return metadata from a bundle, spec, tuple, or DataFrame. |
+| `panel_info` | function | Return a compact diagnostic summary for a canonical panel. |
+| `set_frequencies` | function | Attach a column-level frequency contract to a panel or bundle. |
+| `spec` | function | Build a run-level data specification from a canonical panel. |
+| `validate_panel` | function | Validate macroforecast's canonical panel contract. |
+| `align_frequency` | function | Keep, filter, or align a panel to a common data frequency. |
+| `availability_lag` | function | Delay selected columns to match an information-availability policy. |
+| `chow_lin_disaggregate` | function | Disaggregate a low-frequency series with a high-frequency indicator. |
+| `combine` | function | Combine already-loaded data bundles into one canonical panel. |
+| `define_regime` | function | Attach a binary regime series to panel metadata. |
+| `frequency_hardening_issues` | function | Return frequency-classification issues that should be surfaced. |
+| `infer_frequencies` | function | Infer or read native frequency by panel column. |
+| `load_fred_md` | function | Load FRED-MD as a canonical monthly ``DataBundle``. |
+| `load_fred_qd` | function | No public docstring is available. |
+| `load_fred_sd` | function | No public docstring is available. |
+| `load_fred_md_sd` | function | Load FRED-MD plus FRED-SD as one canonical data bundle. |
+| `load_fred_qd_sd` | function | Load FRED-QD plus FRED-SD as one canonical data bundle. |
+| `load_custom_csv` | function | Load a user CSV into a canonical ``DataBundle``. |
+| `load_custom_parquet` | function | No public docstring is available. |
+| `list_vintages` | function | Return monthly vintage labels between ``start`` and ``end`` inclusive. |
+| `fred_md_vintages` | function | Return a FRED-MD point-in-time source resolved by forecast origin. |
+| `fred_qd_vintages` | function | Return a FRED-QD point-in-time source resolved by origin date. |
+| `with_static_extras` | function | Join non-revised extra columns observable before each origin. |
+| `same_period_predictors` | function | Apply a same-period predictor policy to a run-level data spec. |
+
+## Callable And Class Reference
+
+### DataBundle
+
+Qualified name: `macroforecast.data.panel.DataBundle`
+
+#### Signature
+
+```python
+macroforecast.data.DataBundle(panel: pd.DataFrame, metadata: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Canonical data payload: a pandas panel plus explicit metadata.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-bundle = mf.data.load_fred_md()
-
-data_spec = mf.data.spec(
-    bundle,
-    target="INDPRO",
-    horizons=[1, 3, 6, 12],
-    start="1960-01",
-    end="2024-12",
-    predictors="all",
-)
+# Construct with the signature above:
+# mf.data.DataBundle(...)
 ```
 
-`mf.data.spec(...)` is not a wrapper that runs data loading, preprocessing,
-feature engineering, or modeling. It is a small contract builder for the
-already-loaded panel. It validates the requested target, horizons, sample
-window, and predictor set; subsets the panel to those columns and dates; expands
-`predictors="all"` to concrete non-target columns; and records the choices in
-metadata. Later callable stages can consume the same `DataSpec` without
-guessing which columns or horizons the run intended to use.
+#### Dataclass Fields
 
-## Public Functions
-
-| Function | Purpose | Output |
+| Field | Type | Default |
 | --- | --- | --- |
-| `load_fred_md` | Load official FRED-MD current or vintage data. | `DataBundle` |
-| `load_fred_qd` | Load official FRED-QD current or vintage data. | `DataBundle` |
-| `load_fred_sd` | Load official FRED-SD state-level panel data. | `DataBundle` |
-| `load_fred_md_sd` | Load and combine FRED-MD with FRED-SD. | `DataBundle` |
-| `load_fred_qd_sd` | Load and combine FRED-QD with FRED-SD. | `DataBundle` |
-| `load_custom_csv` | Load a user CSV into the canonical panel contract. | `DataBundle` |
-| `load_custom_parquet` | Load a user Parquet file into the canonical panel contract. | `DataBundle` |
-| `custom_dataset` | Build a custom dataset from an in-memory `DataFrame`. | `DataBundle` |
-| `combine` | Concatenate loaded bundles and optionally align frequency. | `DataBundle` |
-| `list_vintages` | Generate supported monthly vintage labels for a dataset. | `list[str]` |
-| `fred_md_vintages` | Build a per-origin FRED-MD vintage source. | `VintageSource` |
-| `fred_qd_vintages` | Build a per-origin FRED-QD vintage source. | `VintageSource` |
-| `custom_vintages` | Build a per-origin source from callable, mapping, or long-frame custom vintages. | `VintageSource` |
-| `with_static_extras` | Join non-revised columns onto every resolved vintage snapshot. | `VintageSource` |
-| `as_panel` | Normalize a `DataFrame` to the canonical panel contract. | `pandas.DataFrame` |
-| `validate_panel` | Validate the canonical panel contract. | `None` |
-| `panel_info` | Summarize panel shape, dates, missingness, and frequency. | `dict` |
-| `metadata` | Extract explicit package metadata from data-like input. | `dict` |
-| `attach_metadata` | Merge one metadata stage into an existing metadata dictionary. | `dict` |
-| `set_frequencies` | Attach column-level native/output frequency metadata. | `DataBundle` |
-| `spec` | Attach target, horizon, sample, and predictor choices. | `DataSpec` |
-| `align_frequency` | Keep, filter, or align panel columns to a common frequency. | `DataBundle` |
-| `chow_lin_disaggregate` | Disaggregate low-frequency series with a high-frequency indicator. | `pandas.Series` |
-| `infer_frequencies` | Read or infer native frequency by column. | `(dict[str, str], str)` |
-| `frequency_hardening_issues` | Report columns with weak frequency classification. | `list[dict]` |
-| `availability_lag` | Delay selected columns to encode release availability. | `DataBundle` |
-| `same_period_predictors` | Allow, lag, drop, or reject same-period predictors in a `DataSpec`. | `DataSpec` |
-| `define_regime` | Attach a binary regime definition to metadata, optionally as a column. | `DataBundle` |
+| `panel` | `pd.DataFrame` | `required` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
 
-## Public Classes And Types
+#### Public Methods
 
-| Symbol | Meaning |
-| --- | --- |
-| `DataBundle` | Canonical panel plus metadata returned by loaders and data-policy helpers. |
-| `DataSpec` | Canonical panel plus target, horizon, sample, and predictor choices for a run. |
-| `VintageSource` | Protocol for resolving one `DataBundle` observable at a forecast origin. |
-| `VintagePanelSpec` | Run-level wrapper for a `VintageSource`, reference calendar, and actuals policy. |
-| `VintageUnavailableError` | Raised when no vintage exists at or before an origin date. |
-| `RegimeDirection` | Stored threshold direction type: `"above"`, `"below"`, `"equal"`, or `"not_equal"`. |
-| `SamePeriodPolicy` | Stored same-period predictor policy type: `"allow"`, `"lag"`, `"drop"`, or `"forbid"`. |
-
-## Canonical Panel
-
-Every public loader returns a `DataBundle`.
-
-```python
-panel = bundle.panel
-metadata = bundle.metadata
-```
-
-`DataBundle` also supports tuple unpacking:
-
-```python
-panel, metadata = mf.data.load_fred_md()
-```
-
-### Panel Contract
-
-| Property | Required Value |
-| --- | --- |
-| Type | `pandas.DataFrame` |
-| Index | `pandas.DatetimeIndex` |
-| Index name | `"date"` |
-| Sort order | ascending date order |
-| Duplicate dates | not allowed |
-| Columns | variable IDs |
-| Values | numeric values or `NaN` |
-| Empty panel | not allowed |
-| Infinite values | not allowed |
-
-Metadata is explicit on `DataBundle.metadata`. The panel also carries
-`panel.attrs["macroforecast_metadata"]` for pandas-native handoff. FRED-MD and
-FRED-QD transform codes are attached to
-`panel.attrs["macroforecast_transform_codes"]`; preprocessing is responsible
-for using them.
-
-Panel normalization is strict by default. Invalid date values, non-numeric
-cells that would be coerced to `NaN`, duplicate dates, empty panels, and
-infinite values raise errors. When a caller deliberately sets `strict=False`,
-lossy normalization is allowed but recorded in
-`panel.attrs["macroforecast_panel_report"]` and
-`metadata["panel"]` when the panel is returned inside a `DataBundle`.
-
-`macroforecast_panel_report` contains:
-
-| Key | Meaning |
-| --- | --- |
-| `contract` | Panel contract version, currently `macroforecast_panel_v1`. |
-| `strict` | Whether lossy date/numeric coercion was rejected. |
-| `input_rows`, `output_rows` | Row count before and after panel normalization. |
-| `input_columns`, `output_columns` | Column names before and after selection/renaming. |
-| `date_source` | Date source used: a column name or `"index"`. |
-| `invalid_date_rows_dropped` | Number of invalid date rows dropped when `strict=False`. |
-| `numeric_coercion` | Count and examples of non-numeric cells coerced to `NaN` when `strict=False`. |
-
-### Metadata Contract
-
-Every loader writes a metadata dictionary with these common keys.
-
-| Key | Type | Meaning |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| `dataset` | `str` | Dataset identifier such as `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`. |
-| `frequency` | `str` | Loader-level frequency label: `monthly`, `quarterly`, `weekly`, `annual`, `mixed`, `unknown`, or the chosen combined frequency. |
-| `version_mode` | `str` | `current`, `vintage`, or `mixed` for combined inputs with different modes. |
-| `vintage` | `str` or `None` | Requested vintage label in `YYYY-MM` form, or `None` for current data. |
-| `data_through` | `str` or `None` | Last date present in the loaded panel, formatted as `YYYY-MM`. |
-| `support_tier` | `str` | `stable` for official loaders, `provisional` for user-supplied files. |
-| `parse_notes` | `tuple[str, ...]` | Loader notes, including discouraged frequency alignments for combined datasets. |
-| `artifact` | `dict` or `None` | Raw-file provenance for single-source loads; combined bundles use `None`. |
-| `transform_codes` | `dict[str, int]` | Official FRED-MD/FRED-QD t-codes when available. FRED-SD has no official t-code map. |
+| `attach` | `attach(self, stage: str, values: Mapping[str, Any]) -> DataBundle` | No public docstring is available. |
+### DataSpec
 
-Combined bundles add:
+Qualified name: `macroforecast.data.panel.DataSpec`
 
-| Key | Type | Meaning |
+#### Signature
+
+```python
+macroforecast.data.DataSpec(panel: pd.DataFrame, metadata: dict[str, Any], target: str | None, targets: tuple[str, ...], horizons: tuple[int, ...], start: str | None = None, end: str | None = None, predictors: PredictorSelection = "all") -> None
+```
+
+#### Description
+
+Panel plus target, horizon, sample, and predictor choices for a run.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `required` |
+| `target` | positional or keyword | `str \| None` | `required` |
+| `targets` | positional or keyword | `tuple[str, ...]` | `required` |
+| `horizons` | positional or keyword | `tuple[int, ...]` | `required` |
+| `start` | positional or keyword | `str \| None` | `None` |
+| `end` | positional or keyword | `str \| None` | `None` |
+| `predictors` | positional or keyword | `PredictorSelection` | `"all"` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.data.DataSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
 | --- | --- | --- |
-| `source_family` | `str` | Combined-source label currently set to `"combined"`. |
-| `combined_sources` | `list[dict]` | Full metadata dictionaries from the source bundles. |
-| `source_by_column` | `dict[str, str]` | Source dataset for each output column. |
-| `native_frequency_by_column` | `dict[str, str]` | Original frequency for each output column before alignment. |
-| `native_frequency_counts` | `dict[str, int]` | Count of columns by original frequency. |
-| `date_anchor_by_column` | `dict[str, str]` | FRED-SD date-anchor map for state columns when available. |
-| `date_anchor_counts` | `dict[str, int]` | Count of FRED-SD date-anchor patterns when available. |
-| `output_frequency_by_column` | `dict[str, str]` | Frequency represented in the returned panel for each output column. |
-| `output_frequency_counts` | `dict[str, int]` | Count of columns by returned-panel frequency. |
-| `frequency_conversion_warnings` | `list[dict]` | Records of monthly-to-quarterly or quarterly-to-monthly conversions. |
-| `alignment` | `dict` | Chosen target frequency, alignment rules, and source-level alignment summaries. |
+| `panel` | `pd.DataFrame` | `required` |
+| `metadata` | `dict[str, Any]` | `required` |
+| `target` | `str \| None` | `required` |
+| `targets` | `tuple[str, ...]` | `required` |
+| `horizons` | `tuple[int, ...]` | `required` |
+| `start` | `str \| None` | `None` |
+| `end` | `str \| None` | `None` |
+| `predictors` | `PredictorSelection` | `"all"` |
 
-Public metadata helpers and policy types:
+#### Public Methods
 
-| Symbol | Meaning |
-| --- | --- |
-| `attach_metadata` | Return metadata with one stage key merged in a pandas-safe way. Used by loaders, preprocessing, analysis, and runner outputs. |
-| `RegimeDirection` | Stored threshold direction type for `define_regime(...)`: `"above"`, `"below"`, `"equal"`, or `"not_equal"`. |
-| `SamePeriodPolicy` | Stored same-period predictor policy type for `same_period_predictors(...)`: `"allow"`, `"lag"`, `"drop"`, or `"forbid"`. |
-
-## DataBundle
-
-```python
-macroforecast.data.DataBundle(
-    panel: pandas.DataFrame,
-    metadata: dict,
-)
-```
-
-### Output
-
-| Field | Type | Meaning |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| `panel` | `pandas.DataFrame` | Canonical date-indexed data panel. |
-| `metadata` | `dict` | Source, vintage, artifact, frequency, and transform-code metadata. |
+| `attach` | `attach(self, stage: str, values: Mapping[str, Any]) -> DataSpec` | No public docstring is available. |
+### RegimeDirection
 
-### Methods
+Qualified name: `typing.Literal`
 
-| Method | Input | Output | Meaning |
+#### Signature
+
+```python
+macroforecast.data.RegimeDirection(*args, **kwargs)
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `attach(stage, values)` | `stage: str`, `values: Mapping` | `DataBundle` | Return a new bundle with one metadata stage added. |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
 
-Preprocessing outputs can use the same metadata-attachment pattern.
+#### Returns
 
-## DataSpec
+See the description and object-specific contract.
+
+#### Minimal Use
 
 ```python
-macroforecast.data.DataSpec(
-    panel: pandas.DataFrame,
-    metadata: dict,
-    target: str | None,
-    targets: tuple[str, ...],
-    horizons: tuple[int, ...],
-    start: str | None = None,
-    end: str | None = None,
-    predictors: "all" | tuple[str, ...] = "all",
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.RegimeDirection(...)
+```
+### SamePeriodPolicy
+
+Qualified name: `typing.Literal`
+
+#### Signature
+
+```python
+macroforecast.data.SamePeriodPolicy(*args, **kwargs)
 ```
 
-`DataSpec` is the output of `spec(...)`. It keeps the canonical panel and
-metadata together with the target, horizons, sample window, and predictor
-selection for a run.
+#### Description
 
-### Output
+No public docstring is available.
 
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `panel` | `pandas.DataFrame` | Canonical date-indexed data panel after sample and column selection. |
-| `metadata` | `dict` | Source metadata plus a `data_spec` stage. |
-| `target` | `str` or `None` | Single target column when `target=` was used. |
-| `targets` | `tuple[str, ...]` | Active target columns. |
-| `horizons` | `tuple[int, ...]` | Positive forecast horizons. |
-| `start`, `end` | `str` or `None` | Normalized sample bounds. |
-| `predictors` | `tuple[str, ...]` | Concrete non-target predictor columns. |
+#### Parameters
 
-### Methods
-
-| Method | Input | Output | Meaning |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `attach(stage, values)` | `stage: str`, `values: Mapping` | `DataSpec` | Return a new spec with one metadata stage added. |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
 
-`DataSpec` also supports tuple unpacking:
+#### Returns
 
-```python
-panel, metadata = data_spec
-```
+See the description and object-specific contract.
 
-## load_fred_md
-
-Load FRED-MD and return `DataBundle`.
+#### Minimal Use
 
 ```python
-macroforecast.data.load_fred_md(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | pathlib.Path | None = None,
-    local_source: str | pathlib.Path | None = None,
-    local_zip_source: str | pathlib.Path | None = None,
-) -> DataBundle
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.SamePeriodPolicy(...)
 ```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `vintage` | <code>str &#124; None</code> | `None` | Vintage in `YYYY-MM` form. `None` loads current. |
-| `force` | `bool` | `False` | Re-download or re-copy even if cache exists. |
-| `cache_root` | path-like or `None` | `None` | Raw cache root. |
-| `local_source` | path-like or `None` | `None` | Local CSV source instead of download. |
-| `local_zip_source` | path-like or `None` | `None` | Optional local historical zip override. Without it, vintage requests automatically download the official FRED-MD historical archive and extract the requested CSV. |
-
-### Output
-
-Returns `DataBundle` with a monthly FRED-MD panel and metadata. The official
-CSV transform row is parsed into `metadata["transform_codes"]` and
-`panel.attrs["macroforecast_transform_codes"]`.
-
-See [FRED-MD](../datasets/fred_md.md) for dataset-specific details.
-See [FRED-MD + FRED-SD](../datasets/fred_md_sd.md) for the combined monthly
-national/state loader.
-
-## load_fred_qd
-
-Load FRED-QD and return `DataBundle`.
-
-```python
-macroforecast.data.load_fred_qd(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | pathlib.Path | None = None,
-    local_source: str | pathlib.Path | None = None,
-    local_zip_source: str | pathlib.Path | None = None,
-) -> DataBundle
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `vintage` | <code>str &#124; None</code> | `None` | Vintage in `YYYY-MM` form. `None` loads current. |
-| `force` | `bool` | `False` | Re-download or re-copy even if cache exists. |
-| `cache_root` | path-like or `None` | `None` | Raw cache root. |
-| `local_source` | path-like or `None` | `None` | Local CSV source instead of download. |
-| `local_zip_source` | path-like or `None` | `None` | Optional local historical zip override. Without it, vintage requests automatically download the official FRED-QD historical archive and extract the requested CSV. |
-
-### Output
-
-Returns a quarterly canonical panel. The official CSV transform row is parsed
-into `metadata["transform_codes"]` and
-`panel.attrs["macroforecast_transform_codes"]`.
-
-See [FRED-QD](../datasets/fred_qd.md) for dataset-specific details.
-See [FRED-QD + FRED-SD](../datasets/fred_qd_sd.md) for the combined quarterly
-national/state loader.
-
-## load_fred_sd
-
-Load FRED-SD and return `DataBundle`.
-
-```python
-macroforecast.data.load_fred_sd(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | pathlib.Path | None = None,
-    local_source: str | pathlib.Path | None = None,
-    states: list[str] | None = None,
-    variables: list[str] | None = None,
-) -> DataBundle
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `states` | <code>list[str] &#124; None</code> | `None` | Optional state subset. |
-| `variables` | <code>list[str] &#124; None</code> | `None` | Optional FRED-SD variable subset. |
-
-FRED-SD columns are wide variable-state IDs such as `UR_CA`. The loader also
-adds `panel.attrs["macrocast_reports"]["fred_sd_series_metadata"]`, which
-records each column's state, FRED-SD variable, observed date range, non-missing
-count, native frequency, and date-anchor pattern inferred from the official
-series workbook. The same frequency and date-anchor maps are exposed in
-`metadata["native_frequency_by_column"]`,
-`metadata["native_frequency_counts"]`, `metadata["date_anchor_by_column"]`,
-`metadata["date_anchor_counts"]`, and `metadata["state_summary"]`.
-
-For `vintage="YYYY-MM"`, FRED-SD uses the official by-series workbook path. It
-tries `series-YYYY-MM.xlsx` first and then falls back to the official
-by-series zip archive containing that workbook. There is no
-`local_zip_source` parameter for FRED-SD because local overrides are supplied as
-`local_source=` with either an official workbook or a canonical wide CSV.
-
-See [FRED-SD](../datasets/fred_sd.md) for mixed-frequency state-series details
-and t-code limitations.
-See [FRED-MD + FRED-SD](../datasets/fred_md_sd.md) and
-[FRED-QD + FRED-SD](../datasets/fred_qd_sd.md) for combined-loader behavior.
-
-## load_fred_md_sd
-
-Load FRED-MD and FRED-SD, align them to one panel, and return `DataBundle`.
-
-```python
-macroforecast.data.load_fred_md_sd(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | pathlib.Path | None = None,
-    local_fred_md_source: str | pathlib.Path | None = None,
-    local_fred_sd_source: str | pathlib.Path | None = None,
-    states: list[str] | None = None,
-    variables: list[str] | None = None,
-    frequency: str = "monthly",
-    quarterly_to_monthly: str = "repeat_within_quarter",
-    monthly_to_quarterly: str = "quarterly_average",
-) -> DataBundle
-```
-
-### Purpose
-
-Use this when the outcome or main state panel is monthly and national
-macroeconomic controls should come from FRED-MD. This is the recommended
-combined dataset for monthly state analysis.
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `vintage` | <code>str &#124; None</code> | `None` | Vintage label shared across FRED-MD and FRED-SD. |
-| `force` | `bool` | `False` | Re-download or re-copy raw sources. |
-| `cache_root` | path-like or `None` | `None` | Raw cache root used by both loaders. |
-| `local_fred_md_source` | path-like or `None` | `None` | Local FRED-MD CSV source. |
-| `local_fred_sd_source` | path-like or `None` | `None` | Local FRED-SD workbook or CSV source. |
-| `states` | <code>list[str] &#124; None</code> | `None` | FRED-SD state subset. |
-| `variables` | <code>list[str] &#124; None</code> | `None` | FRED-SD variable subset. |
-| `frequency` | `str` | `"monthly"` | `"monthly"`, `"quarterly"`, or `"native"`. Quarterly is supported but not recommended for this loader. |
-| `quarterly_to_monthly` | `str` | `"repeat_within_quarter"` | Rule used if an included FRED-SD series is quarterly and the target panel is monthly. |
-| `monthly_to_quarterly` | `str` | `"quarterly_average"` | Rule used only when `frequency="quarterly"`. |
-
-### Output
-
-Returns a combined `DataBundle` with:
-
-- `metadata["dataset"] == "fred_md+fred_sd"`
-- `metadata["source_family"] == "combined"`
-- `metadata["frequency"] == frequency`
-- FRED-MD official t-codes in `metadata["transform_codes"]`
-- FRED-SD series metadata preserved in `panel.attrs["macrocast_reports"]`
-- FRED-SD source-frequency and date-anchor maps in
-  `metadata["native_frequency_by_column"]` and
-  `metadata["date_anchor_by_column"]`
-- any frequency conversions recorded in `metadata["frequency_conversion_warnings"]`
-
-If a quarterly FRED-SD series is included in a monthly panel, the function
-emits a `UserWarning` and records the conversion. The default
-`quarterly_to_monthly="repeat_within_quarter"` assigns the quarterly value to
-each month inside the quarter.
-
-## load_fred_qd_sd
-
-Load FRED-QD and FRED-SD, align them to one panel, and return `DataBundle`.
-
-```python
-macroforecast.data.load_fred_qd_sd(
-    vintage: str | None = None,
-    *,
-    force: bool = False,
-    cache_root: str | pathlib.Path | None = None,
-    local_fred_qd_source: str | pathlib.Path | None = None,
-    local_fred_sd_source: str | pathlib.Path | None = None,
-    states: list[str] | None = None,
-    variables: list[str] | None = None,
-    frequency: str = "quarterly",
-    quarterly_to_monthly: str = "repeat_within_quarter",
-    monthly_to_quarterly: str = "quarterly_average",
-) -> DataBundle
-```
-
-### Purpose
-
-Use this when the target or outcome is quarterly and national controls should
-come from FRED-QD. This is the recommended combined dataset for quarterly
-state-level analysis.
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `vintage` | <code>str &#124; None</code> | `None` | Vintage label shared across FRED-QD and FRED-SD. |
-| `force` | `bool` | `False` | Re-download or re-copy raw sources. |
-| `cache_root` | path-like or `None` | `None` | Raw cache root used by both loaders. |
-| `local_fred_qd_source` | path-like or `None` | `None` | Local FRED-QD CSV source. |
-| `local_fred_sd_source` | path-like or `None` | `None` | Local FRED-SD workbook or CSV source. |
-| `states` | <code>list[str] &#124; None</code> | `None` | FRED-SD state subset. |
-| `variables` | <code>list[str] &#124; None</code> | `None` | FRED-SD variable subset. |
-| `frequency` | `str` | `"quarterly"` | `"quarterly"`, `"monthly"`, or `"native"`. Monthly is supported but not recommended for this loader. |
-| `quarterly_to_monthly` | `str` | `"repeat_within_quarter"` | Rule used only when `frequency="monthly"`. |
-| `monthly_to_quarterly` | `str` | `"quarterly_average"` | Rule used if an included FRED-SD series is monthly and the target panel is quarterly. |
-
-### Output
-
-Returns a combined `DataBundle` with:
-
-- `metadata["dataset"] == "fred_qd+fred_sd"`
-- `metadata["source_family"] == "combined"`
-- `metadata["frequency"] == frequency`
-- FRED-QD official t-codes in `metadata["transform_codes"]`
-- FRED-SD series metadata preserved in `panel.attrs["macrocast_reports"]`
-- FRED-SD source-frequency and date-anchor maps in
-  `metadata["native_frequency_by_column"]` and
-  `metadata["date_anchor_by_column"]`
-- any frequency conversions recorded in `metadata["frequency_conversion_warnings"]`
-
-If a monthly FRED-SD series is included in a quarterly panel, the function
-emits a `UserWarning` and records the conversion. The default
-`monthly_to_quarterly="quarterly_average"` averages monthly observations inside
-each quarter.
-
-## combine
-
-Combine already-loaded `DataBundle` objects into one canonical panel.
-
-```python
-macroforecast.data.combine(
-    *bundles,
-    dataset: str | None = None,
-    frequency: str = "native",
-    quarterly_to_monthly: str = "repeat_within_quarter",
-    monthly_to_quarterly: str = "quarterly_average",
-) -> DataBundle
-```
-
-### Input
-
-| Name | Type | Default | Choices |
-| --- | --- | --- | --- |
-| `*bundles` | `DataBundle` | required | Two or more bundles to concatenate by date index. |
-| `dataset` | `str` or `None` | joined source names | Output dataset label. |
-| `frequency` | `str` | `"native"` | `"native"`, `"monthly"`, or `"quarterly"`. |
-| `quarterly_to_monthly` | `str` | `"repeat_within_quarter"` | `"repeat_within_quarter"`, `"quarter_end_ffill"`, `"linear_interpolation"`. |
-| `monthly_to_quarterly` | `str` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"`. |
-
-With `frequency="native"` or `frequency="mixed"`, no monthly/quarterly
-conversion is applied. The returned panel keeps each source column on its
-native observation dates and records `metadata["frequency"] == "mixed"`.
-Quarterly columns therefore appear as sparse columns on the union date index
-when they are combined with monthly columns. Downstream mixed-frequency models
-should read `metadata["native_frequency_by_column"]` rather than infer
-frequency from the overall index.
-
-### Frequency Conversion Rules
-
-| Direction | Rule | Meaning |
-| --- | --- | --- |
-| quarterly to monthly | `repeat_within_quarter` | Assign the quarterly value to each month in that quarter. |
-| quarterly to monthly | `quarter_end_ffill` | Place the quarterly value at quarter end and forward-fill after it is observed. |
-| quarterly to monthly | `linear_interpolation` | Interpolate between observed quarter-end values on the monthly grid. |
-| monthly to quarterly | `quarterly_average` | Average monthly observations in the quarter. |
-| monthly to quarterly | `quarterly_endpoint` | Use the last monthly observation in the quarter. |
-| monthly to quarterly | `quarterly_sum` | Sum monthly observations in the quarter. |
-
-Combined monthly/quarterly output supports only source columns identified as
-monthly or quarterly. If a source contains weekly, annual, irregular, or
-unknown-frequency columns, `combine()` raises `ValueError`. Use
-`frequency="native"` to inspect the mixed panel first, then call
-`mf.data.align_frequency()` explicitly if those columns should enter a common
-monthly or quarterly design.
-
-### Output
-
-Returns `DataBundle`. The panel is a column-wise concatenation after frequency
-alignment. Duplicate output column names raise `ValueError`.
-
-For mixed outputs, the key metadata fields are:
-
-| Key | Meaning |
-| --- | --- |
-| `metadata["frequency"]` | `"mixed"`. |
-| `metadata["native_frequency_by_column"]` | Native source frequency for each column. |
-| `metadata["native_frequency_counts"]` | Counts of native source frequencies. |
-| `metadata["date_anchor_by_column"]` | FRED-SD date-anchor map when available. |
-| `metadata["date_anchor_counts"]` | Counts of FRED-SD date-anchor patterns when available. |
-| `metadata["output_frequency_by_column"]` | Returned-panel frequency for each column; equal to native frequency in native mode. |
-| `metadata["alignment"]["frequency"]` | `"native"` when no conversion was applied. |
-
-### Frequency Conversion Warnings
-
-When `combine()` changes a source column's native frequency, it emits
-`UserWarning` and records the same information in
-`metadata["frequency_conversion_warnings"]`.
-
-Each record has:
-
-| Key | Type | Meaning |
-| --- | --- | --- |
-| `dataset` | `str` | Source dataset whose columns were converted. |
-| `from_frequency` | `str` | Native frequency before alignment. |
-| `to_frequency` | `str` | Combined panel frequency. |
-| `rule` | `str` | Alignment rule used. |
-| `variables` | `list[str]` | Variable-level names, e.g. `["NQGSP"]` for `NQGSP_CA`. |
-| `columns` | `list[str]` | Exact converted panel columns. |
-| `n_columns` | `int` | Number of converted columns. |
-
-Example warning:
-
-```text
-fred_sd monthly variables were aligned to quarterly using quarterly_average:
-UR, ICLAIMS (102 columns).
-```
-
-## load_custom_csv
-
-Load a user CSV and normalize it to the canonical panel contract.
-
-```python
-macroforecast.data.load_custom_csv(
-    path,
-    *,
-    date: str | None = None,
-    date_col: str | int | None = None,
-    columns: Iterable[str] | None = None,
-    series_columns: Iterable[str] | None = None,
-    rename: Mapping[str, str] | None = None,
-    dataset: str = "custom",
-    frequency: str = "unknown",
-    frequency_by_column: Mapping[str, str] | None = None,
-    default_frequency: str | None = None,
-    metadata: Mapping[str, object] | None = None,
-    transform_codes: Mapping[str, int] | None = None,
-    cache_root: str | pathlib.Path | None = None,
-    strict: bool = True,
-) -> DataBundle
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `path` | path-like | required | CSV file path. |
-| `date` | <code>str &#124; None</code> | `None` | Date column. If omitted, uses a DatetimeIndex or parses the first column. |
-| `date_col` | <code>str &#124; int &#124; None</code> | `None` | Alias for `date`; integer values select the date column by zero-based position. |
-| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
-| `series_columns` | iterable or `None` | `None` | Alias for `columns`; use this name when thinking in panel series IDs. |
-| `rename` | mapping or `None` | `None` | Column rename map. |
-| `dataset` | `str` | `"custom"` | Metadata dataset label. |
-| `frequency` | `str` | `"unknown"` | Metadata frequency label. |
-| `frequency_by_column` | mapping or `None` | `None` | Optional final-column frequency map, e.g. `{"PAYEMS": "monthly", "GDPC1": "quarterly"}`. |
-| `default_frequency` | `str` or `None` | `None` | Fill frequency for columns omitted from `frequency_by_column`. |
-| `metadata` | mapping or `None` | `None` | User metadata to attach. |
-| `transform_codes` | mapping or `None` | `None` | Optional McCracken-Ng t-code map. Keys must match final loaded series columns after selection and renaming. |
-| `cache_root` | path-like or `None` | `None` | If supplied, append a raw-manifest entry under this cache root. Custom loaders do not write the default manifest unless this is supplied. |
-| `strict` | `bool` | `True` | Reject invalid date rows and non-numeric cells instead of silently coercing them. Set `False` only when you want a permissive load with a panel report. |
-
-### Output
-
-Returns a `DataBundle`. The normalized panel is available as `bundle.panel` and
-metadata as `bundle.metadata`. If `transform_codes` is provided, it is stored in
-both `bundle.metadata["transform_codes"]` and
-`bundle.panel.attrs["macroforecast_transform_codes"]`, so
-`mf.preprocessing.reprocess(bundle)` can use the codes automatically.
-
-Custom loaders also store the strict-normalization report at
-`bundle.metadata["panel"]`. With `strict=True`, malformed dates or non-numeric
-cells raise `RawParseError` wrapping the underlying validation error. With
-`strict=False`, those lossy operations are allowed and counted.
-
-If `frequency_by_column` is provided, custom loaders call
-`set_frequencies(...)` internally and write the same mixed-frequency metadata
-contract used by official combined bundles. The keys must match final loaded
-column names after selection and renaming.
-
-Example:
-
-```python
-bundle = mf.data.load_custom_csv(
-    "panel.csv",
-    date_col="DATE",
-    series_columns=["INDPRO", "spread"],
-    frequency="monthly",
-    transform_codes={"INDPRO": 5, "spread": 2},
-)
-
-processed = mf.preprocessing.reprocess(bundle)
-```
-
-## load_custom_parquet
-
-Load a user Parquet file with the same normalization contract as
-`load_custom_csv`.
-
-```python
-macroforecast.data.load_custom_parquet(
-    path,
-    *,
-    date: str | None = None,
-    date_col: str | int | None = None,
-    columns: Iterable[str] | None = None,
-    series_columns: Iterable[str] | None = None,
-    rename: Mapping[str, str] | None = None,
-    dataset: str = "custom",
-    frequency: str = "unknown",
-    frequency_by_column: Mapping[str, str] | None = None,
-    default_frequency: str | None = None,
-    metadata: Mapping[str, object] | None = None,
-    transform_codes: Mapping[str, int] | None = None,
-    cache_root: str | pathlib.Path | None = None,
-    strict: bool = True,
-) -> DataBundle
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `path` | path-like | required | Parquet file path. |
-| `date` | <code>str &#124; None</code> | `None` | Date column. If omitted, uses a `DatetimeIndex` or parses the first column. |
-| `date_col` | <code>str &#124; int &#124; None</code> | `None` | Alias for `date`; integer values select the date column by zero-based position. |
-| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
-| `series_columns` | iterable or `None` | `None` | Alias for `columns`. |
-| `rename` | mapping or `None` | `None` | Column rename map. |
-| `dataset` | `str` | `"custom"` | Metadata dataset label. |
-| `frequency` | `str` | `"unknown"` | Metadata frequency label. |
-| `frequency_by_column` | mapping or `None` | `None` | Optional final-column frequency map. |
-| `default_frequency` | `str` or `None` | `None` | Fill frequency for columns omitted from `frequency_by_column`. |
-| `metadata` | mapping or `None` | `None` | User metadata to attach. |
-| `transform_codes` | mapping or `None` | `None` | Optional McCracken-Ng t-code map. Keys must match final loaded series columns after selection and renaming. |
-| `cache_root` | path-like or `None` | `None` | If supplied, append a raw-manifest entry under this cache root. |
-| `strict` | `bool` | `True` | Reject invalid date rows and non-numeric cells instead of silently coercing them. |
-
-### Output
-
-Returns a `DataBundle` with the same canonical panel, metadata, transform-code,
-strict-normalization, and optional mixed-frequency contract as
-`load_custom_csv`.
-
-## custom_dataset
-
-Build a custom `DataBundle` from an in-memory pandas `DataFrame`.
-
-Use `custom_dataset()` when the data are already in Python memory and should
-enter the same contract as `load_fred_md()`, `load_fred_qd()`,
-`load_fred_sd()`, `load_custom_csv()`, and `load_custom_parquet()`.
-
-```python
-macroforecast.data.custom_dataset(
-    frame,
-    *,
-    date: str | None = None,
-    columns: Iterable[str] | None = None,
-    rename: Mapping[str, str] | None = None,
-    dataset: str = "custom",
-    source_family: str = "custom",
-    frequency: str = "unknown",
-    frequency_by_column: Mapping[str, str] | None = None,
-    transform_codes: Mapping[str, int] | None = None,
-    metadata: Mapping[str, object] | None = None,
-    strict: bool = True,
-) -> DataBundle
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `frame` | `pandas.DataFrame` | required | Raw or already canonical panel. |
-| `date` | `str` or `None` | `None` | Date column. If omitted, the input must have a `DatetimeIndex` or a parseable first column. |
-| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
-| `rename` | mapping or `None` | `None` | Rename retained columns after selection. |
-| `dataset` | `str` | `"custom"` | Dataset label stored in metadata. |
-| `source_family` | `str` | `"custom"` | Source-family label stored in metadata. |
-| `frequency` | `str` | `"unknown"` | Loader-level frequency label. |
-| `frequency_by_column` | mapping or `None` | `None` | Optional column-level frequency map for mixed-frequency panels. |
-| `transform_codes` | mapping or `None` | `None` | Optional t-code map. Keys must match final panel columns. |
-| `metadata` | mapping or `None` | `None` | User metadata merged before package metadata is attached. |
-| `strict` | `bool` | `True` | Reject lossy date or numeric coercion. |
-
-### Output
-
-Returns `DataBundle`. The panel is canonical and the metadata includes
-`dataset`, `source_family`, `frequency`, optional `transform_codes`, optional
-column-level frequency metadata, and a `custom_dataset` stage.
-
-```python
-bundle = mf.data.custom_dataset(
-    frame,
-    date="date",
-    dataset="bank_panel",
-    frequency="monthly",
-    transform_codes={"loan_growth": 1, "spread": 2},
-)
-
-processed = mf.preprocessing.reprocess(
-    bundle,
-    transform="custom",
-    impute="mean",
-)
-```
-
-## as_panel
-
-Normalize an existing pandas `DataFrame`.
-
-```python
-macroforecast.data.as_panel(
-    frame,
-    *,
-    date: str | None = None,
-    columns: Iterable[str] | None = None,
-    rename: Mapping[str, str] | None = None,
-    metadata: Mapping[str, object] | None = None,
-    strict: bool = True,
-) -> pandas.DataFrame
-```
-
-`as_panel` returns a canonical panel. It raises if the date column is missing,
-dates are duplicated, the output is empty, infinite values are present, or any
-retained column cannot be represented as numeric values or `NaN`.
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `frame` | `pandas.DataFrame` | required | Raw or already canonical panel. |
-| `date` | <code>str &#124; None</code> | `None` | Date column. If omitted and the index is not a `DatetimeIndex`, the first column is parsed as dates. |
-| `columns` | iterable or `None` | `None` | Columns to keep before renaming. |
-| `rename` | mapping or `None` | `None` | Rename retained columns after selection. |
-| `metadata` | mapping or `None` | `None` | Metadata attached under `panel.attrs["macroforecast_metadata"]`. |
-| `strict` | `bool` | `True` | Reject lossy date/numeric coercion. `False` permits it and records a panel report. |
-
-### Output
-
-Returns a `pandas.DataFrame` with `DatetimeIndex` named `"date"`, ascending
-dates, numeric columns, and attrs containing `macroforecast_panel_report`.
-
-## validate_panel
-
-Validate the canonical panel contract.
-
-```python
-macroforecast.data.validate_panel(panel) -> None
-```
-
-Raises `TypeError` or `ValueError` when the panel is not canonical.
-
-## panel_info
-
-Return a compact panel summary.
-
-```python
-macroforecast.data.panel_info(bundle_or_panel) -> dict
-```
-
-Output keys include `n_rows`, `n_columns`, `start`, `end`, `columns`,
-`missing_values`, `frequency`, and `index_frequency`. If the input carries
-metadata, `frequency` uses the metadata label such as `"mixed"` while
-`index_frequency` reports the pandas-inferred date-index frequency. Combined
-data also include compact native/output frequency counts.
-
-## set_frequencies
-
-Attach a column-level frequency contract to an existing panel or bundle.
-
-```python
-macroforecast.data.set_frequencies(
-    data,
-    frequency_by_column,
-    *,
-    default_frequency: str | None = None,
-    output_frequency_by_column: Mapping[str, str] | None = None,
-    frequency: str | None = None,
-    metadata: Mapping[str, object] | None = None,
-) -> DataBundle
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `data` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | required | Canonical panel input. |
-| `frequency_by_column` | mapping | required | Native frequency for each final panel column. |
-| `default_frequency` | `str` or `None` | `None` | Fill omitted columns with one frequency. |
-| `output_frequency_by_column` | mapping or `None` | `None` | Returned-panel frequency for each column; defaults to native frequency. |
-| `frequency` | `str` or `None` | `None` | Overall metadata label. Defaults to the unique native frequency or `"mixed"`. |
-| `metadata` | mapping or `None` | `None` | Extra metadata to merge before writing frequency fields. |
-
-Allowed column frequencies are `monthly`, `quarterly`, `weekly`, `annual`,
-`irregular`, and `unknown`, with short aliases such as `m`, `q`, and `w`.
-For mixed-frequency DFM models, monthly and quarterly columns are the relevant
-contract.
-
-### Output
-
-Returns a `DataBundle` with:
-
-| Metadata key | Meaning |
-| --- | --- |
-| `frequency` | Overall label, usually `"mixed"` when multiple native frequencies are present. |
-| `native_frequency_by_column` | Native frequency for each column. |
-| `native_frequency_counts` | Counts by native frequency. |
-| `output_frequency_by_column` | Frequency represented in the returned panel for each column. |
-| `output_frequency_counts` | Counts by output frequency. |
-
-## metadata
-
-Return explicit metadata from a `DataBundle`, `DataSpec`, `(panel, metadata)`
-tuple, or `DataFrame`.
-
-```python
-macroforecast.data.metadata(obj) -> dict
-```
-
-### Input
-
-| Name | Type | Meaning |
-| --- | --- | --- |
-| `obj` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | Object carrying package metadata. |
-
-### Output
-
-Returns a shallow copy of the metadata dictionary. Mutating the returned object
-does not mutate the original bundle or panel attrs.
-
-## attach_metadata
-
-Merge one metadata stage into an existing metadata dictionary.
-
-```python
-macroforecast.data.attach_metadata(
-    metadata,
-    stage: str,
-    values,
-) -> dict
-```
-
-### Input
-
-| Name | Type | Meaning |
-| --- | --- | --- |
-| `metadata` | mapping | Existing metadata dictionary. |
-| `stage` | `str` | Non-empty stage key to write, such as `"data_spec"` or `"data_frequency_alignment"`. |
-| `values` | mapping | Stage payload to copy under `stage`. |
-
-### Output
-
-Returns a new dictionary. Existing metadata is copied, then `values` is copied
-under the requested stage. `attach_metadata()` does not mutate its input.
-
-## spec
-
-Attach run-level data choices to a bundle or panel. This function creates a
-`DataSpec`; it does not execute downstream pipeline steps.
-
-```python
-macroforecast.data.spec(
-    data,
-    *,
-    metadata: Mapping[str, object] | None = None,
-    target: str | None = None,
-    targets: Iterable[str] | None = None,
-    horizons: Iterable[int] | int | None = None,
-    start: str | None = None,
-    end: str | None = None,
-    predictors: "all" | Iterable[str] = "all",
-) -> DataSpec
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `data` | `DataBundle`, `DataSpec`, `(panel, metadata)`, or `DataFrame` | required | Canonical data input. |
-| `metadata` | mapping or `None` | `None` | Extra metadata to merge. |
-| `target` | <code>str &#124; None</code> | `None` | Single target column. |
-| `targets` | iterable or `None` | `None` | Multiple target columns. |
-| `horizons` | iterable, int, or `None` | derived | Forecast horizons. |
-| `start` | <code>str &#124; None</code> | `None` | Start date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
-| `end` | <code>str &#124; None</code> | `None` | End date. Accepts `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. |
-| `predictors` | <code>"all" &#124; iterable</code> | `"all"` | Predictor columns to keep. `"all"` expands to all non-target columns. Explicit predictor lists may be empty for target-only or autoregressive designs, and may not include target columns. |
-
-### Default Horizons
-
-| Metadata frequency | Default horizons |
-| --- | --- |
-| `monthly` | `(1, 3, 6, 12)` |
-| `quarterly` | `(1, 2, 4, 8)` |
-| other or unknown | `(1,)` |
-
-### Output
-
-Returns `DataSpec`. Its metadata contains a `data_spec` entry with the chosen
-target, targets, horizons, sample dates, expanded predictor list, and panel
-summary. This expansion is deliberate: downstream model stages should consume a
-concrete non-target predictor list, not infer from the full panel and risk
-target leakage.
-
-### What It Does And Does Not Do
-
-| Action | Done by `mf.data.spec(...)`? |
-| --- | --- |
-| Validate the canonical panel contract | Yes |
-| Validate target and predictor columns | Yes |
-| Expand `predictors="all"` to all non-target columns | Yes |
-| Apply `start` and `end` sample bounds | Yes |
-| Attach `metadata["data_spec"]` | Yes |
-| Load raw data | No |
-| Transform, clean, impute, or standardize values | No |
-| Create forecast targets or lagged predictors | No |
-| Fit models or run evaluation | No |
-
-## Data Policy Helpers
-
-These functions are direct Python replacements for the old data-policy axes.
-They do not parse YAML and do not fit models.
-
-### align_frequency
-
-```python
-macroforecast.data.align_frequency(
-    data,
-    *,
-    method: str = "keep",
-    quarterly_to_monthly: str = "repeat_within_quarter",
-    weekly_to_monthly: str = "mean",
-    monthly_to_quarterly: str = "quarterly_average",
-    weekly_to_quarterly: str = "mean",
-    chow_lin_indicator: str | Mapping[str, str] | None = None,
-    chow_lin_aggregation: str = "mean",
-    chow_lin_rho: float | None = None,
-    chow_lin_rho_method: str = "fixed",
-) -> DataBundle
-```
-
-Keeps, filters, or aligns a panel to a common data frequency. This belongs in
-`macroforecast.data` because it changes the calendar and column-level frequency
-contract before preprocessing or feature engineering.
-
-| Input | Default | Choices |
-| --- | --- | --- |
-| `method` | `"keep"` | `"keep"`, `"monthly"`, `"quarterly"`, `"drop_non_monthly"`, `"drop_non_quarterly"` |
-| `quarterly_to_monthly` | `"repeat_within_quarter"` | `"repeat_within_quarter"`, `"step_backward"`, `"step_forward"`, `"quarter_end_ffill"`, `"linear_interpolation"`, `"chow_lin"` |
-| `weekly_to_monthly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
-| `monthly_to_quarterly` | `"quarterly_average"` | `"quarterly_average"`, `"quarterly_endpoint"`, `"quarterly_sum"` |
-| `weekly_to_quarterly` | `"mean"` | `"mean"`, `"last"`, `"sum"` |
-| `chow_lin_indicator` | `None` | Indicator column name, or mapping from quarterly column to indicator column, used only when `quarterly_to_monthly="chow_lin"`. |
-| `chow_lin_aggregation` | `"mean"` | `"mean"` or `"sum"`; the low-frequency aggregation to conserve. |
-| `chow_lin_rho` | `None` | Fixed AR(1) residual correlation. If supplied, must be inside `(-1, 1)`. |
-| `chow_lin_rho_method` | `"fixed"` | `"fixed"`, `"min_chi_squared"`, or `"max_likelihood"`. |
-
-Output is a `DataBundle`. Metadata records `data_frequency_alignment`,
-`native_frequency_by_column`, `output_frequency_by_column`, and frequency
-counts. Frequency detection uses `native_frequency_by_column` first, then
-FRED-SD series reports, then observed-date spacing.
-
-```python
-monthly = mf.data.align_frequency(
-    mixed_bundle,
-    method="monthly",
-    quarterly_to_monthly="repeat_within_quarter",
-)
-```
-
-For quarterly-to-monthly alignment, `step_backward` is accepted as an alias for
-`repeat_within_quarter`; the latter is the clearer spelling. Use
-`quarter_end_ffill` when values should only become available from the
-quarter-end month forward.
-
-Use `quarterly_to_monthly="chow_lin"` when a quarterly series should be
-regression-disaggregated with a monthly indicator:
-
-```python
-monthly = mf.data.align_frequency(
-    mixed_bundle,
-    method="monthly",
-    quarterly_to_monthly="chow_lin",
-    chow_lin_indicator={"GDPC1": "INDPRO"},
-    chow_lin_aggregation="mean",
-)
-```
-
-This preserves the supplied quarterly observations when the output is
-re-aggregated by the declared `chow_lin_aggregation`. The function records the
-indicator and rho choices in `metadata["data_frequency_alignment"]`.
-
-### chow_lin_disaggregate
-
-```python
-macroforecast.data.chow_lin_disaggregate(
-    low_frequency,
-    indicator,
-    *,
-    aggregation: str = "mean",
-    rho: float | None = None,
-    rho_method: str = "fixed",
-) -> pandas.Series
-```
-
-Direct Chow-Lin quarterly-to-monthly style disaggregation. `low_frequency` is a
-low-frequency `Series`, and `indicator` is a higher-frequency `Series` or a
-single/first-column `DataFrame`. The returned series is indexed like the
-indicator and conserves `low_frequency` under `aggregation="mean"` or
-`aggregation="sum"`.
-
-`rho_method="fixed"` uses `rho` when supplied and `0.0` otherwise.
-`"min_chi_squared"` and `"max_likelihood"` estimate `rho` over a bounded grid.
-
-### infer_frequencies
-
-```python
-macroforecast.data.infer_frequencies(data) -> tuple[dict[str, str], str]
-```
-
-`infer_frequencies()` returns `(frequency_by_column, source)`. The source is
-`"native_frequency_by_column"`, `"fred_sd_series_metadata"`, or
-`"observed_dates"`.
-
-### frequency_hardening_issues
-
-```python
-macroforecast.data.frequency_hardening_issues(
-    frequencies,
-) -> list[dict]
-```
-
-Reports columns classified as `unknown`, `irregular`, or `annual` before a
-caller aligns frequencies. This is useful before forcing a mixed panel to
-monthly or quarterly frequency.
-
-| Output key | Meaning |
-| --- | --- |
-| `frequency` | Weak frequency class. |
-| `columns` | Columns assigned to that class. |
-| `n_columns` | Number of affected columns. |
-
-### availability_lag
-
-```python
-macroforecast.data.availability_lag(
-    data,
-    *,
-    lags: int | Mapping[str, int] = 1,
-    columns: Iterable[str] | None = None,
-    drop_missing: bool = False,
-) -> DataBundle
-```
-
-Positive lags delay predictor availability. `lags=1` means the value dated
-`t-1` is the latest available value on row `t`. Pass a mapping for
-column-specific release lags.
-
-### same_period_predictors
-
-```python
-macroforecast.data.same_period_predictors(
-    data_spec,
-    *,
-    policy: "allow" | "lag" | "drop" | "forbid" = "allow",
-    lag: int = 1,
-    columns: Iterable[str] | None = None,
-    drop_missing: bool = False,
-) -> DataSpec
-```
-
-`allow` records the choice, `lag` shifts selected predictors, `drop` removes
-them from the active predictor set, and `forbid` raises if such predictors are
-present. Targets are never shifted by this helper.
-
-### define_regime
-
-```python
-macroforecast.data.define_regime(
-    data,
-    *,
-    name: str = "regime",
-    column: str | None = None,
-    threshold: float | None = None,
-    direction: "above" | "below" | "equal" | "not_equal" = "above",
-    dates: Iterable[str | pandas.Timestamp] | None = None,
-    values: Sequence[bool | int | float] | pandas.Series | None = None,
-    append: bool = False,
-    output_column: str | None = None,
-) -> DataBundle
-```
-
-Exactly one regime source is required: threshold rule, explicit dates, or an
-aligned vector/Series. The regime is stored in `metadata["regimes"]`; set
-`append=True` to also add a numeric indicator column to the panel.
-
-## Vintage Helpers
-
-### list_vintages
-
-Generate monthly vintage labels for a supported dataset.
-
-```python
-macroforecast.data.list_vintages(
-    dataset: str,
-    start: str | None = None,
-    end: str | None = None,
-) -> list[str]
-```
-
-### Input
-
-| Name | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `dataset` | `str` | required | One of `fred_md`, `fred_qd`, `fred_sd`, `fred_md+fred_sd`, or `fred_qd+fred_sd`. |
-| `start` | <code>str &#124; None</code> | first supported vintage | Start vintage in `YYYY-MM` form. |
-| `end` | <code>str &#124; None</code> | required | End vintage in `YYYY-MM` form. |
-
-### Output
-
-Returns candidate monthly vintage labels. The selected vintage is passed to
-`load_fred_md`, `load_fred_qd`, or `load_fred_sd` through `vintage=`.
-
-`end` is required because the function does not inspect remote availability.
-
-### fred_md_vintages
-
-Build a `VintageSource` that resolves FRED-MD by forecast origin.
-
-```python
-macroforecast.data.fred_md_vintages(
-    *,
-    start: str | None = None,
-    end: str | None = None,
-    cache_root: str | pathlib.Path | None = None,
-    local_zip_source: str | pathlib.Path | None = None,
-    force: bool = False,
-) -> VintageSource
-```
-
-`resolve(origin_date)` chooses the latest FRED-MD vintage label at or before
-`origin_date`, then delegates to `load_fred_md(vintage=...)`. Resolved bundles
-are memoized by vintage label and must carry `metadata["vintage"]`.
-
-### fred_qd_vintages
-
-Build a `VintageSource` that resolves FRED-QD by forecast origin. Its arguments
-and behavior mirror `fred_md_vintages`, delegating to `load_fred_qd`.
-
-### custom_vintages
-
-Build a `VintageSource` from user-supplied point-in-time snapshots.
-
-```python
-macroforecast.data.custom_vintages(
-    source,
-    *,
-    vintage_column: str | None = None,
-    date_column: str | None = None,
-    vintage_id=None,
-    dataset: str = "custom_vintages",
-    frequency: str = "unknown",
-    strict: bool = True,
-) -> VintageSource
-```
-
-`source` may be a callable `origin_date -> DataBundle | DataFrame`, a mapping
-from date-like vintage keys to snapshots, or a long ALFRED-style frame with
-`vintage_column` and `date_column`. Every resolved snapshot is normalized
-through the canonical panel contract and memoized by `vintage_id` (default:
-`str(resolved_key)`). Non-deterministic callable sources should run with
-runner/pipeline preprocessing caching disabled.
-
-### with_static_extras
-
-Wrap any `VintageSource` so static, non-revised columns are joined onto every
-resolved bundle.
-
-```python
-macroforecast.data.with_static_extras(
-    source: VintageSource,
-    extra,
-    *,
-    join: "outer" | "inner" | "left" = "outer",
-) -> VintageSource
-```
-
-The wrapper accepts `extra` as a `DataBundle` or `DataFrame`, normalizes it
-through the canonical panel contract, and includes the same SHA-256 panel
-fingerprint used by pipeline data provenance in each resolved vintage ID. A
-change to static extras therefore changes cache identity.
-
-### VintageSource
-
-Runtime-checkable protocol for point-in-time data sources.
-
-| Method | Contract |
-| --- | --- |
-| `resolve(origin_date)` | Return the `DataBundle` observable at that origin, or raise `VintageUnavailableError`. The bundle must set `metadata["vintage"]` to a stable content identifier. |
-| `available_vintages()` | Return sorted canonical vintage identifiers the source can resolve. |
-
 ### VintagePanelSpec
 
+Qualified name: `macroforecast.data.vintage.VintagePanelSpec`
+
+#### Signature
+
 ```python
-macroforecast.data.VintagePanelSpec(
-    source: VintageSource,
-    reference_calendar: pandas.DatetimeIndex,
-    actuals_vintage: "latest" | "first_release" = "latest",
-)
+macroforecast.data.VintagePanelSpec(source: VintageSource, reference_calendar: pd.DatetimeIndex, actuals_vintage: "Literal['latest', 'first_release']" = "latest", first_release_max_vintages: int = 12) -> None
 ```
 
-The reference calendar is required, non-empty, and monotonic; forecast target
-dates are derived from it while each origin's training data is resolved through
-`source`. `actuals_vintage="latest"` scores every forecast against the latest
-snapshot available to the run. `actuals_vintage="first_release"` scores target
-date `d` against the first vintage strictly after `d`; the resulting
-`actuals_vintage_id` can vary by forecast row.
+#### Description
 
+Run-level wrapper for a point-in-time vintage source.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `source` | positional or keyword | `VintageSource` | `required` |
+| `reference_calendar` | positional or keyword | `pd.DatetimeIndex` | `required` |
+| `actuals_vintage` | positional or keyword | `Literal['latest', 'first_release']` | `"latest"` |
+| `first_release_max_vintages` | positional or keyword | `int` | `12` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.data.VintagePanelSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `source` | `VintageSource` | `required` |
+| `reference_calendar` | `pd.DatetimeIndex` | `required` |
+| `actuals_vintage` | `Literal['latest', 'first_release']` | `"latest"` |
+| `first_release_max_vintages` | `int` | `12` |
+### VintageSource
+
+Qualified name: `macroforecast.data.vintage.VintageSource`
+
+#### Signature
+
+```python
+macroforecast.data.VintageSource(*args, **kwargs)
+```
+
+#### Description
+
+A lazily-resolved source of point-in-time data, one bundle per real-time origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.data.VintageSource(...)
+```
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `available_vintages` | `available_vintages(self) -> Sequence[Any]` | Return sorted canonical vintage identifiers this source can resolve. |
+| `resolve` | `resolve(self, origin_date: pd.Timestamp) -> DataBundle` | Return the DataBundle observable as of ``origin_date``. |
 ### VintageUnavailableError
 
-Raised when a `VintageSource` cannot resolve any vintage at or before the
-requested origin date.
+Qualified name: `macroforecast.data.errors.VintageUnavailableError`
 
-## Official Source Pages
+#### Signature
 
-- FRED-MD and FRED-QD source page: <https://www.stlouisfed.org/research/economists/mccracken/fred-databases>
-- FRED-SD source page: <https://www.stlouisfed.org/research/economists/owyang/fred-sd>
+```python
+macroforecast.data.VintageUnavailableError(...)
+```
+
+#### Description
+
+Raised when no point-in-time vintage is available for an origin.
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.data.VintageUnavailableError(...)
+```
+### as_panel
+
+Qualified name: `macroforecast.data.panel.as_panel`
+
+#### Signature
+
+```python
+macroforecast.data.as_panel(frame: pd.DataFrame, *, date: str | None = None, columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, metadata: Mapping[str, Any] | None = None, strict: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return ``frame`` as macroforecast's canonical date-indexed panel.
+
+``strict=True`` is intentional. A forecasting panel should not silently
+lose rows because date parsing failed, nor should string cells such as
+``"missing"`` become ``NaN`` without the caller noticing. Official FRED
+files use real missing-value markers that are already parsed upstream; this
+guard is mainly for custom CSV/Parquet inputs and ad hoc DataFrames.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `frame` | positional or keyword | `pd.DataFrame` | `required` |
+| `date` | keyword only | `str \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `strict` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.as_panel(...)
+```
+### attach_metadata
+
+Qualified name: `macroforecast.data.panel.attach_metadata`
+
+#### Signature
+
+```python
+macroforecast.data.attach_metadata(metadata: Mapping[str, Any], stage: str, values: Mapping[str, Any]) -> dict[str, Any]
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `metadata` | positional or keyword | `Mapping[str, Any]` | `required` |
+| `stage` | positional or keyword | `str` | `required` |
+| `values` | positional or keyword | `Mapping[str, Any]` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.attach_metadata(...)
+```
+### custom_dataset
+
+Qualified name: `macroforecast.data.panel.custom_dataset`
+
+#### Signature
+
+```python
+macroforecast.data.custom_dataset(frame: pd.DataFrame, *, date: str | None = None, columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", source_family: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, transform_codes: Mapping[str, int] | None = None, metadata: Mapping[str, Any] | None = None, strict: bool = True) -> DataBundle
+```
+
+#### Description
+
+Build a canonical custom ``DataBundle`` from an in-memory DataFrame.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `frame` | positional or keyword | `pd.DataFrame` | `required` |
+| `date` | keyword only | `str \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom"` |
+| `source_family` | keyword only | `str` | `"custom"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `frequency_by_column` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `strict` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.custom_dataset(...)
+```
+### custom_vintages
+
+Qualified name: `macroforecast.data.vintage.custom_vintages`
+
+#### Signature
+
+```python
+macroforecast.data.custom_vintages(source: Callable[[pd.Timestamp], DataBundle | pd.DataFrame] | Mapping[Any, DataBundle | pd.DataFrame] | pd.DataFrame, *, vintage_column: str | None = None, date_column: str | None = None, vintage_id: Callable[[Any], Any] | None = None, dataset: str = "custom_vintages", frequency: str = "unknown", strict: bool = True) -> VintageSource
+```
+
+#### Description
+
+Return a custom point-in-time source.
+
+``source`` may be a callable ``origin_date -> DataBundle | DataFrame``, a
+mapping from timestamp-parsable vintage keys to snapshots, or a grouped-wide
+DataFrame. The grouped-wide form has one ``vintage_column``, one
+``date_column``, and one numeric column per series; each vintage group is a
+complete wide snapshot. Every snapshot is normalized through
+:func:`as_panel` / :func:`custom_dataset` and then validated. Resolved
+snapshots are memoized by the stable identifier produced by ``vintage_id``
+(default: ``str(resolved_key)``). If a callable reads from a
+non-deterministic source whose content can change for the same identifier,
+run the forecast with runner/pipeline preprocessing caching disabled.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `source` | positional or keyword | `Callable[[pd.Timestamp], DataBundle \| pd.DataFrame] \| Mapping[Any, DataBundle \| pd.DataFrame] \| pd.DataFrame` | `required` |
+| `vintage_column` | keyword only | `str \| None` | `None` |
+| `date_column` | keyword only | `str \| None` | `None` |
+| `vintage_id` | keyword only | `Callable[[Any], Any] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom_vintages"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `strict` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`VintageSource`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.custom_vintages(...)
+```
+### metadata
+
+Qualified name: `macroforecast.data.panel.metadata`
+
+#### Signature
+
+```python
+macroforecast.data.metadata(obj: PanelInput) -> dict[str, Any]
+```
+
+#### Description
+
+Return metadata from a bundle, spec, tuple, or DataFrame.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `obj` | positional or keyword | `PanelInput` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.metadata(...)
+```
+### panel_info
+
+Qualified name: `macroforecast.data.panel.panel_info`
+
+#### Signature
+
+```python
+macroforecast.data.panel_info(panel: PanelInput) -> dict[str, Any]
+```
+
+#### Description
+
+Return a compact diagnostic summary for a canonical panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `PanelInput` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.panel_info(...)
+```
+### set_frequencies
+
+Qualified name: `macroforecast.data.panel.set_frequencies`
+
+#### Signature
+
+```python
+macroforecast.data.set_frequencies(data: PanelInput, frequency_by_column: Mapping[str, str], *, default_frequency: str | None = None, output_frequency_by_column: Mapping[str, str] | None = None, frequency: str | None = None, metadata: Mapping[str, Any] | None = None) -> DataBundle
+```
+
+#### Description
+
+Attach a column-level frequency contract to a panel or bundle.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PanelInput` | `required` |
+| `frequency_by_column` | positional or keyword | `Mapping[str, str]` | `required` |
+| `default_frequency` | keyword only | `str \| None` | `None` |
+| `output_frequency_by_column` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `frequency` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.set_frequencies(...)
+```
+### spec
+
+Qualified name: `macroforecast.data.panel.spec`
+
+#### Signature
+
+```python
+macroforecast.data.spec(data: PanelInput, *, metadata: Mapping[str, Any] | None = None, target: str | None = None, targets: Iterable[str] | None = None, horizons: Iterable[int] | int | None = None, start: str | None = None, end: str | None = None, predictors: "Literal['all'] | Iterable[str]" = "all") -> DataSpec
+```
+
+#### Description
+
+Build a run-level data specification from a canonical panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PanelInput` | `required` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `target` | keyword only | `str \| None` | `None` |
+| `targets` | keyword only | `Iterable[str] \| None` | `None` |
+| `horizons` | keyword only | `Iterable[int] \| int \| None` | `None` |
+| `start` | keyword only | `str \| None` | `None` |
+| `end` | keyword only | `str \| None` | `None` |
+| `predictors` | keyword only | `Literal['all'] \| Iterable[str]` | `"all"` |
+
+#### Returns
+
+`DataSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.spec(...)
+```
+### validate_panel
+
+Qualified name: `macroforecast.data.panel.validate_panel`
+
+#### Signature
+
+```python
+macroforecast.data.validate_panel(panel: pd.DataFrame) -> None
+```
+
+#### Description
+
+Validate macroforecast's canonical panel contract.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.validate_panel(...)
+```
+### align_frequency
+
+Qualified name: `macroforecast.data.policies.align_frequency`
+
+#### Signature
+
+```python
+macroforecast.data.align_frequency(data: PanelInput, *, method: str = "keep", quarterly_to_monthly: str = "step_forward", weekly_to_monthly: str = "mean", monthly_to_quarterly: str = "quarterly_average", weekly_to_quarterly: str = "mean", chow_lin_indicator: str | Mapping[str, str] | None = None, chow_lin_aggregation: str = "mean", chow_lin_rho: float | None = None, chow_lin_rho_method: str = "fixed") -> DataBundle
+```
+
+#### Description
+
+Keep, filter, or align a panel to a common data frequency.
+
+This is a data-level callable because it changes the panel's calendar and
+column frequency contract. Statistical cleaning such as t-code transforms,
+outlier handling, imputation, and standardization stays in
+``macroforecast.preprocessing``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PanelInput` | `required` |
+| `method` | keyword only | `str` | `"keep"` |
+| `quarterly_to_monthly` | keyword only | `str` | `"step_forward"` |
+| `weekly_to_monthly` | keyword only | `str` | `"mean"` |
+| `monthly_to_quarterly` | keyword only | `str` | `"quarterly_average"` |
+| `weekly_to_quarterly` | keyword only | `str` | `"mean"` |
+| `chow_lin_indicator` | keyword only | `str \| Mapping[str, str] \| None` | `None` |
+| `chow_lin_aggregation` | keyword only | `str` | `"mean"` |
+| `chow_lin_rho` | keyword only | `float \| None` | `None` |
+| `chow_lin_rho_method` | keyword only | `str` | `"fixed"` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.align_frequency(...)
+```
+### availability_lag
+
+Qualified name: `macroforecast.data.policies.availability_lag`
+
+#### Signature
+
+```python
+macroforecast.data.availability_lag(data: PanelInput, *, lags: int | Mapping[str, int] = 1, columns: Iterable[str] | None = None, drop_missing: bool = False) -> DataBundle
+```
+
+#### Description
+
+Delay selected columns to match an information-availability policy.
+
+A positive lag means the value dated ``t`` is treated as usable only from
+later forecast origins. For example, ``lags=1`` shifts ``x[t-1]`` onto row
+``t``. This is the direct callable replacement for the old release-lag
+data policy module; release calendars can be expressed by passing a per-column
+lag mapping.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PanelInput` | `required` |
+| `lags` | keyword only | `int \| Mapping[str, int]` | `1` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `drop_missing` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.availability_lag(...)
+```
+### chow_lin_disaggregate
+
+Qualified name: `macroforecast.data.policies.chow_lin_disaggregate`
+
+#### Signature
+
+```python
+macroforecast.data.chow_lin_disaggregate(low_frequency: pd.Series, indicator: pd.Series | pd.DataFrame, *, aggregation: str = "mean", rho: float | None = None, rho_method: str = "fixed") -> pd.Series
+```
+
+#### Description
+
+Disaggregate a low-frequency series with a high-frequency indicator.
+
+This implements the standard Chow-Lin regression-distribution identity with
+an AR(1) high-frequency residual covariance. The returned high-frequency
+series conserves the supplied low-frequency observations under
+``aggregation='mean'`` or ``aggregation='sum'``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `low_frequency` | positional or keyword | `pd.Series` | `required` |
+| `indicator` | positional or keyword | `pd.Series \| pd.DataFrame` | `required` |
+| `aggregation` | keyword only | `str` | `"mean"` |
+| `rho` | keyword only | `float \| None` | `None` |
+| `rho_method` | keyword only | `str` | `"fixed"` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.chow_lin_disaggregate(...)
+```
+### combine
+
+Qualified name: `macroforecast.data.loaders.combine`
+
+#### Signature
+
+```python
+macroforecast.data.combine(*bundles: DataBundle, dataset: str | None = None, frequency: str = "native", quarterly_to_monthly: str = "repeat_within_quarter", monthly_to_quarterly: str = "quarterly_average") -> DataBundle
+```
+
+#### Description
+
+Combine already-loaded data bundles into one canonical panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `bundles` | var positional | `DataBundle` | `required` |
+| `dataset` | keyword only | `str \| None` | `None` |
+| `frequency` | keyword only | `str` | `"native"` |
+| `quarterly_to_monthly` | keyword only | `str` | `"repeat_within_quarter"` |
+| `monthly_to_quarterly` | keyword only | `str` | `"quarterly_average"` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.combine(...)
+```
+### define_regime
+
+Qualified name: `macroforecast.data.policies.define_regime`
+
+#### Signature
+
+```python
+macroforecast.data.define_regime(data: PanelInput, *, name: str = "regime", column: str | None = None, threshold: float | None = None, direction: RegimeDirection = "above", dates: Iterable[str | pd.Timestamp] | None = None, values: Sequence[bool | int | float] | pd.Series | None = None, append: bool = False, output_column: str | None = None) -> DataBundle
+```
+
+#### Description
+
+Attach a binary regime series to panel metadata.
+
+Regimes can be built from a threshold rule, explicit regime dates, or an
+aligned vector/Series of values. The panel is unchanged unless
+``append=True``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PanelInput` | `required` |
+| `name` | keyword only | `str` | `"regime"` |
+| `column` | keyword only | `str \| None` | `None` |
+| `threshold` | keyword only | `float \| None` | `None` |
+| `direction` | keyword only | `RegimeDirection` | `"above"` |
+| `dates` | keyword only | `Iterable[str \| pd.Timestamp] \| None` | `None` |
+| `values` | keyword only | `Sequence[bool \| int \| float] \| pd.Series \| None` | `None` |
+| `append` | keyword only | `bool` | `False` |
+| `output_column` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.define_regime(...)
+```
+### frequency_hardening_issues
+
+Qualified name: `macroforecast.data.policies.frequency_hardening_issues`
+
+#### Signature
+
+```python
+macroforecast.data.frequency_hardening_issues(frequencies: Mapping[str, str]) -> list[dict[str, Any]]
+```
+
+#### Description
+
+Return frequency-classification issues that should be surfaced.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `frequencies` | positional or keyword | `Mapping[str, str]` | `required` |
+
+#### Returns
+
+`list[dict[str, Any]]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.frequency_hardening_issues(...)
+```
+### infer_frequencies
+
+Qualified name: `macroforecast.data.policies.infer_frequencies`
+
+#### Signature
+
+```python
+macroforecast.data.infer_frequencies(data: PanelInput | pd.DataFrame) -> tuple[dict[str, str], str]
+```
+
+#### Description
+
+Infer or read native frequency by panel column.
+
+Metadata from ``set_frequencies`` / ``combine(..., frequency="native")`` is
+preferred, then FRED-SD series reports, then observed-date spacing.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `PanelInput \| pd.DataFrame` | `required` |
+
+#### Returns
+
+`tuple[dict[str, str], str]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.infer_frequencies(...)
+```
+### load_fred_md
+
+Qualified name: `macroforecast.data.loaders.load_fred_md`
+
+#### Signature
+
+```python
+macroforecast.data.load_fred_md(vintage: str | None = None, *, force: bool = False, cache_root: str | Path | None = None, local_source: str | Path | None = None, local_zip_source: str | Path | None = None) -> DataBundle
+```
+
+#### Description
+
+Load FRED-MD as a canonical monthly ``DataBundle``.
+
+Parameters
+vintage
+    Vintage label in ``YYYY-MM`` form. ``None`` loads the current official
+    CSV. A vintage request is resolved from the official historical-vintage
+    archive unless ``local_zip_source`` supplies that archive locally.
+force
+    Redownload or recopy the raw CSV even when the cache target already
+    exists.
+cache_root
+    Optional cache directory for raw FRED files. ``None`` uses the package
+    cache policy.
+local_source
+    Local CSV file to copy into the cache instead of downloading. This is
+    for deterministic tests and offline workflows.
+local_zip_source
+    Local official historical-vintage ZIP file used with an explicit
+    ``vintage``.
+
+Returns
+DataBundle
+    Canonical date-indexed panel plus metadata containing dataset,
+    frequency, source, and vintage information.
+
+Example
+>>> import macroforecast as mf
+>>> bundle = mf.data.load_fred_md(vintage="2020-01")
+>>> bundle.panel.index.name
+'date'
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `vintage` | positional or keyword | `str \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_source` | keyword only | `str \| Path \| None` | `None` |
+| `local_zip_source` | keyword only | `str \| Path \| None` | `None` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_fred_md(...)
+```
+### load_fred_qd
+
+Qualified name: `macroforecast.data.loaders.load_fred_qd`
+
+#### Signature
+
+```python
+macroforecast.data.load_fred_qd(vintage: str | None = None, *, force: bool = False, cache_root: str | Path | None = None, local_source: str | Path | None = None, local_zip_source: str | Path | None = None) -> DataBundle
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `vintage` | positional or keyword | `str \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_source` | keyword only | `str \| Path \| None` | `None` |
+| `local_zip_source` | keyword only | `str \| Path \| None` | `None` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_fred_qd(...)
+```
+### load_fred_sd
+
+Qualified name: `macroforecast.data.loaders.load_fred_sd`
+
+#### Signature
+
+```python
+macroforecast.data.load_fred_sd(vintage: str | None = None, *, force: bool = False, cache_root: str | Path | None = None, local_source: str | Path | None = None, states: list[str] | None = None, variables: list[str] | None = None) -> DataBundle
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `vintage` | positional or keyword | `str \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_source` | keyword only | `str \| Path \| None` | `None` |
+| `states` | keyword only | `list[str] \| None` | `None` |
+| `variables` | keyword only | `list[str] \| None` | `None` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_fred_sd(...)
+```
+### load_fred_md_sd
+
+Qualified name: `macroforecast.data.loaders.load_fred_md_sd`
+
+#### Signature
+
+```python
+macroforecast.data.load_fred_md_sd(vintage: str | None = None, *, force: bool = False, cache_root: str | Path | None = None, local_fred_md_source: str | Path | None = None, local_fred_sd_source: str | Path | None = None, states: list[str] | None = None, variables: list[str] | None = None, frequency: str = "monthly", quarterly_to_monthly: str = "repeat_within_quarter", monthly_to_quarterly: str = "quarterly_average") -> DataBundle
+```
+
+#### Description
+
+Load FRED-MD plus FRED-SD as one canonical data bundle.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `vintage` | positional or keyword | `str \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_fred_md_source` | keyword only | `str \| Path \| None` | `None` |
+| `local_fred_sd_source` | keyword only | `str \| Path \| None` | `None` |
+| `states` | keyword only | `list[str] \| None` | `None` |
+| `variables` | keyword only | `list[str] \| None` | `None` |
+| `frequency` | keyword only | `str` | `"monthly"` |
+| `quarterly_to_monthly` | keyword only | `str` | `"repeat_within_quarter"` |
+| `monthly_to_quarterly` | keyword only | `str` | `"quarterly_average"` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_fred_md_sd(...)
+```
+### load_fred_qd_sd
+
+Qualified name: `macroforecast.data.loaders.load_fred_qd_sd`
+
+#### Signature
+
+```python
+macroforecast.data.load_fred_qd_sd(vintage: str | None = None, *, force: bool = False, cache_root: str | Path | None = None, local_fred_qd_source: str | Path | None = None, local_fred_sd_source: str | Path | None = None, states: list[str] | None = None, variables: list[str] | None = None, frequency: str = "quarterly", quarterly_to_monthly: str = "repeat_within_quarter", monthly_to_quarterly: str = "quarterly_average") -> DataBundle
+```
+
+#### Description
+
+Load FRED-QD plus FRED-SD as one canonical data bundle.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `vintage` | positional or keyword | `str \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_fred_qd_source` | keyword only | `str \| Path \| None` | `None` |
+| `local_fred_sd_source` | keyword only | `str \| Path \| None` | `None` |
+| `states` | keyword only | `list[str] \| None` | `None` |
+| `variables` | keyword only | `list[str] \| None` | `None` |
+| `frequency` | keyword only | `str` | `"quarterly"` |
+| `quarterly_to_monthly` | keyword only | `str` | `"repeat_within_quarter"` |
+| `monthly_to_quarterly` | keyword only | `str` | `"quarterly_average"` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_fred_qd_sd(...)
+```
+### load_custom_csv
+
+Qualified name: `macroforecast.data.loaders.load_custom_csv`
+
+#### Signature
+
+```python
+macroforecast.data.load_custom_csv(path: str | Path, *, date: str | None = None, date_col: str | int | None = None, columns: Iterable[str] | None = None, series_columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, default_frequency: str | None = None, metadata: Mapping[str, Any] | None = None, transform_codes: Mapping[str, int] | None = None, cache_root: str | Path | None = None, strict: bool = True, na_values: str | Sequence[str] | Mapping[str, str | Sequence[str]] | None = None, date_format: str | None = None, dayfirst: bool = False) -> DataBundle
+```
+
+#### Description
+
+Load a user CSV into a canonical ``DataBundle``.
+
+By default the CSV is read with pandas' normal parsing behavior and then
+normalized through :func:`as_panel`. ``na_values`` is passed to
+:func:`pandas.read_csv` when supplied. ``date_format`` and ``dayfirst`` parse
+the resolved date column before panel normalization, which is useful for
+strict loads with non-ISO or ambiguous dates.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `path` | positional or keyword | `str \| Path` | `required` |
+| `date` | keyword only | `str \| None` | `None` |
+| `date_col` | keyword only | `str \| int \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `series_columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `frequency_by_column` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `default_frequency` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `strict` | keyword only | `bool` | `True` |
+| `na_values` | keyword only | `str \| Sequence[str] \| Mapping[str, str \| Sequence[str]] \| None` | `None` |
+| `date_format` | keyword only | `str \| None` | `None` |
+| `dayfirst` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_custom_csv(...)
+```
+### load_custom_parquet
+
+Qualified name: `macroforecast.data.loaders.load_custom_parquet`
+
+#### Signature
+
+```python
+macroforecast.data.load_custom_parquet(path: str | Path, *, date: str | None = None, date_col: str | int | None = None, columns: Iterable[str] | None = None, series_columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, default_frequency: str | None = None, metadata: Mapping[str, Any] | None = None, transform_codes: Mapping[str, int] | None = None, cache_root: str | Path | None = None, strict: bool = True) -> DataBundle
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `path` | positional or keyword | `str \| Path` | `required` |
+| `date` | keyword only | `str \| None` | `None` |
+| `date_col` | keyword only | `str \| int \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `series_columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `frequency_by_column` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `default_frequency` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `strict` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_custom_parquet(...)
+```
+### list_vintages
+
+Qualified name: `macroforecast.data.loaders.list_vintages`
+
+#### Signature
+
+```python
+macroforecast.data.list_vintages(dataset: str, start: str | None = None, end: str | None = None) -> list[str]
+```
+
+#### Description
+
+Return monthly vintage labels between ``start`` and ``end`` inclusive.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `dataset` | positional or keyword | `str` | `required` |
+| `start` | positional or keyword | `str \| None` | `None` |
+| `end` | positional or keyword | `str \| None` | `None` |
+
+#### Returns
+
+`list[str]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.list_vintages(...)
+```
+### fred_md_vintages
+
+Qualified name: `macroforecast.data.vintage.fred_md_vintages`
+
+#### Signature
+
+```python
+macroforecast.data.fred_md_vintages(*, start: str | None = None, end: str | None = None, cache_root: str | Path | None = None, local_zip_source: str | Path | None = None, force: bool = False) -> VintageSource
+```
+
+#### Description
+
+Return a FRED-MD point-in-time source resolved by forecast origin.
+
+Parameters bound the available monthly vintage labels and cache/download
+behavior. ``start`` and ``end`` use ``YYYY-MM`` labels. ``cache_root``
+controls where raw vintage CSVs are stored. ``local_zip_source`` points to
+an official historical-vintage ZIP for offline or deterministic runs.
+``force=True`` refreshes cached vintage files.
+
+Returns
+VintageSource
+    Source object with ``resolve(origin_date)`` and
+    ``available_vintages()``. Resolving an origin returns the latest
+    FRED-MD vintage available at or before that origin and raises
+    ``VintageUnavailableError`` when no eligible vintage exists.
+
+Example
+>>> import pandas as pd
+>>> import macroforecast as mf
+>>> source = mf.data.fred_md_vintages(start="2020-01", end="2020-03")
+>>> labels = source.available_vintages()
+>>> isinstance(labels, tuple)
+True
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `start` | keyword only | `str \| None` | `None` |
+| `end` | keyword only | `str \| None` | `None` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_zip_source` | keyword only | `str \| Path \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`VintageSource`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.fred_md_vintages(...)
+```
+### fred_qd_vintages
+
+Qualified name: `macroforecast.data.vintage.fred_qd_vintages`
+
+#### Signature
+
+```python
+macroforecast.data.fred_qd_vintages(*, start: str | None = None, end: str | None = None, cache_root: str | Path | None = None, local_zip_source: str | Path | None = None, force: bool = False) -> VintageSource
+```
+
+#### Description
+
+Return a FRED-QD point-in-time source resolved by origin date.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `start` | keyword only | `str \| None` | `None` |
+| `end` | keyword only | `str \| None` | `None` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `local_zip_source` | keyword only | `str \| Path \| None` | `None` |
+| `force` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`VintageSource`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.fred_qd_vintages(...)
+```
+### with_static_extras
+
+Qualified name: `macroforecast.data.vintage.with_static_extras`
+
+#### Signature
+
+```python
+macroforecast.data.with_static_extras(source: VintageSource, extra: DataBundle | pd.DataFrame, *, join: "Literal['outer', 'inner', 'left']" = "outer") -> VintageSource
+```
+
+#### Description
+
+Join non-revised extra columns observable before each origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `source` | positional or keyword | `VintageSource` | `required` |
+| `extra` | positional or keyword | `DataBundle \| pd.DataFrame` | `required` |
+| `join` | keyword only | `Literal['outer', 'inner', 'left']` | `"outer"` |
+
+#### Returns
+
+`VintageSource`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.with_static_extras(...)
+```
+### same_period_predictors
+
+Qualified name: `macroforecast.data.policies.same_period_predictors`
+
+#### Signature
+
+```python
+macroforecast.data.same_period_predictors(data: DataSpec, *, policy: SamePeriodPolicy = "allow", lag: int = 1, columns: Iterable[str] | None = None, drop_missing: bool = False) -> DataSpec
+```
+
+#### Description
+
+Apply a same-period predictor policy to a run-level data spec.
+
+``allow`` records that same-period predictors are intentionally allowed.
+``lag`` shifts selected predictors by ``lag`` periods. ``drop`` removes
+selected predictors from the spec. ``forbid`` raises when selected
+same-period predictors are present. Targets are never shifted by this
+helper.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `DataSpec` | `required` |
+| `policy` | keyword only | `SamePeriodPolicy` | `"allow"` |
+| `lag` | keyword only | `int` | `1` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `drop_missing` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`DataSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.same_period_predictors(...)
+```

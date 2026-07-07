@@ -2,88 +2,155 @@
 
 [Back to custom extensions](index.md)
 
-Use output custom artifacts when the object is already a result, table, note,
-or diagnostic. Output functions do not run models or recompute metrics; they
-write named objects and record provenance.
+This page is generated from the live callable signatures.
 
-## write_artifacts
+## Callable Reference
+
+### select_outputs
+
+Qualified name: `macroforecast.output.core.select_outputs`
+
+#### Signature
 
 ```python
-mf.output.write_artifacts(
-    artifacts,
-    output_dir,
-    *,
-    formats=("json", "csv"),
-    manifest_format="json",
-    include_provenance=True,
-    provenance_fields=None,
-    compression="none",
-) -> mf.output.ArtifactManifest
+macroforecast.output.select_outputs(bundle: OutputBundle | Mapping[str, Any], *, objects: tuple[str, ...] | list[str]) -> OutputBundle
 ```
 
-### Input
+#### Description
 
-| Input object | Written as | Metadata behavior |
-| --- | --- | --- |
-| `ForecastResult` | forecast JSON plus forecast CSV | forecast metadata and stored-model sidecars recorded. |
-| `DataFrame` | one file per requested format | `attrs` preserved in JSON and manifest records. |
-| mapping | JSON | keys recorded in manifest metadata. |
-| list/tuple | JSON | sequence length recorded. |
-| scalar | JSON | object type recorded. |
+Select named outputs from a bundle or mapping.
 
-### Example
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `bundle` | positional or keyword | `OutputBundle \| Mapping[str, Any]` | `required` |
+| `objects` | keyword only | `tuple[str, ...] \| list[str]` | `required` |
+
+#### Returns
+
+`OutputBundle`
+
+#### Minimal Use
 
 ```python
-manifest = mf.output.write_artifacts(
-    {
-        "forecast_result": result,
-        "scores": scores,
-        "custom_test": test.to_dict(),
-        "custom_interpretation": interpretation,
-        "run_notes": {"design": "local robustness check", "accepted": True},
-    },
-    "results/custom_flow",
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.select_outputs(...)
 ```
 
-### Output
+### write_artifacts
 
-| Manifest field | Meaning |
-| --- | --- |
-| `artifacts` | Mapping from written file name to path. |
-| `records` | One `ArtifactRecord` per written object or stored-model sidecar. |
-| `provenance` | Macroforecast version, Python/platform, git, and package versions unless disabled. |
-| `metadata_schema` | `{"kind": "artifact_manifest", "version": 1}`. |
+Qualified name: `macroforecast.output.core.write_artifacts`
 
-## bundle_outputs With Custom Extra
+#### Signature
 
 ```python
-bundle = mf.output.bundle_outputs(
-    forecasts=result,
-    evaluation=report,
-    metadata={"study": "custom"},
-    extra={"custom_diagnostic": diagnostic_table},
-)
-
-manifest = mf.output.write_artifacts(bundle, "results/custom_bundle")
+macroforecast.output.write_artifacts(artifacts: Mapping[str, Any] | ForecastResult | pd.DataFrame | OutputBundle, output_dir: str | Path, *, formats: tuple[ExportFormat, ...] = ('json', 'csv'), manifest_format: ManifestFormat = "json", include_provenance: bool = True, provenance_fields: tuple[str, ...] | None = None, compression: CompressionFormat = "none", layout: ArtifactLayout = "flat") -> ArtifactManifest
 ```
 
-Use `extra={...}` for custom objects that should travel with the standard
-forecast/evaluation bundle.
+#### Description
 
-## Reporting Flow
+Write forecast/package artifacts and a reproducibility manifest.
 
-If the custom object is a paper-facing table, format it before writing:
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `artifacts` | positional or keyword | `Mapping[str, Any] \| ForecastResult \| pd.DataFrame \| OutputBundle` | `required` |
+| `output_dir` | positional or keyword | `str \| Path` | `required` |
+| `formats` | keyword only | `tuple[ExportFormat, ...]` | `("json", "csv")` |
+| `manifest_format` | keyword only | `ManifestFormat` | `"json"` |
+| `include_provenance` | keyword only | `bool` | `True` |
+| `provenance_fields` | keyword only | `tuple[str, ...] \| None` | `None` |
+| `compression` | keyword only | `CompressionFormat` | `"none"` |
+| `layout` | keyword only | `ArtifactLayout` | `"flat"` |
+
+#### Returns
+
+`ArtifactManifest`
+
+#### Minimal Use
 
 ```python
-paper_table = mf.reporting.report_table(
-    diagnostic_table,
-    caption="Custom diagnostic",
-    label="tab:custom_diagnostic",
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.output.write_artifacts(...)
+```
 
-mf.output.write_artifacts(
-    {"custom_diagnostic": paper_table.data},
-    "results/custom_tables",
-)
+### report_table
+
+Qualified name: `macroforecast.reporting.core.report_table`
+
+#### Signature
+
+```python
+macroforecast.reporting.report_table(table: Any, *, columns: Sequence[str] | None = None, rename: Mapping[str, str] | None = None, sort_by: str | Sequence[str] | None = None, ascending: bool | Sequence[bool] = True, index: bool = False, precision: int = 3, percent_columns: Sequence[str] = (), missing: str = "", caption: str | None = None, label: str | None = None, notes: Sequence[str] = (), metadata: Mapping[str, Any] | None = None) -> ReportTable
+```
+
+#### Description
+
+Return a presentation-ready table without writing files.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `table` | positional or keyword | `Any` | `required` |
+| `columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `sort_by` | keyword only | `str \| Sequence[str] \| None` | `None` |
+| `ascending` | keyword only | `bool \| Sequence[bool]` | `True` |
+| `index` | keyword only | `bool` | `False` |
+| `precision` | keyword only | `int` | `3` |
+| `percent_columns` | keyword only | `Sequence[str]` | `()` |
+| `missing` | keyword only | `str` | `""` |
+| `caption` | keyword only | `str \| None` | `None` |
+| `label` | keyword only | `str \| None` | `None` |
+| `notes` | keyword only | `Sequence[str]` | `()` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`ReportTable`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.report_table(...)
+```
+
+### render_tables
+
+Qualified name: `macroforecast.reporting.core.render_tables`
+
+#### Signature
+
+```python
+macroforecast.reporting.render_tables(value: ReportBundle | Mapping[str, ReportTable | Any], *, format: RenderFormat = "latex") -> dict[str, str]
+```
+
+#### Description
+
+Render all tables in a bundle or mapping.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `value` | positional or keyword | `ReportBundle \| Mapping[str, ReportTable \| Any]` | `required` |
+| `format` | keyword only | `RenderFormat` | `"latex"` |
+
+#### Returns
+
+`dict[str, str]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.render_tables(...)
 ```

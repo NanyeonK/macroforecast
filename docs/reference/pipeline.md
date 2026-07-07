@@ -1,622 +1,1338 @@
-# `macroforecast.pipeline`
+# macroforecast.pipeline
 
-A comprehensive pseudo-out-of-sample (POOS) forecasting pipeline that orchestrates
-the existing `macroforecast` building blocks. You declare a set of **arms** (each a
-full preprocessing/features/model configuration) and the pipeline runs them through
-`forecasting.run`, evaluates every contender against a benchmark with relative RMSE,
-Diebold-Mariano, Clark-West and the Model Confidence Set, builds forecast
-combinations, and assembles a single `PipelineReport`. Targets are resolved from the
-FRED-MD/QD t-code, and ML arms can be interpreted (SHAP/ALE/PDP) without re-running.
+[Back to reference](index.md)
 
-## Terminology
+Comprehensive pseudo-out-of-sample pipeline specs, execution, evaluation, interpretation, and result stores.
 
-The pipeline uses four terms consistently.
+Guide context: [../guide/index.md](../guide/index.md).
 
-- **cell** -- the execution unit the pipeline manages: one `arm` applied to one
-  `target` over the window for a horizon-group. The pipeline enumerates and
-  schedules cells, and each cell is executed by exactly one `run()` call. The
-  serial backend groups all horizons of a (target, arm) into one cell; the
-  parallel backend splits one horizon per cell.
-- **run()** -- the atomic forecasting function (`forecasting.run`) that executes
-  one cell (one model, one target, over the window). "run" is the function and the
-  verb; the execution unit it produces is a cell, not "a run".
-- **arm** -- a target-agnostic configuration (preprocessing + features + a single
-  model). It is not a cell by itself; applied to a target and a horizon it forms a
-  cell, and in the evaluation it appears as one contender.
-- **contender** -- an arm as it appears in the evaluation comparison, the named
-  entity compared via DM/CW/MCS. One arm is one contender; forecast combinations
-  are additional contenders.
+## Public Symbols
 
-In one line: **arm × target × horizon → cell = one run(); arm = contender.**
-
-## Entry points
-
-| Symbol | Summary |
-| --- | --- |
-| `pipeline_spec(...)` | Validating generator that builds a `PipelineSpec`. |
-| `model_arms(models, ...)` | Build one `Arm` per model for a pure model comparison. |
-| `run_pipeline(spec)` | Run arms, evaluate, and return a `PipelineReport`. |
-| `rescore(checkpoint_dir, spec)` | Re-score a checkpointed run from disk alone (no refitting); returns a `PipelineReport`. |
-| `result_store_summary(store)` | Summarise stored result cells from a cross-run result store. |
-| `purge_result_store(store, *, before=None, version=None, digests=None)` | Delete matching result-store cells and return the number removed. |
-| `interpret_pipeline(report, *, methods, which_fit, arms)` | Deferred multi-method ML interpretation. |
-| `run_arms(spec)` | Execute every cell into the master forecast frame (lower-level; name retained for back-compat). |
-| `evaluate(master, spec)` | Accuracy + requested forecast-comparison tests + combinations on a master frame. |
-| `apply_combinations(master, spec)` | Append cross-arm combination contenders. |
-| `resolve_target(target, *, data, tcode, tcode_map, reduce_i2)` | Resolve a target's (policy, transform). |
-| `is_vintage_aware(spec)` | Return whether `spec.data` is a `VintagePanelSpec`. |
-| `contender_names(arm)` | The contender label for an arm. A contender IS exactly an arm (one model per arm), so this returns `[arm.name]`. |
-
-## Configuration objects
-
-- `PipelineSpec` -- validated, frozen run configuration.
-- `Arm` -- a target-agnostic configuration with exactly ONE model: name, model, preprocessing, features, params, interpret. An arm is one contender in the evaluation; applied to a target and horizon it forms a cell. Comparing models means multiple arms identical except for `model`; comparing feature cases means arms differing in features. A list/mapping of models in one arm is rejected.
-- `TargetSpec` -- a target and how its forecast object is defined (transform, policy, reduce_i2).
-- `ResolvedTarget` -- a target with its forecast policy and transform resolved.
-- `InterpretSpec` -- ML interpretation request (methods, which_fit, background, top_k).
-- `EvalSpec` -- benchmark, metrics, tests, loss, per-test options, MCS alpha, evaluation-window subsamples, and calibration alpha. `metrics` and `tests` are live configuration (see "Custom metrics, significance tests, and loss" below), not documentation-only fields; `metrics`/`tests` also carry the opt-in density/calibration names (see "Density and interval forecasting" below). `by`, `primary_axis`, and `multiple_testing` are reserved and rejected when set away from their defaults.
-- `CombinationContender` -- a forecast combination that becomes an additional contender.
-- `PipelineReport` -- output: forecasts, accuracy, significance, mcs, density, calibration, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`. `density`/`calibration` are empty frames unless `EvalSpec.metrics`/`tests` explicitly requests a density metric or calibration test. `provenance` is self-certifying by default (`pipeline_spec(..., provenance_level="full")`, the default) -- see "Provenance" below.
-- `TCODE_TARGET_MAP` -- FRED t-code to (forecast_policy, target_transform) mapping.
-- `is_vintage_aware(spec)` -- read-only predicate for callers that need to branch
-  on per-origin vintage data without duplicating the `VintagePanelSpec` check.
-
-## t-code to target mapping
-
-The forecast object is the h-period cumulation (`direct_average`) of the
-transformation implied by the target's t-code, not the raw single-period transform.
-I(2) price/level series are reduced to the first-difference object (`reduce_i2`).
-
-| t-code | forecast policy | transform |
+| Symbol | Kind | Summary |
 | --- | --- | --- |
-| 1 | direct | level |
-| 2 | direct_average | change |
-| 3 | direct_average | change |
-| 4 | direct | level |
-| 5 | direct_average | log_growth |
-| 6 | direct_average | log_growth |
-| 7 | direct_average | growth |
+| `TCODE_TARGET_MAP` | data | dict() -> new empty dictionary |
+| `auto_parallelism` | function | Return ``(cell_workers, model_threads)`` saturating ``cores``. |
+| `rescore` | function | Re-score a saved pipeline run from its checkpoint directory alone. |
+| `result_store_summary` | function | Summarise result-store manifests, one row per readable cell manifest. |
+| `purge_result_store` | function | Delete result-store cells matching the supplied filters and return a count. |
+| `run_arms` | function | Execute every cell and concatenate into one master forecast frame. |
+| `run_pipeline` | function | Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport. |
+| `interpret_pipeline` | function | Interpret the interpretable arms of a completed pipeline run. |
+| `PipelineReport` | class | Standard pipeline output (mutable: interpretation is filled in later). |
+| `evaluate` | function | Run the full evaluation: combinations -> accuracy + significance + MCS |
+| `evaluate_cross_policy` | function | Score every ``(arm, forecast_policy)`` contender against ONE benchmark fixed |
+| `apply_combinations` | function | Append cross-arm combination contenders to the master forecast frame. |
+| `Arm` | class | A target-agnostic configuration: preprocessing + features + a single model. |
+| `CombinationContender` | class | A forecast combination that becomes an additional contender. |
+| `DIRECT_POLICY_GUARD_MODELS` | data | frozenset() -> empty frozenset object |
+| `EvalSpec` | class | Automatic evaluation and significance-testing configuration. |
+| `InterpretSpec` | class | ML interpretation request for an arm (deferred, multi-method). |
+| `PipelineSpec` | class | Validated, frozen configuration produced by :func:`pipeline_spec`. |
+| `ResolvedTarget` | class | A target with its forecast policy and transform resolved. |
+| `SubsampleWindow` | class | Evaluation-window filter applied to forecast target dates. |
+| `TargetSpec` | class | A forecast target and how its forecast object is defined. |
+| `contender_names` | function | Display contender labels for an arm. A contender IS exactly an arm. |
+| `is_vintage_aware` | function | Return whether a pipeline spec runs against per-origin vintage data. |
+| `model_arms` | function | Build one :class:`Arm` per model for a pure model comparison. |
+| `pipeline_spec` | function | Validate and build a :class:`PipelineSpec`. |
+| `resolve_target` | function | Resolve a target to its (forecast_policy, target_transform). |
 
-Unsupported direct-like model combinations are rejected at spec-build time by
-default. `pipeline_spec(..., on_unsupported_direct="warn")` preserves the old
-warning-only weak-benchmark behavior, and
-`pipeline_spec(..., on_unsupported_direct="reroute")` runs only the affected
-arm-target cells as `forecast_policy="recursive"`.
+## Data And Module Values
 
-## Example
+### `TCODE_TARGET_MAP`
+
+Kind: `data`
+
+```python
+TCODE_TARGET_MAP = dict(7 entries: 1, 2, 3, 4, 5, 6, 7)
+```
+### `DIRECT_POLICY_GUARD_MODELS`
+
+Kind: `data`
+
+```python
+DIRECT_POLICY_GUARD_MODELS = frozenset({'arima', 'auto_arima', 'bvar_minnesota', 'bvar_normal_inverse_wishart', 'dfm_mixed_mariano_murasawa', 'dfm_unrestricted_midas', 'ets', 'favar', 'holt_winters', 'naive', 'random_walk_drift', 'seasonal_naive', 'stlf', 'theta_met...
+```
+
+## Callable And Class Reference
+
+### auto_parallelism
+
+Qualified name: `macroforecast.pipeline.parallelism.auto_parallelism`
+
+#### Signature
+
+```python
+macroforecast.pipeline.auto_parallelism(n_cells: int, *, cores: int | None = None, reserve: int = 0) -> tuple[int, int]
+```
+
+#### Description
+
+Return ``(cell_workers, model_threads)`` saturating ``cores``.
+
+Cell-level parallelism comes first: one worker per cell up to the core budget.
+Whatever cores remain become per-cell model-internal threads for the
+parallelizable models (random_forest, gradient_boosting, xgboost, lightgbm).
+The product ``cell_workers * model_threads`` is always ``<= cores``, so the CPU
+is never oversubscribed.
+
+Parameters
+n_cells:
+    Number of independent ``(arm x target x horizon)`` cells to schedule.
+cores:
+    Core budget. Defaults to the affinity count
+    (``len(os.sched_getaffinity(0))``) -- the cores this process may actually
+    run on, which respects cgroup/taskset pinning.
+reserve:
+    Cores to hold back (e.g. for the parent process / other work) before the
+    split. ``cores`` is reduced by ``reserve`` (floored at 1).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_cells` | positional or keyword | `int` | `required` |
+| `cores` | keyword only | `int \| None` | `None` |
+| `reserve` | keyword only | `int` | `0` |
+
+#### Returns
+
+`tuple[int, int]`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-from macroforecast.pipeline import Arm, EvalSpec, CombinationContender, pipeline_spec, run_pipeline
-
-spec = pipeline_spec(
-    data=bundle,                                  # carries FRED transform_codes
-    targets=["INDPRO", "CPIAUCSL"],               # resolved from t-codes
-    horizons=[1, 3, 12],
-    window=mf.window.from_cutoffs(test_start="1990-01", horizon=1, embargo=0),
-    arms=[
-        Arm("AR", model="ar"),                    # benchmark
-        Arm("RF", model="random_forest", interpret=("shap", "ale")),
-        Arm("MARX", model="ridge", preprocessing=marx_spec),   # transformation comparison
-    ],
-    evaluation=EvalSpec(benchmark="AR", tests=["dm", "cw", "mcs"]),
-    combinations=[CombinationContender("POOL", method="constrained_ls")],
-    n_jobs=8,                                     # fan (arm × target × horizon) cells across 8 processes
-)
-report = run_pipeline(spec)
-report.accuracy        # contender x target x horizon relative RMSE (common sample)
-report.significance    # Diebold-Mariano and Clark-West p-values vs the benchmark
-report.mcs             # Model Confidence Set membership
-report.leakage_audit   # window.validate() warnings (per horizon)
-
-from macroforecast.pipeline import interpret_pipeline
-interpret_pipeline(report, methods=("shap", "ale"))   # deferred, no re-forecast
+# Call with the signature above:
+# mf.pipeline.auto_parallelism(...)
 ```
+### rescore
 
-## Comparing models (`model_arms`)
+Qualified name: `macroforecast.pipeline.rescore.rescore`
 
-Since an `Arm` is exactly ONE model, a pure model comparison is "several arms
-identical except `model`". Writing one `Arm` per model by hand is verbose, so
-`model_arms(...)` builds them for you:
+#### Signature
 
 ```python
-from macroforecast.pipeline import model_arms, pipeline_spec, EvalSpec
-
-arms = model_arms(["ar", "random_forest", "far"], features=feats, preprocessing=pp)
-spec = pipeline_spec(..., arms=arms, evaluation=EvalSpec(benchmark="ar"))
+macroforecast.pipeline.rescore(checkpoint_dir: str | Path, spec: "'Any'") -> "'Any'"
 ```
 
-Each model becomes one `Arm` (one contender; each of its (target, horizon) is one
-cell run by one `run()`), and the contender is the arm name. Arm names default to the model name (`str(model)` /
-`ModelSpec.name` / `callable.__name__`); pass a `Mapping[name -> model]` or
-`names=[...]` to label them explicitly. All arms share the given `preprocessing`,
-`features`, and evaluation config.
+#### Description
 
-`params` and `model_selection` are shared by every arm unless given as a Mapping
-whose keys are exactly the arm names, in which case each entry is applied to its
-own arm. A plain shared dict of hyperparameters (whose keys are hyperparameter
-names, not arm names) is therefore unambiguously shared. `nested_in_benchmark` is
-a bool shared by all, or a set/sequence of arm names that nest the benchmark.
+Re-score a saved pipeline run from its checkpoint directory alone.
 
-This shares all config, so it is for **pure model comparison**. Comparing feature
-cases (arms differing in `features` or `preprocessing`) still needs explicit
-`Arm` objects built by hand.
+Walks every (target, arm, horizon) cell ``spec`` describes, loads that cell's
+persisted lean forecast records from
+``<checkpoint_dir>/<target>__<arm>/h<h>/origin_*.parquet`` (the exact layout
+``run_pipeline(spec)`` writes when ``spec.checkpoint_dir`` is set -- see
+``pipeline/run.py::_cell_checkpoint_path`` and ``forecasting/runner.py``'s
+per-horizon ``h<h>`` subdirectory), reassembles the master forecast frame
+(attaching ``arm``/``contender`` from ``spec`` itself -- the lean checkpoint
+schema does not carry them, only ``target``/``horizon``/``model``/etc.), and
+runs the standard ``evaluate()`` used by ``run_pipeline``.
 
-### What is held fixed vs varied (the reuse contract)
+Parameters
+checkpoint_dir:
+    The directory ``spec.checkpoint_dir`` pointed at during the original run
+    (or any directory with that same layout).
+spec:
+    The ``PipelineSpec`` the checkpointed run used -- NOT necessarily the same
+    object with ``checkpoint_dir`` set to this path; ``rescore`` reads records
+    from ``checkpoint_dir`` regardless of what ``spec.checkpoint_dir`` says.
+    Every field that determines a cell's identity (targets, arms, horizons)
+    must match the original run, or cells will not be found.
 
-A controlled comparison changes ONE stage and holds the rest fixed. The pipeline
-reuses the fixed stages instead of recomputing them per variant, and the boundary is
-determined by where the varied stage sits in the `preprocessing -> features -> model`
-chain.
+Returns
+PipelineReport
+    The same report type ``run_pipeline`` returns, with the evaluation fields
+    (``forecasts``, ``accuracy``, ``significance``, ``mcs``, ``density``,
+    ``calibration``) populated exactly as a live run would produce from the
+    same forecasts -- ``density``/``calibration`` are only non-empty when
+    ``spec.evaluation.metrics``/``tests`` requests a density metric or
+    calibration test AND the checkpointed forecasts actually carry the
+    needed ``variance_prediction``/``quantile_predictions`` columns (see
+    ``forecasting/checkpoint.py``'s lean schema). Fields that require
+    having actually EXECUTED the run are explicitly absent/best-effort:
 
-| Comparison | Computed once and REUSED | Recomputed per variant |
+    - ``interpretation`` is always ``None`` (interpretation needs the fitted
+      model; re-fit via ``interpret_pipeline`` on a live run instead).
+    - ``failed_cells`` is always empty -- a cell that failed during the
+      original run wrote no checkpoint files and is indistinguishable here
+      from a cell that never ran.
+    - ``empty_cells`` is best-effort: a (target, horizon) is reported empty
+      only when NONE of its arms produced any checkpoint rows; an arm that
+      failed outright (vs. produced zero rows) cannot be distinguished from
+      one that was simply never run with this checkpoint_dir.
+    - ``provenance``/``leakage_audit`` carry a ``rescored_from`` marker and a
+      note that they were not recomputed from a live run.
+
+Raises
+ValueError
+    If no cell under ``checkpoint_dir`` yields any checkpoint records at all
+    (an empty or entirely-mismatched directory) -- a clear, actionable error
+    instead of a silently-empty report.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `checkpoint_dir` | positional or keyword | `str \| Path` | `required` |
+| `spec` | positional or keyword | `'Any'` | `required` |
+
+#### Returns
+
+`'Any'`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.rescore(...)
+```
+### result_store_summary
+
+Qualified name: `macroforecast.pipeline.result_store.result_store_summary`
+
+#### Signature
+
+```python
+macroforecast.pipeline.result_store_summary(store: str | Path) -> pd.DataFrame
+```
+
+#### Description
+
+Summarise result-store manifests, one row per readable cell manifest.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `store` | positional or keyword | `str \| Path` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.result_store_summary(...)
+```
+### purge_result_store
+
+Qualified name: `macroforecast.pipeline.result_store.purge_result_store`
+
+#### Signature
+
+```python
+macroforecast.pipeline.purge_result_store(store: str | Path, *, before: str | datetime | None = None, version: str | None = None, digests: Sequence[str] | None = None) -> int
+```
+
+#### Description
+
+Delete result-store cells matching the supplied filters and return a count.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `store` | positional or keyword | `str \| Path` | `required` |
+| `before` | keyword only | `str \| datetime \| None` | `None` |
+| `version` | keyword only | `str \| None` | `None` |
+| `digests` | keyword only | `Sequence[str] \| None` | `None` |
+
+#### Returns
+
+`int`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.purge_result_store(...)
+```
+### run_arms
+
+Qualified name: `macroforecast.pipeline.run.run_arms`
+
+#### Signature
+
+```python
+macroforecast.pipeline.run_arms(spec: PipelineSpec) -> pd.DataFrame
+```
+
+#### Description
+
+Execute every cell and concatenate into one master forecast frame.
+
+(The name is retained for back-compat; the managed unit is a cell -- one arm
+applied to one target over the window for a horizon-group -- not an arm.)
+Columns include arm, model, contender, target, horizon, origin, date,
+prediction, actual, target_transform, forecast_policy. Each cell runs its arm
+with its own preprocessing/features/model against its target's resolved
+(forecast_policy, target_transform).
+
+The pipeline MANAGES atomic ``run()`` calls over (target, arm, horizon-group)
+cells. When ``spec.n_jobs > 1`` the cells run across a process pool, one horizon
+per cell; the result is numerically identical to the serial multi-horizon path.
+Per-cell failures are isolated -- see :func:`run_pipeline` /
+``PipelineReport.failed_cells`` for how they are surfaced.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `spec` | positional or keyword | `PipelineSpec` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.run_arms(...)
+```
+### run_pipeline
+
+Qualified name: `macroforecast.pipeline.run.run_pipeline`
+
+#### Signature
+
+```python
+macroforecast.pipeline.run_pipeline(spec: PipelineSpec)
+```
+
+#### Description
+
+Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `spec` | positional or keyword | `PipelineSpec` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.run_pipeline(...)
+```
+### interpret_pipeline
+
+Qualified name: `macroforecast.pipeline.interpret.interpret_pipeline`
+
+#### Signature
+
+```python
+macroforecast.pipeline.interpret_pipeline(report: PipelineReport, *, methods: "'tuple[str, ...] | None'" = None, which_fit: str = "auto", arms: "'tuple[str, ...] | None'" = None, background: Any = None) -> dict[str, Any]
+```
+
+#### Description
+
+Interpret the interpretable arms of a completed pipeline run.
+
+``methods`` overrides each arm's ``InterpretSpec.methods`` when given. Returns a
+nested dict ``{arm: {model[:target]: {method: table}}}`` stored on
+``report.interpretation``. One arm failing to fit degrades to an error frame
+and never aborts the others.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `PipelineReport` | `required` |
+| `methods` | keyword only | `'tuple[str, ...] \| None'` | `None` |
+| `which_fit` | keyword only | `str` | `"auto"` |
+| `arms` | keyword only | `'tuple[str, ...] \| None'` | `None` |
+| `background` | keyword only | `Any` | `None` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.interpret_pipeline(...)
+```
+### PipelineReport
+
+Qualified name: `macroforecast.pipeline.spec.PipelineReport`
+
+#### Signature
+
+```python
+macroforecast.pipeline.PipelineReport(forecasts: "'Any'", accuracy: "'Any'", significance: "'Any'", mcs: "'Any'", provenance: Mapping[str, Any] = <factory>, leakage_audit: Mapping[str, Any] = <factory>, interpretation: Mapping[str, Any] | None = None, model_store: str = "trained_model", spec: "'Any'" = None, failed_cells: "'Sequence[Mapping[str, Any]]'" = <factory>, empty_cells: "'Sequence[Mapping[str, Any]]'" = <factory>, density: "'Any'" = None, calibration: "'Any'" = None) -> None
+```
+
+#### Description
+
+Standard pipeline output (mutable: interpretation is filled in later).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `'Any'` | `required` |
+| `accuracy` | positional or keyword | `'Any'` | `required` |
+| `significance` | positional or keyword | `'Any'` | `required` |
+| `mcs` | positional or keyword | `'Any'` | `required` |
+| `provenance` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+| `leakage_audit` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+| `interpretation` | positional or keyword | `Mapping[str, Any] \| None` | `None` |
+| `model_store` | positional or keyword | `str` | `"trained_model"` |
+| `spec` | positional or keyword | `'Any'` | `None` |
+| `failed_cells` | positional or keyword | `'Sequence[Mapping[str, Any]]'` | `<factory>` |
+| `empty_cells` | positional or keyword | `'Sequence[Mapping[str, Any]]'` | `<factory>` |
+| `density` | positional or keyword | `'Any'` | `None` |
+| `calibration` | positional or keyword | `'Any'` | `None` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.PipelineReport(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
 | --- | --- | --- |
-| **Model** (arms differ in `model` only) | data load, window/origin schedule, the per-origin preprocessing `fit` **and** `transform` (EM/factor imputation), **and** the per-origin feature-builder `fit` (PCA/MARX/SIR/etc. numerical state) | the feature `transform` (building X/y from the fitted builder) and the model fit/predict |
-| **Feature** (arms differ in `features`, same `preprocessing`) | data, window/origins, per-origin preprocessing | feature build (fit + transform) + model |
-| **Preprocessing** (arms differ in `preprocessing`) | data, window/origin schedule | the preprocessing itself (it is the thing being compared) + everything downstream |
+| `forecasts` | `'Any'` | `required` |
+| `accuracy` | `'Any'` | `required` |
+| `significance` | `'Any'` | `required` |
+| `mcs` | `'Any'` | `required` |
+| `provenance` | `Mapping[str, Any]` | `default_factory` |
+| `leakage_audit` | `Mapping[str, Any]` | `default_factory` |
+| `interpretation` | `Mapping[str, Any] \| None` | `None` |
+| `model_store` | `str` | `"trained_model"` |
+| `spec` | `'Any'` | `None` |
+| `failed_cells` | `'Sequence[Mapping[str, Any]]'` | `default_factory` |
+| `empty_cells` | `'Sequence[Mapping[str, Any]]'` | `default_factory` |
+| `density` | `'Any'` | `None` |
+| `calibration` | `'Any'` | `None` |
 
-The load-bearing case is **model comparison**: the dominant per-origin costs -- the
-`FittedPreprocessor` fit and its EM/factor transform of the panel, AND the
-feature-builder fit -- are each computed once per origin and reused across every arm
-AND every horizon of the same target. So comparing `N` models over `M` horizons runs
-preprocessing and feature-fitting once per origin, not `N x M` times. This reuse is
-real only when the arms **share one spec-level preprocessing** -- i.e. `preprocessing=`
-is set on `pipeline_spec` (or `model_arms`) and each `Arm.preprocessing is None` --
-AND do not override `Arm.window` (a window override changes which rows fall in the
-per-origin fit sample, so it opts out of both the preprocessing and feature-fit
-reuse). An arm that carries its OWN `preprocessing` or `window` opts out and
-recomputes both stages (correct for a preprocessing comparison, or a genuinely
-independent per-arm window, where each variant must differ). The preprocessing reuse
-is keyed on `(PreprocessSpec, target, origin_pos)` and is horizon-independent; the
-feature-fit reuse is keyed on a content digest of the `FeatureSpec` (which already
-captures horizon/forecast-policy-dependence -- e.g. a supervised
-`sliced_inverse_regression` feature step) plus the EXACT fit-sample row-position
-bounds for that origin, so it never leaks a different spec's, origin's, or arm's fit
-even when the position-bounds-based key alone is asked to arbitrate (see
-`macroforecast/forecasting/feature_stage.py`). The feature *transform* step (applying
-the shared fit to build X/y) is NOT shared -- it is cheap relative to the fit for the
-supported feature methods, and doing so safely needs additional per-arm bookkeeping
-that duplicates most of the fit-sharing complexity for comparatively little gain, so
-it is left recomputed per arm.
+#### Public Methods
 
-For **preprocessing comparison** the preprocessing necessarily differs per arm and is
-recomputed -- that is the comparison. Everything upstream (the same `data` bundle and
-`window`/origin schedule) is shared trivially, and two variants that share an
-identical `(spec, target, origin)` sub-fit can still be deduplicated across processes
-and runs via the on-disk `preprocessing_cache_dir` (`PreprocessorStore`).
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_frame` | `to_frame(self) -> "'Any'"` | Return the master forecast frame. |
+### evaluate
 
-### Cross-run result store
+Qualified name: `macroforecast.pipeline.evaluate.evaluate`
 
-`pipeline_spec(..., result_store="path/to/store")` enables cross-run reuse at the
-cell level: one stored payload per `(target, horizon, arm)`. A stored cell is reused
-only when its digest matches the resolved target, horizon, model identity and
-parameters, feature/preprocessing/window/selection choices, vintage mode, and the
-same data fingerprint that pipeline provenance records. Reused cells are loaded back
-into the master forecast frame before evaluation, so `report.forecasts`,
-`report.accuracy`, and significance tables behave as if the cell had just been
-computed.
-
-This is the intended workflow for incremental horse races. Run a two-model
-comparison with `result_store=...`; later add a third `Arm` and use the same store.
-The old two cells are reused and only the new arm is fit. If `preprocessing_cache_dir`
-is also shared, the prepared per-origin preprocessing base panels are reused across
-the later run too, so adding a model does not re-fit or re-transform the common
-preprocessing base.
-
-Custom code is conservative by default. A user-owned model function, custom feature
-step, custom preprocessing step, metric callable, or loss callable makes the cell
-undigestible unless that callable carries a stable string attribute named
-`__mf_digest__`. Undigestible cells are always recomputed and never stored. Use
-`__mf_digest__` only when you are willing to treat that string as the callable's
-semantic version; if you edit the callable, change the string or do not trust reuse.
-
-The result store assumes a single writer. Writes are atomic at the file level, so a
-crash leaves a miss rather than a half-readable cell, but concurrent writers to the
-same directory are outside the contract. Use `result_store_summary(store)` to inspect
-stored cells and `purge_result_store(store, before=..., version=..., digests=...)` to
-remove selected cells.
-
-These invariants are pinned by `tests/pipeline/test_preprocessing_share.py`
-(cross-arm and on-disk dedup, serial==parallel),
-`tests/pipeline/test_crosshorizon_transform_dedup.py` (the per-origin fit and heavy
-transform each run exactly once per origin regardless of arm and horizon count), and
-`tests/pipeline/test_feature_cache_sharing.py` (the per-origin feature-builder fit
-runs exactly once per origin across arms, including with no spec-level preprocessing
-at all; a per-arm `window`/`preprocessing` override correctly opts out and still
-produces byte-identical forecasts; `never`/interval feature-update cadences keep
-their exact single-fit semantics under sharing).
-
-## Parallel execution (`n_jobs`)
-
-`pipeline_spec(..., n_jobs=N)` parallelises the pseudo-out-of-sample replication
-natively, so a fan-out across cores no longer needs hand-rolled shell processes.
-
-- `n_jobs=1` (default) keeps the sequential path byte-for-byte: each `(target, arm)`
-  is one cell run as a consolidated multi-horizon `run()` that shares a single
-  per-origin preprocessing cache across horizons (EM imputation is computed once
-  per origin).
-- `n_jobs>1` splits the work into `(arm × target × horizon)` cells and runs them
-  across a `ProcessPoolExecutor` with `min(n_jobs, n_cells)` workers. Each cell is a
-  single-horizon `run()`, so it trades the cross-horizon EM-sharing for wall-clock
-  parallelism: every cell recomputes its own preprocessing. On a many-core machine
-  this finishes in a fraction of the sequential wall-clock.
-- The parallel path is **deterministic**: every cell uses `spec.seed` and the
-  per-cell computation is independent of sibling cells, so the assembled forecast
-  frame and every downstream accuracy table are numerically identical to `n_jobs=1`.
-- Workers coordinate through the existing per-`(target, arm, horizon)` checkpoints
-  (`checkpoint_dir`), which are already namespaced so parallel processes never
-  collide. Each worker caps nested BLAS/OpenMP threads to one to avoid
-  oversubscribing cores.
-- **Memory scales with `n_jobs`**: each worker holds its own copy of the data panel,
-  so peak memory is roughly `n_jobs ×` the single-process footprint.
-
-### `n_jobs="auto"`
-
-`pipeline_spec(..., n_jobs="auto")` removes the need to hand-tune the worker count.
-It inspects the core budget (the affinity count, `len(os.sched_getaffinity(0))`, which
-respects cgroup/taskset pinning) and the work structure
-(`len(targets) × len(arms) × len(horizons)` cells), then splits the cores between
-**cell workers** and **per-cell model-internal threads** so the CPU is saturated
-without oversubscription (`cell_workers × model_threads ≤ cores`). Cell-level
-parallelism comes first (one worker per cell up to the core count); leftover cores
-become model-internal threads handed to the parallelizable models
-(`random_forest`, `gradient_boosting`, `xgboost`, `lightgbm`) inside each worker.
-The single-threaded models (`ar`, `ols`, `ridge`, `lasso`, `elastic_net`, `far`)
-ignore the thread budget and are unaffected. The resolved cell-worker count is stored
-as `PipelineSpec.n_jobs` and the per-cell thread budget as `PipelineSpec.model_threads`.
-
-This also fixes a latent oversubscription: previously a tree model inside a parallel
-worker defaulted its internal `n_jobs` to `'auto'` (= full CPU count), so `N` workers
-each spawned `cpu_count` threads. Each worker now pins its model-internal threads to
-`model_threads`. The split changes only the number of internal threads, **not** the
-numerical result (tree training is deterministic in `random_state` regardless of the
-thread count), so a `n_jobs="auto"` run is byte-for-byte identical to `n_jobs=1`.
-
-## Provenance (what a referee can verify from the report)
-
-`PipelineReport.provenance` is self-certifying by default: everything a referee
-needs to verify and attempt to reproduce a result lives in the report object
-itself, without re-running anything or having access to the original script.
-
-By default (`pipeline_spec(..., provenance_level="full")`, the default) the
-dict has these keys:
-
-| Key | Contents |
-| --- | --- |
-| `package_version`, `seed`, `targets`, `horizons`, `arms`, `benchmark`, `combinations` | The original, pre-existing fields: what ran. |
-| `environment` | Git commit/branch/dirty, Python version/executable, platform string, and pinned `numpy`/`pandas`/`scipy`/`scikit-learn`/`statsmodels` versions -- **where** it ran from. |
-| `data` | Dataset name/source family/declared vintage (from the `DataBundle` metadata), panel shape, date range, and a content fingerprint -- **what data** it ran on. |
-| `spec_echo` | A plain, JSON-able snapshot of the resolved spec's key choices: targets/policies, horizons, window cutoffs, arms/models, benchmark, evaluation config, seed, `n_jobs`/`model_threads`, cache/checkpoint dirs -- **what was asked for**. |
+#### Signature
 
 ```python
-report = run_pipeline(spec)
-report.provenance["environment"]["git"]           # {"commit": ..., "branch": ..., "dirty": ...}
-report.provenance["data"]["fingerprint"]["value"]  # sha256 over the panel's index+columns+values
-report.provenance["spec_echo"]["window"]["test"]   # resolved test-window cutoffs
+macroforecast.pipeline.evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame]
 ```
 
-`environment` reuses `output.collect_provenance` (the same probe the opt-in
-save path has always used, see `docs/reference/output.md`), pointed at the
-**running macroforecast package's own checkout** -- not the caller's current
-working directory. From a source/editable install this resolves to that
-checkout's commit/branch/dirty state regardless of what directory the
-analysis script runs from; from a wheel install (no `.git` above
-site-packages) the git probe fails gracefully and `commit`/`branch` are `None`
-(`dirty` is not meaningful in that case -- it is not a tri-state and reports
-`False` by default, matching `collect_provenance`'s existing behavior on the
-save path, which this reuse does not change).
+#### Description
 
-`data.fingerprint` is a sha256 digest over the panel's `DatetimeIndex` (as
-int64 nanosecond timestamps), column names in order, and values cast to
-explicit little-endian float64 bytes -- stable across runs and across
-platforms/byte orders, and it changes if a single cell, column, or date
-changes. It is computed over the FULL panel by default: measured at ~1ms for a
-FRED-MD-sized panel (780 rows x 130 columns) and ~8ms for a much larger 2,000 x
-400 panel, both far under the ~0.5s budget this design targets. Only above
-20,000,000 cells (a size no FRED-MD/QD/SD panel macroforecast loads
-approaches -- a deliberately huge synthetic 50,000 x 2,000 panel, 100,000,000
-cells, took ~1.3s to fingerprint in full) does it fall back to a deterministic
-strided subsample instead, and `fingerprint["method"]` says
-`"strided_subsample"` (with `row_stride`/`col_stride`/`sampled_shape`) rather
-than silently returning a partial-content digest labeled as full.
+Run the full evaluation: combinations -> accuracy + significance + MCS
++ density + calibration.
 
-For vintage-aware runs, `provenance["vintage_source"]` records the source kind,
-`actuals_vintage` policy, reference-calendar summary, and origin-to-vintage map.
-Maps with 500 origins or fewer are stored inline. Larger maps are written as
-`vintage_map.json` next to `checkpoint_dir`, and provenance stores the sidecar
-`path`, `sha256`, and `n_origins`.
+``density``/``calibration`` are opt-in via ``EvalSpec.metrics``/``tests``
+(see ``density_table``/``calibration_table``); a default ``EvalSpec`` never
+computes them (empty frames), so ``forecasts``/``accuracy``/``significance``/
+``mcs`` stay byte-identical to before these two keys existed.
 
-Pass `provenance_level="basic"` to `pipeline_spec(...)` to keep exactly the
-pre-existing dict shape (`package_version`/`seed`/`targets`/`horizons`/`arms`/
-`benchmark`/`combinations`, no `environment`/`data`/`spec_echo`) -- for callers
-who assemble their own environment/data documentation elsewhere, or who want
-to skip the git/environment probe and the one panel-fingerprint pass. This is
-independent of the pre-existing `provenance=` keyword (caller-supplied notes,
-e.g. the `save_models=False` + `interpret` warning merged into whichever shape
-results): `provenance=` is the payload, `provenance_level` is only the
-additive-blocks toggle. Forecasts and accuracy are byte-identical regardless
-of `provenance_level` -- this only changes what is attached to the report, never
-what is computed.
+#### Parameters
 
-`rescore(...)` reports carry the same `environment` block (when
-`provenance_level="full"`, respecting the spec's setting) plus the existing
-`rescored_from` marker; `data`/`spec_echo` are not attached to a rescored
-report (rescoring does not re-touch the original data or re-derive execution
-choices -- the `rescored_from`/`rescore_note` fields already document that this
-is a reassembly, not a live run).
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `master` | positional or keyword | `pd.DataFrame` | `required` |
+| `spec` | positional or keyword | `PipelineSpec` | `required` |
 
-## Re-scoring saved forecasts (`rescore`)
+#### Returns
 
-A checkpointed pipeline run (`pipeline_spec(..., checkpoint_dir=<dir>)`) persists
-each cell's lean forecast records under
-`<checkpoint_dir>/<target>__<arm>/h<h>/origin_<pos>.parquet` as origins complete.
-Because the evaluation stage is pure-frame (`evaluate(master, spec)` needs the
-forecasts, not the fitted models), those saved records are sufficient to rebuild
-the full evaluation -- accuracy, requested significance/set tests, and combination
-contenders -- without re-running a single fit. `rescore` is that glue:
+`dict[str, pd.DataFrame]`
+
+#### Minimal Use
 
 ```python
-spec = mf.pipeline.pipeline_spec(..., checkpoint_dir="ckpt")   # the original spec
-report = mf.pipeline.rescore("ckpt", spec)                     # no refitting
-report.accuracy                                                # same as the live run's
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.evaluate(...)
 ```
+### evaluate_cross_policy
 
-`rescore(checkpoint_dir, spec)` walks every `(target, arm, horizon)` cell the
-spec describes, loads the persisted records, reassembles the master forecast
-frame (re-attaching `arm`/`contender` labels from the spec -- the lean checkpoint
-schema does not store them), and runs the standard evaluation. It returns the
-same `PipelineReport` type as `run_pipeline`, with the evaluation fields
-(`forecasts`, `accuracy`, `significance`, `mcs`, `density`, `calibration`)
-populated identically to a live run over the same forecasts -- including
-`variance_prediction` (a plain float, in the lean schema since the density
-pipeline) and quantile predictions (persisted as wide `q_<pct>` columns and
-reconstructed into the same `{level: value}` mapping a live run's
-`quantile_predictions` carries; see "Density and interval forecasting" below).
-The directory argument wins over whatever `spec.checkpoint_dir` says, so a spec
-built without checkpointing (or a copied checkpoint directory) re-scores fine.
+Qualified name: `macroforecast.pipeline.evaluate.evaluate_cross_policy`
 
-For vintage-aware runs, `rescore()` uses the `actual` and
-`actuals_vintage_id` values already stored in the checkpoint records. It cannot
-change `VintagePanelSpec(actuals_vintage=...)` retroactively, because the
-checkpoint contains forecasts and realized values, not enough information to
-resolve a different actuals convention. To compare `"latest"` with
-`"first_release"`, run two otherwise identical specs and checkpoint/report them
-separately.
-
-Fields that require having actually executed the run are absent or best-effort:
-
-- `interpretation` is always `None` (needs fitted models; use
-  `interpret_pipeline` on a live run).
-- `failed_cells` is always empty -- a cell that failed during the original run
-  wrote no checkpoint files and cannot be distinguished from one that never ran.
-- `empty_cells` lists arms with zero checkpoint rows across all horizons
-  (failed, interrupted, or never run -- indistinguishable from disk alone).
-- `provenance` / `leakage_audit` carry a `rescored_from` marker instead of a
-  recomputed live audit.
-
-An empty or wrong `checkpoint_dir` raises a `ValueError` naming the problem
-(no cell directories found / directories present but all empty) rather than
-returning a silently empty report.
-
-## Custom metrics, significance tests, and loss (`EvalSpec`)
-
-`EvalSpec.metrics` and `EvalSpec.tests` are consumed, not decorative: only the
-metrics and tests actually named are computed, and unsupported names fail fast.
-
-- **`metrics: tuple[str | Callable, ...]`** (default `("rmse", "relative_mse",
-  "r2_oos")`) -- each entry is either a name resolved through
-  `macroforecast.metrics.get_metric` (e.g. `"mae"`, `"mape"`, `"bias"`) or a
-  callable `metric(y_true, y_pred) -> float`, named by its `__name__` for the
-  accuracy-table column. `accuracy_table` computes exactly the listed metrics,
-  per contender, on the same pairwise-vs-benchmark sample it always used. The
-  three defaults keep their existing benchmark-relative formulas (`relative_mse`/
-  `r2_oos` need the benchmark's MSE; a same-named custom callable does not
-  override this) regardless of how they are requested. Passing `metrics=("mae",)`
-  now returns only an `mae` column -- prior to this, `metrics` was parsed but
-  never read, so every spec silently got `rmse`/`relative_mse`/`r2_oos` no matter
-  what was requested.
-- **`tests: tuple[str, ...]`** (default `("dm", "cw", "mcs")`) -- only the named
-  tests run. `"cw"` is additionally gated by `cw_for_nested` as before (Clark-West
-  only for contenders whose `Arm.nested_in_benchmark=True`). `tests=("dm",)` runs
-  DM only (`significance` carries no `cw_*` columns, `mcs` is empty);
-  `tests=()` yields `accuracy` only. Supported significance names are
-  `"dm"`, `"cw"`, `"gw"`, `"enc_new"`, `"enc_t"`, `"pt"`, `"hm"`, `"ag"`,
-  `"gr"`, `"mz"`, `"uspa"`, `"aspa"`, `"mcs"`, `"spa"`, `"rc"`, and `"stepm"` plus
-  the calibration names below. Unsupported names raise `ValueError` at `pipeline_spec(...)` build time
-  rather than being silently dropped. The newly wired pairwise tests append
-  long-form rows to `PipelineReport.significance` with `test`, `statistic`,
-  `p_value`, `reject`, `status`, and `n_obs`; `pt`/`hm`/`ag` test the contender's own
-  directional skill on the benchmark-aligned sample. Degenerate directional
-  inputs emit `status="degenerate"` rows instead of aborting evaluation.
-  ENC-NEW/ENC-T rows with no configured critical value or p-value emit
-  `status="inconclusive"` and `reject=None`. `"gr"` defaults its HAC
-  `lag_truncate` to `min(horizon - 1, 5)` unless overridden in
-  `test_options["gr"]`. `"mz"` runs the Mincer-Zarnowitz actual-on-forecast
-  rationality regression with default `hac_lags=horizon-1`. `"uspa"` and `"aspa"`
-  run jointly across all horizons for each target/contender/benchmark triple
-  and write `horizon="joint"` rows to `PipelineReport.significance`; requesting
-  them with only one horizon raises at spec-build time. `"spa"`, `"rc"`, and
-  `"stepm"` compare the full contender set against the benchmark and append rows
-  to `PipelineReport.mcs`. `"spa"`, `"rc"`, and `"stepm"` require the `arch`
-  extra (`pip install "macroforecast[arch]"`) and carry a dependent-loss
-  size-caveat disclosure in their result metadata.
-- **`test_options: Mapping[str, Mapping[str, Any]]`** -- optional per-test keyword
-  options. The outer key must be present in `tests`, and every option name is
-  checked against that test's public callable when `pipeline_spec(...)` is
-  built. Use this for bootstrap controls such as
-  `{"spa": {"n_boot": 999, "block_length": 5, "random_state": 123}}` or GR
-  controls such as `{"gr": {"window_ratio": 0.4}}`; `uspa`/`aspa` accept the
-  `multi_horizon_spa_test(...)` options, including `n_boot`, `block_length`,
-  `weights`, and `random_state`.
-- **`dm_kwargs: Mapping[str, Any]`** -- compatibility alias for
-  `test_options["dm"]`. It is merged into `test_options["dm"]` at spec-build
-  time; if both sources set the same key, `test_options["dm"]` wins.
-- **`loss: Callable[[y_true, y_pred], ndarray] | None`** (default `None` = squared
-  error) -- a per-observation loss threaded into the Diebold-Mariano loss
-  differential and the Model Confidence Set's loss matrix, enabling asymmetric-
-  loss horse races (e.g. linex, or an absolute-error DM/MCS/SPA instead of
-  squared error). **Clark-West, ENC-NEW, and ENC-T are derived under quadratic
-  loss** and are not valid tests for an arbitrary loss function: when `loss` is
-  set and one of those tests would otherwise run, `significance_table` skips it
-  and emits a `UserWarning` instead of silently computing it against the wrong
-  loss. DM, GW, GR, MCS, SPA, RC, and StepM are loss-agnostic and are unaffected.
+#### Signature
 
 ```python
-from macroforecast.pipeline import EvalSpec
-
-def linex_loss(y_true, y_pred, a=1.0):
-    err = y_pred - y_true
-    return (np.exp(a * err) - a * err - 1.0) / (a ** 2)
-
-evaluation = EvalSpec(
-    benchmark="AR",
-    metrics=("rmse", "mae", my_custom_metric),   # my_custom_metric(y_true, y_pred) -> float
-    tests=("dm", "mcs"),                          # skip cw explicitly (or let the loss rule skip it)
-    loss=linex_loss,                              # asymmetric-loss DM/MCS horse race
-)
+macroforecast.pipeline.evaluate_cross_policy(forecasts: pd.DataFrame, *, benchmark: str, benchmark_policy: str, policy_column: str = "forecast_policy", separator: str = "::") -> pd.DataFrame
 ```
 
-`rescore(checkpoint_dir, spec)` honors all of this automatically -- it calls the
-same `evaluate(master, spec)` the live run does.
+#### Description
 
-## Evaluation-window subsamples
+Score every ``(arm, forecast_policy)`` contender against ONE benchmark fixed
+to a single policy -- the common-denominator convention.
 
-`EvalSpec.subsamples` evaluates the same fixed POOS forecast frame on named
-target-date windows. It does not refit models and does not create new forecast
-cells. The filter is applied to the forecast target date (`report.forecasts.date`)
-before accuracy, significance, MCS/set-comparison, density, and calibration
-tables are computed.
+Use this when the benchmark you want lives under a different forecast policy
+than the contenders. The GCLS (2021) appendix, for instance, scores both its
+direct and its path-average tables against a single FM benchmark, the direct
+FM. Running several policies for one target in a single spec pools the
+policies' rows for the same arm, because :func:`accuracy_table` keys the
+relative metrics on contender name within a ``(target, horizon)`` cell and
+does not split on policy. This helper does the qualification for you: it makes
+each ``(arm, forecast_policy)`` a distinct contender, scores all of them
+against the single ``(benchmark, benchmark_policy)`` arm, and returns a tidy
+accuracy table that keeps ``arm`` and ``forecast_policy`` as their own columns.
+
+Parameters
+forecasts:
+    The master forecast frame (``report.forecasts``). Must carry the columns
+    ``target, horizon, origin, prediction, actual, contender`` and
+    ``policy_column``.
+benchmark:
+    The arm name of the benchmark (e.g. ``"FM"``).
+benchmark_policy:
+    The forecast policy whose copy of ``benchmark`` is THE denominator for
+    every contender (e.g. ``"direct_average"`` for the direct FM).
+policy_column:
+    Column holding the per-row forecast policy. Default ``"forecast_policy"``.
+separator:
+    Joins arm and policy into the qualified contender key, then splits them
+    back out. Must not appear in any arm name or policy value; the default
+    ``"::"`` is safe for the underscore-bearing policy names
+    (``direct_average``, ``path_average``).
+
+Returns
+The accuracy table with one row per ``(target, horizon, arm, forecast_policy)``
+-- ``relative_mse`` / ``r2_oos`` / ``rmse`` computed pairwise against the fixed
+benchmark -- plus ``arm`` and ``forecast_policy`` columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `pd.DataFrame` | `required` |
+| `benchmark` | keyword only | `str` | `required` |
+| `benchmark_policy` | keyword only | `str` | `required` |
+| `policy_column` | keyword only | `str` | `"forecast_policy"` |
+| `separator` | keyword only | `str` | `"::"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-from macroforecast.pipeline import EvalSpec, SubsampleWindow
-
-evaluation = EvalSpec(
-    benchmark="AR",
-    tests=("dm", "mcs"),
-    subsamples={
-        "full": SubsampleWindow(),
-        "ex_covid": SubsampleWindow(exclude=(("2020-03-01", "2021-12-31"),)),
-        "post_gfc": SubsampleWindow(start="2010-01-01"),
-    },
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.evaluate_cross_policy(...)
 ```
+### apply_combinations
 
-When `subsamples` is unset, the default output shape is unchanged and no
-`subsample` column is added. When it is set, evaluation tables gain a
-`subsample` column and tests run independently within each named window.
-Bounds are inclusive date strings. `pipeline_spec(...)` validates date parsing,
-nonempty names, and `start < end`; `evaluate()` warns if a subsample leaves fewer
-than 30 forecast observations in a `(target, horizon)` cell. `rescore(...)`
-honors new subsamples automatically because it reuses `evaluate(master, spec)`.
+Qualified name: `macroforecast.pipeline.evaluate.apply_combinations`
 
-## Density and interval forecasting (Phase 1)
-
-`forecasting.run` already threads a fitted model's predictive variance and/or
-quantiles onto the (direct-policy) forecast table when the model exposes
-`predict_variance`/`predict_quantiles` (see `forecasting/policies/base.py`):
-`variance_prediction` (a plain float) and `quantile_predictions` (a
-`{level: value}` mapping). This is Phase 1 scope -- **natively-emitting models
-only**, direct/direct_average policy only. There is no synthetic
-residual-based variance fallback for models that do not emit one: the columns
-are simply absent/NaN, and every downstream stage (accuracy, significance,
-MCS, and the density/calibration stages below) degrades to point-only
-gracefully. Recursive, path_average, panel, and combination rows always carry
-explicit `None` for both columns (a documented follow-up, not this lane's
-scope).
-
-**Which models emit today** (empirically, not by design intent): any model
-whose fit object exposes `predict_variance(X)` or `predict_variance(horizon=)`
--- the volatility family (GARCH, Realized GARCH; needs the `arch` extra) and
-the torch hemisphere/density-HNN models (needs the `deep` extra) -- or
-`predict_quantiles(X)` -- `quantile_regression_forest` (sklearn only, no extra
-dependency) and the `model_ensemble` bagging/random-subspace/booging
-regressors (stacking/super-learner do NOT expose `predict_quantiles`), plus
-the torch density models (Gaussian closed-form quantiles from their own
-mean/variance heads).
-
-**Requesting density metrics** -- add a density-classified name to
-`EvalSpec.metrics` alongside (or instead of) the point metrics; density metrics
-land in `PipelineReport.density`, keyed by `(target, horizon, contender)`, not
-`accuracy`:
+#### Signature
 
 ```python
-from macroforecast.pipeline import EvalSpec
-
-evaluation = EvalSpec(
-    benchmark="AR",
-    metrics=("rmse", "crps", "interval_score"),   # rmse -> accuracy; crps/interval_score -> density
-    tests=("dm", "mcs", "berkowitz", "pit_autocorr", "coverage"),  # calibration -> report.calibration
-)
+macroforecast.pipeline.apply_combinations(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
 ```
 
-- **Gaussian density metrics** (need `variance_prediction`): `crps`,
-  `gaussian_nll`/`log_score`, `negative_log_score`.
-- **Volatility metric** (needs `variance_prediction` scored against the
-  realized target): `qlike`.
-- **Quantile/interval metrics** (need `quantile_predictions`): `pinball_loss`
-  (per requested level), `coverage_rate`, `interval_width`, `interval_score`
-  (for every matched symmetric quantile pair, e.g. `0.05`/`0.95`).
-- Requesting ANY one of the above computes the whole associated bundle (the
-  Gaussian pair or the full quantile bundle) in one pass -- `density_table` is
-  a thin wrapper around `macroforecast.metrics.evaluate_forecasts`, the same
-  registry-driven evaluator `ForecastResult.evaluate()` already exposes, not a
-  reimplementation.
-- A **default `EvalSpec`** requests no density metric, so `report.density` is
-  always an empty frame and no forecast-frame column is even inspected --
-  a point-only run and an unrequested variance-emitting run behave identically.
-- Requesting a density metric on a forecast frame with **no matching column**
-  raises the same actionable `ValueError` `evaluate_forecasts` already raises
-  (e.g. `"variance_prediction column ... is required for requested variance/
-  density metric(s): ['crps']"`) -- checked at the whole-frame schema level, so
-  one contender emitting a variance while another does not is scored
-  point-only for the second without raising (the same graceful-degradation
-  convention as accuracy/significance/MCS).
+#### Description
 
-**Requesting calibration tests** -- add `"berkowitz"`, `"pit_autocorr"`, and/or
-`"coverage"` to `EvalSpec.tests`; they populate `PipelineReport.calibration`
-(columns `target, horizon, contender, test, statistic, p_value, reject,
-n_obs, coverage_rate` -- `coverage_rate` is populated only for the
-`"coverage"` test row), gated at the significance level
-`EvalSpec.calibration_alpha` (default `0.05`, independent of `mcs_alpha`):
+Append cross-arm combination contenders to the master forecast frame.
 
-- `"berkowitz"` / `"pit_autocorr"` need `variance_prediction`: the PIT is the
-  Gaussian CDF of the standardized residual, `Phi((actual - prediction) /
-  sqrt(variance_prediction))`, scored per `(target, horizon, contender)` via
-  `macroforecast.tests.density_interval_tests` (Berkowitz LR test / PIT serial-
-  correlation test).
-- `"coverage"` needs a symmetric quantile pair (e.g. `0.05`/`0.95`) from
-  `quantile_predictions`; the widest such pair is used, scored via
-  `macroforecast.tests.interval_coverage_test` (Kupiec unconditional-coverage
-  test).
-- Same schema-level `ValueError` contract as the density metrics above:
-  missing the required column entirely raises; a contender that individually
-  never emits it is silently skipped.
+#### Parameters
 
-**Checkpoint / rescore**: `forecasting/checkpoint.py`'s lean schema now carries
-`variance_prediction` (a fixed column, `None` when a model does not emit one)
-and, when a model emits quantiles, wide `q_<pct>` columns (`0.05` -> `q_05`,
-`0.5` -> `q_50`, `0.95` -> `q_95`, ...) -- parquet needs scalar columns, so the
-`{level: value}` mapping is expanded rather than stored as-is. Loading a
-checkpoint (`load_checkpoint_frame`, and therefore `rescore`, and a resumed
-`run()`) reconstructs `quantile_predictions` from those wide columns, so
-density/calibration scoring works identically whether the forecasts came from
-a live run or a rescored checkpoint. **Old checkpoints** (written before this
-column existed) load fine and rescore as point-only: the fixed
-`variance_prediction` column is simply absent from a checkpoint directory that
-carries only old-schema files, and `report.density`/`report.calibration` stay
-empty under a default `EvalSpec` exactly as for any other point-only run.
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `master` | positional or keyword | `pd.DataFrame` | `required` |
+| `spec` | positional or keyword | `PipelineSpec` | `required` |
 
-## Notes
+#### Returns
 
-- Accuracy uses a **common sample**: every contender is scored on the origins where
-  all contenders and the realised target are observed, consistent with the MCS.
-- The leakage audit validates the window for each horizon, surfacing the multi-horizon
-  pseudo-out-of-sample embargo convention.
-- Models are saved by default so `interpret_pipeline` runs without re-forecasting.
-- `Arm.nested_in_benchmark` (default `False`) marks an arm whose model nests the
-  benchmark, for example a data-poor autoregressive benchmark nested in a
-  factor-augmented or penalised model. The evaluator reports a Clark-West
-  statistic only for such contenders, since Clark-West is valid only when the
-  benchmark is nested within the contender. Arms that do not nest the benchmark
-  receive Diebold-Mariano only, and forecast combinations are never treated as
-  nested.
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.apply_combinations(...)
+```
+### Arm
+
+Qualified name: `macroforecast.pipeline.spec.Arm`
+
+#### Signature
+
+```python
+macroforecast.pipeline.Arm(name: str, model: Any, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, features: Any | None = None, feature_policy: Any | None = None, params: Mapping[str, Any] | None = None, model_selection: Any | None = None, model_selection_metric: str = "mse", window: Any | None = None, interpret: InterpretSpec | tuple[str, ...] | None = None, is_benchmark: bool = False, nested_in_benchmark: bool = False, metadata: Mapping[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+A target-agnostic configuration: preprocessing + features + a single model.
+
+An arm is NOT itself a cell. Applied to a target and a horizon it forms one
+cell (executed by one ``run()`` call); in the evaluation it appears as exactly
+one contender (one arm = one contender).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `model` | positional or keyword | `Any` | `required` |
+| `preprocessing` | positional or keyword | `Any \| None` | `None` |
+| `preprocessing_policy` | positional or keyword | `Any \| None` | `None` |
+| `features` | positional or keyword | `Any \| None` | `None` |
+| `feature_policy` | positional or keyword | `Any \| None` | `None` |
+| `params` | positional or keyword | `Mapping[str, Any] \| None` | `None` |
+| `model_selection` | positional or keyword | `Any \| None` | `None` |
+| `model_selection_metric` | positional or keyword | `str` | `"mse"` |
+| `window` | positional or keyword | `Any \| None` | `None` |
+| `interpret` | positional or keyword | `InterpretSpec \| tuple[str, ...] \| None` | `None` |
+| `is_benchmark` | positional or keyword | `bool` | `False` |
+| `nested_in_benchmark` | positional or keyword | `bool` | `False` |
+| `metadata` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.Arm(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `name` | `str` | `required` |
+| `model` | `Any` | `required` |
+| `preprocessing` | `Any \| None` | `None` |
+| `preprocessing_policy` | `Any \| None` | `None` |
+| `features` | `Any \| None` | `None` |
+| `feature_policy` | `Any \| None` | `None` |
+| `params` | `Mapping[str, Any] \| None` | `None` |
+| `model_selection` | `Any \| None` | `None` |
+| `model_selection_metric` | `str` | `"mse"` |
+| `window` | `Any \| None` | `None` |
+| `interpret` | `InterpretSpec \| tuple[str, ...] \| None` | `None` |
+| `is_benchmark` | `bool` | `False` |
+| `nested_in_benchmark` | `bool` | `False` |
+| `metadata` | `Mapping[str, Any]` | `default_factory` |
+### CombinationContender
+
+Qualified name: `macroforecast.pipeline.spec.CombinationContender`
+
+#### Signature
+
+```python
+macroforecast.pipeline.CombinationContender(name: str, method: str, over: tuple[str, ...] | str = "all", by: tuple[str, ...] = ('target', 'horizon'), params: Mapping[str, Any] | None = None, weight_window: int | None = None, shrink_to_equal: float | None = None) -> None
+```
+
+#### Description
+
+A forecast combination that becomes an additional contender.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `method` | positional or keyword | `str` | `required` |
+| `over` | positional or keyword | `tuple[str, ...] \| str` | `"all"` |
+| `by` | positional or keyword | `tuple[str, ...]` | `("target", "horizon")` |
+| `params` | positional or keyword | `Mapping[str, Any] \| None` | `None` |
+| `weight_window` | positional or keyword | `int \| None` | `None` |
+| `shrink_to_equal` | positional or keyword | `float \| None` | `None` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.CombinationContender(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `name` | `str` | `required` |
+| `method` | `str` | `required` |
+| `over` | `tuple[str, ...] \| str` | `"all"` |
+| `by` | `tuple[str, ...]` | `("target", "horizon")` |
+| `params` | `Mapping[str, Any] \| None` | `None` |
+| `weight_window` | `int \| None` | `None` |
+| `shrink_to_equal` | `float \| None` | `None` |
+### EvalSpec
+
+Qualified name: `macroforecast.pipeline.spec.EvalSpec`
+
+#### Signature
+
+```python
+macroforecast.pipeline.EvalSpec(benchmark: str, metrics: tuple[str | Callable[..., float], ...] = ('rmse', 'relative_mse', 'r2_oos'), tests: tuple[str, ...] = ('dm', 'cw', 'mcs'), by: tuple[str, ...] = ('target', 'horizon'), primary_axis: str = "contender", cw_for_nested: bool = True, mcs_alpha: float = 0.1, mcs_method: str = "iterative", multiple_testing: str | None = None, subsamples: Mapping[str, SubsampleWindow] | None = None, dm_kwargs: Mapping[str, Any] = <factory>, loss: Callable[[Any, Any], Any] | None = None, test_options: Mapping[str, Mapping[str, Any]] = <factory>, calibration_alpha: float = 0.05) -> None
+```
+
+#### Description
+
+Automatic evaluation and significance-testing configuration.
+
+``metrics`` entries are either a name resolved through the metric registry
+(:func:`macroforecast.metrics.get_metric`, e.g. ``"mae"``, ``"mape"``) or a
+callable ``metric(y_true, y_pred) -> float`` named by its ``__name__``.
+``accuracy_table`` computes one column per listed metric, per contender, on
+the same pairwise-vs-benchmark sample it always has. The three defaults
+(``"rmse"``, ``"relative_mse"``, ``"r2_oos"``) keep their existing
+benchmark-relative formulas regardless of how they are requested.
+
+``loss`` is a per-observation loss ``loss(y_true, y_pred) -> ndarray`` used
+by the Diebold-Mariano loss differential and the Model Confidence Set's loss
+matrix; ``None`` (default) is squared error, the prior, only behavior. Since
+the Clark-West adjustment is derived under quadratic loss, setting a custom
+``loss`` makes ``significance_table`` skip CW (with a ``UserWarning``)
+rather than compute it against the wrong loss.
+
+``tests`` lists which significance tests actually run; unsupported names
+raise at :func:`pipeline_spec` build time (see ``SUPPORTED_EVAL_TESTS``).
+Pairwise contender-vs-benchmark tests are ``"dm"``, ``"cw"``, ``"gw"``,
+``"enc_new"``, ``"enc_t"``, ``"gr"``, and ``"mz"``. ``"mz"`` is the
+Mincer-Zarnowitz actual-on-forecast rationality regression. ``"pt"``, ``"hm"``, and
+``"ag"`` are directional-accuracy tests for the contender's own sign
+forecasts, evaluated on the same benchmark-aligned sample for consistency
+with the pairwise tests. Joint multi-horizon pairwise tests are ``"uspa"``
+and ``"aspa"``; they require at least two horizons and use ``"joint"`` as
+their significance-table horizon sentinel. Full-set benchmark comparisons are ``"mcs"``,
+``"spa"``, ``"rc"``, and ``"stepm"``; they populate ``PipelineReport.mcs``.
+``"spa"``, ``"rc"``, and ``"stepm"`` require the ``arch`` extra
+(``pip install "macroforecast[arch]"``).
+``"berkowitz"``/``"pit_autocorr"``/``"coverage"`` are PIT-based calibration
+diagnostics (Phase 1 density pipeline) -- they populate
+``PipelineReport.calibration`` rather than ``significance``/``mcs`` and,
+like every other test name, are opt-in only (absent from the default).
+``test_options`` maps a requested test name to keyword options for that
+test's underlying public callable. Option blocks are validated when
+:func:`pipeline_spec` is built: the key must appear in ``tests`` and every
+option name must be accepted by that test's callable.
+
+Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
+``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
+``"coverage_rate"``, ``"interval_width"``, ``"interval_score"`` -- are
+requested the SAME way as any other ``metrics`` entry; they land in
+``PipelineReport.density`` instead of ``accuracy`` because they need a
+``variance_prediction``/``quantile_predictions`` column rather than plain
+``(y_true, y_pred)`` (see ``macroforecast.metrics.metric_kind``). Requesting
+one on a forecast frame that carries no such column raises the same
+actionable ``ValueError`` :func:`macroforecast.metrics.evaluate_forecasts`
+already raises. Absent from the defaults, so a default-EvalSpec run never
+computes them.
+
+``calibration_alpha`` is the significance level for the calibration tests
+above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
+checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
+
+``subsamples`` optionally maps names to :class:`SubsampleWindow` values.
+These are evaluation-window splits of an already-produced POOS forecast
+frame: target-date rows are filtered before scoring and testing, without
+refitting models or creating new forecast cells.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `benchmark` | positional or keyword | `str` | `required` |
+| `metrics` | positional or keyword | `tuple[str \| Callable[..., float], ...]` | `("rmse", "relative_mse", "r2_oos")` |
+| `tests` | positional or keyword | `tuple[str, ...]` | `("dm", "cw", "mcs")` |
+| `by` | positional or keyword | `tuple[str, ...]` | `("target", "horizon")` |
+| `primary_axis` | positional or keyword | `str` | `"contender"` |
+| `cw_for_nested` | positional or keyword | `bool` | `True` |
+| `mcs_alpha` | positional or keyword | `float` | `0.1` |
+| `mcs_method` | positional or keyword | `str` | `"iterative"` |
+| `multiple_testing` | positional or keyword | `str \| None` | `None` |
+| `subsamples` | positional or keyword | `Mapping[str, SubsampleWindow] \| None` | `None` |
+| `dm_kwargs` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+| `loss` | positional or keyword | `Callable[[Any, Any], Any] \| None` | `None` |
+| `test_options` | positional or keyword | `Mapping[str, Mapping[str, Any]]` | `<factory>` |
+| `calibration_alpha` | positional or keyword | `float` | `0.05` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.EvalSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `benchmark` | `str` | `required` |
+| `metrics` | `tuple[str \| Callable[..., float], ...]` | `("rmse", "relative_mse", "r2_oos")` |
+| `tests` | `tuple[str, ...]` | `("dm", "cw", "mcs")` |
+| `by` | `tuple[str, ...]` | `("target", "horizon")` |
+| `primary_axis` | `str` | `"contender"` |
+| `cw_for_nested` | `bool` | `True` |
+| `mcs_alpha` | `float` | `0.1` |
+| `mcs_method` | `str` | `"iterative"` |
+| `multiple_testing` | `str \| None` | `None` |
+| `subsamples` | `Mapping[str, SubsampleWindow] \| None` | `None` |
+| `dm_kwargs` | `Mapping[str, Any]` | `default_factory` |
+| `loss` | `Callable[[Any, Any], Any] \| None` | `None` |
+| `test_options` | `Mapping[str, Mapping[str, Any]]` | `default_factory` |
+| `calibration_alpha` | `float` | `0.05` |
+### InterpretSpec
+
+Qualified name: `macroforecast.pipeline.spec.InterpretSpec`
+
+#### Signature
+
+```python
+macroforecast.pipeline.InterpretSpec(methods: tuple[str, ...] = (), which_fit: str = "auto", background: int | None = None, top_k: int | None = 20, on_targets: tuple[str, ...] | None = None, shap_kind: str = "auto") -> None
+```
+
+#### Description
+
+ML interpretation request for an arm (deferred, multi-method).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `methods` | positional or keyword | `tuple[str, ...]` | `()` |
+| `which_fit` | positional or keyword | `str` | `"auto"` |
+| `background` | positional or keyword | `int \| None` | `None` |
+| `top_k` | positional or keyword | `int \| None` | `20` |
+| `on_targets` | positional or keyword | `tuple[str, ...] \| None` | `None` |
+| `shap_kind` | positional or keyword | `str` | `"auto"` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.InterpretSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `methods` | `tuple[str, ...]` | `()` |
+| `which_fit` | `str` | `"auto"` |
+| `background` | `int \| None` | `None` |
+| `top_k` | `int \| None` | `20` |
+| `on_targets` | `tuple[str, ...] \| None` | `None` |
+| `shap_kind` | `str` | `"auto"` |
+### PipelineSpec
+
+Qualified name: `macroforecast.pipeline.spec.PipelineSpec`
+
+#### Signature
+
+```python
+macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
+```
+
+#### Description
+
+Validated, frozen configuration produced by :func:`pipeline_spec`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `targets` | positional or keyword | `tuple[ResolvedTarget, ...]` | `required` |
+| `horizons` | positional or keyword | `tuple[int, ...]` | `required` |
+| `window` | positional or keyword | `Any` | `required` |
+| `arms` | positional or keyword | `tuple[Arm, ...]` | `required` |
+| `evaluation` | positional or keyword | `EvalSpec` | `required` |
+| `preprocessing` | positional or keyword | `Any \| None` | `None` |
+| `preprocessing_policy` | positional or keyword | `Any \| None` | `None` |
+| `combinations` | positional or keyword | `tuple[CombinationContender, ...]` | `()` |
+| `save_models` | positional or keyword | `bool` | `True` |
+| `model_store` | positional or keyword | `str` | `"trained_model"` |
+| `checkpoint_dir` | positional or keyword | `str \| None` | `None` |
+| `result_store` | positional or keyword | `str \| None` | `None` |
+| `n_jobs` | positional or keyword | `int` | `1` |
+| `model_threads` | positional or keyword | `int` | `1` |
+| `preprocessing_cache_dir` | positional or keyword | `str \| Literal[False] \| None` | `None` |
+| `seed` | positional or keyword | `int \| None` | `42` |
+| `provenance` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+| `provenance_level` | positional or keyword | `Literal['full', 'basic']` | `"full"` |
+| `policy_overrides` | positional or keyword | `Mapping[tuple[str, str], str]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.PipelineSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `data` | `Any` | `required` |
+| `targets` | `tuple[ResolvedTarget, ...]` | `required` |
+| `horizons` | `tuple[int, ...]` | `required` |
+| `window` | `Any` | `required` |
+| `arms` | `tuple[Arm, ...]` | `required` |
+| `evaluation` | `EvalSpec` | `required` |
+| `preprocessing` | `Any \| None` | `None` |
+| `preprocessing_policy` | `Any \| None` | `None` |
+| `combinations` | `tuple[CombinationContender, ...]` | `()` |
+| `save_models` | `bool` | `True` |
+| `model_store` | `str` | `"trained_model"` |
+| `checkpoint_dir` | `str \| None` | `None` |
+| `result_store` | `str \| None` | `None` |
+| `n_jobs` | `int` | `1` |
+| `model_threads` | `int` | `1` |
+| `preprocessing_cache_dir` | `str \| Literal[False] \| None` | `None` |
+| `seed` | `int \| None` | `42` |
+| `provenance` | `Mapping[str, Any]` | `default_factory` |
+| `provenance_level` | `Literal['full', 'basic']` | `"full"` |
+| `policy_overrides` | `Mapping[tuple[str, str], str]` | `default_factory` |
+### ResolvedTarget
+
+Qualified name: `macroforecast.pipeline.spec.ResolvedTarget`
+
+#### Signature
+
+```python
+macroforecast.pipeline.ResolvedTarget(name: str, policy: str, transform: str, tcode: int | None, annualize: bool) -> None
+```
+
+#### Description
+
+A target with its forecast policy and transform resolved.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `policy` | positional or keyword | `str` | `required` |
+| `transform` | positional or keyword | `str` | `required` |
+| `tcode` | positional or keyword | `int \| None` | `required` |
+| `annualize` | positional or keyword | `bool` | `required` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.ResolvedTarget(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `name` | `str` | `required` |
+| `policy` | `str` | `required` |
+| `transform` | `str` | `required` |
+| `tcode` | `int \| None` | `required` |
+| `annualize` | `bool` | `required` |
+### SubsampleWindow
+
+Qualified name: `macroforecast.pipeline.spec.SubsampleWindow`
+
+#### Signature
+
+```python
+macroforecast.pipeline.SubsampleWindow(start: str | None = None, end: str | None = None, exclude: tuple[tuple[str, str], ...] = ()) -> None
+```
+
+#### Description
+
+Evaluation-window filter applied to forecast target dates.
+
+Bounds are inclusive date strings. ``exclude`` removes inclusive date ranges
+after the optional start/end bounds are applied.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `start` | positional or keyword | `str \| None` | `None` |
+| `end` | positional or keyword | `str \| None` | `None` |
+| `exclude` | positional or keyword | `tuple[tuple[str, str], ...]` | `()` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.SubsampleWindow(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `start` | `str \| None` | `None` |
+| `end` | `str \| None` | `None` |
+| `exclude` | `tuple[tuple[str, str], ...]` | `()` |
+### TargetSpec
+
+Qualified name: `macroforecast.pipeline.spec.TargetSpec`
+
+#### Signature
+
+```python
+macroforecast.pipeline.TargetSpec(name: str, transform: str | None = None, policy: str | None = None, annualize: bool = False, reduce_i2: bool = True) -> None
+```
+
+#### Description
+
+A forecast target and how its forecast object is defined.
+
+``name`` is the panel column to forecast. ``transform`` and ``policy`` may
+be left as ``None`` so FRED transformation-code metadata chooses the
+conventional forecast object. For example, a FRED-MD growth-rate target
+resolves to a direct-average growth forecast rather than a raw level
+forecast. ``annualize`` affects reporting scale only, while ``reduce_i2``
+keeps the package's convention for I(2) series by forecasting the
+first-difference object.
+
+Returns
+TargetSpec
+    Immutable target declaration consumed by ``pipeline_spec(...)`` and
+    resolved to ``ResolvedTarget`` during execution.
+
+Example
+>>> from macroforecast.pipeline import TargetSpec
+>>> target = TargetSpec(name="INDPRO", annualize=True)
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `transform` | positional or keyword | `str \| None` | `None` |
+| `policy` | positional or keyword | `str \| None` | `None` |
+| `annualize` | positional or keyword | `bool` | `False` |
+| `reduce_i2` | positional or keyword | `bool` | `True` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.TargetSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `name` | `str` | `required` |
+| `transform` | `str \| None` | `None` |
+| `policy` | `str \| None` | `None` |
+| `annualize` | `bool` | `False` |
+| `reduce_i2` | `bool` | `True` |
+### contender_names
+
+Qualified name: `macroforecast.pipeline.spec.contender_names`
+
+#### Signature
+
+```python
+macroforecast.pipeline.contender_names(arm: Arm) -> list[str]
+```
+
+#### Description
+
+Display contender labels for an arm. A contender IS exactly an arm.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `arm` | positional or keyword | `Arm` | `required` |
+
+#### Returns
+
+`list[str]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.contender_names(...)
+```
+### is_vintage_aware
+
+Qualified name: `macroforecast.pipeline.spec.is_vintage_aware`
+
+#### Signature
+
+```python
+macroforecast.pipeline.is_vintage_aware(spec: PipelineSpec) -> bool
+```
+
+#### Description
+
+Return whether a pipeline spec runs against per-origin vintage data.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `spec` | positional or keyword | `PipelineSpec` | `required` |
+
+#### Returns
+
+`bool`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.is_vintage_aware(...)
+```
+### model_arms
+
+Qualified name: `macroforecast.pipeline.spec.model_arms`
+
+#### Signature
+
+```python
+macroforecast.pipeline.model_arms(models: Sequence[Any] | Mapping[str, Any], *, names: Sequence[str] | None = None, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, features: Any | None = None, feature_policy: Any | None = None, params: Mapping[str, Any] | None = None, model_selection: Any | None = None, model_selection_metric: str = "mse", interpret: InterpretSpec | tuple[str, ...] | None = None, nested_in_benchmark: bool | set[str] | Sequence[str] = False, metadata: Mapping[str, Any] | None = None) -> list[Arm]
+```
+
+#### Description
+
+Build one :class:`Arm` per model for a pure model comparison.
+
+A model comparison is "several Arms identical except ``model``". This helper
+is the pipeline idiom for that: it returns a ``list[Arm]`` -- one arm (one
+contender; each (target, horizon) of it is one cell) per model -- all
+sharing the given preprocessing,
+features, and evaluation config, differing only in ``model`` (and in the
+per-model ``params``/``model_selection``/nesting when those are given as
+mappings/sets).
+
+``models`` is a sequence of single models (``str`` | ``Callable`` |
+``ModelSpec``) or a ``Mapping[name -> model]``. Arm names default to the
+model name (``str(model)`` / ``ModelSpec.name`` / ``callable.__name__``), or
+the mapping keys, or the explicit ``names``. Names must be unique.
+
+``params`` and ``model_selection`` are shared by every arm unless they are a
+Mapping whose key set is exactly the arm names, in which case each entry is
+applied to its arm (see :func:`_per_arm_or_shared`). A single shared dict of
+hyperparameters is therefore unambiguous from a per-arm mapping.
+
+``nested_in_benchmark`` is either a bool shared by all arms, or a set/sequence
+of arm names that nest the benchmark.
+
+The returned list is ready to pass to ``pipeline_spec(arms=...)``. Pure model
+comparison shares all config; comparing feature cases still needs explicit
+Arms (build them by hand, varying ``features``).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `models` | positional or keyword | `Sequence[Any] \| Mapping[str, Any]` | `required` |
+| `names` | keyword only | `Sequence[str] \| None` | `None` |
+| `preprocessing` | keyword only | `Any \| None` | `None` |
+| `preprocessing_policy` | keyword only | `Any \| None` | `None` |
+| `features` | keyword only | `Any \| None` | `None` |
+| `feature_policy` | keyword only | `Any \| None` | `None` |
+| `params` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `model_selection` | keyword only | `Any \| None` | `None` |
+| `model_selection_metric` | keyword only | `str` | `"mse"` |
+| `interpret` | keyword only | `InterpretSpec \| tuple[str, ...] \| None` | `None` |
+| `nested_in_benchmark` | keyword only | `bool \| set[str] \| Sequence[str]` | `False` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`list[Arm]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.model_arms(...)
+```
+### pipeline_spec
+
+Qualified name: `macroforecast.pipeline.spec.pipeline_spec`
+
+#### Signature
+
+```python
+macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
+```
+
+#### Description
+
+Validate and build a :class:`PipelineSpec`.
+
+``n_jobs`` is a positive int (explicit cell-worker count) or the literal
+``"auto"``. ``"auto"`` inspects the core budget and the work structure
+(``len(targets) * len(arms) * len(horizons)`` cells) via
+:func:`auto_parallelism` and splits the cores between cell workers
+(stored as the resolved ``PipelineSpec.n_jobs``) and per-cell model-internal
+threads (stored as ``PipelineSpec.model_threads``).
+
+``preprocessing_cache_dir`` is a path, ``None``, or ``False`` -- see the field
+docstring on :class:`PipelineSpec` for the full three-state contract. In short:
+a path pins a persistent shared on-disk preprocessing-fit cache; ``None``
+(default) auto-manages a temporary one for the duration of the run when
+``n_jobs>1`` (a no-op when ``n_jobs==1``); ``False`` explicitly opts out of any
+disk-backed cache even when parallel. ``True`` is invalid and raises.
+
+``provenance_level`` ("full" default, or "basic") controls how much
+``PipelineReport.provenance`` a live ``run_pipeline``/``rescore`` call
+attaches -- see the field docstring on :class:`PipelineSpec`. Note this is
+independent of ``provenance=`` above (caller-supplied notes merged into
+whichever shape results); "basic" does not drop caller-supplied notes, it
+only omits the "environment"/"data"/"spec_echo" blocks.
+
+``result_store`` is an optional directory for cross-run reuse of completed
+forecast cells. When left at ``None`` (the default), the runner follows the
+original execution path exactly.
+
+``on_unsupported_direct`` controls what happens when a model that only
+iterates its own dynamics is combined with ``direct`` or ``direct_average``:
+``"error"`` (default) rejects the spec, ``"warn"`` preserves the old weak
+benchmark behavior, and ``"reroute"`` runs only the affected arm-target
+cells as ``recursive``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | keyword only | `Any` | `required` |
+| `targets` | keyword only | `Sequence[str \| TargetSpec]` | `required` |
+| `horizons` | keyword only | `Sequence[int] \| int` | `required` |
+| `window` | keyword only | `Any` | `required` |
+| `arms` | keyword only | `Sequence[Arm]` | `required` |
+| `evaluation` | keyword only | `EvalSpec` | `required` |
+| `combinations` | keyword only | `Sequence[CombinationContender]` | `()` |
+| `preprocessing` | keyword only | `Any \| None` | `None` |
+| `preprocessing_policy` | keyword only | `Any \| None` | `None` |
+| `tcode_target_map` | keyword only | `Mapping[int, tuple[str, str]] \| None` | `None` |
+| `save_models` | keyword only | `bool` | `True` |
+| `model_store` | keyword only | `str` | `"trained_model"` |
+| `checkpoint_dir` | keyword only | `str \| None` | `None` |
+| `result_store` | keyword only | `str \| Path \| None` | `None` |
+| `n_jobs` | keyword only | `int \| str` | `1` |
+| `preprocessing_cache_dir` | keyword only | `str \| bool \| None` | `None` |
+| `seed` | keyword only | `int \| None` | `42` |
+| `provenance` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `provenance_level` | keyword only | `Literal['full', 'basic']` | `"full"` |
+| `on_unsupported_direct` | keyword only | `Literal['error', 'warn', 'reroute']` | `"error"` |
+
+#### Returns
+
+`PipelineSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.pipeline_spec(...)
+```
+### resolve_target
+
+Qualified name: `macroforecast.pipeline.spec.resolve_target`
+
+#### Signature
+
+```python
+macroforecast.pipeline.resolve_target(target: str | TargetSpec, *, data: Any = None, tcode: int | None = None, tcode_map: Mapping[int, tuple[str, str]] | None = None, reduce_i2: bool = True) -> ResolvedTarget
+```
+
+#### Description
+
+Resolve a target to its (forecast_policy, target_transform).
+
+Explicit ``TargetSpec.transform``/``policy`` win; otherwise the t-code (passed
+or read from ``data`` metadata) is mapped through ``tcode_map`` (defaults to
+:data:`TCODE_TARGET_MAP`). Raises if neither an explicit transform nor a
+t-code is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `target` | positional or keyword | `str \| TargetSpec` | `required` |
+| `data` | keyword only | `Any` | `None` |
+| `tcode` | keyword only | `int \| None` | `None` |
+| `tcode_map` | keyword only | `Mapping[int, tuple[str, str]] \| None` | `None` |
+| `reduce_i2` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ResolvedTarget`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.resolve_target(...)
+```

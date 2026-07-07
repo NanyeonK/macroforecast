@@ -1,117 +1,171 @@
-# custom_features
+# Custom Features
 
 [Back to custom extensions](index.md)
 
-Use custom feature functions when a transformation belongs after
-preprocessing and before model fitting. The output must be a numeric feature
-matrix aligned to the input date index.
+This page is generated from the live callable signatures.
 
-## Direct Function
+## Callable Reference
+
+### feature_spec
+
+Qualified name: `macroforecast.feature_engineering.specs.feature_spec`
+
+#### Signature
 
 ```python
-mf.feature_engineering.custom_features(
-    data,
-    func,
-    *,
-    columns=None,
-    name=None,
-    prefix=None,
-    **params,
-) -> pandas.DataFrame
+macroforecast.feature_engineering.feature_spec(*, target: str | None = None, targets: Iterable[str] | None = None, horizon: int | None = None, horizons: Iterable[int] | int | None = None, predictors: "Literal['all'] | Iterable[str] | None" = None, lags: Iterable[int] | int | None = (0, 1), target_lags: Iterable[int] | int | None = None, rolling_windows: Iterable[int] | int | None = None, rolling_min_periods: int | None = None, add_time: bool = False, time_trend: bool = True, time_month: bool = False, time_quarter: bool = False, time_year: bool = False, pca_components: int | None = None, pca_columns: Iterable[str] | None = None, pca_scale: bool = True, pca_prefix: str = "pc", steps: Iterable[Mapping[str, Any]] | None = None, feature_steps: Iterable[Mapping[str, Any]] | None = None, include_original: bool = False, target_transform: TargetTransform = "level", target_mode: TargetMode = "direct", drop_missing: bool = True, metadata: Mapping[str, Any] | None = None) -> FeatureSpec
 ```
 
-### Callable Signature
+#### Description
+
+Create a reusable feature-building specification.
+
+Parameters define the target columns, horizons, predictor columns, simple
+lag/rolling/PCA shortcuts, or an explicit ``feature_steps`` pipeline. The
+returned spec is inert until a runner calls ``fit(...)`` or
+``fit_transform(...)`` on a training panel, so stateful steps such as PCA,
+sparse PCA, scaling, and feature selection are fitted inside the training
+window rather than on the full sample.
+
+``target``/``targets`` select the source series to forecast.
+``horizon``/``horizons`` select direct forecast horizons. ``predictors`` may
+be ``"all"``, an iterable of column names, ``None`` for metadata/default
+resolution, or an empty iterable for target-only designs. ``lags`` and
+``target_lags`` build simple lag matrices when no explicit step pipeline is
+supplied. ``steps`` is an alias for ``feature_steps``.
+
+Returns
+FeatureSpec
+    Frozen feature-builder configuration with ``fit``, ``fit_transform``,
+    ``to_dict``, and ``to_metadata`` methods.
+
+Example
+>>> import macroforecast as mf
+>>> features = mf.feature_engineering.feature_spec(
+...     target="INDPRO",
+...     predictors=["UNRATE", "CPIAUCSL"],
+...     horizons=[1, 3],
+...     lags=(0, 1, 2),
+... )
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `target` | keyword only | `str \| None` | `None` |
+| `targets` | keyword only | `Iterable[str] \| None` | `None` |
+| `horizon` | keyword only | `int \| None` | `None` |
+| `horizons` | keyword only | `Iterable[int] \| int \| None` | `None` |
+| `predictors` | keyword only | `Literal['all'] \| Iterable[str] \| None` | `None` |
+| `lags` | keyword only | `Iterable[int] \| int \| None` | `(0, 1)` |
+| `target_lags` | keyword only | `Iterable[int] \| int \| None` | `None` |
+| `rolling_windows` | keyword only | `Iterable[int] \| int \| None` | `None` |
+| `rolling_min_periods` | keyword only | `int \| None` | `None` |
+| `add_time` | keyword only | `bool` | `False` |
+| `time_trend` | keyword only | `bool` | `True` |
+| `time_month` | keyword only | `bool` | `False` |
+| `time_quarter` | keyword only | `bool` | `False` |
+| `time_year` | keyword only | `bool` | `False` |
+| `pca_components` | keyword only | `int \| None` | `None` |
+| `pca_columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `pca_scale` | keyword only | `bool` | `True` |
+| `pca_prefix` | keyword only | `str` | `"pc"` |
+| `steps` | keyword only | `Iterable[Mapping[str, Any]] \| None` | `None` |
+| `feature_steps` | keyword only | `Iterable[Mapping[str, Any]] \| None` | `None` |
+| `include_original` | keyword only | `bool` | `False` |
+| `target_transform` | keyword only | `TargetTransform` | `"level"` |
+| `target_mode` | keyword only | `TargetMode` | `"direct"` |
+| `drop_missing` | keyword only | `bool` | `True` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`FeatureSpec`
+
+#### Minimal Use
 
 ```python
-func(source: pandas.DataFrame, *, metadata: dict, **params)
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_engineering.feature_spec(...)
 ```
 
-### Accepted Return Types
+### custom_features
 
-| Return type | Requirement |
-| --- | --- |
-| `DataFrame` | Same date index or same row count as `source`. |
-| `Series` | Same date index or same row count as `source`. |
-| 1-D array-like | Length equals `len(source)`. |
-| 2-D array-like | Row count equals `len(source)`. |
+Qualified name: `macroforecast.feature_engineering.transforms.custom_features`
 
-The returned feature table receives `attrs["macroforecast_metadata_schema"]`
-and `attrs["macroforecast_metadata"]`.
-
-## Runner-Safe Step
+#### Signature
 
 ```python
-mf.feature_engineering.custom_step(
-    name,
-    func=None,
-    *,
-    fit_func=None,
-    transform_func=None,
-    columns=None,
-    requires_target=False,
-    prefix=None,
-    **params,
-) -> dict
+macroforecast.feature_engineering.custom_features(data: FeatureInput, func: Callable[..., Any], *, metadata: Mapping[str, Any] | None = None, columns: Iterable[str] | None = None, name: str | None = None, **params: Any) -> pd.DataFrame
 ```
 
-### Stateless Step
+#### Description
+
+Apply a user supplied feature-engineering callable to a panel.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `FeatureInput` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `name` | keyword only | `str \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-def square_feature(source, *, metadata=None, suffix="sq"):
-    column = source.columns[0]
-    return pandas.DataFrame(
-        {f"{column}_{suffix}": source[column] ** 2},
-        index=source.index,
-    )
-
-features = mf.feature_engineering.feature_spec(
-    target="target",
-    horizon=1,
-    predictors=["x", "z"],
-    steps=[
-        mf.feature_engineering.custom_step(
-            "x_square",
-            square_feature,
-            columns=["x"],
-        ),
-    ],
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_engineering.custom_features(...)
 ```
 
-### Fitted Step
+### custom_step
+
+Qualified name: `macroforecast.feature_engineering.compose.custom_step`
+
+#### Signature
 
 ```python
-features = mf.feature_engineering.feature_spec(
-    target="target",
-    horizon=1,
-    predictors="all",
-    steps=[
-        mf.feature_engineering.custom_step(
-            "my_factor",
-            fit_func=my_factor_fit,
-            transform_func=my_factor_transform,
-            columns=["PAYEMS", "UNRATE", "HOUST"],
-            requires_target=True,
-            prefix="myf",
-            n_components=2,
-        ),
-    ],
-)
+macroforecast.feature_engineering.custom_step(name: str, func: Callable[..., Any] | None = None, *, input: str = "panel", include: bool = True, columns: Iterable[str] | None = None, fit_func: Callable[..., Any] | None = None, transform_func: Callable[..., Any] | None = None, requires_target: bool = False, min_train_size: int | None = None, prefix: str | None = None, drop_missing: bool = False, **params: Any) -> dict[str, Any]
 ```
 
-| Callable | Contract |
-| --- | --- |
-| `fit_func` | `fit_func(source, target=None, metadata=None, **params) -> state` |
-| `transform_func` | `transform_func(source, state=state, metadata=None, **params) -> feature output` |
-| fitted state object | `state.transform(source) -> feature output` |
-| state-aware `func` | `func(source, state=state, metadata=None, **params) -> feature output` |
+#### Description
 
-Set `requires_target=True` only when the feature fit step needs the resolved
-target. Transform-time code should not use future target values.
+Return a user-supplied feature step for ``feature_spec``.
 
-## Flow
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any] \| None` | `None` |
+| `input` | keyword only | `str` | `"panel"` |
+| `include` | keyword only | `bool` | `True` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `fit_func` | keyword only | `Callable[..., Any] \| None` | `None` |
+| `transform_func` | keyword only | `Callable[..., Any] \| None` | `None` |
+| `requires_target` | keyword only | `bool` | `False` |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `prefix` | keyword only | `str \| None` | `None` |
+| `drop_missing` | keyword only | `bool` | `False` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
 
 ```python
-feature_set = features.fit_transform(processed.panel)
-fit = mf.models.ridge(feature_set.X.dropna(), feature_set.y.iloc[:, 0].dropna())
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_engineering.custom_step(...)
 ```

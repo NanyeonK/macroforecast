@@ -9,12 +9,14 @@ on:
     paths:
       - '.github/workflows/ci-docs.yml'
       - 'docs/**'
+      - 'tools/docgen/**'
       - 'pyproject.toml'
       - 'macroforecast/**'  # autodoc reads docstrings from the package
   pull_request:
     paths:
       - '.github/workflows/ci-docs.yml'
       - 'docs/**'
+      - 'tools/docgen/**'
       - 'pyproject.toml'
       - 'macroforecast/**'
 
@@ -38,13 +40,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[docs]"
 
-      # NOTE: the former "Encyclopedia drift check" step was removed. It invoked
-      # `tools.docgen encyclopedia`, which imports `macroforecast.core.ops` /
-      # `macroforecast.core.layer_specs` and diffs `docs/reference/generated/`.
-      # None of those exist in this package (it is a forecasting package, not a
-      # layered-ops framework) — the tooling and the generated tree are orphaned
-      # from a different architecture, so the step failed on every push and
-      # blocked the docs deploy. The live docs build does not depend on it.
+      - name: Reference docs drift check
+        run: |
+          # The reference tree is source-committed but generated from the live
+          # public API, model registry, signatures, and docstrings. Fail if the
+          # committed pages no longer match the installed package.
+          python -m tools.docgen --check docs/reference
 
       - name: Model overview drift check
         run: |

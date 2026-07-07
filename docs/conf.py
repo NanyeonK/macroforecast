@@ -14,7 +14,7 @@ copyright = "2026, NanyeonK"
 
 try:
     from macroforecast import __version__ as _pkg_version  # type: ignore[import-not-found]
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     _pkg_version = "0.1.0"
 
 version = _pkg_version
@@ -41,6 +41,7 @@ language = "en"
 
 exclude_patterns = [
     "_build",
+    "superpowers/plans/*",
     "Thumbs.db",
     ".DS_Store",
 ]
@@ -132,4 +133,6 @@ intersphinx_mapping = {
 # -- Warnings -----------------------------------------------------------------
 
 nitpicky = False
-suppress_warnings = ["myst.xref_missing", "toc.not_included", "myst.header"]
+# Keep this list empty by default so ``sphinx-build -W`` catches broken MyST
+# links and orphaned pages. Add a suppression only with a one-line reason.
+suppress_warnings: list[str] = []

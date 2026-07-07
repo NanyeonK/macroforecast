@@ -1,113 +1,116 @@
-# Custom Window, Selection, and Forecasting
+# Custom Window, Selection, And Forecasting
 
 [Back to custom extensions](index.md)
 
-Use these hooks when the timing, parameter search, or forecast-combination
-logic is project-specific.
+This page is generated from the live callable signatures.
 
-## custom_stage_policy
+## Callable Reference
 
-```python
-mf.window.custom_stage_policy(selector, *, name=None, metadata=None) -> mf.window.StagePolicy
-```
+### custom_stage_policy
 
-### Selector Contract
+Qualified name: `macroforecast.window.policy.custom_stage_policy`
 
-```python
-selector(index: pandas.Index, *, item: dict, policy: StagePolicy)
-```
-
-The selector may return a boolean mask, a slice, integer positions, or index
-labels. The result must select at least one label and must not select dates
-outside the supplied index.
-
-### Example
+#### Signature
 
 ```python
-def last_fit_half(index, *, item, policy):
-    fit_idx = item["fit_idx"]
-    return index[fit_idx[len(fit_idx) // 2 :]]
-
-policy = mf.window.custom_stage_policy(last_fit_half)
+macroforecast.window.custom_stage_policy(selector: Callable[..., Any], *, update: StageUpdate = "every_origin", apply_to: tuple[str, ...] | list[str] = ('fit', 'test'), metadata: Mapping[str, Any] | None = None) -> StagePolicy
 ```
 
-Use this for non-standard model-selection or preprocessing samples. Standard
-expanding, rolling, fixed-reference, and origin-available behavior should use
-`mf.window.stage_policy(...)`.
+#### Description
 
-## custom_search
+Create a stage policy whose sample labels are supplied by a callable.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `selector` | positional or keyword | `Callable[..., Any]` | `required` |
+| `update` | keyword only | `StageUpdate` | `"every_origin"` |
+| `apply_to` | keyword only | `tuple[str, ...] \| list[str]` | `("fit", "test")` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`StagePolicy`
+
+#### Minimal Use
 
 ```python
-mf.model_selection.custom_search(
-    name,
-    custom_func,
-    **params,
-) -> mf.model_selection.SearchSpec
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.custom_stage_policy(...)
 ```
 
-### Search Callable Contract
+### custom_search
+
+Qualified name: `macroforecast.model_selection.builders.custom_search`
+
+#### Signature
 
 ```python
-func(
-    *,
-    model,
-    X,
-    y,
-    splits,
-    metric,
-    fixed_params,
-    search,
-    rng,
-    maximize,
-    evaluate_candidate,
-    **params,
-)
+macroforecast.model_selection.custom_search(name: str, func: Callable[..., Any], *, param_grid: dict[str, Iterable[Any] | Any] | None = None, param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None, n_iter: int = 20, random_state: int | None = None, metadata: dict[str, Any] | None = None, **params: Any) -> SearchSpec
 ```
 
-The callable may return trial records, a trial `DataFrame`, a `SearchResult`,
-or `(records, metadata)`. Prefer `evaluate_candidate(...)` so the package owns
-fit/predict/scoring consistency.
+#### Description
 
-## custom_combination
+Build a user-supplied parameter-search request.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `param_grid` | keyword only | `dict[str, Iterable[Any] \| Any] \| None` | `None` |
+| `param_distributions` | keyword only | `dict[str, ParamDistribution \| Iterable[Any] \| Any] \| None` | `None` |
+| `n_iter` | keyword only | `int` | `20` |
+| `random_state` | keyword only | `int \| None` | `None` |
+| `metadata` | keyword only | `dict[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`SearchSpec`
+
+#### Minimal Use
 
 ```python
-mf.forecasting.custom_combination(
-    name,
-    func,
-    *,
-    models=None,
-    **params,
-) -> mf.forecasting.CombinationSpec
+import macroforecast as mf
+# Call with the signature above:
+# mf.model_selection.custom_search(...)
 ```
 
-### Combination Callable Contract
+### custom_combination
+
+Qualified name: `macroforecast.forecasting.combination.custom_combination`
+
+#### Signature
 
 ```python
-func(forecasts: pandas.DataFrame, *, actual: pandas.Series, **params)
+macroforecast.forecasting.custom_combination(name: str, func: Callable[..., Any], *, models: Sequence[str] | None = None, **params: Any) -> CombinationSpec
 ```
 
-`forecasts` is a wide matrix of base-model predictions indexed by
-`(date, origin, origin_pos, horizon)`. The output must be a `Series` or
-one-dimensional array-like object aligned to those rows.
+#### Description
 
-### Example
+Build a custom forecast-combination spec for ``forecasting.run``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `models` | keyword only | `Sequence[str] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`CombinationSpec`
+
+#### Minimal Use
 
 ```python
-def blend(forecasts, *, actual, weight=0.5):
-    return weight * forecasts.iloc[:, 0] + (1.0 - weight) * forecasts.iloc[:, -1]
-
-combination = mf.forecasting.custom_combination(
-    "ridge_lasso_blend",
-    blend,
-    models=["ridge", "lasso"],
-    weight=0.25,
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.custom_combination(...)
 ```
-
-## Boundary
-
-| Hook | Owns | Does not own |
-| --- | --- | --- |
-| `custom_stage_policy` | sample labels for one stage | fitting or scoring |
-| `custom_search` | hyperparameter search algorithm | model default search spaces |
-| `custom_combination` | combining already produced forecasts | fit-time model ensembles |

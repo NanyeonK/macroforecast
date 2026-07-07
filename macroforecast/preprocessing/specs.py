@@ -365,7 +365,32 @@ class FittedPreprocessor:
 
 
 def preprocess_spec(**options: Any) -> PreprocessSpec:
-    """Create a reusable preprocessing specification."""
+    """Create a reusable preprocessing specification.
+
+    Keyword options are the same data-cleaning choices accepted by
+    ``reprocess(...)``: frequency alignment, transform-code handling,
+    outlier policy, imputation policy, standardization, frame-edge handling,
+    and optional custom preprocessing steps. Stage timing and metadata are not
+    accepted here; they are supplied later through ``PreprocessSpec.fit(...)``
+    or by the forecasting/pipeline runner.
+
+    Returns
+    -------
+    PreprocessSpec
+        Frozen preprocessing configuration. Call ``fit(data)`` to get a
+        ``FittedPreprocessor`` or ``fit_transform(data)`` to obtain a
+        ``PreprocessedData`` object for the training panel.
+
+    Example
+    -------
+    >>> import macroforecast as mf
+    >>> prep = mf.preprocessing.preprocess_spec(
+    ...     transform="official",
+    ...     outliers="iqr",
+    ...     impute="em_factor",
+    ...     standardize="zscore",
+    ... )
+    """
 
     unexpected = sorted(set(options) - _REPROCESS_OPTIONS)
     if unexpected:

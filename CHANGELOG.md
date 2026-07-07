@@ -5,6 +5,21 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `tools/docgen`, `docs/reference`, `README.md`, `docs/conf.py` (docs,
+  issue #421): replaced the broken layered-ops/OptionDoc generator with a
+  current public-API reference renderer and restored
+  `python -m tools.docgen --check docs/reference` in `ci-docs`. The committed
+  reference tree now regenerates from source-declared module `__all__`
+  surfaces, model specs, signatures, and docstrings; stale option-doc internals under
+  `tools/docgen/option_docs` plus the old layer introspector/RST/builder
+  helpers were removed. README and Getting Started now document PyPI and
+  editable install routes, extras, hosted docs, and the current pipeline quick
+  path. First-touch docstrings were added for `load_fred_md`,
+  `feature_spec`, `preprocess_spec`, `TargetSpec`, `ResultStore`, and
+  `fred_md_vintages`; Sphinx warning suppressions were removed and exposed
+  link/orphan issues fixed. The drift gate now ignores runtime-only mutations
+  to module export lists, with regression coverage for optional-dependency
+  environment drift.
 - `models/timeseries.py`, `forecasting/policies/panel.py`, `pipeline/spec.py`
   (behavior change, issue #442): `var` now has a validated direct-projection
   mode for `direct` panel forecasts. The direct VAR target equation regresses

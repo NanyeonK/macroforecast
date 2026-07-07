@@ -1,101 +1,118 @@
-# Custom Interpretation and Analysis
+# Custom Interpretation And Analysis
 
 [Back to custom extensions](index.md)
 
-Use these hooks after models, features, or forecasts already exist. They do
-not refit models, rebuild features, or change predictions.
+This page is generated from the live callable signatures.
 
-## custom_interpretation
+## Callable Reference
+
+### custom_interpretation
+
+Qualified name: `macroforecast.interpretation.core.custom_interpretation`
+
+#### Signature
 
 ```python
-mf.interpretation.custom_interpretation(
-    model,
-    X,
-    func,
-    *,
-    y=None,
-    name=None,
-    **params,
-) -> pandas.DataFrame
+macroforecast.interpretation.custom_interpretation(model: Any, X: pd.DataFrame, func: Callable[..., Any], *, y: pd.Series | np.ndarray | None = None, name: str | None = None, metadata: Mapping[str, Any] | None = None, **params: Any) -> pd.DataFrame
 ```
 
-### Callable Signature
+#### Description
+
+Run a user-supplied interpretation callable and attach metadata.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `model` | positional or keyword | `Any` | `required` |
+| `X` | positional or keyword | `pd.DataFrame` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `y` | keyword only | `pd.Series \| np.ndarray \| None` | `None` |
+| `name` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-func(model, X, *, y=None, metadata=None, **params)
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation.custom_interpretation(...)
 ```
 
-Accepted return types are `DataFrame`, `Series`, mapping, or a sequence that
-can be converted to a `DataFrame`. The output table receives
-`attrs["macroforecast_metadata_schema"]["kind"] == "custom_interpretation"`.
+### custom_feature_diagnostic
 
-## custom_feature_diagnostic
+Qualified name: `macroforecast.feature_analysis.core.custom_feature_diagnostic`
+
+#### Signature
 
 ```python
-mf.feature_analysis.custom_feature_diagnostic(
-    features,
-    func,
-    *,
-    name=None,
-    **params,
-) -> pandas.DataFrame
+macroforecast.feature_analysis.custom_feature_diagnostic(data: Any, func: Callable[..., Any], *, name: str | None = None, feature_metadata: pd.DataFrame | None = None, metadata: Mapping[str, Any] | None = None, **params: Any) -> pd.DataFrame
 ```
 
-### Callable Signature
+#### Description
+
+Run a user-supplied feature diagnostic and attach macroforecast metadata.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `name` | keyword only | `str \| None` | `None` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-func(X, *, feature_metadata=None, metadata=None, **params)
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.custom_feature_diagnostic(...)
 ```
 
-Use this for feature-matrix checks: missingness by block, custom stability
-statistics, custom factor summaries, or project-local data-quality flags.
+### custom_forecast_diagnostic
 
-## custom_forecast_diagnostic
+Qualified name: `macroforecast.forecast_analysis.core.custom_forecast_diagnostic`
+
+#### Signature
 
 ```python
-mf.forecast_analysis.custom_forecast_diagnostic(
-    forecasts,
-    func,
-    *,
-    name=None,
-    **params,
-) -> pandas.DataFrame
+macroforecast.forecast_analysis.custom_forecast_diagnostic(forecasts: Any, func: Callable[..., Any], *, name: str | None = None, metadata: Mapping[str, Any] | None = None, **params: Any) -> pd.DataFrame
 ```
 
-### Callable Signature
+#### Description
+
+Run a user-supplied forecast diagnostic and attach macroforecast metadata.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `name` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-func(forecasts, *, metadata=None, **params)
-```
-
-Use this for forecast-output checks: horizon bias, model-level summary tables,
-origin-level errors, custom stability summaries, or project-local reporting
-tables.
-
-## Example
-
-```python
-feature_diag = mf.feature_analysis.custom_feature_diagnostic(
-    feature_set,
-    lambda X, **_: {"n_features": X.shape[1], "missing_cells": int(X.isna().sum().sum())},
-    name="shape_check",
-)
-
-forecast_diag = mf.forecast_analysis.custom_forecast_diagnostic(
-    result,
-    lambda forecasts, **_: forecasts.groupby("model", as_index=False)["prediction"].mean(),
-    name="mean_prediction_by_model",
-)
-```
-
-## Output Flow
-
-```python
-mf.output.write_artifacts(
-    {
-        "custom_feature_diagnostic": feature_diag,
-        "custom_forecast_diagnostic": forecast_diag,
-    },
-    "results/custom_diagnostics",
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.custom_forecast_diagnostic(...)
 ```
