@@ -650,6 +650,24 @@ model name. Here it wraps a plain ridge regression:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ridge_demo supervised
 </pre></div>
 </div>
+<p>Pass the <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code> returned by <code class="docutils literal notranslate"><span class="pre">custom_model()</span></code> into an <code class="docutils literal notranslate"><span class="pre">Arm</span></code>; do not pass the
+raw <code class="docutils literal notranslate"><span class="pre">fit_ridge</span></code> callable as <code class="docutils literal notranslate"><span class="pre">Arm.model</span></code>. <code class="docutils literal notranslate"><span class="pre">pipeline_spec()</span></code> resolves model names
+and validates <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code> objects before any cells run, so a typo in a model name
+or a bare callable fails while the spec is built. <code class="docutils literal notranslate"><span class="pre">custom_model()</span></code> also validates
+<code class="docutils literal notranslate"><span class="pre">input_kind</span></code>, the fit-function signature, and <code class="docutils literal notranslate"><span class="pre">default_preset</span></code> against
+<code class="docutils literal notranslate"><span class="pre">search_spaces</span></code>.</p>
+<p>For reusable result stores, give custom callables a stable digest:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ridge_spec</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span>
+    <span class="s2">&quot;ridge_demo&quot;</span><span class="p">,</span>
+    <span class="n">fit_ridge</span><span class="p">,</span>
+    <span class="n">default_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+    <span class="n">mf_digest</span><span class="o">=</span><span class="s2">&quot;ridge-demo-v1&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Change that digest whenever the callable’s forecasting behavior changes. Without
+it, <code class="docutils literal notranslate"><span class="pre">result_store</span></code> recomputes the custom-model cell and emits a warning explaining
+why the cell could not be digested.</p>
 <p>Give it an explicit <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> that actually uses the panel – an arm with
 <code class="docutils literal notranslate"><span class="pre">features=None</span></code> does NOT mean “no predictors”; see the
 <a class="reference internal" href="concepts/models_and_arms.html"><span class="std std-doc">Models and Arms</span></a> page and the default-feature-spec
@@ -682,6 +700,11 @@ using only <code class="docutils literal notranslate"><span class="pre">demand_i
 <span class="nb">print</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">accuracy</span><span class="p">[[</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;contender&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">]])</span>
 </pre></div>
 </div>
+<p>If a custom model raises during a managed pipeline run, <code class="docutils literal notranslate"><span class="pre">run_pipeline()</span></code> warns and
+records the omitted cell on <code class="docutils literal notranslate"><span class="pre">report.failed_cells</span></code> and
+<code class="docutils literal notranslate"><span class="pre">report.leakage_audit[&quot;failed_cells&quot;]</span></code>. Downstream <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mf.reporting.paper_accuracy_table()</span></code> also warn when those failed cells are
+present, so a failed contender cannot disappear silently from the horse race.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>      target  horizon contender     rmse  relative_mse    r2_oos
 demand_index        1        AR 0.299713      1.000000  0.000000
 demand_index        1     Ridge 0.295677      0.973249  0.026751

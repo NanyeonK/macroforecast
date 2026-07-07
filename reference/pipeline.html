@@ -1106,6 +1106,10 @@ Per-cell failures are isolated – see :func:<code class="docutils literal notra
 <section id="id27">
 <h4>Description<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
 <p>Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport.</p>
+<p>If evaluation raises a known validation/data error after forecast cells have
+completed, the returned report carries the master forecast frame intact,
+empty evaluation tables, and <code class="docutils literal notranslate"><span class="pre">PipelineReport.evaluation_error</span></code> with the
+captured error text.</p>
 </section>
 <section id="id28">
 <h4>Parameters<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
@@ -1215,7 +1219,7 @@ and never aborts the others.</p>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.PipelineReport</span></code></p>
 <section id="id36">
 <h4>Signature<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">PipelineReport</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">significance</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">mcs</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">provenance</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">leakage_audit</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">interpretation</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trained_model&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">failed_cells</span><span class="p">:</span> <span class="s2">&quot;&#39;Sequence[Mapping[str, Any]]&#39;&quot;</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">empty_cells</span><span class="p">:</span> <span class="s2">&quot;&#39;Sequence[Mapping[str, Any]]&#39;&quot;</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">density</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">calibration</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">PipelineReport</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">significance</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">mcs</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span><span class="p">,</span> <span class="n">provenance</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">leakage_audit</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">interpretation</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trained_model&quot;</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">failed_cells</span><span class="p">:</span> <span class="s2">&quot;&#39;Sequence[Mapping[str, Any]]&#39;&quot;</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">empty_cells</span><span class="p">:</span> <span class="s2">&quot;&#39;Sequence[Mapping[str, Any]]&#39;&quot;</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">density</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">calibration</span><span class="p">:</span> <span class="s2">&quot;&#39;Any&#39;&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">evaluation_error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
@@ -1299,6 +1303,11 @@ and never aborts the others.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">'Any'</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation_error</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1375,6 +1384,10 @@ and never aborts the others.</p>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">calibration</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'Any'</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation_error</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
@@ -3020,7 +3033,15 @@ Arms (build them by hand, varying <code class="docutils literal notranslate"><sp
 (<code class="docutils literal notranslate"><span class="pre">len(targets)</span> <span class="pre">*</span> <span class="pre">len(arms)</span> <span class="pre">*</span> <span class="pre">len(horizons)</span></code> cells) via
 :func:<code class="docutils literal notranslate"><span class="pre">auto_parallelism</span></code> and splits the cores between cell workers
 (stored as the resolved <code class="docutils literal notranslate"><span class="pre">PipelineSpec.n_jobs</span></code>) and per-cell model-internal
-threads (stored as <code class="docutils literal notranslate"><span class="pre">PipelineSpec.model_threads</span></code>).</p>
+threads (stored as <code class="docutils literal notranslate"><span class="pre">PipelineSpec.model_threads</span></code>). When <code class="docutils literal notranslate"><span class="pre">n_jobs</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>,
+every arm’s model, features, preprocessing, policies, and model-selection
+objects must be pickleable because cells run in worker processes. Define
+custom callables at module scope, or use <code class="docutils literal notranslate"><span class="pre">n_jobs=1</span></code> for local closures.</p>
+<p>Model names, evaluation metric names, combination methods, and combination
+<code class="docutils literal notranslate"><span class="pre">over=</span></code> contenders are resolved during spec construction. Unknown names
+fail here, before any forecast cell is computed. Bare callable arm models are
+rejected; wrap them with <code class="docutils literal notranslate"><span class="pre">mf.models.custom_model(...)</span></code> so the runner has a
+stable <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">preprocessing_cache_dir</span></code> is a path, <code class="docutils literal notranslate"><span class="pre">None</span></code>, or <code class="docutils literal notranslate"><span class="pre">False</span></code> – see the field
 docstring on :class:<code class="docutils literal notranslate"><span class="pre">PipelineSpec</span></code> for the full three-state contract. In short:
 a path pins a persistent shared on-disk preprocessing-fit cache; <code class="docutils literal notranslate"><span class="pre">None</span></code>

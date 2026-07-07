@@ -17,12 +17,20 @@ Qualified name: `macroforecast.models.specs.custom_model`
 #### Signature
 
 ```python
-macroforecast.models.custom_model(name: str, fit_func: Callable[..., Any], *, family: str = "custom", default_params: Mapping[str, Any] | None = None, parameters: tuple[ModelParameter, ...] = (), search_spaces: SearchSpaces | None = None, default_search_method: str = "grid", default_preset: str = "standard", input_kind: InputKind = "supervised", backend: str = "custom", requires_extra: str | None = None, requires_scaling: bool = False, recommended_preprocessing: tuple[str, ...] = (), description: str | None = None) -> ModelSpec
+macroforecast.models.custom_model(name: str, fit_func: Callable[..., Any], *, family: str = "custom", default_params: Mapping[str, Any] | None = None, parameters: tuple[ModelParameter, ...] = (), search_spaces: SearchSpaces | None = None, default_search_method: str = "grid", default_preset: str | None = "standard", input_kind: InputKind = "supervised", backend: str = "custom", requires_extra: str | None = None, requires_scaling: bool = False, recommended_preprocessing: tuple[str, ...] = (), description: str | None = None, mf_digest: str | None = None) -> ModelSpec
 ```
 
 #### Description
 
 Build a user-owned ``ModelSpec`` without registering a package model.
+
+``fit_func`` must be callable and accept the inputs required by
+``input_kind`` (``X, y`` for supervised models; at least the target/panel
+object for target, panel, and volatility models). ``input_kind`` is validated
+at construction, and ``default_preset`` must name a key in ``search_spaces``
+when search spaces are supplied. Pass ``mf_digest=`` when this model should
+be reusable through ``pipeline_spec(result_store=...)``; the digest is stamped
+on ``fit_func.__mf_digest__``.
 
 #### Parameters
 
@@ -35,13 +43,14 @@ Build a user-owned ``ModelSpec`` without registering a package model.
 | `parameters` | keyword only | `tuple[ModelParameter, ...]` | `()` |
 | `search_spaces` | keyword only | `SearchSpaces \| None` | `None` |
 | `default_search_method` | keyword only | `str` | `"grid"` |
-| `default_preset` | keyword only | `str` | `"standard"` |
+| `default_preset` | keyword only | `str \| None` | `"standard"` |
 | `input_kind` | keyword only | `InputKind` | `"supervised"` |
 | `backend` | keyword only | `str` | `"custom"` |
 | `requires_extra` | keyword only | `str \| None` | `None` |
 | `requires_scaling` | keyword only | `bool` | `False` |
 | `recommended_preprocessing` | keyword only | `tuple[str, ...]` | `()` |
 | `description` | keyword only | `str \| None` | `None` |
+| `mf_digest` | keyword only | `str \| None` | `None` |
 
 #### Returns
 

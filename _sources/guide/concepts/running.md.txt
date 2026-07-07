@@ -70,6 +70,22 @@ inputs -- only `recursive` does that.
 The t-code to policy mapping is documented in the
 [Pipeline reference](../../reference/pipeline.md).
 
+Recursive custom models need extra care with exogenous predictors. A custom
+supervised model with non-target features under `forecast_policy="recursive"`
+must only use predictors that are genuinely available at each recursive step
+(for example, lagged values). `pipeline_spec()` warns when it can see a custom
+supervised model, a recursive target policy, and exogenous features in the same
+arm.
+
+## Parallel custom code
+
+`pipeline_spec(..., n_jobs>1)` runs cells in worker processes. Any custom model,
+feature, preprocessing, policy, or model-selection object carried by an arm must
+therefore be pickleable. Define custom callables at module scope, or keep
+`n_jobs=1` for notebook-local closures. The runner preflights these arm objects
+before dispatch and raises an actionable `ValueError` instead of a raw
+`PicklingError` from a worker pool.
+
 ## Key Callables
 
 `mf.forecasting.run` executes one (model, data, window) cell and returns a
@@ -197,6 +213,15 @@ not trust old results unless you also update `__mf_digest__` and force a miss. T
 store is intended for a single writer; inspect it with
 `mf.pipeline.result_store_summary(...)` and delete cells with
 `mf.pipeline.purge_result_store(...)`.
+
+For custom models, prefer passing the digest through the constructor:
+
+```python
+model = mf.models.custom_model("my_model", fit_model, mf_digest="my-model-v1")
+```
+
+When a custom object lacks a digest, `run_pipeline()` emits a warning for that
+undigestible cell and includes the reason from the result-store identity layer.
 
 Checkpoint rescoring also verifies identity for new checkpoints. Each completed
 cell writes a small manifest next to its `h<h>/origin_*.parquet` files. `rescore()`

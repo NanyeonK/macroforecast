@@ -578,7 +578,22 @@ fact (<code class="docutils literal notranslate"><span class="pre">path_average<
 inputs – only <code class="docutils literal notranslate"><span class="pre">recursive</span></code> does that.</p>
 <p>The t-code to policy mapping is documented in the
 <a class="reference internal" href="../../reference/pipeline.html"><span class="std std-doc">Pipeline reference</span></a>.</p>
+<p>Recursive custom models need extra care with exogenous predictors. A custom
+supervised model with non-target features under <code class="docutils literal notranslate"><span class="pre">forecast_policy=&quot;recursive&quot;</span></code>
+must only use predictors that are genuinely available at each recursive step
+(for example, lagged values). <code class="docutils literal notranslate"><span class="pre">pipeline_spec()</span></code> warns when it can see a custom
+supervised model, a recursive target policy, and exogenous features in the same
+arm.</p>
 </section>
+</section>
+<section id="parallel-custom-code">
+<h2>Parallel custom code<a class="headerlink" href="#parallel-custom-code" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">n_jobs&gt;1)</span></code> runs cells in worker processes. Any custom model,
+feature, preprocessing, policy, or model-selection object carried by an arm must
+therefore be pickleable. Define custom callables at module scope, or keep
+<code class="docutils literal notranslate"><span class="pre">n_jobs=1</span></code> for notebook-local closures. The runner preflights these arm objects
+before dispatch and raises an actionable <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> instead of a raw
+<code class="docutils literal notranslate"><span class="pre">PicklingError</span></code> from a worker pool.</p>
 </section>
 <section id="key-callables">
 <h2>Key Callables<a class="headerlink" href="#key-callables" title="Link to this heading">#</a></h2>
@@ -699,6 +714,12 @@ not trust old results unless you also update <code class="docutils literal notra
 store is intended for a single writer; inspect it with
 <code class="docutils literal notranslate"><span class="pre">mf.pipeline.result_store_summary(...)</span></code> and delete cells with
 <code class="docutils literal notranslate"><span class="pre">mf.pipeline.purge_result_store(...)</span></code>.</p>
+<p>For custom models, prefer passing the digest through the constructor:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">custom_model</span><span class="p">(</span><span class="s2">&quot;my_model&quot;</span><span class="p">,</span> <span class="n">fit_model</span><span class="p">,</span> <span class="n">mf_digest</span><span class="o">=</span><span class="s2">&quot;my-model-v1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When a custom object lacks a digest, <code class="docutils literal notranslate"><span class="pre">run_pipeline()</span></code> emits a warning for that
+undigestible cell and includes the reason from the result-store identity layer.</p>
 <p>Checkpoint rescoring also verifies identity for new checkpoints. Each completed
 cell writes a small manifest next to its <code class="docutils literal notranslate"><span class="pre">h&lt;h&gt;/origin_*.parquet</span></code> files. <code class="docutils literal notranslate"><span class="pre">rescore()</span></code>
 refuses manifest-bearing cells whose stored digest no longer matches the current
@@ -766,6 +787,7 @@ emit a warning because they can only be matched by directory name.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#textbook-mapping">Textbook mapping</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parallel-custom-code">Parallel custom code</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callables">Key Callables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeds-parallelism-and-model-storage">Seeds, parallelism, and model storage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#incremental-horse-races">Incremental horse races</a></li>
