@@ -1307,7 +1307,11 @@ def run_pipeline(spec: PipelineSpec):
     evaluation_error = None
     try:
         results = evaluate(master, spec)
-    except (ValueError, KeyError) as exc:
+    except Exception as exc:
+        # Sanctioned broad boundary: whatever the evaluation layer raises, the
+        # computed master forecast frame must survive into the partial report
+        # (hours of POOS compute otherwise vanish); the error itself is
+        # preserved verbatim and re-surfaced via the RuntimeWarning below.
         import warnings as _warnings
 
         evaluation_error = f"{type(exc).__name__}: {exc}"
