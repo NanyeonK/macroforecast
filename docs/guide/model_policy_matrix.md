@@ -19,13 +19,6 @@ Status meanings:
 The measured-scan column is only a point-in-time runtime smoke scan. `OK` means a
 combination ran, not that its forecast object has the right statistical meaning.
 
-Custom models are not listed in the generated matrix. Treat a
-`custom_model(input_kind="supervised")` like other supervised models for direct
-and path-average policies, but check recursive policies manually when the arm has
-exogenous features: the model can only use predictor values known at each
-recursive step. `pipeline_spec()` emits a warning for the detectable case
-(custom supervised model + recursive target policy + exogenous feature spec).
-
 | Model | Family | Input | direct | direct_average | path_average | recursive | Measured scan |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `albacore_components` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
