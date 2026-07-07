@@ -797,7 +797,7 @@ def _render_model_registry_section() -> str:
             )
             for parameter in spec.parameters:
                 lines.append(
-                    f"| `{parameter.name}` | `{_cell(_stable_repr(parameter.default))}` | `{parameter.kind}` | {parameter.tunable} | {_cell(parameter.description)} |"
+                    f"| `{parameter.name}` | `{_cell(_stable_repr(parameter.default))}` | `{_cell(str(parameter.kind))}` | {parameter.tunable} | {_cell(parameter.description)} |"
                 )
             lines.append("")
         if spec.search_spaces:

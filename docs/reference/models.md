@@ -244,7 +244,7 @@ Adaptive elastic net using initial coefficient-based column weights.
 | `normalize_weights` | `True` | `bool` | False | Rescale adaptive penalty weights to mean one, matching glmnet penalty.factor scaling. |
 | `max_iter` | `20000` | `int` | False | Final solver iteration cap. |
 | `tol` | `0.0001` | `float` | False | Final solver convergence tolerance. |
-| `random_state` | `None` | `int | None` | False | Final solver random seed. |
+| `random_state` | `None` | `int \| None` | False | Final solver random seed. |
 
 #### Search Spaces
 
@@ -287,7 +287,7 @@ Adaptive lasso using initial coefficient-based penalty weights.
 | `normalize_weights` | `True` | `bool` | False | Rescale adaptive penalty weights to mean one, matching glmnet penalty.factor scaling. |
 | `max_iter` | `20000` | `int` | False | Final solver iteration cap. |
 | `tol` | `0.0001` | `float` | False | Final solver convergence tolerance. |
-| `random_state` | `None` | `int | None` | False | Final solver random seed. |
+| `random_state` | `None` | `int \| None` | False | Final solver random seed. |
 
 #### Search Spaces
 
@@ -322,7 +322,7 @@ Inflation-specific component-space Albacore wrapper.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `reference_weights` | `None` | `mapping | sequence | None` | False | Official or reference basket weights. |
+| `reference_weights` | `None` | `mapping \| sequence \| None` | False | Official or reference basket weights. |
 | `alpha` | `1.0` | `float` | True | Target-shrinkage penalty strength. |
 | `max_iter` | `1000` | `int` | False | SLSQP solver iteration cap. |
 | `tol` | `1e-09` | `float` | False | SLSQP solver tolerance. |
@@ -436,7 +436,7 @@ macroforecast.models.arima(y: Any, *, order: tuple[int, int, int] = (1, 0, 0), s
 | --- | --- | --- | --- | --- |
 | `order` | `(1, 0, 0)` | `tuple[int, int, int]` | True | ARIMA (p, d, q) order. |
 | `seasonal_order` | `(0, 0, 0, 0)` | `tuple[int, int, int, int]` | False | Seasonal (P, D, Q, m) order. |
-| `trend` | `None` | `str | None` | False | Deterministic trend ('n','c','t','ct'). |
+| `trend` | `None` | `str \| None` | False | Deterministic trend ('n','c','t','ct'). |
 
 ### assemblage_regression
 
@@ -463,10 +463,10 @@ Generic assemblage regression wrapper with component and rank variants.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `space` | `"component"` | `component | rank` | False | Use component-space or rank-space aggregation. |
+| `space` | `"component"` | `component \| rank` | False | Use component-space or rank-space aggregation. |
 | `alpha` | `1.0` | `float` | True | Penalty strength. |
-| `reference_weights` | `None` | `mapping | sequence | None` | False | Optional reference weights for component space. |
-| `penalty` | `None` | `str | None` | False | Optional penalty override. |
+| `reference_weights` | `None` | `mapping \| sequence \| None` | False | Optional reference weights for component space. |
+| `penalty` | `None` | `str \| None` | False | Optional penalty override. |
 | `max_iter` | `1000` | `int` | False | SLSQP solver iteration cap. |
 | `tol` | `1e-09` | `float` | False | SLSQP solver tolerance. |
 
@@ -556,12 +556,12 @@ FAVAR::BVAR / bvartools Minnesota-prior Bayesian VAR posterior sampler.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `target` | `None` | `str | None` | False | Target column in the panel. |
+| `target` | `None` | `str \| None` | False | Target column in the panel. |
 | `n_lag` | `1` | `int` | True | VAR lag order. |
 | `kappa0` | `2.0` | `float` | True | FAVAR/bvartools Minnesota own-lag prior scale. |
 | `kappa1` | `0.5` | `float` | True | FAVAR/bvartools Minnesota lag-decay exponent. |
 | `nu0` | `0.0` | `float` | False | Inverse-Wishart degrees-of-freedom prior parameter. |
-| `s0` | `None` | `float | matrix | None` | False | Inverse-Wishart scale prior parameter. None (default): data-dependent diag(AR/OLS residual variance) scale. |
+| `s0` | `None` | `float \| matrix \| None` | False | Inverse-Wishart scale prior parameter. None (default): data-dependent diag(AR/OLS residual variance) scale. |
 | `iter` | `300` | `int` | False | Total Gibbs iterations (deep/paper-faithful default is 10000; pass explicitly to restore it). |
 | `burnin` | `100` | `int` | False | Burn-in iterations discarded from posterior summaries (deep/paper-faithful default is 5000; pass explicitly to restore it). |
 | `random_state` | `0` | `int` | False | Random seed for posterior draws. |
@@ -599,12 +599,12 @@ FAVAR::BVAR-aligned Bayesian VAR with normal/inverse-Wishart prior controls.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `target` | `None` | `str | None` | False | Target column in the panel. |
+| `target` | `None` | `str \| None` | False | Target column in the panel. |
 | `n_lag` | `1` | `int` | True | VAR lag order. |
 | `b0` | `0.0` | `float` | False | Normal prior mean for VAR coefficients. |
 | `vb0` | `0.0` | `float` | False | Normal prior variance scale for VAR coefficients. |
 | `nu0` | `0.0` | `float` | False | Inverse-Wishart degrees-of-freedom prior parameter. |
-| `s0` | `None` | `float | matrix | None` | False | Inverse-Wishart scale prior parameter. None (default): data-dependent diag(AR/OLS residual variance) scale. |
+| `s0` | `None` | `float \| matrix \| None` | False | Inverse-Wishart scale prior parameter. None (default): data-dependent diag(AR/OLS residual variance) scale. |
 | `iter` | `300` | `int` | False | Total Gibbs iterations (deep/paper-faithful default is 10000; pass explicitly to restore it). |
 | `burnin` | `100` | `int` | False | Burn-in iterations discarded from posterior summaries (deep/paper-faithful default is 5000; pass explicitly to restore it). |
 | `random_state` | `0` | `int` | False | Random seed for posterior draws. |
@@ -682,11 +682,11 @@ Component-space supervised aggregation; generic Albacorecomps primitive.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `alpha` | `1.0` | `float` | True | Penalty strength. |
-| `reference_weights` | `None` | `mapping | sequence | None` | False | Optional reference component weights. |
-| `penalty` | `None` | `ridge | target_shrinkage | None` | False | Penalty; None selects target_shrinkage when weights are supplied. |
+| `reference_weights` | `None` | `mapping \| sequence \| None` | False | Optional reference component weights. |
+| `penalty` | `None` | `ridge \| target_shrinkage \| None` | False | Penalty; None selects target_shrinkage when weights are supplied. |
 | `simplex` | `True` | `bool` | False | Constrain weights to sum to one. |
 | `nonneg` | `True` | `bool` | False | Constrain weights to be non-negative. |
-| `penalty_scale` | `"feature_std"` | `none | feature_std` | False | Scale penalties by component standard deviations. |
+| `penalty_scale` | `"feature_std"` | `none \| feature_std` | False | Scale penalties by component standard deviations. |
 | `max_iter` | `1000` | `int` | False | SLSQP solver iteration cap. |
 | `tol` | `1e-09` | `float` | False | SLSQP solver tolerance. |
 
@@ -723,7 +723,7 @@ CART regression tree.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `max_depth` | `None` | `int | None` | True | Maximum tree depth. |
+| `max_depth` | `None` | `int \| None` | True | Maximum tree depth. |
 | `min_samples_leaf` | `1` | `int` | True | Minimum samples per terminal leaf. |
 | `random_state` | `0` | `int` | False | Tree random seed. |
 
@@ -772,7 +772,7 @@ Paper-faithful Density Hemisphere neural network with prior-DNN OOB volatility e
 | `prior_estimators` | `10` | `int` | True | Prior-DNN bootstrap ensemble size used to estimate volatility emphasis. |
 | `subsample` | `0.8` | `float` | False | Blocked bootstrap sampling rate. |
 | `block_size` | `8` | `int` | False | Time-series bootstrap block size. |
-| `volatility_emphasis` | `None` | `float | None` | False | Override for Aionx volatility-emphasis parameter; None estimates it from prior-DNN OOB MSE. |
+| `volatility_emphasis` | `None` | `float \| None` | False | Override for Aionx volatility-emphasis parameter; None estimates it from prior-DNN OOB MSE. |
 | `rescale_volatility` | `True` | `bool` | False | Apply Aionx blocked-OOB log residual-square volatility recalibration. |
 | `patience` | `8` | `int` | False | Early-stopping patience. |
 | `random_state` | `0` | `int` | False | Random seed. |
@@ -813,10 +813,10 @@ Mixed-frequency dynamic factor model using Mariano-Murasawa quarterly aggregatio
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `target` | `None` | `str | None` | False | Target column; defaults to first quarterly column. |
-| `metadata` | `None` | `Mapping[str, Any] | None` | False | Data metadata with native frequencies. |
-| `monthly_columns` | `None` | `Iterable[str] | None` | False | Explicit monthly columns. |
-| `quarterly_columns` | `None` | `Iterable[str] | None` | False | Explicit quarterly columns. |
+| `target` | `None` | `str \| None` | False | Target column; defaults to first quarterly column. |
+| `metadata` | `None` | `Mapping[str, Any] \| None` | False | Data metadata with native frequencies. |
+| `monthly_columns` | `None` | `Iterable[str] \| None` | False | Explicit monthly columns. |
+| `quarterly_columns` | `None` | `Iterable[str] \| None` | False | Explicit quarterly columns. |
 | `unsupported` | `"raise"` | `str` | False | Unsupported-frequency policy: 'raise' or 'drop'. |
 | `n_factors` | `1` | `int` | True | Number of dynamic factors. |
 | `factor_order` | `1` | `int` | True | VAR order for factor dynamics. |
@@ -859,11 +859,11 @@ Composite DynamicFactorMQ factors plus unrestricted MIDAS forecast head.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `target` | `None` | `str` | False | Target column. |
-| `metadata` | `None` | `Mapping[str, Any] | None` | False | Data metadata with native frequencies. |
-| `lag_columns` | `None` | `Iterable[str] | None` | False | Observed columns to add as unrestricted MIDAS lags. |
-| `lags` | `(0, 1, 2)` | `Iterable[int] | int` | True | Observed-column native-frequency lags. |
-| `factor_lags` | `(0,)` | `Iterable[int] | int` | True | DFM factor monthly lags. |
-| `target_frequency` | `"quarterly"` | `str | None` | False | Frequency used to position target anchors. |
+| `metadata` | `None` | `Mapping[str, Any] \| None` | False | Data metadata with native frequencies. |
+| `lag_columns` | `None` | `Iterable[str] \| None` | False | Observed columns to add as unrestricted MIDAS lags. |
+| `lags` | `(0, 1, 2)` | `Iterable[int] \| int` | True | Observed-column native-frequency lags. |
+| `factor_lags` | `(0,)` | `Iterable[int] \| int` | True | DFM factor monthly lags. |
+| `target_frequency` | `"quarterly"` | `str \| None` | False | Frequency used to position target anchors. |
 | `anchor_position` | `"period_end"` | `str` | False | Anchor date positioning. |
 | `n_factors` | `1` | `int` | True | Number of DFM factors. |
 | `factor_order` | `1` | `int` | True | VAR order for DFM factor dynamics. |
@@ -987,9 +987,9 @@ Statsmodels ETS target-only forecasting model.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `error` | `"add"` | `str` | False | ETS error form. |
-| `trend` | `None` | `str | None` | False | ETS trend form. |
-| `seasonal` | `None` | `str | None` | False | ETS seasonal form. |
-| `seasonal_periods` | `None` | `int | None` | False | Seasonal period. |
+| `trend` | `None` | `str \| None` | False | ETS trend form. |
+| `seasonal` | `None` | `str \| None` | False | ETS seasonal form. |
+| `seasonal_periods` | `None` | `int \| None` | False | Seasonal period. |
 | `damped_trend` | `False` | `bool` | False | Whether to damp the trend. |
 
 ### extra_trees
@@ -1018,10 +1018,10 @@ Extremely randomized trees.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `n_estimators` | `200` | `int` | True | Number of trees. |
-| `max_depth` | `None` | `int | None` | True | Maximum depth per tree. |
+| `max_depth` | `None` | `int \| None` | True | Maximum depth per tree. |
 | `min_samples_leaf` | `1` | `int` | True | Minimum samples per terminal leaf. |
 | `random_state` | `0` | `int` | False | Forest random seed. |
-| `n_jobs` | `None` | `int | None` | False | Parallel worker count (None resolves to meta.configure(n_jobs)). |
+| `n_jobs` | `None` | `int \| None` | False | Parallel worker count (None resolves to meta.configure(n_jobs)). |
 
 #### Search Spaces
 
@@ -1097,9 +1097,9 @@ FAVAR::FAVAR-aligned Bayesian factor-augmented VAR sampler.
 | `n_factors` | `2` | `int` | True | Number of latent factors. |
 | `n_lag` | `2` | `int` | True | VAR lag order on target plus factors. |
 | `fctmethod` | `"BGM"` | `str` | False | FAVAR factor identification method: BBE or BGM (default BGM; BBE requires slowcode). |
-| `slowcode` | `None` | `Sequence[bool] | None` | False | Slow-variable mask required by BBE. |
-| `factorprior` | `None` | `Mapping[str, Any] | None` | False | Factor loading prior controls. |
-| `varprior` | `None` | `Mapping[str, Any] | None` | False | BVAR prior controls for the factor VAR block. |
+| `slowcode` | `None` | `Sequence[bool] \| None` | False | Slow-variable mask required by BBE. |
+| `factorprior` | `None` | `Mapping[str, Any] \| None` | False | Factor loading prior controls. |
+| `varprior` | `None` | `Mapping[str, Any] \| None` | False | BVAR prior controls for the factor VAR block. |
 | `nburn` | `100` | `int` | False | Burn-in iterations for loading/BVAR posterior draws (deep/paper-faithful default is 5000; pass explicitly to restore it). |
 | `nrep` | `200` | `int` | False | Saved loading draws and post-burn BVAR draw count (deep/paper-faithful default is 15000; pass explicitly to restore it). |
 | `standardize` | `True` | `bool` | False | Use R scale() semantics for X and y before factor extraction. |
@@ -1262,12 +1262,12 @@ Componentwise linear boosting.
 | `learning_rate` | `0.1` | `float` | True | Shrinkage applied to each componentwise update. |
 | `center` | `True` | `bool` | False | Center predictors before componentwise updates, matching mboost's default. |
 | `candidate_sampling` | `"all"` | `str` | False | Candidate-subset policy per boosting step: all or random. |
-| `candidate_count` | `None` | `int | None` | False | Fixed candidate count when candidate_sampling='random'. |
-| `candidate_fraction` | `None` | `float | None` | False | Candidate fraction when candidate_sampling='random'. |
-| `candidate_cap` | `None` | `int | None` | False | Maximum sampled candidate count after resolving count/fraction. |
+| `candidate_count` | `None` | `int \| None` | False | Fixed candidate count when candidate_sampling='random'. |
+| `candidate_fraction` | `None` | `float \| None` | False | Candidate fraction when candidate_sampling='random'. |
+| `candidate_cap` | `None` | `int \| None` | False | Maximum sampled candidate count after resolving count/fraction. |
 | `candidate_min` | `1` | `int` | False | Minimum sampled candidate count. |
 | `candidate_rounding` | `"floor"` | `str` | False | Rounding rule for candidate_fraction: floor, ceil, or round. |
-| `random_state` | `None` | `int | None` | False | Seed for per-step candidate feature sampling. |
+| `random_state` | `None` | `int \| None` | False | Seed for per-step candidate feature sampling. |
 
 #### Search Spaces
 
@@ -1340,9 +1340,9 @@ Package-native group lasso with group-level sparsity.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `groups` | `None` | `sequence[str | int] | None` | False | One group label per predictor. |
+| `groups` | `None` | `sequence[str \| int] \| None` | False | One group label per predictor. |
 | `alpha` | `1.0` | `float` | True | Group penalty strength. |
-| `group_weights` | `None` | `dict[str, float] | None` | False | Optional group penalty weights. |
+| `group_weights` | `None` | `dict[str, float] \| None` | False | Optional group penalty weights. |
 | `max_iter` | `5000` | `int` | False | Proximal-gradient iteration cap. |
 | `tol` | `1e-05` | `float` | False | Proximal-gradient convergence tolerance. |
 | `scale` | `True` | `bool` | False | Whether to standardize predictors inside the model. |
@@ -1432,19 +1432,19 @@ Bagged Hemisphere neural network with mean and variance heads.
 | `max_epochs` | `40` | `int` | False | Training epoch cap. |
 | `n_estimators` | `20` | `int` | True | Number of blocked-subsample bags. |
 | `subsample` | `0.8` | `float` | False | Blocked-subsample fraction. |
-| `nu` | `None` | `float | None` | False | Variance-emphasis target ratio. |
+| `nu` | `None` | `float \| None` | False | Variance-emphasis target ratio. |
 | `variance_penalty` | `1.0` | `float` | False | Soft penalty on the variance-emphasis target. |
 | `patience` | `8` | `int` | False | Early-stopping patience. |
 | `validation_fraction` | `0.2` | `float` | False | Chronological validation fraction. |
 | `random_state` | `0` | `int` | False | Random seed. |
 | `device` | `"auto"` | `str` | False | Torch device: auto, cpu, or cuda. |
 | `quantile_levels` | `(0.05, 0.5, 0.95)` | `tuple[float, ...]` | False | Default normal-approximation density quantiles. |
-| `lr` | `None` | `float | None` | False | Legacy alias for learning_rate. |
-| `n_epochs` | `None` | `int | None` | False | Legacy alias for max_epochs. |
-| `B` | `None` | `int | None` | False | Legacy alias for n_estimators. |
-| `sub_rate` | `None` | `float | None` | False | Legacy alias for subsample. |
-| `lambda_emphasis` | `None` | `float | None` | False | Legacy alias for variance_penalty. |
-| `val_frac` | `None` | `float | None` | False | Legacy alias for validation_fraction. |
+| `lr` | `None` | `float \| None` | False | Legacy alias for learning_rate. |
+| `n_epochs` | `None` | `int \| None` | False | Legacy alias for max_epochs. |
+| `B` | `None` | `int \| None` | False | Legacy alias for n_estimators. |
+| `sub_rate` | `None` | `float \| None` | False | Legacy alias for subsample. |
+| `lambda_emphasis` | `None` | `float \| None` | False | Legacy alias for variance_penalty. |
+| `val_frac` | `None` | `float \| None` | False | Legacy alias for validation_fraction. |
 
 #### Search Spaces
 
@@ -1479,9 +1479,9 @@ Holt-Winters exponential smoothing target-only forecasting model.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `trend` | `"add"` | `str | None` | False | Trend component. |
-| `seasonal` | `None` | `str | None` | False | Seasonal component. |
-| `seasonal_periods` | `None` | `int | None` | False | Seasonal period. |
+| `trend` | `"add"` | `str \| None` | False | Trend component. |
+| `seasonal` | `None` | `str \| None` | False | Seasonal component. |
+| `seasonal_periods` | `None` | `int \| None` | False | Seasonal period. |
 | `damped_trend` | `False` | `bool` | False | Whether to damp the trend. |
 
 ### huber
@@ -1547,7 +1547,7 @@ Kernel ridge regression.
 | --- | --- | --- | --- | --- |
 | `alpha` | `1.0` | `float` | True | Ridge penalty strength. |
 | `kernel` | `"linear"` | `str` | True | Kernel name: linear, rbf, polynomial, sigmoid, etc. |
-| `gamma` | `None` | `float | None` | False | Kernel coefficient. |
+| `gamma` | `None` | `float \| None` | False | Kernel coefficient. |
 | `degree` | `3` | `int` | False | Polynomial kernel degree. |
 | `coef0` | `1.0` | `float` | False | Independent term for polynomial/sigmoid kernels. |
 
@@ -1669,9 +1669,9 @@ LGB+ competition hybrid boosting with tree/linear channel diagnostics.
 | `linear_candidate_fraction` | `0.5` | `float` | True | Fraction of features sampled before greedy linear residual selection. |
 | `selection_method` | `"oob"` | `str` | False | Candidate judge: 'oob', 'validation', or 'training'. |
 | `val_fraction` | `0.2` | `float` | False | Fixed validation share when selection_method='validation'. |
-| `early_stop_patience` | `50` | `int | None` | False | Stop after no selection-loss improvement. |
+| `early_stop_patience` | `50` | `int \| None` | False | Stop after no selection-loss improvement. |
 | `aggregation` | `"mean"` | `str` | False | Ensemble aggregation: 'mean' or 'median'. |
-| `random_state` | `0` | `int | None` | False | Base random seed. |
+| `random_state` | `0` | `int \| None` | False | Base random seed. |
 
 #### Search Spaces
 
@@ -1714,7 +1714,7 @@ LGB^A+ alternating tree-block and greedy linear boosting.
 | `num_leaves` | `15` | `int` | True | Maximum leaves for each residual tree. |
 | `min_data_in_leaf` | `20` | `int` | True | Minimum rows in a LightGBM leaf. |
 | `subsample` | `1.0` | `float` | False | LightGBM bagging fraction for tree blocks. |
-| `random_state` | `0` | `int | None` | False | Base random seed. |
+| `random_state` | `0` | `int \| None` | False | Base random seed. |
 
 #### Search Spaces
 
@@ -1793,7 +1793,7 @@ Linear support-vector regression.
 | `loss` | `"epsilon_insensitive"` | `str` | False | LinearSVR loss function. |
 | `tol` | `0.0001` | `float` | False | Optimization tolerance. |
 | `max_iter` | `10000` | `int` | False | Solver iteration cap. |
-| `random_state` | `0` | `int | None` | False | Random seed. |
+| `random_state` | `0` | `int \| None` | False | Random seed. |
 
 #### Search Spaces
 
@@ -1871,10 +1871,10 @@ Adapter for the external MacroRandomForest package.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `x_columns` | `None` | `list[str] | None` | False | Predictors in the time-varying linear equation. |
-| `S_columns` | `None` | `list[str] | None` | False | State variables entering the forest split function. |
-| `x_pos` | `None` | `list[int] | None` | False | Reference-package predictor positions after the target column. |
-| `S_pos` | `None` | `list[int] | None` | False | Reference-package state positions after the target column. |
+| `x_columns` | `None` | `list[str] \| None` | False | Predictors in the time-varying linear equation. |
+| `S_columns` | `None` | `list[str] \| None` | False | State variables entering the forest split function. |
+| `x_pos` | `None` | `list[int] \| None` | False | Reference-package predictor positions after the target column. |
+| `S_pos` | `None` | `list[int] \| None` | False | Reference-package state positions after the target column. |
 | `y_pos` | `0` | `int` | False | Fixed target position for the X/y callable adapter; must remain 0. |
 | `B` | `25` | `int` | True | Number of MRF trees (deep/paper-faithful default is 50; pass explicitly to restore it). |
 | `minsize` | `10` | `int` | True | Minimum node size before split attempts. |
@@ -1882,15 +1882,15 @@ Adapter for the external MacroRandomForest package.
 | `min_leaf_frac_of_x` | `1.0` | `float` | True | Minimum leaf-size multiplier relative to local x dimension. |
 | `VI` | `False` | `bool` | False | Enable variable-importance split search mode. |
 | `ERT` | `False` | `bool` | False | Enable extremely randomized tree split mode. |
-| `quantile_rate` | `None` | `float | None` | False | Optional quantile rate for quantile-oriented output. |
-| `S_priority_vec` | `None` | `list[float] | None` | False | Optional priority weights over state variables. |
+| `quantile_rate` | `None` | `float \| None` | False | Optional quantile rate for quantile-oriented output. |
+| `S_priority_vec` | `None` | `list[float] \| None` | False | Optional priority weights over state variables. |
 | `random_x` | `False` | `bool` | False | Use random subsets of local-linear predictors. |
 | `trend_push` | `1` | `int` | False | Reference-package trend-push option. |
 | `howmany_random_x` | `1` | `int` | False | Number of random local-linear predictor draws. |
 | `howmany_keep_best_VI` | `20` | `int` | False | Number of best VI candidates retained. |
 | `cheap_look_at_GTVPs` | `True` | `bool` | False | Use the reference package's cheaper GTVP inspection. |
-| `prior_var` | `None` | `list[float] | None` | False | Optional prior variances for local coefficients. |
-| `prior_mean` | `None` | `list[float] | None` | False | Optional prior means for local coefficients. |
+| `prior_var` | `None` | `list[float] \| None` | False | Optional prior variances for local coefficients. |
+| `prior_mean` | `None` | `list[float] \| None` | False | Optional prior means for local coefficients. |
 | `subsampling_rate` | `0.75` | `float` | True | Subsample share used by each tree. |
 | `rw_regul` | `0.75` | `float` | True | Random-walk shrinkage strength. |
 | `keep_forest` | `False` | `bool` | False | Keep full reference forest object in memory. |
@@ -1977,7 +1977,7 @@ Fixed-shape MIDAS over lag groups using midasr::nealmon-style normalized exponen
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `polynomial_order` | `2` | `int` | False | Almon polynomial order. |
-| `theta` | `None` | `tuple[float, ...] | None` | False | midasr::nealmon shape coefficients; length must equal polynomial_order. |
+| `theta` | `None` | `tuple[float, ...] \| None` | False | midasr::nealmon shape coefficients; length must equal polynomial_order. |
 | `alpha` | `0.0` | `float` | True | Optional ridge penalty on aggregated MIDAS regressors. |
 | `fit_intercept` | `True` | `bool` | False | Whether to fit an intercept. |
 
@@ -2052,8 +2052,8 @@ Fixed-shape MIDAS over lag groups using normalized midasr::polystep-style step w
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `n_steps` | `3` | `int` | True | Number of lag buckets when step_bounds is not supplied. |
-| `step_bounds` | `None` | `tuple[int, ...] | None` | False | Optional midasr::polystep-style interior cut points. |
-| `step_weights` | `None` | `tuple[float, ...] | None` | False | Optional raw height for each step bucket. |
+| `step_bounds` | `None` | `tuple[int, ...] \| None` | False | Optional midasr::polystep-style interior cut points. |
+| `step_weights` | `None` | `tuple[float, ...] \| None` | False | Optional raw height for each step bucket. |
 | `alpha` | `0.0` | `float` | True | Optional ridge penalty on aggregated MIDAS regressors. |
 | `fit_intercept` | `True` | `bool` | False | Whether to fit an intercept. |
 
@@ -2195,7 +2195,7 @@ Nu support-vector regression.
 | `kernel` | `"rbf"` | `str` | False | NuSVR kernel: linear, poly, rbf, or sigmoid. |
 | `C` | `1.0` | `float` | True | Regularization strength inverse. |
 | `nu` | `0.5` | `float` | True | Upper/lower training-error and support-vector fraction control. |
-| `gamma` | `"scale"` | `str | float` | True | Kernel coefficient for rbf/poly/sigmoid. |
+| `gamma` | `"scale"` | `str \| float` | True | Kernel coefficient for rbf/poly/sigmoid. |
 | `degree` | `3` | `int` | False | Polynomial kernel degree. |
 | `coef0` | `0.0` | `float` | False | Independent term for poly/sigmoid kernels. |
 | `shrinking` | `True` | `bool` | False | Whether to use the shrinking heuristic. |
@@ -2261,7 +2261,7 @@ Partial least squares regression with optional Hounyo-Li-style control residuali
 | `scale` | `True` | `bool` | False | Whether to standardize predictors before PLS. |
 | `max_iter` | `500` | `int` | False | NIPALS iteration cap. |
 | `tol` | `1e-06` | `float` | False | NIPALS convergence tolerance. |
-| `control_columns` | `None` | `Sequence[str] | None` | False | Optional X columns used as forecasting controls. |
+| `control_columns` | `None` | `Sequence[str] \| None` | False | Optional X columns used as forecasting controls. |
 | `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PLS block. |
 | `quadratic_factors` | `False` | `bool` | False | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
@@ -2300,7 +2300,7 @@ Quantile regression forest.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `n_estimators` | `200` | `int` | True | Number of trees. |
-| `max_depth` | `None` | `int | None` | True | Maximum depth per tree. |
+| `max_depth` | `None` | `int \| None` | True | Maximum depth per tree. |
 | `min_samples_leaf` | `1` | `int` | True | Minimum samples per terminal leaf. |
 | `random_state` | `0` | `int` | False | Forest random seed. |
 | `quantile_levels` | `(0.05, 0.5, 0.95)` | `tuple[float, ...]` | False | Default quantile levels returned by predict_quantiles(). |
@@ -2339,10 +2339,10 @@ Random forest regression.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `n_estimators` | `200` | `int` | True | Number of trees. |
-| `max_depth` | `None` | `int | None` | True | Maximum depth per tree. |
+| `max_depth` | `None` | `int \| None` | True | Maximum depth per tree. |
 | `min_samples_leaf` | `1` | `int` | True | Minimum samples per terminal leaf. |
 | `random_state` | `0` | `int` | False | Forest random seed. |
-| `n_jobs` | `None` | `int | None` | False | Parallel worker count (None resolves to meta.configure(n_jobs)). |
+| `n_jobs` | `None` | `int \| None` | False | Parallel worker count (None resolves to meta.configure(n_jobs)). |
 
 #### Search Spaces
 
@@ -2436,11 +2436,11 @@ Rank-space supervised aggregation; generic Albacoreranks primitive.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `alpha` | `1.0` | `float` | True | Penalty strength. |
-| `penalty` | `"fused_difference"` | `ridge | fused_difference` | False | Rank-weight penalty family. |
+| `penalty` | `"fused_difference"` | `ridge \| fused_difference` | False | Rank-weight penalty family. |
 | `mean_match` | `True` | `bool` | False | Constrain fitted aggregate mean to match target mean. |
 | `nonneg` | `True` | `bool` | False | Constrain rank weights to be non-negative. |
 | `difference_order` | `1` | `int` | False | Finite-difference order for rank weights. |
-| `penalty_scale` | `"feature_std"` | `none | feature_std` | False | Scale penalties by rank standard deviations. |
+| `penalty_scale` | `"feature_std"` | `none \| feature_std` | False | Scale penalties by rank standard deviations. |
 | `max_iter` | `1000` | `int` | False | SLSQP solver iteration cap. |
 | `tol` | `1e-09` | `float` | False | SLSQP solver tolerance. |
 
@@ -2477,7 +2477,7 @@ Compact realized GARCH volatility model.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `realized_variance` | `None` | `str | None` | False | Column name for realized variance; if omitted, an r_t^2 proxy is used. |
+| `realized_variance` | `None` | `str \| None` | False | Column name for realized variance; if omitted, an r_t^2 proxy is used. |
 | `max_iter` | `2000` | `int` | False | Optimizer iteration cap. |
 | `n_starts` | `5` | `int` | True | Number of optimizer starting points. |
 | `random_state` | `0` | `int` | False | Optimizer random seed. |
@@ -2517,9 +2517,9 @@ midasr::midas_r-style nonlinear restricted MIDAS over explicit lag columns.
 | --- | --- | --- | --- | --- |
 | `weighting` | `"almon"` | `str` | False | Restriction map: 'almon'/'nealmon', 'beta'/'nbetaMT', or 'step'/'polystep'. |
 | `polynomial_order` | `2` | `int` | False | Almon polynomial order after the aggregate scale parameter. |
-| `start_params` | `None` | `Mapping[str, Sequence[float]] | Sequence[float] | None` | False | midasr::midas_r-style starting values for each lag group. |
+| `start_params` | `None` | `Mapping[str, Sequence[float]] \| Sequence[float] \| None` | False | midasr::midas_r-style starting values for each lag group. |
 | `n_steps` | `3` | `int` | False | Number of step buckets when weighting='step' and step_bounds is not supplied. |
-| `step_bounds` | `None` | `tuple[int, ...] | None` | False | Optional midasr::polystep-style interior cut points. |
+| `step_bounds` | `None` | `tuple[int, ...] \| None` | False | Optional midasr::polystep-style interior cut points. |
 | `fit_intercept` | `True` | `bool` | False | Whether to estimate an intercept outside the restricted lag maps. |
 | `maxiter` | `200` | `int` | False | Maximum SciPy least_squares function evaluations (deep/paper-faithful default is 1000; pass explicitly to restore it). |
 | `tolerance` | `1e-06` | `float` | False | least_squares xtol/ftol/gtol (deep/paper-faithful default is 1e-8; pass explicitly to restore it). |
@@ -2594,10 +2594,10 @@ Huang et al. scaled PCA: marginal predictive-slope scaling followed by PCA.
 | --- | --- | --- | --- | --- |
 | `n_components` | `3` | `int` | True | Number of Huang scaled-PCA factors. |
 | `scale` | `True` | `bool` | False | Whether to standardize predictors inside the model. |
-| `control_columns` | `None` | `Sequence[str] | None` | False | Optional X columns used as forecasting controls. |
+| `control_columns` | `None` | `Sequence[str] \| None` | False | Optional X columns used as forecasting controls. |
 | `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PCA block. |
-| `winsorize_slopes` | `None` | `tuple[float, float] | None` | False | Optional percentile winsorization for scaling slopes. |
+| `winsorize_slopes` | `None` | `tuple[float, float] \| None` | False | Optional percentile winsorization for scaling slopes. |
 | `quadratic_factors` | `False` | `bool` | False | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
 
 #### Search Spaces
@@ -2633,7 +2633,7 @@ Seasonal-naive baseline: repeat the last seasonal cycle (forecast::snaive).
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `period` | `None` | `int | None` | False | Seasonal period m; repeats the last m values. |
+| `period` | `None` | `int \| None` | False | Seasonal period m; repeats the last m values. |
 
 ### shrink_to_target_ridge
 
@@ -2661,7 +2661,7 @@ Ridge regression shrinking coefficients toward a target vector.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `alpha` | `1.0` | `float` | True | Strength of the coefficient-target shrinkage. |
-| `prior_target` | `None` | `float | sequence | mapping | None` | False | Coefficient target; None means zero, or uniform when simplex=True. |
+| `prior_target` | `None` | `float \| sequence \| mapping \| None` | False | Coefficient target; None means zero, or uniform when simplex=True. |
 | `simplex` | `False` | `bool` | False | Constrain coefficients to sum to one. |
 | `nonneg` | `False` | `bool` | False | Constrain coefficients to be non-negative. |
 | `fit_intercept` | `True` | `bool` | False | Fit an intercept unless simplex=True. |
@@ -2701,10 +2701,10 @@ Package-native sparse group lasso with group and feature-level sparsity.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `groups` | `None` | `sequence[str | int] | None` | False | One group label per predictor. |
+| `groups` | `None` | `sequence[str \| int] \| None` | False | One group label per predictor. |
 | `alpha` | `1.0` | `float` | True | Total sparse-group penalty strength. |
 | `l1_ratio` | `0.5` | `float` | True | Feature-level L1 share; remaining share is group penalty. |
-| `group_weights` | `None` | `dict[str, float] | None` | False | Optional group penalty weights. |
+| `group_weights` | `None` | `dict[str, float] \| None` | False | Optional group penalty weights. |
 | `max_iter` | `5000` | `int` | False | Proximal-gradient iteration cap. |
 | `tol` | `1e-05` | `float` | False | Proximal-gradient convergence tolerance. |
 | `scale` | `True` | `bool` | False | Whether to standardize predictors inside the model. |
@@ -2742,7 +2742,7 @@ STL decomposition + forecast of the seasonally-adjusted series (forecast::stlf).
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `period` | `None` | `int | None` | False | Seasonal period; inferred from the index if omitted. |
+| `period` | `None` | `int \| None` | False | Seasonal period; inferred from the index if omitted. |
 | `sa_method` | `"ets"` | `str` | False | Forecaster for the seasonally-adjusted series ('ets'). |
 
 ### supervised_aggregation
@@ -2770,16 +2770,16 @@ Generic constrained supervised aggregation derived from Albacore/assemblage prim
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `space` | `"component"` | `component | rank` | False | Aggregation space. |
-| `penalty` | `"ridge"` | `ridge | target_shrinkage | fused_difference` | False | Coefficient penalty family. |
+| `space` | `"component"` | `component \| rank` | False | Aggregation space. |
+| `penalty` | `"ridge"` | `ridge \| target_shrinkage \| fused_difference` | False | Coefficient penalty family. |
 | `alpha` | `1.0` | `float` | True | Penalty strength. |
-| `reference_weights` | `None` | `mapping | sequence | None` | False | Reference basket weights for target shrinkage. |
+| `reference_weights` | `None` | `mapping \| sequence \| None` | False | Reference basket weights for target shrinkage. |
 | `nonneg` | `True` | `bool` | False | Constrain weights to be non-negative. |
 | `simplex` | `False` | `bool` | False | Constrain weights to sum to one. |
 | `mean_match` | `False` | `bool` | False | Constrain fitted aggregate mean to match target mean. |
 | `difference_order` | `1` | `int` | False | Finite-difference order for fused rank weights. |
 | `fit_intercept` | `False` | `bool` | False | Fit an intercept outside the aggregation weights. |
-| `penalty_scale` | `"feature_std"` | `none | feature_std` | False | Scale penalties by component standard deviations. |
+| `penalty_scale` | `"feature_std"` | `none \| feature_std` | False | Scale penalties by component standard deviations. |
 | `max_iter` | `1000` | `int` | False | SLSQP solver iteration cap. |
 | `tol` | `1e-09` | `float` | False | SLSQP solver tolerance. |
 
@@ -2817,10 +2817,10 @@ Original-style iterative supervised PCA with residual correlation screening and 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `n_components` | `3` | `int` | True | Number of sequential supervised components. |
-| `n_selected` | `50` | `int | None` | True | Predictors selected at each SPCA step. |
+| `n_selected` | `50` | `int \| None` | True | Predictors selected at each SPCA step. |
 | `min_abs_corr` | `0.0` | `float` | True | Minimum absolute residual correlation retained before PCA. |
 | `scale` | `True` | `bool` | False | Whether to standardize predictors and target inside the model. |
-| `control_columns` | `None` | `Sequence[str] | None` | False | Optional X columns used as forecasting controls. |
+| `control_columns` | `None` | `Sequence[str] \| None` | False | Optional X columns used as forecasting controls. |
 | `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PCA block. |
 | `preselect` | `"none"` | `str` | False | Optional pre-selection: none, hard_tstat, or elastic_net. |
@@ -2864,10 +2864,10 @@ Hounyo-Li supervised scaled PCA: marginal predictive-slope scaling followed by S
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `n_components` | `3` | `int` | True | Number of sequential SsPCA components. |
-| `n_selected` | `50` | `int | None` | True | Predictors selected at each SPCA step after slope scaling. |
+| `n_selected` | `50` | `int \| None` | True | Predictors selected at each SPCA step after slope scaling. |
 | `min_abs_corr` | `0.0` | `float` | True | Minimum absolute residual correlation retained before PCA. |
 | `scale` | `True` | `bool` | False | Whether to standardize predictors and target inside the model. |
-| `control_columns` | `None` | `Sequence[str] | None` | False | Optional X columns used as forecasting controls. |
+| `control_columns` | `None` | `Sequence[str] \| None` | False | Optional X columns used as forecasting controls. |
 | `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PCA block. |
 | `preselect` | `"none"` | `str` | False | Optional pre-selection: none, hard_tstat, or elastic_net. |
@@ -2913,7 +2913,7 @@ Kernel support-vector regression.
 | `kernel` | `"rbf"` | `str` | False | SVR kernel: linear, poly, rbf, or sigmoid. |
 | `C` | `1.0` | `float` | True | Regularization strength inverse. |
 | `epsilon` | `0.1` | `float` | True | Epsilon-insensitive tube width. |
-| `gamma` | `"scale"` | `str | float` | True | Kernel coefficient for rbf/poly/sigmoid. |
+| `gamma` | `"scale"` | `str \| float` | True | Kernel coefficient for rbf/poly/sigmoid. |
 | `degree` | `3` | `int` | False | Polynomial kernel degree. |
 | `coef0` | `0.0` | `float` | False | Independent term for poly/sigmoid kernels. |
 | `shrinking` | `True` | `bool` | False | Whether to use the shrinking heuristic. |
@@ -2994,7 +2994,7 @@ Theta method target-only forecasting model.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `period` | `None` | `int | None` | False | Seasonal period. |
+| `period` | `None` | `int \| None` | False | Seasonal period. |
 | `deseasonalize` | `True` | `bool` | False | Whether to deseasonalize. |
 | `use_test` | `True` | `bool` | False | Statsmodels seasonality test flag. |
 
@@ -3066,7 +3066,7 @@ Goulet Coulombe TVP ridge / 2SRR estimator.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `lambda_candidates` | `None` | `sequence[float] | None` | True | Candidate lambda values for the time-variation ridge penalty. |
+| `lambda_candidates` | `None` | `sequence[float] \| None` | True | Candidate lambda values for the time-variation ridge penalty. |
 | `lambda2` | `0.1` | `float` | False | Penalty on starting coefficient values beta_0. |
 | `kfold` | `5` | `int` | False | Random k-fold count for lambda CV. |
 | `cv_2srr` | `True` | `bool` | False | Run the second lambda CV after 2SRR variance reweighting. |
@@ -3145,10 +3145,10 @@ R vars::VAR-aligned vector autoregression point forecast.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `target` | `None` | `str | None` | False | Target column in the panel. |
+| `target` | `None` | `str \| None` | False | Target column in the panel. |
 | `n_lag` | `1` | `int` | True | VAR lag order. |
 | `type` | `"const"` | `str` | False | R vars::VAR deterministic terms: const, trend, both, or none. |
-| `season` | `None` | `int | None` | False | Optional centered seasonal dummies, matching vars::VAR(season=...). |
+| `season` | `None` | `int \| None` | False | Optional centered seasonal dummies, matching vars::VAR(season=...). |
 
 #### Search Spaces
 

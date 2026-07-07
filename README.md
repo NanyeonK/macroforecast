@@ -77,9 +77,9 @@ print(report.accuracy)
 ```
 
 This is the shortest real study path. The
-[Getting Started guide](https://macroforecast.readthedocs.io/guide/getting_started.html)
+[Getting Started guide](https://macroforecast.readthedocs.io/en/latest/guide/getting_started.html)
 walks through the same flow, and
-[Your Data, Your Model, One Table](https://macroforecast.readthedocs.io/guide/custom_data_tutorial.html)
+[Your Data, Your Model, One Table](https://macroforecast.readthedocs.io/en/latest/guide/custom_data_tutorial.html)
 shows the custom-data/custom-model path.
 
 ## What It Covers
