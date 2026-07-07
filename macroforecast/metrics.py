@@ -83,16 +83,16 @@ def medae(y_true: Any, y_pred: Any) -> float:
 
 
 def mad(y_true: Any, y_pred: Any) -> float:
-    """Median absolute forecast error.
+    """Median absolute deviation of forecast errors around their median.
 
-    ``mad`` is the median of ``|actual - prediction|`` over the evaluation
-    window. Inflation-forecasting accuracy tables such as Medeiros,
-    Vasconcelos, Veiga, and Zilberman (2021, JBES) report MAD alongside RMSE
-    and MAE as a robust absolute-error summary.
+    For forecast errors ``e = actual - prediction``, ``mad`` is
+    ``median(|e - median(e)|)`` over the evaluation window. This differs from
+    ``medae``, which is the uncentered ``median(|e|)``.
     """
 
     truth, pred = _aligned_values(y_true, y_pred)
-    return float(np.median(np.abs(truth - pred)))
+    errors = truth - pred
+    return float(np.median(np.abs(errors - np.median(errors))))
 
 
 def mape(y_true: Any, y_pred: Any, *, eps: float = 1e-10) -> float:

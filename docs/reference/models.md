@@ -1580,7 +1580,7 @@ Jackknife Model Averaging with simplex weights chosen by OLS leave-one-out CV.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `candidates` | `"nested"` | `nested` | False | Candidate model family; currently nested ordered OLS models. |
+| `candidates` | `"nested"` | `str` | False | Candidate model family; currently nested ordered OLS models. |
 | `max_iter` | `1000` | `int` | False | SLSQP solver iteration cap. |
 | `tol` | `1e-09` | `float` | False | SLSQP solver tolerance. |
 

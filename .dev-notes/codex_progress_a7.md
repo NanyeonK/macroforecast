@@ -40,3 +40,23 @@
 - Final drift gates: `gen_model_overview --check`, `gen_policy_matrix --check`, and `python -m tools.docgen --check docs/reference` all passed.
 - `~/project/macroforecast/.venv/bin/python -m pytest tests/reference --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> passed (`20 passed`).
 - `rg -n "except Exception|except:" macroforecast/models/bayesian.py macroforecast/models/model_averaging.py tests/models/test_standard_estimators.py` -> no matches.
+
+## F1/F2 verifier fix
+
+- Fix brief read: `.dev-notes/fixbrief_a7_ucsv_mad.md`.
+- Reproduced verifier's KSC moment failure before editing: current constants gave mixture mean `-0.665456` and variance `4.492103`.
+- UCSV decision: store KSC Table 4 means with signs corrected and `-1.2704` applied, because `_sample_log_volatility()` subtracts `_KSC_MEAN` as the component mean of `log(epsilon^2) - h`.
+- MAD decision update: fix brief adjudicates the B1 design doc over the original workplan; `mad` now means `median(|e - median(e)|)` and `medae` remains `median(|e|)`.
+- JMA registry cleanup: changed the `candidates` parameter kind from `"nested"` to `"str"`.
+- Untracked orchestration inputs remain unstaged (`.dev-notes/fixbrief_a7_ucsv_mad.md`, ground rules, workplan/design notes, run logs).
+
+## F1/F2 gate log
+
+- `~/project/macroforecast/.venv/bin/python - <<'PY' ...` KSC reproduction -> current constants mean `-0.665456`, variance `4.492103`; monkey-patched corrected constants recovered constant-volatility oracle at `3.905180 / 4.0`.
+- `~/project/macroforecast/.venv/bin/python -m pytest tests/models/test_standard_estimators.py tests/evaluation/test_metrics.py tests/pipeline/test_evalspec_threading.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> passed (`65 passed`, one existing rescore warning).
+- `~/project/macroforecast/.venv/bin/python -m pytest tests/models --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> passed (`196 passed`, existing warnings).
+- `~/project/macroforecast/.venv/bin/python -m mypy macroforecast` -> passed (`Success: no issues found in 113 source files`).
+- `~/project/macroforecast/.venv/bin/python -m tools.docgen docs/reference` -> regenerated reference docs (`37 pages`).
+- `~/project/macroforecast/.venv/bin/python -m tools.docgen --check docs/reference` -> passed (`docs/reference is up to date`).
+- `~/project/macroforecast/.venv/bin/python tools/gen_model_overview.py --check docs/guide` -> passed (`15 model pages in sync with the package`).
+- `~/project/macroforecast/.venv/bin/python tools/gen_policy_matrix.py --check docs/guide` -> passed (`1 policy matrix page in sync with the package`).

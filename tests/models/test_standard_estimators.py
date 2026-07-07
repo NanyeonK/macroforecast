@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
+import macroforecast.models.bayesian as bayesian_models
 
 
 def _supervised_frame(n: int = 24, p: int = 4) -> tuple[pd.DataFrame, pd.Series]:
@@ -159,6 +160,22 @@ def test_jma_model_spec_uses_nested_candidates() -> None:
     assert spec.default_params["candidates"] == "nested"
 
 
+def test_ucsv_ksc_constants_match_log_chi_square_moments() -> None:
+    mean = float(np.sum(bayesian_models._KSC_PROB * bayesian_models._KSC_MEAN))
+    variance = float(
+        np.sum(
+            bayesian_models._KSC_PROB
+            * (
+                bayesian_models._KSC_VAR
+                + (bayesian_models._KSC_MEAN - mean) ** 2
+            )
+        )
+    )
+
+    assert mean == pytest.approx(-1.2704, abs=5e-5)
+    assert variance == pytest.approx(4.9348, abs=5e-4)
+
+
 def _local_level_sv(seed: int = 0, n: int = 120) -> tuple[pd.Series, pd.Series]:
     rng = np.random.default_rng(seed)
     idx = pd.date_range("2000-01-31", periods=n, freq="ME")
@@ -185,6 +202,24 @@ def test_ucsv_tracks_synthetic_local_level_sv_trend() -> None:
     )
     assert trend_rmse < noisy_rmse
     assert fit.metadata["forecast_is_final_trend"] is True
+
+
+def test_ucsv_recovers_constant_observation_variance() -> None:
+    rng = np.random.default_rng(202405)
+    truth = 4.0
+    idx = pd.date_range("1980-01-31", periods=400, freq="ME")
+    y = pd.Series(
+        rng.normal(scale=np.sqrt(truth), size=len(idx)),
+        index=idx,
+        name="y",
+    )
+
+    fit = mf.models.ucsv(y, n_draws=260, burn=100, gamma=0.01, random_state=918)
+    recovered = float(
+        np.mean(np.exp(fit.diagnostics["obs_log_vol"].to_numpy(dtype=float)))
+    )
+
+    assert recovered == pytest.approx(truth, rel=0.25)
 
 
 def test_ucsv_is_deterministic_given_random_state() -> None:

@@ -49,10 +49,12 @@ def test_point_relative_and_direction_metrics() -> None:
 
 
 def test_mad_hand_computed_oracle() -> None:
-    actual = pd.Series([10.0, 12.0, 8.0, 15.0, np.nan], index=list("abcde"))
-    forecast = pd.Series([9.0, 9.0, 10.0, 20.0, 7.0], index=list("abcde"))
+    actual = pd.Series([11.0, 14.0, 10.0, 17.0, 41.0, np.nan], index=list("abcdef"))
+    forecast = pd.Series([10.0, 12.0, 8.0, 15.0, 21.0, 0.0], index=list("abcdef"))
 
-    assert mf.metrics.mad(actual, forecast) == 2.5
+    assert mf.metrics.mad(actual, forecast) == 0.0
+    assert mf.metrics.medae(actual, forecast) == 2.0
+    assert mf.metrics.mad(actual, forecast) != mf.metrics.medae(actual, forecast)
     assert mf.metrics.get_metric("mad") is mf.metrics.mad
     assert mf.metrics.metric_kind("mad") == "point"
 

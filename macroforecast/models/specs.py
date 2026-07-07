@@ -1014,7 +1014,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             _p(
                 "candidates",
                 "nested",
-                "nested",
+                "str",
                 "Candidate model family; currently nested ordered OLS models.",
                 False,
             ),

@@ -9,6 +9,10 @@ full per-version honesty-pass history embedded in repo documentation.
   Stock-Watson UCSV, Complete Subset Regression (`csr`), Jackknife Model
   Averaging (`jma`), and the `mad` median absolute forecast-error metric.
   Stochastic estimators expose `random_state` for pipeline-derived per-arm seeds.
+- `models/bayesian.py`, `metrics.py`, docs/tests (standard estimators fix):
+  corrected the UCSV KSC mixture signs/offset and redefined `mad` as median
+  absolute deviation around median forecast errors, with regression oracles for
+  KSC moments, constant-volatility recovery, and accuracy-table threading.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

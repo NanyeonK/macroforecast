@@ -26,7 +26,7 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 | `interval_width` | function | Mean forecast interval width. |
 | `log_score` | function | Alias for Gaussian negative log score; lower is better. |
 | `mae` | function | Mean absolute error. |
-| `mad` | function | Median absolute forecast error. |
+| `mad` | function | Median absolute deviation of forecast errors around their median. |
 | `mape` | function | Mean absolute percentage error on the 0-100 scale. |
 | `max_drawdown` | function | Return the most negative drawdown of a forecast-return path. |
 | `medae` | function | Median absolute error. |
@@ -563,12 +563,11 @@ macroforecast.metrics.mad(y_true: Any, y_pred: Any) -> float
 
 #### Description
 
-Median absolute forecast error.
+Median absolute deviation of forecast errors around their median.
 
-``mad`` is the median of ``|actual - prediction|`` over the evaluation
-window. Inflation-forecasting accuracy tables such as Medeiros,
-Vasconcelos, Veiga, and Zilberman (2021, JBES) report MAD alongside RMSE
-and MAE as a robust absolute-error summary.
+For forecast errors ``e = actual - prediction``, ``mad`` is
+``median(|e - median(e)|)`` over the evaluation window. This differs from
+``medae``, which is the uncentered ``median(|e|)``.
 
 #### Parameters
 

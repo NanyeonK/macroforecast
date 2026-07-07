@@ -12,15 +12,22 @@ _KSC_PROB = np.asarray(
     [0.00730, 0.10556, 0.00002, 0.04395, 0.34001, 0.24566, 0.25750],
     dtype=float,
 )
-_KSC_MEAN = np.asarray(
-    [-10.12999, -3.97281, -8.56686, -2.77786, -0.61961, 1.79518, -1.08819],
-    dtype=float,
+_KSC_LOG_CHISQ_OFFSET = 1.2704
+# KSC Table 4 is centered for log(chi-square) + 1.2704; the sampler needs
+# log(chi-square).
+_KSC_MEAN = (
+    np.asarray(
+        [-10.12999, -3.97281, -8.56686, 2.77786, 0.61942, 1.79518, -1.08819],
+        dtype=float,
+    )
+    - _KSC_LOG_CHISQ_OFFSET
 )
 _KSC_VAR = np.asarray(
     [5.79596, 2.61369, 5.17950, 0.16735, 0.64009, 0.34023, 1.26261],
     dtype=float,
 )
 _LOG_2PI = float(np.log(2.0 * np.pi))
+# Pragmatic safeguard; it should bind only for extreme log-volatility draws.
 _LOG_VOL_CLIP = (-20.0, 20.0)
 
 
