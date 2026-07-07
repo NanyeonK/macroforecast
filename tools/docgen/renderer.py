@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import dataclasses
 import difflib
 import importlib
@@ -327,10 +328,58 @@ def _module(page: ModulePage) -> ModuleType:
 
 
 def _public_names(module: ModuleType) -> tuple[str, ...]:
-    names = getattr(module, "__all__", None)
+    names = _source_declared_all(module)
+    if names is None:
+        names = getattr(module, "__all__", None)
     if names is None:
         names = [name for name in dir(module) if not name.startswith("_")]
     return tuple(str(name) for name in names)
+
+
+def _source_declared_all(module: ModuleType) -> tuple[str, ...] | None:
+    """Return literal source ``__all__`` names without trusting runtime mutation."""
+
+    file_name = getattr(module, "__file__", None)
+    if not file_name:
+        return None
+    source_path = Path(file_name)
+    if source_path.suffix != ".py":
+        return None
+    try:
+        tree = ast.parse(
+            source_path.read_text(encoding="utf-8"),
+            filename=str(source_path),
+        )
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return None
+    for statement in tree.body:
+        value: ast.expr | None = None
+        if isinstance(statement, ast.Assign):
+            if any(_is_all_target(target) for target in statement.targets):
+                value = statement.value
+        elif isinstance(statement, ast.AnnAssign) and _is_all_target(statement.target):
+            value = statement.value
+        if value is None:
+            continue
+        names = _literal_string_sequence(value)
+        if names is not None:
+            return names
+    return None
+
+
+def _is_all_target(target: ast.expr) -> bool:
+    return isinstance(target, ast.Name) and target.id == "__all__"
+
+
+def _literal_string_sequence(value: ast.expr) -> tuple[str, ...] | None:
+    if not isinstance(value, (ast.List, ast.Tuple)):
+        return None
+    names: list[str] = []
+    for item in value.elts:
+        if not isinstance(item, ast.Constant) or not isinstance(item.value, str):
+            return None
+        names.append(item.value)
+    return tuple(names)
 
 
 def _resolve_dotted(path: str) -> Any:

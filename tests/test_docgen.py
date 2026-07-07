@@ -5,11 +5,42 @@ import sys
 from pathlib import Path
 
 import tools.docgen as docgen
+from tools.docgen import renderer
 
 
 def test_tools_docgen_imports_cleanly() -> None:
     assert "write_all" in docgen.__all__
     assert docgen.collect_pages()
+
+
+def test_docgen_uses_source_declared_module_exports(monkeypatch) -> None:
+    import macroforecast.model_selection as model_selection
+
+    page = Path("model_selection.md")
+    baseline = docgen.collect_pages()[page]
+    monkeypatch.setattr(
+        model_selection,
+        "__all__",
+        [*model_selection.__all__, "OptionalRuntimeOnly"],
+    )
+    monkeypatch.setattr(
+        model_selection,
+        "OptionalRuntimeOnly",
+        lambda: None,
+        raising=False,
+    )
+
+    assert docgen.collect_pages()[page] == baseline
+
+
+def test_docgen_module_pages_have_source_declared_exports() -> None:
+    missing = [
+        page.module
+        for page in renderer.MODULE_PAGES
+        if renderer._source_declared_all(renderer._module(page)) is None
+    ]
+
+    assert not missing
 
 
 def test_docgen_check_passes_on_committed_reference_tree() -> None:
