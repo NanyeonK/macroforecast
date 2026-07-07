@@ -167,6 +167,7 @@ class _StageUpdateState:
 class _VintageActualValue:
     value: float | None
     vintage_id: Any
+    found: bool
 
 
 def run(
@@ -1540,6 +1541,7 @@ def _run_vintage_aware(
         "actuals_vintage_id": actual_vintage_id,
         "origin_vintage_map": origin_vintage_map,
     }
+    _attach_first_release_summary(metadata["vintage_source"], actual_resolver)
     metadata["vintage_boundary_audit"] = boundary_audit
     forecast_table.attrs["macroforecast_vintage_boundary_audit"] = boundary_audit
     forecast_table.attrs["macroforecast_vintage_source"] = metadata["vintage_source"]
@@ -1768,6 +1770,7 @@ def _run_vintage_panel_models(
         "actuals_vintage_id": actual_vintage_id,
         "origin_vintage_map": origin_vintage_map,
     }
+    _attach_first_release_summary(metadata["vintage_source"], actual_resolver)
     metadata["vintage_boundary_audit"] = boundary_audit
     forecast_table.attrs["macroforecast_vintage_boundary_audit"] = boundary_audit
     forecast_table.attrs["macroforecast_vintage_source"] = metadata["vintage_source"]
@@ -1825,6 +1828,78 @@ def _vintage_work_panel(bundle: DataBundle, reference_index: pd.DatetimeIndex) -
     return panel
 
 
+def _validate_vintage_reference_calendar(
+    bundle: DataBundle,
+    reference_index: pd.DatetimeIndex,
+) -> None:
+    validate_panel(bundle.panel)
+    reference = pd.DatetimeIndex(reference_index)
+    overlap = pd.DatetimeIndex(bundle.panel.index).intersection(reference)
+    panel_anchor = _calendar_anchor_description(pd.DatetimeIndex(bundle.panel.index))
+    reference_anchor = _calendar_anchor_description(reference)
+    if overlap.empty:
+        advice = _calendar_anchor_advice(
+            pd.DatetimeIndex(bundle.panel.index),
+            reference,
+        )
+        raise ValueError(
+            "vintage panel index has no dates in common with reference_calendar: "
+            f"vintage panel is {panel_anchor}; reference_calendar uses "
+            f"{reference_anchor}.{advice}"
+        )
+    coverage = len(overlap) / len(reference)
+    if coverage < 0.5:
+        warnings.warn(
+            "vintage panel/reference_calendar overlap covers only "
+            f"{coverage:.1%} of reference_calendar labels; vintage panel is "
+            f"{panel_anchor} and reference_calendar uses {reference_anchor}",
+            UserWarning,
+            stacklevel=3,
+        )
+
+
+def _calendar_anchor_description(index: pd.DatetimeIndex) -> str:
+    if index.empty:
+        return "empty"
+    normalized = pd.DatetimeIndex(index).dropna()
+    if normalized.empty:
+        return "empty"
+    inferred = pd.infer_freq(normalized) if len(normalized) >= 3 else None
+    days = pd.Index(normalized.day)
+    if bool((days == 1).all()):
+        if inferred and inferred.startswith("QS"):
+            return "quarter-start (QS) indexed"
+        return "month-start (MS) indexed"
+    if bool(pd.Index(normalized.is_month_end).all()):
+        if inferred and inferred.startswith("QE"):
+            return "quarter-end (QE) indexed"
+        return "month-end (ME) indexed"
+    if inferred:
+        return f"{inferred} indexed"
+    start = normalized.min().date()
+    end = normalized.max().date()
+    return f"dates from {start} to {end}"
+
+
+def _calendar_anchor_advice(
+    panel_index: pd.DatetimeIndex,
+    reference_index: pd.DatetimeIndex,
+) -> str:
+    panel = pd.DatetimeIndex(panel_index).dropna()
+    reference = pd.DatetimeIndex(reference_index).dropna()
+    if panel.empty or reference.empty:
+        return ""
+    panel_is_month_start = bool((pd.Index(panel.day) == 1).all())
+    panel_is_month_end = bool(pd.Index(panel.is_month_end).all())
+    reference_is_month_start = bool((pd.Index(reference.day) == 1).all())
+    reference_is_month_end = bool(pd.Index(reference.is_month_end).all())
+    if panel_is_month_start and reference_is_month_end:
+        return " Rebuild the calendar with freq='MS'."
+    if panel_is_month_end and reference_is_month_start:
+        return " Rebuild the calendar with freq='ME'."
+    return ""
+
+
 class _VintageActualResolver:
     def __init__(self, data: VintagePanelSpec, reference_index: pd.DatetimeIndex) -> None:
         self._data = data
@@ -1835,7 +1910,11 @@ class _VintageActualResolver:
         self._available_timestamps = tuple(
             pd.Timestamp(value) for value in self._available_keys
         )
+        self._first_release_max_vintages = int(data.first_release_max_vintages)
+        self._first_release_found: dict[tuple[str, pd.Timestamp], Any] = {}
+        self._first_release_not_found: set[tuple[str, pd.Timestamp]] = set()
         latest_bundle = _vintage_latest_actual_bundle(data, reference_index)
+        _validate_vintage_reference_calendar(latest_bundle, reference_index)
         self._latest_vintage_id = _bundle_vintage_id(latest_bundle)
         self.base_panel = _vintage_work_panel(latest_bundle, reference_index)
         self.metadata_vintage_id = (
@@ -1875,20 +1954,46 @@ class _VintageActualResolver:
         if cached is not None:
             return cached
         pos = bisect_right(self._available_timestamps, pd.Timestamp(date))
-        if pos >= len(self._available_keys):
-            raise VintageUnavailableError(
-                f"no first-release vintage is available strictly after {date.date()}"
-            )
-        bundle = self._data.source.resolve(pd.Timestamp(self._available_keys[pos]))
-        vintage_id = _bundle_vintage_id(bundle)
-        validate_panel(bundle.panel)
-        value: float | None = None
-        if target in bundle.panel.columns and date in bundle.panel.index:
+        stop = min(len(self._available_keys), pos + self._first_release_max_vintages)
+        for probe_pos in range(pos, stop):
+            bundle = self._data.source.resolve(pd.Timestamp(self._available_keys[probe_pos]))
+            vintage_id = _bundle_vintage_id(bundle)
+            validate_panel(bundle.panel)
+            if target not in bundle.panel.columns or date not in bundle.panel.index:
+                continue
             raw = bundle.panel.loc[date, target]
-            value = None if pd.isna(raw) else float(raw)
-        actual = _VintageActualValue(value=value, vintage_id=vintage_id)
+            if pd.isna(raw):
+                continue
+            actual = _VintageActualValue(value=float(raw), vintage_id=vintage_id, found=True)
+            self._cache[key] = actual
+            self._first_release_found[(str(target), pd.Timestamp(date))] = vintage_id
+            return actual
+        actual = _VintageActualValue(value=None, vintage_id=None, found=False)
         self._cache[key] = actual
+        self._first_release_not_found.add((str(target), pd.Timestamp(date)))
         return actual
+
+    def first_release_summary(self) -> dict[str, Any] | None:
+        if self._policy != "first_release":
+            return None
+        found = {
+            f"{target}|{date.isoformat()}": vintage_id
+            for (target, date), vintage_id in sorted(
+                self._first_release_found.items(),
+                key=lambda item: (item[0][0], item[0][1]),
+            )
+        }
+        not_found = [
+            {"target": target, "date": date.isoformat()}
+            for target, date in sorted(self._first_release_not_found)
+        ]
+        return {
+            "max_vintages_probed": self._first_release_max_vintages,
+            "resolved_count": len(found),
+            "not_found_count": len(not_found),
+            "resolved_vintage_map": found,
+            "not_found": not_found,
+        }
 
     @staticmethod
     def _format_vintage_ids(resolved: Sequence[tuple[pd.Timestamp, Any]]) -> Any:
@@ -1989,6 +2094,26 @@ def _warn_vintage_boundary_violations(violations: Sequence[Mapping[str, Any]]) -
         RuntimeWarning,
         stacklevel=3,
     )
+
+
+def _attach_first_release_summary(
+    vintage_source_metadata: dict[str, Any],
+    resolver: _VintageActualResolver,
+) -> None:
+    summary = resolver.first_release_summary()
+    if summary is None:
+        return
+    vintage_source_metadata["first_release_actuals"] = summary
+    missing = int(summary["not_found_count"])
+    if missing:
+        warnings.warn(
+            "first-release actuals were not found for "
+            f"{missing} target date(s) after probing up to "
+            f"{summary['max_vintages_probed']} vintage(s); those actuals are NaN "
+            "and metadata['vintage_source']['first_release_actuals'] lists them",
+            UserWarning,
+            stacklevel=3,
+        )
 
 
 def _vintage_boundary_audit(

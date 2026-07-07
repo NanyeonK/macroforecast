@@ -26,7 +26,7 @@ import pandas as pd
 import macroforecast as mf
 
 source = mf.data.fred_md_vintages(start="1999-01", end="2024-12")
-reference = pd.date_range("1999-01-31", "2024-12-31", freq="ME", name="date")
+reference = pd.date_range("1999-01-01", "2024-12-01", freq="MS", name="date")
 
 data = mf.data.VintagePanelSpec(
     source=source,
@@ -42,7 +42,7 @@ spec = mf.pipeline.pipeline_spec(
     data=data,
     targets=["INDPRO"],
     horizons=[1, 3, 6],
-    window=mf.window.from_cutoffs(test_start="2005-01-31", horizon=1),
+    window=mf.window.from_cutoffs(test_start="2005-01-01", horizon=1),
     arms=[mf.pipeline.Arm("AR", model="ar", is_benchmark=True)],
     evaluation=mf.pipeline.EvalSpec(benchmark="AR"),
     checkpoint_dir="ckpt/vintage_indpro",
@@ -53,6 +53,12 @@ report = mf.pipeline.run_pipeline(spec)
 
 Forecast rows include `vintage_id`, the snapshot used for the origin, and
 `actuals_vintage_id`, the snapshot used for the realized value.
+
+FRED-MD and FRED-QD source files date observations at the start of the month or
+quarter. Build the reference calendar with matching labels (`freq="MS"` for
+monthly FRED-MD, `freq="QS"` for quarterly FRED-QD). A month-end calendar such
+as `freq="ME"` has no labels in common with FRED-MD vintages and the vintage
+runner raises a calendar-anchor error before feature construction.
 
 ## Custom vintages
 
@@ -78,7 +84,9 @@ snapshots = {
 source = mf.data.custom_vintages(snapshots, dataset="my_archive", frequency="monthly")
 ```
 
-A long ALFRED-style frame can be grouped by vintage:
+A grouped-wide ALFRED-style frame can be grouped by vintage. It must contain a
+vintage column, a date column, and one numeric column per series within each
+vintage snapshot:
 
 ```python
 source = mf.data.custom_vintages(
@@ -94,6 +102,11 @@ Every custom snapshot is normalized through `as_panel` and `validate_panel`.
 Sources are memoized by the resolved vintage identifier. If a callable source is
 non-deterministic, run without persistent preprocessing cache so stale fitted
 state cannot be reused against changing content.
+
+For `actuals_vintage="first_release"`, the source must report timestamp-parsable
+`available_vintages()`. Callable-only custom sources do not provide a release
+calendar, so use a mapping or grouped-wide frame when first-release scoring is
+needed.
 
 ## Static extras
 
@@ -114,7 +127,11 @@ source = mf.data.with_static_extras(
 ```
 
 The static panel's SHA-256 fingerprint is included in each resolved vintage ID.
-Changing the extras therefore changes cache identity and provenance.
+Changing the extras therefore changes cache identity and provenance. Static
+extras are truncated to rows strictly before the forecast origin before joining,
+so a full-span calendar dummy panel does not create post-origin rows. Only use
+this wrapper for deterministic columns or columns genuinely known in advance at
+the origin.
 
 ## Latest vs first-release actuals
 
@@ -123,9 +140,13 @@ available to the run. This is the usual referee convention when the target is
 defined as the current best measurement.
 
 `actuals_vintage="first_release"` scores each target date `d` against the first
-available vintage strictly after `d`. This is useful when the estimand is the
-initial public release. It also makes `actuals_vintage_id` row-varying because
-each realized date can come from a different release.
+available vintage strictly after `d` that contains a non-missing value for that
+observation. The resolver walks forward across later vintages when the first
+post-date vintage does not yet contain the release, up to
+`first_release_max_vintages` probes on `VintagePanelSpec` (default `12`). This is
+useful when the estimand is the initial public release. It also makes
+`actuals_vintage_id` row-varying because each realized date can come from a
+different release.
 
 Choose the convention before running the pipeline. `rescore()` re-evaluates the
 forecast rows already written to checkpoints; it cannot retroactively switch

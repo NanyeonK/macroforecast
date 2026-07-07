@@ -40,6 +40,7 @@ class VintagePanelSpec:
     source: VintageSource
     reference_calendar: pd.DatetimeIndex
     actuals_vintage: Literal["latest", "first_release"] = "latest"
+    first_release_max_vintages: int = 12
 
     def __post_init__(self) -> None:
         if not isinstance(self.source, VintageSource):
@@ -52,6 +53,19 @@ class VintagePanelSpec:
             raise ValueError("reference_calendar must be monotonic increasing")
         if self.actuals_vintage not in {"latest", "first_release"}:
             raise ValueError("actuals_vintage must be 'latest' or 'first_release'")
+        if int(self.first_release_max_vintages) < 1:
+            raise ValueError("first_release_max_vintages must be at least 1")
+        if self.actuals_vintage == "first_release":
+            keys = tuple(self.source.available_vintages())
+            if not keys:
+                raise ValueError(
+                    "actuals_vintage='first_release' requires "
+                    "source.available_vintages() to return timestamp-parsable "
+                    "vintage keys; callable custom_vintages sources without "
+                    "explicit vintages cannot supply first-release actuals"
+                )
+            for key in keys:
+                _coerce_vintage_timestamp(key)
 
 
 @dataclass
@@ -254,12 +268,14 @@ def custom_vintages(
     """Return a custom point-in-time source.
 
     ``source`` may be a callable ``origin_date -> DataBundle | DataFrame``, a
-    mapping from date-like vintage keys to snapshots, or a long ALFRED-style
-    DataFrame with one row per ``(date, vintage, series...)``. Every snapshot is
-    normalized through :func:`as_panel` / :func:`custom_dataset` and then
-    validated. Resolved snapshots are memoized by the stable identifier produced
-    by ``vintage_id`` (default: ``str(resolved_key)``). If a callable reads from
-    a non-deterministic source whose content can change for the same identifier,
+    mapping from timestamp-parsable vintage keys to snapshots, or a grouped-wide
+    DataFrame. The grouped-wide form has one ``vintage_column``, one
+    ``date_column``, and one numeric column per series; each vintage group is a
+    complete wide snapshot. Every snapshot is normalized through
+    :func:`as_panel` / :func:`custom_dataset` and then validated. Resolved
+    snapshots are memoized by the stable identifier produced by ``vintage_id``
+    (default: ``str(resolved_key)``). If a callable reads from a
+    non-deterministic source whose content can change for the same identifier,
     run the forecast with runner/pipeline preprocessing caching disabled.
     """
 
@@ -273,10 +289,10 @@ def custom_vintages(
         )
 
     if isinstance(source, Mapping):
-        vintages = tuple(
-            _ResolvedVintage(key=key, timestamp=_coerce_vintage_timestamp(key), bundle=value)
-            for key, value in source.items()
-        )
+        vintages: list[_ResolvedVintage] = []
+        for key, value in source.items():
+            timestamp = _coerce_vintage_timestamp(key)
+            vintages.append(_ResolvedVintage(key=key, timestamp=timestamp, bundle=value))
         return _CustomVintageSource(
             vintages=tuple(sorted(vintages, key=lambda v: v.timestamp)),
             vintage_id=vintage_id,
@@ -344,14 +360,16 @@ class _StaticExtrasVintageSource:
         return self.source.available_vintages()
 
     def resolve(self, origin_date: pd.Timestamp) -> DataBundle:
-        bundle = self.source.resolve(pd.Timestamp(origin_date))
+        origin = pd.Timestamp(origin_date)
+        bundle = self.source.resolve(origin)
         base_id = _bundle_vintage_label(bundle)
-        vintage_label = _extra_vintage_label(base_id, self._extra_fingerprint)
+        vintage_label = _extra_vintage_label(base_id, self._extra_fingerprint, origin)
         cached = self._cache.get(vintage_label)
         if cached is not None:
             return cached
         validate_panel(bundle.panel)
-        joined = bundle.panel.join(self.extra.panel, how=self.join)
+        observable_extra = self.extra.panel.loc[self.extra.panel.index < origin]
+        joined = bundle.panel.join(observable_extra, how=self.join)
         metadata = {
             **dict(bundle.metadata),
             "vintage": vintage_label,
@@ -360,6 +378,7 @@ class _StaticExtrasVintageSource:
                 "join": self.join,
                 "fingerprint": self._extra_fingerprint,
                 "columns": [str(column) for column in self.extra.panel.columns],
+                "truncated_before": origin.isoformat(),
             },
         }
         panel = as_panel(joined, metadata=metadata)
@@ -374,7 +393,7 @@ def with_static_extras(
     *,
     join: Literal["outer", "inner", "left"] = "outer",
 ) -> VintageSource:
-    """Join non-revised extra columns onto every resolved vintage bundle."""
+    """Join non-revised extra columns observable before each origin."""
 
     if join not in {"outer", "inner", "left"}:
         raise ValueError("join must be one of 'outer', 'inner', or 'left'")
@@ -389,9 +408,16 @@ def _vintage_label_timestamp(label: str) -> pd.Timestamp:
 
 
 def _coerce_vintage_timestamp(value: Any) -> pd.Timestamp:
-    timestamp = pd.Timestamp(value)
+    try:
+        timestamp = pd.Timestamp(value)
+    except (TypeError, ValueError, pd.errors.OutOfBoundsDatetime) as exc:
+        raise ValueError(
+            f"custom_vintages vintage key {value!r} cannot be parsed as a timestamp"
+        ) from exc
     if pd.isna(timestamp):
-        raise ValueError(f"vintage key {value!r} cannot be parsed as a timestamp")
+        raise ValueError(
+            f"custom_vintages vintage key {value!r} cannot be parsed as a timestamp"
+        )
     return timestamp
 
 
@@ -422,8 +448,13 @@ def _bundle_vintage_label(bundle: DataBundle) -> str:
     return str(bundle.metadata["vintage"])
 
 
-def _extra_vintage_label(base_id: str, fingerprint: Mapping[str, Any]) -> str:
-    return f"{base_id}|static_extra_sha256={fingerprint.get('value')}"
+def _extra_vintage_label(
+    base_id: str,
+    fingerprint: Mapping[str, Any],
+    origin: pd.Timestamp,
+) -> str:
+    origin_label = pd.Timestamp(origin).strftime("%Y-%m-%d")
+    return f"{base_id}|static_extra_sha256={fingerprint.get('value')}|origin={origin_label}"
 
 
 def _source_kind(source: Any) -> str:
