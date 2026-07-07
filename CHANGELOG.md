@@ -5,6 +5,23 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `data/vintage.py`, `forecasting/runner.py`, `data/loaders.py`,
+  `data/panel.py` (fix, vintage correctness + custom-data onboarding):
+  vintage-aware runs now fail early when the resolved panel calendar has no
+  overlap with `reference_calendar` (including FRED month-start vs
+  month-end-label mistakes), `actuals_vintage="first_release"` walks forward
+  across delayed releases up to `VintagePanelSpec.first_release_max_vintages`
+  and records/warns on missing actuals, and `with_static_extras()` truncates
+  extras strictly before each origin so full-span deterministic calendars do
+  not create boundary-audit violations. Custom vintages now validate
+  timestamp-parsable mapping keys and reject callable-only first-release specs;
+  `combine()` points weekly users to `mf.data.align_frequency(...)`; duplicate
+  date errors for long-format custom panels name the pivot-to-wide fix; and
+  `load_custom_csv()` accepts `na_values`, `date_format`, and `dayfirst`
+  controls while preserving default parsing when unset. The vintage guide now
+  uses FRED month-start calendars and documents grouped-wide custom snapshots
+  plus static-extra truncation.
+
 - `pipeline/result_store.py`, `pipeline/run.py`, `pipeline/spec.py`,
   `preprocessing/cache.py`, `forecasting/preprocessing_stage.py` (feature, W9
   result store + Gap C): added `pipeline_spec(..., result_store=...)` for
