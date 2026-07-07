@@ -48,6 +48,12 @@ The pipeline runs statistical forecast comparison tests across all contenders:
 
 - **Diebold-Mariano (DM)**: tests whether contender and benchmark have equal
   predictive accuracy. Valid for any pair of forecasts (nested or non-nested).
+  The default applies the Harvey-Leybourne-Newbold small-sample correction and
+  uses a Student-t reference with `df=n_obs-1`, matching the package's
+  `forecast::dm.test` parity contract. Use `test_options={"dm":
+  {"small_sample": False}}` only when a replication design needs the plain
+  Diebold-Mariano (1995) statistic and asymptotic standard-normal p-value, such
+  as MATLAB oracles that report the uncorrected DM statistic.
 - **Clark-West (CW)**: adjusts the DM test for the finite-sample upward bias of
   a larger nested model. Valid only when the benchmark is nested within the
   contender (declare `nested_in_benchmark=True` on the arm). The pipeline emits
@@ -73,6 +79,29 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   They require the `arch` extra (`pip install "macroforecast[arch]"`) and carry
   a dependent-loss size caveat; prefer `model_confidence_set` or `uspa`/`aspa`
   when serial dependence in losses is central to the inference.
+
+Tests that estimate a HAC or lag-truncated long-run variance accept fixed lag
+overrides through `test_options`. Use `hac_lags` when a replication design pins a
+Newey-West bandwidth rather than deriving it from the forecast horizon:
+
+```python
+evaluation = mf.pipeline.EvalSpec(
+    benchmark="AR",
+    tests=("dm", "cw", "gw", "enc_t", "gr", "mz"),
+    test_options={
+        "dm": {"hac_lags": 4},
+        "cw": {"hac_lags": 4},
+        "gw": {"hac_lags": 4},
+        "enc_t": {"hac_lags": 4},
+        "gr": {"hac_lags": 4},
+        "mz": {"hac_lags": 4},
+    },
+)
+```
+
+`hac_lags` must be an integer greater than or equal to zero and is validated when
+`pipeline_spec` is built. For `"gr"`, `hac_lags` is the paper-facing alias for the
+legacy `lag_truncate` option and takes precedence if both are supplied.
 
 ## Choosing the benchmark
 
@@ -161,22 +190,35 @@ evaluation = EvalSpec(
     metrics=("rmse", "relative_mse", "r2_oos"),
     tests=("dm", "cw", "mcs", "spa", "uspa", "mz"),
     test_options={"spa": {"n_boot": 999, "block_length": 5},
-                  "uspa": {"n_boot": 999, "block_length": 3}},
+                  "uspa": {"n_boot": 999, "block_length": 3},
+                  "dm": {"hac_lags": 4}},
     cw_for_nested=True,    # compute CW only for arms with nested_in_benchmark=True
     mcs_alpha=0.10,
     subsamples={
         "full": SubsampleWindow(),
         "ex_covid": SubsampleWindow(exclude=(("2020-03-01", "2021-12-31"),)),
         "post_gfc": SubsampleWindow(start="2010-01-01"),
+        "nber_recession": SubsampleWindow(mask="nber_recession"),
+        "nber_expansion": SubsampleWindow(mask="nber_expansion"),
     },
 )
 ```
 
 The accuracy table, significance tests, and Model Confidence Set are produced by
 `run_pipeline`. Subsamples filter the already-produced forecast frame by target
-date before scoring; they do not refit models. When subsamples are configured,
-evaluation tables include a `subsample` column, and paper tables can select a
-window with `mf.reporting.paper_accuracy_table(report, subsample="ex_covid")`.
+date before scoring; they do not refit models. `SubsampleWindow(mask=...)`
+intersects the date window with a boolean state series. Pass a date-indexed
+boolean `Series`, a `{date: bool}` mapping, or the named masks
+`"nber_recession"` / `"nber_expansion"`. The NBER masks fetch `USREC` for
+month-start targets and `USRECQ` for quarter-start targets through the raw FRED
+cache, then record the raw-file hash in report provenance.
+
+Mask dates must exactly cover the forecast target dates being evaluated. A
+month-end mask will not be silently shifted onto month-start forecasts, and
+missing mask dates or `NaN` states raise with the first missing target dates.
+When subsamples are configured, evaluation tables include a `subsample` column,
+and paper tables can select a window with
+`mf.reporting.paper_accuracy_table(report, subsample="ex_covid")`.
 See the runnable [Getting Started](../getting_started.md) snippets and the
 [Replication Gallery](../gallery.md) for the full report objects in context.
 

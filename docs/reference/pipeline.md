@@ -1042,7 +1042,7 @@ Qualified name: `macroforecast.pipeline.spec.SubsampleWindow`
 #### Signature
 
 ```python
-macroforecast.pipeline.SubsampleWindow(start: str | None = None, end: str | None = None, exclude: tuple[tuple[str, str], ...] = ()) -> None
+macroforecast.pipeline.SubsampleWindow(start: str | None = None, end: str | None = None, exclude: tuple[tuple[str, str], ...] = (), mask: SubsampleMaskInput = None) -> None
 ```
 
 #### Description
@@ -1050,7 +1050,10 @@ macroforecast.pipeline.SubsampleWindow(start: str | None = None, end: str | None
 Evaluation-window filter applied to forecast target dates.
 
 Bounds are inclusive date strings. ``exclude`` removes inclusive date ranges
-after the optional start/end bounds are applied.
+after the optional start/end bounds are applied. ``mask`` intersects the
+window with dates where a boolean state indicator is true; it accepts a
+date-indexed boolean Series, a date-to-bool mapping, or the named indicators
+``"nber_recession"`` and ``"nber_expansion"``.
 
 #### Parameters
 
@@ -1059,6 +1062,7 @@ after the optional start/end bounds are applied.
 | `start` | positional or keyword | `str \| None` | `None` |
 | `end` | positional or keyword | `str \| None` | `None` |
 | `exclude` | positional or keyword | `tuple[tuple[str, str], ...]` | `()` |
+| `mask` | positional or keyword | `SubsampleMaskInput` | `None` |
 
 #### Returns
 
@@ -1079,6 +1083,7 @@ import macroforecast as mf
 | `start` | `str \| None` | `None` |
 | `end` | `str \| None` | `None` |
 | `exclude` | `tuple[tuple[str, str], ...]` | `()` |
+| `mask` | `SubsampleMaskInput` | `None` |
 ### TargetSpec
 
 Qualified name: `macroforecast.pipeline.spec.TargetSpec`

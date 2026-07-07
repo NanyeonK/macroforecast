@@ -56,6 +56,7 @@ from .svm import linear_svr, nu_svr, svr
 from .timeseries import (
     ar,
     naive,
+    hist_mean,
     seasonal_naive,
     random_walk_drift,
     stlf,
@@ -139,6 +140,7 @@ __all__ = [
     "albacore_ranks",
     "ar",
     "naive",
+    "hist_mean",
     "seasonal_naive",
     "random_walk_drift",
     "stlf",

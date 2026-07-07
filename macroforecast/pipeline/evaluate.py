@@ -1,6 +1,8 @@
 """Pipeline evaluation: accuracy, DM/CW significance, MCS, cross-arm combinations (Stage 2)."""
 from __future__ import annotations
 
+import hashlib
+import json
 import warnings
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
@@ -8,6 +10,7 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
+from macroforecast.data import load_fred_series
 from macroforecast.pipeline.spec import (
     CALIBRATION_EVAL_TESTS,
     CombinationContender,
@@ -112,6 +115,11 @@ _NESTED_QUADRATIC_TESTS = frozenset({"cw", "enc_new", "enc_t"})
 _SET_COMPARISON_TESTS = frozenset({"spa", "rc", "stepm"})
 _MULTI_HORIZON_TESTS = frozenset({"uspa", "aspa"})
 _SUBSAMPLE_DATE_COLUMN = "date"
+_SUBSAMPLE_PROVENANCE_ATTR = "macroforecast_subsample_provenance"
+_NAMED_SUBSAMPLE_MASKS = {
+    "nber_recession": {"monthly": "USREC", "quarterly": "USRECQ", "invert": False},
+    "nber_expansion": {"monthly": "USREC", "quarterly": "USRECQ", "invert": True},
+}
 
 
 def _eval_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
@@ -144,13 +152,251 @@ def _parse_window_date(value: str | None) -> pd.Timestamp | None:
     return None if value is None else pd.Timestamp(value).normalize()
 
 
-def _subsample_mask(master: pd.DataFrame, window: SubsampleWindow) -> pd.Series:
+def _date_anchor_description(index: pd.DatetimeIndex) -> str:
+    if index.empty:
+        return "empty"
+    normalized = pd.DatetimeIndex(index).dropna()
+    if normalized.empty:
+        return "empty"
+    inferred = pd.infer_freq(normalized) if len(normalized) >= 3 else None
+    days = pd.Index(normalized.day)
+    if bool((days == 1).all()):
+        if inferred and inferred.startswith("QS"):
+            return "quarter-start (QS) indexed"
+        return "month-start (MS) indexed"
+    if bool(pd.Index(normalized.is_month_end).all()):
+        if inferred and inferred.startswith("QE"):
+            return "quarter-end (QE) indexed"
+        return "month-end (ME) indexed"
+    if inferred:
+        return f"{inferred} indexed"
+    start = normalized.min().date()
+    end = normalized.max().date()
+    return f"dates from {start} to {end}"
+
+
+def _mask_anchor_advice(mask_index: pd.DatetimeIndex, target_index: pd.DatetimeIndex) -> str:
+    mask_anchor = _date_anchor_description(mask_index)
+    target_anchor = _date_anchor_description(target_index)
+    if "month-end" in mask_anchor and "month-start" in target_anchor:
+        return " Reindex the mask to month-start (freq='MS') dates."
+    if "month-start" in mask_anchor and "month-end" in target_anchor:
+        return " Reindex the mask to month-end (freq='ME') dates."
+    if "quarter-end" in mask_anchor and "quarter-start" in target_anchor:
+        return " Reindex the mask to quarter-start (freq='QS') dates."
+    if "quarter-start" in mask_anchor and "quarter-end" in target_anchor:
+        return " Reindex the mask to quarter-end (freq='QE') dates."
+    return ""
+
+
+def _target_mask_frequency(target_dates: pd.DatetimeIndex) -> str:
+    if target_dates.empty:
+        return "monthly"
+    normalized = pd.DatetimeIndex(target_dates).sort_values()
+    inferred = pd.infer_freq(normalized) if len(normalized) >= 3 else None
+    if inferred and (inferred.startswith("QS") or inferred.startswith("QE")):
+        return "quarterly"
+    if bool((pd.Index(normalized.day) == 1).all()):
+        deltas = [
+            int((right - left).days)
+            for left, right in zip(normalized[:-1], normalized[1:], strict=False)
+            if right > left
+        ]
+        months = set(int(month) for month in normalized.month)
+        if deltas and 80 <= float(pd.Series(deltas).median()) <= 100 and months <= {1, 4, 7, 10}:
+            return "quarterly"
+    return "monthly"
+
+
+def _unique_target_dates(dates: pd.Series, *, name: str) -> pd.DatetimeIndex:
+    if dates.isna().any():
+        count = int(dates.isna().sum())
+        raise ValueError(
+            f"EvalSpec.subsamples[{name!r}].mask cannot align because forecast "
+            f"target dates contain {count} invalid or missing value(s)"
+        )
+    return pd.DatetimeIndex(pd.unique(dates)).sort_values()
+
+
+def _series_summary(series: pd.Series) -> dict[str, Any]:
+    observed = series.dropna()
+    if observed.empty:
+        return {"n_obs": 0, "n_true": 0, "first": None, "last": None}
+    bool_values = observed.astype(bool)
+    return {
+        "n_obs": int(observed.shape[0]),
+        "n_true": int(bool_values.sum()),
+        "first": pd.Timestamp(observed.index[0]).strftime("%Y-%m-%d"),
+        "last": pd.Timestamp(observed.index[-1]).strftime("%Y-%m-%d"),
+    }
+
+
+def _user_mask_summary(mask: tuple[tuple[str, bool], ...]) -> dict[str, Any]:
+    payload = json.dumps(list(mask), separators=(",", ":"), ensure_ascii=True)
+    series = pd.Series(
+        [value for _date, value in mask],
+        index=pd.DatetimeIndex([date for date, _value in mask]),
+        dtype=bool,
+    )
+    return {
+        **_series_summary(series),
+        "sha256": hashlib.sha256(payload.encode("utf-8")).hexdigest(),
+    }
+
+
+def _user_mask_series(mask: tuple[tuple[str, bool], ...]) -> pd.Series:
+    return pd.Series(
+        [value for _date, value in mask],
+        index=pd.DatetimeIndex([date for date, _value in mask]),
+        dtype=bool,
+    )
+
+
+def _named_mask_series(mask_name: str, target_dates: pd.DatetimeIndex) -> tuple[pd.Series, dict[str, Any]]:
+    registry = _NAMED_SUBSAMPLE_MASKS[mask_name]
+    frequency = _target_mask_frequency(target_dates)
+    series_id = str(registry[frequency])
+    bundle = load_fred_series(series_id, frequency=frequency)
+    raw = pd.to_numeric(bundle.panel[series_id], errors="coerce")
+    observed = raw.dropna()
+    invalid = observed[~observed.isin([0, 1])]
+    if not invalid.empty:
+        first = pd.Timestamp(invalid.index[0]).strftime("%Y-%m-%d")
+        raise ValueError(
+            f"EvalSpec.subsamples mask {mask_name!r} loaded FRED series "
+            f"{series_id!r} with non-0/1 value at {first}"
+        )
+
+    state = pd.Series(pd.NA, index=raw.index, dtype="boolean")
+    state.loc[raw == 1] = True
+    state.loc[raw == 0] = False
+    if bool(registry["invert"]):
+        state = ~state
+
+    artifact = dict(bundle.metadata.get("artifact", {}) or {})
+    summary = {
+        **_series_summary(state),
+        "series_id": series_id,
+        "frequency": frequency,
+        "source_url": artifact.get("source_url"),
+        "cache_path": artifact.get("local_path"),
+        "raw_sha256": artifact.get("file_sha256"),
+        "cache_hit": artifact.get("cache_hit"),
+    }
+    return state, summary
+
+
+def _resolve_subsample_state_mask(
+    *,
+    name: str,
+    mask_spec: Any,
+    target_dates: pd.DatetimeIndex,
+    resolved_masks: dict[str, dict[str, Any]],
+) -> pd.Series:
+    if isinstance(mask_spec, str):
+        state, summary = _named_mask_series(mask_spec, target_dates)
+        resolved_masks[name] = {"mask_source": mask_spec, "mask_summary": summary}
+    else:
+        user_mask = cast("tuple[tuple[str, bool], ...]", mask_spec)
+        state = _user_mask_series(user_mask)
+        resolved_masks[name] = {
+            "mask_source": "user_series",
+            "mask_summary": _user_mask_summary(user_mask),
+        }
+    return _align_subsample_state_mask(name=name, state=state, target_dates=target_dates)
+
+
+def _align_subsample_state_mask(
+    *,
+    name: str,
+    state: pd.Series,
+    target_dates: pd.DatetimeIndex,
+) -> pd.Series:
+    mask_index = pd.DatetimeIndex(state.index).normalize()
+    if mask_index.has_duplicates:
+        duplicated = mask_index[mask_index.duplicated()].unique()
+        sample = ", ".join(ts.strftime("%Y-%m-%d") for ts in duplicated[:3])
+        raise ValueError(f"EvalSpec.subsamples[{name!r}].mask has duplicate dates after normalization: {sample}")
+    mask_series = pd.Series(state.to_numpy(), index=mask_index).sort_index()
+    overlap = pd.DatetimeIndex(mask_series.index).intersection(target_dates)
+    if overlap.empty:
+        mask_anchor = _date_anchor_description(pd.DatetimeIndex(mask_series.index))
+        target_anchor = _date_anchor_description(target_dates)
+        advice = _mask_anchor_advice(pd.DatetimeIndex(mask_series.index), target_dates)
+        raise ValueError(
+            f"EvalSpec.subsamples[{name!r}].mask has no dates in common with "
+            f"the forecast target dates: mask is {mask_anchor}; target dates "
+            f"are {target_anchor}.{advice}"
+        )
+
+    missing = target_dates.difference(pd.DatetimeIndex(mask_series.index))
+    if not missing.empty:
+        sample = ", ".join(ts.strftime("%Y-%m-%d") for ts in missing[:5])
+        raise ValueError(
+            f"EvalSpec.subsamples[{name!r}].mask is missing {len(missing)} "
+            f"forecast target date(s); first missing dates: {sample}. Extend "
+            "or reindex the mask to cover all forecast target dates."
+        )
+
+    aligned = mask_series.reindex(target_dates)
+    undecidable = aligned.isna()
+    if bool(undecidable.any()):
+        missing_values = pd.DatetimeIndex(aligned.index[undecidable])
+        sample = ", ".join(ts.strftime("%Y-%m-%d") for ts in missing_values[:5])
+        raise ValueError(
+            f"EvalSpec.subsamples[{name!r}].mask contains NaN for "
+            f"{len(missing_values)} covered target date(s); first dates: {sample}. "
+            "Fill or drop undecidable dates before evaluating."
+        )
+    return aligned.astype(bool)
+
+
+def subsample_provenance(
+    spec: PipelineSpec,
+    resolved_masks: Mapping[str, Mapping[str, Any]] | None = None,
+) -> dict[str, Any] | None:
+    subsamples = _eval_subsamples(spec)
+    if subsamples is None:
+        return None
+    resolved = dict(resolved_masks or {})
+    payload: dict[str, Any] = {}
+    for name, window in subsamples.items():
+        mask_source: str | None
+        mask_summary: Mapping[str, Any] | None
+        if window.mask is None:
+            mask_source = None
+            mask_summary = None
+        elif isinstance(window.mask, str):
+            record = dict(resolved.get(name, {}))
+            mask_source = str(record.get("mask_source") or window.mask)
+            raw_summary = record.get("mask_summary")
+            mask_summary = dict(raw_summary) if isinstance(raw_summary, Mapping) else None
+        else:
+            user_mask = cast("tuple[tuple[str, bool], ...]", window.mask)
+            mask_source = "user_series"
+            mask_summary = _user_mask_summary(user_mask)
+        payload[name] = {
+            "start": window.start,
+            "end": window.end,
+            "exclude": [list(bounds) for bounds in window.exclude],
+            "mask_source": mask_source,
+            "mask_summary": mask_summary,
+        }
+    return payload
+
+
+def _subsample_mask(
+    master: pd.DataFrame,
+    name: str,
+    window: SubsampleWindow,
+    resolved_masks: dict[str, dict[str, Any]],
+) -> pd.Series:
     if _SUBSAMPLE_DATE_COLUMN not in master.columns:
         raise ValueError(
             "EvalSpec.subsamples filters forecast target dates, but the master "
             f"forecast frame has no {_SUBSAMPLE_DATE_COLUMN!r} column"
         )
-    dates = pd.to_datetime(master[_SUBSAMPLE_DATE_COLUMN], errors="coerce")
+    dates = pd.to_datetime(master[_SUBSAMPLE_DATE_COLUMN], errors="coerce").dt.normalize()
     mask = pd.Series(True, index=master.index)
     start = _parse_window_date(window.start)
     end = _parse_window_date(window.end)
@@ -163,6 +409,22 @@ def _subsample_mask(master: pd.DataFrame, window: SubsampleWindow) -> pd.Series:
         ex_end = _parse_window_date(raw_ex_end)
         assert ex_start is not None and ex_end is not None
         mask &= ~((dates >= ex_start) & (dates <= ex_end))
+    if window.mask is not None:
+        target_dates = _unique_target_dates(dates, name=name)
+        state = _resolve_subsample_state_mask(
+            name=name,
+            mask_spec=window.mask,
+            target_dates=target_dates,
+            resolved_masks=resolved_masks,
+        )
+        row_state = dates.map(state)
+        if row_state.isna().any():
+            count = int(row_state.isna().sum())
+            raise ValueError(
+                f"EvalSpec.subsamples[{name!r}].mask could not classify "
+                f"{count} forecast row(s); check target-date coverage"
+            )
+        mask &= row_state.astype(bool)
     return mask
 
 
@@ -170,10 +432,13 @@ def _subsample_frames(master: pd.DataFrame, spec: PipelineSpec) -> list[tuple[st
     subsamples = _eval_subsamples(spec)
     if subsamples is None:
         return None
-    return [
-        (name, master.loc[_subsample_mask(master, window)].copy())
+    resolved_masks: dict[str, dict[str, Any]] = {}
+    frames = [
+        (name, master.loc[_subsample_mask(master, name, window, resolved_masks)].copy())
         for name, window in subsamples.items()
     ]
+    master.attrs[_SUBSAMPLE_PROVENANCE_ATTR] = subsample_provenance(spec, resolved_masks)
+    return frames
 
 
 def _with_subsample_column(frame: pd.DataFrame, name: str) -> pd.DataFrame:
@@ -772,8 +1037,15 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                 elif test_name == "gr":
                     options = _eval_test_options(spec, "gr")
                     default_lag_truncate = min(max(int(horizon) - 1, 0), 5)
-                    lag_truncate_source = "user" if "lag_truncate" in options else "default_min_h_minus_1_5"
-                    options.setdefault("lag_truncate", default_lag_truncate)
+                    has_hac_lags = "hac_lags" in options
+                    has_lag_truncate = "lag_truncate" in options
+                    lag_truncate_source = (
+                        "user" if has_hac_lags or has_lag_truncate else "default_min_h_minus_1_5"
+                    )
+                    if has_hac_lags:
+                        options.pop("lag_truncate", None)
+                    else:
+                        options.setdefault("lag_truncate", default_lag_truncate)
                     gr = conditional_predictive_ability_test(
                         loss_c,
                         loss_b,
@@ -794,6 +1066,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         "critical_value": gr.get("critical_value"),
                         "window_size": gr.get("window_size"),
                         "lag_truncate": gr.get("lag_truncate"),
+                        "hac_lags": gr.get("hac_lags", gr.get("lag_truncate")),
                         "lag_truncate_source": lag_truncate_source,
                         "status": "computed",
                     })

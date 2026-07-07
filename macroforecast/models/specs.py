@@ -45,6 +45,7 @@ from macroforecast.models.svm import linear_svr, nu_svr, svr
 from macroforecast.models.timeseries import (
     ar,
     naive,
+    hist_mean,
     seasonal_naive,
     random_walk_drift,
     stlf,
@@ -2773,6 +2774,24 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         input_kind="target",
         backend="macroforecast",
         description="Random-walk (naive) baseline: carry the last value forward (forecast::naive).",
+    ),
+    "hist_mean": _spec(
+        "hist_mean",
+        "timeseries",
+        hist_mean,
+        default_params={"window": None},
+        parameters=(
+            _p(
+                "window",
+                None,
+                "int | None",
+                "Rolling target-mean window; None uses the expanding fit sample.",
+                False,
+            ),
+        ),
+        input_kind="target",
+        backend="macroforecast",
+        description="Historical (prevailing) mean benchmark of the transformed target.",
     ),
     "seasonal_naive": _spec(
         "seasonal_naive",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 import pandas as pd
 
 import macroforecast as mf
@@ -198,6 +199,7 @@ def test_reporting_helpers_are_namespace_only() -> None:
     assert mf.reporting.model_comparison_table is not None
     assert mf.reporting.forecast_test_table is not None
     assert mf.reporting.paper_accuracy_table is not None
+    assert mf.reporting.pairwise_test_table is not None
     assert not hasattr(mf, "report_table")
     assert not hasattr(mf, "latex_table")
     assert not hasattr(mf, "metric_report_table")
@@ -208,6 +210,109 @@ def test_reporting_helpers_are_namespace_only() -> None:
     assert not hasattr(mf, "model_comparison_table")
     assert not hasattr(mf, "forecast_test_table")
     assert not hasattr(mf, "paper_accuracy_table")
+    assert not hasattr(mf, "pairwise_test_table")
+
+
+def _pairwise_master() -> pd.DataFrame:
+    rows = []
+    dates = pd.date_range("2020-01-31", periods=14, freq="ME")
+    errors = {
+        "AR": np.array([0.10, -0.22, 0.18, -0.12, 0.28, -0.16, 0.20, -0.24, 0.14, -0.10, 0.26, -0.18, 0.22, -0.14]),
+        "RF": np.array([0.30, -0.34, 0.26, -0.20, 0.36, -0.28, 0.31, -0.30, 0.24, -0.22, 0.35, -0.32, 0.29, -0.25]),
+        "Ridge": np.array([-0.16, 0.18, -0.12, 0.20, -0.22, 0.24, -0.18, 0.16, -0.14, 0.22, -0.20, 0.26, -0.17, 0.19]),
+    }
+    for origin, date in enumerate(dates):
+        actual = 2.0 + 0.04 * origin + 0.2 * np.sin(origin / 3.0)
+        for model, model_errors in errors.items():
+            rows.append(
+                {
+                    "target": "y",
+                    "horizon": 3,
+                    "origin": origin,
+                    "date": date,
+                    "contender": model,
+                    "prediction": actual + model_errors[origin],
+                    "actual": actual,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+def test_pairwise_test_table_builds_square_dm_matrix_from_public_test() -> None:
+    master = _pairwise_master()
+    models = ["AR", "RF", "Ridge"]
+
+    pvals = mf.reporting.pairwise_test_table(
+        master,
+        target="y",
+        horizon=3,
+        models=models,
+        test_options={"hac_lags": 0},
+    )
+    stats = mf.reporting.pairwise_test_table(
+        master,
+        target="y",
+        horizon=3,
+        models=models,
+        value="stat",
+        test_options={"hac_lags": 0},
+    )
+
+    assert list(pvals.index) == models
+    assert list(pvals.columns) == models
+    assert pvals.shape == (3, 3)
+    assert np.isnan(pvals.to_numpy().diagonal()).all()
+    assert np.isclose(pvals.loc["AR", "RF"], pvals.loc["RF", "AR"])
+    assert np.isclose(stats.loc["AR", "RF"], -stats.loc["RF", "AR"])
+
+    cell = master.loc[(master["target"] == "y") & (master["horizon"] == 3)]
+    wide = cell.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
+    actual = cell.groupby("origin")["actual"].first().reindex(wide.index)
+    loss_ar = (wide["AR"].to_numpy(dtype=float) - actual.to_numpy(dtype=float)) ** 2
+    loss_rf = (wide["RF"].to_numpy(dtype=float) - actual.to_numpy(dtype=float)) ** 2
+    expected = mf.tests.dm_test(
+        loss_ar,
+        loss_rf,
+        horizon=3,
+        hac_lags=0,
+        input_type="loss",
+    )
+    assert np.isclose(pvals.loc["AR", "RF"], expected.p_value)
+    assert np.isclose(stats.loc["AR", "RF"], expected.statistic)
+
+
+def test_pairwise_test_table_honors_test_options_and_renders_latex() -> None:
+    master = _pairwise_master()
+
+    default = mf.reporting.pairwise_test_table(
+        master,
+        target="y",
+        horizon=3,
+        value="stat",
+    )
+    fixed_lag = mf.reporting.pairwise_test_table(
+        master,
+        target="y",
+        horizon=3,
+        value="stat",
+        test_options={"hac_lags": 0},
+    )
+    starred = mf.reporting.pairwise_test_table(
+        {"forecasts": master},
+        target="y",
+        horizon=3,
+        test_options={"hac_lags": 0},
+        stars=True,
+    )
+
+    assert not np.isclose(default.loc["AR", "RF"], fixed_lag.loc["AR", "RF"])
+    assert starred.loc["AR", "AR"] == ""
+    assert isinstance(starred.loc["AR", "RF"], str)
+    pytest.importorskip("jinja2")  # pandas>=2 DataFrame.to_latex delegates to Styler
+    latex = starred.to_latex()
+    assert "\\begin{tabular}" in latex
+    assert "AR" in latex
+    assert starred.attrs["macroforecast_metadata_schema"]["kind"] == "pairwise_test_table"
 
 
 def _paper_report(

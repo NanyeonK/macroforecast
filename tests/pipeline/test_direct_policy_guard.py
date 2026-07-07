@@ -16,7 +16,9 @@ guard does NOT fire for ``ar``/``far``/``var`` (excluded -- they have the real
 fix) or for a genuine supervised model, nor for ``recursive``/``path_average``
 policies; (5) the guarded model set is derived from
 ``macroforecast.list_model_specs()`` so it cannot silently rot as the models
-lane adds or removes models.
+lane adds or removes models. ``hist_mean`` is the narrow target-kind exception:
+it is a constant mean projection of the already transformed target, not an
+iterated dynamic forecast.
 """
 import warnings
 
@@ -30,6 +32,8 @@ from macroforecast.pipeline.spec import (
     DIRECT_AVERAGE_GUARD_MODELS,
     DIRECT_POLICY_GUARD_MODELS,
 )
+
+_DIRECT_SAFE_TARGET_EXCEPTIONS = frozenset({"hist_mean"})
 
 
 def _toy_inputs():
@@ -74,6 +78,7 @@ def test_guard_set_matches_model_specs():
         for _, row in df.iterrows()
         if row["input_kind"] in {"target", "panel"}
         and "direct" not in mf.get_model(str(row["name"])).default_params
+        and str(row["name"]) not in _DIRECT_SAFE_TARGET_EXCEPTIONS
     } | {"favar"}
     assert DIRECT_POLICY_GUARD_MODELS == expected
     # ar/far deliberately excluded even though they share favar's input_kind;
@@ -81,6 +86,7 @@ def test_guard_set_matches_model_specs():
     assert "ar" not in DIRECT_POLICY_GUARD_MODELS
     assert "far" not in DIRECT_POLICY_GUARD_MODELS
     assert "var" not in DIRECT_POLICY_GUARD_MODELS
+    assert "hist_mean" not in DIRECT_POLICY_GUARD_MODELS
     assert DIRECT_AVERAGE_GUARD_MODELS == frozenset({"var"})
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from html import escape as _html_escape
@@ -517,6 +517,123 @@ def forecast_test_table(
     )
 
 
+def pairwise_test_table(
+    report_or_master: Any,
+    *,
+    test: str = "dm",
+    target: Any,
+    horizon: Any,
+    models: Sequence[str] | None = None,
+    value: Literal["p_value", "stat"] = "p_value",
+    loss: str | Callable[[Any, Any], Any] = "squared",
+    test_options: Mapping[str, Any] | None = None,
+    stars: bool = False,
+    star_levels: PValueStarLevels = ((0.01, "***"), (0.05, "**"), (0.10, "*")),
+    precision: int = 3,
+    p_value_precision: int = 3,
+    missing: str = "",
+) -> pd.DataFrame:
+    """Return a square pairwise forecast-comparison table.
+
+    Rendering the returned frame with ``DataFrame.to_latex()`` requires the
+    optional ``jinja2`` package (a pandas>=2 Styler dependency).
+
+    ``report_or_master`` may be a ``PipelineReport`` or a master forecast frame
+    with ``target``, ``horizon``, ``origin``, ``contender``, ``prediction``, and
+    ``actual`` columns. Rows are the first model in the comparison and columns
+    are the second. For ``test="dm"``, for example, the cell ``(A, B)`` calls
+    :func:`macroforecast.tests.dm_test` on A's loss minus B's loss.
+    """
+
+    if value not in {"p_value", "stat"}:
+        raise ValueError("value must be 'p_value' or 'stat'")
+    if stars and value != "p_value":
+        raise ValueError("stars=True is only valid when value='p_value'")
+    key = str(test).lower().replace("-", "_")
+    if key not in {"dm", "gw", "cw", "enc_new", "enc_t", "gr"}:
+        raise ValueError("test must be one of 'dm', 'gw', 'cw', 'enc_new', 'enc_t', or 'gr'")
+
+    master = _master_forecast_frame(report_or_master)
+    required = {"target", "horizon", "origin", "contender", "prediction", "actual"}
+    missing_columns = required - set(master.columns)
+    if missing_columns:
+        raise ValueError(f"pairwise_test_table: forecasts frame missing column(s) {sorted(missing_columns)}")
+    cell = master.loc[
+        (master["target"] == target) & (master["horizon"] == horizon)
+    ].copy()
+    if cell.empty:
+        raise ValueError(f"no forecasts found for target={target!r}, horizon={horizon!r}")
+
+    model_order = [str(name) for name in models] if models is not None else [
+        str(name) for name in dict.fromkeys(cell["contender"].dropna().astype(str))
+    ]
+    wide = cell.pivot_table(
+        index="origin", columns="contender", values="prediction", aggfunc="mean"
+    ).sort_index()
+    wide.columns = [str(column) for column in wide.columns]
+    actual = cell.groupby("origin")["actual"].first().reindex(wide.index)
+    absent = [name for name in model_order if name not in wide.columns]
+    if absent:
+        raise ValueError(f"model(s) {absent} are not present for target={target!r}, horizon={horizon!r}")
+
+    raw_options = dict(test_options or {})
+    table = pd.DataFrame(np.nan, index=model_order, columns=model_order, dtype=object if stars else float)
+    for row_model in model_order:
+        for col_model in model_order:
+            if row_model == col_model:
+                if stars:
+                    table.loc[row_model, col_model] = missing
+                continue
+            common = actual.notna() & wide[row_model].notna() & wide[col_model].notna()
+            if int(common.sum()) == 0:
+                if stars:
+                    table.loc[row_model, col_model] = missing
+                continue
+            y = actual.loc[common].to_numpy(dtype=float)
+            row_pred = wide.loc[common, row_model].to_numpy(dtype=float)
+            col_pred = wide.loc[common, col_model].to_numpy(dtype=float)
+            result = _pairwise_test_result(
+                key,
+                y,
+                row_pred,
+                col_pred,
+                horizon=int(horizon),
+                loss=loss,
+                options=raw_options,
+            )
+            cell_value = _pairwise_result_value(result, value)
+            if stars:
+                table.loc[row_model, col_model] = _format_p_value(
+                    cell_value,
+                    precision=p_value_precision,
+                    missing=missing,
+                    stars=True,
+                    star_levels=star_levels,
+                )
+            elif not _is_missing(cell_value):
+                table.loc[row_model, col_model] = float(cell_value)
+    table.index.name = "model"
+    table.attrs["macroforecast_metadata_schema"] = {
+        "kind": "pairwise_test_table",
+        "version": 1,
+        "test": key,
+        "target": str(target),
+        "horizon": str(horizon),
+        "value": value,
+    }
+    table.attrs["macroforecast_metadata"] = _json_ready({
+        "source_kind": "pairwise_test_table",
+        "models": model_order,
+        "loss": _callable_or_name(loss),
+        "test_options": raw_options,
+        "stars": bool(stars),
+        "star_levels": list(star_levels),
+        "precision": int(precision),
+        "p_value_precision": int(p_value_precision),
+    })
+    return table
+
+
 def paper_accuracy_table(
     report: Any,
     *,
@@ -645,6 +762,111 @@ def paper_accuracy_table(
     if target is not None or len(tables) == 1:
         return next(iter(tables.values()))
     return tables
+
+
+def _master_forecast_frame(report_or_master: Any) -> pd.DataFrame:
+    if isinstance(report_or_master, pd.DataFrame):
+        return report_or_master.copy()
+    if isinstance(report_or_master, Mapping):
+        value = report_or_master.get("forecasts")
+    else:
+        value = getattr(report_or_master, "forecasts", None)
+    if value is None and hasattr(report_or_master, "to_frame"):
+        value = report_or_master.to_frame()
+    if value is None:
+        raise ValueError(
+            "pairwise_test_table requires a PipelineReport-like object with "
+            "'forecasts' or a master forecast DataFrame"
+        )
+    return pd.DataFrame(value).copy()
+
+
+def _pairwise_test_result(
+    test: str,
+    y: np.ndarray,
+    row_pred: np.ndarray,
+    col_pred: np.ndarray,
+    *,
+    horizon: int,
+    loss: str | Callable[[Any, Any], Any],
+    options: Mapping[str, Any],
+) -> Any:
+    from macroforecast import tests as forecast_tests
+
+    loss_row = _pairwise_loss_values(y, row_pred, loss)
+    loss_col = _pairwise_loss_values(y, col_pred, loss)
+    merged = dict(options)
+    if test == "dm":
+        return forecast_tests.dm_test(
+            loss_row,
+            loss_col,
+            **{**merged, "horizon": horizon, "input_type": "loss"},
+        )
+    if test == "gw":
+        return forecast_tests.giacomini_white_test(
+            loss_row,
+            loss_col,
+            **{**merged, "horizon": horizon},
+        )
+    if test == "cw":
+        return forecast_tests.clark_west_test(
+            loss_col,
+            loss_row,
+            col_pred,
+            row_pred,
+            **{**merged, "horizon": horizon},
+        )
+    if test == "enc_new":
+        return forecast_tests.enc_new_test(
+            col_pred - y,
+            row_pred - y,
+            **merged,
+        )
+    if test == "enc_t":
+        return forecast_tests.enc_t_test(
+            col_pred - y,
+            row_pred - y,
+            **{**merged, "horizon": horizon},
+        )
+    gr_options = dict(merged)
+    if "hac_lags" in gr_options:
+        gr_options.pop("lag_truncate", None)
+    else:
+        gr_options.setdefault("lag_truncate", min(max(horizon - 1, 0), 5))
+    return forecast_tests.conditional_predictive_ability_test(
+        loss_row,
+        loss_col,
+        **{**gr_options, "method": "giacomini_rossi"},
+    )
+
+
+def _pairwise_loss_values(
+    y: np.ndarray,
+    pred: np.ndarray,
+    loss: str | Callable[[Any, Any], Any],
+) -> np.ndarray:
+    if callable(loss):
+        return np.asarray(loss(y, pred), dtype=float)
+    key = str(loss).lower().replace("-", "_")
+    error = np.asarray(pred, dtype=float) - np.asarray(y, dtype=float)
+    if key in {"squared", "squared_error", "mse"}:
+        return error**2
+    if key in {"absolute", "absolute_error", "mae"}:
+        return np.abs(error)
+    raise ValueError("loss must be 'squared', 'absolute', or a callable")
+
+
+def _pairwise_result_value(result: Any, value: Literal["p_value", "stat"]) -> Any:
+    key = "statistic" if value == "stat" else "p_value"
+    if isinstance(result, Mapping):
+        return result.get(key)
+    return getattr(result, key, None)
+
+
+def _callable_or_name(value: Any) -> str:
+    if callable(value):
+        return getattr(value, "__name__", repr(value))
+    return str(value)
 
 
 def _report_component_frame(report: Any, name: str) -> pd.DataFrame:
@@ -1290,6 +1512,7 @@ __all__ = [
     "markdown_table",
     "model_comparison_table",
     "paper_accuracy_table",
+    "pairwise_test_table",
     "render_tables",
     "report_bundle",
     "report_table",

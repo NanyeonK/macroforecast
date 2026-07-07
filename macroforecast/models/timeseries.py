@@ -397,6 +397,58 @@ class _NaiveForecaster:
         return np.full(steps, self._last, dtype=float)
 
 
+class _HistoricalMeanForecaster:
+    """Constant forecaster equal to the fit-window target mean."""
+
+    def __init__(self, *, window: int | None = None) -> None:
+        if window is not None and int(window) <= 0:
+            raise ValueError("window must be a positive integer or None")
+        self.window = None if window is None else int(window)
+        self.mean_: float = 0.0
+        self.nobs_: int = 0
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_HistoricalMeanForecaster":
+        del X
+        series = pd.Series(y).astype(float).dropna()
+        if self.window is not None:
+            series = series.tail(self.window)
+        self.nobs_ = int(len(series))
+        self.mean_ = float(series.mean()) if not series.empty else 0.0
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        return np.full(len(X), self.mean_, dtype=float)
+
+
+def hist_mean(y: Any, *, window: int | None = None, **kwargs: Any) -> ModelFit:
+    """Historical (prevailing) mean benchmark for the transformed target.
+
+    Fits the canonical expanding historical-mean benchmark used in equity-premium
+    and forecast-comparison work: every forecast from an origin equals the mean
+    of the target values in that origin's fit window. ``window=None`` uses the
+    full expanding fit sample; an integer ``window`` uses the last ``window``
+    observed target values. The forecast is horizon-invariant by construction.
+
+    The mean is computed on the target object supplied by the forecasting
+    pipeline after target transformation. For example, a level target forecasts
+    the historical mean level, while a growth or log-growth target forecasts the
+    historical mean growth rate.
+    """
+
+    del kwargs
+    target = as_series(y)
+    dummy = pd.DataFrame(
+        {"__origin__": np.arange(len(target), dtype=float)}, index=target.index
+    )
+    return fit_estimator(
+        _HistoricalMeanForecaster(window=window),
+        dummy,
+        target,
+        model="hist_mean",
+        metadata={"window": (None if window is None else int(window))},
+    )
+
+
 def _naive_fit(method: str, y: Any, *, period: int | None = None) -> ModelFit:
     target = as_series(y)
     dummy = pd.DataFrame(
@@ -4133,6 +4185,7 @@ def _midas_weights(
 
 __all__ = [
     "var_restrict",
+    "hist_mean",
     "stlf",
     "random_walk_drift",
     "ar",

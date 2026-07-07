@@ -155,6 +155,14 @@ Expanding, rolling, and no-validation windows; retrain and retune cadence.
 RMSE, relative MSE, relative RMSE, DM/CW tests, and the Model Confidence Set.
 :::
 
+:::{grid-item-card} Paper Tables
+:link: reporting
+:link-type: doc
+
+Accuracy horse-race tables and pairwise model-comparison matrices from a
+`PipelineReport`.
+:::
+
 :::{grid-item-card} Paper Figures
 :link: figures
 :link-type: doc
@@ -187,6 +195,7 @@ model_policy_matrix
 concepts/windows
 concepts/running
 concepts/evaluation
+reporting
 figures
 custom_data_tutorial
 ```

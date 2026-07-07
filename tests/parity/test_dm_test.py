@@ -1,5 +1,6 @@
-"""``macroforecast.tests.dm_test`` vs R ``forecast::dm.test`` -- statistic AND
-p-value, for h=1/h=4, both HLN correction and none, power=1 and power=2.
+"""``macroforecast.tests.dm_test`` vs R ``forecast::dm.test`` -- statistic and
+p-value, for h=1/h=4 with HLN correction plus the plain-DM statistic,
+power=1 and power=2.
 
 Work item 3 of the WP-V1 brief: promotes the docstring claim
 (``r_reference: "forecast/R/DM2.R::dm.test"``) to an executable check.
@@ -12,12 +13,11 @@ install's forecast version) rather than assumed from memory:
    small-sample correction factor ``k`` -- there is no "raw DM statistic"
    mode in the installed version. So macroforecast's ``correction="none"``
    has no direct R comparator; instead we ask R to also emit its own ``k``
-   factor (computed with the exact formula printed in the R source) and
-   divide R's corrected statistic back out, then re-derive R's own p-value
-   for that raw statistic via ``pt()`` with the same df=n-1 R itself uses.
-   This keeps the comparison "R's numbers, decomposed with R's own
-   documented formula" rather than "R's numbers vs. a formula we typed from
-   memory."
+   factor (computed with the exact formula printed in the R source), divide
+   R's corrected statistic back out, and pair that statistic with the plain
+   Diebold-Mariano asymptotic normal p-value. This keeps the statistic
+   comparison "R's numbers, decomposed with R's own documented formula" rather
+   than "R's numbers vs. a formula we typed from memory."
 
 2. ``forecast::dm.test``'s "bartlett" varestimator weights lag k as
    ``1 - k/h`` (h = the forecast horizon, not h-1) -- which is algebraically
@@ -61,7 +61,7 @@ n <- length(e1)
 h_val <- {h}
 k <- sqrt((n + 1 - 2 * h_val + (h_val / n) * (h_val - 1)) / n)
 raw_stat <- unname(res$statistic) / k
-raw_pvalue <- 2 * pt(-abs(raw_stat), df = n - 1)
+raw_pvalue <- 2 * pnorm(-abs(raw_stat))
 emit("statistic_hln", unname(res$statistic))
 emit("p_value_hln", res$p.value)
 emit("k", k)
