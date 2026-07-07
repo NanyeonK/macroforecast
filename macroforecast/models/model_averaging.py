@@ -17,7 +17,7 @@ class _CompleteSubsetRegressor:
         *,
         k: int = 4,
         max_subsets: int = 5000,
-        random_state: int | None = None,
+        random_state: int | None = 1071,
     ) -> None:
         if int(k) < 1:
             raise ValueError("k must be at least 1")
@@ -250,7 +250,7 @@ def csr(
     *,
     k: int = 4,
     max_subsets: int = 5000,
-    random_state: int | None = None,
+    random_state: int | None = 1071,
 ) -> ModelFit:
     """Fit Complete Subset Regression.
 

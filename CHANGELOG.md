@@ -5,6 +5,10 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models`, `metrics.py`, docs/tests (standard estimators lane): added
+  Stock-Watson UCSV, Complete Subset Regression (`csr`), Jackknife Model
+  Averaging (`jma`), and the `mad` median absolute forecast-error metric.
+  Stochastic estimators expose `random_state` for pipeline-derived per-arm seeds.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

@@ -51,12 +51,13 @@ PCA are refit inside every training window.
 ## Choosing a model
 
 **Few predictors and a mostly linear signal.** Start from the benchmarks `ar`,
-`ols`, and `arima`. They anchor any comparison and are cheap to refit at every
-origin.
+`ols`, `arima`, and the target-only `ucsv` inflation benchmark. They anchor any
+comparison and are cheap to refit at every origin except for MCMC-based UCSV.
 
 **Many predictors.** Regularize. `ridge` shrinks all coefficients, `lasso` and
 `elastic_net` also select variables, and `adaptive_lasso` and `group_lasso` add
-structured selection across feature blocks.
+structured selection across feature blocks. For forecast averaging over many
+candidate regressions, use `csr` or `jma`.
 
 **Latent factor structure.** When series move together, extract common factors
 with `far` and `favar`, or use a dynamic factor model from the mixed-frequency
@@ -79,6 +80,8 @@ Each family has a detail page with a per-model table of inputs, optional depende
 - [Linear and regularized](models/linear.md) — 16 models
 - [Factor models](models/factor.md) — 2 models
 - [Classical time series](models/timeseries.md) — 13 models
+- [Bayesian state-space](models/bayesian.md) — 1 models
+- [Model averaging](models/model_averaging.md) — 2 models
 - [Tree ensembles](models/tree.md) — 11 models
 - [Support vector](models/support_vector.md) — 3 models
 - [Nonparametric](models/nonparametric.md) — 2 models
@@ -109,6 +112,8 @@ policies are supported for each registered model.
 models/linear
 models/factor
 models/timeseries
+models/bayesian
+models/model_averaging
 models/tree
 models/support_vector
 models/nonparametric

@@ -725,7 +725,7 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
     # input_kind == "target": iterate their own one-step dynamics.
     "arima", "auto_arima", "ets", "holt_winters", "naive", "random_walk_drift",
-    "seasonal_naive", "stlf", "theta_method",
+    "seasonal_naive", "stlf", "theta_method", "ucsv",
     # input_kind == "panel": iterate their own dynamics at the panel level.
     "bvar_minnesota", "bvar_normal_inverse_wishart",
     "dfm_mixed_mariano_murasawa", "dfm_unrestricted_midas",

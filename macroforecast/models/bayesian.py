@@ -31,7 +31,7 @@ class _UCSVForecaster:
         n_draws: int = 5000,
         burn: int = 1000,
         gamma: float = 0.2,
-        random_state: int | None = None,
+        random_state: int | None = 1071,
     ) -> None:
         if int(n_draws) < 1:
             raise ValueError("n_draws must be at least 1")
@@ -67,9 +67,9 @@ class _UCSVForecaster:
         rng = np.random.default_rng(self.random_state)
         tau = _initial_trend(values)
         obs_log_vol, level_log_vol = _initial_log_vols(values, tau)
-        trend_sum = np.zeros(len(values), dtype=float)
-        obs_vol_sum = np.zeros(len(values), dtype=float)
-        level_vol_sum = np.zeros(len(values) - 1, dtype=float)
+        trend_sum: np.ndarray = np.zeros(len(values), dtype=float)
+        obs_vol_sum: np.ndarray = np.zeros(len(values), dtype=float)
+        level_vol_sum: np.ndarray = np.zeros(len(values) - 1, dtype=float)
         kept = 0
         for draw in range(self.n_draws):
             obs_log_vol = _sample_log_volatility(
@@ -215,10 +215,10 @@ def _sample_random_walk_state(
         q[0] = 0.0
     q = np.maximum(q, 0.0)
     n = len(y)
-    pred_mean = np.zeros(n, dtype=float)
-    pred_var = np.zeros(n, dtype=float)
-    filt_mean = np.zeros(n, dtype=float)
-    filt_var = np.zeros(n, dtype=float)
+    pred_mean: np.ndarray = np.zeros(n, dtype=float)
+    pred_var: np.ndarray = np.zeros(n, dtype=float)
+    filt_mean: np.ndarray = np.zeros(n, dtype=float)
+    filt_var: np.ndarray = np.zeros(n, dtype=float)
     prev_mean = float(initial_mean)
     prev_var = max(float(initial_variance), 1e-8)
     for pos in range(n):
@@ -234,7 +234,7 @@ def _sample_random_walk_state(
         filt_var[pos] = c
         prev_mean = m
         prev_var = c
-    state = np.zeros(n, dtype=float)
+    state: np.ndarray = np.zeros(n, dtype=float)
     state[-1] = rng.normal(filt_mean[-1], np.sqrt(filt_var[-1]))
     for pos in range(n - 2, -1, -1):
         denom = pred_var[pos + 1]
@@ -251,7 +251,7 @@ def ucsv(
     n_draws: int = 5000,
     burn: int = 1000,
     gamma: float = 0.2,
-    random_state: int | None = None,
+    random_state: int | None = 1071,
 ) -> ModelFit:
     """Fit Stock-Watson unobserved-components stochastic-volatility model.
 

@@ -108,6 +108,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `compose_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `configure` | [`macroforecast.meta`](meta.md) | function |
 | `correlation_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `csr` | [`macroforecast.models`](models.md) | function |
 | `cumsum_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `custom_combination` | [`macroforecast.forecasting`](forecasting.md) | function |
 | `custom_dataset` | [`macroforecast.data`](data.md) | function |
@@ -192,6 +193,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `interaction_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `interaction_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `interpretation` | [`macroforecast.interpretation`](interpretation.md) | module |
+| `jma` | [`macroforecast.models`](models.md) | function |
 | `kernel_ridge` | [`macroforecast.models`](models.md) | function |
 | `knn` | [`macroforecast.models`](models.md) | function |
 | `lag` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
@@ -350,6 +352,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `transform_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `transformer` | [`macroforecast.models`](models.md) | function |
 | `tvp_ridge` | [`macroforecast.models`](models.md) | function |
+| `ucsv` | [`macroforecast.models`](models.md) | function |
 | `uniform` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `unrestricted_midas` | [`macroforecast.models`](models.md) | function |
 | `use_config` | [`macroforecast.meta`](meta.md) | function |

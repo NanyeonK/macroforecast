@@ -27,6 +27,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `component_aggregation` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `rank_aggregation` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `supervised_aggregation` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
+| `ucsv` | bayesian | `target` | guarded-unsupported | guarded-unsupported | supported | supported | not available |
 | `pls` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `scaled_pca` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `supervised_pca` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
@@ -56,6 +57,8 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `midas_step` | mixed_frequency | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `restricted_midas` | mixed_frequency | `supervised` | supported | supported | supported | supported | direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT |
 | `unrestricted_midas` | mixed_frequency | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
+| `csr` | model_averaging | `supervised` | supported | supported | supported | supported | not available |
+| `jma` | model_averaging | `supervised` | supported | supported | supported | supported | not available |
 | `density_hnn` | neural | `supervised` | supported | supported | supported | supported | direct: EMPTY, direct_average: EMPTY, path_average: EMPTY, recursive: EMPTY |
 | `gru` | neural | `supervised` | supported | supported | supported | supported | direct: EMPTY, direct_average: EMPTY, path_average: EMPTY, recursive: EMPTY |
 | `hemisphere_nn` | neural | `supervised` | supported | supported | supported | supported | direct: EMPTY, direct_average: EMPTY, path_average: EMPTY, recursive: EMPTY |
