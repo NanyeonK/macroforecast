@@ -126,6 +126,14 @@ F / X / MARX / MAF / Level feature families and the `FeatureSpec` abstraction.
 `ModelSpec`, `Arm`, and how one arm becomes one contender in the evaluation.
 :::
 
+:::{grid-item-card} Model Policy Matrix
+:link: model_policy_matrix
+:link-type: doc
+
+Which forecast policies are supported, direct-projection, guarded, or
+unsupported for each registered model.
+:::
+
 :::{grid-item-card} Windows
 :link: concepts/windows
 :link-type: doc
@@ -167,6 +175,7 @@ vintages
 concepts/preprocessing
 concepts/features
 concepts/models_and_arms
+model_policy_matrix
 concepts/windows
 concepts/running
 concepts/evaluation

@@ -12,6 +12,7 @@ import json
 import os
 import re
 import tempfile
+import dataclasses as _dc
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Mapping, NamedTuple
@@ -47,6 +48,17 @@ def _cell_checkpoint_path(spec: PipelineSpec, arm: Arm, target: ResolvedTarget):
     return Path(spec.checkpoint_dir) / cell
 
 
+def _effective_target_for_arm(
+    spec: PipelineSpec,
+    arm: Arm,
+    target: ResolvedTarget,
+) -> ResolvedTarget:
+    policy = spec.policy_overrides.get((arm.name, target.name))
+    if policy is None or policy == target.policy:
+        return target
+    return _dc.replace(target, policy=policy)
+
+
 def _run_one_arm_target(
     spec: PipelineSpec,
     arm: Arm,
@@ -63,11 +75,10 @@ def _run_one_arm_target(
     those horizons are computed -- the parallel path passes a single horizon per
     cell so independent processes each execute just their cell.
     """
-    import dataclasses as _dc
-
     from macroforecast.forecasting import run
 
     run_horizons = list(spec.horizons if horizons is None else horizons)
+    effective_target = _effective_target_for_arm(spec, arm, target)
 
     # A multi-target pipeline runs each arm for every target, but an arm's feature
     # spec carries a single target; align it (and its transform) to this target.
@@ -101,10 +112,10 @@ def _run_one_arm_target(
         params=arm.params,
         model_selection=arm.model_selection,
         model_selection_metric=arm.model_selection_metric,
-        target=target.name,
+        target=effective_target.name,
         horizons=run_horizons,
-        forecast_policy=target.policy,
-        target_transform=target.transform,
+        forecast_policy=effective_target.policy,
+        target_transform=effective_target.transform,
         save_models=spec.save_models,
         model_store=spec.model_store,
         preprocessing_cache=preprocessing_cache,
@@ -124,7 +135,7 @@ def _run_one_arm_target(
     frame["contender"] = arm.name
     # ensure the target column carries the resolved target name
     if "target" not in frame.columns:
-        frame["target"] = target.name
+        frame["target"] = effective_target.name
     return frame
 
 
@@ -489,7 +500,7 @@ def _result_store_identity(
     return result_cell_identity(
         spec,
         arm,
-        target,
+        _effective_target_for_arm(spec, arm, target),
         horizon=int(cell.horizons[0]),
         data_identity=data_identity,
     )
@@ -980,6 +991,10 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
         "targets": [
             {"name": t.name, "policy": t.policy, "transform": t.transform, "tcode": t.tcode}
             for t in spec.targets
+        ],
+        "policy_overrides": [
+            {"arm": arm, "target": target, "policy": policy}
+            for (arm, target), policy in sorted(spec.policy_overrides.items())
         ],
         "horizons": list(spec.horizons),
         "window": window_echo,

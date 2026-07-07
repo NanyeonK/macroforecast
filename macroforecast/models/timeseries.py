@@ -462,18 +462,29 @@ class _VAR:
         target: str | None = None,
         type: str = "const",
         season: int | None = None,
+        direct: bool = False,
+        direct_horizon: int = 1,
     ) -> None:
         self.n_lag = max(1, int(n_lag))
         self.target = target
         self.type = _normalize_vars_type(type)
         self.season = None if season is None else max(2, int(season))
+        self.direct = bool(direct)
+        self.direct_horizon = max(1, int(direct_horizon))
         self.coef_: np.ndarray | None = None
+        self.direct_coef_: np.ndarray | None = None
         self.names_: tuple[str, ...] = ()
         self.rhs_names_: tuple[str, ...] = ()
+        self.direct_rhs_names_: tuple[str, ...] = ()
         self.datamat_: pd.DataFrame | None = None
+        self.direct_datamat_: pd.DataFrame | None = None
         self.y_values_: np.ndarray | None = None
         self._target_name: str | None = None
         self._fallback: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
+        self.residual_variance_: float | None = None
 
     def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> "_VAR":
         if y is None:
@@ -493,10 +504,12 @@ class _VAR:
         self._target_name = target_name
         self.names_ = tuple(str(column) for column in data.columns)
         self._fallback = float(pd.to_numeric(data[target_name], errors="coerce").mean())
+        self.y_values_ = data.to_numpy(dtype=float)
+        if self.direct:
+            return self._fit_direct(data, target_name=target_name)
         if data.shape[0] <= self.n_lag + 1 or data.shape[1] < 2:
-            self.y_values_ = data.to_numpy(dtype=float)
             return self
-        values = data.to_numpy(dtype=float)
+        values = self.y_values_
         yend, rhs, rhs_names = _vars_rhs(
             values,
             self.names_,
@@ -505,8 +518,13 @@ class _VAR:
             season=self.season,
         )
         self.coef_ = np.linalg.lstsq(rhs, yend, rcond=None)[0].T
+        resid = yend - rhs @ self.coef_.T
+        self.ssr_ = float(np.sum(resid * resid))
+        self.nobs_ = int(yend.shape[0])
+        self.n_params_ = int(rhs.shape[1])
+        denom = max(1, int(yend.shape[0]) - int(rhs.shape[1]))
+        self.residual_variance_ = float(np.sum(resid * resid) / denom)
         self.rhs_names_ = tuple(rhs_names)
-        self.y_values_ = values
         self.datamat_ = pd.DataFrame(
             np.column_stack([yend, rhs]),
             index=data.index[self.n_lag :],
@@ -514,7 +532,42 @@ class _VAR:
         )
         return self
 
+    def _fit_direct(self, data: pd.DataFrame, *, target_name: str) -> "_VAR":
+        values = self.y_values_
+        if values is None:
+            return self
+        target_index = self.names_.index(target_name)
+        if values.shape[0] < self.n_lag + self.direct_horizon:
+            return self
+        response, rhs, rhs_names, origin_positions = _vars_direct_rhs(
+            values,
+            self.names_,
+            self.n_lag,
+            self.direct_horizon,
+            type=self.type,
+            season=self.season,
+        )
+        if response.size == 0 or rhs.size == 0:
+            return self
+        target_response = response[:, target_index]
+        self.direct_coef_ = np.linalg.lstsq(rhs, target_response, rcond=None)[0]
+        resid = target_response - rhs @ self.direct_coef_
+        self.ssr_ = float(resid @ resid)
+        self.nobs_ = int(target_response.shape[0])
+        self.n_params_ = int(self.direct_coef_.shape[0])
+        denom = max(1, int(target_response.shape[0]) - int(self.direct_coef_.shape[0]))
+        self.residual_variance_ = float((resid @ resid) / denom)
+        self.direct_rhs_names_ = tuple(rhs_names)
+        self.direct_datamat_ = pd.DataFrame(
+            np.column_stack([target_response, rhs]),
+            index=data.index[origin_positions + self.direct_horizon],
+            columns=[target_name, *self.direct_rhs_names_],
+        )
+        return self
+
     def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.direct:
+            return self._predict_direct(X)
         if self.coef_ is None or self.y_values_ is None or self._target_name is None:
             return np.full(len(X), self._fallback, dtype=float)
         forecast = _vars_forecast(
@@ -527,6 +580,24 @@ class _VAR:
         )
         target_index = self.names_.index(self._target_name)
         return np.asarray(forecast[:, target_index], dtype=float)[: len(X)]
+
+    def _predict_direct(self, X: pd.DataFrame) -> np.ndarray:
+        if (
+            self.direct_coef_ is None
+            or self.y_values_ is None
+            or self._target_name is None
+        ):
+            return np.full(len(X), self._fallback, dtype=float)
+        row = _vars_direct_forecast_row(
+            self.y_values_,
+            self.names_,
+            self.n_lag,
+            self.direct_horizon,
+            type=self.type,
+            season=self.season,
+        )
+        pred = float(row @ self.direct_coef_)
+        return np.full(len(X), pred, dtype=float)
 
 
 def var_restrict(
@@ -626,11 +697,26 @@ def var(
     n_lag: int = 1,
     type: str = "const",
     season: int | None = None,
+    direct: bool = False,
+    direct_horizon: int = 1,
 ) -> ModelFit:
-    """Fit a vector autoregression on a multivariate panel."""
+    """Fit a vector autoregression on a multivariate panel.
+
+    With ``direct=True``, fit the target equation as an h-step POINT projection
+    on the same panel lag block the VAR uses at the forecast origin. This is the
+    runner's ``forecast_policy="direct"`` target, not the horizon-average object
+    required by ``forecast_policy="direct_average"``.
+    """
 
     frame = as_frame(panel)
-    estimator = _VAR(n_lag=n_lag, target=target, type=type, season=season)
+    estimator = _VAR(
+        n_lag=n_lag,
+        target=target,
+        type=type,
+        season=season,
+        direct=bool(direct),
+        direct_horizon=direct_horizon,
+    )
     estimator.fit(frame)
     return ModelFit(
         estimator=estimator,
@@ -642,10 +728,13 @@ def var(
             "n_lag": int(n_lag),
             "type": estimator.type,
             "season": estimator.season,
+            "direct": bool(direct),
+            "direct_horizon": int(estimator.direct_horizon),
             "backend": "internal vars::VAR-aligned OLS",
             "implementation_note": (
                 "R vars::VAR-aligned OLS design and predict.varest-style "
-                "recursive point forecasts."
+                "recursive point forecasts; direct=True fits a target-equation "
+                "h-step point projection on the same lag block."
             ),
         },
     )
@@ -2799,6 +2888,80 @@ def _vars_rhs(
         rhs = np.column_stack([rhs, seasonal])
         rhs_names.extend([f"sd{i}" for i in range(1, season)])
     return yend, rhs, rhs_names
+
+
+def _vars_direct_rhs(
+    values: np.ndarray,
+    names: tuple[str, ...],
+    n_lag: int,
+    horizon: int,
+    *,
+    type: str,
+    season: int | None,
+) -> tuple[np.ndarray, np.ndarray, list[str], np.ndarray]:
+    """Direct VAR projection design.
+
+    Row t uses the origin-dated lag block ``Y_t, ..., Y_{t-p+1}`` and response
+    ``Y_{t+h}``. For ``h=1`` this is exactly the target equation row in
+    ``_vars_rhs``.
+    """
+
+    n_obs, _n_vars = values.shape
+    first_origin = int(n_lag) - 1
+    last_origin = int(n_obs) - int(horizon) - 1
+    if last_origin < first_origin:
+        empty_response = np.empty((0, values.shape[1]), dtype=float)
+        return empty_response, np.empty((0, 0), dtype=float), [], np.empty(0, dtype=int)
+    origin_positions: np.ndarray = np.arange(first_origin, last_origin + 1, dtype=int)
+    target_positions: np.ndarray = origin_positions + int(horizon)
+    rows: list[list[float]] = []
+    lag_names: list[str] = []
+    for lag in range(1, n_lag + 1):
+        lag_names.extend([f"{name}.l{lag}" for name in names])
+    for origin_pos in origin_positions:
+        row: list[float] = []
+        for lag in range(1, n_lag + 1):
+            row.extend(values[origin_pos - lag + 1, :].tolist())
+        rows.append(row)
+    rhs = np.asarray(rows, dtype=float)
+    rhs_names = list(lag_names)
+    sample = len(origin_positions)
+    if type in {"const", "both"}:
+        rhs = np.column_stack([rhs, np.ones(sample, dtype=float)])
+        rhs_names.append("const")
+    if type in {"trend", "both"}:
+        rhs = np.column_stack([rhs, target_positions.astype(float) + 1.0])
+        rhs_names.append("trend")
+    if season is not None:
+        seasonal = _vars_seasonal_dummies(n_obs, season)[target_positions, :]
+        rhs = np.column_stack([rhs, seasonal])
+        rhs_names.extend([f"sd{i}" for i in range(1, season)])
+    return values[target_positions, :], rhs, rhs_names, origin_positions
+
+
+def _vars_direct_forecast_row(
+    values: np.ndarray,
+    names: tuple[str, ...],
+    n_lag: int,
+    horizon: int,
+    *,
+    type: str,
+    season: int | None,
+) -> np.ndarray:
+    """One direct VAR forecast row at the sample end."""
+
+    n_obs, _n_vars = values.shape
+    row: list[float] = []
+    for lag in range(1, n_lag + 1):
+        row.extend(values[n_obs - lag, :].tolist())
+    if type in {"const", "both"}:
+        row.append(1.0)
+    if type in {"trend", "both"}:
+        row.append(float(n_obs + int(horizon)))
+    if season is not None:
+        seasonal = _vars_seasonal_dummies(n_obs + int(horizon), season)
+        row.extend(seasonal[n_obs + int(horizon) - 1].tolist())
+    return np.asarray(row, dtype=float)
 
 
 def _vars_forecast(

@@ -5,6 +5,27 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/timeseries.py`, `forecasting/policies/panel.py`, `pipeline/spec.py`
+  (behavior change, issue #442): `var` now has a validated direct-projection
+  mode for `direct` panel forecasts. The direct VAR target equation regresses
+  `y[t+h]` on the origin-dated panel lag block
+  `Y[t], ..., Y[t-p+1]`, so `h=1` matches the iterated VAR one-step forecast
+  while longer horizons no longer collapse to stale persistence. Because this is
+  a point target, not the horizon-average object, `var` is guarded under
+  `direct_average` by the same `on_unsupported_direct` error/warn/reroute control
+  used for other unsupported direct-like combinations. `var` leaves
+  `DIRECT_POLICY_GUARD_MODELS` for plain `direct`. For the remaining guarded
+  iterated/state-space
+  models, `pipeline_spec(...)` now defaults to
+  `on_unsupported_direct="error"` instead of warning: silent persistence-like
+  forecasts must not be produceable by default. Deliberate weak benchmarks can
+  pass `on_unsupported_direct="warn"`, or `on_unsupported_direct="reroute"` to
+  run affected arm-target cells as `forecast_policy="recursive"` with recursive
+  row labels. `forecasting.run(...)` with panel-input models under
+  `forecast_policy="recursive"` no longer raises `ValueError`; the panel runner
+  uses the model's native multi-step prediction path and emits recursive row
+  labels. Added the generated
+  `docs/guide/model_policy_matrix.md` and CI drift check.
 - `pipeline/evaluate.py`, `pipeline/spec.py`, `tests.py`, `reporting`
   (bugfix/feature, eval correctness lane): fixed mixed wide/long significance
   rows duplicating `paper_accuracy_table` joins, made pipeline `"gr"` use

@@ -157,7 +157,9 @@ Full feature-step parameters are on the
 [Feature Engineering reference page](../reference/feature_engineering.md), and
 model search spaces and presets are on the
 [Models reference page](../reference/models.md) and, for fit-time ensembles, the
-[Model Ensemble reference page](../reference/model_ensemble.md).
+[Model Ensemble reference page](../reference/model_ensemble.md). The generated
+[Model x Forecast Policy Matrix](model_policy_matrix.md) states which forecast
+policies are supported for each registered model.
 """
 
 
@@ -258,6 +260,7 @@ def build_overview(df) -> str:
     parts.append("")
     for fam in _ordered_families(df):
         parts.append(f"models/{fam}")
+    parts.append("model_policy_matrix")
     parts.append("```")
     parts.append("")
     return "\n".join(parts)

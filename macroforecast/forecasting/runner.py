@@ -357,11 +357,6 @@ def run(
     panel = _coerce_runner_panel(data)
     validate_panel(panel)
     if _all_panel_model_runs(model_runs):
-        if policy == "recursive":
-            raise ValueError(
-                "recursive forecasting is only defined for feature-matrix models; "
-                "panel-input models own their own multi-step prediction logic"
-            )
         if features is not None:
             raise ValueError(
                 "panel-input models consume the panel directly; pass features=None"
@@ -1145,11 +1140,6 @@ def _run_vintage_aware(
         forecast_policy=forecast_policy,
     )
     if _all_panel_model_runs(model_runs):
-        if forecast_policy == "recursive":
-            raise ValueError(
-                "recursive forecasting is only defined for feature-matrix models; "
-                "panel-input models own their own multi-step prediction logic"
-            )
         if features is not None:
             raise ValueError(
                 "panel-input models consume the panel directly; pass features=None"

@@ -15,8 +15,8 @@ forecasting April with h=2 projects the anchor to the June quarter-end), so
     values; missing columns: ['dfm_factor1_lag0']
 This is fixed by extending the fitted DynamicFactorMQ state forward to the
 anchor date (via the model's own ``.extend()`` Kalman-filter forecast)
-instead of reindexing to NaN. ``recursive`` is unaffected -- panel-input
-models correctly reject it regardless of this bug.
+instead of reindexing to NaN. ``recursive`` is unaffected because panel-input
+models use their native panel multi-step path under the recursive label.
 """
 from __future__ import annotations
 
@@ -62,11 +62,13 @@ def test_dfm_unrestricted_midas_prediction_anchor_no_longer_nans(policy) -> None
     assert np.isfinite(fc["prediction"].to_numpy(dtype=float)).all()
 
 
-def test_dfm_unrestricted_midas_recursive_still_correctly_rejected() -> None:
-    # Panel-input models own their own multi-step prediction logic; recursive
-    # is not defined for them. This must remain true after the anchor fix.
-    with pytest.raises(ValueError, match="recursive forecasting is only defined"):
-        mf.forecasting.run(
-            _monthly_panel(), "dfm_unrestricted_midas", window=_window(), features=None,
-            target="Y", horizons=[2], forecast_policy="recursive",
-        )
+def test_dfm_unrestricted_midas_recursive_uses_panel_path() -> None:
+    report = mf.forecasting.run(
+        _monthly_panel(), "dfm_unrestricted_midas", window=_window(), features=None,
+        target="Y", horizons=[2], forecast_policy="recursive",
+    )
+    fc = report.to_frame()
+
+    assert not fc.empty
+    assert set(fc["forecast_policy"]) == {"recursive"}
+    assert np.isfinite(fc["prediction"].to_numpy(dtype=float)).all()

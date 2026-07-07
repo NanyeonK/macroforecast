@@ -499,6 +499,10 @@ class PipelineSpec:
     # produces -- ``provenance`` is the mapping payload, ``provenance_level``
     # is only the additive-blocks toggle.
     provenance_level: Literal["full", "basic"] = "full"
+    # Per-(arm, target) forecast-policy overrides, currently used by
+    # on_unsupported_direct="reroute" to run guarded direct-like cells as recursive
+    # without mutating the target policy for direct-capable arms.
+    policy_overrides: Mapping[tuple[str, str], str] = field(default_factory=dict)
 
 
 
@@ -666,10 +670,11 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 # direct-projection mode and are DELIBERATELY excluded here).
 #
 # The set below is every model whose ``ModelSpec.input_kind`` is "target" or
-# "panel", PLUS "favar" (its input_kind is "supervised" -- the same bucket as
-# ar/far -- because FAVAR's own factor-VAR update is still an iterated
-# dynamics model; ar/far are excluded from this set by name because they now
-# have a validated direct-projection mode). This set is cross-checked against
+# "panel" and lacks a validated direct point-projection mode, PLUS "favar" (its
+# input_kind is "supervised" -- the same bucket as ar/far -- because FAVAR's own
+# factor-VAR update is still an iterated dynamics model; ar/far/var are excluded
+# from this set because they have validated direct point-projection modes). This
+# set is cross-checked against
 # ``macroforecast.list_model_specs()`` by
 # ``tests/pipeline/test_direct_policy_guard.py`` so it cannot silently rot as
 # the models lane adds or removes models -- update it there, not just here, if
@@ -679,51 +684,130 @@ DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
     "arima", "auto_arima", "ets", "holt_winters", "naive", "random_walk_drift",
     "seasonal_naive", "stlf", "theta_method",
     # input_kind == "panel": iterate their own dynamics at the panel level.
-    "var", "bvar_minnesota", "bvar_normal_inverse_wishart",
+    "bvar_minnesota", "bvar_normal_inverse_wishart",
     "dfm_mixed_mariano_murasawa", "dfm_unrestricted_midas",
     # input_kind == "supervised" but genuinely iterated internally (unlike
     # ar/far, deliberately excluded -- see module docstring above).
     "favar",
 })
 
+# Models that support ``forecast_policy="direct"`` as an h-step point projection
+# but not ``forecast_policy="direct_average"`` as a horizon-average target. Keep
+# this policy-specific extension separate from ``DIRECT_POLICY_GUARD_MODELS`` so
+# ``var`` remains valid under plain direct point forecasts.
+DIRECT_AVERAGE_GUARD_MODELS: frozenset[str] = frozenset({"var"})
+
 _DIRECT_LIKE_POLICIES = frozenset({"direct", "direct_average"})
 
 
 def _direct_policy_guard_message(arm: Arm, model_name: str, policies: "Sequence[str]") -> str:
-    """The ``UserWarning`` text for one guarded arm under a direct-like policy."""
+    """The guard text for one guarded arm under a direct-like policy."""
     policies_txt = ", ".join(sorted(set(policies)))
+    if (
+        model_name in DIRECT_AVERAGE_GUARD_MODELS
+        and set(policies) == {"direct_average"}
+    ):
+        return (
+            f"arm {arm.name!r} (model {model_name!r}) is run under forecast "
+            f"policy/policies {{{policies_txt}}}: {model_name!r} supports "
+            "forecast_policy='direct' as an h-step POINT projection, but it does "
+            "not fit the horizon-average target required by "
+            "forecast_policy='direct_average'. Labeling that point projection as "
+            "direct_average would misstate the forecast object (see CHANGELOG "
+            "[Unreleased] and docs/guide/model_policy_matrix.md). Prefer "
+            "forecast_policy='recursive' or 'path_average' for "
+            f"{model_name!r}, or give this target an explicit TargetSpec(policy=...) "
+            "override if only some targets should differ. To opt out deliberately, "
+            "set on_unsupported_direct='warn'; to reroute affected cells to "
+            "recursive, set on_unsupported_direct='reroute'."
+        )
     return (
         f"arm {arm.name!r} (model {model_name!r}) is run under forecast "
         f"policy/policies {{{policies_txt}}}: {model_name!r} forecasts by "
         "ITERATING its own dynamics rather than fitting a genuine h-step-ahead "
         "projection, so direct-policy semantics do not apply to it -- long-horizon "
         "forecasts may silently degrade toward a stale/persistence-like forecast "
-        "(see CHANGELOG [Unreleased], GCLS replication Bug 3). This is a warning, "
-        "not a rejection: deliberate use (e.g. an intentionally weak benchmark) "
-        "stays possible. Prefer forecast_policy='recursive' or 'path_average' for "
+        "(see CHANGELOG [Unreleased], GCLS replication Bug 3, and "
+        "docs/guide/model_policy_matrix.md). Prefer forecast_policy='recursive' "
+        "or 'path_average' for "
         f"{model_name!r}, or give this target an explicit "
-        "TargetSpec(policy=...) override if only some targets should differ."
+        "TargetSpec(policy=...) override if only some targets should differ. "
+        "To opt out deliberately, set on_unsupported_direct='warn'; to reroute "
+        "affected cells to recursive, set on_unsupported_direct='reroute'."
     )
 
 
-def _warn_direct_policy_guard(arms: "Sequence[Arm]", targets: "Sequence[ResolvedTarget]") -> None:
-    """Emit one ``UserWarning`` per guarded arm whose target(s) use direct/direct_average.
+def _is_unsupported_direct_cell(model_name: str, policy: str) -> bool:
+    if policy == "direct_average" and model_name in DIRECT_AVERAGE_GUARD_MODELS:
+        return True
+    return policy in _DIRECT_LIKE_POLICIES and model_name in DIRECT_POLICY_GUARD_MODELS
 
-    Grouped per-arm (not per (arm, target)) so a pipeline with many targets that
-    all resolve to the same policy produces ONE informative warning per affected
-    arm rather than one per target.
-    """
+
+def _unsupported_direct_cells(
+    arms: "Sequence[Arm]",
+    targets: "Sequence[ResolvedTarget]",
+) -> list[tuple[Arm, str, list[ResolvedTarget]]]:
+    cells: list[tuple[Arm, str, list[ResolvedTarget]]] = []
     for arm in arms:
         model_name = _arm_model_name(arm)
-        if model_name not in DIRECT_POLICY_GUARD_MODELS:
-            continue
-        affected = [t.policy for t in targets if t.policy in _DIRECT_LIKE_POLICIES]
+        affected = [
+            target
+            for target in targets
+            if _is_unsupported_direct_cell(model_name, target.policy)
+        ]
         if affected:
+            cells.append((arm, model_name, affected))
+    return cells
+
+
+def _resolve_unsupported_direct_policy(
+    arms: "Sequence[Arm]",
+    targets: "Sequence[ResolvedTarget]",
+    *,
+    mode: Literal["error", "warn", "reroute"],
+) -> dict[tuple[str, str], str]:
+    """Validate/warn/reroute guarded models under direct/direct_average.
+
+    Grouped per-arm (not per (arm, target)) so a pipeline with many targets that
+    all resolve to the same policy produces ONE informative diagnostic per
+    affected arm rather than one per target.
+    """
+    affected_cells = _unsupported_direct_cells(arms, targets)
+    if not affected_cells:
+        return {}
+    if mode == "error":
+        details = "\n".join(
+            "- " + _direct_policy_guard_message(
+                arm,
+                model_name,
+                [target.policy for target in affected],
+            )
+            for arm, model_name, affected in affected_cells
+        )
+        raise ValueError(
+            "unsupported direct-like forecast policy for iterated/state-space "
+            f"model(s):\n{details}"
+        )
+    overrides: dict[tuple[str, str], str] = {}
+    for arm, model_name, affected in affected_cells:
+        policies = [target.policy for target in affected]
+        if mode == "warn":
             warnings.warn(
-                _direct_policy_guard_message(arm, model_name, affected),
+                _direct_policy_guard_message(arm, model_name, policies),
                 UserWarning,
                 stacklevel=2,
             )
+            continue
+        for target in affected:
+            overrides[(arm.name, target.name)] = "recursive"
+        warnings.warn(
+            _direct_policy_guard_message(arm, model_name, policies)
+            + " Rerouting affected arm-target cell(s) to forecast_policy='recursive'; "
+            "emitted rows will be labeled recursive.",
+            UserWarning,
+            stacklevel=2,
+        )
+    return overrides
 
 
 
@@ -927,6 +1011,7 @@ def pipeline_spec(
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
     provenance_level: Literal["full", "basic"] = "full",
+    on_unsupported_direct: Literal["error", "warn", "reroute"] = "error",
 ) -> PipelineSpec:
     """Validate and build a :class:`PipelineSpec`.
 
@@ -954,10 +1039,20 @@ def pipeline_spec(
     ``result_store`` is an optional directory for cross-run reuse of completed
     forecast cells. When left at ``None`` (the default), the runner follows the
     original execution path exactly.
+
+    ``on_unsupported_direct`` controls what happens when a model that only
+    iterates its own dynamics is combined with ``direct`` or ``direct_average``:
+    ``"error"`` (default) rejects the spec, ``"warn"`` preserves the old weak
+    benchmark behavior, and ``"reroute"`` runs only the affected arm-target
+    cells as ``recursive``.
     """
     arms = tuple(arms)
     if not arms:
         raise ValueError("pipeline requires at least one arm")
+    if on_unsupported_direct not in ("error", "warn", "reroute"):
+        raise ValueError(
+            "on_unsupported_direct must be one of 'error', 'warn', or 'reroute'"
+        )
     if provenance_level not in ("full", "basic"):
         raise ValueError(
             f"provenance_level must be 'full' or 'basic', got {provenance_level!r}"
@@ -1047,9 +1142,11 @@ def pipeline_spec(
         )
     _validate_eval_test_options(evaluation)
 
-    # Warn (never reject) when a guarded iterated/state-space model is combined
-    # with a direct-like forecast policy -- see DIRECT_POLICY_GUARD_MODELS above.
-    _warn_direct_policy_guard(arms, resolved)
+    policy_overrides = _resolve_unsupported_direct_policy(
+        arms,
+        resolved,
+        mode=on_unsupported_direct,
+    )
 
     notes = dict(provenance or {})
     if not save_models and any(a.interpret for a in arms):
@@ -1073,4 +1170,5 @@ def pipeline_spec(
         seed=seed,
         provenance=notes,
         provenance_level=provenance_level,
+        policy_overrides=policy_overrides,
     )

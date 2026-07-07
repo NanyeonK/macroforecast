@@ -107,13 +107,11 @@ def test_var_single_horizon_labels_and_dates_correctly() -> None:
     assert not fc.duplicated(["horizon", "origin"]).any()
     _assert_dates_match_positional_horizon(fc, bundle.panel.index, horizon=2)
 
-    # VALUE-alignment oracle: the prediction for each origin must equal a VAR
-    # fit on data THROUGH the origin (the last in-sample date) forecasting
-    # exactly 2 positional steps. This pins the information set: a window
-    # that excluded the origin from the fit sample (the pre-#423 estimation
-    # end of origin-1) would relabel every forecast value one step late,
-    # because panel models forecast positionally from the end of their fit
-    # data.
+    # VALUE-alignment oracle: under forecast_policy="direct", var now fits a
+    # target-equation direct projection on data THROUGH the origin (the last
+    # in-sample date) for the requested horizon. This still pins the information
+    # set: a window that excluded the origin from the fit sample (the pre-#423
+    # estimation end of origin-1) would feed the wrong origin-dated lag block.
     params = fc.iloc[0]["params"]
     for _, row_ in fc.iterrows():
         train = bundle.panel.loc[: row_["origin"]]
@@ -121,8 +119,12 @@ def test_var_single_horizon_labels_and_dates_correctly() -> None:
             n_lag=int(params.get("n_lag", 1)),
             target="Y",
             type=str(params.get("type", "const")),
+            direct=True,
+            direct_horizon=2,
         ).fit(train)
-        # _VAR.predict ignores the frame content; len(...) is the step count.
+        # Direct _VAR.predict returns the requested-horizon direct forecast for
+        # each supplied row; the panel policy keeps the row at the requested
+        # horizon.
         path = oracle.predict(pd.DataFrame(index=range(2)))
         assert float(row_["prediction"]) == pytest.approx(
             float(path[1]), abs=1e-12
