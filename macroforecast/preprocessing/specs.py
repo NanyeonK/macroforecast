@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -50,6 +51,8 @@ _REPROCESS_OPTIONS = {
     "warn_metadata",
 }
 
+_FIT_WINDOW_CUSTOM_WARNED: set[int] = set()
+
 
 @dataclass(frozen=True)
 class PreprocessSpec:
@@ -71,6 +74,8 @@ class PreprocessSpec:
         if scope == "fit_window":
             _validate_fit_window_options(self.options)
         custom_steps = _normalize_custom_steps(self.options.get("custom_steps"))
+        if scope == "fit_window" and custom_steps:
+            _warn_fit_window_custom_steps(self)
         fit_options = _reprocess_options(self.options)
         fit_options.setdefault("warn_metadata", False)
         processed = reprocess(data, metadata=metadata, **fit_options)
@@ -208,6 +213,7 @@ class FittedPreprocessor:
 
         def _run(frame: pd.DataFrame) -> PreprocessedData:
             out = reprocess((frame, combined_metadata), **transform_options)
+            out = _apply_fitted_standardization_state(out, self.standardization_state)
             return _apply_custom_preprocess_steps(out, custom_steps)
 
         processed = _run(combined)
@@ -232,23 +238,6 @@ class FittedPreprocessor:
                 ]
         selected = merged_panel.reindex(base.panel.index)
         selected_metadata = dict(processed.metadata)
-        if self.standardization_state is not None:
-            selected = apply_standardization_state(selected, self.standardization_state)
-            preprocessing_stage = dict(selected_metadata.get("preprocessing", {}))
-            preprocessing_stage["standardize"] = self.standardization_state.get("method")
-            preprocessing_stage["standardize_columns"] = list(
-                self.standardization_state.get("columns", ())
-            )
-            preprocessing_stage["standardization_state"] = dict(self.standardization_state)
-            preprocessing_stage["steps"] = _replace_standardize_step(
-                preprocessing_stage.get("steps", ()),
-                self.standardization_state,
-            )
-            selected_metadata = attach_metadata(
-                selected_metadata,
-                "preprocessing",
-                preprocessing_stage,
-            )
         selected_metadata = attach_metadata(
             selected_metadata,
             "preprocess_transform",
@@ -374,6 +363,17 @@ def preprocess_spec(**options: Any) -> PreprocessSpec:
     accepted here; they are supplied later through ``PreprocessSpec.fit(...)``
     or by the forecasting/pipeline runner.
 
+    Custom preprocessing callables are safe for in-memory use. Disk-backed
+    preprocessing caches require a stable callable identity: use named
+    functions and set ``func.__mf_digest__`` whenever cached reuse should span
+    processes or runs. Anonymous lambdas without ``__mf_digest__`` are rejected
+    because they cannot be distinguished by a stable content identity.
+
+    With ``policy="fit_window"``, custom steps are re-executed on the apply
+    window at each origin. Those steps must be row-local/stateless; a custom
+    step that computes statistics from its whole input can read post-origin
+    rows and leak future information.
+
     Returns
     -------
     PreprocessSpec
@@ -399,6 +399,7 @@ def preprocess_spec(**options: Any) -> PreprocessSpec:
             f"{unexpected}. Stage timing belongs to forecasting.run(...), "
             "and input metadata belongs to PreprocessSpec.fit(...)."
         )
+    _reject_undigested_lambda_custom_steps(options.get("custom_steps"))
     return PreprocessSpec(options=dict(options))
 
 
@@ -407,7 +408,13 @@ def custom_preprocess_step(
     func: Callable[..., Any],
     **params: Any,
 ) -> dict[str, Any]:
-    """Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``."""
+    """Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``.
+
+    For disk-backed preprocessing caches, set ``func.__mf_digest__`` to a stable
+    string and update it when the callable's behavior changes. Without that
+    opt-in digest, the runner skips disk get/put for specs containing the
+    callable and recomputes instead of risking stale reuse.
+    """
 
     if not callable(func):
         raise TypeError("custom preprocessing step func must be callable")
@@ -482,6 +489,81 @@ def _reprocess_options(options: Mapping[str, Any]) -> dict[str, Any]:
 
 def _metadata_options(options: Mapping[str, Any]) -> dict[str, Any]:
     return _json_ready(dict(options))
+
+
+def _warn_fit_window_custom_steps(spec: PreprocessSpec) -> None:
+    key = id(spec)
+    if key in _FIT_WINDOW_CUSTOM_WARNED:
+        return
+    _FIT_WINDOW_CUSTOM_WARNED.add(key)
+    warnings.warn(
+        "custom preprocessing steps with policy='fit_window' are re-executed on "
+        "each apply window and must be row-local/stateless; data-dependent "
+        "statistics inside custom steps can leak post-origin rows.",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
+def _apply_fitted_standardization_state(
+    data: PreprocessedData,
+    state: dict[str, Any] | None,
+) -> PreprocessedData:
+    if state is None:
+        return data
+    panel = apply_standardization_state(data.panel, state)
+    metadata = dict(data.metadata)
+    preprocessing_stage = dict(metadata.get("preprocessing", {}))
+    preprocessing_stage["standardize"] = state.get("method")
+    preprocessing_stage["standardize_columns"] = list(state.get("columns", ()))
+    preprocessing_stage["standardization_state"] = dict(state)
+    preprocessing_stage["steps"] = _replace_standardize_step(
+        preprocessing_stage.get("steps", data.steps),
+        state,
+    )
+    metadata = attach_metadata(metadata, "preprocessing", preprocessing_stage)
+    panel.attrs["macroforecast_metadata"] = metadata
+    return PreprocessedData(
+        panel=panel,
+        metadata=metadata,
+        target=data.target,
+        targets=data.targets,
+        horizons=data.horizons,
+        start=data.start,
+        end=data.end,
+        predictors=data.predictors,
+        steps=tuple(preprocessing_stage.get("steps", data.steps)),
+    )
+
+
+def _reject_undigested_lambda_custom_steps(value: Any) -> None:
+    if value is None:
+        return
+    if callable(value):
+        _reject_undigested_lambda(value, path="custom_steps")
+        return
+    if isinstance(value, Mapping):
+        func = value.get("func", value.get("callable"))
+        if callable(func):
+            _reject_undigested_lambda(func, path=f"custom step {value.get('name', '<unnamed>')!r}")
+        return
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            _reject_undigested_lambda_custom_steps(item)
+        return
+
+
+def _reject_undigested_lambda(func: Callable[..., Any], *, path: str) -> None:
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", ""))
+    if "<lambda>" not in str(qualname):
+        return
+    if getattr(func, "__mf_digest__", None) is not None:
+        return
+    raise ValueError(
+        f"{path} uses an anonymous lambda without __mf_digest__; use a named "
+        "function or set a stable __mf_digest__ so disk preprocessing caches "
+        "cannot collide or replay stale callable code."
+    )
 
 
 def _normalize_custom_steps(value: Any) -> tuple[dict[str, Any], ...]:
