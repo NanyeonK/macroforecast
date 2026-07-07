@@ -74,6 +74,29 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   a dependent-loss size caveat; prefer `model_confidence_set` or `uspa`/`aspa`
   when serial dependence in losses is central to the inference.
 
+Tests that estimate a HAC or lag-truncated long-run variance accept fixed lag
+overrides through `test_options`. Use `hac_lags` when a replication design pins a
+Newey-West bandwidth rather than deriving it from the forecast horizon:
+
+```python
+evaluation = mf.pipeline.EvalSpec(
+    benchmark="AR",
+    tests=("dm", "cw", "gw", "enc_t", "gr", "mz"),
+    test_options={
+        "dm": {"hac_lags": 4},
+        "cw": {"hac_lags": 4},
+        "gw": {"hac_lags": 4},
+        "enc_t": {"hac_lags": 4},
+        "gr": {"hac_lags": 4},
+        "mz": {"hac_lags": 4},
+    },
+)
+```
+
+`hac_lags` must be an integer greater than or equal to zero and is validated when
+`pipeline_spec` is built. For `"gr"`, `hac_lags` is the paper-facing alias for the
+legacy `lag_truncate` option and takes precedence if both are supplied.
+
 ## Choosing the benchmark
 
 The relative metrics (`relative_mse`, `r2_oos`) and the comparison tests score
@@ -161,7 +184,8 @@ evaluation = EvalSpec(
     metrics=("rmse", "relative_mse", "r2_oos"),
     tests=("dm", "cw", "mcs", "spa", "uspa", "mz"),
     test_options={"spa": {"n_boot": 999, "block_length": 5},
-                  "uspa": {"n_boot": 999, "block_length": 3}},
+                  "uspa": {"n_boot": 999, "block_length": 3},
+                  "dm": {"hac_lags": 4}},
     cw_for_nested=True,    # compute CW only for arms with nested_in_benchmark=True
     mcs_alpha=0.10,
     subsamples={

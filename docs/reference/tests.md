@@ -149,7 +149,7 @@ Qualified name: `macroforecast.tests.clark_west_test`
 #### Signature
 
 ```python
-macroforecast.tests.clark_west_test(loss_small: Any, loss_large: Any, forecast_small: Any, forecast_large: Any, *, horizon: int = 1, cw_adjustment: bool = True, kernel: str = "newey_west", alpha: float = 0.05) -> TestResult
+macroforecast.tests.clark_west_test(loss_small: Any, loss_large: Any, forecast_small: Any, forecast_large: Any, *, horizon: int = 1, hac_lags: int | None = None, cw_adjustment: bool = True, kernel: str = "newey_west", alpha: float = 0.05) -> TestResult
 ```
 
 #### Description
@@ -165,6 +165,7 @@ Clark-West nested forecast comparison test.
 | `forecast_small` | positional or keyword | `Any` | `required` |
 | `forecast_large` | positional or keyword | `Any` | `required` |
 | `horizon` | keyword only | `int` | `1` |
+| `hac_lags` | keyword only | `int \| None` | `None` |
 | `cw_adjustment` | keyword only | `bool` | `True` |
 | `kernel` | keyword only | `str` | `"newey_west"` |
 | `alpha` | keyword only | `float` | `0.05` |
@@ -187,7 +188,7 @@ Qualified name: `macroforecast.tests.conditional_predictive_ability_test`
 #### Signature
 
 ```python
-macroforecast.tests.conditional_predictive_ability_test(loss_a: Any, loss_b: Any, *, method: str = "giacomini_rossi", window_ratio: float = 0.5, dmv_fullsample: bool = True, lag_truncate: int = 0, alpha: float = 0.05) -> dict[str, Any]
+macroforecast.tests.conditional_predictive_ability_test(loss_a: Any, loss_b: Any, *, method: str = "giacomini_rossi", window_ratio: float = 0.5, dmv_fullsample: bool = True, hac_lags: int | None = None, lag_truncate: int = 0, alpha: float = 0.05) -> dict[str, Any]
 ```
 
 #### Description
@@ -203,6 +204,7 @@ Giacomini-Rossi rolling fluctuation test or package recursive extension.
 | `method` | keyword only | `str` | `"giacomini_rossi"` |
 | `window_ratio` | keyword only | `float` | `0.5` |
 | `dmv_fullsample` | keyword only | `bool` | `True` |
+| `hac_lags` | keyword only | `int \| None` | `None` |
 | `lag_truncate` | keyword only | `int` | `0` |
 | `alpha` | keyword only | `float` | `0.05` |
 
@@ -363,7 +365,7 @@ Qualified name: `macroforecast.tests.dm_test`
 #### Signature
 
 ```python
-macroforecast.tests.dm_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
+macroforecast.tests.dm_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, hac_lags: int | None = None, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
 ```
 
 #### Description
@@ -377,6 +379,7 @@ Diebold-Mariano equal predictive ability test.
 | `loss_a` | positional or keyword | `Any` | `required` |
 | `loss_b` | positional or keyword | `Any` | `required` |
 | `horizon` | keyword only | `int` | `1` |
+| `hac_lags` | keyword only | `int \| None` | `None` |
 | `correction` | keyword only | `str` | `"hln"` |
 | `kernel` | keyword only | `str` | `"acf"` |
 | `input_type` | keyword only | `str` | `"loss"` |
@@ -438,7 +441,7 @@ Qualified name: `macroforecast.tests.giacomini_white_test`
 #### Signature
 
 ```python
-macroforecast.tests.giacomini_white_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, instruments: Any | None = None, alpha: float = 0.05, small_sample: bool = True) -> TestResult
+macroforecast.tests.giacomini_white_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, hac_lags: int | None = None, instruments: Any | None = None, alpha: float = 0.05, small_sample: bool = True) -> TestResult
 ```
 
 #### Description
@@ -499,6 +502,7 @@ backward-compatible p-values.
 | `loss_a` | positional or keyword | `Any` | `required` |
 | `loss_b` | positional or keyword | `Any` | `required` |
 | `horizon` | keyword only | `int` | `1` |
+| `hac_lags` | keyword only | `int \| None` | `None` |
 | `instruments` | keyword only | `Any \| None` | `None` |
 | `alpha` | keyword only | `float` | `0.05` |
 | `small_sample` | keyword only | `bool` | `True` |
@@ -864,7 +868,7 @@ Qualified name: `macroforecast.tests.enc_t_test`
 #### Signature
 
 ```python
-macroforecast.tests.enc_t_test(error_small: Any, error_large: Any, *, horizon: int = 1, kernel: str = "newey_west", critical_value: float | None = None, normal_approximation: bool = False, alpha: float = 0.05) -> TestResult
+macroforecast.tests.enc_t_test(error_small: Any, error_large: Any, *, horizon: int = 1, hac_lags: int | None = None, kernel: str = "newey_west", critical_value: float | None = None, normal_approximation: bool = False, alpha: float = 0.05) -> TestResult
 ```
 
 #### Description
@@ -878,6 +882,7 @@ ENC-T nested forecast encompassing test.
 | `error_small` | positional or keyword | `Any` | `required` |
 | `error_large` | positional or keyword | `Any` | `required` |
 | `horizon` | keyword only | `int` | `1` |
+| `hac_lags` | keyword only | `int \| None` | `None` |
 | `kernel` | keyword only | `str` | `"newey_west"` |
 | `critical_value` | keyword only | `float \| None` | `None` |
 | `normal_approximation` | keyword only | `bool` | `False` |
@@ -901,7 +906,7 @@ Qualified name: `macroforecast.tests.gw_test`
 #### Signature
 
 ```python
-macroforecast.tests.gw_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
+macroforecast.tests.gw_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, hac_lags: int | None = None, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
 ```
 
 #### Description
@@ -919,6 +924,7 @@ Giacomini-White Wald test, use :func:`giacomini_white_test`.
 | `loss_a` | positional or keyword | `Any` | `required` |
 | `loss_b` | positional or keyword | `Any` | `required` |
 | `horizon` | keyword only | `int` | `1` |
+| `hac_lags` | keyword only | `int \| None` | `None` |
 | `correction` | keyword only | `str` | `"hln"` |
 | `kernel` | keyword only | `str` | `"acf"` |
 | `input_type` | keyword only | `str` | `"loss"` |

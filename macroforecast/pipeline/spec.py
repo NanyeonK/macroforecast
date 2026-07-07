@@ -11,6 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 import importlib.util
 import inspect
+from numbers import Integral
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -240,6 +241,18 @@ def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
                 f"option name(s) {sorted(unknown)}; accepted options for "
                 f"{test_name!r} are {sorted(accepted)}"
             )
+        if "hac_lags" in options:
+            _validate_hac_lags_option(
+                options["hac_lags"],
+                label=f"evaluation.test_options[{test_name!r}]['hac_lags']",
+            )
+
+
+def _validate_hac_lags_option(value: Any, *, label: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, Integral):
+        raise ValueError(f"{label} must be an integer >= 0")
+    if int(value) < 0:
+        raise ValueError(f"{label} must be an integer >= 0")
 
 
 _DEFAULT_EVAL_BY = ("target", "horizon")

@@ -72,6 +72,7 @@ def dm_test(
     loss_b: Any,
     *,
     horizon: int = 1,
+    hac_lags: int | None = None,
     correction: str = "hln",
     kernel: str = "acf",
     input_type: str = "loss",
@@ -84,6 +85,7 @@ def dm_test(
     _validate_alpha(alpha)
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
+    hac_lag_count = _resolve_hac_lags(horizon, hac_lags)
     input_type = _normalize_dm_input_type(input_type)
     alternative = _normalize_alternative(alternative)
     frame = _aligned_frame(loss_a, loss_b, names=("series_a", "series_b"))
@@ -97,6 +99,7 @@ def dm_test(
     stat, p_value = _diebold_mariano_stat(
         diff,
         horizon=horizon,
+        hac_lags=hac_lag_count,
         hln=hln,
         kernel=kernel,
         alternative=alternative,
@@ -113,6 +116,8 @@ def dm_test(
         metadata={
             "name": "Diebold-Mariano",
             "horizon": int(horizon),
+            "hac_lags": int(hac_lag_count),
+            "hac_lags_source": "default_h_minus_1" if hac_lags is None else "user",
             "hln_correction": hln,
             "variance_estimator": variance_estimator,
             "input_type": input_type,
@@ -147,6 +152,7 @@ def gw_test(
     loss_b: Any,
     *,
     horizon: int = 1,
+    hac_lags: int | None = None,
     correction: str = "hln",
     kernel: str = "acf",
     input_type: str = "loss",
@@ -165,6 +171,7 @@ def gw_test(
         loss_a,
         loss_b,
         horizon=horizon,
+        hac_lags=hac_lags,
         correction=correction,
         kernel=kernel,
         input_type=input_type,
@@ -389,6 +396,7 @@ def clark_west_test(
     forecast_large: Any,
     *,
     horizon: int = 1,
+    hac_lags: int | None = None,
     cw_adjustment: bool = True,
     kernel: str = "newey_west",
     alpha: float = 0.05,
@@ -398,6 +406,7 @@ def clark_west_test(
     _validate_alpha(alpha)
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
+    hac_lag_count = _resolve_hac_lags(horizon, hac_lags)
     frame = _aligned_frame(
         loss_small,
         loss_large,
@@ -411,6 +420,7 @@ def clark_west_test(
     stat, p_value = _mean_hac_test_statistic(
         improvement,
         horizon=horizon,
+        hac_lags=hac_lag_count,
         kernel=kernel,
         reference="normal",
         alternative="greater",
@@ -425,6 +435,8 @@ def clark_west_test(
         metadata={
             "name": "Clark-West",
             "cw_adjustment": bool(cw_adjustment),
+            "hac_lags": int(hac_lag_count),
+            "hac_lags_source": "default_h_minus_1" if hac_lags is None else "user",
             "mean_adjusted_improvement": _float_or_none(improvement.mean()),
             "source_reference": "Clark-West adjusted MSPE differential",
             "reference_formula": "e_r^2 - (e_u^2 - (f_r - f_u)^2)",
@@ -482,6 +494,7 @@ def enc_t_test(
     error_large: Any,
     *,
     horizon: int = 1,
+    hac_lags: int | None = None,
     kernel: str = "newey_west",
     critical_value: float | None = None,
     normal_approximation: bool = False,
@@ -492,11 +505,13 @@ def enc_t_test(
     _validate_alpha(alpha)
     if horizon < 1:
         raise ValueError("horizon must be >= 1")
+    hac_lag_count = _resolve_hac_lags(horizon, hac_lags)
     frame = _aligned_frame(error_small, error_large, names=("error_small", "error_large"))
     c_values = frame["error_small"] * (frame["error_small"] - frame["error_large"])
     stat, normal_p = _mean_hac_test_statistic(
         c_values,
         horizon=horizon,
+        hac_lags=hac_lag_count,
         kernel=kernel,
         reference="normal",
         alternative="greater",
@@ -518,6 +533,8 @@ def enc_t_test(
             "name": "Enc-T",
             "mean_encompassing_covariance": _float_or_none(c_values.mean()),
             "hac_kernel": kernel,
+            "hac_lags": int(hac_lag_count),
+            "hac_lags_source": "default_h_minus_1" if hac_lags is None else "user",
             "critical_value": critical_value,
             "normal_approximation": bool(normal_approximation),
             "source_reference": "Clark-McCracken ENC-T statistic",
@@ -609,9 +626,7 @@ def mincer_zarnowitz_test(
     """
 
     _validate_alpha(alpha)
-    hac_lags = int(hac_lags)
-    if hac_lags < 0:
-        raise ValueError("hac_lags must be nonnegative")
+    hac_lags = _validate_nonnegative_int(hac_lags, "hac_lags")
     frame = _aligned_frame(y_true, y_pred, names=("actual", "forecast"))
     if len(frame) < 3:
         return TestResult(
@@ -1168,6 +1183,7 @@ def conditional_predictive_ability_test(
     method: str = "giacomini_rossi",
     window_ratio: float = 0.5,
     dmv_fullsample: bool = True,
+    hac_lags: int | None = None,
     lag_truncate: int = 0,
     alpha: float = 0.05,
 ) -> dict[str, Any]:
@@ -1183,7 +1199,11 @@ def conditional_predictive_ability_test(
         raise ValueError("window_ratio must be in (0, 1]")
     else:
         critical = None
-    lag_truncate = _validate_gr_lag_truncate(lag_truncate)
+    lag_truncate = (
+        _validate_gr_lag_truncate(_validate_nonnegative_int(hac_lags, "hac_lags"))
+        if hac_lags is not None
+        else _validate_gr_lag_truncate(lag_truncate)
+    )
     frame = _aligned_frame(loss_a, loss_b, names=("loss_a", "loss_b"))
     diff = (frame["loss_a"] - frame["loss_b"]).to_numpy(dtype=float)
     n = diff.size
@@ -1232,6 +1252,8 @@ def conditional_predictive_ability_test(
         "requested_method": requested_method,
         "variance_scope": "full_sample" if dmv_fullsample else "rolling_window",
         "lag_truncate": int(lag_truncate),
+        "hac_lags": int(lag_truncate),
+        "hac_lags_source": "user" if hac_lags is not None else "lag_truncate",
         "loss_difference_orientation": "loss_a - loss_b; positive path values mean loss_a has larger loss than loss_b",
         "statistic_definition": "supremum_absolute_fluctuation_path",
         "available_window_ratio_grid": [round(idx / 10, 1) for idx in range(1, 10)]
@@ -1841,6 +1863,21 @@ def _validate_positive_int(value: int, name: str) -> int:
     if value < 1:
         raise ValueError(f"{name} must be >= 1")
     return value
+
+
+def _validate_nonnegative_int(value: Any, name: str) -> int:
+    if isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, np.integer)):
+        raise ValueError(f"{name} must be an integer >= 0")
+    value_int = int(value)
+    if value_int < 0:
+        raise ValueError(f"{name} must be an integer >= 0")
+    return value_int
+
+
+def _resolve_hac_lags(horizon: int, hac_lags: int | None) -> int:
+    if hac_lags is None:
+        return max(int(horizon) - 1, 0)
+    return _validate_nonnegative_int(hac_lags, "hac_lags")
 
 
 def _normalize_direction_method(method: str) -> str:
@@ -2729,6 +2766,7 @@ def _diebold_mariano_stat(
     diff: pd.Series,
     *,
     horizon: int,
+    hac_lags: int | None = None,
     hln: bool = True,
     kernel: str = "acf",
     alternative: str = "two_sided",
@@ -2738,7 +2776,7 @@ def _diebold_mariano_stat(
     if n < 3:
         return None, None
     mean = float(clean.mean())
-    lag = max(0, int(horizon) - 1)
+    lag = _resolve_hac_lags(horizon, hac_lags)
     # R alignment: forecast/R/DM2.R::dm.test computes
     # d <- abs(e1)^power - abs(e2)^power;
     # STATISTIC <- mean(d) / sqrt(d.var);
@@ -2755,7 +2793,8 @@ def _diebold_mariano_stat(
             return None, None
     statistic = mean / math.sqrt(variance / n)
     if hln:
-        adjustment = math.sqrt((n + 1 - 2 * int(horizon) + int(horizon) * lag / n) / n)
+        horizon_lag = max(0, int(horizon) - 1)
+        adjustment = math.sqrt((n + 1 - 2 * int(horizon) + int(horizon) * horizon_lag / n) / n)
         statistic *= adjustment if adjustment > 0 else 1.0
     return float(statistic), _t_p_value(statistic, df=n - 1, alternative=alternative)
 
@@ -2764,6 +2803,7 @@ def _mean_hac_test_statistic(
     series: Any,
     *,
     horizon: int,
+    hac_lags: int | None = None,
     kernel: str,
     reference: str = "normal",
     alternative: str = "greater",
@@ -2776,7 +2816,7 @@ def _mean_hac_test_statistic(
         raise ValueError("horizon must be >= 1")
     alternative = _normalize_alternative(alternative)
     mean = float(clean.mean())
-    lag = max(0, int(horizon) - 1)
+    lag = _resolve_hac_lags(horizon, hac_lags)
     # Source alignment: Clark-West and ENC-T are mean-of-series HAC tests,
     # not HLN Diebold-Mariano tests. This helper keeps that statistic separate:
     # t = mean(q_t) / sqrt(LRV(q_t) / n), where q_t is the adjusted MSPE
@@ -3246,6 +3286,7 @@ def giacomini_white_test(
     loss_b: Any,
     *,
     horizon: int = 1,
+    hac_lags: int | None = None,
     instruments: Any | None = None,
     alpha: float = 0.05,
     small_sample: bool = True,
@@ -3302,13 +3343,20 @@ def giacomini_white_test(
 
     _validate_alpha(alpha)
     h = max(1, int(horizon))
+    bandwidth = _resolve_hac_lags(h, hac_lags)
     a = pd.Series(loss_a).astype(float).reset_index(drop=True)
     b = pd.Series(loss_b).astype(float).reset_index(drop=True)
     dl = (a - b).dropna().to_numpy()
     if dl.size <= h + 2:
         return TestResult(
             None, None, False, "conditional_equal_predictive_ability", None,
-            int(dl.size), {"test": "giacomini_white", "p_value_status": "insufficient_observations"},
+            int(dl.size), {
+                "test": "giacomini_white",
+                "horizon": int(h),
+                "hac_lags": int(bandwidth),
+                "hac_lags_source": "default_h_minus_1" if hac_lags is None else "user",
+                "p_value_status": "insufficient_observations",
+            },
         )
     dl_t = dl[h:]
     if instruments is None:
@@ -3323,7 +3371,6 @@ def giacomini_white_test(
     n, q = reg.shape
     rbar = reg.mean(axis=0)
     centered = reg - rbar
-    bandwidth = h - 1
 
     from scipy.stats import chi2
     from scipy.stats import f as f_dist
@@ -3366,6 +3413,8 @@ def giacomini_white_test(
             "test": "giacomini_white",
             "instruments": int(q),
             "horizon": int(h),
+            "hac_lags": int(bandwidth),
+            "hac_lags_source": "default_h_minus_1" if hac_lags is None else "user",
             "df": int(q),
             "small_sample": bool(small_sample),
             **extra_metadata,
