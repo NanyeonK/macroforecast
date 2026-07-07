@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use macroforecast, please cite the software using this metadata."
+type: software
+title: macroforecast
+authors:
+  - family-names: Kim
+    given-names: Nanyeon
+    email: nanyeon99@gmail.com
+    alias: NanyeonK
+repository-code: "https://github.com/NanyeonK/macroforecast"
+license: MIT
+version: 0.9.5
+date-released: 2026-06-27

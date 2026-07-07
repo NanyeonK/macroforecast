@@ -35,14 +35,11 @@ jobs:
           # first, so a single push surfaces the full failure set. A fail-fast
           # run once masked Python-3.10-only and optional-dependency failures
           # behind an earlier error.
-          pytest tests/ -q -m 'not deep and not slow and not rparity and not mc'
+          pytest tests/ -q -m 'not slow and not rparity and not mc'
 
       - name: Check seed hardcoding absent (Phase 0)
         run: |
-          # seed_policy.py documents the anti-pattern in its docstring and
-          # __pycache__ contains compiled bytecode copies of that docstring;
-          # exclude both from the grep.
-          ! grep -rE 'random_state=42|random_seed=42' macroforecast/execution/ --include='*.py' --exclude='seed_policy.py' || (echo "Found hardcoded seed — use resolve_seed()" && exit 1)
+          ! grep -rE 'random_state=42|random_seed=42' macroforecast scripts --include='*.py' --exclude-dir='__pycache__' || (echo "Found hardcoded seed literal in package or scripts; use configured RNG plumbing instead" && exit 1)
 
       - name: Check version consistency (pyproject.toml ↔ macroforecast/__init__.py)
         run: |
@@ -57,11 +54,11 @@ jobs:
 
       - name: Check docs do not advertise stale tag
         run: |
-          # README and install docs must point at the current package version.
+          # README and getting-started docs must point at the current package version.
           # CHANGELOG entries naming older tags are fine; they are historical.
           version=$(python -c 'import re,pathlib; print(re.search(r"^version = \"([^\"]+)\"", pathlib.Path("pyproject.toml").read_text(), re.M).group(1))')
-          if grep -RnE "@v[0-9]+\.[0-9]+\.[0-9]+" README.md docs/install.md | grep -v "@v${version}" ; then
-              echo "Stale @vN.N.N tag in README.md / docs/install.md — bump to v${version}"
+          if grep -RnE "@v[0-9]+\.[0-9]+\.[0-9]+" README.md docs/guide/getting_started.md | grep -v "@v${version}" ; then
+              echo "Stale @vN.N.N tag in README.md / docs/guide/getting_started.md — bump to v${version}"
               exit 1
           fi
           if grep -nE "version-[0-9]+\.[0-9]+\.[0-9]+" README.md | grep -v "version-${version}" ; then

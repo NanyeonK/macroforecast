@@ -19,13 +19,22 @@ from .core import (
     test_provenance_table,
     test_report_table,
 )
+from .figures import (
+    cumulative_loss_differential_plot,
+    fluctuation_test_plot,
+    forecast_path_plot,
+    pit_histogram_plot,
+)
 
 __all__ = [
     "ReportBundle",
     "ReportTable",
     "accuracy_table",
+    "cumulative_loss_differential_plot",
     "evaluation_report_tables",
     "figure_data",
+    "fluctuation_test_plot",
+    "forecast_path_plot",
     "forecast_test_table",
     "html_table",
     "latex_table",
@@ -33,6 +42,7 @@ __all__ = [
     "metric_report_table",
     "model_comparison_table",
     "paper_accuracy_table",
+    "pit_histogram_plot",
     "render_tables",
     "report_bundle",
     "report_table",

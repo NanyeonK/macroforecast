@@ -11,8 +11,11 @@ Markdown, HTML, and LaTeX report-table rendering.
 | `ReportBundle` | class | Named in-memory report outputs. |
 | `ReportTable` | class | Presentation-ready table that has not been written to disk. |
 | `accuracy_table` | function | Return the default paper-facing forecast accuracy table. |
+| `cumulative_loss_differential_plot` | function | Plot cumulative benchmark-minus-contender loss differentials. |
 | `evaluation_report_tables` | function | Return named paper-facing tables from an evaluation report. |
 | `figure_data` | function | Return a tidy frame intended for plotting or figure export. |
+| `fluctuation_test_plot` | function | Plot Giacomini-Rossi rolling fluctuation test paths. |
+| `forecast_path_plot` | function | Plot actual values and selected forecast paths over target dates. |
 | `forecast_test_table` | function | Return the default paper-facing forecast-comparison test table. |
 | `html_table` | function | Render a report table as HTML text. |
 | `latex_table` | function | Render a report table as LaTeX text. |
@@ -20,6 +23,7 @@ Markdown, HTML, and LaTeX report-table rendering.
 | `metric_report_table` | function | Return a paper-facing metric/evaluation table. |
 | `model_comparison_table` | function | Return the default paper-facing model ranking/comparison table. |
 | `paper_accuracy_table` | function | One line from a ``PipelineReport`` to a referee-ready horse-race table. |
+| `pit_histogram_plot` | function | Plot a probability integral transform histogram with a binomial band. |
 | `render_tables` | function | Render all tables in a bundle or mapping. |
 | `report_bundle` | function | Collect named reporting tables and figure data without writing files. |
 | `report_table` | function | Return a presentation-ready table without writing files. |
@@ -175,6 +179,51 @@ import macroforecast as mf
 # Call with the signature above:
 # mf.reporting.accuracy_table(...)
 ```
+### cumulative_loss_differential_plot
+
+Qualified name: `macroforecast.reporting.figures.cumulative_loss_differential_plot`
+
+#### Signature
+
+```python
+macroforecast.reporting.cumulative_loss_differential_plot(report: Any, *, target: Any, horizon: int, benchmark: str | None = None, contenders: Sequence[str] | None = None, loss: str | Callable[[Any, Any], Any] = "squared", ax: Any | None = None, shade: Sequence[tuple[Any, Any]] | None = None, savefig: str | Path | None = None, dpi: int = 300) -> Any
+```
+
+#### Description
+
+Plot cumulative benchmark-minus-contender loss differentials.
+
+This is the cumulative squared-error differential exhibit when
+``loss="squared"``. Upward slopes mean the contender is beating the
+benchmark over that interval because benchmark loss is larger than
+contender loss.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+| `target` | keyword only | `Any` | `required` |
+| `horizon` | keyword only | `int` | `required` |
+| `benchmark` | keyword only | `str \| None` | `None` |
+| `contenders` | keyword only | `Sequence[str] \| None` | `None` |
+| `loss` | keyword only | `str \| Callable[[Any, Any], Any]` | `"squared"` |
+| `ax` | keyword only | `Any \| None` | `None` |
+| `shade` | keyword only | `Sequence[tuple[Any, Any]] \| None` | `None` |
+| `savefig` | keyword only | `str \| Path \| None` | `None` |
+| `dpi` | keyword only | `int` | `300` |
+
+#### Returns
+
+`Any`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.cumulative_loss_differential_plot(...)
+```
 ### evaluation_report_tables
 
 Qualified name: `macroforecast.reporting.core.evaluation_report_tables`
@@ -250,6 +299,96 @@ Return a tidy frame intended for plotting or figure export.
 import macroforecast as mf
 # Call with the signature above:
 # mf.reporting.figure_data(...)
+```
+### fluctuation_test_plot
+
+Qualified name: `macroforecast.reporting.figures.fluctuation_test_plot`
+
+#### Signature
+
+```python
+macroforecast.reporting.fluctuation_test_plot(report: Any, *, target: Any, horizon: int, benchmark: str | None = None, contender: str | None = None, contenders: Sequence[str] | None = None, loss: str | Callable[[Any, Any], Any] = "squared", window_ratio: float = 0.5, dmv_fullsample: bool = True, lag_truncate: int | None = None, alpha: float = 0.05, ax: Any | None = None, shade: Sequence[tuple[Any, Any]] | None = None, savefig: str | Path | None = None, dpi: int = 300) -> Any
+```
+
+#### Description
+
+Plot Giacomini-Rossi rolling fluctuation test paths.
+
+The statistic path, window size, and critical value are produced by
+:func:`macroforecast.tests.conditional_predictive_ability_test`; this
+function only aligns forecast losses and draws the path with two-sided
+critical-value bands.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+| `target` | keyword only | `Any` | `required` |
+| `horizon` | keyword only | `int` | `required` |
+| `benchmark` | keyword only | `str \| None` | `None` |
+| `contender` | keyword only | `str \| None` | `None` |
+| `contenders` | keyword only | `Sequence[str] \| None` | `None` |
+| `loss` | keyword only | `str \| Callable[[Any, Any], Any]` | `"squared"` |
+| `window_ratio` | keyword only | `float` | `0.5` |
+| `dmv_fullsample` | keyword only | `bool` | `True` |
+| `lag_truncate` | keyword only | `int \| None` | `None` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `ax` | keyword only | `Any \| None` | `None` |
+| `shade` | keyword only | `Sequence[tuple[Any, Any]] \| None` | `None` |
+| `savefig` | keyword only | `str \| Path \| None` | `None` |
+| `dpi` | keyword only | `int` | `300` |
+
+#### Returns
+
+`Any`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.fluctuation_test_plot(...)
+```
+### forecast_path_plot
+
+Qualified name: `macroforecast.reporting.figures.forecast_path_plot`
+
+#### Signature
+
+```python
+macroforecast.reporting.forecast_path_plot(report: Any, *, target: Any, horizon: int, models: Sequence[str] | None = None, start: Any | None = None, end: Any | None = None, variance_band: str | None = None, ax: Any | None = None, savefig: str | Path | None = None, dpi: int = 300) -> Any
+```
+
+#### Description
+
+Plot actual values and selected forecast paths over target dates.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+| `target` | keyword only | `Any` | `required` |
+| `horizon` | keyword only | `int` | `required` |
+| `models` | keyword only | `Sequence[str] \| None` | `None` |
+| `start` | keyword only | `Any \| None` | `None` |
+| `end` | keyword only | `Any \| None` | `None` |
+| `variance_band` | keyword only | `str \| None` | `None` |
+| `ax` | keyword only | `Any \| None` | `None` |
+| `savefig` | keyword only | `str \| Path \| None` | `None` |
+| `dpi` | keyword only | `int` | `300` |
+
+#### Returns
+
+`Any`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.forecast_path_plot(...)
 ```
 ### forecast_test_table
 
@@ -565,6 +704,44 @@ subsamples raises so the table cannot accidentally mix windows.
 import macroforecast as mf
 # Call with the signature above:
 # mf.reporting.paper_accuracy_table(...)
+```
+### pit_histogram_plot
+
+Qualified name: `macroforecast.reporting.figures.pit_histogram_plot`
+
+#### Signature
+
+```python
+macroforecast.reporting.pit_histogram_plot(report: Any, *, target: Any, horizon: int, model: str, bins: int = 10, ax: Any | None = None, savefig: str | Path | None = None, dpi: int = 300) -> Any
+```
+
+#### Description
+
+Plot a probability integral transform histogram with a binomial band.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report` | positional or keyword | `Any` | `required` |
+| `target` | keyword only | `Any` | `required` |
+| `horizon` | keyword only | `int` | `required` |
+| `model` | keyword only | `str` | `required` |
+| `bins` | keyword only | `int` | `10` |
+| `ax` | keyword only | `Any \| None` | `None` |
+| `savefig` | keyword only | `str \| Path \| None` | `None` |
+| `dpi` | keyword only | `int` | `300` |
+
+#### Returns
+
+`Any`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.reporting.pit_histogram_plot(...)
 ```
 ### render_tables
 
