@@ -6,6 +6,7 @@ from datetime import date, datetime
 from html import escape as _html_escape
 from pathlib import Path
 from typing import Any, Literal
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -583,6 +584,22 @@ def paper_accuracy_table(
     ``"full"`` is selected if present; otherwise a report with multiple
     subsamples raises so the table cannot accidentally mix windows.
     """
+
+    failed_cells = list(
+        (report.get("failed_cells", ()) if isinstance(report, Mapping) else getattr(report, "failed_cells", ()))
+        or ()
+    )
+    if failed_cells:
+        first = failed_cells[0]
+        warnings.warn(
+            "paper_accuracy_table() is rendering a report with "
+            f"failed_cells={len(failed_cells)}; failed arms are absent from the "
+            "paper table. First failed cell: "
+            f"target={first.get('target')!r}, arm={first.get('arm')!r}, "
+            f"horizons={first.get('horizons')!r}, error={first.get('error')!r}.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     accuracy = _report_component_frame(report, "accuracy")
     if accuracy.empty:

@@ -167,6 +167,28 @@ print(ridge_spec.name, ridge_spec.input_kind)
 ridge_demo supervised
 ```
 
+Pass the `ModelSpec` returned by `custom_model()` into an `Arm`; do not pass the
+raw `fit_ridge` callable as `Arm.model`. `pipeline_spec()` resolves model names
+and validates `ModelSpec` objects before any cells run, so a typo in a model name
+or a bare callable fails while the spec is built. `custom_model()` also validates
+`input_kind`, the fit-function signature, and `default_preset` against
+`search_spaces`.
+
+For reusable result stores, give custom callables a stable digest:
+
+```python
+ridge_spec = mf.models.custom_model(
+    "ridge_demo",
+    fit_ridge,
+    default_params={"alpha": 1.0},
+    mf_digest="ridge-demo-v1",
+)
+```
+
+Change that digest whenever the callable's forecasting behavior changes. Without
+it, `result_store` recomputes the custom-model cell and emits a warning explaining
+why the cell could not be digested.
+
 Give it an explicit `FeatureSpec` that actually uses the panel -- an arm with
 `features=None` does NOT mean "no predictors"; see the
 [Models and Arms](concepts/models_and_arms.md) page and the default-feature-spec
@@ -201,6 +223,12 @@ spec = pipeline_spec(
 report = run_pipeline(spec)
 print(report.accuracy[["target", "horizon", "contender", "rmse", "relative_mse", "r2_oos"]])
 ```
+
+If a custom model raises during a managed pipeline run, `run_pipeline()` warns and
+records the omitted cell on `report.failed_cells` and
+`report.leakage_audit["failed_cells"]`. Downstream `evaluate()` and
+`mf.reporting.paper_accuracy_table()` also warn when those failed cells are
+present, so a failed contender cannot disappear silently from the horse race.
 
 ```text
       target  horizon contender     rmse  relative_mse    r2_oos

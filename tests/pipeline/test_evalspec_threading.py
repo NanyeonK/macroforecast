@@ -199,11 +199,9 @@ def test_custom_callable_metric_appears_as_its_own_column():
         assert np.isclose(got, expected)
 
 
-def test_unknown_metric_name_raises_via_metric_registry():
-    spec = _spec(evaluation=EvalSpec(benchmark="AR", metrics=("not_a_real_metric",)))
-    master = _golden_master()
+def test_unknown_metric_name_raises_at_spec_build_via_metric_registry():
     with pytest.raises(ValueError, match="Unknown metric"):
-        evaluate(master, spec)
+        _spec(evaluation=EvalSpec(benchmark="AR", metrics=("not_a_real_metric",)))
 
 
 # --------------------------------------------------------------------------- #

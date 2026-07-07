@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
-from typing import Any, Literal
+import difflib
+import inspect
+from typing import Any, Literal, cast
 
 import pandas as pd
 import numpy as np
@@ -89,6 +91,7 @@ from macroforecast.models.volatility import (
 InputKind = Literal["supervised", "target", "panel", "volatility"]
 SearchSpace = dict[str, tuple[Any, ...]]
 SearchSpaces = dict[str, SearchSpace]
+_ALLOWED_INPUT_KINDS = frozenset({"supervised", "target", "panel", "volatility"})
 
 
 @dataclass(frozen=True)
@@ -267,13 +270,26 @@ def get_model(
         key = model.lower()
         if key not in MODEL_SPECS:
             allowed = ", ".join(sorted(MODEL_SPECS))
-            raise ValueError(f"Unknown model {model!r}. Available models: {allowed}.")
+            suggestions = difflib.get_close_matches(key, sorted(MODEL_SPECS), n=3)
+            hint = (
+                " Did you mean "
+                + ", ".join(repr(name) for name in suggestions)
+                + "?"
+                if suggestions
+                else ""
+            )
+            raise ValueError(
+                f"Unknown model {model!r}.{hint} Available models: {allowed}."
+            )
         spec = MODEL_SPECS[key]
     elif callable(model):
         callable_spec = _MODEL_SPECS_BY_CALLABLE.get(model)
         if callable_spec is None:
             name = getattr(model, "__name__", repr(model))
-            raise ValueError(f"No registered ModelSpec for callable {name!r}")
+            raise ValueError(
+                f"No registered ModelSpec for callable {name!r}; wrap it: "
+                f"mf.models.custom_model('my_model', {name})"
+            )
         spec = callable_spec
     else:
         raise TypeError("model must be a model name, callable, or ModelSpec")
@@ -293,31 +309,83 @@ def custom_model(
     parameters: tuple[ModelParameter, ...] = (),
     search_spaces: SearchSpaces | None = None,
     default_search_method: str = "grid",
-    default_preset: str = "standard",
+    default_preset: str | None = "standard",
     input_kind: InputKind = "supervised",
     backend: str = "custom",
     requires_extra: str | None = None,
     requires_scaling: bool = False,
     recommended_preprocessing: tuple[str, ...] = (),
     description: str | None = None,
+    mf_digest: str | None = None,
 ) -> ModelSpec:
-    """Build a user-owned ``ModelSpec`` without registering a package model."""
+    """Build a user-owned ``ModelSpec`` without registering a package model.
+
+    ``fit_func`` must be callable and accept the inputs required by
+    ``input_kind`` (``X, y`` for supervised models; at least the target/panel
+    object for target, panel, and volatility models). ``input_kind`` is validated
+    at construction, and ``default_preset`` must name a key in ``search_spaces``
+    when search spaces are supplied. Pass ``mf_digest=`` when this model should
+    be reusable through ``pipeline_spec(result_store=...)``; the digest is stamped
+    on ``fit_func.__mf_digest__``.
+    """
 
     if not name:
         raise ValueError("custom model name must be non-empty")
     if not callable(fit_func):
         raise TypeError("custom model fit_func must be callable")
+    if input_kind not in _ALLOWED_INPUT_KINDS:
+        raise ValueError(
+            f"custom model input_kind must be one of {sorted(_ALLOWED_INPUT_KINDS)}, "
+            f"got {input_kind!r}"
+        )
+    try:
+        signature = inspect.signature(fit_func)
+    except (TypeError, ValueError) as exc:
+        raise TypeError("custom model fit_func must have an inspectable signature") from exc
+    positional = [
+        param
+        for param in signature.parameters.values()
+        if param.kind
+        in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    ]
+    minimum_positional = 2 if input_kind == "supervised" else 1
+    has_varargs = any(
+        param.kind is inspect.Parameter.VAR_POSITIONAL
+        for param in signature.parameters.values()
+    )
+    if len(positional) < minimum_positional and not has_varargs:
+        raise TypeError(
+            f"custom model fit_func for input_kind={input_kind!r} must accept at "
+            f"least {minimum_positional} positional argument(s)"
+        )
+    search_space_dict = dict(search_spaces or {})
+    if default_preset is None:
+        if search_space_dict:
+            raise ValueError(
+                "custom model default_preset=None is ambiguous when search_spaces "
+                "is provided; pass one of the search_spaces keys"
+            )
+        default_preset_value = "standard"
+    else:
+        default_preset_value = str(default_preset)
+    if search_space_dict and default_preset_value not in search_space_dict:
+        raise ValueError(
+            f"custom model default_preset {default_preset_value!r} is not in "
+            f"search_spaces keys {sorted(search_space_dict)}"
+        )
+    if mf_digest is not None:
+        setattr(fit_func, "__mf_digest__", str(mf_digest))
     return ModelSpec(
         name=str(name),
         family=str(family),
         fit_func=fit_func,
         default_params=dict(default_params or {}),
         parameters=parameters,
-        search_spaces=dict(search_spaces or {}),
+        search_spaces=search_space_dict,
         default_search_method=str(default_search_method),
-        default_preset=str(default_preset),
-        preset=str(default_preset),
-        input_kind=input_kind,
+        default_preset=default_preset_value,
+        preset=default_preset_value,
+        input_kind=cast("InputKind", input_kind),
         backend=str(backend),
         requires_extra=requires_extra,
         requires_scaling=bool(requires_scaling),

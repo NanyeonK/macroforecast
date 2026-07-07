@@ -360,6 +360,11 @@ macroforecast.pipeline.run_pipeline(spec: PipelineSpec)
 
 Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport.
 
+If evaluation raises a known validation/data error after forecast cells have
+completed, the returned report carries the master forecast frame intact,
+empty evaluation tables, and ``PipelineReport.evaluation_error`` with the
+captured error text.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -424,7 +429,7 @@ Qualified name: `macroforecast.pipeline.spec.PipelineReport`
 #### Signature
 
 ```python
-macroforecast.pipeline.PipelineReport(forecasts: "'Any'", accuracy: "'Any'", significance: "'Any'", mcs: "'Any'", provenance: Mapping[str, Any] = <factory>, leakage_audit: Mapping[str, Any] = <factory>, interpretation: Mapping[str, Any] | None = None, model_store: str = "trained_model", spec: "'Any'" = None, failed_cells: "'Sequence[Mapping[str, Any]]'" = <factory>, empty_cells: "'Sequence[Mapping[str, Any]]'" = <factory>, density: "'Any'" = None, calibration: "'Any'" = None) -> None
+macroforecast.pipeline.PipelineReport(forecasts: "'Any'", accuracy: "'Any'", significance: "'Any'", mcs: "'Any'", provenance: Mapping[str, Any] = <factory>, leakage_audit: Mapping[str, Any] = <factory>, interpretation: Mapping[str, Any] | None = None, model_store: str = "trained_model", spec: "'Any'" = None, failed_cells: "'Sequence[Mapping[str, Any]]'" = <factory>, empty_cells: "'Sequence[Mapping[str, Any]]'" = <factory>, density: "'Any'" = None, calibration: "'Any'" = None, evaluation_error: str | None = None) -> None
 ```
 
 #### Description
@@ -448,6 +453,7 @@ Standard pipeline output (mutable: interpretation is filled in later).
 | `empty_cells` | positional or keyword | `'Sequence[Mapping[str, Any]]'` | `<factory>` |
 | `density` | positional or keyword | `'Any'` | `None` |
 | `calibration` | positional or keyword | `'Any'` | `None` |
+| `evaluation_error` | positional or keyword | `str \| None` | `None` |
 
 #### Returns
 
@@ -478,6 +484,7 @@ import macroforecast as mf
 | `empty_cells` | `'Sequence[Mapping[str, Any]]'` | `default_factory` |
 | `density` | `'Any'` | `None` |
 | `calibration` | `'Any'` | `None` |
+| `evaluation_error` | `str \| None` | `None` |
 
 #### Public Methods
 
@@ -1282,7 +1289,16 @@ Validate and build a :class:`PipelineSpec`.
 (``len(targets) * len(arms) * len(horizons)`` cells) via
 :func:`auto_parallelism` and splits the cores between cell workers
 (stored as the resolved ``PipelineSpec.n_jobs``) and per-cell model-internal
-threads (stored as ``PipelineSpec.model_threads``).
+threads (stored as ``PipelineSpec.model_threads``). When ``n_jobs > 1``,
+every arm's model, features, preprocessing, policies, and model-selection
+objects must be pickleable because cells run in worker processes. Define
+custom callables at module scope, or use ``n_jobs=1`` for local closures.
+
+Model names, evaluation metric names, combination methods, and combination
+``over=`` contenders are resolved during spec construction. Unknown names
+fail here, before any forecast cell is computed. Bare callable arm models are
+rejected; wrap them with ``mf.models.custom_model(...)`` so the runner has a
+stable ``ModelSpec``.
 
 ``preprocessing_cache_dir`` is a path, ``None``, or ``False`` -- see the field
 docstring on :class:`PipelineSpec` for the full three-state contract. In short:
