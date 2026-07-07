@@ -104,8 +104,48 @@ def test_combine_rejects_unknown_frequency_in_monthly_or_quarterly_output():
         {"dataset": "unknown_source", "source_family": "test", "frequency": "mixed"},
     )
 
-    with pytest.raises(ValueError, match="supports only monthly and quarterly native columns"):
+    with pytest.raises(ValueError, match="align_frequency"):
         mf.data.combine(monthly, unknown, dataset="custom_combo", frequency="monthly")
+
+
+def test_combine_weekly_error_points_to_align_frequency_recipe() -> None:
+    monthly = _bundle(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=3, freq="MS"),
+                "m": [1.0, 2.0, 3.0],
+            }
+        ),
+        {"dataset": "monthly_source", "source_family": "test", "frequency": "monthly"},
+    )
+    weekly = _bundle(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-03", periods=10, freq="W-FRI"),
+                "w": list(range(10)),
+            }
+        ),
+        {"dataset": "weekly_source", "source_family": "test", "frequency": "mixed"},
+    )
+
+    with pytest.raises(ValueError, match="align_frequency"):
+        mf.data.combine(monthly, weekly, dataset="custom_combo", frequency="monthly")
+
+    weekly_monthly = mf.data.align_frequency(
+        weekly,
+        method="monthly",
+        weekly_to_monthly="mean",
+    )
+    combined = mf.data.combine(
+        monthly,
+        weekly_monthly,
+        dataset="custom_combo",
+        frequency="monthly",
+    )
+
+    assert combined.metadata["frequency"] == "monthly"
+    assert "w" in combined.panel.columns
+    assert combined.panel.index.equals(pd.date_range("2020-01-01", periods=3, freq="MS", name="date"))
 
 
 def test_load_fred_md_sd_combines_monthly_national_and_state_sources(tmp_path: Path):

@@ -108,6 +108,67 @@ def test_load_custom_csv_preserves_first_pass_panel_report_when_permissive(tmp_p
     assert bundle.metadata["panel"]["numeric_coercion"]["coerced_cells"] == 1
 
 
+def test_as_panel_duplicate_dates_in_long_format_names_pivot_fix() -> None:
+    frame = pd.DataFrame(
+        {
+            "date": ["2020-01-01", "2020-01-01", "2020-02-01", "2020-02-01"],
+            "country": ["US", "CA", "US", "CA"],
+            "value": [1.0, 2.0, 3.0, 4.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="pivot to wide"):
+        mf.data.as_panel(frame, date="date")
+
+
+def test_load_custom_csv_custom_na_values_pass_strict_mode(tmp_path) -> None:
+    path = tmp_path / "custom_na.csv"
+    path.write_text(
+        "date,x\n"
+        "2020-01-01,1.0\n"
+        "2020-02-01,MISSING\n",
+        encoding="utf-8",
+    )
+
+    bundle = mf.data.load_custom_csv(path, date="date", na_values=["MISSING"])
+
+    assert np.isnan(bundle.panel.loc[pd.Timestamp("2020-02-01"), "x"])
+
+
+def test_load_custom_csv_dayfirst_dates_parse_when_requested(tmp_path) -> None:
+    path = tmp_path / "dayfirst.csv"
+    path.write_text(
+        "date,x\n"
+        "01/02/2020,1.0\n"
+        "02/03/2020,2.0\n",
+        encoding="utf-8",
+    )
+
+    bundle = mf.data.load_custom_csv(path, date="date", dayfirst=True)
+
+    assert list(bundle.panel.index) == [
+        pd.Timestamp("2020-02-01"),
+        pd.Timestamp("2020-03-02"),
+    ]
+
+
+def test_load_custom_csv_date_format_parses_when_requested(tmp_path) -> None:
+    path = tmp_path / "date_format.csv"
+    path.write_text(
+        "date,x\n"
+        "20200131,1.0\n"
+        "20200229,2.0\n",
+        encoding="utf-8",
+    )
+
+    bundle = mf.data.load_custom_csv(path, date="date", date_format="%Y%m%d")
+
+    assert list(bundle.panel.index) == [
+        pd.Timestamp("2020-01-31"),
+        pd.Timestamp("2020-02-29"),
+    ]
+
+
 def test_set_frequencies_marks_existing_panel_as_mixed() -> None:
     panel = mf.data.as_panel(
         pd.DataFrame(
