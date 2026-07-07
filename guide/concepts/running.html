@@ -626,6 +626,26 @@ inputs – only <code class="docutils literal notranslate"><span class="pre">rec
 snippets in <a class="reference internal" href="../getting_started.html"><span class="std std-doc">Getting Started</span></a> and the step-by-step
 pipeline in the <a class="reference internal" href="../gallery.html#a-complete-pipeline-step-by-step"><span class="std std-ref">Replication Gallery</span></a>.</p>
 </section>
+<section id="seeds-parallelism-and-model-storage">
+<h2>Seeds, parallelism, and model storage<a class="headerlink" href="#seeds-parallelism-and-model-storage" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pipeline_spec(...,</span> <span class="pre">seed=...)</span></code> is the run-level reproducibility knob for the
+pipeline. During <code class="docutils literal notranslate"><span class="pre">run_pipeline(spec)</span></code>, it temporarily becomes the active
+<code class="docutils literal notranslate"><span class="pre">mf.configure(random_seed=...)</span></code> value, so model-owned random search and parallel
+workers see the same seed. Stochastic model fits derive a stable per-arm
+<code class="docutils literal notranslate"><span class="pre">random_state</span></code> from <code class="docutils literal notranslate"><span class="pre">(seed,</span> <span class="pre">arm</span> <span class="pre">name)</span></code> only when the arm did not explicitly pass
+<code class="docutils literal notranslate"><span class="pre">random_state</span></code> in <code class="docutils literal notranslate"><span class="pre">params</span></code>; explicit model params win. The report records these
+effective values under <code class="docutils literal notranslate"><span class="pre">report.provenance[&quot;effective_seeds&quot;]</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">n_jobs=&quot;auto&quot;</span></code> resolves to a concrete cell-worker count plus a per-worker model
+thread budget. On Linux it honors CPU affinity; on macOS and Windows it falls
+back to <code class="docutils literal notranslate"><span class="pre">os.cpu_count()</span></code>. Parallel workers cap common BLAS/OpenMP thread
+environment variables before running forecast cells and receive the data payload
+once per worker rather than once per cell.</p>
+<p>Pipeline model persistence is opt-in. <code class="docutils literal notranslate"><span class="pre">pipeline_spec(...)</span></code> defaults to
+<code class="docutils literal notranslate"><span class="pre">save_models=False</span></code>; pass <code class="docutils literal notranslate"><span class="pre">save_models=True</span></code> and <code class="docutils literal notranslate"><span class="pre">model_store=...</span></code> only when you
+need fitted-model pickles. Large projected stores warn before execution. Remove
+old model fits with <code class="docutils literal notranslate"><span class="pre">mf.pipeline.purge_model_store(...)</span></code>. The lower-level
+<code class="docutils literal notranslate"><span class="pre">mf.forecasting.run(...)</span></code> keeps its historical <code class="docutils literal notranslate"><span class="pre">save_models=True</span></code> default.</p>
+</section>
 <section id="incremental-horse-races">
 <h2>Incremental horse races<a class="headerlink" href="#incremental-horse-races" title="Link to this heading">#</a></h2>
 <p>Long paper projects often grow a model comparison over many months. Use
@@ -747,6 +767,7 @@ emit a warning because they can only be matched by directory name.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callables">Key Callables</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#seeds-parallelism-and-model-storage">Seeds, parallelism, and model storage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#incremental-horse-races">Incremental horse races</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
 </ul>

@@ -643,7 +643,10 @@ cross-vintage transform automatically.</p>
 <h2>Cache and provenance<a class="headerlink" href="#cache-and-provenance" title="Link to this heading">#</a></h2>
 <p>Vintage-aware runs can use <code class="docutils literal notranslate"><span class="pre">n_jobs</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>. Preprocessing cache keys include both
 the origin and the resolved <code class="docutils literal notranslate"><span class="pre">vintage_id</span></code>, so two origins with the same calendar
-position but different data content do not share fitted state.</p>
+position but different data content do not share fitted state. In parallel mode,
+each worker receives the <code class="docutils literal notranslate"><span class="pre">VintagePanelSpec.data</span></code> payload once and reuses its
+source object across cells, so mapping-backed custom vintage sources keep their
+per-worker memoization instead of reparsing every snapshot for every cell.</p>
 <p>Pipeline reports include <code class="docutils literal notranslate"><span class="pre">provenance[&quot;vintage_source&quot;]</span></code> with:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>: source family or class name.</p></li>

@@ -169,7 +169,10 @@ cross-vintage transform automatically.
 
 Vintage-aware runs can use `n_jobs > 1`. Preprocessing cache keys include both
 the origin and the resolved `vintage_id`, so two origins with the same calendar
-position but different data content do not share fitted state.
+position but different data content do not share fitted state. In parallel mode,
+each worker receives the `VintagePanelSpec.data` payload once and reuses its
+source object across cells, so mapping-backed custom vintage sources keep their
+per-worker memoization instead of reparsing every snapshot for every cell.
 
 Pipeline reports include `provenance["vintage_source"]` with:
 
