@@ -1,11 +1,10 @@
 # Third-party notices
 
-macroforecast bundles vendored third-party code under
-``macroforecast/_vendor/``. Each subpackage carries the upstream licence
-file alongside a ``PATCHES.md`` describing the delta from the original
-release. This file is the consolidated attribution table.
+macroforecast bundles one vendored third-party reference backend. The upstream
+licence file is preserved beside the adapted source file, and this file is the
+consolidated attribution table.
 
-## macroforecast/_vendor/macro_random_forest/
+## macroforecast/models/_mrf_reference.py
 
 * **Upstream**: <https://github.com/RyanLucas3/MacroRandomForest>
 * **Upstream version**: 1.0.6 (2022-07-28; sole release)
@@ -13,14 +12,12 @@ release. This file is the consolidated attribution table.
 * **Method reference**: Goulet Coulombe, P. (2024) "The Macroeconomy as
   a Random Forest", *Journal of Applied Econometrics*. arXiv:2006.12724.
 * **Licence**: MIT (preserved at
-  ``macroforecast/_vendor/macro_random_forest/LICENSE`` with dual
-  copyright for the upstream and patch authors).
-* **Patches**: four surgical numpy 2.x / pandas 2.x compatibility fixes;
-  full list at ``macroforecast/_vendor/macro_random_forest/PATCHES.md``.
-  No algorithmic changes.
+  ``macroforecast/models/_mrf_reference.LICENSE``).
+* **Local source**: ``macroforecast/models/_mrf_reference.py``.
+* **Patches**: package integration and numpy/pandas compatibility fixes called
+  out in the source-file header. No algorithmic changes are intended.
 * **Citation requirement**: research using the
-  ``macroeconomic_random_forest`` L4 family must cite Goulet Coulombe
+  ``macro_random_forest`` model must cite Goulet Coulombe
   (2024) and acknowledge Ryan Lucas's upstream implementation. The
-  citation is surfaced in the encyclopedia entry for the family
-  (``docs/encyclopedia/l4/axes/family.md``) and in the ``OPTION_DOCS``
-  prose.
+  backend is documented in the model reference page
+  (``docs/reference/models.md``).

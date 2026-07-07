@@ -33,8 +33,4 @@ jobs:
 
       - name: Run deep tests
         run: |
-          pytest tests/ -m 'deep or slow' -x -q
-
-      - name: Run cross-cutting sweep-safety (deep included)
-        run: |
-          pytest tests/core/test_deep_models_sweep_safety.py -x -q
+          pytest tests/models tests/forecasting -q

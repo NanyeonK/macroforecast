@@ -1,47 +1,41 @@
 # Release Checklist
 
-Run before tagging a new release. The version-consistency CI step in
-``ci-core.yml`` will fail if any of the version updates are skipped.
+Run before publishing a new release. ``release.yml`` is manual and validates
+that its ``version`` input is final-release form ``vX.Y.Z`` and matches
+``pyproject.toml`` before any build or publish step runs.
 
 ## Pre-tag
 
 - [ ] ``pyproject.toml`` ``version`` bumped
 - [ ] ``macroforecast/__init__.py`` ``__version__`` bumped
-- [ ] ``README.md`` install commands point at the new ``@vX.Y.Z`` tag
-- [ ] ``README.md`` citation line uses the new ``vX.Y.Z`` (badges are
-      now real CI badges; no version badge to bump)
-- [ ] ``docs/install.md`` install commands and verify-comment use the
-      new tag
+- [ ] ``CITATION.cff`` ``version`` and ``date-released`` updated
 - [ ] ``CHANGELOG.md`` entry added under ``## [X.Y.Z] -- YYYY-MM-DD``
 - [ ] Local pytest pass:
       ```bash
-      python -m pytest tests/ -x -q -m "not deep"
+      python -m pytest tests/ -q -m "not slow and not rparity and not mc"
       ```
-- [ ] If you edited any ``OptionDoc`` content or any
-      ``LayerImplementationSpec`` (axes / options / sub-layers),
-      regenerate the encyclopedia and stage the diff:
+- [ ] If you changed public docstrings, signatures, ``__all__``, or public
+      modules, regenerate and check reference docs:
       ```bash
-      python -m tools.docgen encyclopedia docs/reference/
-      git add docs/reference/
+      python -m tools.docgen docs/reference
+      python -m tools.docgen --check docs/reference
       ```
-      The ``ci-docs`` Encyclopedia drift check fails the build if this
-      step is skipped.
+      The ``ci-docs`` reference drift check fails the build if this step is
+      skipped.
 
-## Tag and push
+## Publish
 
 - [ ] ``git push origin main`` (CI must be green for the commit)
+- [ ] Run the ``release.yml`` workflow manually with ``version=vX.Y.Z``
+- [ ] Confirm ``release.yml`` validation, build, twine check, artifact upload,
+      and PyPI publish steps are green
 - [ ] ``git tag -a vX.Y.Z -m "..."``
-- [ ] ``git push origin vX.Y.Z``
+- [ ] ``git push origin vX.Y.Z`` (source tag only; tag push does not publish)
 
-## After tag
+## After publish
 
-- [ ] ``ci-core`` and ``ci-docs`` green for the tag commit
-- [ ] ``release.yml`` workflow ran successfully (publishes to
-      https://pypi.org/project/macroforecast/; first release under the
-      ``macroforecast`` PyPI namespace was v0.6.0)
-- [ ] GitHub Pages (``gh-pages``) docs deploy reflects the new tag
-      (``docs/install.md`` and ``README.md`` show ``vX.Y.Z`` in the
-      published HTML, not just in the source)
+- [ ] ``ci-core``, ``ci-docs``, ``ci-typecheck``, and scheduled optional
+      workflow expectations are green for the release commit
 - [ ] PyPI ``latest`` shows the new version:
       ```bash
       python -m pip index versions macroforecast
@@ -63,4 +57,4 @@ rename and were never published to PyPI.
 
 The ``PYPI_API_TOKEN`` secret must remain registered in repo
 Settings → Secrets and variables → Actions, scoped to the
-``macroforecast`` project, for ``release.yml`` to publish on tag push.
+``macroforecast`` project, for the manual ``release.yml`` workflow to publish.

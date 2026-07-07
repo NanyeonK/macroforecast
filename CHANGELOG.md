@@ -5,6 +5,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `.github/workflows`, `.github/RELEASE_CHECKLIST.md`, `CITATION.cff`,
+  `THIRD_PARTY_NOTICES.md`, `docs/guide/citing.md`, `.readthedocs.yaml`,
+  `CONTRIBUTING.md` (CI/release hygiene): repaired stale CI trust checks,
+  added weekly optional-extra coverage, validated manual release versions
+  against `pyproject.toml`, added citation metadata/docs, corrected third-party
+  notice paths, and documented the lockfile's non-enforced CI role.
+
 - `tools/docgen`, `docs/reference`, `README.md`, `docs/conf.py` (docs,
   issue #421): replaced the broken layered-ops/OptionDoc generator with a
   current public-API reference renderer and restored
