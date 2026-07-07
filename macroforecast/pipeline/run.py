@@ -57,6 +57,18 @@ def _cell_checkpoint_path(spec: PipelineSpec, arm: Arm, target: ResolvedTarget):
     return Path(spec.checkpoint_dir) / cell
 
 
+def _cell_checkpoint_manifest_path(
+    spec: PipelineSpec,
+    arm: Arm,
+    target: ResolvedTarget,
+    horizon: int,
+) -> Path | None:
+    cell_dir = _cell_checkpoint_path(spec, arm, target)
+    if cell_dir is None:
+        return None
+    return cell_dir / f"h{int(horizon)}" / "cell_manifest.json"
+
+
 def _effective_target_for_arm(
     spec: PipelineSpec,
     arm: Arm,
@@ -131,6 +143,13 @@ def _run_one_arm_target(
         preprocessing_store=preprocessing_store,
         checkpoint_path=_cell_checkpoint_path(spec, arm, target),
     )
+    _write_checkpoint_cell_manifests(
+        spec,
+        arm,
+        target,
+        effective_target,
+        horizons=run_horizons,
+    )
     frame = result.to_frame().copy()
     if "vintage_boundary_audit" in result.metadata:
         frame.attrs["macroforecast_vintage_boundary_audit"] = result.metadata[
@@ -146,6 +165,67 @@ def _run_one_arm_target(
     if "target" not in frame.columns:
         frame["target"] = effective_target.name
     return frame
+
+
+def _write_checkpoint_cell_manifests(
+    spec: PipelineSpec,
+    arm: Arm,
+    path_target: ResolvedTarget,
+    effective_target: ResolvedTarget,
+    *,
+    horizons: Sequence[int],
+) -> None:
+    if spec.checkpoint_dir is None:
+        return
+    data_identity = _data_identity(spec.data)
+    for horizon in horizons:
+        manifest_path = _cell_checkpoint_manifest_path(spec, arm, path_target, int(horizon))
+        if manifest_path is None:
+            continue
+        identity = result_cell_identity(
+            spec,
+            arm,
+            effective_target,
+            horizon=int(horizon),
+            data_identity=data_identity,
+        )
+        payload = {
+            "schema": "macroforecast_checkpoint_cell_manifest",
+            "version": 1,
+            "target": path_target.name,
+            "effective_target": effective_target.name,
+            "arm": arm.name,
+            "horizon": int(horizon),
+            "digest": identity.digest,
+            "cell_echo": identity.cell_echo,
+            "data_fingerprint": identity.data_fingerprint,
+            "undigestible_reason": identity.reason,
+        }
+        _write_json_atomic(manifest_path, payload)
+
+
+def _write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    encoded = (
+        json.dumps(payload, sort_keys=True, ensure_ascii=True, default=str) + "\n"
+    ).encode("utf-8")
+    fd, tmp_path = tempfile.mkstemp(
+        suffix=".tmp",
+        prefix=f".{path.name}.",
+        dir=path.parent,
+    )
+    try:
+        os.write(fd, encoded)
+    except OSError:
+        os.close(fd)
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+    else:
+        os.close(fd)
+    os.replace(tmp_path, path)
 
 
 def _empty_arm_warning(arm_name: str, target_name: str) -> str:
@@ -1038,6 +1118,10 @@ def _data_identity(data: Any) -> dict[str, Any]:
     than raising -- provenance collection must never break a run.
     """
     from macroforecast.data import metadata as _bundle_metadata
+    from macroforecast.data import VintagePanelSpec
+
+    if isinstance(data, VintagePanelSpec):
+        return _vintage_data_identity(data)
 
     try:
         meta = dict(_bundle_metadata(data))
@@ -1076,6 +1160,197 @@ def _data_identity(data: Any) -> dict[str, Any]:
         "start": start,
         "end": end,
         "fingerprint": fingerprint,
+    }
+
+
+def _vintage_data_identity(data: Any) -> dict[str, Any]:
+    source = getattr(data, "source", None)
+    calendar = getattr(data, "reference_calendar", None)
+    calendar_summary = _calendar_identity(calendar)
+    source_kind = str(getattr(source, "kind", type(source).__name__))
+    labels: tuple[Any, ...]
+    try:
+        labels = tuple(source.available_vintages()) if source is not None else ()
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        labels = ()
+
+    source_digest = getattr(source, "__mf_digest__", None)
+    if not labels and source_digest is None:
+        fingerprint: dict[str, Any] = {
+            "algorithm": "sha256",
+            "method": "undigestible",
+            "reason": (
+                "vintage source cannot enumerate available_vintages() and has "
+                "no __mf_digest__; result-store reuse is disabled for this cell"
+            ),
+        }
+        return {
+            "dataset": getattr(source, "dataset", None),
+            "source_family": source_kind,
+            "vintage": None,
+            "frequency": getattr(source, "frequency", None),
+            "n_rows": None,
+            "n_columns": None,
+            "start": calendar_summary.get("start"),
+            "end": calendar_summary.get("end"),
+            "reference_calendar": calendar_summary,
+            "actuals_vintage": getattr(data, "actuals_vintage", None),
+            "fingerprint": fingerprint,
+        }
+
+    last_panel_identity: dict[str, Any] | None = None
+    dataset = getattr(source, "dataset", None)
+    frequency = getattr(source, "frequency", None)
+    last_vintage = labels[-1] if labels else None
+    if labels:
+        resolved = _resolve_vintage_boundary_bundle(source, last_vintage, calendar)
+        if resolved is None:
+            fingerprint = {
+                "algorithm": "sha256",
+                "method": "undigestible",
+                "reason": (
+                    "vintage source available_vintages() enumerated labels but "
+                    "the last vintage could not be resolved for a content fingerprint"
+                ),
+            }
+            return {
+                "dataset": dataset,
+                "source_family": source_kind,
+                "vintage": None,
+                "frequency": frequency,
+                "n_rows": None,
+                "n_columns": None,
+                "start": calendar_summary.get("start"),
+                "end": calendar_summary.get("end"),
+                "reference_calendar": calendar_summary,
+                "actuals_vintage": getattr(data, "actuals_vintage", None),
+                "fingerprint": fingerprint,
+            }
+        bundle, resolved_origin = resolved
+        meta = dict(getattr(bundle, "metadata", {}) or {})
+        dataset = meta.get("dataset", dataset)
+        frequency = meta.get("frequency", frequency)
+        panel = getattr(bundle, "panel", None)
+        if isinstance(panel, pd.DataFrame):
+            last_panel_identity = _vintage_panel_identity(
+                panel,
+                vintage=meta.get("vintage", last_vintage),
+                resolved_at=resolved_origin,
+            )
+
+    label_payload = [str(label) for label in labels]
+    labels_digest = hashlib.sha256(
+        json.dumps(label_payload, sort_keys=True, ensure_ascii=True).encode("utf-8")
+    ).hexdigest()
+    payload = {
+        "source_kind": source_kind,
+        "source_mf_digest": None if source_digest is None else str(source_digest),
+        "actuals_vintage": getattr(data, "actuals_vintage", None),
+        "reference_calendar": calendar_summary,
+        "available_vintages_sha256": labels_digest,
+        "n_available_vintages": len(labels),
+        # Boundary by design: resolving every vintage just to build a cache key is
+        # too expensive for long FRED histories. The latest resolvable vintage's
+        # panel fingerprint detects refreshed current content while the full label
+        # digest detects additions/removals/relabeling across the vintage set.
+        "content_boundary": "last_available_vintage",
+        "last_vintage": str(last_vintage) if last_vintage is not None else None,
+        "last_panel": last_panel_identity,
+    }
+    fingerprint = {
+        "algorithm": "sha256",
+        "method": "vintage_last_available_boundary",
+        "value": hashlib.sha256(
+            json.dumps(payload, sort_keys=True, ensure_ascii=True, default=str).encode("utf-8")
+        ).hexdigest(),
+        "boundary": "available_vintages labels + reference calendar + last resolved vintage panel",
+        "available_vintages": {
+            "n": int(len(labels)),
+            "first": str(labels[0]) if labels else None,
+            "last": str(labels[-1]) if labels else None,
+            "sha256": labels_digest,
+        },
+        "source_mf_digest": None if source_digest is None else str(source_digest),
+        "last_panel": last_panel_identity,
+    }
+    return {
+        "dataset": dataset,
+        "source_family": source_kind,
+        "vintage": str(last_vintage) if last_vintage is not None else None,
+        "frequency": frequency,
+        "n_rows": None if last_panel_identity is None else last_panel_identity.get("n_rows"),
+        "n_columns": None if last_panel_identity is None else last_panel_identity.get("n_columns"),
+        "start": calendar_summary.get("start"),
+        "end": calendar_summary.get("end"),
+        "reference_calendar": calendar_summary,
+        "actuals_vintage": getattr(data, "actuals_vintage", None),
+        "fingerprint": fingerprint,
+    }
+
+
+def _resolve_vintage_boundary_bundle(
+    source: Any,
+    last_vintage: Any,
+    calendar: Any,
+) -> tuple[Any, pd.Timestamp] | None:
+    from macroforecast.data import VintageUnavailableError
+
+    candidates: list[pd.Timestamp] = []
+    try:
+        candidates.append(pd.Timestamp(last_vintage))
+    except (TypeError, ValueError, pd.errors.OutOfBoundsDatetime):
+        pass
+    if isinstance(calendar, pd.DatetimeIndex) and len(calendar):
+        candidates.append(pd.Timestamp(calendar[-1]))
+    for origin in candidates:
+        try:
+            return source.resolve(origin), origin
+        except (VintageUnavailableError, AttributeError, TypeError, ValueError, KeyError):
+            continue
+    return None
+
+
+def _vintage_panel_identity(
+    panel: pd.DataFrame,
+    *,
+    vintage: Any,
+    resolved_at: pd.Timestamp,
+) -> dict[str, Any]:
+    n_rows, n_columns = panel.shape
+    start = end = None
+    if len(panel.index):
+        try:
+            start = panel.index[0].isoformat()
+            end = panel.index[-1].isoformat()
+        except AttributeError:
+            start = str(panel.index[0])
+            end = str(panel.index[-1])
+    return {
+        "vintage": str(vintage),
+        "resolved_at": pd.Timestamp(resolved_at).isoformat(),
+        "n_rows": int(n_rows),
+        "n_columns": int(n_columns),
+        "start": start,
+        "end": end,
+        "columns": [str(column) for column in panel.columns],
+        "fingerprint": _panel_fingerprint(panel),
+    }
+
+
+def _calendar_identity(calendar: Any) -> dict[str, Any]:
+    if not isinstance(calendar, pd.DatetimeIndex) or calendar.empty:
+        return {"start": None, "end": None, "n_origins": 0, "frequency": None}
+    frequency = calendar.freqstr
+    if frequency is None:
+        try:
+            frequency = pd.infer_freq(calendar)
+        except ValueError:
+            frequency = None
+    return {
+        "start": calendar[0].isoformat(),
+        "end": calendar[-1].isoformat(),
+        "n_origins": int(len(calendar)),
+        "frequency": frequency,
     }
 
 
@@ -1216,11 +1491,7 @@ def _reference_calendar_summary(spec: PipelineSpec) -> dict[str, Any] | None:
     calendar = getattr(spec.data, "reference_calendar", None)
     if not isinstance(calendar, pd.DatetimeIndex) or calendar.empty:
         return None
-    return {
-        "start": calendar[0].isoformat(),
-        "end": calendar[-1].isoformat(),
-        "n_origins": int(len(calendar)),
-    }
+    return _calendar_identity(calendar)
 
 
 def _compact_vintage_map_summary(

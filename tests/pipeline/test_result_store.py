@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
+import macroforecast.pipeline.result_store as result_store_mod
 from macroforecast.pipeline import Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline
 from macroforecast.pipeline.result_store import result_cell_identity
 from macroforecast.pipeline.run import _data_identity
@@ -196,6 +197,139 @@ def test_result_store_digest_sensitivity_oracle(tmp_path):
         data_identity=_data_identity(base.data),
     )
     assert vintage_identity.digest != identity.digest
+
+
+def test_result_store_vintage_content_refresh_recomputes(tmp_path):
+    class MutableVintageSource:
+        kind = "mutable_vintage"
+
+        def __init__(self) -> None:
+            self.bump = 0.0
+
+        def available_vintages(self):
+            return ("2006-01-31",)
+
+        def resolve(self, origin_date):
+            bundle = _bundle(bump=self.bump)
+            panel = bundle.panel.loc[bundle.panel.index < pd.Timestamp(origin_date)]
+            metadata = {**bundle.metadata, "vintage": "2006-01-31"}
+            return mf.data.DataBundle(panel, metadata)
+
+    source = MutableVintageSource()
+    spec = pipeline_spec(
+        data=mf.data.VintagePanelSpec(
+            source,
+            pd.date_range("2000-01-31", periods=72, freq="ME"),
+        ),
+        targets=[TargetSpec("y", transform="level", policy="direct")],
+        horizons=[1],
+        window=_window(),
+        arms=[Arm("A", model=_recording_model(), features=_features())],
+        evaluation=EvalSpec(benchmark="A", metrics=("rmse",)),
+        save_models=False,
+        result_store=tmp_path / "results",
+    )
+
+    first = run_pipeline(spec)
+    unchanged = run_pipeline(spec)
+    assert first.provenance["result_store"]["n_computed"] == 1
+    assert unchanged.provenance["result_store"]["n_reused"] == 1
+
+    source.bump = 5.0
+    refreshed = run_pipeline(spec)
+    assert refreshed.provenance["result_store"]["n_reused"] == 0
+    assert refreshed.provenance["result_store"]["n_computed"] == 1
+
+
+def test_result_store_callable_vintage_source_requires_digest_opt_in(tmp_path):
+    class CallableOnlyVintageSource:
+        kind = "callable_only"
+
+        def available_vintages(self):
+            return ()
+
+        def resolve(self, origin_date):
+            bundle = _bundle()
+            metadata = {**bundle.metadata, "vintage": "live"}
+            return mf.data.DataBundle(bundle.panel, metadata)
+
+    source = CallableOnlyVintageSource()
+    spec = pipeline_spec(
+        data=mf.data.VintagePanelSpec(
+            source,
+            pd.date_range("2000-01-31", periods=72, freq="ME"),
+        ),
+        targets=[TargetSpec("y", transform="level", policy="direct")],
+        horizons=[1],
+        window=_window(),
+        arms=[Arm("A", model=_recording_model(), features=_features())],
+        evaluation=EvalSpec(benchmark="A", metrics=("rmse",)),
+        save_models=False,
+        result_store=tmp_path / "results",
+    )
+
+    identity = result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+    assert identity.digest is None
+    assert "available_vintages" in str(identity.reason)
+
+    source.__mf_digest__ = "callable-source-v1"
+    digestible = result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+    assert digestible.digest is not None
+
+
+def test_result_store_digest_includes_backend_version_and_effective_seed(monkeypatch, tmp_path):
+    base = _spec(tmp_path, arms=[Arm("A", model="ridge", features=_features())])
+
+    versions = {"scikit-learn": "1.0"}
+    real_version = result_store_mod._metadata.version
+
+    def _fake_version(package: str) -> str:
+        return versions.get(package, real_version(package))
+
+    monkeypatch.setattr(result_store_mod._metadata, "version", _fake_version)
+    with mf.meta.use_config(random_seed=11):
+        first = result_cell_identity(
+            base,
+            base.arms[0],
+            base.targets[0],
+            horizon=1,
+            data_identity=_data_identity(base.data),
+        )
+    versions["scikit-learn"] = "2.0"
+    with mf.meta.use_config(random_seed=11):
+        changed_backend = result_cell_identity(
+            base,
+            base.arms[0],
+            base.targets[0],
+            horizon=1,
+            data_identity=_data_identity(base.data),
+        )
+    versions["scikit-learn"] = "1.0"
+    with mf.meta.use_config(random_seed=99):
+        changed_seed = result_cell_identity(
+            base,
+            base.arms[0],
+            base.targets[0],
+            horizon=1,
+            data_identity=_data_identity(base.data),
+        )
+
+    assert changed_backend.digest != first.digest
+    assert changed_seed.digest != first.digest
+    assert first.cell_echo["backend_versions"]["packages"]["scikit-learn"] == "1.0"
+    assert first.cell_echo["effective_selection_seed"] == 11
 
 
 def test_result_store_custom_callable_requires_digest_opt_in(tmp_path):

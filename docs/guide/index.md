@@ -155,6 +155,14 @@ Expanding, rolling, and no-validation windows; retrain and retune cadence.
 RMSE, relative MSE, relative RMSE, DM/CW tests, and the Model Confidence Set.
 :::
 
+:::{grid-item-card} Paper Figures
+:link: figures
+:link-type: doc
+
+CSSED, Giacomini-Rossi fluctuation, PIT, and forecast-path exhibits from a
+`PipelineReport`.
+:::
+
 :::{grid-item-card} Your Data, Your Model, One Table
 :link: custom_data_tutorial
 :link-type: doc
@@ -179,5 +187,6 @@ model_policy_matrix
 concepts/windows
 concepts/running
 concepts/evaluation
+figures
 custom_data_tutorial
 ```

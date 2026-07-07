@@ -114,7 +114,7 @@ Qualified name: `macroforecast.pipeline.rescore.rescore`
 #### Signature
 
 ```python
-macroforecast.pipeline.rescore(checkpoint_dir: str | Path, spec: "'Any'") -> "'Any'"
+macroforecast.pipeline.rescore(checkpoint_dir: str | Path, spec: "'Any'", *, allow_stale: bool = False) -> "'Any'"
 ```
 
 #### Description
@@ -141,6 +141,11 @@ spec:
     from ``checkpoint_dir`` regardless of what ``spec.checkpoint_dir`` says.
     Every field that determines a cell's identity (targets, arms, horizons)
     must match the original run, or cells will not be found.
+allow_stale:
+    By default, checkpoint cells that carry a manifest are reused only when
+    the current spec/data identity digest matches the stored digest. Set
+    ``allow_stale=True`` to intentionally score stale checkpoint cells after
+    changing a model, feature, preprocessing, or data identity.
 
 Returns
 PipelineReport
@@ -171,6 +176,8 @@ ValueError
     If no cell under ``checkpoint_dir`` yields any checkpoint records at all
     (an empty or entirely-mismatched directory) -- a clear, actionable error
     instead of a silently-empty report.
+    Also raised when manifest-bearing checkpoint cells do not match the
+    current spec identity and ``allow_stale`` is false.
 
 #### Parameters
 
@@ -178,6 +185,7 @@ ValueError
 | --- | --- | --- | --- |
 | `checkpoint_dir` | positional or keyword | `str \| Path` | `required` |
 | `spec` | positional or keyword | `'Any'` | `required` |
+| `allow_stale` | keyword only | `bool` | `False` |
 
 #### Returns
 

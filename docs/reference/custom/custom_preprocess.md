@@ -27,6 +27,17 @@ and optional custom preprocessing steps. Stage timing and metadata are not
 accepted here; they are supplied later through ``PreprocessSpec.fit(...)``
 or by the forecasting/pipeline runner.
 
+Custom preprocessing callables are safe for in-memory use. Disk-backed
+preprocessing caches require a stable callable identity: use named
+functions and set ``func.__mf_digest__`` whenever cached reuse should span
+processes or runs. Anonymous lambdas without ``__mf_digest__`` are rejected
+because they cannot be distinguished by a stable content identity.
+
+With ``policy="fit_window"``, custom steps are re-executed on the apply
+window at each origin. Those steps must be row-local/stateless; a custom
+step that computes statistics from its whole input can read post-origin
+rows and leak future information.
+
 Returns
 PreprocessSpec
     Frozen preprocessing configuration. Call ``fit(data)`` to get a
@@ -109,6 +120,11 @@ macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[...
 #### Description
 
 Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``.
+
+For disk-backed preprocessing caches, set ``func.__mf_digest__`` to a stable
+string and update it when the callable's behavior changes. Without that
+opt-in digest, the runner skips disk get/put for specs containing the
+callable and recomputes instead of risking stale reuse.
 
 #### Parameters
 

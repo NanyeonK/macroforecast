@@ -45,11 +45,15 @@ import json
 import os
 import pickle
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+
+class UndigestiblePreprocessorSpec(Exception):
+    """Raised when a preprocessing spec is unsafe for disk-cache identity."""
 
 
 class PreprocessorStore:
@@ -95,18 +99,10 @@ class PreprocessorStore:
                 "origin_pos": origin_pos,
             }
 
-        ``prep_spec.to_dict()`` already converts the options dict to a
-        JSON-ready form (callables become qualified name strings, tuples
-        become lists), so ``json.dumps(..., sort_keys=True)`` is stable across
-        Python runs.
-
-        Caveat: a callable carried in the spec (e.g. a ``custom_steps`` entry)
-        is identified only by its qualified name, so two DIFFERENT anonymous
-        ``lambda`` callables both serialise to ``<module>.<lambda>`` and would
-        share a key. Use named module-level functions in ``custom_steps`` to
-        guarantee distinct keys. The standard pipeline specs (impute /
-        standardize / transform / outliers options) carry no anonymous
-        callables and are unaffected.
+        The disk identity path refuses user callables unless they carry an
+        explicit ``__mf_digest__``. Qualified names alone are not content
+        identity: editing a named function in place must not replay stale fitted
+        preprocessors or prepared-base panels from a previous run.
 
         Second caveat: the key does NOT independently encode the ``fit_policy``
         (``origin_available`` vs ``fit_window``) used when calling
@@ -139,7 +135,7 @@ class PreprocessorStore:
             64-character lowercase hex digest.
         """
         payload: dict[str, Any] = {
-            "spec": prep_spec.to_dict(),
+            "spec": _disk_spec_identity(prep_spec),
             "target": str(target),
             "origin_pos": int(origin_pos),
         }
@@ -167,7 +163,7 @@ class PreprocessorStore:
 
         payload: dict[str, Any] = {
             "kind": str(kind),
-            "spec": prep_spec.to_dict(),
+            "spec": _disk_spec_identity(prep_spec),
             "target": str(target),
             "cache_key": _json_ready(cache_key),
         }
@@ -373,6 +369,49 @@ def _json_ready(value: Any) -> Any:
     except TypeError:
         return str(value)
     return value
+
+
+def _disk_spec_identity(prep_spec: Any) -> dict[str, Any]:
+    options = getattr(prep_spec, "options", None)
+    if isinstance(options, Mapping):
+        return {"options": _json_ready_for_disk(dict(options), path="preprocessing.options")}
+    if hasattr(prep_spec, "to_dict"):
+        return _json_ready_for_disk(prep_spec.to_dict(), path="preprocessing")
+    return _json_ready_for_disk(prep_spec, path="preprocessing")
+
+
+def _json_ready_for_disk(value: Any, *, path: str) -> Any:
+    if isinstance(value, Mapping):
+        return {
+            str(key): _json_ready_for_disk(item, path=f"{path}.{key}")
+            for key, item in value.items()
+        }
+    if isinstance(value, tuple):
+        return [_json_ready_for_disk(item, path=f"{path}[]") for item in value]
+    if isinstance(value, list):
+        return [_json_ready_for_disk(item, path=f"{path}[]") for item in value]
+    if callable(value):
+        return {
+            "callable": _callable_name(value),
+            "mf_digest": _callable_digest(value, path=path),
+        }
+    return _json_ready(value)
+
+
+def _callable_digest(func: Callable[..., Any], *, path: str) -> str:
+    marker = getattr(func, "__mf_digest__", None)
+    if marker is not None:
+        return str(marker)
+    raise UndigestiblePreprocessorSpec(
+        f"{path} is a custom preprocessing callable without __mf_digest__; "
+        "skipping disk preprocessing cache tiers for this spec"
+    )
+
+
+def _callable_name(func: Callable[..., Any]) -> str:
+    module = getattr(func, "__module__", "")
+    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    return f"{module}.{qualname}" if module else str(qualname)
 
 
 __all__ = ["PreprocessorStore"]

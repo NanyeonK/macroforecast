@@ -9,6 +9,7 @@ from __future__ import annotations
 import dataclasses as _dc
 import base64
 import hashlib
+import importlib.metadata as _metadata
 import json
 import os
 import pickle
@@ -63,9 +64,12 @@ def result_cell_identity(
 
     data_fingerprint = data_identity.get("fingerprint")
     try:
+        _assert_digestible_data_fingerprint(data_fingerprint)
         effective_features = _retargeted_features(arm.features, target.name)
         payload: dict[str, Any] = {
             "data_fingerprint": _json_ready(data_fingerprint),
+            "effective_selection_seed": _effective_selection_seed(),
+            "backend_versions": _backend_versions(arm.model, params=arm.params),
             "target": {
                 "name": target.name,
                 "transform": target.transform,
@@ -396,6 +400,91 @@ def _model_identity(model: Any, *, params: Mapping[str, Any] | None) -> dict[str
 
 def _model_preset(model: Any) -> Any:
     return getattr(model, "preset", None) or getattr(model, "default_preset", None)
+
+
+def _assert_digestible_data_fingerprint(fingerprint: Any) -> None:
+    if isinstance(fingerprint, Mapping) and fingerprint.get("method") == "undigestible":
+        reason = fingerprint.get("reason") or "data fingerprint is undigestible"
+        raise _UndigestibleCell(str(reason))
+
+
+def _effective_selection_seed() -> int | None:
+    from macroforecast.meta import get_config
+
+    return get_config()["random_seed"]
+
+
+def _backend_versions(model: Any, *, params: Mapping[str, Any] | None) -> dict[str, Any]:
+    spec = _model_spec_for_backend(model, params=params)
+    backend = str(getattr(spec, "backend", "")) if spec is not None else ""
+    family = str(getattr(spec, "family", "")) if spec is not None else ""
+    packages = _backend_packages(backend=backend, family=family)
+    return {
+        "model": getattr(spec, "name", _callable_name(model) if callable(model) else str(model)),
+        "family": family or None,
+        "backend": backend or None,
+        "packages": {package: _package_version(package) for package in packages},
+    }
+
+
+def _model_spec_for_backend(model: Any, *, params: Mapping[str, Any] | None) -> Any | None:
+    try:
+        from macroforecast.models import ModelSpec
+        from macroforecast.models.specs import get_model
+    except ImportError:
+        return None
+    if isinstance(model, str):
+        return get_model(model, params=params)
+    if isinstance(model, ModelSpec):
+        return model.with_params(**dict(params or {})) if params else model
+    if callable(model):
+        try:
+            return get_model(model, params=params)
+        except (TypeError, ValueError, KeyError):
+            return None
+    return None
+
+
+_BACKEND_PACKAGE_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("xgboost", ("xgboost",)),
+    ("lightgbm", ("lightgbm",)),
+    ("catboost", ("catboost",)),
+    ("torch", ("torch",)),
+    ("arch.", ("arch",)),
+    ("statsmodels", ("statsmodels",)),
+    ("sklearn", ("scikit-learn",)),
+    ("scipy", ("scipy",)),
+)
+
+_FAMILY_BACKEND_PACKAGES: Mapping[str, tuple[str, ...]] = {
+    "tree": ("scikit-learn",),
+    "support_vector": ("scikit-learn",),
+    "nonparametric": ("scikit-learn",),
+    "linear": ("scikit-learn",),
+    "factor": ("numpy",),
+    "timeseries": ("statsmodels",),
+    "volatility": ("arch",),
+    "neural": ("torch",),
+}
+
+
+def _backend_packages(*, backend: str, family: str) -> tuple[str, ...]:
+    found: list[str] = []
+    lowered = backend.lower()
+    for marker, packages in _BACKEND_PACKAGE_MARKERS:
+        if marker in lowered:
+            found.extend(packages)
+    if not found:
+        found.extend(_FAMILY_BACKEND_PACKAGES.get(family, ()))
+    # Stable de-duplication without changing declared package order.
+    return tuple(dict.fromkeys(found))
+
+
+def _package_version(package: str) -> str | None:
+    try:
+        return _metadata.version(package)
+    except _metadata.PackageNotFoundError:
+        return None
 
 
 def _feature_identity(features: Any) -> Any:

@@ -47,6 +47,13 @@ FRED-MD, FRED-QD, FRED-SD, and combined loaders.
 Published paper replication studies.
 :::
 
+:::{grid-item-card} {octicon}`graph;1.5em;sd-mr-1` Paper Figures
+:link: guide/figures
+:link-type: doc
+
+CSSED, fluctuation, PIT, and forecast-path exhibits.
+:::
+
 :::{grid-item-card} {octicon}`tools;1.5em;sd-mr-1` Custom Extensions
 :link: reference/custom/index
 :link-type: doc
@@ -68,6 +75,13 @@ Workflow reference grouped by responsibility.
 Definitions of every core abstraction.
 :::
 
+:::{grid-item-card} {octicon}`quote;1.5em;sd-mr-1` Citing
+:link: guide/citing
+:link-type: doc
+
+Citation metadata for papers, reports, and replication packages.
+:::
+
 ::::
 
 ```{toctree}
@@ -77,6 +91,8 @@ guide/index
 guide/model_overview
 datasets/index
 guide/gallery
+guide/figures
 reference/index
 guide/glossary
+guide/citing
 ```

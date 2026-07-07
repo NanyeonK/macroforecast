@@ -24,7 +24,7 @@ cd macroforecast
 pip install -e ".[dev]"
 ```
 
-Useful extras: `parquet`, `xgboost`, `lightgbm`, `catboost`, `arch`,
+Useful extras: `parquet`, `xgboost`, `lightgbm`, `catboost`, `arch`, `plots`,
 `macro_random_forest`, `interpretation`, `deep`, `docs`, `typecheck`,
 `markdown`, `ci`, `dev`, and `all`.
 

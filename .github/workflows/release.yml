@@ -2,15 +2,15 @@ name: release
 
 # PyPI publish via API token (PYPI_API_TOKEN secret in repo settings).
 # Triggered manually via GitHub Actions "Run workflow" UI.
-# User must type the version string (e.g. 0.9.3) before triggering;
+# User must type the version string with a leading "v" (e.g. v0.9.5)
+# before triggering; the workflow validates it against pyproject.toml.
 # tag push alone no longer publishes to PyPI.
 #
 # NOTE: the project maintainer owns the ``macroforecast`` PyPI namespace,
-# so a successful tag push publishes the new version to
+# and release publishing is handled by this manual workflow at
 # https://pypi.org/project/macroforecast/. v0.6.0 was the first release
-# under this namespace (the v0.5.x history was published under the old
-# ``macrocast`` GitHub repo and never reached PyPI; v0.5.x tags remain
-# in this repo's history under the original name).
+# under this namespace; v0.5.x tags pre-date the rename and were never
+# published to PyPI.
 #
 # Required: the ``PYPI_API_TOKEN`` secret must be registered in repo
 # Settings → Secrets and variables → Actions, scoped to the
@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to publish (e.g. 0.9.3 or 0.9.3b1)'
+        description: 'Version to publish; vX.Y.Z or vX.Y.Z{a|b|rc}N, must match pyproject.toml (e.g. v0.9.5, v0.9.6b1)'
         required: true
         type: string
 
@@ -28,7 +28,48 @@ permissions:
   contents: read
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+
+      - name: Validate release version input
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          python - <<'PY'
+          import os
+          import pathlib
+          import re
+          import sys
+          import tomllib
+
+          release_version = os.environ["RELEASE_VERSION"].strip()
+          if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?", release_version):
+              sys.exit(
+                  "release version must be vX.Y.Z or a vX.Y.Z{a|b|rc}N pre-release "
+                  f"(got {release_version!r})"
+              )
+
+          project = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
+          package_version = project["project"]["version"]
+          expected = f"v{package_version}"
+          if release_version != expected:
+              sys.exit(
+                  "release version must match pyproject.toml: "
+                  f"input={release_version!r}, expected={expected!r}"
+              )
+
+          print(f"release version OK: {release_version}")
+          PY
+
   build:
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
