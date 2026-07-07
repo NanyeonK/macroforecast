@@ -43,6 +43,20 @@ def test_docgen_module_pages_have_source_declared_exports() -> None:
     assert not missing
 
 
+import pytest
+
+
+@pytest.mark.skipif(
+    sys.version_info[:2] < (3, 11),
+    reason=(
+        "The committed reference tree is generated in the canonical env "
+        "(CPython >= 3.11): 3.10 typing reprs differ structurally "
+        "(e.g. union aliases render tuple[pandas.core.frame.DataFrame, ...] "
+        "instead of tuple[pandas.DataFrame, ...], and typing.NewType-style "
+        "symbols classify as callable instead of class), so byte-identity "
+        "cannot hold there. 3.10 still runs the env-invariant self-checks."
+    ),
+)
 def test_docgen_check_passes_on_committed_reference_tree() -> None:
     result = subprocess.run(
         [sys.executable, "-m", "tools.docgen", "--check", "docs/reference"],
