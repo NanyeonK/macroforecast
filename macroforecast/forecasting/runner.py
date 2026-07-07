@@ -23,6 +23,7 @@ from macroforecast.data import (
 )
 from macroforecast.feature_engineering import FeatureSet, FeatureSpec, FittedFeatureBuilder
 from macroforecast.meta import get_config
+from macroforecast.meta.config import _get_pipeline_arm_alias, _get_pipeline_random_seed
 from macroforecast.models import ModelSpec
 from macroforecast.preprocessing import FittedPreprocessor, PreprocessSpec
 from macroforecast.preprocessing.cache import PreprocessorStore
@@ -262,6 +263,8 @@ def run(
             checkpoint_path=checkpoint_path,
         )
     config = get_config()
+    model_random_seed = _get_pipeline_random_seed()
+    model_random_alias = _get_pipeline_arm_alias()
     # Namespace the checkpoint directory by horizon, mirroring the per-horizon
     # subdirectory that ``_run_multiple_horizons`` appends. Origin positions are
     # horizon-independent, so a single ``checkpoint_path`` reused across distinct
@@ -679,6 +682,8 @@ def run(
                 param_cache=model_param_cache,
                 selection_cache=selection_cache,
                 selection_random_state=config["random_seed"],
+                model_random_seed=model_random_seed,
+                model_random_alias=model_random_alias,
                 save_models=save_models,
                 model_store=model_store,
             ),
@@ -913,6 +918,8 @@ def _run_feature_set(
                     param_cache=model_param_cache,
                     selection_cache=selection_cache,
                     selection_random_state=config["random_seed"],
+                    model_random_seed=_get_pipeline_random_seed(),
+                    model_random_alias=_get_pipeline_arm_alias(),
                     save_models=save_models,
                     model_store=model_store,
                 ),
@@ -1066,6 +1073,8 @@ def _run_panel_models(
                 selection=selection,
                 selection_policy=selection_policy,
                 preprocessed=preprocessing is not None,
+                model_random_seed=_get_pipeline_random_seed(),
+                model_random_alias=_get_pipeline_arm_alias(),
                 save_models=save_models,
                 model_store=model_store,
                 forecast_policy=forecast_policy,
@@ -1473,6 +1482,8 @@ def _run_vintage_aware(
                 param_cache=model_param_cache,
                 selection_cache=selection_cache,
                 selection_random_state=config["random_seed"],
+                model_random_seed=_get_pipeline_random_seed(),
+                model_random_alias=_get_pipeline_arm_alias(),
                 save_models=save_models,
                 model_store=model_store,
             ),
@@ -1694,6 +1705,8 @@ def _run_vintage_panel_models(
             selection=selection,
             selection_policy=selection_policy,
             preprocessed=preprocessing is not None,
+            model_random_seed=_get_pipeline_random_seed(),
+            model_random_alias=_get_pipeline_arm_alias(),
             save_models=save_models,
             model_store=model_store,
             forecast_policy=forecast_policy,

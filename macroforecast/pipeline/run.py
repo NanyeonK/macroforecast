@@ -14,6 +14,7 @@ import re
 import tempfile
 import dataclasses as _dc
 from collections.abc import Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Mapping, NamedTuple
 
@@ -30,6 +31,14 @@ from macroforecast.pipeline.spec import (
 from macroforecast.pipeline.result_store import ResultCellIdentity, ResultStore, result_cell_identity
 
 
+_BLAS_THREAD_ENV_VARS = (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+)
+_WORKER_DATA_BY_TOKEN: dict[str, Any] = {}
 def _safe_segment(value: str) -> str:
     """Make a target/arm name safe to use as a single filesystem path segment."""
     return re.sub(r"[^0-9A-Za-z._-]+", "_", str(value)).strip("_") or "x"
@@ -415,45 +424,86 @@ def _execute_cell(
         # shared-spec arms. The namespace additionally isolates arms/specs that
         # resolve to a different effective preprocessing_policy.
         store = PreprocessorStore(spec.preprocessing_cache_dir, namespace=namespace)
-    return _run_one_arm_target(
-        spec, arm, target,
-        preprocessing_cache=preprocessing_cache,
-        preprocessing_store=store,
-        horizons=list(cell.horizons),
-    )
+    from macroforecast.meta.config import _use_pipeline_arm_alias
+
+    with _use_pipeline_arm_alias(arm.name):
+        return _run_one_arm_target(
+            spec, arm, target,
+            preprocessing_cache=preprocessing_cache,
+            preprocessing_store=store,
+            horizons=list(cell.horizons),
+        )
+
+
+def _cap_worker_blas_threads() -> None:
+    for var in _BLAS_THREAD_ENV_VARS:
+        os.environ[var] = "1"
+
+
+def _parallel_worker_initializer(
+    data_token: str,
+    data: Any,
+    model_threads: int,
+    seed: int | None,
+) -> None:
+    """Initialize one process-pool worker before any forecast task executes."""
+
+    _cap_worker_blas_threads()
+    _WORKER_DATA_BY_TOKEN[str(data_token)] = data
+
+    import macroforecast as mf
+    from macroforecast.meta.config import _set_pipeline_random_seed
+
+    mf.meta.configure(n_jobs=int(model_threads), random_seed=seed)
+    _set_pipeline_random_seed(seed)
+
+
+def _parallel_worker_probe() -> dict[str, Any]:
+    """Return worker initializer state for tests."""
+
+    from macroforecast.meta import get_config
+    from macroforecast.meta.config import _get_pipeline_random_seed
+
+    return {
+        "blas_env": {var: os.environ.get(var) for var in _BLAS_THREAD_ENV_VARS},
+        "n_jobs": get_config()["n_jobs"],
+        "random_seed": get_config()["random_seed"],
+        "pipeline_seed": _get_pipeline_random_seed(),
+        "data_tokens": sorted(_WORKER_DATA_BY_TOKEN),
+    }
+
+
+def _spec_with_worker_data(spec: PipelineSpec, data_token: str) -> PipelineSpec:
+    if data_token not in _WORKER_DATA_BY_TOKEN:
+        raise RuntimeError(f"worker data token {data_token!r} was not initialized")
+    return _dc.replace(spec, data=_WORKER_DATA_BY_TOKEN[data_token])
 
 
 def _parallel_cell_worker(
-    args: "tuple[PipelineSpec, _Cell]",
+    args: "tuple[PipelineSpec, _Cell, str]",
 ) -> "tuple[_Cell, pd.DataFrame | None, str | None]":
     """Module-level worker: execute ONE cell (its single ``run()``) in a subprocess,
     returning any error text.
 
-    Caps nested BLAS/OpenMP threads to one so a pool of ``n_jobs`` processes does
-    not oversubscribe the cores. Returns ``(cell, frame, error)`` where exactly one
-    of ``frame``/``error`` is set, so the parent isolates per-cell failures.
+    Worker initialization caps nested BLAS/OpenMP threads and installs the shared
+    data payload once per process. Task payloads carry only a data-less spec plus
+    the cell identity. Returns ``(cell, frame, error)`` where exactly one of
+    ``frame``/``error`` is set, so the parent isolates per-cell failures.
     """
-    for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-                "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
-        os.environ.setdefault(var, "1")
-    spec, cell = args
-    # Pin this worker's model-internal thread budget from the AUTO allocator so the
-    # parallelizable models (RF/GBM/XGB/LGBM) inside the cell use exactly
-    # spec.model_threads threads -- using the leftover cores while keeping
-    # cell_workers * model_threads <= cores (no oversubscription). Only changes the
-    # thread COUNT, never the numerical result (tree training is deterministic in
-    # random_state regardless of n_jobs). This runs in the worker's own process, so
-    # it does not touch the parent's meta config.
-    import macroforecast as mf
-
-    mf.meta.configure(n_jobs=int(spec.model_threads))
+    spec_without_data, cell, data_token = args
     try:
+        spec = _spec_with_worker_data(spec_without_data, data_token)
         # No in-memory cache across processes (preprocessing_cache=None); each cell
         # recomputes its own preprocessing unless spec.preprocessing_cache_dir is set,
         # in which case _execute_cell builds an on-disk PreprocessorStore the workers
         # share so each per-(spec, target, origin) fit is computed once overall.
         return cell, _execute_cell(spec, cell, preprocessing_cache=None), None
-    except Exception as exc:  # isolate the failure; the parent records it
+    except Exception as exc:
+        # Sanctioned broad boundary: per-cell isolation must match the serial
+        # path exactly (which also catches Exception) -- a custom model raising
+        # a user-defined exception type must fail its OWN cell, not the whole
+        # n_jobs run. The failure is recorded with its type and surfaced by the
+        # failed-cell warnings.
         return cell, None, f"{type(exc).__name__}: {exc}"
 
 
@@ -666,6 +716,54 @@ def _warn_result_store_version_mismatches(metadata: Mapping[str, Any] | None) ->
     )
 
 
+@contextmanager
+def _pipeline_seed_context(spec: PipelineSpec):
+    from macroforecast.meta import use_config
+    from macroforecast.meta.config import _use_pipeline_random_seed
+
+    with use_config(random_seed=spec.seed), _use_pipeline_random_seed(spec.seed):
+        yield
+
+
+def _result_store_model_count(spec: PipelineSpec, cells: Sequence[_Cell]) -> int:
+    return int(sum(len(cell.horizons) for cell in cells))
+
+
+def _projected_origin_count(spec: PipelineSpec) -> int | None:
+    index = (
+        getattr(spec.data, "reference_calendar", None)
+        if is_vintage_aware(spec)
+        else _panel_index(spec.data)
+    )
+    if not isinstance(index, pd.DatetimeIndex):
+        return None
+    try:
+        return sum(1 for _ in spec.window.iter_origins(index))
+    except (AttributeError, TypeError, ValueError, KeyError, IndexError):
+        return None
+
+
+def _warn_large_model_store(spec: PipelineSpec, cells: Sequence[_Cell]) -> None:
+    if not spec.save_models:
+        return
+    n_origins = _projected_origin_count(spec)
+    if n_origins is None:
+        return
+    n_fits = _result_store_model_count(spec, cells) * int(n_origins)
+    if n_fits <= 5_000:
+        return
+    import warnings as _warnings
+
+    _warnings.warn(
+        "save_models=True is projected to write "
+        f"{n_fits:,} model fits ({n_fits * 2:,} files: pickle + JSON metadata) "
+        f"under {spec.model_store!r}; pass save_models=False or purge old fits "
+        "with mf.pipeline.purge_model_store(...).",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
 def _run_cells(
     spec: PipelineSpec,
 ) -> "tuple[pd.DataFrame, list[dict[str, Any]], list[dict[str, Any]], dict[str, Any] | None]":
@@ -683,6 +781,7 @@ def _run_cells(
     result_store_metadata = _empty_result_store_metadata(spec)
     if not cells:
         return pd.DataFrame(), [], [], result_store_metadata
+    _warn_large_model_store(spec, cells)
 
     # Auto-manage a run-scoped on-disk preprocessing cache dir when the caller
     # left preprocessing_cache_dir unset and n_jobs>1 (see _resolve_run_cache_dir).
@@ -722,9 +821,21 @@ def _run_cells(
             # only, not output.
             if pending_cells:
                 dispatch = _lpt_dispatch_order(spec, pending_cells)
-                with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                data_token = f"{os.getpid()}:{id(spec)}:{len(pending_cells)}"
+                spec_payload = _dc.replace(spec, data=None)
+                with ProcessPoolExecutor(
+                    max_workers=max_workers,
+                    initializer=_parallel_worker_initializer,
+                    initargs=(
+                        data_token,
+                        spec.data,
+                        int(spec.model_threads),
+                        spec.seed,
+                    ),
+                ) as executor:
                     for cell, frame, error in executor.map(
-                        _parallel_cell_worker, [(spec, c) for c in dispatch]
+                        _parallel_cell_worker,
+                        [(spec_payload, c, data_token) for c in dispatch],
                     ):
                         if error is not None:
                             failed.append(_cell_failure(spec, cell, error))
@@ -870,7 +981,8 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     Per-cell failures are isolated -- see :func:`run_pipeline` /
     ``PipelineReport.failed_cells`` for how they are surfaced.
     """
-    master, _failed, _empty, _result_store = _run_cells(spec)
+    with _pipeline_seed_context(spec):
+        master, _failed, _empty, _result_store = _run_cells(spec)
     return master
 
 
@@ -1296,6 +1408,63 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
     }
 
 
+def _effective_seed_metadata(spec: PipelineSpec) -> dict[str, Any]:
+    from macroforecast.forecasting.model_resolution import _resolve_model_runs
+    from macroforecast.meta.config import _derive_random_state
+
+    arm_seeds: dict[str, Any] = {}
+    for arm in spec.arms:
+        try:
+            model_runs = _resolve_model_runs(arm.model, preset=None, params=arm.params)
+        except (TypeError, ValueError, ImportError) as exc:
+            arm_seeds[arm.name] = {
+                "source": "unavailable",
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+            continue
+        records: list[dict[str, Any]] = []
+        for model_run in model_runs:
+            model_spec = model_run.spec
+            if "random_state" not in model_spec.default_params:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": None,
+                        "source": "not_applicable",
+                    }
+                )
+            elif "random_state" in model_spec.params:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": model_spec.params.get("random_state"),
+                        "source": "explicit_param",
+                    }
+                )
+            elif spec.seed is None:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": None,
+                        "source": "disabled",
+                    }
+                )
+            else:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": _derive_random_state(spec.seed, arm.name),
+                        "source": "derived_from_pipeline_seed",
+                    }
+                )
+        arm_seeds[arm.name] = records[0] if len(records) == 1 else records
+    return {
+        "spec_seed": spec.seed,
+        "selection_seed": spec.seed,
+        "model_random_states": arm_seeds,
+    }
+
+
 def _merge_vintage_boundary_audits(audits: Any) -> dict[str, Any]:
     records = [dict(audit) for audit in audits if isinstance(audit, Mapping)]
     violations: list[dict[str, Any]] = []
@@ -1442,6 +1611,7 @@ def _audit(
     # content fingerprint), and WHAT WAS ASKED FOR (a plain echo of the
     # resolved spec's key choices) -- see the module-level comment above.
     if getattr(spec, "provenance_level", "full") == "full":
+        provenance["effective_seeds"] = _effective_seed_metadata(spec)
         provenance["environment"] = _environment_provenance()
         provenance["data"] = _data_identity(spec.data)
         provenance["spec_echo"] = _spec_echo(spec)
@@ -1503,18 +1673,19 @@ def run_pipeline(spec: PipelineSpec):
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.spec import PipelineReport
 
-    master, failed_cells, empty_cells, result_store_metadata = _run_cells(spec)
-    results = evaluate(master, spec)
-    provenance, leakage = _audit(
-        spec,
-        execution_metadata={
-            "vintage_boundary_audits": master.attrs.get(
-                "macroforecast_vintage_boundary_audits"
-            ),
-            "vintage_sources": master.attrs.get("macroforecast_vintage_sources"),
-            "result_store": result_store_metadata,
-        },
-    )
+    with _pipeline_seed_context(spec):
+        master, failed_cells, empty_cells, result_store_metadata = _run_cells(spec)
+        results = evaluate(master, spec)
+        provenance, leakage = _audit(
+            spec,
+            execution_metadata={
+                "vintage_boundary_audits": master.attrs.get(
+                    "macroforecast_vintage_boundary_audits"
+                ),
+                "vintage_sources": master.attrs.get("macroforecast_vintage_sources"),
+                "result_store": result_store_metadata,
+            },
+        )
     # Mirror per-cell failures and zero-row cells into the leakage audit so any
     # consumer that reads only the audit still sees that some arms failed to run or
     # that some (target, horizon) cells silently produced no forecasts.

@@ -29,6 +29,7 @@ from macroforecast.forecasting.model_resolution import (
 from macroforecast.forecasting.policies.base import (
     _prediction_series,
     _store_model_fit,
+    _with_derived_random_state,
 )
 from macroforecast.forecasting.policy_config import ForecastPolicy
 from macroforecast.forecasting.selection_stage import _selection_for_model
@@ -45,6 +46,8 @@ def forecast_panel_origin(
     selection: SearchSpec | Mapping[str, SearchSpec | None] | None,
     selection_policy: StagePolicy,
     preprocessed: bool,
+    model_random_seed: int | None,
+    model_random_alias: str | None,
     save_models: bool,
     model_store: str | Path,
     forecast_policy: ForecastPolicy,
@@ -62,6 +65,12 @@ def forecast_panel_origin(
             target=target,
             forecast_policy=forecast_policy,
             horizon=requested_horizon,
+        )
+        best_params = _with_derived_random_state(
+            model_spec,
+            best_params,
+            seed=model_random_seed,
+            alias=model_random_alias or model_run.alias,
         )
         fit_params = _actual_model_params(model_spec, best_params)
         fit = model_spec(DataBundle(fit_panel, dict(metadata)), **best_params)

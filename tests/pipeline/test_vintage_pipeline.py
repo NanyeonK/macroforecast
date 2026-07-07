@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import json
+import pickle
 
 import pandas as pd
 import pandas.testing as pdt
@@ -317,6 +319,19 @@ def test_vintage_pipeline_parallel_equals_serial() -> None:
             ]
         ],
     )
+
+
+def test_vintage_parallel_task_payload_omits_data_object() -> None:
+    spec = _spec(n_jobs=2)
+    cell = run_mod._enumerate_cells(spec)[0]
+    token = "payload-probe"
+    slim_spec = dataclasses.replace(spec, data=None)
+
+    old_payload_size = len(pickle.dumps((spec, cell)))
+    new_payload_size = len(pickle.dumps((slim_spec, cell, token)))
+
+    assert slim_spec.data is None
+    assert new_payload_size < old_payload_size
 
 
 def test_vintage_parallel_uses_vintage_namespaced_preprocessing_store(tmp_path) -> None:

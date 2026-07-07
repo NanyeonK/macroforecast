@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.models import ModelSpec, save_fit
+from macroforecast.meta.config import _derive_random_state
 
 from macroforecast.model_selection import (
     SearchSpec,
@@ -51,6 +52,8 @@ class _OriginRunConfig:
     param_cache: dict[str, dict[str, Any]]
     selection_cache: dict[str, Any]
     selection_random_state: int | None
+    model_random_seed: int | None
+    model_random_alias: str | None
     save_models: bool
     model_store: "str | Path"
 
@@ -216,6 +219,12 @@ def _fit_one_model_at_origin(
     call_params = (
         {**best_params, "direct": True} if direct_capable_flag else best_params
     )
+    call_params = _with_derived_random_state(
+        model_spec,
+        call_params,
+        seed=cfg.model_random_seed,
+        alias=cfg.model_random_alias or model_run.alias,
+    )
     fit_params = _actual_model_params(model_spec, call_params)
     fit = model_spec(X_fit, y_fit, **call_params)
     stored_model = (
@@ -243,6 +252,29 @@ def _fit_one_model_at_origin(
         stored_model=stored_model,
         prediction=prediction,
     )
+
+
+def _with_derived_random_state(
+    model_spec: ModelSpec,
+    params: Mapping[str, Any],
+    *,
+    seed: int | None,
+    alias: str,
+) -> dict[str, Any]:
+    """Inject a pipeline-derived random_state only when no explicit value exists."""
+
+    resolved = dict(params)
+    if (
+        seed is None
+        or "random_state" not in model_spec.default_params
+        or "random_state" in model_spec.params
+        or "random_state" in resolved
+    ):
+        return resolved
+    derived = _derive_random_state(seed, alias)
+    if derived is not None:
+        resolved["random_state"] = derived
+    return resolved
 
 
 # ---------------------------------------------------------------------------
