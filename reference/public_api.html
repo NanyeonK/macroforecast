@@ -51,7 +51,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Custom Extensions" href="custom/index.html" />
+    <link rel="next" title="macroforecast.meta" href="meta.html" />
     <link rel="prev" title="Reference Verification" href="reference_verification.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -400,21 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Public Python API</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
-</ul>
-</details></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
@@ -440,19 +425,34 @@
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Extension Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">Custom Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">Custom Preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">Custom Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, And Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation And Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -516,187 +516,1453 @@
   <section class="tex2jax_ignore mathjax_ignore" id="public-python-api">
 <h1>Public Python API<a class="headerlink" href="#public-python-api" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
-<p>The importable surface is module-based and pandas-first. The table below
-mirrors <code class="docutils literal notranslate"><span class="pre">macroforecast.__all__</span></code>: every symbol listed there should be importable
-from the top-level package. Module-level helpers that are not top-level
-convenience exports are documented on their module reference pages.</p>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast.__version__</span></code>: <code class="docutils literal notranslate"><span class="pre">0.9.5</span></code></p>
+<p>The top-level package uses lazy exports. Attribute access imports the owning semantic module on demand.</p>
 <section id="top-level-exports">
 <h2>Top-Level Exports<a class="headerlink" href="#top-level-exports" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Symbol</p></th>
-<th class="head"><p>Source</p></th>
-<th class="head"><p>Description</p></th>
+<th class="head"><p>Owner</p></th>
+<th class="head"><p>Kind</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">meta</span></code>, <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code>, <code class="docutils literal notranslate"><span class="pre">filters</span></code>, <code class="docutils literal notranslate"><span class="pre">data_analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_diagnostic</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_diagnostic</span></code>, <code class="docutils literal notranslate"><span class="pre">models</span></code>, <code class="docutils literal notranslate"><span class="pre">model_ensemble</span></code>, <code class="docutils literal notranslate"><span class="pre">model_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">forecasting</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluation</span></code>, <code class="docutils literal notranslate"><span class="pre">window</span></code>, <code class="docutils literal notranslate"><span class="pre">interpretation</span></code>, <code class="docutils literal notranslate"><span class="pre">output</span></code>, <code class="docutils literal notranslate"><span class="pre">reporting</span></code></p></td>
-<td><p>package namespaces</p></td>
-<td><p>Top-level module namespaces. <code class="docutils literal notranslate"><span class="pre">feature_diagnostic</span></code> and <code class="docutils literal notranslate"><span class="pre">forecast_diagnostic</span></code> are compatibility aliases for the corresponding analysis modules.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">AlignmentWindow</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">configure</span></code>, <code class="docutils literal notranslate"><span class="pre">get_config</span></code>, <code class="docutils literal notranslate"><span class="pre">get_option</span></code>, <code class="docutils literal notranslate"><span class="pre">reset_config</span></code>, <code class="docutils literal notranslate"><span class="pre">use_config</span></code>, <code class="docutils literal notranslate"><span class="pre">DEFAULT_RANDOM_SEED</span></code>, <code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span></code>, <code class="docutils literal notranslate"><span class="pre">MetadataLevel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></p></td>
-<td><p>Global package defaults and config types.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BaggingRegressor</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataBundle</span></code>, <code class="docutils literal notranslate"><span class="pre">DataSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">VintagePanelSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">VintageSource</span></code>, <code class="docutils literal notranslate"><span class="pre">VintageUnavailableError</span></code>, <code class="docutils literal notranslate"><span class="pre">RegimeDirection</span></code>, <code class="docutils literal notranslate"><span class="pre">SamePeriodPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">as_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">attach_metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_dataset</span></code>, <code class="docutils literal notranslate"><span class="pre">metadata</span></code>, <code class="docutils literal notranslate"><span class="pre">panel_info</span></code>, <code class="docutils literal notranslate"><span class="pre">set_frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">spec</span></code>, <code class="docutils literal notranslate"><span class="pre">validate_panel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></p></td>
-<td><p>Canonical panel, per-origin vintage, and metadata helpers.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BoogingRegressor</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">align_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">chow_lin_disaggregate</span></code>, <code class="docutils literal notranslate"><span class="pre">infer_frequencies</span></code>, <code class="docutils literal notranslate"><span class="pre">frequency_hardening_issues</span></code>, <code class="docutils literal notranslate"><span class="pre">availability_lag</span></code>, <code class="docutils literal notranslate"><span class="pre">same_period_predictors</span></code>, <code class="docutils literal notranslate"><span class="pre">define_regime</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></p></td>
-<td><p>Frequency alignment/inference, Chow-Lin disaggregation, data availability, same-period predictor, and regime metadata policies.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CombinationSpec</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">load_fred_md</span></code>, <code class="docutils literal notranslate"><span class="pre">load_fred_qd</span></code>, <code class="docutils literal notranslate"><span class="pre">load_fred_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">load_fred_md_sd</span></code>, <code class="docutils literal notranslate"><span class="pre">load_fred_qd_sd</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></p></td>
-<td><p>Dataset loaders.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DEFAULT_RANDOM_SEED</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>data</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load_custom_csv</span></code>, <code class="docutils literal notranslate"><span class="pre">load_custom_parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">list_vintages</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_md_vintages</span></code>, <code class="docutils literal notranslate"><span class="pre">fred_qd_vintages</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_vintages</span></code>, <code class="docutils literal notranslate"><span class="pre">with_static_extras</span></code>, <code class="docutils literal notranslate"><span class="pre">combine</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></p></td>
-<td><p>Custom loading, vintage discovery, per-origin vintage sources, static extras, and panel combination.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DataBundle</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reprocess</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_preprocess</span></code>, <code class="docutils literal notranslate"><span class="pre">standardize_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">PreprocessedData</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></p></td>
-<td><p>Direct pandas preprocessing.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DataSpec</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PreprocessSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocess_spec</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_preprocess_step</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></p></td>
-<td><p>Runner-compatible preprocessing fit/transform specs.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EstimationWindow</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code>, <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">FittedFeatureBuilder</span></code>, <code class="docutils literal notranslate"><span class="pre">build_features</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Aligned forecast matrices, metadata, and runner-compatible feature specs.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">direct_target</span></code>, <code class="docutils literal notranslate"><span class="pre">average_target</span></code>, <code class="docutils literal notranslate"><span class="pre">forward_average_target</span></code>, <code class="docutils literal notranslate"><span class="pre">path_targets</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Direct, forward-average, and path target construction.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FeatureSelectionResult</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_matrix</span></code>, <code class="docutils literal notranslate"><span class="pre">compose_features</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Paper-style feature blocks and sequential feature composition.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FeatureSet</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag</span></code>, <code class="docutils literal notranslate"><span class="pre">mixed_frequency_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">moving_average_ladder</span></code>, <code class="docutils literal notranslate"><span class="pre">scale_features</span></code>, <code class="docutils literal notranslate"><span class="pre">pca_features</span></code>, <code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_features</span></code>, <code class="docutils literal notranslate"><span class="pre">varimax_features</span></code>, <code class="docutils literal notranslate"><span class="pre">group_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">maf_features</span></code>, <code class="docutils literal notranslate"><span class="pre">time_features</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_features</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Core direct pandas feature transforms.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transform_features</span></code>, <code class="docutils literal notranslate"><span class="pre">log_features</span></code>, <code class="docutils literal notranslate"><span class="pre">diff_features</span></code>, <code class="docutils literal notranslate"><span class="pre">log_diff_features</span></code>, <code class="docutils literal notranslate"><span class="pre">pct_change_features</span></code>, <code class="docutils literal notranslate"><span class="pre">cumsum_features</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code>, <code class="docutils literal notranslate"><span class="pre">season_dummy</span></code>, <code class="docutils literal notranslate"><span class="pre">fourier_features</span></code>, <code class="docutils literal notranslate"><span class="pre">polynomial_features</span></code>, <code class="docutils literal notranslate"><span class="pre">interaction_features</span></code>, <code class="docutils literal notranslate"><span class="pre">hp_filter_features</span></code>, <code class="docutils literal notranslate"><span class="pre">hamilton_filter_features</span></code>, <code class="docutils literal notranslate"><span class="pre">savitzky_golay_features</span></code>, <code class="docutils literal notranslate"><span class="pre">wavelet_features</span></code>, <code class="docutils literal notranslate"><span class="pre">adaptive_ma_rf_features</span></code>, <code class="docutils literal notranslate"><span class="pre">asymmetric_trim_features</span></code>, <code class="docutils literal notranslate"><span class="pre">rank_space_features</span></code>, <code class="docutils literal notranslate"><span class="pre">moving_average_changes</span></code>, <code class="docutils literal notranslate"><span class="pre">align_reference_weights</span></code>, <code class="docutils literal notranslate"><span class="pre">weighted_aggregate</span></code>, <code class="docutils literal notranslate"><span class="pre">partial_least_squares_features</span></code>, <code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_features</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_features</span></code>, <code class="docutils literal notranslate"><span class="pre">variance_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">correlation_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">lasso_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">rfe_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">stability_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">genetic_selection</span></code>, <code class="docutils literal notranslate"><span class="pre">select_features</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_selection_requires_target</span></code>, <code class="docutils literal notranslate"><span class="pre">normalize_feature_selection_method</span></code>, <code class="docutils literal notranslate"><span class="pre">FeatureSelectionResult</span></code>, <code class="docutils literal notranslate"><span class="pre">random_projection_features</span></code>, <code class="docutils literal notranslate"><span class="pre">nystroem_features</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Additional transform, seasonal, expansion, filter, supervised aggregation, supervised factor, feature-selection, and kernel-approximation feature functions.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">FittedFeatureBuilder</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag_step</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_step</span></code>, <code class="docutils literal notranslate"><span class="pre">moving_average_step</span></code>, <code class="docutils literal notranslate"><span class="pre">marx_step</span></code>, <code class="docutils literal notranslate"><span class="pre">transform_step</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_lag_step</span></code>, <code class="docutils literal notranslate"><span class="pre">season_dummy_step</span></code>, <code class="docutils literal notranslate"><span class="pre">fourier_step</span></code>, <code class="docutils literal notranslate"><span class="pre">time_step</span></code>, <code class="docutils literal notranslate"><span class="pre">polynomial_step</span></code>, <code class="docutils literal notranslate"><span class="pre">interaction_step</span></code>, <code class="docutils literal notranslate"><span class="pre">scale_step</span></code>, <code class="docutils literal notranslate"><span class="pre">pca_step</span></code>, <code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_step</span></code>, <code class="docutils literal notranslate"><span class="pre">varimax_step</span></code>, <code class="docutils literal notranslate"><span class="pre">group_pca_step</span></code>, <code class="docutils literal notranslate"><span class="pre">maf_step</span></code>, <code class="docutils literal notranslate"><span class="pre">hamilton_step</span></code>, <code class="docutils literal notranslate"><span class="pre">random_projection_step</span></code>, <code class="docutils literal notranslate"><span class="pre">nystroem_step</span></code>, <code class="docutils literal notranslate"><span class="pre">partial_least_squares_step</span></code>, <code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_step</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_step</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Reusable step dictionaries for <code class="docutils literal notranslate"><span class="pre">compose_features</span></code> and runner-safe <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code> pipelines. Feature selection uses individual <code class="docutils literal notranslate"><span class="pre">method</span></code> names in step mappings instead of a generic step builder.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">FittedPreprocessor</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pca_then_lags</span></code>, <code class="docutils literal notranslate"><span class="pre">lags_then_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">moving_average_pca_lags</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Convenience composed feature callables.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code>, <code class="docutils literal notranslate"><span class="pre">VolatilityFit</span></code>, <code class="docutils literal notranslate"><span class="pre">SavedModel</span></code>, <code class="docutils literal notranslate"><span class="pre">save_fit</span></code>, <code class="docutils literal notranslate"><span class="pre">load_fit</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Fitted model result wrappers and low-level fit persistence.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LGBAPlusRegressor</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ols</span></code>, <code class="docutils literal notranslate"><span class="pre">ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">nonneg_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">shrink_to_target_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">fused_difference_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">random_walk_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">tvp_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code>, <code class="docutils literal notranslate"><span class="pre">adaptive_lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">adaptive_elastic_net</span></code>, <code class="docutils literal notranslate"><span class="pre">group_lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">sparse_group_lasso</span></code>, <code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">huber</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">knn</span></code>, <code class="docutils literal notranslate"><span class="pre">glmboost</span></code>, <code class="docutils literal notranslate"><span class="pre">pls</span></code>, <code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code>, <code class="docutils literal notranslate"><span class="pre">supervised_scaled_pca</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Linear, penalized, grouped, time-varying ridge, kernel, nearest-neighbor, and supervised dimension-reduction models.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">LGBPlusRegressor</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">supervised_aggregation</span></code>, <code class="docutils literal notranslate"><span class="pre">component_aggregation</span></code>, <code class="docutils literal notranslate"><span class="pre">rank_aggregation</span></code>, <code class="docutils literal notranslate"><span class="pre">assemblage_regression</span></code>, <code class="docutils literal notranslate"><span class="pre">albacore_components</span></code>, <code class="docutils literal notranslate"><span class="pre">albacore_ranks</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Generic supervised aggregation and Albacore/assemblage wrappers.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_BASE_ESTIMATORS</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>data</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solve_nonnegative_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">solve_simplex_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">solve_target_shrinkage_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">solve_mean_aligned_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">solve_fused_difference_ridge</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Low-level constrained aggregation solver helpers returning weight vectors.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_SPECS</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>data</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">svr</span></code>, <code class="docutils literal notranslate"><span class="pre">linear_svr</span></code>, <code class="docutils literal notranslate"><span class="pre">nu_svr</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Support-vector regression models.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MetadataLevel</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>callable</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nn</span></code>, <code class="docutils literal notranslate"><span class="pre">lstm</span></code>, <code class="docutils literal notranslate"><span class="pre">gru</span></code>, <code class="docutils literal notranslate"><span class="pre">transformer</span></code>, <code class="docutils literal notranslate"><span class="pre">hemisphere_nn</span></code>, <code class="docutils literal notranslate"><span class="pre">density_hnn</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Torch-backed neural-network and density-forecast regressors; require <code class="docutils literal notranslate"><span class="pre">macroforecast[deep]</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ar</span></code>, <code class="docutils literal notranslate"><span class="pre">arima</span></code>, <code class="docutils literal notranslate"><span class="pre">auto_arima</span></code>, <code class="docutils literal notranslate"><span class="pre">var</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code>, <code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code>, <code class="docutils literal notranslate"><span class="pre">ets</span></code>, <code class="docutils literal notranslate"><span class="pre">holt_winters</span></code>, <code class="docutils literal notranslate"><span class="pre">theta_method</span></code>, <code class="docutils literal notranslate"><span class="pre">naive</span></code>, <code class="docutils literal notranslate"><span class="pre">seasonal_naive</span></code>, <code class="docutils literal notranslate"><span class="pre">random_walk_drift</span></code>, <code class="docutils literal notranslate"><span class="pre">stlf</span></code>, <code class="docutils literal notranslate"><span class="pre">far</span></code>, <code class="docutils literal notranslate"><span class="pre">favar</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Time-series, Bayesian VAR, exponential-smoothing, and factor-augmented forecasting models.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ModelParameter</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code>, <code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code>, <code class="docutils literal notranslate"><span class="pre">midas_almon</span></code>, <code class="docutils literal notranslate"><span class="pre">midas_beta</span></code>, <code class="docutils literal notranslate"><span class="pre">midas_step</span></code>, <code class="docutils literal notranslate"><span class="pre">restricted_midas</span></code>, <code class="docutils literal notranslate"><span class="pre">unrestricted_midas</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Mixed-frequency dynamic-factor and MIDAS models.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code>, <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">extra_trees</span></code>, <code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code>, <code class="docutils literal notranslate"><span class="pre">mars</span></code>, <code class="docutils literal notranslate"><span class="pre">xgboost</span></code>, <code class="docutils literal notranslate"><span class="pre">lightgbm</span></code>, <code class="docutils literal notranslate"><span class="pre">lgb_plus</span></code>, <code class="docutils literal notranslate"><span class="pre">lgba_plus</span></code>, <code class="docutils literal notranslate"><span class="pre">catboost</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Tree, spline, ML, and LGB+ hybrid regressors.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ParamDistribution</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code>, <code class="docutils literal notranslate"><span class="pre">macro_random_forest</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Macro-specific tree models.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PreprocessSpec</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">LGBPlusRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">LGBAPlusRegressor</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>LGB+ competition and LGB^A+ alternating estimator classes.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PreprocessedData</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">garch11</span></code>, <code class="docutils literal notranslate"><span class="pre">egarch</span></code>, <code class="docutils literal notranslate"><span class="pre">gjr_garch</span></code>, <code class="docutils literal notranslate"><span class="pre">tgarch</span></code>, <code class="docutils literal notranslate"><span class="pre">realized_garch</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Volatility models.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RandomSubspaceRegressor</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">ModelParameter</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_model</span></code>, <code class="docutils literal notranslate"><span class="pre">get_model</span></code>, <code class="docutils literal notranslate"><span class="pre">list_model_specs</span></code>, <code class="docutils literal notranslate"><span class="pre">describe_model</span></code>, <code class="docutils literal notranslate"><span class="pre">model_search_space</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Model-owned defaults and hyperparameter spaces.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RegimeDirection</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>callable</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BaggingRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">BoogingRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">RandomSubspaceRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">StackingRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">SuperLearnerRegressor</span></code>, <code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_BASE_ESTIMATORS</span></code>, <code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_SPECS</span></code>, <code class="docutils literal notranslate"><span class="pre">bagging</span></code>, <code class="docutils literal notranslate"><span class="pre">subagging</span></code>, <code class="docutils literal notranslate"><span class="pre">random_subspace</span></code>, <code class="docutils literal notranslate"><span class="pre">stacking</span></code>, <code class="docutils literal notranslate"><span class="pre">super_learner</span></code>, <code class="docutils literal notranslate"><span class="pre">booging</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_model_ensemble</span></code>, <code class="docutils literal notranslate"><span class="pre">get_model_ensemble</span></code>, <code class="docutils literal notranslate"><span class="pre">list_model_ensemble_bases</span></code>, <code class="docutils literal notranslate"><span class="pre">list_model_ensemble_specs</span></code>, <code class="docutils literal notranslate"><span class="pre">describe_model_ensemble</span></code>, <code class="docutils literal notranslate"><span class="pre">model_ensemble_search_space</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></p></td>
-<td><p>Fit-time model-composition callables, estimator classes, and specs.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SamePeriodPolicy</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>callable</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">EstimationWindow</span></code>, <code class="docutils literal notranslate"><span class="pre">ValWindow</span></code>, <code class="docutils literal notranslate"><span class="pre">TestWindow</span></code>, <code class="docutils literal notranslate"><span class="pre">AlignmentWindow</span></code>, <code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">Split</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
-<td><p>Forecast experiment and stage timing objects.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SavedModel</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">from_cutoffs</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_rolling</span></code>, <code class="docutils literal notranslate"><span class="pre">estimation_fixed</span></code>, <code class="docutils literal notranslate"><span class="pre">val_last_block</span></code>, <code class="docutils literal notranslate"><span class="pre">val_poos</span></code>, <code class="docutils literal notranslate"><span class="pre">val_expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">val_rolling_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">val_blocked_kfold</span></code>, <code class="docutils literal notranslate"><span class="pre">val_random_kfold</span></code>, <code class="docutils literal notranslate"><span class="pre">test_origins</span></code>, <code class="docutils literal notranslate"><span class="pre">alignment_drop_incomplete</span></code>, <code class="docutils literal notranslate"><span class="pre">alignment_keep_missing</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
-<td><p>Component window builders.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SearchError</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">last_block</span></code>, <code class="docutils literal notranslate"><span class="pre">poos</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_blocks</span></code>, <code class="docutils literal notranslate"><span class="pre">blocked_kfold</span></code>, <code class="docutils literal notranslate"><span class="pre">random_kfold</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
-<td><p>Shortcut window specs.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SearchResult</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stage_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_stage_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">stage_index</span></code>, <code class="docutils literal notranslate"><span class="pre">stage_panel</span></code>, <code class="docutils literal notranslate"><span class="pre">last_block_split</span></code>, <code class="docutils literal notranslate"><span class="pre">poos_split</span></code>, <code class="docutils literal notranslate"><span class="pre">expanding_split</span></code>, <code class="docutils literal notranslate"><span class="pre">rolling_blocks_split</span></code>, <code class="docutils literal notranslate"><span class="pre">blocked_kfold_split</span></code>, <code class="docutils literal notranslate"><span class="pre">random_kfold_split</span></code>, <code class="docutils literal notranslate"><span class="pre">make_splitter</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve_window</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve_stage_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">split_table</span></code>, <code class="docutils literal notranslate"><span class="pre">normalize_window_name</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
-<td><p>Stage timing, resolver helpers, and train/val split inspection.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code></p></td>
-<td><p>Forecast scoring namespace, including point scores and risk-adjusted forecast-return metrics. Use <code class="docutils literal notranslate"><span class="pre">mf.metrics.rmse</span></code>, not <code class="docutils literal notranslate"><span class="pre">mf.rmse</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Split</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>callable</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></p></td>
-<td><p>Forecast-comparison test namespace, including <code class="docutils literal notranslate"><span class="pre">mf.tests.custom_test</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.tests.equal_predictive_tests</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.tests.model_confidence_set</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.tests.blocked_oob_reality_check</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.tests.superior_predictive_ability_test</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.tests.reality_check_test</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.tests.stepm_test</span></code>, interval coverage, and PIT diagnostics. Use <code class="docutils literal notranslate"><span class="pre">mf.tests.dm_test</span></code>, not <code class="docutils literal notranslate"><span class="pre">mf.dm_test</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StackingRegressor</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluate_report</span></code>, <code class="docutils literal notranslate"><span class="pre">aggregate_scores</span></code>, <code class="docutils literal notranslate"><span class="pre">filter_oos_period</span></code>, <code class="docutils literal notranslate"><span class="pre">error_decomposition</span></code>, <code class="docutils literal notranslate"><span class="pre">benchmark_comparison</span></code>, <code class="docutils literal notranslate"><span class="pre">regime_scores</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></p></td>
-<td><p>Multi-slice evaluation reports, OOS filtering, error decomposition, benchmark comparisons, and regime scoring.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>callable</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></p></td>
-<td><p>Evaluation namespace exposing report functions plus <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code>; raw metric/test functions are not re-exported directly from it.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StagePolicy</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pipeline</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></p></td>
-<td><p>Comprehensive POOS pipeline namespace: <code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code>, <code class="docutils literal notranslate"><span class="pre">resolve_target</span></code>, <code class="docutils literal notranslate"><span class="pre">Arm</span></code>, <code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">CombinationContender</span></code>, <code class="docutils literal notranslate"><span class="pre">TCODE_TARGET_MAP</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SuperLearnerRegressor</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">SearchResult</span></code>, <code class="docutils literal notranslate"><span class="pre">SearchError</span></code>, <code class="docutils literal notranslate"><span class="pre">ParamDistribution</span></code>, <code class="docutils literal notranslate"><span class="pre">search_spec</span></code>, <code class="docutils literal notranslate"><span class="pre">select_params</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></p></td>
-<td><p>Model-parameter selection over a supplied window and metric.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TestWindow</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code>, <code class="docutils literal notranslate"><span class="pre">grid</span></code>, <code class="docutils literal notranslate"><span class="pre">random_search</span></code>, <code class="docutils literal notranslate"><span class="pre">cv_path</span></code>, <code class="docutils literal notranslate"><span class="pre">bayesian_search</span></code>, <code class="docutils literal notranslate"><span class="pre">genetic_search</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_search</span></code>, <code class="docutils literal notranslate"><span class="pre">choice</span></code>, <code class="docutils literal notranslate"><span class="pre">uniform</span></code>, <code class="docutils literal notranslate"><span class="pre">log_uniform</span></code>, <code class="docutils literal notranslate"><span class="pre">randint</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></p></td>
-<td><p>Search specification and distribution builders.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ValWindow</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, <code class="docutils literal notranslate"><span class="pre">run</span></code>, <code class="docutils literal notranslate"><span class="pre">run_forecast</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></p></td>
-<td><p>Windowed forecast runner.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VintagePanelSpec</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>class</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CombinationSpec</span></code>, <code class="docutils literal notranslate"><span class="pre">combination_spec</span></code>, <code class="docutils literal notranslate"><span class="pre">custom_combination</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_median</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_trimmed_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_winsorized_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_inverse_mspe</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_dmspe</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_best_n</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_bates_granger</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_granger_ramanathan</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_constrained_ls</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_eigenvector</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_regularized</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_linear_pool</span></code>, <code class="docutils literal notranslate"><span class="pre">combine_log_pool</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></p></td>
-<td><p>Runner-integrated and direct forecast combination methods.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VintageSource</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>class</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">VintageUnavailableError</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>class</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VolatilityFit</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>class</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>class</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">adaptive_elastic_net</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">adaptive_lasso</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">adaptive_ma_rf_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">aggregate_scores</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">albacore_components</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">albacore_ranks</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">align_frequency</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">align_reference_weights</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">alignment_drop_incomplete</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alignment_keep_missing</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ar</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">arima</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">as_panel</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">assemblage_regression</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">asymmetric_trim_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attach_metadata</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">auto_arima</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">availability_lag</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">average_target</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bagging</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bayesian_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bayesian_search</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_comparison</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">blocked_kfold</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">blocked_kfold_split</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">booging</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">boruta_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">build_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bvar_minnesota</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bvar_normal_inverse_wishart</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">catboost</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">choice</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">chow_lin_disaggregate</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combination_spec</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_bates_granger</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_best_n</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_constrained_ls</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_dmspe</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_eigenvector</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_granger_ramanathan</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_inverse_mspe</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_linear_pool</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_log_pool</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_mean</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_median</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_regularized</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">combine_trimmed_mean</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">combine_winsorized_mean</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">component_aggregation</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">compose_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">configure</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">correlation_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cumsum_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_combination</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_dataset</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_model</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_model_ensemble</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_preprocess</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_preprocess_step</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_search</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_stage_policy</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_vintages</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cv_path</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data_analysis</span></code></p></td>
+<td><p><a class="reference internal" href="data_analysis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data_analysis</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">decision_tree</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">define_regime</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">density_hnn</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">describe_model</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">describe_model_ensemble</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dfm_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dfm_mixed_mariano_murasawa</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dfm_unrestricted_midas</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">diff_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">direct_target</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">egarch</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">elastic_net</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">error_decomposition</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">estimation_expanding</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">estimation_fixed</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">estimation_rolling</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ets</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate_report</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluation</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">expanding</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">expanding_split</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">extra_trees</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">far</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">favar</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_analysis</span></code></p></td>
+<td><p><a class="reference internal" href="feature_analysis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_analysis</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_diagnostic</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_diagnostic</span></code></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_matrix</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">feature_selection_requires_target</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">feature_spec</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">filter_oos_period</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">filters</span></code></p></td>
+<td><p><a class="reference internal" href="filters.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.filters</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_analysis</span></code></p></td>
+<td><p><a class="reference internal" href="forecast_analysis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_diagnostic</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_diagnostic</span></code></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasting</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">forward_average_target</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fourier_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fourier_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fred_md_vintages</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fred_qd_vintages</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">frequency_hardening_issues</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">from_cutoffs</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fused_difference_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">garch11</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">genetic_search</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">genetic_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_config</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_model</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_model_ensemble</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_option</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gjr_garch</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">glmboost</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gradient_boosting</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">grid</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">group_lasso</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">group_pca</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">group_pca_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gru</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hamilton_filter_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hamilton_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hemisphere_nn</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">holt_winters</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hp_filter_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">huber</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">infer_frequencies</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interaction_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interaction_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">interpretation</span></code></p></td>
+<td><p><a class="reference internal" href="interpretation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">knn</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lag</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lag_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lags_then_pca</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lasso</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lasso_path_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lasso_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">last_block</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">last_block_split</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lgb_plus</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lgba_plus</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">linear_svr</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">list_model_ensemble_bases</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_model_ensemble_specs</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">list_model_specs</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">list_vintages</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">load_custom_csv</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load_custom_parquet</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">load_fit</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load_fred_md</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">load_fred_md_sd</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load_fred_qd</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">load_fred_qd_sd</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load_fred_sd</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">log_diff_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">log_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">log_uniform</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lstm</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macro_random_forest</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">maf_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maf_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">make_splitter</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mars</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">marx_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">meta</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p><a class="reference internal" href="metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">midas_almon</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">midas_beta</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">midas_step</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mixed_frequency_lags</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_ensemble</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_ensemble_search_space</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model_search_space</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_selection</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">models</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">moving_average_changes</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">moving_average_ladder</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">moving_average_pca_lags</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">moving_average_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">naive</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nn</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nonneg_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">normalize_feature_selection_method</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">normalize_window_name</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nu_svr</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">nystroem_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nystroem_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ols</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">output</span></code></p></td>
+<td><p><a class="reference internal" href="output.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">panel_info</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">partial_least_squares_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">partial_least_squares_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">path_targets</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pca_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pca_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pca_then_lags</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pct_change_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pipeline</span></code></p></td>
+<td><p><a class="reference internal" href="pipeline.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pls</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">polynomial_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">polynomial_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">poos</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">poos_split</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">preprocess_spec</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">preprocessing</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">quantile_regression_forest</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">randint</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_forest</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_kfold</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_kfold_split</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_projection_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_projection_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_search</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_subspace</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_walk_drift</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_walk_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rank_aggregation</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rank_space_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">realized_garch</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regime_scores</span></code></p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reporting</span></code></p></td>
+<td><p><a class="reference internal" href="reporting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.reporting</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reprocess</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reset_config</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_stage_policy</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_window</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">restricted_midas</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rfe_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_blocks</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_blocks_split</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_mean</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">run</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">run_forecast</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">same_period_predictors</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_fit</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">savitzky_golay_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scale_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scale_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scaled_pca</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">search_spec</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">season_dummy_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_lag_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_naive</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">select_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">select_params</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">set_frequencies</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">shrink_to_target_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solve_fused_difference_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solve_mean_aligned_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solve_nonnegative_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solve_simplex_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solve_target_shrinkage_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_group_lasso</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spec</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">split_table</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stacking</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stage_index</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stage_panel</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stage_policy</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">standardize_panel</span></code></p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stlf</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subagging</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">super_learner</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">supervised_aggregation</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">supervised_pca</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">supervised_scaled_pca</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">svr</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">test_origins</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests</span></code></p></td>
+<td><p><a class="reference internal" href="tests.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tgarch</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">theta_method</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transform_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transform_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transformer</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tvp_ridge</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">uniform</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unrestricted_midas</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">use_config</span></code></p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val_blocked_kfold</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_expanding</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val_last_block</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_poos</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">val_random_kfold</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">val_rolling_blocks</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validate_panel</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">var</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variance_selection</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">varimax_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">varimax_step</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wavelet_features</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">weighted_aggregate</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">window</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
+<td><p>module</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">with_static_extras</span></code></p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
+<td><p>function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+<td><p>function</p></td>
 </tr>
 </tbody>
 </table>
@@ -707,75 +1973,75 @@ convenience exports are documented on their module reference pages.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Module</p></th>
-<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Reference</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></p></td>
-<td><p>Global defaults.</p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></p></td>
-<td><p>Data loading and study data specs.</p></td>
+<td><p><a class="reference internal" href="data.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></p></td>
-<td><p>Pandas preprocessing functions.</p></td>
+<td><p><a class="reference internal" href="preprocessing.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.filters</span></code></p></td>
-<td><p>Direct one-series filters and smoothers such as HP, Hamilton, Savitzky-Golay, wavelet-style components, and AlbaMA.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
+<td><p><a class="reference internal" href="feature_engineering.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Direct-forecast target construction and composable ML feature transforms.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data_analysis</span></code></p></td>
+<td><p><a class="reference internal" href="data_analysis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.data_analysis</span></code></span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_analysis</span></code></p></td>
-<td><p>Feature-matrix analysis after feature engineering.</p></td>
+<td><p><a class="reference internal" href="feature_analysis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_analysis</span></code></span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_diagnostic</span></code></p></td>
-<td><p>Compatibility alias for <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_analysis</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_diagnostic</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Callable model fits.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></p></td>
-<td><p>Fit-time model composition over multiple member models.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
-<td><p>Macro forecasting time-frame specs.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></p></td>
-<td><p>Hyperparameter search and parameter selection.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></p></td>
-<td><p>Windowed runner and forecast combination.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.filters</span></code></p></td>
+<td><p><a class="reference internal" href="filters.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.filters</span></code></span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis</span></code></p></td>
-<td><p>Forecast-result analysis after runner execution.</p></td>
+<td><p><a class="reference internal" href="forecast_analysis.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis</span></code></span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_diagnostic</span></code></p></td>
-<td><p>Compatibility alias for <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis</span></code>.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_diagnostic</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
+<td><p><a class="reference internal" href="models.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></p></td>
+<td><p><a class="reference internal" href="model_ensemble.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></span></a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></p></td>
+<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></p></td>
+<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code></p></td>
-<td><p>Scoring metrics, forecast ranking, and metric resolution.</p></td>
+<td><p><a class="reference internal" href="metrics.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code></span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></p></td>
-<td><p>Forecast-comparison tests and residual diagnostics.</p></td>
+<td><p><a class="reference internal" href="tests.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></p></td>
-<td><p>Evaluation reports, OOS filtering, error decomposition, benchmark comparisons, regime scoring, and namespace links to <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code>.</p></td>
+<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code></p></td>
-<td><p>Model-native importance, model-agnostic effects, SHAP/anatomy attribution, OLS-as-attention, VAR interpretation, and deep optional helpers.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
+<td><p><a class="reference internal" href="window.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code></p></td>
-<td><p>Output generation, artifact writing, provenance collection, hashing, and compression.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code></p></td>
+<td><p><a class="reference internal" href="interpretation.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code></span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.reporting</span></code></p></td>
-<td><p>Presentation/report formatting, paper-table presets, and rendering without artifact writing.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code></p></td>
+<td><p><a class="reference internal" href="output.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code></span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></p></td>
-<td><p>Comprehensive POOS pipeline: spec generator, t-code target resolution, arms, combinations, evaluation.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.reporting</span></code></p></td>
+<td><p><a class="reference internal" href="reporting.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.reporting</span></code></span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data_analysis</span></code></p></td>
-<td><p>Single-panel diagnostics, summaries, and raw-versus-processed comparison.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></p></td>
+<td><p><a class="reference internal" href="pipeline.html"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></span></a></p></td>
 </tr>
 </tbody>
 </table>
@@ -803,11 +2069,11 @@ convenience exports are documented on their module reference pages.</p>
       </div>
     </a>
     <a class="right-next"
-       href="custom/index.html"
+       href="meta.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Custom Extensions</p>
+        <p class="prev-next-title">macroforecast.meta</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

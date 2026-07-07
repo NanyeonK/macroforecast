@@ -1,98 +1,124 @@
-# custom_model
+# Custom Model
 
 [Back to custom extensions](index.md)
 
-Use custom models when the estimator is not built into `macroforecast`. A
-custom model returns a `ModelSpec`, so it can be passed to the runner exactly
-like a built-in model name.
+This page is generated from the live callable signatures.
 
-## custom_model
+Use `custom_model` when the estimator is not built into `macroforecast`. It returns a `ModelSpec`, so it can be passed anywhere a built-in model spec is accepted.
+
+Important current contract: there is no `metadata=` keyword. Use `description`, `parameters`, `default_params`, `search_spaces`, `input_kind`, `requires_extra`, `requires_scaling`, and `recommended_preprocessing` to describe the custom model.
+
+## Callable Reference
+
+### custom_model
+
+Qualified name: `macroforecast.models.specs.custom_model`
+
+#### Signature
 
 ```python
-mf.models.custom_model(
-    name,
-    fit_func,
-    *,
-    default_params=None,
-    default_preset=None,
-    search_spaces=None,
-    family="custom",
-    requires_extra=None,
-    metadata=None,
-) -> mf.models.ModelSpec
+macroforecast.models.custom_model(name: str, fit_func: Callable[..., Any], *, family: str = "custom", default_params: Mapping[str, Any] | None = None, parameters: tuple[ModelParameter, ...] = (), search_spaces: SearchSpaces | None = None, default_search_method: str = "grid", default_preset: str = "standard", input_kind: InputKind = "supervised", backend: str = "custom", requires_extra: str | None = None, requires_scaling: bool = False, recommended_preprocessing: tuple[str, ...] = (), description: str | None = None) -> ModelSpec
 ```
 
-### Fit Callable Contract
+#### Description
+
+Build a user-owned ``ModelSpec`` without registering a package model.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `fit_func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `family` | keyword only | `str` | `"custom"` |
+| `default_params` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `parameters` | keyword only | `tuple[ModelParameter, ...]` | `()` |
+| `search_spaces` | keyword only | `SearchSpaces \| None` | `None` |
+| `default_search_method` | keyword only | `str` | `"grid"` |
+| `default_preset` | keyword only | `str` | `"standard"` |
+| `input_kind` | keyword only | `InputKind` | `"supervised"` |
+| `backend` | keyword only | `str` | `"custom"` |
+| `requires_extra` | keyword only | `str \| None` | `None` |
+| `requires_scaling` | keyword only | `bool` | `False` |
+| `recommended_preprocessing` | keyword only | `tuple[str, ...]` | `()` |
+| `description` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`ModelSpec`
+
+#### Minimal Use
 
 ```python
-fit_func(X: pandas.DataFrame, y: pandas.Series, **params) -> fitted_object
-fitted_object.predict(X_test: pandas.DataFrame) -> predictions
+import macroforecast as mf
+# Call with the signature above:
+# mf.models.custom_model(...)
 ```
 
-Prediction output must have length `len(X_test)`. If it is a pandas object, it
-must use `X_test.index` or `RangeIndex(len(X_test))`.
+### custom_model_ensemble
 
-### Example
+Qualified name: `macroforecast.model_ensemble.specs.custom_model_ensemble`
+
+#### Signature
 
 ```python
+macroforecast.model_ensemble.custom_model_ensemble(name: str, fit_func: Callable[..., Any], *, default_params: Mapping[str, Any] | None = None, parameters: tuple[ModelParameter, ...] = (), search_spaces: SearchSpaces | None = None, default_search_method: str = "grid", default_preset: str = "standard", backend: str = "custom", description: str | None = None) -> ModelSpec
+```
+
+#### Description
+
+Build a user-owned fit-time model-ensemble spec.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `fit_func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `default_params` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `parameters` | keyword only | `tuple[ModelParameter, ...]` | `()` |
+| `search_spaces` | keyword only | `SearchSpaces \| None` | `None` |
+| `default_search_method` | keyword only | `str` | `"grid"` |
+| `default_preset` | keyword only | `str` | `"standard"` |
+| `backend` | keyword only | `str` | `"custom"` |
+| `description` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`ModelSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.model_ensemble.custom_model_ensemble(...)
+```
+
+## Minimal Custom Model Example
+
+```python
+import numpy as np
+import pandas as pd
+import macroforecast as mf
+
 class MeanFit:
-    def __init__(self, value):
-        self.value = float(value)
+    def __init__(self, value: float) -> None:
+        self.value = value
 
-    def predict(self, X):
-        return numpy.full(len(X), self.value)
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        return np.full(len(X), self.value)
 
-def mean_model(X, y, *, offset=0.0):
-    return MeanFit(pandas.Series(y).mean() + offset)
+def mean_model(X: pd.DataFrame, y: pd.Series, *, offset: float = 0.0) -> MeanFit:
+    return MeanFit(float(pd.Series(y).mean()) + offset)
 
 model = mf.models.custom_model(
     "mean_model",
     mean_model,
     default_params={"offset": 0.0},
-    default_preset="small",
-    search_spaces={"small": {"offset": (-0.1, 0.0, 0.1)}},
+    search_spaces={"standard": {"offset": (-0.1, 0.0, 0.1)}},
+    input_kind="supervised",
+    requires_scaling=False,
+    description="Mean benchmark with a tunable offset.",
 )
 ```
-
-### Runner Use
-
-```python
-result = mf.forecasting.run(
-    panel,
-    model,
-    window=window,
-    features=features,
-)
-```
-
-`mf.forecasting.run` is atomic: one model per call. To compare a custom model
-against a benchmark, give each one its own `Arm` and run them through
-`pipeline_spec`/`run_pipeline` instead -- for the full worked example (your
-own CSV, this model, a scored horse race, and a paper-ready table), continue
-to the full horse-race tutorial:
-[Your Data, Your Model, One Table](../../guide/custom_data_tutorial.md).
-
-## custom_model_ensemble
-
-Use `mf.model_ensemble.custom_model_ensemble(...)` when the extension is a
-fit-time composition of member models, not a post-forecast combination.
-
-```python
-spec = mf.model_ensemble.custom_model_ensemble(
-    "my_stacker",
-    fit_func=my_ensemble_fit,
-    default_params={"base_models": ("ridge", "lasso")},
-)
-```
-
-| Custom type | Stage | Output |
-| --- | --- | --- |
-| `custom_model` | one estimator fit | `ModelSpec` |
-| `custom_model_ensemble` | fit-time member-model composition | `ModelSpec` with `family="model_ensemble"` |
-| `custom_combination` | post-forecast combination | `CombinationSpec` |
-
-## Metadata
-
-The model spec stores the model name, callable name, default parameters,
-search-space metadata, optional dependency labels, and user metadata. It does
-not store the source code of `fit_func`.

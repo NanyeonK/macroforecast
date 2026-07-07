@@ -2,988 +2,911 @@
 
 [Back to reference](index.md)
 
-`macroforecast.forecasting` is the workflow composition module. It connects
-`window`, `preprocessing`, `feature_engineering`, `model_selection`, `models`,
-`model_ensemble`, and `metrics`/`tests`.
+Single-model forecasting runner, forecast result objects, checkpoint helpers, and forecast-combination specs.
 
-## run
+Guide context: [../guide/concepts/running.md](../guide/concepts/running.md).
 
-`run_forecast` is an alias for `run`. New code can call `run(...)`; use
-`run_forecast(...)` only when the longer name makes a script clearer.
+## Public Symbols
+
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `ForecastResult` | class | Forecast runner output. |
+| `LEAN_FORECAST_COLUMNS` | data | Built-in immutable sequence. |
+| `load_checkpoint_frame` | function | Load all persisted lean records as a single frame (empty if none/missing). |
+| `CombinationSpec` | class | Forecast-combination request consumed by ``forecasting.run``. |
+| `combine_best_n` | function | Average the historically best ``n`` models by MSPE. |
+| `combine_bates_granger` | function | Bates-Granger (1969) minimum error-variance combination (full covariance). |
+| `combine_granger_ramanathan` | function | Granger-Ramanathan (1984) regression combination. |
+| `combine_constrained_ls` | function | Non-negative weights summing to one minimising squared combination error. |
+| `combine_eigenvector` | function | Eigenvector (principal-component) combination (Hsiao-Wan). |
+| `combine_regularized` | function | Ridge/Lasso-penalised regression combination (high-dimensional weights). |
+| `combine_linear_pool` | function | Linear opinion pool of (Gaussian) density forecasts. |
+| `combine_log_pool` | function | Logarithmic opinion pool of Gaussian density forecasts. |
+| `combine_dmspe` | function | Combine forecasts with inverse discounted MSPE weights. |
+| `combine_inverse_mspe` | function | Combine forecasts with inverse discounted MSPE weights. |
+| `combine_mean` | function | Equal-weight average forecast. |
+| `combine_median` | function | Cross-model median forecast. |
+| `combine_trimmed_mean` | function | Trim extreme model forecasts before averaging. |
+| `combine_winsorized_mean` | function | Winsorize cross-model forecasts before averaging. |
+| `combination_spec` | function | Build a runner-compatible forecast-combination spec. |
+| `custom_combination` | function | Build a custom forecast-combination spec for ``forecasting.run``. |
+| `run` | function | Run a windowed macro forecasting experiment. |
+| `run_forecast` | function | Run a windowed macro forecasting experiment. |
+
+## Data And Module Values
+
+### `LEAN_FORECAST_COLUMNS`
+
+Kind: `data`
 
 ```python
-macroforecast.forecasting.run(
-    data,
-    model,
-    *,
-    window=None,
-    preprocessing=None,
-    preprocessing_policy=None,
-    features=None,
-    feature_policy=None,
-    model_selection=None,
-    model_selection_policy=None,
-    model_selection_metric="mse",
-    maximize_model_selection=False,
-    preset=None,
-    params=None,
-    target=None,
-    horizon=1,
-    horizons=None,
-    forecast_policy="direct",
-    future_feature_policy=None,
-    target_transform=None,
-    combination=None,
-    save_models=True,
-    model_store="trained_model",
-    checkpoint_path=None,
-)
+LEAN_FORECAST_COLUMNS = ("target", "horizon", "origin", "origin_pos", "date", "model", "prediction", "actual", "forecast_policy", "target_transform", "variance_prediction", "vintage_id", "actuals_vintage_id")
 ```
 
-| Input | Type | Default | Meaning |
+## Callable And Class Reference
+
+### ForecastResult
+
+Qualified name: `macroforecast.forecasting.types.ForecastResult`
+
+#### Signature
+
+```python
+macroforecast.forecasting.ForecastResult(forecasts: pd.DataFrame, metadata: dict[str, Any] = <factory>, sidecars: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Forecast runner output.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `data` | `FeatureSet`, `DataBundle`, `DataSpec`, `(panel, metadata)`, or pandas-like panel | required | Prebuilt model matrix or canonical panel. `DataBundle` metadata, including native frequencies, is preserved. |
-| `model` | str, callable, or `ModelSpec` | required | A SINGLE model (or fit-time model-ensemble) spec to fit at each origin. `run` is atomic: exactly one model per call. To compare or combine models, run each model in its own call (or use the pipeline with one `Arm` per model). Passing a list or mapping of models raises `TypeError`. |
-| `window` | `WindowSpec`, str, or `None` | `None` | Forecast experiment design: estimation mode, validation, test origins, retrain and retune cadence. |
-| `preprocessing` | `PreprocessSpec` or `None` | `None` | Callable preprocessing operations. |
-| `preprocessing_policy` | `StagePolicy`, str, or `None` | `origin_available` when preprocessing is supplied | Where preprocessing may fit and apply: `full_panel`, `origin_available`, `fit_window`, or `fixed_reference`. |
-| `features` | `FeatureSpec` or `None` | `None` | Feature and target construction operations. For panel-input models such as `dfm_mixed_mariano_murasawa`, leave this as `None`. |
-| `feature_policy` | `StagePolicy`, str, or `None` | `fit_window` | Where stateful feature engineering such as PCA may fit. |
-| `model_selection` | `SearchSpec`, model-keyed mapping, or `None` | `None` | Hyperparameter candidate generation and search method. `None` uses each model's owned default search space; a model-keyed value of `None` disables model selection for that model. |
-| `model_selection_policy` | `StagePolicy`, str, or `None` | `fit_window` | Which feature rows are supplied to model selection. |
-| `model_selection_metric` | str or callable | `"mse"` | Objective used during model selection. |
-| `maximize_model_selection` | bool | `False` | Whether larger selection scores are better. |
-| `preset` | str, mapping, or `None` | `None` | Model-owned search-space preset. |
-| `params` | mapping or `None` | `None` | Fixed model parameters. |
-| `target` | str or `None` | `None` | Required for raw panel input when `features` is omitted, and required for panel-input models unless every model spec sets the same `target` parameter. |
-| `horizon` | positive int | `1` | Target horizon when `features` is omitted. |
-| `horizons` | positive int, sequence, or `None` | `None` | Multiple target horizons. Provide either `horizon` or `horizons`, not both. |
-| `forecast_policy` | str | `"direct"` | Target/forecast construction policy: `"direct"`, `"direct_average"`, `"path_average"`, `"recursive"`, or alias `"iterated"`. |
-| `future_feature_policy` | str or `None` | `None` | Used only for recursive forecasting. `None` becomes `"target_lags"`. Use `"observed_future"` only for explicit oracle/scenario paths where future predictors are known or supplied. |
-| `target_transform` | str or `None` | `None` | Optional target transform override. For `direct_average`, `"growth"` becomes `"average_growth"` and `"value"` becomes `"average_value"`; for `path_average`, `"growth"` means average step growth forecasts and `"value"` means step forecasts of an already transformed one-period target; for `recursive`, allowed values are `level`, `change`, `growth`, and `log_growth`. |
-| `combination` | str, `CombinationSpec`, sequence, mapping, or `None` | `None` | Optional forecast-combination requests. Combined forecasts are appended as additional model rows. |
-| `save_models` | bool | `True` | Save each fitted origin/model object and its metadata. |
-| `model_store` | str or path-like | `"trained_model"` | Root directory for saved fitted models. |
-| `checkpoint_path` | str, path-like, or `None` | `None` | Optional incremental-checkpoint directory. When set, each origin's lean forecast records are persisted as soon as the origin completes, and a restarted run skips origins already on disk. `None` keeps the prior behavior with no checkpoint writes. |
+| `forecasts` | positional or keyword | `pd.DataFrame` | `required` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `sidecars` | positional or keyword | `dict[str, Any]` | `<factory>` |
 
-Output: `ForecastResult`.
+#### Returns
 
-`ForecastResult` methods:
+`None`
 
-| Method | Input | Output | Meaning |
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.forecasting.ForecastResult(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `forecasts` | `pd.DataFrame` | `required` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `sidecars` | `dict[str, Any]` | `default_factory` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `anatomy_explain` | `anatomy_explain(self, anatomy: Any, **kwargs: Any) -> pd.DataFrame` | Explain a precomputed ``anatomy.Anatomy`` object for this run. |
+| `anatomy_oshapley_vi` | `anatomy_oshapley_vi(self, anatomy: Any, **kwargs: Any) -> pd.DataFrame` | Compute backend oShapley-VI rows for a precomputed anatomy object. |
+| `anatomy_pbsv` | `anatomy_pbsv(self, anatomy: Any, **kwargs: Any) -> pd.DataFrame` | Compute backend PBSV rows for a precomputed ``anatomy.Anatomy`` object. |
+| `evaluate` | `evaluate(self, **kwargs: Any) -> pd.DataFrame` | Evaluate this forecast result with ``macroforecast.metrics``. |
+| `get_sidecar` | `get_sidecar(self, name: str, default: Any = None) -> Any` | Return a named sidecar, or ``default`` when it is absent. |
+| `oshapley_vi` | `oshapley_vi(self, anatomy: Any, **kwargs: Any) -> pd.DataFrame` | Compute oShapley-VI rows for a precomputed forecast-Shapley object. |
+| `pbsv` | `pbsv(self, anatomy: Any, **kwargs: Any) -> pd.DataFrame` | Compute PBSV rows for a precomputed forecast-Shapley backend object. |
+| `sidecar_names` | `sidecar_names(self) -> tuple[str, ...]` | Return attached sidecar names. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | Return a JSON-ready forecast result. |
+| `to_frame` | `to_frame(self) -> pd.DataFrame` | Return a copy of the forecast table. |
+| `to_json` | `to_json(self, path: str \| Path \| None = None, *, indent: int \| None = 2) -> str` | Return JSON text, and optionally write it to ``path``. |
+| `with_anatomy` | `with_anatomy(self, X: Any, y: Any, models: Any, *, window: Any, sidecar_name: str = "anatomy", **kwargs: Any) -> "'ForecastResult'"` | Build and attach a forecast-accuracy anatomy sidecar. |
+| `with_dual` | `with_dual(self, model: Any \| None, X_train: Any, y_train: Any, X_test: Any \| None = None, *, sidecar_name: str = "dual", **kwargs: Any) -> "'ForecastResult'"` | Build and attach a dual interpretation sidecar. |
+| `with_oshapley` | `with_oshapley(self, X: Any, y: Any, models: Any, *, window: Any, sidecar_name: str = "oshapley", **kwargs: Any) -> "'ForecastResult'"` | Build and attach an oShapley/PBSV forecast-accuracy sidecar. |
+| `with_sidecar` | `with_sidecar(self, name: str, value: Any) -> "'ForecastResult'"` | Return a copy with a named runtime sidecar attached. |
+### load_checkpoint_frame
+
+Qualified name: `macroforecast.forecasting.checkpoint.load_checkpoint_frame`
+
+#### Signature
+
+```python
+macroforecast.forecasting.load_checkpoint_frame(checkpoint_path: str | Path) -> pd.DataFrame
+```
+
+#### Description
+
+Load all persisted lean records as a single frame (empty if none/missing).
+
+Origin files may carry different wide ``q_<pct>`` quantile columns (a
+point-only or pre-density-pipeline origin has none); ``pd.concat`` unions
+them, filling gaps with NaN, so this needs no cross-file coordination. When
+any ``q_<pct>`` column is present, a ``quantile_predictions`` mapping column
+is additionally synthesized (the wide columns are kept alongside it, not
+dropped) so this frame's quantile representation matches the rich
+(non-checkpointed) forecast table's -- one ``{level_str: value}`` dict per
+row -- and every downstream consumer (``evaluate()``'s density stage,
+``rescore()``) can use the SAME dict-based dispatch regardless of whether
+the forecasts came from a live run or a checkpoint.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `to_frame()` | none | `DataFrame` | Copy of forecast table. |
-| `evaluate(**kwargs)` | arguments forwarded to `mf.metrics.evaluate_forecasts` | `DataFrame` | Forecast-score table. |
-| `with_sidecar(name, value)` | sidecar name and runtime object | `ForecastResult` | Copy with a named sidecar recorded in metadata. |
-| `get_sidecar(name, default=None)` | sidecar name | object | Return an attached sidecar. |
-| `sidecar_names()` | none | tuple | Names of attached sidecars. |
-| `with_oshapley(X, y, models, window=..., ...)` | explicit aligned oShapley/PBSV inputs | `ForecastResult` | Build and attach an oShapley/PBSV sidecar through `mf.interpretation.oshapley_from_forecast_result(...)`. |
-| `with_anatomy(X, y, models, window=..., ...)` | explicit aligned backend inputs | `ForecastResult` | Backend alias for `with_oshapley(...)`. |
-| `with_dual(model, X_train, y_train, X_test=None, ...)` | fitted model and explicit train/test design | `ForecastResult` | Build and attach a DualML observation-weight sidecar through `mf.interpretation.dual_from_forecast_result(...)`. |
-| `anatomy_explain(anatomy, **kwargs)` | precomputed `anatomy.Anatomy` object or saved path | `DataFrame` | Convenience call to `mf.interpretation.anatomy_explain(...)`, with forecast-result metadata attached. |
-| `pbsv(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Convenience call to `mf.interpretation.pbsv(...)`. |
-| `oshapley_vi(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Convenience call to `mf.interpretation.oshapley_vi(...)`. |
-| `anatomy_pbsv(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Backend alias for `pbsv(...)`. |
-| `anatomy_oshapley_vi(anatomy, **kwargs)` | precomputed backend object or saved path | `DataFrame` | Backend alias for `oshapley_vi(...)`. |
+| `checkpoint_path` | positional or keyword | `str \| Path` | `required` |
 
-`pbsv(...)` and `oshapley_vi(...)` do not create the backend object. Use
-`with_oshapley(...)` or
-`mf.interpretation.oshapley_from_forecast_result(...)` when the sidecar should
-be built from explicit `X/y`, model specs, and `WindowSpec`.
+#### Returns
 
-Dual interpretation is also attached after the runner. `forecasting.run()`
-does not infer observation weights automatically because the forecast table
-does not contain the exact fitted estimator, training feature matrix, training
-target, and forecast-row feature matrix. Use `with_dual(...)` or
-`mf.interpretation.dual_from_forecast_result(...)` with those objects
-explicitly.
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-pre = mf.preprocessing.preprocess_spec(
-    transform="none",
-    outliers="none",
-    impute="mean",
-    standardize="zscore",
-    frame="keep",
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.load_checkpoint_frame(...)
+```
+### CombinationSpec
 
-features = mf.feature_engineering.feature_spec(
-    target="INDPRO",
-    horizon=1,
-    predictors="all",
-    lags=(0, 1, 2),
-    pca_components=3,
-)
+Qualified name: `macroforecast.forecasting.combination.CombinationSpec`
 
-window = mf.window.spec(
-    estimation=mf.window.estimation_expanding(min_size=120),
-    val=mf.window.val_last_block(size=24),
-    test=mf.window.test_origins(horizon=1, step=1),
-)
+#### Signature
 
-result = mf.forecasting.run(
-    panel,
-    ["ridge", "lasso"],
-    window=window,
-    preprocessing=pre,
-    preprocessing_policy=mf.window.stage_policy("origin_available"),
-    features=features,
-    feature_policy=mf.window.stage_policy("fit_window"),
-    model_selection=mf.model_selection.search_spec("ridge", preset="small"),
-    model_selection_policy=mf.window.stage_policy("fit_window"),
-    preset="small",
-)
+```python
+macroforecast.forecasting.CombinationSpec(method: str, name: str, models: tuple[str, ...] | None = None, params: dict[str, Any] = <factory>, func: Callable[..., Any] | None = None) -> None
 ```
 
-`model_selection=None` means “use registered model defaults” when a model has a
-search space. To run fixed parameters with no tuning, pass a model-keyed
-mapping such as `model_selection={"ridge": None}`. To evaluate a single explicit
-candidate through the model-selection ledger, pass `model_selection={"ridge":
-mf.model_selection.fixed({"alpha": 0.1})}`.
+#### Description
 
-### Forecast Policies
+Forecast-combination request consumed by ``forecasting.run``.
 
-`forecast_policy` decides how the target is constructed and how forecasts are
-written to the forecast table.
+#### Parameters
 
-| Policy | Target construction | Model fit | Forecast row |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `"direct"` | `y[t+h]` or a direct transform such as growth/change. | One model per requested horizon. | `date` is the target date `t+h`; `horizon` is `h`. |
-| `"direct_average"` | Direct average target, such as average change or average growth over steps `1..h`. | One model per requested horizon. | `prediction` and `actual` are horizon-average objects. |
-| `"path_average"` | Step-level targets for steps `1..h`. | One model per future step, then average the step forecasts. | `prediction` and `actual` are averages of the step forecasts/outcomes. |
-| `"recursive"` / `"iterated"` | One-step target `y[t+1]`. | Fit one one-step model at each origin, then feed predicted target values back into the feature panel for steps `2..h`. | `prediction` and `actual` are expressed at the requested horizon `h` under the selected `target_transform`. |
+| `method` | positional or keyword | `str` | `required` |
+| `name` | positional or keyword | `str` | `required` |
+| `models` | positional or keyword | `tuple[str, ...] \| None` | `None` |
+| `params` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `func` | positional or keyword | `Callable[..., Any] \| None` | `None` |
 
-For panel-input models, `recursive` uses the model's native panel multi-step
-prediction path and labels the emitted rows `recursive`; it does not build a
-feature-matrix recursive panel.
+#### Returns
 
-Examples:
+`None`
+
+#### Minimal Use
 
 ```python
-# Fit separate direct models for h=1, 3, and 12.
-direct = mf.forecasting.run(
-    panel,
-    "ridge",
-    target="INDPRO",
-    horizons=[1, 3, 12],
-    model_selection={"ridge": None},
-)
-
-# Direct average growth target over the next 12 months.
-direct_avg = mf.forecasting.run(
-    panel,
-    "ridge",
-    target="INDPRO",
-    horizon=12,
-    forecast_policy="direct_average",
-    target_transform="growth",
-    model_selection={"ridge": None},
-)
-
-# Fit step 1..12 models and average the step growth forecasts.
-path_avg = mf.forecasting.run(
-    panel,
-    "ridge",
-    target="INDPRO",
-    horizon=12,
-    forecast_policy="path_average",
-    target_transform="growth",
-    model_selection={"ridge": None},
-)
-
-# Recursive / iterated forecast: fit one-step AR-style model and iterate to h=12.
-recursive = mf.forecasting.run(
-    panel,
-    "ridge",
-    target="INDPRO",
-    horizon=12,
-    forecast_policy="recursive",
-    target_transform="level",
-    model_selection={"ridge": None},
-)
+import macroforecast as mf
+# Construct with the signature above:
+# mf.forecasting.CombinationSpec(...)
 ```
 
-Target availability rule:
-: for feature-matrix direct and direct-average forecasts, a training row `u` is
-  used only when `u + h <= origin`. For path-average forecasts, each step model
-  uses only rows satisfying `u + step <= origin`. Hyperparameter validation splits
-  are rebuilt under the same rule. Forecast rows expose
-  `window["target_availability_end"]`, `window["target_availability_end_pos"]`,
-  and `window["target_availability_lag"]` so users can audit the effective fit
-  sample. Path-average rows also expose
-  `window["target_availability_by_step"]`. This can be earlier than the generic
-  `WindowSpec` `fit_end`, because `fit_end` is an information-window boundary
-  while h-step target labels realize later.
+#### Dataclass Fields
 
-Test-origin rule:
-: `window.test.first_origin` and `window.test.last_origin` are origin dates.
-  `step=1` means every emitted row in the input index, so overlapping h-step
-  macro forecasts are supported. The runner writes a scored row only when the
-  realized target date is available. With `drop_incomplete=True`, an h-step
-  origin `t` is kept for scoring only if `t + h` is inside the panel. For a
-  monthly panel ending in `2017-12`, h=24 origins after `2015-12` are not
-  evaluable even though the origin dates themselves exist. If an entire final
-  calendar block has no evaluable origins, `WindowSpec.validate(...)` reports
-  no test origins; replication scripts should skip that tail block rather than
-  count it as a forecast error.
-
-For FRED-MD-style replications where preprocessing has already produced the
-one-period target object, use `forecast_policy="direct_average",
-target_transform="value"` or `target_transform="average_value"` for direct
-average targets, and use `forecast_policy="path_average",
-target_transform="value"` for path-average step targets.
-
-Recursive forecasting has an explicit future-feature contract:
-
-| `future_feature_policy` | Meaning | Use when |
+| Field | Type | Default |
 | --- | --- | --- |
-| `"target_lags"` | Default. The runner builds or requires target-lag features only, then updates the target path with its own predictions. It does not invent future exogenous predictors. | Real-time recursive or iterated forecasting. |
-| `"observed_future"` | The runner uses future non-target predictor values already present in the panel while recursively updating only the target. This is an oracle/scenario path. | Scenario analysis, controlled simulations, or cases where future predictor paths are genuinely known. |
+| `method` | `str` | `required` |
+| `name` | `str` | `required` |
+| `models` | `tuple[str, ...] \| None` | `None` |
+| `params` | `dict[str, Any]` | `default_factory` |
+| `func` | `Callable[..., Any] \| None` | `None` |
 
-When `features=None` and `forecast_policy="recursive"`, the runner creates
-`feature_spec(target=target, predictors=[], lags=None, target_lags=(0, 1),
-horizon=1)`. In row-date convention, `target_lags=(0, 1)` means the current
-target value at the one-step information date and its previous value. For
-supplied `FeatureSpec` with `future_feature_policy="target_lags"`, regular
-`predictors` must be empty and `target_lags` must be declared with lag `0`
-included, because predicted target values are written into the next row before
-the next one-step forecast is formed. For supplied `FeatureSpec` with
-`future_feature_policy="observed_future"`, regular predictors are allowed, but
-the user is responsible for the future predictor path.
+#### Public Methods
 
-For feature-matrix models, the runner uses the requested horizon to restrict
-test origins to dates where `t+h` is observable, but it fits/predicts one
-origin row per forecast origin. This keeps `origin` as the information date and
-`date` as the realized target date.
-
-Panel-input models consume the canonical panel directly instead of an
-engineered `X, y` matrix. They cannot be mixed with feature-matrix models in one
-runner call. Currently `forecasting.run(..., features=None)` supports
-`dfm_mixed_mariano_murasawa` and `dfm_unrestricted_midas` as native
-mixed-frequency panel models. It keeps `DataBundle` metadata such as
-`native_frequency_by_column` so the model can separate monthly and quarterly
-columns inside each fit window. Panel-input runner calls currently fit fixed
-model parameters; pass `model_selection={model_name: None}` for these models.
-
-For standard MIDAS regressions, build the mixed-frequency lag matrix explicitly
-and pass it as a `FeatureSet`. This keeps calendar anchoring in
-`mixed_frequency_lags()` and model weighting in `midas_almon()`,
-`midas_beta()`, `midas_step()`, or `unrestricted_midas()`:
-
-```python
-X_midas = mf.feature_engineering.mixed_frequency_lags(
-    mixed,
-    target="GDPC1",
-    columns=["PAYEMS", "INDPRO"],
-    lags=range(0, 12),
-    target_frequency="quarterly",
-    anchor_position="period_end",
-    drop_missing=True,
-)
-y = mixed.panel["GDPC1"].reindex(X_midas.index).rename("GDPC1").to_frame()
-features = mf.feature_engineering.FeatureSet(
-    X=X_midas,
-    y=y,
-    metadata={"feature_engineering": {"method": "mixed_frequency_lags"}},
-    target="GDPC1",
-    targets=("GDPC1",),
-    horizons=(1,),
-    predictors=tuple(X_midas.columns),
-)
-result = mf.forecasting.run(
-    features,
-    "midas_beta",
-    window=mf.window.spec(
-        estimation=mf.window.estimation_expanding(min_size=40),
-        val=mf.window.val_last_block(size=12),
-        test=mf.window.test_origins(horizon=1, step=1),
-    ),
-    params={"midas_beta": {"beta_params": (1.0, 2.0), "alpha": 0.1}},
-    model_selection={"midas_beta": None},
-)
-```
-
-If the analysis intentionally follows the common full-sample empirical
-workflow, preprocess first and pass the processed panel to `run(...,
-preprocessing=None)`. If the analysis is a real-time forecasting exercise, pass
-`preprocess_spec(...)` plus an explicit `preprocessing_policy`.
-
-Stage policies are intentionally shared across preprocessing, feature
-engineering, and model selection:
-
-| Scope | Meaning |
-| --- | --- |
-| `full_panel` | Fit the stage once on the full panel. Useful for retrospective replication designs. |
-| `origin_available` | Fit using observations available up to each origin. This supports common macro cleaning designs, including EM imputation on variables observed by that origin. |
-| `fit_window` | Fit only on the model fit window and apply that fitted state to validation/test rows. |
-| `fixed_reference` | Fit on a named reference period, then keep that state fixed. Useful for fixed PCA loadings or fixed standardization windows. |
-
-Each `StagePolicy` also has an `update` cadence. For preprocessing and feature
-engineering, `run()` refits or reuses the fitted state according to
-`"every_origin"`, `"on_retrain"`, `"never"`, a positive integer cadence, or a
-pandas date offset such as `"12ME"`. This lets the same runner express both
-full re-estimation designs and fixed-reference designs such as “fit PCA
-loadings once, then keep the loadings fixed while origins roll forward.”
-
-The runner metadata records the window, each stage policy, preprocessing
-options, feature-engineering options, model-selection spec, model specs, and origin
-stage records. Each origin stage record includes an `updated` flag showing
-whether that stage fitted new state at that origin.
-
-Before any origin is fitted, `run()` validates the resolved `WindowSpec` against
-the input index. Window validation errors, such as invalid inner validation
-splits or `reuse_params=False` with skipped retune origins, stop the run with
-`window validation failed: ...`.
-
-### Model x Policy Compatibility
-
-`forecast_policy in {"direct", "direct_average"}` asks the model to fit a genuine
-h-step-ahead projection: the target itself is constructed as the h-step object
-(`y[t+h]`, or its h-period average), and the model regresses directly onto it.
-Most models in `list_model_specs()` are built for exactly this (any
-`input_kind="supervised"` feature-matrix model such as `ols`/`ridge`/`lasso`/tree
-models/nets, plus `ar`/`far`, which have validated direct/direct-average
-projection modes). `var` has a validated direct POINT projection for
-`forecast_policy="direct"` only; it is not a horizon-average direct target.
-
-A subset of models instead forecast a horizon by ITERATING their own one-step
-dynamics -- an ARIMA/ETS/Theta-style recursion, a panel BVAR/DFM update, or
-FAVAR's internal factor-VAR -- rather than fitting a direct h-step regression.
-Asking one of these for a `direct`/`direct_average` forecast can silently degrade
-toward a stale/persistence-like forecast at longer horizons. `pipeline_spec(...)`
-therefore rejects these combinations by default. Set
-`on_unsupported_direct="warn"` only for an intentional weak benchmark, or
-`on_unsupported_direct="reroute"` to run affected arm-target cells as
-`forecast_policy="recursive"` with rows labeled `recursive`.
-
-| Bucket (`ModelSpec.input_kind`) | Models |
-| --- | --- |
-| `target` | `arima`, `auto_arima`, `ets`, `holt_winters`, `naive`, `random_walk_drift`, `seasonal_naive`, `stlf`, `theta_method` |
-| `panel` | `bvar_minnesota`, `bvar_normal_inverse_wishart`, `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas` |
-| `supervised` (iterated internally) | `favar` |
-
-`ar` and `far` are deliberately excluded from the guard: they have true
-direct-projection modes that regress the h-ahead or horizon-average target on the
-fresh origin-dated lag block, so direct-policy semantics apply to them. `var` is
-excluded from the plain `direct` guard for the same point-target reason, but it
-is guarded under `direct_average` because its direct VAR equation regresses
-`y[t+h]`, not the average object over steps `1..h`.
-
-For any guarded model, prefer `forecast_policy="recursive"` (iterate the model's
-own one-step dynamics out to h, the design it is built for) or `"path_average"`
-(fit one model per step, then average). See the generated
-[Model x Forecast Policy Matrix](../guide/model_policy_matrix.md) for the full
-registry-derived table. The guarded-model set is cross-checked by
-`tests/pipeline/test_direct_policy_guard.py`, so it tracks the models lane rather
-than drifting out of sync as models are added or removed.
-
-## Execution Order
-
-For raw panel input, `run()` executes one test origin at a time:
-
-| Step | Owner | What happens |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| 1 | `meta` | Read package defaults such as random seed and default stage scopes. |
-| 2 | `window` | Resolve estimation, validation, test, retrain, and retune rows. |
-| 3 | `preprocessing` | Fit or reuse the preprocessing state according to `preprocessing_policy`; transform the rows needed by the origin. |
-| 4 | `feature_engineering` | Fit or reuse the feature builder according to `feature_policy`; create `X_fit`, `y_fit`, `X_selection`, `y_selection`, `X_test`, and `y_test`. |
-| 5 | `model_selection` | If enabled, evaluate model parameter candidates on validation splits supplied by the window. |
-| 6 | `models` or `model_ensemble` | Fit the model or fit-time ensemble on the origin fit window with selected or fixed parameters. |
-| 7 | `models` | Save the fitted object and JSON sidecar when `save_models=True`. |
-| 8 | `forecasting` | Collect point, variance, and quantile forecasts. |
-| 9 | `forecasting` | Append requested forecast-combination rows and write the run metadata ledger. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### combine_best_n
 
-If `data` is already a `FeatureSet`, preprocessing and feature construction are
-skipped. The runner slices the supplied `X` and `y` by the window plan and then
-runs model selection, model fitting, prediction, and optional model storage.
+Qualified name: `macroforecast.forecasting.combination.combine_best_n`
 
-If every selected model has `input_kind="panel"` and `features=None`, the runner
-uses the window plan to slice the panel directly into fit and test panels. This
-is the path used by mixed-frequency DFM models. Runner-level preprocessing can
-run on this path with `preprocess_spec(...)` and `preprocessing_policy`; feature
-engineering is skipped because panel-input models consume native panel columns.
-
-The result metadata records which execution path was used:
-
-| `run.input_path` | Input | Stages run inside `run()` |
-| --- | --- | --- |
-| `panel_to_features` | Raw canonical panel, `DataBundle`, `DataSpec`, or `(panel, metadata)` with feature-matrix models | Optional preprocessing, feature engineering, model selection, model fitting, optional combination. |
-| `feature_set` | Prebuilt `FeatureSet` | Model selection, model fitting, optional combination. Preprocessing and feature construction are assumed to have already happened. |
-| `panel_model` | Canonical panel with panel-input models such as mixed-frequency DFM | Optional preprocessing, panel slicing, panel-model fitting, optional combination. Feature engineering is skipped. |
-
-## Forecast Table
-
-`ForecastResult.to_frame()` returns one row per `(origin, test date, model)`.
-
-| Column | Meaning |
-| --- | --- |
-| `date` | Test target date. |
-| `origin` | Forecast origin from the window row. |
-| `origin_pos` | Integer position of the origin in the input index. |
-| `horizon` | Forecast horizon for the row. |
-| `forecast_policy` | Policy used to construct the row: `direct`, `direct_average`, `path_average`, or `recursive`. |
-| `target` | Source target variable. |
-| `model` | Runner alias, such as `ridge` or a key from a model mapping. |
-| `model_spec` | Canonical registered model name. |
-| `prediction` | Point forecast. |
-| `variance_prediction` | Forecast variance when the fitted model exposes `predict_variance(...)`; otherwise `None`. |
-| `quantile_predictions` | Per-row quantile dictionary when the fitted model exposes `predict_quantiles(X)`; otherwise `None`. |
-| `actual` | Realized target value when available. |
-| `params` | Actual fixed-plus-selected parameters used for the origin fit. |
-| `model_selection` | Model-selection ledger for the origin/model, including `retuned`. |
-| `stored_model` | Model and metadata sidecar paths when `save_models=True`; otherwise `None`. |
-| `window` | Full window row used for the origin. |
-| `preprocessed` | `True` when runner-level preprocessing was active for the row; otherwise `False`. |
-| `combined` | `True` for runner-created combination rows; `False` for base model rows. |
-| `combination` | Combination spec dictionary for combined rows; otherwise `None`. |
-
-## Metadata Structure
-
-`ForecastResult.metadata` is JSON-ready and contains:
-
-| Key | Meaning |
-| --- | --- |
-| `metadata_schema` | Stable metadata contract: `kind="forecast_result"`, schema version, execution path, forecast-table columns, and stage-record columns. |
-| `run` | Forecast count, model count, execution path, forecast policy, horizons, meta config, metadata level, and model storage settings. |
-| `data` | Input panel summary from `macroforecast.data.panel_info(...)`. |
-| `window` | Complete `WindowSpec.to_dict()` output. |
-| `stage_policies` | Resolved preprocessing, feature-engineering, and model-selection policies. |
-| `preprocessing` | `PreprocessSpec.to_dict()` output, or `None`. |
-| `forecast_policy` | Policy metadata including method, horizons, `future_feature_policy`, and whether observed future predictors were used. |
-| `features` | `FeatureSpec.to_dict()` output or supplied `FeatureSet` metadata. |
-| `model_selection` | Search spec metadata, model-keyed search metadata, or `None`. |
-| `combination` | List of resolved forecast-combination specs. |
-| `models` | Runner aliases plus model spec metadata. |
-| `stages` | Origin-level preprocessing and feature-engineering fit records unless `metadata_level="minimal"`. |
-
-`metadata_schema.version` is currently `1`. Code that consumes runner outputs
-should check this value before assuming column or metadata shape. The
-`forecast_table_columns` entry lists the stable row fields emitted by the
-runner. `stage_record_columns` lists the ledger fields used when a stateful
-stage is fitted or reused at an origin.
-
-## Runner Examples
-
-### Full-Sample Empirical Preprocessing
-
-This pattern matches many retrospective empirical designs: clean the panel once,
-then run the forecasting experiment on the processed panel.
+#### Signature
 
 ```python
-processed = mf.preprocessing.reprocess(
-    panel,
-    transform="official",
-    outliers="iqr",
-    outlier_action="flag_as_nan",
-    impute="em_factor",
-    standardize="zscore",
-    frame="keep",
-).panel
-
-features = mf.feature_engineering.feature_spec(
-    target="INDPRO",
-    horizon=1,
-    predictors="all",
-    lags=(0, 1, 2),
-)
-
-result = mf.forecasting.run(
-    processed,
-    ["ridge", "lasso"],
-    window=window,
-    features=features,
-    preprocessing=None,
-    preset="small",
-    save_models=False,
-)
+macroforecast.forecasting.combine_best_n(forecasts: Any, y_true: Any, *, n: int = 3, horizon: int = 1) -> pd.Series
 ```
 
-### Window-Local Preprocessing
+#### Description
 
-This pattern is stricter for real-time forecasting. Preprocessing state is fit
-inside each origin's fit window and then applied to validation/test rows.
+Average the historically best ``n`` models by MSPE.
+
+The ranking at each target date uses only errors observable at the forecast
+origin, so the expanding MSPE is lagged by ``horizon`` target-date rows
+(a 1-row lag for one-step forecasts).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `n` | keyword only | `int` | `3` |
+| `horizon` | keyword only | `int` | `1` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
 
 ```python
-pre = mf.preprocessing.preprocess_spec(
-    transform="official",
-    outliers="iqr",
-    impute="mean",
-    standardize="zscore",
-    standardize_columns="predictors",
-    frame="keep",
-)
-
-result = mf.forecasting.run(
-    panel,
-    "ridge",
-    window=window,
-    preprocessing=pre,
-    preprocessing_policy=mf.window.stage_policy("fit_window", update="every_origin"),
-    features=features,
-    feature_policy=mf.window.stage_policy("fit_window", update="on_retrain"),
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_best_n(...)
 ```
+### combine_bates_granger
 
-### Fixed Standardization Reference
+Qualified name: `macroforecast.forecasting.combination.combine_bates_granger`
 
-Use a fixed preprocessing reference when scaling or imputation state should come
-from a named historical period rather than from every rolling origin.
+#### Signature
 
 ```python
-result = mf.forecasting.run(
-    panel,
-    "ridge",
-    window=window,
-    preprocessing=pre,
-    preprocessing_policy=mf.window.stage_policy(
-        "fixed_reference",
-        reference_start="1985-01-31",
-        reference_end="2004-12-31",
-        update="never",
-    ),
-    features=features,
-)
+macroforecast.forecasting.combine_bates_granger(forecasts: Any, y_true: Any, *, horizon: int = 1, min_periods: int = 10, window: int | None = None, shrink_to_equal: float | None = None) -> pd.Series
 ```
 
-### Fixed PCA Loadings
+#### Description
 
-Use a fixed feature reference when factor loadings should be estimated once and
-held fixed while forecast origins move forward.
+Bates-Granger (1969) minimum error-variance combination (full covariance).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `min_periods` | keyword only | `int` | `10` |
+| `window` | keyword only | `int \| None` | `None` |
+| `shrink_to_equal` | keyword only | `float \| None` | `None` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
 
 ```python
-pca_features = mf.feature_engineering.feature_spec(
-    target="INDPRO",
-    horizon=1,
-    predictors="all",
-    lags=(0, 1),
-    pca_components=8,
-)
-
-result = mf.forecasting.run(
-    panel,
-    "ols",
-    window=window,
-    preprocessing=None,
-    features=pca_features,
-    feature_policy=mf.window.stage_policy(
-        "fixed_reference",
-        reference_start="1985-01-31",
-        reference_end="2004-12-31",
-        update="never",
-    ),
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_bates_granger(...)
 ```
+### combine_granger_ramanathan
 
-When `feature_policy` is `full_panel` or `fixed_reference`, runner-level
-preprocessing must be absent or `preprocessing_policy` must be `full_panel`.
-This keeps fixed feature state fitted on one well-defined processed panel.
+Qualified name: `macroforecast.forecasting.combination.combine_granger_ramanathan`
 
-### Multiple Models with Model-Keyed Model Selection
-
-`model_selection` can be one shared `SearchSpec` or a model-keyed mapping. A
-model-keyed `None` disables model selection for that model. Mapping keys can be
-the output alias, such as `linear`, or the registered spec name, such as `ridge`.
+#### Signature
 
 ```python
-result = mf.forecasting.run(
-    panel,
-    {"linear": "ridge", "sparse": "lasso", "tree": "random_forest"},
-    window=window,
-    features=features,
-    model_selection={
-        "linear": mf.model_selection.grid({"alpha": [0.01, 0.1, 1.0]}),
-        "sparse": mf.model_selection.cv_path(
-            param="alpha",
-            values=[0.001, 0.01, 0.1, 1.0],
-        ),
-        "tree": mf.model_selection.random_search(
-            {
-                "n_estimators": mf.model_selection.randint(100, 500),
-                "max_depth": mf.model_selection.choice([2, 3, 4, None]),
-            },
-            n_iter=12,
-            random_state=123,
-        ),
-    },
-    model_selection_policy=mf.window.stage_policy("fit_window"),
-    model_selection_metric="mse",
-)
+macroforecast.forecasting.combine_granger_ramanathan(forecasts: Any, y_true: Any, *, variant: str = "constrained", horizon: int = 1, min_periods: int = 10, window: int | None = None, shrink_to_equal: float | None = None) -> pd.Series
 ```
 
-`params` and `preset` follow the same alias-or-spec-key rule. Unknown keys raise
-an error instead of being silently ignored. For a single model, direct parameter
-names are also accepted, including dict-valued parameters such as
-`params={"base_params": {"alpha": 0.1}}` for a fit-time ensemble spec.
-This is also how model-local preprocessing options are expressed. For example,
-Elastic Net can standardize predictors inside each fit window while a tree model
-uses the raw feature matrix:
+#### Description
+
+Granger-Ramanathan (1984) regression combination.
+
+``variant``: ``"ols"`` (with intercept), ``"no_intercept"``, or
+``"constrained"`` (no intercept, weights sum to one).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `variant` | keyword only | `str` | `"constrained"` |
+| `horizon` | keyword only | `int` | `1` |
+| `min_periods` | keyword only | `int` | `10` |
+| `window` | keyword only | `int \| None` | `None` |
+| `shrink_to_equal` | keyword only | `float \| None` | `None` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
 
 ```python
-result = mf.forecasting.run(
-    panel,
-    ["elastic_net", "random_forest"],
-    window=window,
-    features=features,
-    params={
-        "elastic_net": {"standardize": True},
-        "random_forest": {"n_estimators": 200, "max_features": 1 / 3},
-    },
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_granger_ramanathan(...)
 ```
+### combine_constrained_ls
 
-This differs from `macroforecast.preprocessing.standardize_panel()`, which is a
-panel preprocessing step. If that preprocessing is run on the full panel outside
-the runner, it uses full-sample moments. If leakage-safe scaling is needed for
-all models, use runner preprocessing specs and window policies. If only selected
-models need scaling, use model-local options such as `standardize=True`.
+Qualified name: `macroforecast.forecasting.combination.combine_constrained_ls`
 
-Forecast rows record the actual fixed-plus-selected parameter set in the
-`params` column. For example, if `params={"ridge": {"fit_intercept": False}}`
-and model selection picks `{"alpha": 0.1}`, the row records both values.
-
-### Forecast Combination Across Models
-
-`run` is atomic: it fits exactly one model per call, so a combination across
-several models is built by running each model in its own call and combining the
-resulting forecast tables. The combination primitives in
-`macroforecast.forecasting` operate on a forecast frame that already contains the
-base model rows. `apply_combinations` appends combined rows that use the same
-`date`, `origin`, `origin_pos`, `horizon`, and `actual` fields as the base rows,
-with `model` set to the combination name.
-
-The `models=` filter inside a combination spec refers to the output `model`
-column, not the registry `model_spec`. If an arm was run under the alias
-`"bagged"`, use `models=["bagged"]` when selecting it for a forecast combination.
+#### Signature
 
 ```python
-from macroforecast.forecasting.combination import apply_combinations, resolve_combinations
-
-tables = [
-    mf.forecasting.run(panel, name, window=window, features=features).to_frame()
-    for name in ("ridge", "lasso", "random_forest")
-]
-master = pd.concat(tables, ignore_index=True)
-records = apply_combinations(master, resolve_combinations("mean"))
-combined = pd.DataFrame(records)  # model == "combined_mean"
+macroforecast.forecasting.combine_constrained_ls(forecasts: Any, y_true: Any, *, horizon: int = 1, min_periods: int = 10, window: int | None = None, shrink_to_equal: float | None = None) -> pd.Series
 ```
 
-Multiple combinations can be requested together by passing a mapping to
-`resolve_combinations`:
+#### Description
+
+Non-negative weights summing to one minimising squared combination error.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `min_periods` | keyword only | `int` | `10` |
+| `window` | keyword only | `int \| None` | `None` |
+| `shrink_to_equal` | keyword only | `float \| None` | `None` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
 
 ```python
-records = apply_combinations(
-    master,
-    resolve_combinations(
-        {
-            "avg": "mean",
-            "dmspe": {"method": "dmspe", "models": ["ridge", "lasso"], "discount": 0.95},
-            "best_two": {"method": "best_n", "n": 2},
-        }
-    ),
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_constrained_ls(...)
 ```
+### combine_eigenvector
 
-For a managed comparison the pipeline applies the same combination methods across
-arms via `CombinationContender` (see the pipeline reference), so combinations
-become additional contenders in the master frame without manual table assembly.
+Qualified name: `macroforecast.forecasting.combination.combine_eigenvector`
 
-`inverse_mspe`, `dmspe`, and `best_n` use only historical forecast errors when
-forming the current combined forecast. The current row's realized value is used
-only after that row's weight or best-model decision has already been made.
-
-Custom forecast combinations use the same primitive:
+#### Signature
 
 ```python
-def blend(forecasts, *, actual, weight=0.5):
-    return weight * forecasts.iloc[:, 0] + (1.0 - weight) * forecasts.iloc[:, -1]
-
-records = apply_combinations(
-    master,
-    [mf.forecasting.custom_combination("ridge_lasso_blend", blend, models=["ridge", "lasso"], weight=0.25)],
-)
+macroforecast.forecasting.combine_eigenvector(forecasts: Any, y_true: Any, *, horizon: int = 1, min_periods: int = 10, window: int | None = None, shrink_to_equal: float | None = None) -> pd.Series
 ```
 
-The callable receives a wide forecast matrix indexed by
-`(date, origin, origin_pos, horizon)` and an `actual` series aligned to the same
-index:
+#### Description
+
+Eigenvector (principal-component) combination (Hsiao-Wan).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `min_periods` | keyword only | `int` | `10` |
+| `window` | keyword only | `int \| None` | `None` |
+| `shrink_to_equal` | keyword only | `float \| None` | `None` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
 
 ```python
-func(forecasts: pandas.DataFrame, *, actual: pandas.Series, **params)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_eigenvector(...)
 ```
+### combine_regularized
 
-It must return a `Series` or one-dimensional array-like object with the same
-length. The runner appends the output as rows with `combined=True` and records
-the callable name in `metadata["combination"]`.
+Qualified name: `macroforecast.forecasting.combination.combine_regularized`
 
-### Mixed-Frequency DFM In The Runner
-
-Use the panel-input path for native monthly/quarterly state-space models. The
-input should be a `DataBundle` whose metadata records column-level native
-frequencies.
+#### Signature
 
 ```python
-mixed = mf.data.combine(monthly_bundle, quarterly_bundle, frequency="native")
-
-window = mf.window.spec(
-    estimation=mf.window.estimation_expanding(min_size=120),
-    val=mf.window.val_last_block(size=24),
-    test=mf.window.test_origins(horizon=1, step=3),
-)
-
-result = mf.forecasting.run(
-    mixed,
-    "dfm_mixed_mariano_murasawa",
-    window=window,
-    target="GDPC1",
-    params={
-        "dfm_mixed_mariano_murasawa": {
-            "n_factors": 1,
-            "factor_order": 1,
-        }
-    },
-    model_selection={"dfm_mixed_mariano_murasawa": None},
-    features=None,
-)
+macroforecast.forecasting.combine_regularized(forecasts: Any, y_true: Any, *, penalty: str = "ridge", alpha: float = 1.0, intercept: bool = True, horizon: int = 1, min_periods: int = 10, window: int | None = None, shrink_to_equal: float | None = None) -> pd.Series
 ```
 
-The result metadata records `run.panel_model_runner=True` and keeps
-`data.native_frequency_counts`, `data.output_frequency_counts`, and
-`data.frequency="mixed"` when those fields are present on the input bundle.
-The requested `target` must be present in the panel before fitting begins; a
-missing target raises a direct error before any model backend is called.
+#### Description
 
-For all runner paths, fitted model `predict(X_test)` output is validated before
-records are appended. Array-like predictions are positional. A pandas `Series`
-or single-column `DataFrame` must either use `X_test.index` or the default
-`RangeIndex(len(X_test))`; any other index is rejected to avoid silently
-writing NaN forecasts. `predict_quantiles(X_test)` follows the same DataFrame
-index rule when it returns a DataFrame.
+Ridge/Lasso-penalised regression combination (high-dimensional weights).
 
-### Quantile and Variance Outputs
+#### Parameters
 
-Models that expose variance or quantile prediction methods fill extra forecast
-columns automatically. The runner first tries `predict_variance(X_test)` for
-models such as `hemisphere_nn`, then falls back to
-`predict_variance(horizon=len(X_test))` for volatility models.
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `penalty` | keyword only | `str` | `"ridge"` |
+| `alpha` | keyword only | `float` | `1.0` |
+| `intercept` | keyword only | `bool` | `True` |
+| `horizon` | keyword only | `int` | `1` |
+| `min_periods` | keyword only | `int` | `10` |
+| `window` | keyword only | `int \| None` | `None` |
+| `shrink_to_equal` | keyword only | `float \| None` | `None` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
 
 ```python
-quantile_result = mf.forecasting.run(
-    panel,
-    "quantile_regression_forest",
-    window=window,
-    features=features,
-    params={
-        "quantile_regression_forest": {
-            "n_estimators": 200,
-            "quantile_levels": (0.1, 0.5, 0.9),
-            "random_state": 123,
-        }
-    },
-    model_selection={"quantile_regression_forest": None},
-)
-
-quantile_result.to_frame()[["prediction", "quantile_predictions"]]
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_regularized(...)
 ```
+### combine_linear_pool
+
+Qualified name: `macroforecast.forecasting.combination.combine_linear_pool`
+
+#### Signature
 
 ```python
-variance_result = mf.forecasting.run(
-    panel,
-    "garch11",
-    window=window,
-    features=mf.feature_engineering.feature_spec(target="y", horizon=1),
-    model_selection={"garch11": None},
-)
-
-variance_result.to_frame()[["prediction", "variance_prediction"]]
+macroforecast.forecasting.combine_linear_pool(means: Any, sds: Any | None = None, *, weights: Any | None = None) -> pd.DataFrame
 ```
 
-### Model Storage
+#### Description
 
-Model storage is on by default. Use a custom root when the run should keep its
-fitted objects separate from other experiments.
+Linear opinion pool of (Gaussian) density forecasts.
+
+The combined density is the mixture ``sum_i w_i N(mu_i, sigma_i^2)``. ``means``
+and ``sds`` are frames (rows = dates, cols = models); ``weights`` default to
+equal. Returns a frame with the pooled ``mean``, ``variance`` and ``sd``. The
+mixture variance exceeds the weighted component variance, capturing model
+disagreement. If ``sds`` is omitted the pool reduces to the weighted mean.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `means` | positional or keyword | `Any` | `required` |
+| `sds` | positional or keyword | `Any \| None` | `None` |
+| `weights` | keyword only | `Any \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-stored = mf.forecasting.run(
-    panel,
-    ["ridge", "random_forest"],
-    window=window,
-    features=features,
-    model_store="trained_model/monthly_baseline",
-)
-
-stored.to_frame()[["model", "stored_model"]]
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_linear_pool(...)
 ```
+### combine_log_pool
 
-Disable storage for fast exploratory runs:
+Qualified name: `macroforecast.forecasting.combination.combine_log_pool`
+
+#### Signature
 
 ```python
-preview = mf.forecasting.run(
-    panel,
-    "ridge",
-    window=window,
-    features=features,
-    save_models=False,
-)
+macroforecast.forecasting.combine_log_pool(means: Any, sds: Any, *, weights: Any | None = None) -> pd.DataFrame
 ```
 
-## Trained Model Storage
+#### Description
 
-By default, `run()` saves the fitted model object produced at each forecast
-origin. The runner decides which object to save: after model selection, it refits the
-model on the origin fit window with the selected best parameters, then delegates
-the actual pickle and JSON write to `macroforecast.models.save_fit()`.
+Logarithmic opinion pool of Gaussian density forecasts.
 
-The default root is relative to the current working directory:
+The combined density is proportional to ``prod_i f_i^{w_i}``. For Gaussians the
+pool is itself Gaussian with precision ``tau = sum_i w_i / sigma_i^2`` and mean
+``(sum_i w_i mu_i / sigma_i^2) / tau``. The log pool is sharper (smaller
+variance) than the linear pool. Returns a frame with pooled ``mean``,
+``variance`` and ``sd``.
 
-```text
-trained_model/{model_name}/origin_{origin_pos}_h{horizon}_{origin}.pkl
-trained_model/{model_name}/origin_{origin_pos}_h{horizon}_{origin}.json
-```
+#### Parameters
 
-Model selection remains a runner responsibility because it depends on the window,
-validation split, model-selection policy, and model-owned search space. Model
-persistence remains a model-module utility because it only knows how to save a
-fitted object and a metadata sidecar.
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `means` | positional or keyword | `Any` | `required` |
+| `sds` | positional or keyword | `Any` | `required` |
+| `weights` | keyword only | `Any \| None` | `None` |
 
-The forecast table includes a `stored_model` dictionary for each row:
+#### Returns
 
-| Key | Meaning |
-| --- | --- |
-| `model_path` | Pickle path for the fitted model, or `None` when the object cannot be pickled. |
-| `metadata_path` | JSON metadata path written for the fitted model. |
-| `save_error` | `None` on success, otherwise the pickle error string. |
+`pd.DataFrame`
 
-The sidecar JSON records the model alias, canonical model spec, fit metadata,
-fit diagnostics, selected parameters, model-selection ledger, and window row used for
-the fit. For custom/local callables that cannot be pickled, the runner still
-writes the JSON sidecar and records `save_error`; forecasting continues.
-
-When a `ForecastResult` is passed to `mf.output.write_artifacts(...)`, the
-artifact manifest also records the `stored_model` pickle and sidecar paths. The
-output writer does not copy those model files; it links the already-written
-runner artifacts into the manifest with `stored_model_pickle` and
-`stored_model_metadata` records.
-
-To disable storage:
+#### Minimal Use
 
 ```python
-result = mf.forecasting.run(
-    panel,
-    "ridge",
-    window=window,
-    features=features,
-    save_models=False,
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_log_pool(...)
 ```
+### combine_dmspe
 
-## Benchmark Forecasts
+Qualified name: `macroforecast.forecasting.combination.combine_inverse_mspe`
 
-Benchmark-relative metrics are evaluated after `run()`, but the benchmark
-forecast should normally be generated at the forecasting stage. Include the
-benchmark model in the same runner call so it uses the same preprocessing,
-feature policy, window, validation split, forecast origin, horizon, and target
-support as the candidate models.
+#### Signature
 
 ```python
-result = mf.forecasting.run(
-    panel,
-    ["ridge", "ols"],
-    window=window,
-    features=features,
-)
-
-scores = result.evaluate(
-    metrics=("mse", "relative_mse", "r2_oos"),
-    benchmark_model="ols",
-)
+macroforecast.forecasting.combine_dmspe(forecasts: Any, y_true: Any, *, discount: float = 1.0, min_weight: float = 1e-12, horizon: int = 1) -> pd.Series
 ```
 
-External benchmark forecasts are also allowed when they come from a published
-system or an existing CSV. Append those rows to the forecast table first, using
-the same `model`, `date` or origin, `horizon`, `target`, `actual`, and
-`prediction` contract. `macroforecast.metrics.evaluate_forecasts()` then
-checks that candidate and benchmark supports match before computing relative
-metrics.
+#### Description
 
-## ForecastResult
+Combine forecasts with inverse discounted MSPE weights.
+
+For an h-step forecast the weights at a target date are decided at the
+origin (h target-date steps earlier), so only forecast errors realised on or
+before that origin are observable. The error history is therefore lagged by
+``horizon`` target-date rows (a 1-row lag for one-step forecasts), preventing
+the use of not-yet-realised errors for multi-step combinations.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `discount` | keyword only | `float` | `1.0` |
+| `min_weight` | keyword only | `float` | `1e-12` |
+| `horizon` | keyword only | `int` | `1` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
 
 ```python
-macroforecast.forecasting.ForecastResult(forecasts, metadata={})
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_dmspe(...)
+```
+### combine_inverse_mspe
+
+Qualified name: `macroforecast.forecasting.combination.combine_inverse_mspe`
+
+#### Signature
+
+```python
+macroforecast.forecasting.combine_inverse_mspe(forecasts: Any, y_true: Any, *, discount: float = 1.0, min_weight: float = 1e-12, horizon: int = 1) -> pd.Series
 ```
 
-| Attribute | Type | Meaning |
-| --- | --- | --- |
-| `forecasts` | pandas DataFrame | One row per emitted forecast. |
-| `metadata` | dict | Window, preprocessing, feature, model, and model-selection metadata. |
-| `sidecars` | dict | Runtime objects attached after forecasting, such as a `ForecastShapleyResult`. |
+#### Description
 
-The forecast table always includes `prediction`. If the fitted model exposes
-`predict_variance(X_test)` or `predict_variance(horizon=...)`, the runner also
-fills `variance_prediction`; otherwise that column is `None`. If the fitted model
-exposes `predict_quantiles(X)`, the runner also fills
-`quantile_predictions` with a per-row dictionary such as
-`{"0.1": value, "0.5": value, "0.9": value}`; otherwise that column is
-`None`.
+Combine forecasts with inverse discounted MSPE weights.
 
-Methods:
+For an h-step forecast the weights at a target date are decided at the
+origin (h target-date steps earlier), so only forecast errors realised on or
+before that origin are observable. The error history is therefore lagged by
+``horizon`` target-date rows (a 1-row lag for one-step forecasts), preventing
+the use of not-yet-realised errors for multi-step combinations.
 
-| Method | Output |
-| --- | --- |
-| `to_frame()` | Forecast table copy. |
-| `evaluate(**kwargs)` | Calls `macroforecast.metrics.evaluate_forecasts()` on this result. |
-| `with_sidecar(name, value)` | Returns a copy with a named runtime sidecar. |
-| `with_oshapley(X, y, models, window=..., **kwargs)` | Builds and attaches an oShapley/PBSV sidecar. |
-| `with_anatomy(X, y, models, window=..., **kwargs)` | Backend alias for `with_oshapley(...)`. |
-| `with_dual(model, X_train, y_train, X_test=None, **kwargs)` | Builds and attaches a dual interpretation sidecar. |
-| `get_sidecar(name, default=None)` | Retrieves one sidecar. |
-| `sidecar_names()` | Lists attached sidecars. |
-| `to_dict()` | JSON-ready dictionary. |
-| `to_json(path=None)` | JSON text and optional file write. |
+#### Parameters
 
-## Incremental Checkpointing
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `discount` | keyword only | `float` | `1.0` |
+| `min_weight` | keyword only | `float` | `1e-12` |
+| `horizon` | keyword only | `int` | `1` |
 
-Long pseudo-out-of-sample runs can persist progress per origin so a crash does
-not discard hours of compute. Pass `checkpoint_path=<dir>` to `run()` (or set
-`checkpoint_dir` on a `PipelineSpec`). Each origin writes one
-`origin_<pos>.parquet` file holding only the lean, scalar columns that are a
-sufficient statistic for every metric and test (`prediction`, `actual`, `model`,
-plus the keys). One file per origin makes each write atomic, so a crash mid-write
-corrupts at most one origin's file, which is simply ignored on resume. A
-restarted run lists the directory, skips origins already on disk, and returns the
-complete frame across all origins.
+#### Returns
 
-The checkpoint covers the feature-matrix single-horizon execution path
-(`direct`, `direct_average`, `path_average`, `recursive`), which is the path the
-replications use. For a multi-horizon `run(..., horizons=[...])`, each horizon is
-written under an `h<h>` subdirectory. The panel-input and prebuilt-`FeatureSet`
-paths are not checkpointed.
+`pd.Series`
 
-| Symbol | Meaning |
-| --- | --- |
-| `LEAN_FORECAST_COLUMNS` | The scalar lean schema persisted per origin: `target`, `horizon`, `origin`, `origin_pos`, `date`, `model`, `prediction`, `actual`, `forecast_policy`, `target_transform`. |
-| `load_checkpoint_frame(checkpoint_path)` | Load all persisted lean records under a checkpoint directory into a single frame (empty if none). |
+#### Minimal Use
 
-## Direct Forecast Combination Functions
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_inverse_mspe(...)
+```
+### combine_mean
 
-Forecast combination lives in `macroforecast.forecasting` because it combines
-forecast outputs, not model fits. Fit-time member-model composition lives in
-`macroforecast.model_ensemble`.
+Qualified name: `macroforecast.forecasting.combination.combine_mean`
 
-| Function | Meaning |
-| --- | --- |
-| `combine_mean(forecasts)` | Equal-weight average. |
-| `combine_median(forecasts)` | Cross-model median. |
-| `combine_trimmed_mean(forecasts, trim=0.1)` | Trim extremes before averaging. |
-| `combine_winsorized_mean(forecasts, limits=(0.1, 0.1))` | Winsorize extremes before averaging. |
-| `combine_inverse_mspe(forecasts, y_true, discount=1.0)` | Inverse discounted MSPE weights. |
-| `combine_dmspe(forecasts, y_true, discount=1.0)` | Alias for inverse discounted MSPE. |
-| `combine_best_n(forecasts, y_true, n=3)` | Average historically best `n` models. |
-| `combine_bates_granger(forecasts, y_true, ...)` | Minimum error-variance weights (full covariance, 1969). |
-| `combine_granger_ramanathan(forecasts, y_true, variant=...)` | Regression combination (ols/no_intercept/constrained). |
-| `combine_constrained_ls(forecasts, y_true, ...)` | Non-negative weights summing to one. |
-| `combine_eigenvector(forecasts, y_true, ...)` | Principal-component (Hsiao-Wan) combination. |
-| `combine_regularized(forecasts, y_true, penalty=...)` | Ridge/Lasso-penalised regression weights. |
-| `combine_linear_pool(means, sds, weights=None)` | Linear opinion pool of Gaussian densities. |
-| `combine_log_pool(means, sds, weights=None)` | Logarithmic opinion pool of Gaussian densities. |
-| `combination_spec(method, name=None, models=None, **params)` | Build a reusable runner combination spec. |
-| `custom_combination(name, func, models=None, **params)` | Build a runner combination spec from a user callable. |
+#### Signature
+
+```python
+macroforecast.forecasting.combine_mean(forecasts: Any) -> pd.Series
+```
+
+#### Description
+
+Equal-weight average forecast.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_mean(...)
+```
+### combine_median
+
+Qualified name: `macroforecast.forecasting.combination.combine_median`
+
+#### Signature
+
+```python
+macroforecast.forecasting.combine_median(forecasts: Any) -> pd.Series
+```
+
+#### Description
+
+Cross-model median forecast.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_median(...)
+```
+### combine_trimmed_mean
+
+Qualified name: `macroforecast.forecasting.combination.combine_trimmed_mean`
+
+#### Signature
+
+```python
+macroforecast.forecasting.combine_trimmed_mean(forecasts: Any, *, trim: float = 0.1) -> pd.Series
+```
+
+#### Description
+
+Trim extreme model forecasts before averaging.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `trim` | keyword only | `float` | `0.1` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_trimmed_mean(...)
+```
+### combine_winsorized_mean
+
+Qualified name: `macroforecast.forecasting.combination.combine_winsorized_mean`
+
+#### Signature
+
+```python
+macroforecast.forecasting.combine_winsorized_mean(forecasts: Any, *, limits: tuple[float, float] = (0.1, 0.1)) -> pd.Series
+```
+
+#### Description
+
+Winsorize cross-model forecasts before averaging.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `limits` | keyword only | `tuple[float, float]` | `(0.1, 0.1)` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combine_winsorized_mean(...)
+```
+### combination_spec
+
+Qualified name: `macroforecast.forecasting.combination.combination_spec`
+
+#### Signature
+
+```python
+macroforecast.forecasting.combination_spec(method: str, *, name: str | None = None, models: Sequence[str] | None = None, **params: Any) -> CombinationSpec
+```
+
+#### Description
+
+Build a runner-compatible forecast-combination spec.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `method` | positional or keyword | `str` | `required` |
+| `name` | keyword only | `str \| None` | `None` |
+| `models` | keyword only | `Sequence[str] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`CombinationSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.combination_spec(...)
+```
+### custom_combination
+
+Qualified name: `macroforecast.forecasting.combination.custom_combination`
+
+#### Signature
+
+```python
+macroforecast.forecasting.custom_combination(name: str, func: Callable[..., Any], *, models: Sequence[str] | None = None, **params: Any) -> CombinationSpec
+```
+
+#### Description
+
+Build a custom forecast-combination spec for ``forecasting.run``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `models` | keyword only | `Sequence[str] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`CombinationSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.custom_combination(...)
+```
+### run
+
+Qualified name: `macroforecast.forecasting.runner.run`
+
+#### Signature
+
+```python
+macroforecast.forecasting.run(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None) -> ForecastResult
+```
+
+#### Description
+
+Run a windowed macro forecasting experiment.
+
+The runner composes small stage callables. ``window`` owns the temporal
+design, stage policies decide where preprocessing, features, and model
+selection are fitted, model specs fit predictors to targets, and the result
+records a run-level metadata ledger.
+
+A ``run`` is ATOMIC: it fits exactly ONE model. ``model`` must be a single
+``str`` model name, a ``Callable`` model factory, or a ``ModelSpec`` (a
+fit-time model-ensemble spec still counts as one model). Passing a sequence
+or a mapping of models raises ``TypeError`` -- run one model per call, or use
+the pipeline with one ``Arm`` per model when comparing models.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `model` | positional or keyword | `str \| Callable[..., Any] \| ModelSpec` | `required` |
+| `window` | keyword only | `WindowSpec \| str \| None` | `None` |
+| `preprocessing` | keyword only | `PreprocessSpec \| None` | `None` |
+| `preprocessing_policy` | keyword only | `StagePolicy \| str \| None` | `None` |
+| `features` | keyword only | `FeatureSpec \| None` | `None` |
+| `feature_policy` | keyword only | `StagePolicy \| str \| None` | `None` |
+| `model_selection` | keyword only | `SearchSpec \| Mapping[str, SearchSpec \| None] \| None` | `None` |
+| `model_selection_policy` | keyword only | `StagePolicy \| str \| None` | `None` |
+| `model_selection_metric` | keyword only | `str \| Callable[..., float]` | `"mse"` |
+| `maximize_model_selection` | keyword only | `bool` | `False` |
+| `preset` | keyword only | `str \| Mapping[str, str \| None] \| None` | `None` |
+| `params` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `target` | keyword only | `str \| None` | `None` |
+| `horizon` | keyword only | `int` | `1` |
+| `horizons` | keyword only | `Sequence[int] \| int \| None` | `None` |
+| `forecast_policy` | keyword only | `str` | `"direct"` |
+| `future_feature_policy` | keyword only | `str \| None` | `None` |
+| `target_transform` | keyword only | `str \| None` | `None` |
+| `combination` | keyword only | `str \| CombinationSpec \| Sequence[str \| CombinationSpec \| Mapping[str, Any]] \| Mapping[str, Any] \| None` | `None` |
+| `save_models` | keyword only | `bool` | `True` |
+| `model_store` | keyword only | `str \| Path` | `"trained_model"` |
+| `preprocessing_cache` | keyword only | `dict[Any, FittedPreprocessor \| _PreparedStage \| FittedFeatureBuilder] \| None` | `None` |
+| `preprocessing_store` | keyword only | `PreprocessorStore \| None` | `None` |
+| `checkpoint_path` | keyword only | `str \| Path \| None` | `None` |
+
+#### Returns
+
+`ForecastResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.run(...)
+```
+### run_forecast
+
+Qualified name: `macroforecast.forecasting.runner.run`
+
+#### Signature
+
+```python
+macroforecast.forecasting.run_forecast(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None) -> ForecastResult
+```
+
+#### Description
+
+Run a windowed macro forecasting experiment.
+
+The runner composes small stage callables. ``window`` owns the temporal
+design, stage policies decide where preprocessing, features, and model
+selection are fitted, model specs fit predictors to targets, and the result
+records a run-level metadata ledger.
+
+A ``run`` is ATOMIC: it fits exactly ONE model. ``model`` must be a single
+``str`` model name, a ``Callable`` model factory, or a ``ModelSpec`` (a
+fit-time model-ensemble spec still counts as one model). Passing a sequence
+or a mapping of models raises ``TypeError`` -- run one model per call, or use
+the pipeline with one ``Arm`` per model when comparing models.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `model` | positional or keyword | `str \| Callable[..., Any] \| ModelSpec` | `required` |
+| `window` | keyword only | `WindowSpec \| str \| None` | `None` |
+| `preprocessing` | keyword only | `PreprocessSpec \| None` | `None` |
+| `preprocessing_policy` | keyword only | `StagePolicy \| str \| None` | `None` |
+| `features` | keyword only | `FeatureSpec \| None` | `None` |
+| `feature_policy` | keyword only | `StagePolicy \| str \| None` | `None` |
+| `model_selection` | keyword only | `SearchSpec \| Mapping[str, SearchSpec \| None] \| None` | `None` |
+| `model_selection_policy` | keyword only | `StagePolicy \| str \| None` | `None` |
+| `model_selection_metric` | keyword only | `str \| Callable[..., float]` | `"mse"` |
+| `maximize_model_selection` | keyword only | `bool` | `False` |
+| `preset` | keyword only | `str \| Mapping[str, str \| None] \| None` | `None` |
+| `params` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `target` | keyword only | `str \| None` | `None` |
+| `horizon` | keyword only | `int` | `1` |
+| `horizons` | keyword only | `Sequence[int] \| int \| None` | `None` |
+| `forecast_policy` | keyword only | `str` | `"direct"` |
+| `future_feature_policy` | keyword only | `str \| None` | `None` |
+| `target_transform` | keyword only | `str \| None` | `None` |
+| `combination` | keyword only | `str \| CombinationSpec \| Sequence[str \| CombinationSpec \| Mapping[str, Any]] \| Mapping[str, Any] \| None` | `None` |
+| `save_models` | keyword only | `bool` | `True` |
+| `model_store` | keyword only | `str \| Path` | `"trained_model"` |
+| `preprocessing_cache` | keyword only | `dict[Any, FittedPreprocessor \| _PreparedStage \| FittedFeatureBuilder] \| None` | `None` |
+| `preprocessing_store` | keyword only | `PreprocessorStore \| None` | `None` |
+| `checkpoint_path` | keyword only | `str \| Path \| None` | `None` |
+
+#### Returns
+
+`ForecastResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.run_forecast(...)
+```

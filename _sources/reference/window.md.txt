@@ -2,803 +2,1703 @@
 
 [Back to reference](index.md)
 
-`macroforecast.window` defines the estimation/val/test time frame. It is the object
-passed between data, feature engineering, model selection, models, and evaluation to
-answer five questions:
+Estimation, validation, test-window, split, and stage-policy definitions.
 
-- how the pre-test estimation sample expands or rolls
-- how validation splits are created inside the estimation sample for model selection
-- where the final test origins start and end
-- how far each test target horizon runs
-- when the model is retrained versus reused
-- where each runner stage may fit stateful operations
+Guide context: [../guide/concepts/windows.md](../guide/concepts/windows.md).
 
-The public unit is one `WindowSpec`. Internally it is composed in this order:
-`EstimationWindow`, `ValWindow`, `TestWindow`, then `AlignmentWindow`.
+## Public Symbols
 
-## Configuration Axes
-
-All major macro-forecasting time-frame choices are explicit:
-
-| Question | Setting | Where |
+| Symbol | Kind | Summary |
 | --- | --- | --- |
-| Should the pre-test estimation sample expand, roll, or stay fixed? | `mode` | `estimation_expanding()`, `estimation_rolling()`, `estimation_fixed()` |
-| How long is a rolling estimation sample? | `size` | `estimation_rolling(size=...)` |
-| What is the minimum estimation sample before a test origin is allowed? | `min_size` | `estimation_expanding(min_size=...)`, `estimation_rolling(min_size=...)`, `estimation_fixed(min_size=...)` |
-| How often does the final test origin move? | `step` | `test_origins(step=...)` |
-| Is test-origin movement row-count based or calendar based? | positive integer or pandas offset | `test_origins(step=1)`, `test_origins(step="1ME")`, `test_origins(step=pd.offsets.MonthEnd(3))` |
-| How far does each final test target run? | `horizon` | `test_origins(horizon=...)` |
-| Which inner validation design is used for model selection? | `method` | `val_last_block()`, `val_poos()`, `val_expanding()`, `val_rolling_blocks()`, `val_blocked_kfold()`, `val_random_kfold()` |
-| How many time blocks are used for tail-block validation? | `n_blocks` | `val_rolling_blocks(n_blocks=...)` |
-| How large is each time block? | `block_size` | `val_rolling_blocks(block_size=...)` |
-| How many chronological CV folds are used? | `n_splits` | `val_blocked_kfold(n_splits=...)` |
-| How many randomly assigned CV folds are used? | `n_splits` and `random_state` | `val_random_kfold(n_splits=..., random_state=...)` |
-| How often is the model refit? | positive integer or pandas offset | `estimation_* (retrain_every=12)`, `estimation_* (retrain_every="12ME")` |
-| How often are hyperparameters reselected? | positive integer or pandas offset | `val_* (retune_every=12)`, `val_* (retune_every="12ME")` |
-| Should retuning happen only when the model is refit? | `retune_on_retrain` | `val_* (retune_on_retrain=True/False)` |
-| Can skipped retune origins reuse the previous selected parameters? | `reuse_params` | `val_* (reuse_params=True/False)` |
-| Where may preprocessing, feature engineering, or model selection fit state? | `scope` | `stage_policy("full_panel")`, `stage_policy("origin_available")`, `stage_policy("fit_window")`, `stage_policy("fixed_reference")` |
-
-Validation choices have explicit time-order semantics:
-
-| Function | Design | Typical use |
-| --- | --- | --- |
-| `val_last_block(size=...)` | One final holdout block inside the estimation sample. | Simple holdout model selection. |
-| `val_poos(size=...)` | Pseudo-out-of-sample one-step tail splits. | Recursive historical model selection with many tail origins. |
-| `val_expanding(min_train_size=..., step=..., horizon=...)` | Expanding inner training sample and forward validation blocks. | Walk-forward validation inside each estimation window. |
-| `val_rolling_blocks(n_blocks=..., block_size=...)` | Several consecutive tail time blocks. | Time-block model selection over recent history. |
-| `val_blocked_kfold(n_splits=...)` | Chronological blocked folds with only past data used for training. | Time-aware CV. This is not random iid k-fold. |
-| `val_random_kfold(n_splits=..., random_state=...)` | Randomly assigned iid-style folds over the estimation sample. | Paper replication when the original study explicitly used random folds. This is not time-safe validation. |
-
-```python
-window = mf.window.spec(
-    estimation=mf.window.estimation_rolling(
-        size=120,
-        embargo=1,
-        retrain_every="12ME",
-    ),
-    val=mf.window.val_expanding(
-        min_train_size=80,
-        horizon=12,
-        step=1,
-        retune_every="12ME",
-        retune_on_retrain=True,
-        reuse_params=True,
-    ),
-    test=mf.window.test_origins(
-        first_origin="2000-01-31",
-        last_origin="2023-12-31",
-        horizon=12,
-        step="1ME",
-    ),
-    alignment=mf.window.alignment_drop_incomplete(),
-)
-```
-
-Rolling estimation with time-block validation:
-
-```python
-window = mf.window.spec(
-    estimation=mf.window.estimation_rolling(
-        size=120,
-        min_size=80,
-        embargo=1,
-        retrain_every="12ME",
-    ),
-    val=mf.window.val_rolling_blocks(
-        n_blocks=4,
-        block_size=12,
-        embargo=1,
-        retune_every="12ME",
-        retune_on_retrain=True,
-        reuse_params=True,
-    ),
-    test=mf.window.test_origins(
-        first_origin="2000-01-31",
-        last_origin="2023-12-31",
-        horizon=12,
-        step="1ME",
-    ),
-)
-```
-
-Expanding estimation with chronological blocked CV:
-
-```python
-window = mf.window.spec(
-    estimation=mf.window.estimation_expanding(
-        min_size=120,
-        embargo=1,
-        retrain_every=1,
-    ),
-    val=mf.window.val_blocked_kfold(
-        n_splits=5,
-        embargo=1,
-        retune_every=1,
-    ),
-    test=mf.window.test_origins(
-        first_origin="2000-01-31",
-        last_origin="2023-12-31",
-        horizon=4,
-        step="1QE",
-    ),
-)
-```
-
-## Public Functions
-
-| Task | Functions |
-| --- | --- |
-| Compose full window | `spec()` |
-| Build from common cutoffs | `from_cutoffs()` |
-| Configure estimation | `estimation_expanding()`, `estimation_rolling()`, `estimation_fixed()` |
-| Configure val | `val_last_block()`, `val_poos()`, `val_expanding()`, `val_rolling_blocks()`, `val_blocked_kfold()`, `val_random_kfold()` |
-| Configure test | `test_origins()` |
-| Configure alignment | `alignment_drop_incomplete()`, `alignment_keep_missing()` |
-| Configure runner stage timing | `stage_policy()`, `custom_stage_policy()`, `stage_index()`, `stage_panel()` |
-| Shortcut windows | `last_block()`, `poos()`, `expanding()`, `rolling_blocks()`, `blocked_kfold()`, `random_kfold()` |
-| Inspect windows | `WindowSpec.plan()`, `WindowSpec.origins()`, `WindowSpec.test_mask()`, `WindowSpec.align()`, `WindowSpec.to_table()` |
-| Runner handoff | `WindowSpec.val_splits_for_origin()`, `WindowSpec.iter_origins()`, `WindowSpec.iter_slices()` |
-| Low-level split generators | `make_splitter()`, `last_block_split()`, `poos_split()`, `expanding_split()`, `rolling_blocks_split()`, `blocked_kfold_split()`, `random_kfold_split()` |
-
-## StagePolicy
-
-```python
-macroforecast.window.stage_policy(
-    scope="fit_window",
-    update="every_origin",
-    reference_start=None,
-    reference_end=None,
-    apply_to=("fit", "test"),
-    metadata=None,
-)
-```
-
-`StagePolicy` is the runner-facing timing rule for stateful stages. It is used
-as `preprocessing_policy`, `feature_policy`, and `selection_policy` in
-`macroforecast.forecasting.run(...)`.
-
-| Scope | Meaning |
-| --- | --- |
-| `full_panel` | Fit the stage on the complete panel once. |
-| `origin_available` | Fit the stage on rows available by each origin. |
-| `fit_window` | Fit the stage only on the model fit window. |
-| `fixed_reference` | Fit the stage on a fixed reference period and reuse that state. |
-| `custom` | Use a user selector callable to choose the allowed labels. Build this with `custom_stage_policy(...)`. |
-
-`update` controls how often a runner refits stateful preprocessing or feature
-engineering stages. Current accepted values are:
-
-| Update | Meaning |
-| --- | --- |
-| `"every_origin"` | Refit the stage at every test origin. |
-| `"on_retrain"` | Refit when the window row has `retrain=True`. |
-| `"never"` | Fit once at the first origin and reuse the fitted state. |
-| Positive integer | Refit every N origins. |
-| Pandas date offset string, such as `"12ME"` | Refit when the current origin is at least the offset after the last update. |
-
-Selection retuning follows the validation window's `retune_every` setting. The
-stage `update` field is mainly for fitted preprocessing state, fixed PCA
-loadings, and other feature-engineering states.
-
-`stage_index(index, item, policy)` and `stage_panel(panel, item, policy)` are
-the low-level handoff helpers used by runners. They resolve the exact rows
-allowed by a policy for an origin item returned by `WindowSpec.iter_origins()`.
-This keeps policy-to-index logic in `macroforecast.window`, not in
-preprocessing, feature engineering, model, or model selection code.
-
-```python
-feature_policy = mf.window.stage_policy(
-    "fixed_reference",
-    reference_start="2000-01-31",
-    reference_end="2019-12-31",
-    update="never",
-)
-```
-
-### custom_stage_policy
-
-Build a `StagePolicy` whose rows are selected by user code.
-
-```python
-macroforecast.window.custom_stage_policy(
-    selector,
-    *,
-    update="every_origin",
-    apply_to=("fit", "test"),
-    metadata=None,
-) -> StagePolicy
-```
-
-The selector receives the full index and the current origin item:
-
-```python
-selector(index: pandas.Index, *, item: dict, policy: StagePolicy)
-```
-
-It may return:
-
-| Return type | Meaning |
-| --- | --- |
-| Boolean `Series` or boolean `ndarray` | Mask over the full index. |
-| `slice` | Positional slice into the full index. |
-| Integer positions | Positional labels from the full index. |
-| Index labels | Labels to keep. Every requested label must exist in the supplied index. Duplicate requested labels raise. |
-
-The selected labels must not be empty. Missing labels and duplicate label
-requests raise instead of being silently dropped. The runner stores the policy under
-`ForecastResult.metadata["stage_policies"]`; the callable itself is recorded by
-name in metadata.
-
-```python
-def last_half_of_fit(index, *, item, policy):
-    fit_idx = item["fit_idx"]
-    return fit_idx[len(fit_idx) // 2 :]
-
-result = mf.forecasting.run(
-    panel,
-    "ridge",
-    window=window,
-    features=features,
-    model_selection_policy=mf.window.custom_stage_policy(last_half_of_fit),
-)
-```
-
-## WindowSpec
-
-```python
-macroforecast.window.WindowSpec(
-    method="expanding",
-    estimation=EstimationWindow(...),
-    val=ValWindow(...),
-    test=TestWindow(...),
-    alignment=AlignmentWindow(...),
-    validation_size=None,
-    validation_ratio=0.2,
-    min_train_size=None,
-    n_splits=5,
-    step=1,
-    horizon=1,
-    embargo=0,
-    metadata=None,
-)
-```
-
-The explicit component fields are the preferred API. The scalar validation
-fields remain to preserve the older model-selection split behavior.
-
-Output methods:
-
-| Method | Output | Meaning |
-| --- | --- | --- |
-| `split(n_samples)` | list of inner train/val integer positions | Validation splits for model-parameter selection. |
-| `to_table(n_samples, index=None)` | DataFrame | Inspectable inner train/val split ranges. |
-| `plan(index)` | DataFrame | Combined estimation/val/test execution plan. |
-| `origins(index)` | DataFrame | Test-origin rows with estimation, fit, and test ranges. |
-| `val_splits_for_origin(index, origin)` | list of train/val positions | Absolute-position inner validation splits for one test origin. |
-| `iter_origins(index)` | iterator of dicts | Origin metadata plus absolute `estimation_idx`, `fit_idx`, `test_idx`, and retune-time `val_splits`. |
-| `iter_slices(X, y=None)` | iterator of dicts | Same origin metadata plus sliced `X_estimation`, `X_fit`, `X_test`, `y_estimation`, `y_fit`, and `y_test`. |
-| `validate(index)` | dict | User-facing validation report with `ok`, counts, errors, and warnings. |
-| `test_mask(index)` | Series[bool] | Dates included in the final test region. |
-| `align(X, y=None)` | DataFrame or `(X, y)` | Feature/target index alignment. |
-| `to_dict()` | dict | JSON-ready metadata. |
-
-`origins(index)` returns:
-
-| Column | Meaning |
-| --- | --- |
-| `origin`, `origin_pos` | Test origin label and position. |
-| `estimation_start`, `estimation_end` | Full pre-test sample available at that origin. |
-| `fit_start`, `fit_end` | Sample actually used by the current fitted model. This can lag `estimation_*` when `retrain_every > 1`. |
-| `test_start`, `test_end` | Test label range produced at the origin. |
-| `*_pos` | Integer positions. |
-| `horizon`, `step`, `test_step`, `n_estimation`, `n_fit`, `n_test` | Window sizes and test-origin movement metadata. |
-| `retrain`, `retrain_group` | Whether this origin refits the model and the refit group id. |
-| `retrain_cadence`, `estimation_mode` | Refit cadence metadata and estimation-window mode. |
-
-`plan(index)` adds:
-
-| Column | Meaning |
-| --- | --- |
-| `val_method` | Inner validation splitter used when retuning. |
-| `retune`, `retune_group` | Whether hyperparameters are retuned at this origin and the retune group id. |
-| `retune_cadence` | Hyperparameter retuning cadence metadata. |
-| `retune_on_retrain` | Whether scheduled retunes are allowed only at retrain origins. |
-| `reuse_params` | Whether non-retune origins may reuse the last selected parameters. |
-| `selection_start`, `selection_end` | Label range of the estimation sample used for the active model-parameter selection run. Non-retune origins reuse the previous range. |
-| `selection_start_pos`, `selection_end_pos`, `n_selection` | Integer positions and length for the active model-selection sample. |
-| `n_val_splits` | Number of inner train/val splits evaluated at this origin. Zero when `retune=False`. |
-| `val_start`, `val_end` | Label range covered by the validation folds at retune origins. |
-| `val_start_pos`, `val_end_pos` | Integer positions for the validation-fold label range. |
-
-All methods that consume an index require unique, monotonic increasing labels.
-This keeps time order explicit and avoids silent reordering.
-
-`retrain_every` and `retune_every` are separate cadences:
-
-- `retrain_every` controls when model coefficients are refit.
-- `retune_every` controls when hyperparameters are reselected.
-- Positive integers count emitted test origins. `retrain_every=12` means every
-  twelfth emitted origin, regardless of the calendar distance between labels.
-- Pandas offsets use calendar time. `retrain_every="12ME"` means the first
-  emitted origin retrains, then the next origin on or after last retrain date
-  plus 12 month ends retrains.
-- Calendar `retrain_every` and `retune_every` require a `DatetimeIndex`.
-- With `retune_on_retrain=True`, retuning is allowed only at origins that also retrain.
-- With `reuse_params=True`, skipped retune origins reuse the last selected parameters.
-- With `reuse_params=False`, `validate(index)` requires every emitted origin to retune.
-
-`TestWindow.step` can be either row-count based or calendar based:
-
-- `step=1` means every emitted observation in the supplied index.
-- `step=3` means every third emitted observation.
-- `step="1ME"` means one month-end calendar move between test origins.
-- `step="1QE"` means one quarter-end calendar move.
-- `step=pd.DateOffset(months=3)` or a pandas offset object such as
-  `pd.offsets.MonthEnd(3)` is also accepted.
-
-Calendar/date-offset steps require a `DatetimeIndex`. If the offset lands
-between two available labels, the next available label is used. For example, on
-an irregular monthly panel, a target date of May 29 moves to the first available
-index label on or after May 29. This calendar option applies to final test
-origins only; `ValWindow.step` and the low-level validation splitters remain
-row-count based because they operate inside an already selected estimation
-sample.
-
-Current row-count-only settings:
-
-| Setting | Meaning |
-| --- | --- |
-| `TestWindow.horizon` | Number of rows in the final test horizon. |
-| `EstimationWindow.embargo` | Number of rows between estimation end and test origin. |
-| `ValWindow.step` | Row-count movement between inner validation splits. |
-| `ValWindow.horizon` | Row-count length of each inner validation target block. |
-| Low-level splitters | All low-level splitters operate on integer positions. |
-
-Irregular calendar example:
-
-```python
-idx = pd.date_range("2000-01-31", periods=18, freq="ME").delete([7, 10, 14])
-X = pd.DataFrame({"x": range(len(idx))}, index=idx)
-
-window = mf.window.spec(
-    estimation=mf.window.estimation_expanding(
-        min_size=3,
-        retrain_every="6ME",
-    ),
-    val=mf.window.val_last_block(
-        size=2,
-        retune_every="3ME",
-        retune_on_retrain=False,
-    ),
-    test=mf.window.test_origins(
-        first_origin=idx[4],
-        last_origin=idx[-1],
-        horizon=1,
-        step="3ME",
-    ),
-)
-
-plan = window.plan(X.index)
-plan[[
-    "origin",
-    "test_step",
-    "retrain",
-    "retrain_cadence",
-    "retune",
-    "retune_cadence",
-]]
-```
-
-If `idx[4] + 3ME` lands on a missing label, the next available index label is
-used. The cadence metadata columns make the effective runner plan auditable
-without reopening the original `WindowSpec`.
-
-```python
-plan = window.plan(X.index)
-report = window.validate(X.index)
-
-for origin in window.iter_slices(X, y):
-    X_fit = origin["X_fit"]
-    y_fit = origin["y_fit"]
-    X_test = origin["X_test"]
-    if origin["row"]["retune"]:
-        inner_splits = origin["val_splits"]
-```
-
-Minimal runner loop:
-
-```python
-selected_params = None
-fit = None
-
-for origin in window.iter_slices(X, y):
-    row = origin["row"]
-    if row["retune"]:
-        selected_params = your_selection_function(
-            origin["X_fit"],
-            origin["y_fit"],
-            val_splits=origin["val_splits"],
-        )
-    if row["retrain"]:
-        fit = your_model_function(origin["X_fit"], origin["y_fit"], **selected_params)
-    prediction = fit.predict(origin["X_test"])
-```
-
-## from_cutoffs
-
-```python
-macroforecast.window.from_cutoffs(
-    test_start,
-    test_end=None,
-    estimation_start=None,
-    mode="expanding",
-    estimation_size=None,
-    estimation_min_size=None,
-    embargo=0,
-    retrain_every=1,
-    val_method="last_block",
-    val_size=None,
-    val_ratio=0.2,
-    val_min_train_size=None,
-    val_n_splits=5,
-    val_random_state=None,
-    val_horizon=None,
-    val_step=1,
-    val_embargo=None,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-    horizon=1,
-    step=1,
-)
-```
-
-This helper builds the same `WindowSpec` from common cutoff choices.
-
-```python
-window = mf.window.from_cutoffs(
-    estimation_start="1960-01-31",
-    test_start="2000-01-31",
-    test_end="2023-12-31",
-    mode="rolling",
-    estimation_size=120,
-    val_method="last_block",
-    val_size=24,
-    horizon=12,
-    retrain_every="12ME",
-    retune_every="12ME",
-    retune_on_retrain=True,
-    reuse_params=True,
-    step="1ME",
-)
-```
-
-## Components
-
-### EstimationWindow
-
-```python
-macroforecast.window.EstimationWindow(
-    mode="expanding",
-    start=None,
-    end=None,
-    min_size=None,
-    size=None,
-    embargo=0,
-    retrain_every=1,
-)
-```
-
-Builders:
-
-```python
-mf.window.estimation_expanding(
-    start=None,
-    min_size=None,
-    embargo=0,
-    retrain_every=1,
-)
-mf.window.estimation_rolling(
-    start=None,
-    size=120,
-    min_size=None,
-    embargo=0,
-    retrain_every=1,
-)
-mf.window.estimation_fixed(
-    start=None,
-    end=None,
-    min_size=None,
-    embargo=0,
-    retrain_every=1,
-)
-```
-
-Input:
-
-| Argument | Meaning |
-| --- | --- |
-| `mode` | `expanding`, `rolling`, or `fixed`. |
-| `start` | First allowed estimation label or integer position. |
-| `end` | Last allowed estimation label or integer position for fixed bounds. |
-| `min_size` | Minimum estimation observations required before an origin is emitted. |
-| `size` | Rolling estimation length. Required for `estimation_rolling()`. |
-| `embargo` | Gap between the last estimation observation and the test origin. |
-| `retrain_every` | Refit cadence. Positive integers count emitted test origins; pandas offset strings or `DateOffset` objects use calendar time and require a `DatetimeIndex`. |
-
-### ValWindow
-
-```python
-macroforecast.window.ValWindow(
-    method="expanding",
-    size=None,
-    ratio=0.2,
-    min_train_size=None,
-    n_splits=5,
-    random_state=None,
-    horizon=1,
-    step=1,
-    embargo=None,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-)
-```
-
-Builders:
-
-```python
-mf.window.val_last_block(
-    size=None,
-    ratio=0.2,
-    embargo=None,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-)
-mf.window.val_poos(
-    size=None,
-    ratio=0.25,
-    embargo=None,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-)
-mf.window.val_expanding(
-    min_train_size=None,
-    step=1,
-    horizon=1,
-    embargo=None,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-)
-mf.window.val_rolling_blocks(
-    n_blocks=3,
-    block_size=None,
-    embargo=None,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-)
-mf.window.val_blocked_kfold(
-    n_splits=5,
-    embargo=None,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-)
-mf.window.val_random_kfold(
-    n_splits=5,
-    random_state=0,
-    retune_every=1,
-    retune_on_retrain=True,
-    reuse_params=True,
-)
-```
-
-Input:
-
-| Argument | Meaning |
-| --- | --- |
-| `method` | Validation splitter: `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold`, or `random_kfold`. |
-| `size` | Explicit validation size for holdout-style splitters. |
-| `ratio` | Validation ratio when `size` is absent. |
-| `min_train_size` | Minimum inner training size for expanding validation inside the estimation window. |
-| `n_splits` | Number of validation folds or blocks. |
-| `random_state` | Seed for `random_kfold` fold assignment. Ignored by temporal splitters. |
-| `horizon` | Validation target length. Defaults to one-step validation. |
-| `step` | Validation split movement. |
-| `embargo` | Validation-specific embargo. If absent, estimation embargo is used. |
-| `retune_every` | Hyperparameter retuning cadence. Positive integers count emitted test origins; pandas offset strings or `DateOffset` objects use calendar time and require a `DatetimeIndex`. |
-| `retune_on_retrain` | If `True`, a scheduled retune happens only when the same origin retrains the model. |
-| `reuse_params` | If `True`, skipped retune origins reuse the most recent selected parameters. If `False`, validation fails unless every origin retunes. |
-
-### TestWindow
-
-```python
-macroforecast.window.TestWindow(
-    first_origin=None,
-    last_origin=None,
-    horizon=1,
-    step=1,
-    drop_incomplete=True,
-    exclude=(),
-)
-```
-
-Builder:
-
-```python
-mf.window.test_origins(
-    first_origin=None,
-    last_origin=None,
-    horizon=1,
-    step=1,
-    drop_incomplete=True,
-    exclude=(),
-)
-```
-
-Input:
-
-| Argument | Meaning |
-| --- | --- |
-| `first_origin` | First final-test origin label or integer position. |
-| `last_origin` | Last final-test origin label or integer position. |
-| `horizon` | Test horizon length in rows. |
-| `step` | Origin movement. Positive integers move by row count. Pandas offset strings or `DateOffset` objects move by calendar time and require a `DatetimeIndex`. |
-| `drop_incomplete` | Drop origins whose full horizon exceeds the available index. |
-| `exclude` | Sequence of `(start, end)` windows removed from the test mask. |
-
-`first_origin` and `last_origin` are forecast-origin labels, not realized
-target-date labels. With a monthly index and `step=1`, the test origin moves one
-row at a time, so h-step forecasts overlap in the usual macro-forecasting
-sense. The horizon still controls target availability: an origin `t` is
-evaluable only when `t + horizon` is in the supplied index. If the panel ends at
-`2017-12` and `horizon=24`, the last evaluable origin is `2015-12`; origins in
-`2016` and `2017` have no realized 24-month-ahead actual.
-
-With `drop_incomplete=True`, those tail origins are removed before the runner
-fits/evaluates them. A calendar block can therefore be empty for long horizons
-even when `step=1`; this is normal for evaluation runs and prevents RMSE/MAE
-from using forecasts without realized actuals. For future-only forecasting,
-build a forecast-only/scenario panel separately instead of scoring those tail
-origins.
+| `AlignmentWindow` | class | Feature/target alignment rule before model fitting. |
+| `EstimationWindow` | class | Pre-test estimation-sample rule applied at each test origin. |
+| `Split` | callable | Built-in immutable sequence. |
+| `StagePolicy` | class | Fit/apply timing rule for one forecasting-run stage. |
+| `TestWindow` | class | Final test-origin and horizon rule. |
+| `ValWindow` | class | Validation rule used for model and hyperparameter selection. |
+| `WindowSpec` | class | Macro forecasting time frame passed across selection/model/evaluation. |
+| `alignment_drop_incomplete` | function | Alignment rule that drops rows with missing feature or target values. |
+| `alignment_keep_missing` | function | Alignment rule that preserves missing rows after index alignment. |
+| `blocked_kfold` | function | Configure chronological blocked k-fold validation. |
+| `blocked_kfold_split` | function | Yield chronological blocked-fold splits using only past data for training. |
+| `custom_stage_policy` | function | Create a stage policy whose sample labels are supplied by a callable. |
+| `estimation_expanding` | function | Estimation rule that expands from ``start`` through each test origin. |
+| `estimation_fixed` | function | Estimation rule with a fixed start and optional fixed end bound. |
+| `estimation_rolling` | function | Estimation rule with a fixed trailing sample size at each test origin. |
+| `expanding` | function | Configure expanding-window train/val splits. |
+| `expanding_split` | function | Yield expanding-window validation splits. |
+| `from_cutoffs` | function | Build a window from common estimation/test cutoff dates. |
+| `last_block` | function | Configure one final val block. |
+| `last_block_split` | function | Yield one split with the last block held out for validation. |
+| `make_splitter` | function | Build validation splits from a validation method name. |
+| `normalize_window_name` | function | Return the canonical window method name for a method or alias. |
+| `poos` | function | Configure pseudo-out-of-sample one-step tail splits. |
+| `poos_split` | function | Yield pseudo-out-of-sample one-step validation splits over the tail block. |
+| `random_kfold` | function | Configure randomly assigned iid-style K-fold validation. |
+| `random_kfold_split` | function | Yield randomly assigned K-fold splits. |
+| `resolve_window` | function | Return a ``WindowSpec`` from a spec, method name, or default. |
+| `resolve_stage_policy` | function | Return a ``StagePolicy`` from a policy object, scope name, or default. |
+| `rolling_blocks` | function | Configure consecutive validation blocks over the sample tail. |
+| `rolling_blocks_split` | function | Yield consecutive validation blocks with all prior observations as training data. |
+| `spec` | function | Compose a full estimation/val/test macro window from component windows. |
+| `stage_index` | function | Return labels allowed by one stage policy for one origin item. |
+| `stage_panel` | function | Return panel rows allowed by one stage policy for one origin item. |
+| `stage_policy` | function | Create a reusable stage timing policy. |
+| `split_table` | function | Return validation splits as an inspectable table. |
+| `test_origins` | function | Final test-origin rule for model-stage out-of-sample runs. |
+| `val_blocked_kfold` | function | Validation rule with chronological blocked folds. |
+| `val_expanding` | function | Validation rule with expanding train windows. |
+| `val_last_block` | function | Validation rule with one final holdout block. |
+| `val_poos` | function | Validation rule with one-step pseudo-out-of-sample tail splits. |
+| `val_random_kfold` | function | Validation rule with randomly assigned iid-style folds. |
+| `val_rolling_blocks` | function | Validation rule with consecutive validation blocks over the sample tail. |
+
+## Callable And Class Reference
 
 ### AlignmentWindow
 
-```python
-macroforecast.window.AlignmentWindow(
-    join="inner",
-    drop_missing=True,
-    require_full_horizon=True,
-)
-```
+Qualified name: `macroforecast.window.core.AlignmentWindow`
 
-Builders:
+#### Signature
 
 ```python
-mf.window.alignment_drop_incomplete(join="inner", require_full_horizon=True)
-mf.window.alignment_keep_missing(join="inner", require_full_horizon=True)
+macroforecast.window.AlignmentWindow(join: str = "inner", drop_missing: bool = True, require_full_horizon: bool = True) -> None
 ```
 
-`alignment_drop_incomplete()` removes rows with missing features or missing
-targets. `alignment_keep_missing()` keeps missing feature rows after index
-alignment, but with `require_full_horizon=True` it still drops rows whose target
-horizon is incomplete.
+#### Description
 
-## Shortcuts
+Feature/target alignment rule before model fitting.
 
-Shortcuts create a full `WindowSpec` and still support model-selection-style use.
+#### Parameters
 
-### last_block
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `join` | positional or keyword | `str` | `"inner"` |
+| `drop_missing` | positional or keyword | `bool` | `True` |
+| `require_full_horizon` | positional or keyword | `bool` | `True` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.window.last_block(validation_size=None, validation_ratio=0.2, embargo=0)
+import macroforecast as mf
+# Construct with the signature above:
+# mf.window.AlignmentWindow(...)
 ```
 
-One final validation block.
+#### Dataclass Fields
 
-### poos
+| Field | Type | Default |
+| --- | --- | --- |
+| `join` | `str` | `"inner"` |
+| `drop_missing` | `bool` | `True` |
+| `require_full_horizon` | `bool` | `True` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### EstimationWindow
+
+Qualified name: `macroforecast.window.core.EstimationWindow`
+
+#### Signature
 
 ```python
-macroforecast.window.poos(validation_size=None, validation_ratio=0.25, embargo=0)
+macroforecast.window.EstimationWindow(mode: str = "expanding", start: Any | None = None, end: Any | None = None, min_size: int | None = None, size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> None
 ```
 
-Pseudo-out-of-sample one-step tail validation splits.
+#### Description
 
-### expanding
+Pre-test estimation-sample rule applied at each test origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `mode` | positional or keyword | `str` | `"expanding"` |
+| `start` | positional or keyword | `Any \| None` | `None` |
+| `end` | positional or keyword | `Any \| None` | `None` |
+| `min_size` | positional or keyword | `int \| None` | `None` |
+| `size` | positional or keyword | `int \| None` | `None` |
+| `embargo` | positional or keyword | `int` | `0` |
+| `retrain_every` | positional or keyword | `TemporalCadence` | `1` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.window.expanding(min_train_size=None, step=1, horizon=1, embargo=0)
+import macroforecast as mf
+# Construct with the signature above:
+# mf.window.EstimationWindow(...)
 ```
 
-Expanding inner-train window with forward validation blocks.
+#### Dataclass Fields
 
-### rolling_blocks
+| Field | Type | Default |
+| --- | --- | --- |
+| `mode` | `str` | `"expanding"` |
+| `start` | `Any \| None` | `None` |
+| `end` | `Any \| None` | `None` |
+| `min_size` | `int \| None` | `None` |
+| `size` | `int \| None` | `None` |
+| `embargo` | `int` | `0` |
+| `retrain_every` | `TemporalCadence` | `1` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### Split
+
+Qualified name: `builtins.tuple`
+
+#### Signature
 
 ```python
-macroforecast.window.rolling_blocks(n_blocks=3, block_size=None, embargo=0)
+macroforecast.window.Split(*args, **kwargs)
 ```
 
-Consecutive validation blocks over the sample tail.
+#### Description
 
+Built-in immutable sequence.
+
+If no argument is given, the constructor returns an empty tuple.
+If iterable is specified the tuple is initialized from iterable's items.
+
+If the argument is a tuple, the return value is the same object.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.Split(...)
+```
+### StagePolicy
+
+Qualified name: `macroforecast.window.policy.StagePolicy`
+
+#### Signature
+
+```python
+macroforecast.window.StagePolicy(scope: StageScope = "fit_window", update: StageUpdate = "every_origin", reference_start: Any | None = None, reference_end: Any | None = None, apply_to: tuple[str, ...] = ('fit', 'test'), metadata: dict[str, Any] = <factory>, selector: Callable[..., Any] | None = None) -> None
+```
+
+#### Description
+
+Fit/apply timing rule for one forecasting-run stage.
+
+``scope`` decides what sample a stateful stage may use. ``update`` decides
+when a runner should refit or reuse that stage state across forecast
+origins.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `scope` | positional or keyword | `StageScope` | `"fit_window"` |
+| `update` | positional or keyword | `StageUpdate` | `"every_origin"` |
+| `reference_start` | positional or keyword | `Any \| None` | `None` |
+| `reference_end` | positional or keyword | `Any \| None` | `None` |
+| `apply_to` | positional or keyword | `tuple[str, ...]` | `("fit", "test")` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `selector` | positional or keyword | `Callable[..., Any] \| None` | `None` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.window.StagePolicy(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `scope` | `StageScope` | `"fit_window"` |
+| `update` | `StageUpdate` | `"every_origin"` |
+| `reference_start` | `Any \| None` | `None` |
+| `reference_end` | `Any \| None` | `None` |
+| `apply_to` | `tuple[str, ...]` | `("fit", "test")` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `selector` | `Callable[..., Any] \| None` | `None` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | Return a JSON-ready policy description. |
+### TestWindow
+
+Qualified name: `macroforecast.window.core.TestWindow`
+
+#### Signature
+
+```python
+macroforecast.window.TestWindow(first_origin: Any | None = None, last_origin: Any | None = None, horizon: int = 1, step: TestStep = 1, drop_incomplete: bool = True, exclude: tuple[tuple[Any | None, Any | None], ...] = ()) -> None
+```
+
+#### Description
+
+Final test-origin and horizon rule.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `first_origin` | positional or keyword | `Any \| None` | `None` |
+| `last_origin` | positional or keyword | `Any \| None` | `None` |
+| `horizon` | positional or keyword | `int` | `1` |
+| `step` | positional or keyword | `TestStep` | `1` |
+| `drop_incomplete` | positional or keyword | `bool` | `True` |
+| `exclude` | positional or keyword | `tuple[tuple[Any \| None, Any \| None], ...]` | `()` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.window.TestWindow(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `first_origin` | `Any \| None` | `None` |
+| `last_origin` | `Any \| None` | `None` |
+| `horizon` | `int` | `1` |
+| `step` | `TestStep` | `1` |
+| `drop_incomplete` | `bool` | `True` |
+| `exclude` | `tuple[tuple[Any \| None, Any \| None], ...]` | `()` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### ValWindow
+
+Qualified name: `macroforecast.window.core.ValWindow`
+
+#### Signature
+
+```python
+macroforecast.window.ValWindow(method: str = "expanding", size: int | None = None, ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, horizon: int = 1, step: int = 1, embargo: int | None = None, random_state: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> None
+```
+
+#### Description
+
+Validation rule used for model and hyperparameter selection.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `method` | positional or keyword | `str` | `"expanding"` |
+| `size` | positional or keyword | `int \| None` | `None` |
+| `ratio` | positional or keyword | `float` | `0.2` |
+| `min_train_size` | positional or keyword | `int \| None` | `None` |
+| `n_splits` | positional or keyword | `int` | `5` |
+| `horizon` | positional or keyword | `int` | `1` |
+| `step` | positional or keyword | `int` | `1` |
+| `embargo` | positional or keyword | `int \| None` | `None` |
+| `random_state` | positional or keyword | `int \| None` | `None` |
+| `retune_every` | positional or keyword | `TemporalCadence` | `1` |
+| `retune_on_retrain` | positional or keyword | `bool` | `True` |
+| `reuse_params` | positional or keyword | `bool` | `True` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.window.ValWindow(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `method` | `str` | `"expanding"` |
+| `size` | `int \| None` | `None` |
+| `ratio` | `float` | `0.2` |
+| `min_train_size` | `int \| None` | `None` |
+| `n_splits` | `int` | `5` |
+| `horizon` | `int` | `1` |
+| `step` | `int` | `1` |
+| `embargo` | `int \| None` | `None` |
+| `random_state` | `int \| None` | `None` |
+| `retune_every` | `TemporalCadence` | `1` |
+| `retune_on_retrain` | `bool` | `True` |
+| `reuse_params` | `bool` | `True` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### WindowSpec
+
+Qualified name: `macroforecast.window.core.WindowSpec`
+
+#### Signature
+
+```python
+macroforecast.window.WindowSpec(method: str = "expanding", estimation: EstimationWindow = <factory>, val: ValWindow = <factory>, test: TestWindow = <factory>, alignment: AlignmentWindow = <factory>, validation_size: int | None = None, validation_ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, step: int = 1, horizon: int = 1, embargo: int = 0, metadata: dict[str, Any] | None = None) -> None
+```
+
+#### Description
+
+Macro forecasting time frame passed across selection/model/evaluation.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `method` | positional or keyword | `str` | `"expanding"` |
+| `estimation` | positional or keyword | `EstimationWindow` | `<factory>` |
+| `val` | positional or keyword | `ValWindow` | `<factory>` |
+| `test` | positional or keyword | `TestWindow` | `<factory>` |
+| `alignment` | positional or keyword | `AlignmentWindow` | `<factory>` |
+| `validation_size` | positional or keyword | `int \| None` | `None` |
+| `validation_ratio` | positional or keyword | `float` | `0.2` |
+| `min_train_size` | positional or keyword | `int \| None` | `None` |
+| `n_splits` | positional or keyword | `int` | `5` |
+| `step` | positional or keyword | `int` | `1` |
+| `horizon` | positional or keyword | `int` | `1` |
+| `embargo` | positional or keyword | `int` | `0` |
+| `metadata` | positional or keyword | `dict[str, Any] \| None` | `None` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.window.WindowSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `method` | `str` | `"expanding"` |
+| `estimation` | `EstimationWindow` | `default_factory` |
+| `val` | `ValWindow` | `default_factory` |
+| `test` | `TestWindow` | `default_factory` |
+| `alignment` | `AlignmentWindow` | `default_factory` |
+| `validation_size` | `int \| None` | `None` |
+| `validation_ratio` | `float` | `0.2` |
+| `min_train_size` | `int \| None` | `None` |
+| `n_splits` | `int` | `5` |
+| `step` | `int` | `1` |
+| `horizon` | `int` | `1` |
+| `embargo` | `int` | `0` |
+| `metadata` | `dict[str, Any] \| None` | `None` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `align` | `align(self, X: pd.DataFrame \| pd.Series, y: pd.Series \| pd.DataFrame \| None = None) -> pd.DataFrame \| tuple[pd.DataFrame, pd.Series \| pd.DataFrame]` | Align feature and target objects according to the alignment rule. |
+| `iter_origins` | `iter_origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> Iterator[dict[str, Any]]` | Yield origin metadata and absolute-position slices for model runners. |
+| `iter_slices` | `iter_slices(self, X: pd.DataFrame \| pd.Series, y: pd.Series \| pd.DataFrame \| None = None) -> Iterator[dict[str, Any]]` | Yield origin metadata with already sliced ``X`` and optional ``y``. |
+| `origins` | `origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> pd.DataFrame` | Return test-origin rows with train and test ranges. |
+| `plan` | `plan(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> pd.DataFrame` | Return an execution plan with estimation, val, and test metadata. |
+| `split` | `split(self, n_samples: int) -> list[Split]` | Return train/val index splits for ``n_samples``. |
+| `test_mask` | `test_mask(self, index: int \| Sequence[Any] \| pd.Index) -> pd.Series` | Return a boolean final-test mask indexed by the supplied labels. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | Return a metadata representation of the window. |
+| `to_table` | `to_table(self, n_samples: int, *, index: pd.Index \| None = None) -> pd.DataFrame` | Return this window's train/val splits as an inspectable table. |
+| `val_splits_for_origin` | `val_splits_for_origin(self, index: int \| Sequence[Any] \| pd.Index, origin: Any, *, exclude_origin: bool = False) -> list[Split]` | Return absolute-position inner train/val splits for one test origin. |
+| `validate` | `validate(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> dict[str, Any]` | Return a validation report for this time-frame specification. |
+### alignment_drop_incomplete
+
+Qualified name: `macroforecast.window.core.alignment_drop_incomplete`
+
+#### Signature
+
+```python
+macroforecast.window.alignment_drop_incomplete(*, join: str = "inner", require_full_horizon: bool = True) -> AlignmentWindow
+```
+
+#### Description
+
+Alignment rule that drops rows with missing feature or target values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `join` | keyword only | `str` | `"inner"` |
+| `require_full_horizon` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`AlignmentWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.alignment_drop_incomplete(...)
+```
+### alignment_keep_missing
+
+Qualified name: `macroforecast.window.core.alignment_keep_missing`
+
+#### Signature
+
+```python
+macroforecast.window.alignment_keep_missing(*, join: str = "inner", require_full_horizon: bool = True) -> AlignmentWindow
+```
+
+#### Description
+
+Alignment rule that preserves missing rows after index alignment.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `join` | keyword only | `str` | `"inner"` |
+| `require_full_horizon` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`AlignmentWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.alignment_keep_missing(...)
+```
 ### blocked_kfold
 
+Qualified name: `macroforecast.window.core.blocked_kfold`
+
+#### Signature
+
 ```python
-macroforecast.window.blocked_kfold(n_splits=5, embargo=0)
+macroforecast.window.blocked_kfold(*, n_splits: int = 5, embargo: int = 0) -> WindowSpec
 ```
 
-Chronological blocked folds with past-only training.
+#### Description
 
+Configure chronological blocked k-fold validation.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_splits` | keyword only | `int` | `5` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.blocked_kfold(...)
+```
+### blocked_kfold_split
+
+Qualified name: `macroforecast.window.core.blocked_kfold_split`
+
+#### Signature
+
+```python
+macroforecast.window.blocked_kfold_split(n_samples: int, *, n_splits: int = 5, embargo: int = 0) -> Iterator[Split]
+```
+
+#### Description
+
+Yield chronological blocked-fold splits using only past data for training.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `n_splits` | keyword only | `int` | `5` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`Iterator[Split]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.blocked_kfold_split(...)
+```
+### custom_stage_policy
+
+Qualified name: `macroforecast.window.policy.custom_stage_policy`
+
+#### Signature
+
+```python
+macroforecast.window.custom_stage_policy(selector: Callable[..., Any], *, update: StageUpdate = "every_origin", apply_to: tuple[str, ...] | list[str] = ('fit', 'test'), metadata: Mapping[str, Any] | None = None) -> StagePolicy
+```
+
+#### Description
+
+Create a stage policy whose sample labels are supplied by a callable.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `selector` | positional or keyword | `Callable[..., Any]` | `required` |
+| `update` | keyword only | `StageUpdate` | `"every_origin"` |
+| `apply_to` | keyword only | `tuple[str, ...] \| list[str]` | `("fit", "test")` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+
+#### Returns
+
+`StagePolicy`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.custom_stage_policy(...)
+```
+### estimation_expanding
+
+Qualified name: `macroforecast.window.core.estimation_expanding`
+
+#### Signature
+
+```python
+macroforecast.window.estimation_expanding(*, start: Any | None = None, min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> EstimationWindow
+```
+
+#### Description
+
+Estimation rule that expands from ``start`` through each test origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `start` | keyword only | `Any \| None` | `None` |
+| `min_size` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+| `retrain_every` | keyword only | `TemporalCadence` | `1` |
+
+#### Returns
+
+`EstimationWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.estimation_expanding(...)
+```
+### estimation_fixed
+
+Qualified name: `macroforecast.window.core.estimation_fixed`
+
+#### Signature
+
+```python
+macroforecast.window.estimation_fixed(*, start: Any | None = None, end: Any | None = None, min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> EstimationWindow
+```
+
+#### Description
+
+Estimation rule with a fixed start and optional fixed end bound.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `start` | keyword only | `Any \| None` | `None` |
+| `end` | keyword only | `Any \| None` | `None` |
+| `min_size` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+| `retrain_every` | keyword only | `TemporalCadence` | `1` |
+
+#### Returns
+
+`EstimationWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.estimation_fixed(...)
+```
+### estimation_rolling
+
+Qualified name: `macroforecast.window.core.estimation_rolling`
+
+#### Signature
+
+```python
+macroforecast.window.estimation_rolling(*, start: Any | None = None, size: int, min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> EstimationWindow
+```
+
+#### Description
+
+Estimation rule with a fixed trailing sample size at each test origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `start` | keyword only | `Any \| None` | `None` |
+| `size` | keyword only | `int` | `required` |
+| `min_size` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+| `retrain_every` | keyword only | `TemporalCadence` | `1` |
+
+#### Returns
+
+`EstimationWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.estimation_rolling(...)
+```
+### expanding
+
+Qualified name: `macroforecast.window.core.expanding`
+
+#### Signature
+
+```python
+macroforecast.window.expanding(*, min_train_size: int | None = None, step: int = 1, horizon: int = 1, embargo: int = 0) -> WindowSpec
+```
+
+#### Description
+
+Configure expanding-window train/val splits.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `step` | keyword only | `int` | `1` |
+| `horizon` | keyword only | `int` | `1` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.expanding(...)
+```
+### expanding_split
+
+Qualified name: `macroforecast.window.core.expanding_split`
+
+#### Signature
+
+```python
+macroforecast.window.expanding_split(n_samples: int, *, min_train_size: int | None = None, step: int = 1, horizon: int = 1, embargo: int = 0) -> Iterator[Split]
+```
+
+#### Description
+
+Yield expanding-window validation splits.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `step` | keyword only | `int` | `1` |
+| `horizon` | keyword only | `int` | `1` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`Iterator[Split]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.expanding_split(...)
+```
+### from_cutoffs
+
+Qualified name: `macroforecast.window.core.from_cutoffs`
+
+#### Signature
+
+```python
+macroforecast.window.from_cutoffs(*, test_start: Any, test_end: Any | None = None, estimation_start: Any | None = None, mode: str = "expanding", estimation_size: int | None = None, estimation_min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1, val_method: str = "last_block", val_size: int | None = None, val_ratio: float = 0.2, val_min_train_size: int | None = None, val_n_splits: int = 5, val_horizon: int | None = None, val_step: int = 1, val_embargo: int | None = None, val_random_state: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True, horizon: int = 1, step: TestStep = 1, drop_incomplete: bool = True, exclude: Sequence[tuple[Any | None, Any | None]] = (), alignment: AlignmentWindow | None = None, metadata: dict[str, Any] | None = None) -> WindowSpec
+```
+
+#### Description
+
+Build a window from common estimation/test cutoff dates.
+
+Embargo conventions for h-step targets (``horizon > 1``)
+A row at position ``p`` carries the direct h-step target realised at
+``p + horizon``. Two boundaries are embargoed independently:
+
+* Estimation/test boundary (``embargo``, default ``0``). With ``embargo=0``
+  the production model for origin ``t`` is fit on rows up to ``t - 1`` whose
+  targets realise at ``t + horizon - 1`` -- i.e. after the forecast is
+  issued. This is the standard *pseudo-out-of-sample* convention used on a
+  fixed (final-vintage) dataset, and it maximises the training sample. For a
+  *strict real-time* protocol, where every training label must be observable
+  at the origin, pass ``embargo=horizon - 1`` (the last training label then
+  realises at the origin). The default is deliberately the pseudo-OOS choice;
+  it does not enforce real-time observability.
+
+* Train/validation boundary (``val_embargo``, default ``horizon - 1``). This
+  purges the gap between the last training label and the first validation
+  input. The default ``horizon - 1`` leaves the single boundary timestamp
+  shared between the last training label and the first validation feature;
+  pass ``val_embargo=horizon`` for a fully disjoint purge.
+
+Both defaults are conventions, not guarantees of real-time observability;
+set the embargoes explicitly when the forecasting protocol requires it.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `test_start` | keyword only | `Any` | `required` |
+| `test_end` | keyword only | `Any \| None` | `None` |
+| `estimation_start` | keyword only | `Any \| None` | `None` |
+| `mode` | keyword only | `str` | `"expanding"` |
+| `estimation_size` | keyword only | `int \| None` | `None` |
+| `estimation_min_size` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+| `retrain_every` | keyword only | `TemporalCadence` | `1` |
+| `val_method` | keyword only | `str` | `"last_block"` |
+| `val_size` | keyword only | `int \| None` | `None` |
+| `val_ratio` | keyword only | `float` | `0.2` |
+| `val_min_train_size` | keyword only | `int \| None` | `None` |
+| `val_n_splits` | keyword only | `int` | `5` |
+| `val_horizon` | keyword only | `int \| None` | `None` |
+| `val_step` | keyword only | `int` | `1` |
+| `val_embargo` | keyword only | `int \| None` | `None` |
+| `val_random_state` | keyword only | `int \| None` | `None` |
+| `retune_every` | keyword only | `TemporalCadence` | `1` |
+| `retune_on_retrain` | keyword only | `bool` | `True` |
+| `reuse_params` | keyword only | `bool` | `True` |
+| `horizon` | keyword only | `int` | `1` |
+| `step` | keyword only | `TestStep` | `1` |
+| `drop_incomplete` | keyword only | `bool` | `True` |
+| `exclude` | keyword only | `Sequence[tuple[Any \| None, Any \| None]]` | `()` |
+| `alignment` | keyword only | `AlignmentWindow \| None` | `None` |
+| `metadata` | keyword only | `dict[str, Any] \| None` | `None` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.from_cutoffs(...)
+```
+### last_block
+
+Qualified name: `macroforecast.window.core.last_block`
+
+#### Signature
+
+```python
+macroforecast.window.last_block(*, validation_size: int | None = None, validation_ratio: float = 0.2, embargo: int = 0) -> WindowSpec
+```
+
+#### Description
+
+Configure one final val block.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `validation_size` | keyword only | `int \| None` | `None` |
+| `validation_ratio` | keyword only | `float` | `0.2` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.last_block(...)
+```
+### last_block_split
+
+Qualified name: `macroforecast.window.core.last_block_split`
+
+#### Signature
+
+```python
+macroforecast.window.last_block_split(n_samples: int, *, validation_size: int | None = None, validation_ratio: float = 0.2, embargo: int = 0) -> Iterator[Split]
+```
+
+#### Description
+
+Yield one split with the last block held out for validation.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `validation_size` | keyword only | `int \| None` | `None` |
+| `validation_ratio` | keyword only | `float` | `0.2` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`Iterator[Split]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.last_block_split(...)
+```
+### make_splitter
+
+Qualified name: `macroforecast.window.core.make_splitter`
+
+#### Signature
+
+```python
+macroforecast.window.make_splitter(validation: str, n_samples: int, *, validation_size: int | None = None, validation_ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, step: int = 1, horizon: int = 1, random_state: int | None = None, embargo: int = 0) -> list[Split]
+```
+
+#### Description
+
+Build validation splits from a validation method name.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `validation` | positional or keyword | `str` | `required` |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `validation_size` | keyword only | `int \| None` | `None` |
+| `validation_ratio` | keyword only | `float` | `0.2` |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `n_splits` | keyword only | `int` | `5` |
+| `step` | keyword only | `int` | `1` |
+| `horizon` | keyword only | `int` | `1` |
+| `random_state` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`list[Split]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.make_splitter(...)
+```
+### normalize_window_name
+
+Qualified name: `macroforecast.window.core.normalize_window_name`
+
+#### Signature
+
+```python
+macroforecast.window.normalize_window_name(window: str) -> str
+```
+
+#### Description
+
+Return the canonical window method name for a method or alias.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `window` | positional or keyword | `str` | `required` |
+
+#### Returns
+
+`str`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.normalize_window_name(...)
+```
+### poos
+
+Qualified name: `macroforecast.window.core.poos`
+
+#### Signature
+
+```python
+macroforecast.window.poos(*, validation_size: int | None = None, validation_ratio: float = 0.25, embargo: int = 0) -> WindowSpec
+```
+
+#### Description
+
+Configure pseudo-out-of-sample one-step tail splits.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `validation_size` | keyword only | `int \| None` | `None` |
+| `validation_ratio` | keyword only | `float` | `0.25` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.poos(...)
+```
+### poos_split
+
+Qualified name: `macroforecast.window.core.poos_split`
+
+#### Signature
+
+```python
+macroforecast.window.poos_split(n_samples: int, *, validation_size: int | None = None, validation_ratio: float = 0.25, embargo: int = 0) -> Iterator[Split]
+```
+
+#### Description
+
+Yield pseudo-out-of-sample one-step validation splits over the tail block.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `validation_size` | keyword only | `int \| None` | `None` |
+| `validation_ratio` | keyword only | `float` | `0.25` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`Iterator[Split]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.poos_split(...)
+```
 ### random_kfold
 
-```python
-macroforecast.window.random_kfold(n_splits=5, random_state=0)
-```
+Qualified name: `macroforecast.window.core.random_kfold`
 
-Randomly assigned iid-style folds. Each fold trains on all non-validation rows,
-so the training set can contain rows later than validation rows. Use this only
-to reproduce studies whose appendix or code explicitly used random folds. For
-ordinary macro forecasting, prefer `blocked_kfold`, `poos`, `expanding`, or
-other time-aware validation designs.
-
-## Low-Level Splitters
-
-Low-level splitters return iterators of `(train_idx, val_idx)`.
+#### Signature
 
 ```python
-macroforecast.window.last_block_split(n_samples, validation_size=None, validation_ratio=0.2, embargo=0)
-macroforecast.window.poos_split(n_samples, validation_size=None, validation_ratio=0.25, embargo=0)
-macroforecast.window.expanding_split(n_samples, min_train_size=None, step=1, horizon=1, embargo=0)
-macroforecast.window.rolling_blocks_split(n_samples, n_blocks=3, block_size=None, embargo=0)
-macroforecast.window.blocked_kfold_split(n_samples, n_splits=5, embargo=0)
-macroforecast.window.random_kfold_split(n_samples, n_splits=5, random_state=0)
+macroforecast.window.random_kfold(*, n_splits: int = 5, random_state: int | None = 0) -> WindowSpec
 ```
 
-## split_table
+#### Description
+
+Configure randomly assigned iid-style K-fold validation.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_splits` | keyword only | `int` | `5` |
+| `random_state` | keyword only | `int \| None` | `0` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
 
 ```python
-macroforecast.window.split_table(
-    window,
-    n_samples,
-    *,
-    index=None,
-    validation_size=None,
-    validation_ratio=0.2,
-    min_train_size=None,
-    n_splits=5,
-    step=1,
-    horizon=1,
-    random_state=None,
-    embargo=0,
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.random_kfold(...)
+```
+### random_kfold_split
+
+Qualified name: `macroforecast.window.core.random_kfold_split`
+
+#### Signature
+
+```python
+macroforecast.window.random_kfold_split(n_samples: int, *, n_splits: int = 5, random_state: int | None = 0) -> Iterator[Split]
 ```
 
-Output columns:
+#### Description
 
-| Column | Meaning |
-| --- | --- |
-| `split` | Split id. |
-| `n_train`, `n_validation` | Split sizes. |
-| `train_start`, `train_end` | Labels for the training range. |
-| `validation_start`, `validation_end` | Labels for the validation range. |
-| `*_pos` | Integer positions for the same ranges. |
+Yield randomly assigned K-fold splits.
 
-## Aliases
+Each fold trains on all non-validation positions. This intentionally does
+not enforce temporal ordering, so use it only when reproducing methods that
+used random iid folds, not as the default macro forecast validation design.
 
-`normalize_window_name()` and `resolve_window()` accept these aliases.
-`resolve_stage_policy()` applies the same normalization idea to stage policies,
-accepting a `StagePolicy`, string scope, mapping, or `None`.
+#### Parameters
 
-| Alias | Canonical |
-| --- | --- |
-| `last`, `holdout` | `last_block` |
-| `poos`, `pseudo_out_of_sample` | `poos` |
-| `expanding`, `expanding_walk_forward` | `expanding` |
-| `time_series_split` | `expanding` |
-| `rolling`, `rolling_walk_forward` | `rolling_blocks` |
-| `blocked_kfold`, `block_cv`, `kfold` | `blocked_kfold` |
-| `random_kfold`, `iid_kfold`, `random_cv` | `random_kfold` |
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `n_splits` | keyword only | `int` | `5` |
+| `random_state` | keyword only | `int \| None` | `0` |
+
+#### Returns
+
+`Iterator[Split]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.random_kfold_split(...)
+```
+### resolve_window
+
+Qualified name: `macroforecast.window.core.resolve_window`
+
+#### Signature
+
+```python
+macroforecast.window.resolve_window(window: WindowSpec | str | None = None) -> WindowSpec
+```
+
+#### Description
+
+Return a ``WindowSpec`` from a spec, method name, or default.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `window` | positional or keyword | `WindowSpec \| str \| None` | `None` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.resolve_window(...)
+```
+### resolve_stage_policy
+
+Qualified name: `macroforecast.window.policy.resolve_stage_policy`
+
+#### Signature
+
+```python
+macroforecast.window.resolve_stage_policy(policy: StagePolicy | str | None, *, default_scope: StageScope = "fit_window") -> StagePolicy
+```
+
+#### Description
+
+Return a ``StagePolicy`` from a policy object, scope name, or default.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `policy` | positional or keyword | `StagePolicy \| str \| None` | `required` |
+| `default_scope` | keyword only | `StageScope` | `"fit_window"` |
+
+#### Returns
+
+`StagePolicy`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.resolve_stage_policy(...)
+```
+### rolling_blocks
+
+Qualified name: `macroforecast.window.core.rolling_blocks`
+
+#### Signature
+
+```python
+macroforecast.window.rolling_blocks(*, n_blocks: int = 3, block_size: int | None = None, embargo: int = 0) -> WindowSpec
+```
+
+#### Description
+
+Configure consecutive validation blocks over the sample tail.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_blocks` | keyword only | `int` | `3` |
+| `block_size` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.rolling_blocks(...)
+```
+### rolling_blocks_split
+
+Qualified name: `macroforecast.window.core.rolling_blocks_split`
+
+#### Signature
+
+```python
+macroforecast.window.rolling_blocks_split(n_samples: int, *, n_blocks: int = 3, block_size: int | None = None, embargo: int = 0) -> Iterator[Split]
+```
+
+#### Description
+
+Yield consecutive validation blocks with all prior observations as training data.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `n_blocks` | keyword only | `int` | `3` |
+| `block_size` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`Iterator[Split]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.rolling_blocks_split(...)
+```
+### spec
+
+Qualified name: `macroforecast.window.core.spec`
+
+#### Signature
+
+```python
+macroforecast.window.spec(*, estimation: EstimationWindow | None = None, val: ValWindow | None = None, test: TestWindow | None = None, alignment: AlignmentWindow | None = None, method: str = "expanding", metadata: dict[str, Any] | None = None) -> WindowSpec
+```
+
+#### Description
+
+Compose a full estimation/val/test macro window from component windows.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `estimation` | keyword only | `EstimationWindow \| None` | `None` |
+| `val` | keyword only | `ValWindow \| None` | `None` |
+| `test` | keyword only | `TestWindow \| None` | `None` |
+| `alignment` | keyword only | `AlignmentWindow \| None` | `None` |
+| `method` | keyword only | `str` | `"expanding"` |
+| `metadata` | keyword only | `dict[str, Any] \| None` | `None` |
+
+#### Returns
+
+`WindowSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.spec(...)
+```
+### stage_index
+
+Qualified name: `macroforecast.window.policy.stage_index`
+
+#### Signature
+
+```python
+macroforecast.window.stage_index(index: Any, item: Mapping[str, Any] | None, policy: StagePolicy | str | None) -> pd.Index
+```
+
+#### Description
+
+Return labels allowed by one stage policy for one origin item.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `index` | positional or keyword | `Any` | `required` |
+| `item` | positional or keyword | `Mapping[str, Any] \| None` | `required` |
+| `policy` | positional or keyword | `StagePolicy \| str \| None` | `required` |
+
+#### Returns
+
+`pd.Index`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.stage_index(...)
+```
+### stage_panel
+
+Qualified name: `macroforecast.window.policy.stage_panel`
+
+#### Signature
+
+```python
+macroforecast.window.stage_panel(panel: pd.DataFrame, item: Mapping[str, Any] | None, policy: StagePolicy | str | None) -> pd.DataFrame
+```
+
+#### Description
+
+Return panel rows allowed by one stage policy for one origin item.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `item` | positional or keyword | `Mapping[str, Any] \| None` | `required` |
+| `policy` | positional or keyword | `StagePolicy \| str \| None` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.stage_panel(...)
+```
+### stage_policy
+
+Qualified name: `macroforecast.window.policy.stage_policy`
+
+#### Signature
+
+```python
+macroforecast.window.stage_policy(scope: StageScope = "fit_window", *, update: StageUpdate = "every_origin", reference_start: Any | None = None, reference_end: Any | None = None, apply_to: tuple[str, ...] | list[str] = ('fit', 'test'), metadata: Mapping[str, Any] | None = None, selector: Callable[..., Any] | None = None) -> StagePolicy
+```
+
+#### Description
+
+Create a reusable stage timing policy.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `scope` | positional or keyword | `StageScope` | `"fit_window"` |
+| `update` | keyword only | `StageUpdate` | `"every_origin"` |
+| `reference_start` | keyword only | `Any \| None` | `None` |
+| `reference_end` | keyword only | `Any \| None` | `None` |
+| `apply_to` | keyword only | `tuple[str, ...] \| list[str]` | `("fit", "test")` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `selector` | keyword only | `Callable[..., Any] \| None` | `None` |
+
+#### Returns
+
+`StagePolicy`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.stage_policy(...)
+```
+### split_table
+
+Qualified name: `macroforecast.window.core.split_table`
+
+#### Signature
+
+```python
+macroforecast.window.split_table(validation: str, n_samples: int, *, index: pd.Index | None = None, validation_size: int | None = None, validation_ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, step: int = 1, horizon: int = 1, random_state: int | None = None, embargo: int = 0) -> pd.DataFrame
+```
+
+#### Description
+
+Return validation splits as an inspectable table.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `validation` | positional or keyword | `str` | `required` |
+| `n_samples` | positional or keyword | `int` | `required` |
+| `index` | keyword only | `pd.Index \| None` | `None` |
+| `validation_size` | keyword only | `int \| None` | `None` |
+| `validation_ratio` | keyword only | `float` | `0.2` |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `n_splits` | keyword only | `int` | `5` |
+| `step` | keyword only | `int` | `1` |
+| `horizon` | keyword only | `int` | `1` |
+| `random_state` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int` | `0` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.split_table(...)
+```
+### test_origins
+
+Qualified name: `macroforecast.window.core.test_origins`
+
+#### Signature
+
+```python
+macroforecast.window.test_origins(*, first_origin: Any | None = None, last_origin: Any | None = None, horizon: int = 1, step: TestStep = 1, drop_incomplete: bool = True, exclude: Sequence[tuple[Any | None, Any | None]] = ()) -> TestWindow
+```
+
+#### Description
+
+Final test-origin rule for model-stage out-of-sample runs.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `first_origin` | keyword only | `Any \| None` | `None` |
+| `last_origin` | keyword only | `Any \| None` | `None` |
+| `horizon` | keyword only | `int` | `1` |
+| `step` | keyword only | `TestStep` | `1` |
+| `drop_incomplete` | keyword only | `bool` | `True` |
+| `exclude` | keyword only | `Sequence[tuple[Any \| None, Any \| None]]` | `()` |
+
+#### Returns
+
+`TestWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.test_origins(...)
+```
+### val_blocked_kfold
+
+Qualified name: `macroforecast.window.core.val_blocked_kfold`
+
+#### Signature
+
+```python
+macroforecast.window.val_blocked_kfold(*, n_splits: int = 5, embargo: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> ValWindow
+```
+
+#### Description
+
+Validation rule with chronological blocked folds.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_splits` | keyword only | `int` | `5` |
+| `embargo` | keyword only | `int \| None` | `None` |
+| `retune_every` | keyword only | `TemporalCadence` | `1` |
+| `retune_on_retrain` | keyword only | `bool` | `True` |
+| `reuse_params` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ValWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.val_blocked_kfold(...)
+```
+### val_expanding
+
+Qualified name: `macroforecast.window.core.val_expanding`
+
+#### Signature
+
+```python
+macroforecast.window.val_expanding(*, min_train_size: int | None = None, step: int = 1, horizon: int = 1, embargo: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> ValWindow
+```
+
+#### Description
+
+Validation rule with expanding train windows.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `step` | keyword only | `int` | `1` |
+| `horizon` | keyword only | `int` | `1` |
+| `embargo` | keyword only | `int \| None` | `None` |
+| `retune_every` | keyword only | `TemporalCadence` | `1` |
+| `retune_on_retrain` | keyword only | `bool` | `True` |
+| `reuse_params` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ValWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.val_expanding(...)
+```
+### val_last_block
+
+Qualified name: `macroforecast.window.core.val_last_block`
+
+#### Signature
+
+```python
+macroforecast.window.val_last_block(*, size: int | None = None, ratio: float = 0.2, embargo: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> ValWindow
+```
+
+#### Description
+
+Validation rule with one final holdout block.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `size` | keyword only | `int \| None` | `None` |
+| `ratio` | keyword only | `float` | `0.2` |
+| `embargo` | keyword only | `int \| None` | `None` |
+| `retune_every` | keyword only | `TemporalCadence` | `1` |
+| `retune_on_retrain` | keyword only | `bool` | `True` |
+| `reuse_params` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ValWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.val_last_block(...)
+```
+### val_poos
+
+Qualified name: `macroforecast.window.core.val_poos`
+
+#### Signature
+
+```python
+macroforecast.window.val_poos(*, size: int | None = None, ratio: float = 0.25, embargo: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> ValWindow
+```
+
+#### Description
+
+Validation rule with one-step pseudo-out-of-sample tail splits.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `size` | keyword only | `int \| None` | `None` |
+| `ratio` | keyword only | `float` | `0.25` |
+| `embargo` | keyword only | `int \| None` | `None` |
+| `retune_every` | keyword only | `TemporalCadence` | `1` |
+| `retune_on_retrain` | keyword only | `bool` | `True` |
+| `reuse_params` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ValWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.val_poos(...)
+```
+### val_random_kfold
+
+Qualified name: `macroforecast.window.core.val_random_kfold`
+
+#### Signature
+
+```python
+macroforecast.window.val_random_kfold(*, n_splits: int = 5, random_state: int | None = 0, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> ValWindow
+```
+
+#### Description
+
+Validation rule with randomly assigned iid-style folds.
+
+This is useful for reproducing papers that explicitly used random K-fold
+CV. It is not the default macro-forecasting validation rule because train
+folds can contain observations later than their validation folds.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_splits` | keyword only | `int` | `5` |
+| `random_state` | keyword only | `int \| None` | `0` |
+| `retune_every` | keyword only | `TemporalCadence` | `1` |
+| `retune_on_retrain` | keyword only | `bool` | `True` |
+| `reuse_params` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ValWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.val_random_kfold(...)
+```
+### val_rolling_blocks
+
+Qualified name: `macroforecast.window.core.val_rolling_blocks`
+
+#### Signature
+
+```python
+macroforecast.window.val_rolling_blocks(*, n_blocks: int = 3, block_size: int | None = None, embargo: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> ValWindow
+```
+
+#### Description
+
+Validation rule with consecutive validation blocks over the sample tail.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_blocks` | keyword only | `int` | `3` |
+| `block_size` | keyword only | `int \| None` | `None` |
+| `embargo` | keyword only | `int \| None` | `None` |
+| `retune_every` | keyword only | `TemporalCadence` | `1` |
+| `retune_on_retrain` | keyword only | `bool` | `True` |
+| `reuse_params` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ValWindow`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.window.val_rolling_blocks(...)
+```

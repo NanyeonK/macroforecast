@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>macroforecast.interpretation.dual &#8212; macroforecast</title>
+    <title>macroforecast.interpretation_dual &#8212; macroforecast</title>
   
   
   
@@ -400,21 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
-</ul>
-</details></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
@@ -440,19 +425,34 @@
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Extension Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">Custom Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">Custom Preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">Custom Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, And Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation And Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -496,7 +496,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.interpretation.dual</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">macroforecast.interpretation_dual</span></li>
   </ul>
 </nav>
 </div>
@@ -514,697 +514,996 @@
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-interpretation-dual">
-<h1>macroforecast.interpretation.dual<a class="headerlink" href="#macroforecast-interpretation-dual" title="Link to this heading">#</a></h1>
-<p><a class="reference internal" href="interpretation.html"><span class="std std-doc">Back to interpretation</span></a></p>
-<p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual</span></code> is the dedicated namespace for the dual
-interpretation route in Goulet Coulombe, Goebel, and Klieber (2024), “Dual
-Interpretation of Machine Learning Forecasts” (<code class="docutils literal notranslate"><span class="pre">arXiv:2412.13076</span></code>). Standard
-variable-importance tools ask which predictor columns matter. Dual
-interpretation asks which historical training observations matter for a
-forecast.</p>
-<p>The central identity is:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>yhat_new = sum_i w_i(new) y_i
-</pre></div>
-</div>
-<p>The weights <code class="docutils literal notranslate"><span class="pre">w_i(new)</span></code> are observation weights, also called data-portfolio
-weights in the paper/code. A positive weight means the model borrows from that
-historical outcome. A negative weight means the model uses that observation by
-contrast. A concentrated weight vector means the forecast relies on a small
-number of episodes. A high short position or high gross leverage means the
-forecast is extrapolative rather than a simple local average.</p>
-<p>Relation to Goulet Coulombe (2026), “Ordinary Least Squares as an Attention
-Mechanism”: OLS-as-attention is the exact linear algebra route
-<code class="docutils literal notranslate"><span class="pre">X_test</span> <span class="pre">(X_train'X_train)^-1</span> <span class="pre">X_train'</span></code>. It is available through
-<code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.ols_attention_weights()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ridge_attention_weights()</span></code>, <code class="docutils literal notranslate"><span class="pre">ols_attention_embedding()</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">ols_attention_equivalence()</span></code>. This <code class="docutils literal notranslate"><span class="pre">dual</span></code> namespace is broader: it uses the
-same historical-observation idea for ridge/OLS, kernel ridge, and random
-forest data-portfolio weights, plus contribution, diagnostic, top-observation,
-and group tables.</p>
-<section id="reference-sources">
-<h2>Reference Sources<a class="headerlink" href="#reference-sources" title="Link to this heading">#</a></h2>
+<h1>macroforecast.interpretation_dual<a class="headerlink" href="#macroforecast-interpretation-dual" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
+<p>Observation-based dual interpretation for forecast results.</p>
+<section id="public-symbols">
+<h2>Public Symbols<a class="headerlink" href="#public-symbols" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Source</p></th>
-<th class="head"><p>Used for</p></th>
+<tr class="row-odd"><th class="head"><p>Symbol</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Summary</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Goulet Coulombe, Goebel, and Klieber (2024), “Dual Interpretation of Machine Learning Forecasts”</p></td>
-<td><p>Paper terminology and interpretation target.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Goulet Coulombe (2026), “Ordinary Least Squares as an Attention Mechanism”</p></td>
-<td><p>Exact OLS/ridge attention identity and whitened embedding interpretation.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wiki/raw/paper_code/coulombe_site_github_20260530/dual_python/auxiliaries.py</span></code></p></td>
-<td><p>Ridge, kernel-ridge, and random-forest observation-weight formulas.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">wiki/raw/paper_code/coulombe_site_github_20260530/DualML_R/DualML.R</span></code></p></td>
-<td><p>Forecast concentration, forecast short position, forecast leverage, and forecast turnover definitions.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wiki/raw/paper_code/coulombe_site_github_20260530/DualML_R/README.md</span></code></p></td>
-<td><p>Original model-route inventory: OLS, RF, LGB, RR, KRR, and NN.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Implemented now: ridge/OLS, kernel ridge, and sklearn-style random forest.
-Deferred routes: boosted-tree AXIL, LGB+/LGBA+ channel-specific weights, neural
-embedding-ridge approximation, and classification log-odds decomposition.</p>
-</section>
-<section id="public-functions">
-<h2>Public Functions<a class="headerlink" href="#public-functions" title="Link to this heading">#</a></h2>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Function</p></th>
-<th class="head"><p>Input</p></th>
-<th class="head"><p>Output</p></th>
-<th class="head"><p>Purpose</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.dual_interpretation()</span></code></p></td>
-<td><p>model, train features, train target, optional test features</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code></p></td>
-<td><p>Run the paper-aligned ridge/KRR/RF path and return all dual tables together.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.dual_from_forecast_result()</span></code></p></td>
-<td><p>completed <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>, model, train features, train target, optional test features</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> or <code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code></p></td>
-<td><p>Build a dual sidecar for a completed runner result.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.observation_weights()</span></code></p></td>
-<td><p>model, <code class="docutils literal notranslate"><span class="pre">X_train</span></code>, optional <code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
-<td><p>long <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Compute historical observation/data-portfolio weights.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.observation_contributions()</span></code></p></td>
-<td><p>weights and <code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
-<td><p>long <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Multiply observation weights by historical outcomes.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.forecast_diagnostics()</span></code></p></td>
-<td><p>weights</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Compute concentration, short position, leverage, gross leverage, and turnover.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.top_observations()</span></code></p></td>
-<td><p>weights or contributions</p></td>
-<td><p>long <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Return the largest historical observations for each forecast.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.group_observation_weights()</span></code></p></td>
-<td><p>weights/contributions and a group mapping</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Aggregate observation weights over user-defined regimes or episodes.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DualInterpretationResult.to_tables()</span></code></p></td>
-<td><p>result object</p></td>
-<td><p>dict of <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Expand the result for <code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code>.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Backward-compatible aliases are still available:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Alias</p></th>
-<th class="head"><p>Preferred name</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">outcome_contributions</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">observation_contributions</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code></p></td>
+<td><p>class</p></td>
+<td><p>Paper-aligned dual interpretation output bundle.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">data_portfolio_diagnostics</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">forecast_diagnostics</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return concentration, short-position, leverage, and turnover diagnostics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dual_from_forecast_result</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Build a dual interpretation sidecar for a completed forecast result.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dual_interpretation</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Run the ridge/KRR/RF DualML interpretation path in one callable.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">episode_group_weights</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Aggregate observation weights over named historical groups.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">forecast_diagnostics</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return concentration, short-position, leverage, and turnover diagnostics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">group_observation_weights</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Aggregate observation weights over named historical groups.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">observation_contributions</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Convert observation weights into observation-level forecast contributions.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">observation_weights</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return DualML observation/data-portfolio weights.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">outcome_contributions</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Convert observation weights into observation-level forecast contributions.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">top_episodes</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">top_observations</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return the largest historical observations per forecast row.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">episode_group_weights</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">group_observation_weights</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_observations</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return the largest historical observations per forecast row.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="public-flow">
-<h2>Public Flow<a class="headerlink" href="#public-flow" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-
-<span class="n">dual</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">dual_interpretation</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">X_train</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="p">,</span>
-    <span class="n">X_test</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">,</span>
-    <span class="n">top_n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">groups</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;gfc&quot;</span><span class="p">:</span> <span class="n">gfc_train_dates</span><span class="p">,</span>
-        <span class="s2">&quot;covid&quot;</span><span class="p">:</span> <span class="n">covid_train_dates</span><span class="p">,</span>
-    <span class="p">},</span>
-<span class="p">)</span>
-
-<span class="n">tables</span> <span class="o">=</span> <span class="n">dual</span><span class="o">.</span><span class="n">to_tables</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;inflation&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For completed forecast runs, attach the same result as a sidecar:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">feature_set</span><span class="p">,</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">)</span>
-
-<span class="n">result</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">dual_from_forecast_result</span><span class="p">(</span>
-    <span class="n">result</span><span class="p">,</span>
-    <span class="n">fit</span><span class="p">,</span>
-    <span class="n">X_train</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="p">,</span>
-    <span class="n">X_test</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Equivalent method form:</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">with_dual</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">forecasting.run()</span></code> does not compute dual interpretation automatically. The
-completed forecast table does not contain the exact fitted estimator,
-training-feature matrix, training target, or forecast-row feature matrix. Those
-objects must be passed explicitly to avoid silent look-ahead or stale-design
-errors.</p>
-<p>For a ridge/KRR route, <code class="docutils literal notranslate"><span class="pre">model</span></code> can be <code class="docutils literal notranslate"><span class="pre">None</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dual</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">dual_interpretation</span><span class="p">(</span>
-    <span class="kc">None</span><span class="p">,</span>
-    <span class="n">X_train</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="p">,</span>
-    <span class="n">X_test</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;krr&quot;</span><span class="p">,</span>
-    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;laplace&quot;</span><span class="p">,</span>
-    <span class="n">sigma</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-    <span class="n">lambda_</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-<span class="p">)</span>
+<section id="callable-and-class-reference">
+<h2>Callable And Class Reference<a class="headerlink" href="#callable-and-class-reference" title="Link to this heading">#</a></h2>
+<section id="dualinterpretationresult">
+<h3>DualInterpretationResult<a class="headerlink" href="#dualinterpretationresult" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.DualInterpretationResult</span></code></p>
+<section id="signature">
+<h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">DualInterpretationResult</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">contributions</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">diagnostics</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">top_observations</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">group_weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">metadata_schema</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="dual-interpretation">
-<h2>dual_interpretation<a class="headerlink" href="#dual-interpretation" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">dual_interpretation</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">X_train</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="p">,</span>
-    <span class="n">X_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
-    <span class="n">lambda_</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
-    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span>
-    <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">add_intercept</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">ridge_penalty_scale</span><span class="o">=</span><span class="s2">&quot;n_train&quot;</span><span class="p">,</span>
-    <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">center</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">include_base</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">top_n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">top_sort_by</span><span class="o">=</span><span class="s2">&quot;abs_weight&quot;</span><span class="p">,</span>
-    <span class="n">top_q</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
-    <span class="n">groups</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">include_contributions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">include_diagnostics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">include_top_observations</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">include_group_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Input:</p>
+<section id="description">
+<h4>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h4>
+<p>Paper-aligned dual interpretation output bundle.</p>
+<p>Goulet Coulombe, Goebel, and Klieber’s DualML code reports observation
+weights, observation contributions, and data-portfolio diagnostics as
+connected objects. The result container keeps that relation explicit while
+still exposing output-ready tables through <code class="docutils literal notranslate"><span class="pre">to_tables</span></code>.</p>
+</section>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
 <th class="head"><p>Type</p></th>
 <th class="head"><p>Default</p></th>
-<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
-<td><p>fitted model or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>required</p></td>
-<td><p>Required for random-forest weights. Optional for ridge/KRR because weights are closed-form from <code class="docutils literal notranslate"><span class="pre">X_train</span></code> and <code class="docutils literal notranslate"><span class="pre">X_test</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code></p></td>
-<td><p>pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>required</p></td>
-<td><p>Training feature matrix. Its index becomes <code class="docutils literal notranslate"><span class="pre">train_index</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
-<td><p>pandas <code class="docutils literal notranslate"><span class="pre">Series</span></code> or sequence</p></td>
-<td><p>required</p></td>
-<td><p>Training target aligned to <code class="docutils literal notranslate"><span class="pre">X_train</span></code>. If it is a <code class="docutils literal notranslate"><span class="pre">Series</span></code>, the index is aligned to <code class="docutils literal notranslate"><span class="pre">train_index</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
-<td><p>pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">contributions</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Forecast-row feature matrix. If omitted, each training row is explained against the training panel.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
-<td><p>string</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">auto</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">auto</span></code>, <code class="docutils literal notranslate"><span class="pre">ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">ols</span></code>, <code class="docutils literal notranslate"><span class="pre">krr</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel_ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>, or <code class="docutils literal notranslate"><span class="pre">rf</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lambda_</span></code></p></td>
-<td><p>float</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1e-8</span></code></p></td>
-<td><p>Ridge/KRR regularization.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kernel</span></code></p></td>
-<td><p>string</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">linear</span></code></p></td>
-<td><p>KRR kernel: <code class="docutils literal notranslate"><span class="pre">linear</span></code>, <code class="docutils literal notranslate"><span class="pre">gaussian</span></code>, <code class="docutils literal notranslate"><span class="pre">rbf</span></code>, <code class="docutils literal notranslate"><span class="pre">laplace</span></code>, or <code class="docutils literal notranslate"><span class="pre">laplacian</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code></p></td>
-<td><p>float</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
-<td><p>Kernel bandwidth convention used by the reviewed code: <code class="docutils literal notranslate"><span class="pre">exp(-sigma</span> <span class="pre">*</span> <span class="pre">distance)</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_intercept</span></code></p></td>
-<td><p>bool</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
-<td><p>Adds an unpenalized intercept for ridge/OLS. The paper code usually works with standardized no-intercept matrices.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ridge_penalty_scale</span></code></p></td>
-<td><p>string</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">n_train</span></code></p></td>
-<td><p>Ridge penalty convention. <code class="docutils literal notranslate"><span class="pre">n_train</span></code> uses <code class="docutils literal notranslate"><span class="pre">n_train</span> <span class="pre">*</span> <span class="pre">lambda_</span></code>; <code class="docutils literal notranslate"><span class="pre">none</span></code> uses <code class="docutils literal notranslate"><span class="pre">lambda_</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code></p></td>
-<td><p>bool</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
-<td><p>Re-normalize row weights to sum to one. Default is false because leverage and negative weights are meaningful diagnostics.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">center</span></code></p></td>
-<td><p>bool</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
-<td><p>Center <code class="docutils literal notranslate"><span class="pre">y_train</span></code> before contribution calculation.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include_base</span></code></p></td>
-<td><p>bool</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
-<td><p>With <code class="docutils literal notranslate"><span class="pre">center=True</span></code>, add an explicit base-row contribution.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_n</span></code></p></td>
-<td><p>int</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
-<td><p>Number of top observations returned per forecast row.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">top_sort_by</span></code></p></td>
-<td><p>string</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">abs_weight</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">abs_weight</span></code>, <code class="docutils literal notranslate"><span class="pre">weight</span></code>, <code class="docutils literal notranslate"><span class="pre">contribution</span></code>, or <code class="docutils literal notranslate"><span class="pre">abs_contribution</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_q</span></code></p></td>
-<td><p>float</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
-<td><p>Share of observations used in concentration. Values above <code class="docutils literal notranslate"><span class="pre">1</span></code> are treated as <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">groups</span></code></p></td>
-<td><p>mapping or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Named historical episode groups, mapping group name to training-index labels.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_*</span></code></p></td>
-<td><p>bool</p></td>
-<td><p>varies</p></td>
-<td><p>Include or skip contribution, diagnostic, top-observation, and group tables.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_observations</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">group_weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;factory&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_schema</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;factory&gt;</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Output: <code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code>.</p>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="minimal-use">
+<h4>Minimal Use<a class="headerlink" href="#minimal-use" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Construct with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.DualInterpretationResult(...)</span>
+</pre></div>
+</div>
+</section>
+<section id="dataclass-fields">
+<h4>Dataclass Fields<a class="headerlink" href="#dataclass-fields" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
 <th class="head"><p>Type</p></th>
-<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Observation/data-portfolio weights.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">contributions</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Observation-level forecast contributions.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">diagnostics</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Forecast concentration, short position, leverage, gross leverage, and turnover.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_observations</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Largest historical observations per forecast.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">group_weights</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Group-level observation weights and contributions.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
-<td><p>dict</p></td>
-<td><p>Paper route, implemented/deferred routes, and options used.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">default_factory</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_schema</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">default_factory</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="dual-from-forecast-result">
-<h2>dual_from_forecast_result<a class="headerlink" href="#dual-from-forecast-result" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">dual_from_forecast_result</span><span class="p">(</span>
-    <span class="n">result</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">X_train</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="p">,</span>
-    <span class="n">X_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">attach</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">sidecar_name</span><span class="o">=</span><span class="s2">&quot;dual&quot;</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">dual_options</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Input:</p>
+<section id="public-methods">
+<h4>Public Methods<a class="headerlink" href="#public-methods" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Signature</p></th>
+<th class="head"><p>Summary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_dict</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">to_dict(self)</span> <span class="pre">-&gt;</span> <span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p>No public docstring is available.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">to_tables</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">to_tables(self,</span> <span class="pre">*,</span> <span class="pre">prefix:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&quot;dual&quot;)</span> <span class="pre">-&gt;</span> <span class="pre">dict[str,</span> <span class="pre">pd.DataFrame]</span></code></p></td>
+<td><p>Return output-ready tables with paper-aligned names.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="data-portfolio-diagnostics">
+<h3>data_portfolio_diagnostics<a class="headerlink" href="#data-portfolio-diagnostics" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.forecast_diagnostics</span></code></p>
+<section id="id1">
+<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">data_portfolio_diagnostics</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">top_q</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<p>Return concentration, short-position, leverage, and turnover diagnostics.</p>
+</section>
+<section id="id3">
+<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
 <th class="head"><p>Type</p></th>
 <th class="head"><p>Default</p></th>
-<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_q</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id4">
+<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id5">
+<h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.data_portfolio_diagnostics(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dual-from-forecast-result">
+<h3>dual_from_forecast_result<a class="headerlink" href="#dual-from-forecast-result" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.dual_from_forecast_result</span></code></p>
+<section id="id6">
+<h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">dual_from_forecast_result</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">X_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">X_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">attach</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">sidecar_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dual&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<p>Build a dual interpretation sidecar for a completed forecast result.</p>
+<p>A forecast table cannot reconstruct the exact train/test feature matrices
+used by the fitted model. The caller therefore passes the fitted model,
+training features, training target, and forecast-row features explicitly.</p>
+</section>
+<section id="id8">
+<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">result</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p></td>
-<td><p>required</p></td>
-<td><p>Completed forecast runner output.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
-<td><p>fitted model or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>required</p></td>
-<td><p>Same model argument passed to <code class="docutils literal notranslate"><span class="pre">dual_interpretation(...)</span></code>.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code>, <code class="docutils literal notranslate"><span class="pre">y_train</span></code>, <code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
-<td><p>pandas objects</p></td>
-<td><p>required except <code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
-<td><p>Exact design matrices used for the dual explanation.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attach</span></code></p></td>
-<td><p>bool</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
-<td><p>If true, return a copy of <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> with the sidecar attached. If false, return the standalone <code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sidecar_name</span></code></p></td>
-<td><p>str</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dual</span></code></p></td>
-<td><p>Name used in <code class="docutils literal notranslate"><span class="pre">ForecastResult.sidecars</span></code> and output artifact names.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;dual&quot;</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">**dual_options</span></code></p></td>
-<td><p>keyword args</p></td>
-<td><p>none</p></td>
-<td><p>Forwarded to <code class="docutils literal notranslate"><span class="pre">dual_interpretation(...)</span></code>, such as <code class="docutils literal notranslate"><span class="pre">method</span></code>, <code class="docutils literal notranslate"><span class="pre">lambda_</span></code>, <code class="docutils literal notranslate"><span class="pre">kernel</span></code>, <code class="docutils literal notranslate"><span class="pre">groups</span></code>, and <code class="docutils literal notranslate"><span class="pre">top_n</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code></p></td>
+<td><p>var keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Output: with <code class="docutils literal notranslate"><span class="pre">attach=True</span></code>, a new <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code>; with <code class="docutils literal notranslate"><span class="pre">attach=False</span></code>, a
-standalone <code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code>.</p>
 </section>
-<section id="observation-weights">
-<h2>observation_weights<a class="headerlink" href="#observation-weights" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">observation_weights</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">X_train</span><span class="p">,</span>
-    <span class="n">X_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
-    <span class="n">lambda_</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
-    <span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span>
-    <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">add_intercept</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">ridge_penalty_scale</span><span class="o">=</span><span class="s2">&quot;n_train&quot;</span><span class="p">,</span>
-    <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
+<section id="id9">
+<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p>
+</section>
+<section id="id10">
+<h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.dual_from_forecast_result(...)</span>
 </pre></div>
 </div>
-<p>Implemented routes:</p>
+</section>
+</section>
+<section id="dual-interpretation">
+<h3>dual_interpretation<a class="headerlink" href="#dual-interpretation" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.dual_interpretation</span></code></p>
+<section id="id11">
+<h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">dual_interpretation</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">X_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">X_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span> <span class="n">kernel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">add_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ridge_penalty_scale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;n_train&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">center</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_base</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">top_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">top_sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;abs_weight&quot;</span><span class="p">,</span> <span class="n">top_q</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_contributions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_diagnostics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_top_observations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_group_weights</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DualInterpretationResult</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<p>Run the ridge/KRR/RF DualML interpretation path in one callable.</p>
+</section>
+<section id="id13">
+<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Route</p></th>
-<th class="head"><p>Formula / logic</p></th>
-<th class="head"><p>Notes</p></th>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Ridge / OLS</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">W</span> <span class="pre">=</span> <span class="pre">X_test</span> <span class="pre">(X_train'</span> <span class="pre">X_train</span> <span class="pre">+</span> <span class="pre">n</span> <span class="pre">lambda</span> <span class="pre">I)^-1</span> <span class="pre">X_train'</span></code> by default</p></td>
-<td><p>Set <code class="docutils literal notranslate"><span class="pre">ridge_penalty_scale=&quot;none&quot;</span></code> for <code class="docutils literal notranslate"><span class="pre">lambda</span> <span class="pre">I</span></code>. <code class="docutils literal notranslate"><span class="pre">add_intercept=True</span></code> adds an unpenalized intercept.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Kernel ridge</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">W</span> <span class="pre">=</span> <span class="pre">K_test</span> <span class="pre">(K_train</span> <span class="pre">+</span> <span class="pre">lambda</span> <span class="pre">I)^-1</span></code></p></td>
-<td><p>Kernels: <code class="docutils literal notranslate"><span class="pre">linear</span></code>, <code class="docutils literal notranslate"><span class="pre">gaussian</span></code>/<code class="docutils literal notranslate"><span class="pre">rbf</span></code>, <code class="docutils literal notranslate"><span class="pre">laplace</span></code>/<code class="docutils literal notranslate"><span class="pre">laplacian</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Random forest</p></td>
-<td><p>For each tree, assign test and train rows to leaves; train rows in the same leaf share weight; average across trees</p></td>
-<td><p>For sklearn forests, bootstrap sample counts are used when recoverable.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
-</tbody>
-</table>
-</div>
-<p>Output columns:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Column</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">test_row</span></code>, <code class="docutils literal notranslate"><span class="pre">test_index</span></code></p></td>
-<td><p>Forecast-row position and index.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train_row</span></code>, <code class="docutils literal notranslate"><span class="pre">train_index</span></code></p></td>
-<td><p>Historical observation position and index.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lambda_</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-08</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weight</span></code>, <code class="docutils literal notranslate"><span class="pre">abs_weight</span></code></p></td>
-<td><p>Signed and absolute observation weight.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">kernel</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">channel</span></code></p></td>
-<td><p>Implemented route: <code class="docutils literal notranslate"><span class="pre">ridge</span></code>, <code class="docutils literal notranslate"><span class="pre">krr</span></code>, or <code class="docutils literal notranslate"><span class="pre">random_forest</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
 </tr>
-</tbody>
-</table>
-</div>
-<p>The dense matrix is attached as <code class="docutils literal notranslate"><span class="pre">attrs[&quot;weight_matrix&quot;]</span></code> with shape
-<code class="docutils literal notranslate"><span class="pre">(n_test,</span> <span class="pre">n_train)</span></code>.</p>
-</section>
-<section id="observation-contributions">
-<h2>observation_contributions<a class="headerlink" href="#observation-contributions" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">observation_contributions</span><span class="p">(</span>
-    <span class="n">weights</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">center</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">include_base</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Input: an observation-weight table and the aligned training target.</p>
-<p>Output columns add:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Column</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">add_intercept</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">train_y</span></code></p></td>
-<td><p>Realized historical outcome.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ridge_penalty_scale</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;n_train&quot;</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">centered_train_y</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">train_y</span> <span class="pre">-</span> <span class="pre">mean(y_train)</span></code> when <code class="docutils literal notranslate"><span class="pre">center=True</span></code>; otherwise <code class="docutils literal notranslate"><span class="pre">train_y</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">contribution</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">*</span> <span class="pre">train_y</span></code> by default.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">center</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code></p></td>
-<td><p>Sum of contributions for the forecast row.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include_base</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">channel</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">episode</span></code>, or <code class="docutils literal notranslate"><span class="pre">base</span></code> when <code class="docutils literal notranslate"><span class="pre">center=True</span></code> and <code class="docutils literal notranslate"><span class="pre">include_base=True</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_n</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
 </tr>
-</tbody>
-</table>
-</div>
-<p>Default <code class="docutils literal notranslate"><span class="pre">center=False</span></code> preserves the exact identity
-<code class="docutils literal notranslate"><span class="pre">prediction</span> <span class="pre">=</span> <span class="pre">weights</span> <span class="pre">&#64;</span> <span class="pre">y_train</span></code>. Centering is useful for plots but changes the
-table into a base-plus-centered-contribution decomposition.</p>
-</section>
-<section id="forecast-diagnostics">
-<h2>forecast_diagnostics<a class="headerlink" href="#forecast-diagnostics" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">forecast_diagnostics</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">top_q</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Output:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Column</p></th>
-<th class="head"><p>Paper/code meaning</p></th>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">top_sort_by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;abs_weight&quot;</span></code></p></td>
 </tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">concentration</span></code></p></td>
-<td><p>Forecast concentration: sum of top absolute weights divided by total absolute weight.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_q</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">short_position</span></code></p></td>
-<td><p>Forecast short position: signed sum of negative weights.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">groups</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">Sequence[Any]]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">short_position_abs</span></code></p></td>
-<td><p>Absolute short-side exposure.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_contributions</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">leverage</span></code></p></td>
-<td><p>Signed weight sum.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include_diagnostics</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gross_leverage</span></code></p></td>
-<td><p>Sum of absolute weights.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_top_observations</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">turnover</span></code></p></td>
-<td><p>Sum of absolute weight changes relative to the previous forecast row.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">top_q</span></code>, <code class="docutils literal notranslate"><span class="pre">top_k</span></code>, <code class="docutils literal notranslate"><span class="pre">n_train</span></code></p></td>
-<td><p>Diagnostic settings.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include_group_weights</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Negative weights are not automatically errors. In this paper they identify
-contrast-based use of historical observations. The caution is economic:
-macroeconomic shocks are often asymmetric, so a mirror-image historical
-analogy may be a weak explanation even if the model uses it.</p>
 </section>
-<section id="top-observations">
-<h2>top_observations<a class="headerlink" href="#top-observations" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">top_observations</span><span class="p">(</span>
-    <span class="n">weights</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-    <span class="n">sort_by</span><span class="o">=</span><span class="s2">&quot;abs_weight&quot;</span><span class="p">,</span>
-<span class="p">)</span>
+<section id="id14">
+<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">DualInterpretationResult</span></code></p>
+</section>
+<section id="id15">
+<h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.dual_interpretation(...)</span>
 </pre></div>
 </div>
-<p>Input: observation weights or observation contributions. If <code class="docutils literal notranslate"><span class="pre">y_train</span></code> is
-provided and the table lacks <code class="docutils literal notranslate"><span class="pre">contribution</span></code>, contributions are computed first.</p>
-<p>Output: top historical observations per forecast row with a <code class="docutils literal notranslate"><span class="pre">rank</span></code> column.
-Supported <code class="docutils literal notranslate"><span class="pre">sort_by</span></code> values: <code class="docutils literal notranslate"><span class="pre">abs_weight</span></code>, <code class="docutils literal notranslate"><span class="pre">weight</span></code>, <code class="docutils literal notranslate"><span class="pre">contribution</span></code>, and
-<code class="docutils literal notranslate"><span class="pre">abs_contribution</span></code>.</p>
 </section>
-<section id="group-observation-weights">
-<h2>group_observation_weights<a class="headerlink" href="#group-observation-weights" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">group_observation_weights</span><span class="p">(</span>
-    <span class="n">weights</span><span class="p">,</span>
-    <span class="n">groups</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span>
+</section>
+<section id="episode-group-weights">
+<h3>episode_group_weights<a class="headerlink" href="#episode-group-weights" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.group_observation_weights</span></code></p>
+<section id="id16">
+<h4>Signature<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">episode_group_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>Input:</p>
+</section>
+<section id="id17">
+<h4>Description<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<p>Aggregate observation weights over named historical groups.</p>
+</section>
+<section id="id18">
+<h4>Parameters<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Argument</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
-<td><p>Observation-weight or contribution table.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">groups</span></code></p></td>
-<td><p>Mapping from group name to training-index labels.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">Sequence[Any]]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
-<td><p>Optional training target used to create contributions before grouping.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">groups</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;gfc&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">period_range</span><span class="p">(</span><span class="s2">&quot;2007Q4&quot;</span><span class="p">,</span> <span class="s2">&quot;2009Q2&quot;</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;Q&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_timestamp</span><span class="p">(</span><span class="s2">&quot;Q&quot;</span><span class="p">),</span>
-    <span class="s2">&quot;covid&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">period_range</span><span class="p">(</span><span class="s2">&quot;2020Q1&quot;</span><span class="p">,</span> <span class="s2">&quot;2021Q2&quot;</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;Q&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_timestamp</span><span class="p">(</span><span class="s2">&quot;Q&quot;</span><span class="p">),</span>
-<span class="p">}</span>
-
-<span class="n">grouped</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">dual</span><span class="o">.</span><span class="n">group_observation_weights</span><span class="p">(</span>
-    <span class="n">dual</span><span class="o">.</span><span class="n">weights</span><span class="p">,</span>
-    <span class="n">groups</span><span class="p">,</span>
-    <span class="n">y_train</span><span class="o">=</span><span class="n">y_train</span><span class="p">,</span>
-<span class="p">)</span>
+</section>
+<section id="id19">
+<h4>Returns<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id20">
+<h4>Minimal Use<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.episode_group_weights(...)</span>
 </pre></div>
 </div>
-<p>Output columns: <code class="docutils literal notranslate"><span class="pre">test_row</span></code>, <code class="docutils literal notranslate"><span class="pre">test_index</span></code>, <code class="docutils literal notranslate"><span class="pre">episode_group</span></code>, <code class="docutils literal notranslate"><span class="pre">weight</span></code>,
-<code class="docutils literal notranslate"><span class="pre">abs_weight</span></code>, <code class="docutils literal notranslate"><span class="pre">n_episodes</span></code>, and, when available, <code class="docutils literal notranslate"><span class="pre">contribution</span></code> and
-<code class="docutils literal notranslate"><span class="pre">abs_contribution</span></code>.</p>
 </section>
-<section id="output-integration">
-<h2>Output Integration<a class="headerlink" href="#output-integration" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">DualInterpretationResult.to_tables(prefix=&quot;dual&quot;)</span></code> returns:</p>
+</section>
+<section id="forecast-diagnostics">
+<h3>forecast_diagnostics<a class="headerlink" href="#forecast-diagnostics" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.forecast_diagnostics</span></code></p>
+<section id="id21">
+<h4>Signature<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">forecast_diagnostics</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">top_q</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id22">
+<h4>Description<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<p>Return concentration, short-position, leverage, and turnover diagnostics.</p>
+</section>
+<section id="id23">
+<h4>Parameters<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Table key</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dual_observation_weights</span></code></p></td>
-<td><p>Long observation-weight table.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dual_observation_contributions</span></code></p></td>
-<td><p>Long contribution table, when requested.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dual_forecast_diagnostics</span></code></p></td>
-<td><p>Concentration, short-position, leverage, gross-leverage, and turnover table.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dual_top_observations</span></code></p></td>
-<td><p>Top historical observations per forecast row.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dual_group_observation_weights</span></code></p></td>
-<td><p>Group-level weights/contributions, when groups are provided.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dual_metadata</span></code></p></td>
-<td><p>Result metadata as key/value rows.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_q</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.05</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>The output module recognizes this result directly:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">bundle_outputs</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-    <span class="n">interpretation</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;dual&quot;</span><span class="p">:</span> <span class="n">dual</span><span class="p">},</span>
-    <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;study&quot;</span><span class="p">:</span> <span class="s2">&quot;inflation_dual&quot;</span><span class="p">},</span>
-<span class="p">)</span>
-
-<span class="n">manifest</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span>
-    <span class="n">bundle</span><span class="p">,</span>
-    <span class="s2">&quot;results/inflation_dual&quot;</span><span class="p">,</span>
-    <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;grouped&quot;</span><span class="p">,</span>
-<span class="p">)</span>
+</section>
+<section id="id24">
+<h4>Returns<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id25">
+<h4>Minimal Use<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.forecast_diagnostics(...)</span>
 </pre></div>
 </div>
-<p>With <code class="docutils literal notranslate"><span class="pre">layout=&quot;grouped&quot;</span></code>, dual tables are written under:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>interpretation/dual/
+</section>
+</section>
+<section id="group-observation-weights">
+<h3>group_observation_weights<a class="headerlink" href="#group-observation-weights" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.group_observation_weights</span></code></p>
+<section id="id26">
+<h4>Signature<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">group_observation_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="o">*</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>The same grouped path is used when a <code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> contains a dual sidecar:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">with_dual</span><span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">)</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;results/dual_run&quot;</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;grouped&quot;</span><span class="p">)</span>
+</section>
+<section id="id27">
+<h4>Description<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<p>Aggregate observation weights over named historical groups.</p>
+</section>
+<section id="id28">
+<h4>Parameters<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">groups</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">Sequence[Any]]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id29">
+<h4>Returns<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id30">
+<h4>Minimal Use<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.group_observation_weights(...)</span>
 </pre></div>
 </div>
-<p>This keeps DualML observation-based explanations separate from SHAP,
-oShapley/PBSV, PDP/ICE/ALE, and other feature-based interpretation outputs.</p>
+</section>
+</section>
+<section id="observation-contributions">
+<h3>observation_contributions<a class="headerlink" href="#observation-contributions" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.observation_contributions</span></code></p>
+<section id="id31">
+<h4>Signature<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">observation_contributions</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">center</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_base</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id32">
+<h4>Description<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<p>Convert observation weights into observation-level forecast contributions.</p>
+</section>
+<section id="id33">
+<h4>Parameters<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">center</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_base</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id34">
+<h4>Returns<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id35">
+<h4>Minimal Use<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.observation_contributions(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="observation-weights">
+<h3>observation_weights<a class="headerlink" href="#observation-weights" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.observation_weights</span></code></p>
+<section id="id36">
+<h4>Signature<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">observation_weights</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">X_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">X_test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">lambda_</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span> <span class="n">kernel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">add_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">ridge_penalty_scale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;n_train&quot;</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id37">
+<h4>Description<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<p>Return DualML observation/data-portfolio weights.</p>
+</section>
+<section id="id38">
+<h4>Parameters<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X_test</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lambda_</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-08</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kernel</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">add_intercept</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ridge_penalty_scale</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;n_train&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">normalize</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id39">
+<h4>Returns<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id40">
+<h4>Minimal Use<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.observation_weights(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="outcome-contributions">
+<h3>outcome_contributions<a class="headerlink" href="#outcome-contributions" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.observation_contributions</span></code></p>
+<section id="id41">
+<h4>Signature<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">outcome_contributions</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">center</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_base</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id42">
+<h4>Description<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
+<p>Convert observation weights into observation-level forecast contributions.</p>
+</section>
+<section id="id43">
+<h4>Parameters<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">center</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_base</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id44">
+<h4>Returns<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id45">
+<h4>Minimal Use<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.outcome_contributions(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="top-episodes">
+<h3>top_episodes<a class="headerlink" href="#top-episodes" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.top_observations</span></code></p>
+<section id="id46">
+<h4>Signature<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">top_episodes</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;abs_weight&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id47">
+<h4>Description<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
+<p>Return the largest historical observations per forecast row.</p>
+</section>
+<section id="id48">
+<h4>Parameters<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sort_by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;abs_weight&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id49">
+<h4>Returns<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id50">
+<h4>Minimal Use<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.top_episodes(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="top-observations">
+<h3>top_observations<a class="headerlink" href="#top-observations" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation.dual.top_observations</span></code></p>
+<section id="id51">
+<h4>Signature<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">interpretation_dual</span><span class="o">.</span><span class="n">top_observations</span><span class="p">(</span><span class="n">weights</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">y_train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">sort_by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;abs_weight&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id52">
+<h4>Description<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
+<p>Return the largest historical observations per forecast row.</p>
+</section>
+<section id="id53">
+<h4>Parameters<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weights</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">Sequence[float]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sort_by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;abs_weight&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id54">
+<h4>Returns<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id55">
+<h4>Minimal Use<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.interpretation_dual.top_observations(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 </section>
 
@@ -1255,17 +1554,108 @@ oShapley/PBSV, PDP/ICE/ALE, and other feature-based interpretation outputs.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference-sources">Reference Sources</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-functions">Public Functions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-flow">Public Flow</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dual-interpretation">dual_interpretation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dual-from-forecast-result">dual_from_forecast_result</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observation-weights">observation_weights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#observation-contributions">observation_contributions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-diagnostics">forecast_diagnostics</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#top-observations">top_observations</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#group-observation-weights">group_observation_weights</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-integration">Output Integration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-symbols">Public Symbols</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#callable-and-class-reference">Callable And Class Reference</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dualinterpretationresult">DualInterpretationResult</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#signature">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#returns">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-use">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dataclass-fields">Dataclass Fields</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#public-methods">Public Methods</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-portfolio-diagnostics">data_portfolio_diagnostics</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dual-from-forecast-result">dual_from_forecast_result</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dual-interpretation">dual_interpretation</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#episode-group-weights">episode_group_weights</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-diagnostics">forecast_diagnostics</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-observation-weights">group_observation_weights</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#observation-contributions">observation_contributions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#observation-weights">observation_weights</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#outcome-contributions">outcome_contributions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-episodes">top_episodes</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id47">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id48">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id49">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id50">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#top-observations">top_observations</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id51">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id52">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id53">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id54">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id55">Minimal Use</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

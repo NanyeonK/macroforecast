@@ -2,377 +2,380 @@
 
 [Back to reference](index.md)
 
-## Purpose
+Package-wide defaults such as random seed, worker count, metadata level, and context-managed overrides.
 
-`macroforecast.meta` stores package-wide execution settings. These settings are
-used when a run does not pass a more specific value through a direct function
-argument. They do not choose data, preprocessing, features, models, evaluation
-metrics, or output files.
+## Public Symbols
 
-The module is intentionally small. It owns defaults and temporary overrides;
-direct function arguments and runner policies always take precedence over
-global settings.
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `DEFAULT_RANDOM_SEED` | data | int([x]) -> integer |
+| `configure` | function | Update package-wide execution defaults and return the active config. |
+| `get_config` | function | Return a copy of the current package-wide execution defaults. |
+| `get_option` | function | Return one setting from the current package-wide execution defaults. |
+| `resolve_n_jobs` | function | Return the configured worker count, resolving ``'auto'`` to the CPU count. |
+| `MetaConfig` | class | dict() -> new empty dictionary |
+| `MetadataLevel` | callable | No public docstring is available. |
+| `NJobs` | callable | No public docstring is available. |
+| `OnError` | callable | No public docstring is available. |
+| `StageDefaultScope` | callable | No public docstring is available. |
+| `reset_config` | function | Reset package-wide execution defaults to their initial values. |
+| `use_config` | function | Temporarily update package-wide execution defaults inside a context. |
 
-## Public Functions
+## Data And Module Values
 
-| Function | Purpose |
-| --- | --- |
-| `configure` | Update one or more global execution settings. |
-| `get_config` | Return the full active configuration. |
-| `get_option` | Return one active configuration value. |
-| `resolve_n_jobs` | Resolve the configured worker count (`'auto'` resolves to the CPU count). |
-| `reset_config` | Restore package defaults. |
-| `use_config` | Temporarily override settings inside a `with` block. |
+### `DEFAULT_RANDOM_SEED`
 
-## Public Values
+Kind: `data`
 
-| Symbol | Meaning |
-| --- | --- |
-| `DEFAULT_RANDOM_SEED` | Package default seed value, currently `42`. |
-| `MetaConfig` | Dictionary-like output schema for active meta settings. |
-| `NJobs` | Accepted worker-count type: positive integer or `"auto"`. |
-| `OnError` | Stored failure-mode type: `"raise"` or `"continue"`. |
-| `StageDefaultScope` | Runner stage-scope type: `"full_panel"`, `"origin_available"`, or `"fit_window"`. |
-| `MetadataLevel` | Runner metadata detail type: `"minimal"`, `"standard"`, or `"full"`. |
+```python
+DEFAULT_RANDOM_SEED = 42
+```
 
-## MetaConfig
+## Callable And Class Reference
 
-`MetaConfig` is the output schema returned by `configure`, `get_config`,
-`reset_config`, and yielded by `use_config`.
+### configure
 
-### Output Schema
+Qualified name: `macroforecast.meta.config.configure`
 
-| Key | Type | Default | Meaning |
+#### Signature
+
+```python
+macroforecast.meta.configure(*, random_seed: int | None | object = <UNSET>, n_jobs: NJobs | object = <UNSET>, on_error: OnError | object = <UNSET>, verbose: int | object = <UNSET>, default_preprocessing_scope: StageDefaultScope | object = <UNSET>, default_feature_scope: StageDefaultScope | object = <UNSET>, default_selection_scope: StageDefaultScope | object = <UNSET>, metadata_level: MetadataLevel | object = <UNSET>) -> MetaConfig
+```
+
+#### Description
+
+Update package-wide execution defaults and return the active config.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `random_seed` | <code>int &#124; None</code> | `42` | Seed used by stochastic functions when no run-specific seed is supplied. `None` leaves stochastic components unseeded. |
-| `n_jobs` | <code>int &#124; "auto"</code> | `1` | Default worker count. `1` means serial execution; `"auto"` lets the package choose a bounded worker count. |
-| `on_error` | failure mode | stop on error | Default cell failure behavior. See [Failure Mode Values](#failure-mode-values). |
-| `verbose` | `int` | `0` | Default verbosity level for future logging surfaces. |
-| `default_preprocessing_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"origin_available"` | Default `forecasting.run(..., preprocessing_policy=...)` scope when preprocessing is supplied and no explicit policy is passed. |
-| `default_feature_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `feature_policy` scope. |
-| `default_selection_scope` | `"full_panel"`, `"origin_available"`, or `"fit_window"` | `"fit_window"` | Default `model_selection_policy` scope. |
-| `metadata_level` | `"minimal"`, `"standard"`, or `"full"` | `"standard"` | Runner metadata detail. `minimal` suppresses per-origin stage records; `standard` and `full` currently keep the same stage ledger. |
+| `random_seed` | keyword only | `int \| None \| object` | `<UNSET>` |
+| `n_jobs` | keyword only | `NJobs \| object` | `<UNSET>` |
+| `on_error` | keyword only | `OnError \| object` | `<UNSET>` |
+| `verbose` | keyword only | `int \| object` | `<UNSET>` |
+| `default_preprocessing_scope` | keyword only | `StageDefaultScope \| object` | `<UNSET>` |
+| `default_feature_scope` | keyword only | `StageDefaultScope \| object` | `<UNSET>` |
+| `default_selection_scope` | keyword only | `StageDefaultScope \| object` | `<UNSET>` |
+| `metadata_level` | keyword only | `MetadataLevel \| object` | `<UNSET>` |
 
-The default seed is owned by `macroforecast.meta.config.DEFAULT_RANDOM_SEED` and
-is exported as `macroforecast.meta.DEFAULT_RANDOM_SEED`.
+#### Returns
 
-### Failure Mode Values
+`MetaConfig`
 
-| User-facing mode | Stored value | Meaning |
-| --- | --- | --- |
-| Stop on error | `raise` | Stop immediately when a supported execution cell fails. |
-| Continue where supported | `continue` | Record the failure and continue for call sites that support non-fatal errors. |
-
-### Stage Scope Aliases
-
-Stage-scope inputs are normalized before storage. Docs and metadata use the
-canonical stored values.
-
-| Accepted input | Stored value | Meaning |
-| --- | --- | --- |
-| `"full"`, `"full_panel"`, `"global"` | `"full_panel"` | Fit the stage on the full panel. |
-| `"origin"`, `"origin_available"`, `"available"` | `"origin_available"` | Fit the stage on observations available at each forecast origin. |
-| `"fit"`, `"fit_window"`, `"train"`, `"train_window"` | `"fit_window"` | Fit the stage on the model fit window. |
-
-Example output:
-
-```python
-{
-    "random_seed": 42,
-    "n_jobs": 1,
-    "on_error": "raise",
-    "verbose": 0,
-    "default_preprocessing_scope": "origin_available",
-    "default_feature_scope": "fit_window",
-    "default_selection_scope": "fit_window",
-    "metadata_level": "standard",
-}
-```
-
-## configure
-
-Update package-wide execution settings and return the active configuration.
-
-### Signature
-
-```python
-macroforecast.meta.configure(
-    *,
-    random_seed: int | None = ...,
-    n_jobs: int | "auto" = ...,
-    on_error: str = ...,
-    verbose: int = ...,
-    default_preprocessing_scope: "full_panel" | "origin_available" | "fit_window" = ...,
-    default_feature_scope: "full_panel" | "origin_available" | "fit_window" = ...,
-    default_selection_scope: "full_panel" | "origin_available" | "fit_window" = ...,
-    metadata_level: "minimal" | "standard" | "full" = ...,
-) -> MetaConfig
-```
-
-All inputs are keyword-only. Omitted inputs keep their current values.
-
-### Input
-
-| Name | Type | Default if omitted | Allowed Values | Meaning |
-| --- | --- | --- | --- | --- |
-| `random_seed` | <code>int &#124; None</code> | keep current value | non-negative integer or `None` | Sets the default seed for stochastic components. |
-| `n_jobs` | <code>int &#124; "auto"</code> | keep current value | positive integer or `"auto"` | Sets the default worker count. |
-| `on_error` | failure mode | keep current value | Stop on error (`raise`) or continue where supported (`continue`) | Sets default failure behavior. |
-| `verbose` | `int` | keep current value | non-negative integer | Sets default verbosity. |
-| `default_preprocessing_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default preprocessing stage scope for `forecasting.run(...)`. |
-| `default_feature_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default feature-engineering stage scope. |
-| `default_selection_scope` | str | keep current value | `"full_panel"`, `"origin_available"`, `"fit_window"` | Sets the default model-selection stage scope. |
-| `metadata_level` | str | keep current value | `"minimal"`, `"standard"`, `"full"` | Sets the default runner metadata detail. |
-
-Stage-scope inputs also accept the aliases listed in
-[Stage Scope Aliases](#stage-scope-aliases). The returned `MetaConfig` always
-stores the canonical value.
-
-### Output
-
-Returns `MetaConfig`, a copy of the full active configuration after the update.
-
-| Output | Type | Meaning |
-| --- | --- | --- |
-| `config` | `MetaConfig` | The active package-wide execution settings. |
-
-### Side Effects
-
-`configure` changes global package state. Later calls that consult
-`macroforecast.meta` will see the updated values.
-
-### Validation
-
-| Condition | Error |
-| --- | --- |
-| `random_seed` is negative | `ValueError` |
-| `random_seed` is not `int` or `None` | `TypeError` |
-| `n_jobs` is not a positive integer or `"auto"` | `TypeError` or `ValueError` |
-| `on_error` is not a supported failure mode | `ValueError` |
-| `verbose` is not a non-negative integer | `TypeError` or `ValueError` |
-| stage default scope is not one of the allowed scopes | `ValueError` |
-| `metadata_level` is not `"minimal"`, `"standard"`, or `"full"` | `ValueError` |
-
-### Example
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-config = mf.meta.configure(
-    random_seed=7,
-    n_jobs="auto",
-    on_error="continue",
-    default_feature_scope="origin_available",
-    metadata_level="standard",
-    verbose=1,
-)
-
-assert config["random_seed"] == 7
+# Call with the signature above:
+# mf.meta.configure(...)
 ```
+### get_config
 
-## get_config
+Qualified name: `macroforecast.meta.config.get_config`
 
-Return the active package-wide execution settings.
-
-### Signature
+#### Signature
 
 ```python
 macroforecast.meta.get_config() -> MetaConfig
 ```
 
-### Input
+#### Description
 
-No input.
+Return a copy of the current package-wide execution defaults.
 
-### Output
+#### Returns
 
-Returns `MetaConfig`.
+`MetaConfig`
 
-| Output | Type | Meaning |
-| --- | --- | --- |
-| `config` | `MetaConfig` | Copy of the active package-wide execution settings. |
-
-The returned object is a copy. Mutating it does not change global package state.
-
-### Example
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-config = mf.meta.get_config()
-print(config["n_jobs"])
+# Call with the signature above:
+# mf.meta.get_config(...)
 ```
+### get_option
 
-## get_option
+Qualified name: `macroforecast.meta.config.get_option`
 
-Return one active configuration value.
-
-### Signature
+#### Signature
 
 ```python
-macroforecast.meta.get_option(name: str) -> object
+macroforecast.meta.get_option(name: str) -> Any
 ```
 
-### Input
+#### Description
 
-| Name | Type | Allowed Values | Meaning |
+Return one setting from the current package-wide execution defaults.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `name` | `str` | any `MetaConfig` key | Configuration key to read. |
+| `name` | positional or keyword | `str` | `required` |
 
-### Output
+#### Returns
 
-Returns the value for `name`.
+`Any`
 
-| `name` | Output Type |
-| --- | --- |
-| `"random_seed"` | <code>int &#124; None</code> |
-| `"n_jobs"` | <code>int &#124; "auto"</code> |
-| `"on_error"` | failure mode string |
-| `"verbose"` | `int` |
-| `"default_preprocessing_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
-| `"default_feature_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
-| `"default_selection_scope"` | `"full_panel"`, `"origin_available"`, or `"fit_window"` |
-| `"metadata_level"` | `"minimal"`, `"standard"`, or `"full"` |
-
-### Errors
-
-| Condition | Error |
-| --- | --- |
-| `name` is not a known option | `KeyError` |
-
-### Example
+#### Minimal Use
 
 ```python
 import macroforecast as mf
+# Call with the signature above:
+# mf.meta.get_option(...)
+```
+### resolve_n_jobs
 
-seed = mf.meta.get_option("random_seed")
+Qualified name: `macroforecast.meta.config.resolve_n_jobs`
+
+#### Signature
+
+```python
+macroforecast.meta.resolve_n_jobs() -> int
 ```
 
-## reset_config
+#### Description
 
-Restore package-wide execution settings to their defaults.
+Return the configured worker count, resolving ``'auto'`` to the CPU count.
 
-### Signature
+This is the single resolution point so that ``meta.configure(n_jobs=...)``
+actually controls parallelism in callers that opt in (e.g. tree ensembles).
+
+#### Returns
+
+`int`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.meta.resolve_n_jobs(...)
+```
+### MetaConfig
+
+Qualified name: `macroforecast.meta.config.MetaConfig`
+
+#### Signature
+
+```python
+macroforecast.meta.MetaConfig(...)
+```
+
+#### Description
+
+dict() -> new empty dictionary
+dict(mapping) -> new dictionary initialized from a mapping object's
+    (key, value) pairs
+dict(iterable) -> new dictionary initialized as if via:
+    d = {}
+    for k, v in iterable:
+        d[k] = v
+dict(**kwargs) -> new dictionary initialized with the name=value pairs
+    in the keyword argument list.  For example:  dict(one=1, two=2)
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.meta.MetaConfig(...)
+```
+### MetadataLevel
+
+Qualified name: `typing.Literal`
+
+#### Signature
+
+```python
+macroforecast.meta.MetadataLevel(*args, **kwargs)
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.meta.MetadataLevel(...)
+```
+### NJobs
+
+Qualified name: `typing.Union`
+
+#### Signature
+
+```python
+macroforecast.meta.NJobs(*args, **kwargs)
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.meta.NJobs(...)
+```
+### OnError
+
+Qualified name: `typing.Literal`
+
+#### Signature
+
+```python
+macroforecast.meta.OnError(*args, **kwargs)
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.meta.OnError(...)
+```
+### StageDefaultScope
+
+Qualified name: `typing.Literal`
+
+#### Signature
+
+```python
+macroforecast.meta.StageDefaultScope(*args, **kwargs)
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `unspecified` | `required` |
+| `kwargs` | var keyword | `unspecified` | `required` |
+
+#### Returns
+
+See the description and object-specific contract.
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.meta.StageDefaultScope(...)
+```
+### reset_config
+
+Qualified name: `macroforecast.meta.config.reset_config`
+
+#### Signature
 
 ```python
 macroforecast.meta.reset_config() -> MetaConfig
 ```
 
-### Input
+#### Description
 
-No input.
+Reset package-wide execution defaults to their initial values.
 
-### Output
+#### Returns
 
-Returns `MetaConfig` after reset.
+`MetaConfig`
 
-| Key | Reset Value |
-| --- | --- |
-| `random_seed` | `42` |
-| `n_jobs` | `1` |
-| `on_error` | `"raise"` |
-| `verbose` | `0` |
-| `default_preprocessing_scope` | `"origin_available"` |
-| `default_feature_scope` | `"fit_window"` |
-| `default_selection_scope` | `"fit_window"` |
-| `metadata_level` | `"standard"` |
-
-### Side Effects
-
-`reset_config` changes global package state.
-
-### Example
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-mf.meta.configure(random_seed=123, n_jobs=4)
-config = mf.meta.reset_config()
-
-assert config["random_seed"] == 42
-assert config["n_jobs"] == 1
+# Call with the signature above:
+# mf.meta.reset_config(...)
 ```
+### use_config
 
-## use_config
+Qualified name: `macroforecast.meta.config.use_config`
 
-Temporarily override package-wide execution settings inside a context manager.
-
-### Signature
+#### Signature
 
 ```python
-macroforecast.meta.use_config(
-    *,
-    random_seed: int | None = ...,
-    n_jobs: int | "auto" = ...,
-    on_error: str = ...,
-    verbose: int = ...,
-    default_preprocessing_scope: "full_panel" | "origin_available" | "fit_window" = ...,
-    default_feature_scope: "full_panel" | "origin_available" | "fit_window" = ...,
-    default_selection_scope: "full_panel" | "origin_available" | "fit_window" = ...,
-    metadata_level: "minimal" | "standard" | "full" = ...,
-) -> Iterator[MetaConfig]
+macroforecast.meta.use_config(*, random_seed: int | None | object = <UNSET>, n_jobs: NJobs | object = <UNSET>, on_error: OnError | object = <UNSET>, verbose: int | object = <UNSET>, default_preprocessing_scope: StageDefaultScope | object = <UNSET>, default_feature_scope: StageDefaultScope | object = <UNSET>, default_selection_scope: StageDefaultScope | object = <UNSET>, metadata_level: MetadataLevel | object = <UNSET>) -> Iterator[MetaConfig]
 ```
 
-### Input
+#### Description
 
-The inputs match `configure`.
+Temporarily update package-wide execution defaults inside a context.
 
-| Name | Type | Default if omitted | Allowed Values | Meaning |
-| --- | --- | --- | --- | --- |
-| `random_seed` | <code>int &#124; None</code> | keep current value inside context | non-negative integer or `None` | Temporary default seed. |
-| `n_jobs` | <code>int &#124; "auto"</code> | keep current value inside context | positive integer or `"auto"` | Temporary worker count. |
-| `on_error` | failure mode | keep current value inside context | Stop on error (`raise`) or continue where supported (`continue`) | Temporary failure behavior. |
-| `verbose` | `int` | keep current value inside context | non-negative integer | Temporary verbosity. |
-| `default_preprocessing_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary preprocessing default scope. |
-| `default_feature_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary feature default scope. |
-| `default_selection_scope` | str | keep current value inside context | `"full_panel"`, `"origin_available"`, `"fit_window"` | Temporary model-selection default scope. |
-| `metadata_level` | str | keep current value inside context | `"minimal"`, `"standard"`, `"full"` | Temporary metadata detail. |
+#### Parameters
 
-Stage-scope inputs use the same alias normalization as `configure`.
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `random_seed` | keyword only | `int \| None \| object` | `<UNSET>` |
+| `n_jobs` | keyword only | `NJobs \| object` | `<UNSET>` |
+| `on_error` | keyword only | `OnError \| object` | `<UNSET>` |
+| `verbose` | keyword only | `int \| object` | `<UNSET>` |
+| `default_preprocessing_scope` | keyword only | `StageDefaultScope \| object` | `<UNSET>` |
+| `default_feature_scope` | keyword only | `StageDefaultScope \| object` | `<UNSET>` |
+| `default_selection_scope` | keyword only | `StageDefaultScope \| object` | `<UNSET>` |
+| `metadata_level` | keyword only | `MetadataLevel \| object` | `<UNSET>` |
 
-### Output
+#### Returns
 
-Yields `MetaConfig`, the active configuration inside the context.
+`Iterator[MetaConfig]`
 
-| Output | Type | Meaning |
-| --- | --- | --- |
-| `config` | `MetaConfig` | Active temporary settings inside the `with` block. |
-
-### Side Effects
-
-`use_config` changes global package state only for the duration of the `with`
-block. The previous configuration is restored when the block exits, including
-when an exception is raised.
-
-### Example
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-mf.meta.configure(random_seed=42)
-
-with mf.meta.use_config(random_seed=7, n_jobs=2) as config:
-    assert config["random_seed"] == 7
-    # Run code here with the temporary settings.
-
-assert mf.meta.get_option("random_seed") == 42
+# Call with the signature above:
+# mf.meta.use_config(...)
 ```
-
-## Usage Behavior
-
-Direct package functions can read `macroforecast.meta` when no more specific
-value is provided by the caller.
-
-| Setting | Use |
-| --- | --- |
-| `random_seed` | Used as the default run seed and propagated to stochastic estimators where supported. |
-| `n_jobs` | Used as the default worker count for run-level and selected model-level parallel work. |
-| `on_error` | Default failure handling. `raise` stops on failure; `continue` continues where supported. |
-| `verbose` | Reserved as the package-wide verbosity setting. |
-| `default_preprocessing_scope` | Used by `forecasting.run(...)` when `preprocessing` is supplied without `preprocessing_policy`. |
-| `default_feature_scope` | Used by `forecasting.run(...)` when `feature_policy` is omitted. |
-| `default_selection_scope` | Used by `forecasting.run(...)` when `model_selection_policy` is omitted. |
-| `metadata_level` | Controls how much run-level metadata is recorded. `minimal` drops per-origin stage records; `standard` and `full` currently keep the same stage ledger. |
-
-Forecast results record the active config under `metadata["run"]["config"]` so
-a completed run can be audited against the settings in force at execution time.

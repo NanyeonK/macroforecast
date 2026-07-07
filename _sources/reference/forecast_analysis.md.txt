@@ -2,583 +2,977 @@
 
 [Back to reference](index.md)
 
-`macroforecast.forecast_analysis` inspects outputs from
-`macroforecast.forecasting.run(...)`. It does not refit models and does not
-change forecasts. It reads two sources:
+Forecast diagnostics for fitted values, residuals, tuning traces, and forecast paths.
 
-| Source | Used for |
-| --- | --- |
-| `ForecastResult.forecasts` | Forecast-vs-actual rows, residuals, rolling loss, model-selection metadata, and combination rows. |
-| Saved model sidecar JSON from `stored_model["metadata_path"]` | Coefficients, intercepts, hyperparameters, and fit diagnostics recorded by `macroforecast.models`. |
+## Public Symbols
 
-`macroforecast.forecast_diagnostic` remains available as a compatibility alias.
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `ForecastDiagnosticReport` | class | Container returned by :func:`diagnose_forecasts`. |
+| `coefficient_trace` | function | Read saved fit sidecars and return coefficient paths over origins. |
+| `custom_forecast_diagnostic` | function | Run a user-supplied forecast diagnostic and attach macroforecast metadata. |
+| `diagnose_forecasts` | function | Run the standard forecast diagnostics on a ForecastResult or table. |
+| `dfm_factor_stability` | function | Summarize filtered DFM factors saved in fit diagnostics. |
+| `dfm_idiosyncratic_acf` | function | Return ACF diagnostics for DFM idiosyncratic residual series. |
+| `ensemble_member_contribution` | function | Return member-level weighted forecast contributions for combinations. |
+| `ensemble_weight_concentration` | function | Return concentration metrics for identifiable forecast-combination weights. |
+| `ensemble_weights_over_time` | function | Reconstruct combination weights when the method has identifiable weights. |
+| `first_vs_last_forecast` | function | Compare the first and last forecast row inside each group. |
+| `fitted_vs_actual` | function | Return forecast rows with residual and error columns. |
+| `forecast_overview` | function | Return compact shape, model, horizon, and metadata coverage counts. |
+| `forecast_scale_view` | function | Return transformed and back-transformed forecast rows when possible. |
+| `hyperparameter_path` | function | Return long-form selected hyperparameters by origin. |
+| `parameter_stability` | function | Summarize coefficient drift and sign changes over forecast origins. |
+| `residual_autocorrelation` | function | Return residual autocorrelation by model/horizon group. |
+| `residual_qq` | function | Return residual QQ table against a fitted normal reference. |
+| `residual_report` | function | Return grouped out-of-sample residual diagnostics. |
+| `rolling_loss` | function | Return rolling out-of-sample loss by model and horizon. |
+| `rolling_training_loss` | function | Return a rolling trace of saved in-sample training metrics. |
+| `select_forecast_origins` | function | Return a forecast table filtered to a requested origin view. |
+| `stage_update_trace` | function | Return stage update records saved by the forecasting runner. |
+| `training_loss_trace` | function | Read saved model sidecars and return in-sample fit metrics by origin. |
+| `tuning_objective_trace` | function | Return best validation objective over origins for tuned models. |
+| `tuning_score_distribution` | function | Summarize the distribution of selected validation scores over origins. |
+| `tuning_trace` | function | Return one row per forecast row carrying parameter-selection metadata. |
 
-This module corresponds to the old generator/model diagnostic role, but the new
-API is callable-first. No YAML, recipe graph, or runtime materialization is
-involved.
+## Callable And Class Reference
 
-## Public Flow
+### ForecastDiagnosticReport
+
+Qualified name: `macroforecast.forecast_analysis.core.ForecastDiagnosticReport`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.ForecastDiagnosticReport(overview: dict[str, Any], fitted: pd.DataFrame | None = None, residuals: pd.DataFrame | None = None, residual_acf: pd.DataFrame | None = None, residual_qq: pd.DataFrame | None = None, rolling_loss: pd.DataFrame | None = None, forecast_scale: pd.DataFrame | None = None, coefficients: pd.DataFrame | None = None, parameter_stability: pd.DataFrame | None = None, training_loss: pd.DataFrame | None = None, rolling_training_loss: pd.DataFrame | None = None, first_vs_last: pd.DataFrame | None = None, tuning: pd.DataFrame | None = None, tuning_objective: pd.DataFrame | None = None, hyperparameters: pd.DataFrame | None = None, tuning_scores: pd.DataFrame | None = None, ensemble_weights: pd.DataFrame | None = None, ensemble_concentration: pd.DataFrame | None = None, member_contribution: pd.DataFrame | None = None, dfm_idiosyncratic_acf: pd.DataFrame | None = None, dfm_factor_stability: pd.DataFrame | None = None, stage_updates: pd.DataFrame | None = None, metadata: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Container returned by :func:`diagnose_forecasts`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `overview` | positional or keyword | `dict[str, Any]` | `required` |
+| `fitted` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `residuals` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `residual_acf` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `residual_qq` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `rolling_loss` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `forecast_scale` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `coefficients` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `parameter_stability` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `training_loss` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `rolling_training_loss` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `first_vs_last` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `tuning` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `tuning_objective` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `hyperparameters` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `tuning_scores` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `ensemble_weights` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `ensemble_concentration` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `member_contribution` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `dfm_idiosyncratic_acf` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `dfm_factor_stability` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `stage_updates` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-result = mf.forecasting.run(
-    processed_panel,
-    ["ridge", "random_forest"],
-    window=window_spec,
-    features=feature_spec,
-    model_selection=mf.model_selection.grid({"alpha": [0.01, 0.1]}),
-    combination=["mean", "inverse_mspe"],
-)
-
-analysis = mf.forecast_analysis.diagnose_forecasts(
-    result,
-    rolling_window=12,
-    include_residual_acf=True,
-    include_residual_qq=True,
-)
+# Construct with the signature above:
+# mf.forecast_analysis.ForecastDiagnosticReport(...)
 ```
 
-## diagnose_forecasts
+#### Dataclass Fields
 
-```python
-macroforecast.forecast_analysis.diagnose_forecasts(
-    forecasts,
-    *,
-    include_fitted: bool = True,
-    include_residuals: bool = True,
-    include_residual_acf: bool = False,
-    include_residual_qq: bool = False,
-    include_rolling_loss: bool = True,
-    rolling_window: int = 12,
-    rolling_metric: str = "rmse",
-    include_forecast_scale: bool = False,
-    levels=None,
-    scale_view: str = "both_overlay",
-    back_transform=None,
-    include_training_loss: bool = False,
-    include_rolling_training_loss: bool = False,
-    training_loss_metric: str = "rmse",
-    include_first_vs_last: bool = False,
-    include_dfm_idiosyncratic_acf: bool = False,
-    include_dfm_factor_stability: bool = False,
-    include_coefficients: bool = True,
-    include_parameter_stability: bool = True,
-    include_tuning: bool = True,
-    include_tuning_objective: bool = True,
-    include_hyperparameters: bool = True,
-    include_tuning_scores: bool = True,
-    include_ensemble_weights: bool = True,
-    include_ensemble_concentration: bool = True,
-    include_member_contribution: bool = False,
-    include_stage_updates: bool = True,
-    include_combined: bool = True,
-) -> ForecastDiagnosticReport
-```
-
-### Input
-
-| Name | Type | Default | Choices |
-| --- | --- | --- | --- |
-| `forecasts` | `ForecastResult` or `pandas.DataFrame` | required | Runner result or forecast table. |
-| `include_fitted` | `bool` | `True` | Include row-level fitted-vs-actual table. |
-| `include_residuals` | `bool` | `True` | Include grouped residual summary. |
-| `include_residual_acf` | `bool` | `False` | Include residual autocorrelation by model/horizon. |
-| `include_residual_qq` | `bool` | `False` | Include normal QQ reference points for residuals. |
-| `include_rolling_loss` | `bool` | `True` | Include rolling OOS loss table. |
-| `rolling_window` | positive int | `12` | Rolling window length in forecast rows within each group. |
-| `rolling_metric` | `str` | `"rmse"` | `"mse"`, `"rmse"`, `"mae"`, or `"bias"`. |
-| `include_forecast_scale` | `bool` | `False` | Include transformed and/or back-transformed forecast rows. |
-| `levels` | Series, DataFrame, or `None` | `None` | Original-level target series used by `forecast_scale_view` for change/growth back transforms. |
-| `scale_view` | `str` | `"both_overlay"` | `"transformed_only"`, `"back_transformed_only"`, or `"both_overlay"`. |
-| `back_transform` | callable or `None` | `None` | Optional custom row-level back-transform function. |
-| `include_training_loss` | `bool` | `False` | Read saved model sidecar fit metrics. |
-| `include_rolling_training_loss` | `bool` | `False` | Add rolling traces of saved fit metrics. |
-| `training_loss_metric` | `str` | `"rmse"` | Metric name from model sidecar diagnostics, usually `"rmse"`, `"mse"`, `"mae"`, `"mean"`, `"std"`, or `"n"`. |
-| `include_first_vs_last` | `bool` | `False` | Include first-versus-last forecast comparison by model/horizon. |
-| `include_dfm_idiosyncratic_acf` | `bool` | `False` | Include ACF of DFM residual diagnostics when sidecars contain DFM residuals. |
-| `include_dfm_factor_stability` | `bool` | `False` | Include filtered-factor stability summaries when sidecars contain DFM factors. |
-| `include_coefficients` | `bool` | `True` | Read saved model sidecar JSON and return coefficient paths when available. |
-| `include_parameter_stability` | `bool` | `True` | Summarize coefficient stability over origins/windows. |
-| `include_tuning` | `bool` | `True` | Include per-forecast model-selection metadata. |
-| `include_tuning_objective` | `bool` | `True` | Extract the selected objective and best score from tuning metadata. |
-| `include_hyperparameters` | `bool` | `True` | Return selected hyperparameter values over time. |
-| `include_tuning_scores` | `bool` | `True` | Summarize tuning best-score distributions. |
-| `include_ensemble_weights` | `bool` | `True` | Reconstruct weights for identifiable combination methods. |
-| `include_ensemble_concentration` | `bool` | `True` | Summarize ensemble-weight concentration by combined forecast row. |
-| `include_member_contribution` | `bool` | `False` | Attach member prediction, weight, and contribution rows where weights are identifiable. |
-| `include_stage_updates` | `bool` | `True` | Include preprocessing/feature stage update trace from result metadata. |
-| `include_combined` | `bool` | `True` | Include combined forecast rows in fitted/residual/loss tables. |
-
-### Output
-
-Returns `ForecastDiagnosticReport`.
-
-| Field | Type | Meaning |
+| Field | Type | Default |
 | --- | --- | --- |
-| `overview` | `dict` | Forecast count, model/horizon counts, date range, missing prediction/actual counts, stored-model count, model-selection count, uncertainty count. |
-| `fitted` | `DataFrame` or `None` | Forecast rows plus residual, absolute error, squared error, and percent error. |
-| `residuals` | `DataFrame` or `None` | Grouped residual diagnostics by model and horizon. |
-| `residual_acf` | `DataFrame` or `None` | Residual autocorrelation table by model, horizon, and lag. |
-| `residual_qq` | `DataFrame` or `None` | Residual quantiles paired with standard-normal theoretical quantiles. |
-| `rolling_loss` | `DataFrame` or `None` | Rolling OOS loss by model and horizon. |
-| `forecast_scale` | `DataFrame` or `None` | Transformed/back-transformed forecast rows. |
-| `training_loss` | `DataFrame` or `None` | Sidecar fit metrics by origin/model/horizon. |
-| `rolling_training_loss` | `DataFrame` or `None` | Rolling sidecar fit metrics. |
-| `first_vs_last` | `DataFrame` or `None` | First and last forecast rows in each group plus changes. |
-| `coefficients` | `DataFrame` or `None` | Coefficient path from saved model sidecars when available. |
-| `parameter_stability` | `DataFrame` or `None` | Coefficient stability summary across origins/windows. |
-| `tuning` | `DataFrame` or `None` | Model-selection event trace from forecast table metadata. |
-| `tuning_objective` | `DataFrame` or `None` | Selected objective, best score, retune flag, and trial counts by forecast row. |
-| `hyperparameters` | `DataFrame` or `None` | Long-form selected hyperparameter values over forecast rows. |
-| `tuning_scores` | `DataFrame` or `None` | Tuning-score distribution summary by model/horizon/method. |
-| `ensemble_weights` | `DataFrame` or `None` | Reconstructed combination weights for supported methods. |
-| `ensemble_concentration` | `DataFrame` or `None` | Herfindahl/effective-number summary of ensemble weights. |
-| `member_contribution` | `DataFrame` or `None` | Member prediction and weighted contribution rows. |
-| `dfm_idiosyncratic_acf` | `DataFrame` or `None` | DFM idiosyncratic residual ACF from saved fit diagnostics. |
-| `dfm_factor_stability` | `DataFrame` or `None` | Filtered-factor mean, variance, drift, and autocorrelation summaries. |
-| `stage_updates` | `DataFrame` or `None` | Runner stage update trace. |
-| `metadata` | `dict` | Input metadata plus compact `forecast_analysis` stage. |
+| `overview` | `dict[str, Any]` | `required` |
+| `fitted` | `pd.DataFrame \| None` | `None` |
+| `residuals` | `pd.DataFrame \| None` | `None` |
+| `residual_acf` | `pd.DataFrame \| None` | `None` |
+| `residual_qq` | `pd.DataFrame \| None` | `None` |
+| `rolling_loss` | `pd.DataFrame \| None` | `None` |
+| `forecast_scale` | `pd.DataFrame \| None` | `None` |
+| `coefficients` | `pd.DataFrame \| None` | `None` |
+| `parameter_stability` | `pd.DataFrame \| None` | `None` |
+| `training_loss` | `pd.DataFrame \| None` | `None` |
+| `rolling_training_loss` | `pd.DataFrame \| None` | `None` |
+| `first_vs_last` | `pd.DataFrame \| None` | `None` |
+| `tuning` | `pd.DataFrame \| None` | `None` |
+| `tuning_objective` | `pd.DataFrame \| None` | `None` |
+| `hyperparameters` | `pd.DataFrame \| None` | `None` |
+| `tuning_scores` | `pd.DataFrame \| None` | `None` |
+| `ensemble_weights` | `pd.DataFrame \| None` | `None` |
+| `ensemble_concentration` | `pd.DataFrame \| None` | `None` |
+| `member_contribution` | `pd.DataFrame \| None` | `None` |
+| `dfm_idiosyncratic_acf` | `pd.DataFrame \| None` | `None` |
+| `dfm_factor_stability` | `pd.DataFrame \| None` | `None` |
+| `stage_updates` | `pd.DataFrame \| None` | `None` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
 
-Returned tables carry `attrs["macroforecast_metadata"] == report.metadata`.
+#### Public Methods
 
-### Metadata
-
-`diagnose_forecasts(...)` attaches one compact stage:
-
-```python
-analysis.metadata["forecast_analysis"]
-```
-
-The stage records:
-
-| Key | Meaning |
-| --- | --- |
-| `overview` | Compact counts: forecasts, models, combined rows, stored-model rows, and model-selection rows. |
-| `options` | Residual, rolling-loss, coefficient, tuning, ensemble, and stage-update choices. |
-| `tables` | Number of rows generated by each analysis table. |
-
-## Helper Functions
-
-### forecast_overview
-
-```python
-macroforecast.forecast_analysis.forecast_overview(forecasts) -> dict
-```
-
-Returns counts and coverage for one forecast table:
-
-| Key | Meaning |
-| --- | --- |
-| `n_forecasts`, `n_models`, `models`, `horizons` | Forecast-table shape. |
-| `start`, `end` | Forecast date range. |
-| `missing_prediction_count`, `missing_actual_count` | Missingness in forecast/actual columns. |
-| `combined_count`, `base_model_count` | Combination versus base model rows. |
-| `stored_model_count` | Rows with saved model metadata. |
-| `selection_count`, `retuned_count` | Rows with model-selection metadata and rows that retuned. |
-| `variance_prediction_count`, `quantile_prediction_count` | Uncertainty output coverage. |
-
-### fitted_vs_actual
-
-```python
-macroforecast.forecast_analysis.fitted_vs_actual(
-    forecasts,
-    *,
-    include_combined: bool = True,
-    drop_missing_actual: bool = True,
-) -> pandas.DataFrame
-```
-
-Returns row-level diagnostics:
-
-| Column | Meaning |
-| --- | --- |
-| `prediction`, `actual` | Forecast and realized target from the runner. |
-| `residual` | `actual - prediction`. |
-| `abs_error` | Absolute residual. |
-| `squared_error` | Squared residual. |
-| `percent_error` | `residual / abs(actual)`; zero actuals become missing. |
-
-### residual_report
-
-```python
-macroforecast.forecast_analysis.residual_report(
-    forecasts,
-    *,
-    group_by: Sequence[str] = ("model", "horizon"),
-    include_combined: bool = True,
-) -> pandas.DataFrame
-```
-
-Default grouping is model by horizon. Output columns include `n`, `bias`,
-`mae`, `mse`, `rmse`, `residual_sd`, `residual_autocorr1`, `mean_actual`,
-`mean_prediction`, `first_date`, and `last_date`. The lag-1 autocorrelation is
-computed after sorting each group by `origin_pos` and `date`; input row order
-does not affect the result.
-
-### residual_autocorrelation
-
-```python
-macroforecast.forecast_analysis.residual_autocorrelation(
-    forecasts,
-    *,
-    max_lag: int = 12,
-    group_by: Sequence[str] = ("model", "horizon"),
-    include_combined: bool = True,
-) -> pandas.DataFrame
-```
-
-Returns one row per model/horizon/lag with residual ACF values. This supports
-forecast-residual correlogram checks without rerunning the model.
-
-### residual_qq
-
-```python
-macroforecast.forecast_analysis.residual_qq(
-    forecasts,
-    *,
-    n_quantiles: int = 21,
-    group_by: Sequence[str] = ("model", "horizon"),
-    include_combined: bool = True,
-) -> pandas.DataFrame
-```
-
-Returns empirical residual quantiles and matching standard-normal theoretical
-quantiles. Use it for QQ plots or tail-shape checks. It does not run a
-normality test.
-
-### rolling_loss
-
-```python
-macroforecast.forecast_analysis.rolling_loss(
-    forecasts,
-    *,
-    metric: str = "rmse",
-    window: int = 12,
-    min_periods: int | None = None,
-    group_by: Sequence[str] = ("model", "horizon"),
-    include_combined: bool = True,
-) -> pandas.DataFrame
-```
-
-Computes rolling OOS loss inside each group. `rmse` rolls the squared error and
-takes the square root after averaging.
-
-### forecast_scale_view
-
-```python
-macroforecast.forecast_analysis.forecast_scale_view(
-    forecasts,
-    *,
-    levels=None,
-    target=None,
-    transform=None,
-    view="both_overlay",
-    back_transform=None,
-    include_combined=True,
-) -> pandas.DataFrame
-```
-
-Returns forecast rows on the transformed scale, the original level scale, or
-both. The runner records `target_transform` when available. Built-in
-back-transform support covers `level`, one-step `change`, `growth`, and
-`log_growth`. For path-average targets or custom transforms, pass
-`back_transform`, a callable that returns either a mapping with `prediction`
-and `actual` or a two-value sequence.
-
-Output columns include `date`, `origin`, `horizon`, `model`, `scale`,
-`target_transform`, `prediction`, `actual`, `residual`, and
-`back_transform_available`.
-
-### select_forecast_origins
-
-```python
-macroforecast.forecast_analysis.select_forecast_origins(
-    forecasts,
-    *,
-    view="all_origins",
-    every_n=12,
-    include_last=True,
-    include_combined=True,
-) -> pandas.DataFrame
-```
-
-Filters the forecast table to one of three origin views:
-`"all_origins"`, `"last_origin_only"`, or `"every_n_origins"`. The last
-origin is retained by default in `"every_n_origins"` so the final test window
-is visible even when it does not land exactly on the spacing.
-
-### first_vs_last_forecast
-
-```python
-macroforecast.forecast_analysis.first_vs_last_forecast(
-    forecasts,
-    *,
-    group_by=("model", "horizon"),
-    include_combined=True,
-) -> pandas.DataFrame
-```
-
-Compares the first and last forecast row inside each group. Output includes
-first/last dates, origins, predictions, actuals, residuals, and changes. This
-is the callable equivalent of the old first-window versus last-window view.
-
-### training_loss_trace
-
-```python
-macroforecast.forecast_analysis.training_loss_trace(
-    forecasts,
-    *,
-    load_pickle=False,
-) -> pandas.DataFrame
-```
-
-Reads saved model sidecar JSON and returns fit metrics recorded by
-`macroforecast.models`, usually `n`, `mean`, `std`, `mae`, `mse`, and `rmse`.
-It does not unpickle models by default. Path-average forecasts can save one
-fit per step; those rows use `fit_step`.
-
-### rolling_training_loss
-
-```python
-macroforecast.forecast_analysis.rolling_training_loss(
-    forecasts_or_trace,
-    *,
-    metric="rmse",
-    window=12,
-    min_periods=None,
-    group_by=("model", "horizon"),
-    load_pickle=False,
-) -> pandas.DataFrame
-```
-
-Computes a rolling average of sidecar training metrics. It accepts either a
-runner `ForecastResult`/forecast table or the output of
-`training_loss_trace(...)`.
-
-### dfm_idiosyncratic_acf
-
-```python
-macroforecast.forecast_analysis.dfm_idiosyncratic_acf(
-    source,
-    *,
-    max_lag=12,
-    load_pickle=False,
-) -> pandas.DataFrame
-```
-
-Reads DFM residual diagnostics from a `ModelFit`, `ForecastResult`, or forecast
-table with saved model sidecars. Output columns include model context,
-residual name, lag, ACF, and observation count.
-
-### dfm_factor_stability
-
-```python
-macroforecast.forecast_analysis.dfm_factor_stability(
-    source,
-    *,
-    load_pickle=False,
-) -> pandas.DataFrame
-```
-
-Reads filtered DFM factor diagnostics from a `ModelFit`, `ForecastResult`, or
-forecast table with saved model sidecars. Output includes factor name, count,
-mean, standard deviation, variance, first/last values, drift, and lag-1
-autocorrelation.
-
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
 ### coefficient_trace
 
-```python
-macroforecast.forecast_analysis.coefficient_trace(
-    forecasts,
-    *,
-    include_intercept: bool = True,
-    load_pickle: bool = False,
-    models: Iterable[str] | None = None,
-) -> pandas.DataFrame
-```
+Qualified name: `macroforecast.forecast_analysis.core.coefficient_trace`
 
-Reads `stored_model["metadata_path"]` sidecar JSON for each forecast row and
-extracts `fit.fit.diagnostics.coefficients`. It does not unpickle model objects
-by default. Set `load_pickle=True` only for trusted local artifacts when a
-sidecar is missing.
-
-Returned rows include `date`, `origin`, `origin_pos`, `horizon`, `model`,
-`fit_step`, `feature`, `coefficient`, `component`, and stored artifact paths.
-
-### parameter_stability
+#### Signature
 
 ```python
-macroforecast.forecast_analysis.parameter_stability(
-    forecasts,
-    *,
-    include_intercept: bool = True,
-    load_pickle: bool = False,
-    group_by: Sequence[str] = ("model", "horizon", "feature"),
-    models: Iterable[str] | None = None,
-) -> pandas.DataFrame
+macroforecast.forecast_analysis.coefficient_trace(forecasts: Any, *, include_intercept: bool = True, load_pickle: bool = False, models: Iterable[str] | None = None) -> pd.DataFrame
 ```
 
-Summarizes coefficient traces across forecast origins. Output includes count,
-mean, standard deviation, min/max, first/last coefficient, and sign-change
-count. It is available only when model sidecars contain coefficient metadata.
+#### Description
 
-### tuning_trace
+Read saved fit sidecars and return coefficient paths over origins.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `include_intercept` | keyword only | `bool` | `True` |
+| `load_pickle` | keyword only | `bool` | `False` |
+| `models` | keyword only | `Iterable[str] \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-macroforecast.forecast_analysis.tuning_trace(forecasts) -> pandas.DataFrame
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.coefficient_trace(...)
 ```
-
-Returns one row per forecast row with model-selection metadata. It records method,
-metric, validation window, retune flag, best score, best params, trial counts,
-and policy. The current runner stores selection-event summaries, not full
-per-trial histories.
-
-### tuning_objective_trace
-
-```python
-macroforecast.forecast_analysis.tuning_objective_trace(forecasts) -> pandas.DataFrame
-```
-
-Extracts the objective-facing part of `tuning_trace`: model, horizon, origin,
-method, metric, validation window, retune flag, best score, trial counts, and
-policy. Use this when the question is whether model selection itself behaved
-consistently.
-
-Output columns are `date`, `origin`, `origin_pos`, `horizon`, `model`,
-`model_spec`, `method`, `metric`, `window`, `best_score`, `retuned`,
-`n_trials`, `n_successful`, `n_failed`, and `policy`.
-
-### hyperparameter_path
-
-```python
-macroforecast.forecast_analysis.hyperparameter_path(forecasts) -> pandas.DataFrame
-```
-
-Returns selected hyperparameters in long form: one row per forecast row and
-parameter. This is the callable table behind hyperparameter-over-time plots.
-
-### tuning_score_distribution
-
-```python
-macroforecast.forecast_analysis.tuning_score_distribution(
-    forecasts,
-    *,
-    group_by: Sequence[str] = ("model", "horizon", "method"),
-) -> pandas.DataFrame
-```
-
-Summarizes selected tuning scores by group. Output includes count, mean,
-standard deviation, min, max, and median best score.
-
-### ensemble_weights_over_time
-
-```python
-macroforecast.forecast_analysis.ensemble_weights_over_time(
-    forecasts,
-    *,
-    unsupported: str = "skip",
-) -> pandas.DataFrame
-```
-
-Reconstructs weights when the combination method has identifiable weights.
-
-| Method | Weight support |
-| --- | --- |
-| `mean` | Equal weights. |
-| `inverse_mspe`, `dmspe` | Recomputed from historical squared forecast errors using the same discount/min-weight parameters. |
-| `best_n` | Equal weights over historically best models. |
-| `median`, `trimmed_mean`, `winsorized_mean` | No unique model weights; skipped by default. |
-
-`unsupported` controls non-identifiable methods: `"skip"`, `"nan"`, or
-`"raise"`.
-
-### ensemble_weight_concentration
-
-```python
-macroforecast.forecast_analysis.ensemble_weight_concentration(forecasts) -> pandas.DataFrame
-```
-
-Summarizes reconstructed weights for each combined forecast row. Output
-includes member count, min/max weight, Herfindahl index, effective number of
-members, and entropy. These are concentration diagnostics for identifiable
-weights; median, trimmed-mean, and custom combinations can be non-identifiable.
-
-### ensemble_member_contribution
-
-```python
-macroforecast.forecast_analysis.ensemble_member_contribution(forecasts) -> pandas.DataFrame
-```
-
-Returns long-form member contribution rows when weights are identifiable:
-member model, member prediction, weight, contribution, and combined
-prediction.
-
-### stage_update_trace
-
-```python
-macroforecast.forecast_analysis.stage_update_trace(forecasts) -> pandas.DataFrame
-```
-
-Returns preprocessing and feature-engineering stage update records stored in
-`ForecastResult.metadata["stages"]`. This is empty for direct `FeatureSet`
-inputs because the runner does not refit preprocessing/features in that path.
-
 ### custom_forecast_diagnostic
 
-```python
-macroforecast.forecast_analysis.custom_forecast_diagnostic(
-    forecasts,
-    func,
-    *,
-    name=None,
-    metadata=None,
-    **params,
-) -> pandas.DataFrame
-```
+Qualified name: `macroforecast.forecast_analysis.core.custom_forecast_diagnostic`
 
-Runs one user diagnostic on a runner `ForecastResult` or forecast table. This
-is for inspection only; it does not refit models, recompute model selection, or
-change forecast rows.
-
-Callable signature:
+#### Signature
 
 ```python
-func(forecasts, *, metadata=None, **params)
+macroforecast.forecast_analysis.custom_forecast_diagnostic(forecasts: Any, func: Callable[..., Any], *, name: str | None = None, metadata: Mapping[str, Any] | None = None, **params: Any) -> pd.DataFrame
 ```
 
-The `forecasts` argument passed to the callable is a copy of the forecast
-`DataFrame`. Accepted callable outputs are `DataFrame`, `Series`, mapping, or a
-sequence convertible to a `DataFrame`.
+#### Description
 
-The returned table carries:
+Run a user-supplied forecast diagnostic and attach macroforecast metadata.
 
-| Attr | Meaning |
-| --- | --- |
-| `macroforecast_metadata_schema.kind` | Always `custom_forecast_diagnostic`. |
-| `macroforecast_metadata_schema.method` | `name` or callable name. |
-| `macroforecast_metadata` | Input metadata plus a `custom_forecast_diagnostic` stage. |
+#### Parameters
 
-Example:
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `name` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-def tail_errors(forecasts, *, metadata=None, q=0.95):
-    err = (forecasts["actual"] - forecasts["prediction"]).abs()
-    return {"q": q, "abs_error": float(err.quantile(q))}
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.custom_forecast_diagnostic(...)
+```
+### diagnose_forecasts
 
-diag = mf.forecast_analysis.custom_forecast_diagnostic(
-    result,
-    tail_errors,
-    name="tail_errors",
-    q=0.9,
-)
+Qualified name: `macroforecast.forecast_analysis.core.diagnose_forecasts`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.diagnose_forecasts(forecasts: Any, *, include_fitted: bool = True, include_residuals: bool = True, include_residual_acf: bool = False, include_residual_qq: bool = False, include_rolling_loss: bool = True, rolling_window: int = 12, rolling_metric: LossMetric = "rmse", include_forecast_scale: bool = False, levels: Any | None = None, scale_view: ScaleView = "both_overlay", back_transform: Callable[..., Any] | None = None, include_training_loss: bool = False, include_rolling_training_loss: bool = False, training_loss_metric: str = "rmse", include_first_vs_last: bool = False, include_dfm_idiosyncratic_acf: bool = False, include_dfm_factor_stability: bool = False, include_coefficients: bool = True, include_parameter_stability: bool = True, include_tuning: bool = True, include_tuning_objective: bool = True, include_hyperparameters: bool = True, include_tuning_scores: bool = True, include_ensemble_weights: bool = True, include_ensemble_concentration: bool = True, include_member_contribution: bool = False, include_stage_updates: bool = True, include_combined: bool = True) -> ForecastDiagnosticReport
 ```
 
-## Boundary
+#### Description
 
-| Question | Use |
-| --- | --- |
-| Run windowed forecasts and combinations | `mf.forecasting` |
-| Score and rank forecasts | `mf.metrics` |
-| Run forecast-comparison tests | `mf.tests` |
-| Inspect forecast rows, residuals, tuning, coefficients, weights, and stage updates | `mf.forecast_analysis` |
+Run the standard forecast diagnostics on a ForecastResult or table.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `include_fitted` | keyword only | `bool` | `True` |
+| `include_residuals` | keyword only | `bool` | `True` |
+| `include_residual_acf` | keyword only | `bool` | `False` |
+| `include_residual_qq` | keyword only | `bool` | `False` |
+| `include_rolling_loss` | keyword only | `bool` | `True` |
+| `rolling_window` | keyword only | `int` | `12` |
+| `rolling_metric` | keyword only | `LossMetric` | `"rmse"` |
+| `include_forecast_scale` | keyword only | `bool` | `False` |
+| `levels` | keyword only | `Any \| None` | `None` |
+| `scale_view` | keyword only | `ScaleView` | `"both_overlay"` |
+| `back_transform` | keyword only | `Callable[..., Any] \| None` | `None` |
+| `include_training_loss` | keyword only | `bool` | `False` |
+| `include_rolling_training_loss` | keyword only | `bool` | `False` |
+| `training_loss_metric` | keyword only | `str` | `"rmse"` |
+| `include_first_vs_last` | keyword only | `bool` | `False` |
+| `include_dfm_idiosyncratic_acf` | keyword only | `bool` | `False` |
+| `include_dfm_factor_stability` | keyword only | `bool` | `False` |
+| `include_coefficients` | keyword only | `bool` | `True` |
+| `include_parameter_stability` | keyword only | `bool` | `True` |
+| `include_tuning` | keyword only | `bool` | `True` |
+| `include_tuning_objective` | keyword only | `bool` | `True` |
+| `include_hyperparameters` | keyword only | `bool` | `True` |
+| `include_tuning_scores` | keyword only | `bool` | `True` |
+| `include_ensemble_weights` | keyword only | `bool` | `True` |
+| `include_ensemble_concentration` | keyword only | `bool` | `True` |
+| `include_member_contribution` | keyword only | `bool` | `False` |
+| `include_stage_updates` | keyword only | `bool` | `True` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`ForecastDiagnosticReport`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.diagnose_forecasts(...)
+```
+### dfm_factor_stability
+
+Qualified name: `macroforecast.forecast_analysis.core.dfm_factor_stability`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.dfm_factor_stability(source: Any, *, load_pickle: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Summarize filtered DFM factors saved in fit diagnostics.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `source` | positional or keyword | `Any` | `required` |
+| `load_pickle` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.dfm_factor_stability(...)
+```
+### dfm_idiosyncratic_acf
+
+Qualified name: `macroforecast.forecast_analysis.core.dfm_idiosyncratic_acf`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.dfm_idiosyncratic_acf(source: Any, *, max_lag: int = 12, load_pickle: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Return ACF diagnostics for DFM idiosyncratic residual series.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `source` | positional or keyword | `Any` | `required` |
+| `max_lag` | keyword only | `int` | `12` |
+| `load_pickle` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.dfm_idiosyncratic_acf(...)
+```
+### ensemble_member_contribution
+
+Qualified name: `macroforecast.forecast_analysis.core.ensemble_member_contribution`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.ensemble_member_contribution(forecasts: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return member-level weighted forecast contributions for combinations.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.ensemble_member_contribution(...)
+```
+### ensemble_weight_concentration
+
+Qualified name: `macroforecast.forecast_analysis.core.ensemble_weight_concentration`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.ensemble_weight_concentration(forecasts: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return concentration metrics for identifiable forecast-combination weights.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.ensemble_weight_concentration(...)
+```
+### ensemble_weights_over_time
+
+Qualified name: `macroforecast.forecast_analysis.core.ensemble_weights_over_time`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.ensemble_weights_over_time(forecasts: Any, *, unsupported: UnsupportedWeights = "skip") -> pd.DataFrame
+```
+
+#### Description
+
+Reconstruct combination weights when the method has identifiable weights.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `unsupported` | keyword only | `UnsupportedWeights` | `"skip"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.ensemble_weights_over_time(...)
+```
+### first_vs_last_forecast
+
+Qualified name: `macroforecast.forecast_analysis.core.first_vs_last_forecast`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.first_vs_last_forecast(forecasts: Any, *, group_by: Sequence[str] = ('model', 'horizon'), include_combined: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Compare the first and last forecast row inside each group.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.first_vs_last_forecast(...)
+```
+### fitted_vs_actual
+
+Qualified name: `macroforecast.forecast_analysis.core.fitted_vs_actual`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.fitted_vs_actual(forecasts: Any, *, include_combined: bool = True, drop_missing_actual: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return forecast rows with residual and error columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `include_combined` | keyword only | `bool` | `True` |
+| `drop_missing_actual` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.fitted_vs_actual(...)
+```
+### forecast_overview
+
+Qualified name: `macroforecast.forecast_analysis.core.forecast_overview`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.forecast_overview(forecasts: Any) -> dict[str, Any]
+```
+
+#### Description
+
+Return compact shape, model, horizon, and metadata coverage counts.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.forecast_overview(...)
+```
+### forecast_scale_view
+
+Qualified name: `macroforecast.forecast_analysis.core.forecast_scale_view`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.forecast_scale_view(forecasts: Any, *, levels: Any | None = None, target: str | None = None, transform: str | None = None, view: ScaleView = "both_overlay", back_transform: Callable[..., Any] | None = None, include_combined: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return transformed and back-transformed forecast rows when possible.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `levels` | keyword only | `Any \| None` | `None` |
+| `target` | keyword only | `str \| None` | `None` |
+| `transform` | keyword only | `str \| None` | `None` |
+| `view` | keyword only | `ScaleView` | `"both_overlay"` |
+| `back_transform` | keyword only | `Callable[..., Any] \| None` | `None` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.forecast_scale_view(...)
+```
+### hyperparameter_path
+
+Qualified name: `macroforecast.forecast_analysis.core.hyperparameter_path`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.hyperparameter_path(forecasts: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return long-form selected hyperparameters by origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.hyperparameter_path(...)
+```
+### parameter_stability
+
+Qualified name: `macroforecast.forecast_analysis.core.parameter_stability`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.parameter_stability(forecasts: Any, *, include_intercept: bool = True, load_pickle: bool = False, group_by: Sequence[str] = ('model', 'horizon', 'feature'), models: Iterable[str] | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Summarize coefficient drift and sign changes over forecast origins.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `include_intercept` | keyword only | `bool` | `True` |
+| `load_pickle` | keyword only | `bool` | `False` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon", "feature")` |
+| `models` | keyword only | `Iterable[str] \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.parameter_stability(...)
+```
+### residual_autocorrelation
+
+Qualified name: `macroforecast.forecast_analysis.core.residual_autocorrelation`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.residual_autocorrelation(forecasts: Any, *, max_lag: int = 12, group_by: Sequence[str] = ('model', 'horizon'), include_combined: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return residual autocorrelation by model/horizon group.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `max_lag` | keyword only | `int` | `12` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.residual_autocorrelation(...)
+```
+### residual_qq
+
+Qualified name: `macroforecast.forecast_analysis.core.residual_qq`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.residual_qq(forecasts: Any, *, n_quantiles: int = 21, group_by: Sequence[str] = ('model', 'horizon'), include_combined: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return residual QQ table against a fitted normal reference.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `n_quantiles` | keyword only | `int` | `21` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.residual_qq(...)
+```
+### residual_report
+
+Qualified name: `macroforecast.forecast_analysis.core.residual_report`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.residual_report(forecasts: Any, *, group_by: Sequence[str] = ('model', 'horizon'), include_combined: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return grouped out-of-sample residual diagnostics.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.residual_report(...)
+```
+### rolling_loss
+
+Qualified name: `macroforecast.forecast_analysis.core.rolling_loss`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.rolling_loss(forecasts: Any, *, metric: LossMetric = "rmse", window: int = 12, min_periods: int | None = None, group_by: Sequence[str] = ('model', 'horizon'), include_combined: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return rolling out-of-sample loss by model and horizon.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `metric` | keyword only | `LossMetric` | `"rmse"` |
+| `window` | keyword only | `int` | `12` |
+| `min_periods` | keyword only | `int \| None` | `None` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.rolling_loss(...)
+```
+### rolling_training_loss
+
+Qualified name: `macroforecast.forecast_analysis.core.rolling_training_loss`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.rolling_training_loss(forecasts_or_trace: Any, *, metric: str = "rmse", window: int = 12, min_periods: int | None = None, group_by: Sequence[str] = ('model', 'horizon'), load_pickle: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Return a rolling trace of saved in-sample training metrics.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts_or_trace` | positional or keyword | `Any` | `required` |
+| `metric` | keyword only | `str` | `"rmse"` |
+| `window` | keyword only | `int` | `12` |
+| `min_periods` | keyword only | `int \| None` | `None` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `load_pickle` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.rolling_training_loss(...)
+```
+### select_forecast_origins
+
+Qualified name: `macroforecast.forecast_analysis.core.select_forecast_origins`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.select_forecast_origins(forecasts: Any, *, view: OriginView = "all_origins", every_n: int = 12, include_last: bool = True, include_combined: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return a forecast table filtered to a requested origin view.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `view` | keyword only | `OriginView` | `"all_origins"` |
+| `every_n` | keyword only | `int` | `12` |
+| `include_last` | keyword only | `bool` | `True` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.select_forecast_origins(...)
+```
+### stage_update_trace
+
+Qualified name: `macroforecast.forecast_analysis.core.stage_update_trace`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.stage_update_trace(forecasts: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return stage update records saved by the forecasting runner.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.stage_update_trace(...)
+```
+### training_loss_trace
+
+Qualified name: `macroforecast.forecast_analysis.core.training_loss_trace`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.training_loss_trace(forecasts: Any, *, load_pickle: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Read saved model sidecars and return in-sample fit metrics by origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `load_pickle` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.training_loss_trace(...)
+```
+### tuning_objective_trace
+
+Qualified name: `macroforecast.forecast_analysis.core.tuning_objective_trace`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.tuning_objective_trace(forecasts: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return best validation objective over origins for tuned models.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.tuning_objective_trace(...)
+```
+### tuning_score_distribution
+
+Qualified name: `macroforecast.forecast_analysis.core.tuning_score_distribution`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.tuning_score_distribution(forecasts: Any, *, group_by: Sequence[str] = ('model', 'horizon', 'method')) -> pd.DataFrame
+```
+
+#### Description
+
+Summarize the distribution of selected validation scores over origins.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `group_by` | keyword only | `Sequence[str]` | `("model", "horizon", "method")` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.tuning_score_distribution(...)
+```
+### tuning_trace
+
+Qualified name: `macroforecast.forecast_analysis.core.tuning_trace`
+
+#### Signature
+
+```python
+macroforecast.forecast_analysis.tuning_trace(forecasts: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return one row per forecast row carrying parameter-selection metadata.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecast_analysis.tuning_trace(...)
+```

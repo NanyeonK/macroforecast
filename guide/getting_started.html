@@ -474,16 +474,76 @@ once, and <code class="docutils literal notranslate"><span class="pre">run_pipel
 takes you from install to a first result, then to a full study.</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>Install the package in editable mode:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.&quot;</span><span class="w">          </span><span class="c1"># minimal</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span><span class="w">     </span><span class="c1"># development extras</span>
-pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span><span class="w">    </span><span class="c1"># documentation tools</span>
+<p>For normal use, install the published package from PyPI:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast&quot;</span>
+</pre></div>
+</div>
+<p>Install optional extras only when you need the corresponding backends:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Extra</p></th>
+<th class="head"><p>Adds</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">parquet</span></code></p></td>
+<td><p>Parquet checkpoint/result-store support through <code class="docutils literal notranslate"><span class="pre">pyarrow</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">xgboost</span></code></p></td>
+<td><p>XGBoost model family.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lightgbm</span></code></p></td>
+<td><p>LightGBM model family.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">catboost</span></code></p></td>
+<td><p>CatBoost model family.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">arch</span></code></p></td>
+<td><p>ARCH/GARCH volatility backends.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macro_random_forest</span></code></p></td>
+<td><p>Macro Random Forest support utilities.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interpretation</span></code></p></td>
+<td><p>SHAP/anatomy interpretation backends.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">deep</span></code></p></td>
+<td><p>Torch and Captum neural/attribution backends.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">markdown</span></code></p></td>
+<td><p>Markdown/table rendering helpers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">docs</span></code></p></td>
+<td><p>Sphinx documentation build dependencies.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">all</span></code></p></td>
+<td><p>Common optional model, reporting, and interpretation extras.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[all]&quot;</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;macroforecast[xgboost,arch]&quot;</span>
+</pre></div>
+</div>
+<p>From a source checkout, use an editable install:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/NanyeonK/macroforecast.git
+<span class="nb">cd</span><span class="w"> </span>macroforecast
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
 </pre></div>
 </div>
 <p>Python 3.10 or later is required. Torch is not installed by default and is only
-needed for the neural-network model families. The project uses <code class="docutils literal notranslate"><span class="pre">uv</span></code> as the
-environment manager in development, and all dependency groups are defined in
-<code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p>
+needed for the neural-network model families.</p>
+<p>Check a PyPI or wheel install without a repository checkout:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+<span class="s">import macroforecast as mf</span>
+
+<span class="s">print(&quot;macroforecast&quot;, mf.__version__)</span>
+<span class="s">print(mf.models.list_model_specs()[[&quot;name&quot;, &quot;family&quot;, &quot;default_preset&quot;]].head())</span>
+<span class="s">PY</span>
+</pre></div>
+</div>
 </section>
 <section id="key-concepts">
 <h2>Key concepts<a class="headerlink" href="#key-concepts" title="Link to this heading">#</a></h2>

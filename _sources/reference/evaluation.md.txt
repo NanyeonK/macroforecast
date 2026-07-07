@@ -2,275 +2,343 @@
 
 [Back to reference](index.md)
 
-`macroforecast.evaluation` owns evaluation reports. Raw scoring functions still
-live in `macroforecast.metrics`, and forecast-comparison statistical tests still
-live in `macroforecast.tests`.
+Report-level aggregation, benchmark comparison, regime scores, and namespace access to metrics/tests.
+
+Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md).
+
+## Public Symbols
+
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `BENCHMARK_METRICS` | data | Built-in immutable sequence. |
+| `DEFAULT_METRICS` | data | Built-in immutable sequence. |
+| `DEFAULT_SCORE_BY` | data | Built-in immutable sequence. |
+| `EvaluationReport` | class | Container returned by :func:`evaluate_report`. |
+| `aggregate_scores` | function | Evaluate the same forecasts over multiple explicit groupings. |
+| `benchmark_comparison` | function | Evaluate candidate models relative to one benchmark model. |
+| `error_decomposition` | function | Decompose forecast MSE into squared bias and residual variance. |
+| `evaluate_report` | function | Build a multi-slice forecast evaluation report. |
+| `filter_oos_period` | function | Return forecast rows restricted to an out-of-sample date interval. |
+| `metrics` | module | No public docstring is available. |
+| `regime_scores` | function | Evaluate forecasts by regime labels. |
+| `tests` | module | No public docstring is available. |
+
+## Data And Module Values
+
+### `BENCHMARK_METRICS`
+
+Kind: `data`
+
+```python
+BENCHMARK_METRICS = ("mse", "mae", "relative_mse", "relative_mae", "mse_reduction", "r2_oos")
+```
+### `DEFAULT_METRICS`
+
+Kind: `data`
+
+```python
+DEFAULT_METRICS = ("mse", "rmse", "mae")
+```
+### `DEFAULT_SCORE_BY`
+
+Kind: `data`
+
+```python
+DEFAULT_SCORE_BY = ("model", "horizon")
+```
+### `metrics`
+
+Kind: `module`
+
+```python
+metrics = <module macroforecast.metrics>
+```
+### `tests`
+
+Kind: `module`
+
+```python
+tests = <module macroforecast.tests>
+```
+
+## Callable And Class Reference
+
+### EvaluationReport
+
+Qualified name: `macroforecast.evaluation.report.EvaluationReport`
+
+#### Signature
+
+```python
+macroforecast.evaluation.EvaluationReport(scores: pd.DataFrame, ranking: pd.DataFrame, aggregations: dict[str, pd.DataFrame] = <factory>, benchmark: pd.DataFrame | None = None, regime: pd.DataFrame | None = None, decomposition: pd.DataFrame | None = None, metadata: dict[str, Any] = <factory>, metadata_schema: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Container returned by :func:`evaluate_report`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `scores` | positional or keyword | `pd.DataFrame` | `required` |
+| `ranking` | positional or keyword | `pd.DataFrame` | `required` |
+| `aggregations` | positional or keyword | `dict[str, pd.DataFrame]` | `<factory>` |
+| `benchmark` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `regime` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `decomposition` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `metadata_schema` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-mf.evaluation.metrics is mf.metrics
-mf.evaluation.tests is mf.tests
+# Construct with the signature above:
+# mf.evaluation.EvaluationReport(...)
 ```
 
-The public API contract is:
+#### Dataclass Fields
 
-| Namespace | Owns | Does not own |
+| Field | Type | Default |
 | --- | --- | --- |
-| `macroforecast.metrics` | Forecast scoring, ranking, metric resolution. | Statistical comparison tests. |
-| `macroforecast.tests` | Forecast-comparison tests, density diagnostics, residual diagnostics. | General scoring tables. |
-| `macroforecast.evaluation` | Multi-slice evaluation reports, OOS-period filtering, benchmark comparisons, regime scoring, and error decomposition. | Raw metric functions or statistical test functions. |
+| `scores` | `pd.DataFrame` | `required` |
+| `ranking` | `pd.DataFrame` | `required` |
+| `aggregations` | `dict[str, pd.DataFrame]` | `default_factory` |
+| `benchmark` | `pd.DataFrame \| None` | `None` |
+| `regime` | `pd.DataFrame \| None` | `None` |
+| `decomposition` | `pd.DataFrame \| None` | `None` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `metadata_schema` | `dict[str, Any]` | `default_factory` |
 
-Public defaults:
+#### Public Methods
 
-| Symbol | Meaning |
-| --- | --- |
-| `DEFAULT_METRICS` | Default metric tuple used by `evaluate_report(...)`. |
-| `DEFAULT_SCORE_BY` | Default grouping columns for score aggregation. |
-| `BENCHMARK_METRICS` | Default benchmark-comparison metrics. |
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+### aggregate_scores
 
-## Public Flow
+Qualified name: `macroforecast.evaluation.report.aggregate_scores`
 
-```python
-report = mf.evaluation.evaluate_report(
-    forecast_result,
-    metrics=("mse", "rmse", "mae", "relative_mse", "r2_oos"),
-    benchmark_model="historical_mean",
-    time_frequency="Q",
-)
-
-scores = report.scores
-ranking = report.ranking
-by_regime = report.regime
-```
-
-## evaluate_report
+#### Signature
 
 ```python
-macroforecast.evaluation.evaluate_report(
-    forecasts,
-    *,
-    metrics=("mse", "rmse", "mae"),
-    score_by=("model", "horizon"),
-    aggregations=None,
-    rank_metric=None,
-    rank_by=None,
-    benchmark_model=None,
-    benchmark_metrics=("mse", "mae", "relative_mse", "relative_mae", "mse_reduction", "r2_oos"),
-    oos_start=None,
-    oos_end=None,
-    regimes=None,
-    regime_column="regime",
-    target_column="target",
-    state_column="state",
-    time_frequency=None,
-    time_column="date",
-    time_bucket_column="time_bucket",
-    include_decomposition=False,
-    decomposition_by=None,
-    include_combined=True,
-) -> EvaluationReport
+macroforecast.evaluation.aggregate_scores(forecasts: Any, *, groupings: Mapping[str, Sequence[str]] | Sequence[Sequence[str]], metrics: Sequence[str | MetricLike] = ('mse', 'rmse', 'mae'), benchmark_model: str | None = None) -> dict[str, pd.DataFrame]
 ```
 
-### Input
+#### Description
 
-| Name | Type | Default | Choices |
+Evaluate the same forecasts over multiple explicit groupings.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `forecasts` | `ForecastResult` or `DataFrame` | required | Forecast runner output or forecast-like table. |
-| `metrics` | sequence | `("mse", "rmse", "mae")` | Metric names accepted by `mf.metrics.get_metric(...)` or callables. |
-| `score_by` | sequence | `("model", "horizon")` | Main score grouping. Columns must exist. |
-| `aggregations` | mapping, sequence, or `None` | auto | Extra groupings to evaluate. `None` creates model, horizon, model-horizon, and available target/state/regime/time slices. |
-| `rank_metric` | str or `None` | auto | Metric used for `ranking`. Auto preference is `rmse`, `mse`, `mae`, `r2_oos`, `relative_mse`. |
-| `rank_by` | sequence or `None` | `score_by` without `model` | Ranking groups. |
-| `benchmark_model` | str or `None` | `None` | Model name used for relative metrics and benchmark table. |
-| `benchmark_metrics` | sequence | default benchmark metrics | Metrics for `benchmark_comparison`. |
-| `oos_start`, `oos_end` | date-like or `None` | `None` | Restrict forecast rows before scoring. Dates are inclusive. |
-| `regimes` | mapping, Series, str, or `None` | `None` | Date-to-regime labels, existing regime column name, or no extra regime attachment. |
-| `regime_column` | str | `"regime"` | Column used for regime scoring. |
-| `target_column`, `state_column` | str | `"target"`, `"state"` | Optional slice columns when present. |
-| `time_frequency` | str or `None` | `None` | Pandas period frequency such as `"M"`, `"Q"`, `"A"` for time-bucket aggregation. |
-| `include_decomposition` | bool | `False` | Add MSE decomposition into squared bias and residual variance. |
-| `decomposition_by` | sequence or `None` | `score_by` | Grouping used by `error_decomposition`. |
-| `include_combined` | bool | `True` | Include forecast-combination rows. |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `groupings` | keyword only | `Mapping[str, Sequence[str]] \| Sequence[Sequence[str]]` | `required` |
+| `metrics` | keyword only | `Sequence[str \| MetricLike]` | `("mse", "rmse", "mae")` |
+| `benchmark_model` | keyword only | `str \| None` | `None` |
 
-Custom scoring belongs in the `metrics` argument:
+#### Returns
+
+`dict[str, pd.DataFrame]`
+
+#### Minimal Use
 
 ```python
-def mean_bias(y_true, y_pred):
-    return float(pd.Series(y_pred).sub(pd.Series(y_true)).mean())
-
-report = mf.evaluation.evaluate_report(
-    forecast_result,
-    metrics=("mse", "rmse", mean_bias),
-    aggregations={
-        "model_target": ("model", "target"),
-        "model_regime": ("model", "regime"),
-    },
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.evaluation.aggregate_scores(...)
 ```
+### benchmark_comparison
 
-Custom aggregation slices belong in `aggregations`. The value is a grouping
-tuple over existing forecast-table columns; evaluation still uses
-`mf.metrics.evaluate_forecasts()` to compute the metric table.
-When relative metrics are requested, every scoring or aggregation grouping must
-include `model`; the automatic aggregation set omits model-free slices such as
-`horizon` alone because benchmark-relative scores are candidate-model specific.
+Qualified name: `macroforecast.evaluation.report.benchmark_comparison`
 
-### Output
-
-Returns `EvaluationReport`.
-
-| Field | Type | Meaning |
-| --- | --- | --- |
-| `scores` | `DataFrame` | Main metric table over `score_by`. |
-| `ranking` | `DataFrame` | Ranked `scores` table. |
-| `aggregations` | `dict[str, DataFrame]` | Extra metric tables by requested or auto-discovered slices. |
-| `benchmark` | `DataFrame` or `None` | Candidate rows relative to `benchmark_model`. |
-| `regime` | `DataFrame` or `None` | Regime-specific metric table when regime labels are available. |
-| `decomposition` | `DataFrame` or `None` | Error decomposition table when requested. |
-| `metadata` | `dict` | Input metadata plus compact `evaluation_report` stage. |
-
-`EvaluationReport.to_dict()` serializes all tables into JSON-ready records.
-The serialized payload includes
-`metadata_schema={"kind": "evaluation_report", "version": 1}`.
-
-The metadata stage records options, table row counts, and forecast-table input
-shape:
+#### Signature
 
 ```python
-report.metadata["evaluation_report"]
+macroforecast.evaluation.benchmark_comparison(forecasts: Any, *, benchmark_model: str, by: Sequence[str] = ('model', 'horizon'), metrics: Sequence[str | MetricLike] = ('mse', 'mae', 'relative_mse', 'relative_mae', 'mse_reduction', 'r2_oos')) -> pd.DataFrame
 ```
 
-For paper/report output, keep evaluation and presentation separate:
+#### Description
+
+Evaluate candidate models relative to one benchmark model.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `benchmark_model` | keyword only | `str` | `required` |
+| `by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `metrics` | keyword only | `Sequence[str \| MetricLike]` | `("mse", "mae", "relative_mse", "relative_mae", "mse_reduction...` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-main_table = mf.reporting.metric_report_table(
-    report,
-    columns=("model", "horizon", "rmse", "r2_oos"),
-    percent_columns=("r2_oos",),
-)
-
-paper_tables = mf.reporting.evaluation_report_tables(
-    report,
-    include=("scores", "ranking", "benchmark", "decomposition"),
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.evaluation.benchmark_comparison(...)
 ```
+### error_decomposition
 
-`metric_report_table(...)` creates one presentation-ready table.
-`evaluation_report_tables(...)` creates a named `ReportBundle` for the report's
-main components.
+Qualified name: `macroforecast.evaluation.report.error_decomposition`
 
-## aggregate_scores
+#### Signature
 
 ```python
-macroforecast.evaluation.aggregate_scores(
-    forecasts,
-    *,
-    groupings,
-    metrics=("mse", "rmse", "mae"),
-    benchmark_model=None,
-) -> dict[str, pandas.DataFrame]
+macroforecast.evaluation.error_decomposition(forecasts: Any, *, by: Sequence[str] = ('model', 'horizon'), actual: str = "actual", prediction: str = "prediction") -> pd.DataFrame
 ```
 
-Evaluates one forecast table over multiple explicit groupings.
+#### Description
+
+Decompose forecast MSE into squared bias and residual variance.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `actual` | keyword only | `str` | `"actual"` |
+| `prediction` | keyword only | `str` | `"prediction"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-tables = mf.evaluation.aggregate_scores(
-    result,
-    groupings={
-        "model": ("model",),
-        "model_horizon_target": ("model", "horizon", "target"),
-    },
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.evaluation.error_decomposition(...)
 ```
+### evaluate_report
 
-All requested columns must exist. This function fails loudly instead of silently
-dropping unavailable dimensions.
+Qualified name: `macroforecast.evaluation.report.evaluate_report`
 
-## filter_oos_period
+#### Signature
 
 ```python
-macroforecast.evaluation.filter_oos_period(
-    forecasts,
-    *,
-    start=None,
-    end=None,
-    date_column="date",
-) -> pandas.DataFrame
+macroforecast.evaluation.evaluate_report(forecasts: Any, *, metrics: Sequence[str | MetricLike] = ('mse', 'rmse', 'mae'), score_by: Sequence[str] = ('model', 'horizon'), aggregations: Mapping[str, Sequence[str]] | Sequence[Sequence[str]] | None = None, rank_metric: str | None = None, rank_by: Sequence[str] | None = None, benchmark_model: str | None = None, benchmark_metrics: Sequence[str | MetricLike] = ('mse', 'mae', 'relative_mse', 'relative_mae', 'mse_reduction', 'r2_oos'), oos_start: Any | None = None, oos_end: Any | None = None, regimes: Mapping[Any, Any] | pd.Series | str | None = None, regime_column: str = "regime", target_column: str = "target", state_column: str = "state", time_frequency: str | None = None, time_column: str = "date", time_bucket_column: str = "time_bucket", include_decomposition: bool = False, decomposition_by: Sequence[str] | None = None, include_combined: bool = True) -> EvaluationReport
 ```
 
-Returns forecast rows inside an inclusive out-of-sample date interval. This is
-the callable replacement for an `oos_period` setting. Use it directly when you
-want to score only a subsample, or pass `oos_start`/`oos_end` to
-`evaluate_report(...)`.
+#### Description
 
-## error_decomposition
+Build a multi-slice forecast evaluation report.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `metrics` | keyword only | `Sequence[str \| MetricLike]` | `("mse", "rmse", "mae")` |
+| `score_by` | keyword only | `Sequence[str]` | `("model", "horizon")` |
+| `aggregations` | keyword only | `Mapping[str, Sequence[str]] \| Sequence[Sequence[str]] \| None` | `None` |
+| `rank_metric` | keyword only | `str \| None` | `None` |
+| `rank_by` | keyword only | `Sequence[str] \| None` | `None` |
+| `benchmark_model` | keyword only | `str \| None` | `None` |
+| `benchmark_metrics` | keyword only | `Sequence[str \| MetricLike]` | `("mse", "mae", "relative_mse", "relative_mae", "mse_reduction...` |
+| `oos_start` | keyword only | `Any \| None` | `None` |
+| `oos_end` | keyword only | `Any \| None` | `None` |
+| `regimes` | keyword only | `Mapping[Any, Any] \| pd.Series \| str \| None` | `None` |
+| `regime_column` | keyword only | `str` | `"regime"` |
+| `target_column` | keyword only | `str` | `"target"` |
+| `state_column` | keyword only | `str` | `"state"` |
+| `time_frequency` | keyword only | `str \| None` | `None` |
+| `time_column` | keyword only | `str` | `"date"` |
+| `time_bucket_column` | keyword only | `str` | `"time_bucket"` |
+| `include_decomposition` | keyword only | `bool` | `False` |
+| `decomposition_by` | keyword only | `Sequence[str] \| None` | `None` |
+| `include_combined` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`EvaluationReport`
+
+#### Minimal Use
 
 ```python
-macroforecast.evaluation.error_decomposition(
-    forecasts,
-    *,
-    by=("model", "horizon"),
-    actual="actual",
-    prediction="prediction",
-) -> pandas.DataFrame
+import macroforecast as mf
+# Call with the signature above:
+# mf.evaluation.evaluate_report(...)
 ```
+### filter_oos_period
 
-Decomposes MSE within each group as:
+Qualified name: `macroforecast.evaluation.report.filter_oos_period`
 
-```text
-mse = bias_squared + residual_variance
-```
-
-where `bias` is the mean residual `actual - prediction`. Output columns
-include `n`, `mse`, `bias`, `bias_squared`, `residual_variance`,
-`bias_share`, and `variance_share`.
-
-## benchmark_comparison
+#### Signature
 
 ```python
-macroforecast.evaluation.benchmark_comparison(
-    forecasts,
-    *,
-    benchmark_model,
-    by=("model", "horizon"),
-    metrics=("mse", "mae", "relative_mse", "relative_mae", "mse_reduction", "r2_oos"),
-) -> pandas.DataFrame
+macroforecast.evaluation.filter_oos_period(forecasts: Any, *, start: Any | None = None, end: Any | None = None, date_column: str = "date") -> pd.DataFrame
 ```
 
-Returns candidate model rows with benchmark-relative scores. The benchmark row
-itself is removed from the output. `benchmark_model` must be present in the
-forecast table. The benchmark forecasts must already exist in the input table;
-this function does not generate them. Use the forecasting runner to generate a
-same-window benchmark, or append an external benchmark forecast table only after
-verifying identical date/origin/horizon/target support.
+#### Description
 
-## regime_scores
+Return forecast rows restricted to an out-of-sample date interval.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `start` | keyword only | `Any \| None` | `None` |
+| `end` | keyword only | `Any \| None` | `None` |
+| `date_column` | keyword only | `str` | `"date"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-macroforecast.evaluation.regime_scores(
-    forecasts,
-    *,
-    regimes=None,
-    regime_column="regime",
-    by=("model", "horizon", "regime"),
-    metrics=("mse", "rmse", "mae"),
-    benchmark_model=None,
-) -> pandas.DataFrame
+import macroforecast as mf
+# Call with the signature above:
+# mf.evaluation.filter_oos_period(...)
+```
+### regime_scores
+
+Qualified name: `macroforecast.evaluation.report.regime_scores`
+
+#### Signature
+
+```python
+macroforecast.evaluation.regime_scores(forecasts: Any, *, regimes: Mapping[Any, Any] | pd.Series | str | None = None, regime_column: str = "regime", by: Sequence[str] = ('model', 'horizon', 'regime'), metrics: Sequence[str | MetricLike] = ('mse', 'rmse', 'mae'), benchmark_model: str | None = None) -> pd.DataFrame
 ```
 
-`regimes` can be:
+#### Description
 
-| Form | Meaning |
-| --- | --- |
-| `None` | Use an existing `regime_column`. |
-| `str` | Use that existing column as the source and copy to `regime_column` when names differ. |
-| mapping or `Series` | Map forecast `date` values to regime labels. |
+Evaluate forecasts by regime labels.
 
-## Boundary
+#### Parameters
 
-| Question | Use |
-| --- | --- |
-| One metric value or one metric table | `mf.metrics` |
-| Multi-slice report with ranking, OOS filtering, benchmark, regime, target/state/time aggregation, decomposition | `mf.evaluation` |
-| Diebold-Mariano, Clark-West, MCS, residual tests | `mf.tests` |
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `forecasts` | positional or keyword | `Any` | `required` |
+| `regimes` | keyword only | `Mapping[Any, Any] \| pd.Series \| str \| None` | `None` |
+| `regime_column` | keyword only | `str` | `"regime"` |
+| `by` | keyword only | `Sequence[str]` | `("model", "horizon", "regime")` |
+| `metrics` | keyword only | `Sequence[str \| MetricLike]` | `("mse", "rmse", "mae")` |
+| `benchmark_model` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.evaluation.regime_scores(...)
+```

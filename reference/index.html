@@ -400,21 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
-</ul>
-</details></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
@@ -440,19 +425,34 @@
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Extension Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">Custom Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">Custom Preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">Custom Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, And Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation And Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -513,12 +513,8 @@
   <section class="tex2jax_ignore mathjax_ignore" id="reference">
 <h1>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="../index.html"><span class="std std-doc">Back to documentation home</span></a></p>
-<p>New here? Start with the <a class="reference internal" href="../guide/index.html"><span class="std std-doc">User Guide</span></a> for concept-level explanations and a getting-started walkthrough.</p>
-<p>Current workflow reference for the clean public Python API and callable module
-boundaries. Dataset descriptions live in <a class="reference internal" href="../datasets/index.html"><span class="std std-doc">FRED Datasets</span></a>.</p>
-<p>Start with <a class="reference internal" href="documentation_map.html"><span class="std std-doc">Documentation Map</span></a> if you are deciding what
-to inspect. Use this page when you already know the part of the workflow you
-want to read.</p>
+<p>Current workflow reference for the live public Python API. These pages are generated from importable package surfaces, model registry metadata, signatures, and docstrings.</p>
+<p>Start with <a class="reference internal" href="documentation_map.html"><span class="std std-doc">Documentation Map</span></a> when deciding what to inspect, or <a class="reference internal" href="public_api.html"><span class="std std-doc">Public Python API</span></a> when checking top-level imports.</p>
 <section id="first-review-path">
 <h2>First Review Path<a class="headerlink" href="#first-review-path" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -535,19 +531,19 @@ want to read.</p>
 </tr>
 <tr class="row-odd"><td><p>2</p></td>
 <td><p><a class="reference internal" href="workflow.html"><span class="std std-doc">Workflow Contract</span></a></p></td>
-<td><p>Defines module ownership and runner composition.</p></td>
+<td><p>Defines current module ownership and runner composition.</p></td>
 </tr>
 <tr class="row-even"><td><p>3</p></td>
-<td><p><a class="reference internal" href="legacy_callable_coverage.html"><span class="std std-doc">Legacy Callable Coverage</span></a></p></td>
-<td><p>Confirms what old runtime functionality is covered, removed, or deferred.</p></td>
+<td><p><a class="reference internal" href="public_api.html"><span class="std std-doc">Public Python API</span></a></p></td>
+<td><p>Lists importable public symbols from the live package.</p></td>
 </tr>
 <tr class="row-odd"><td><p>4</p></td>
-<td><p><a class="reference internal" href="public_api.html"><span class="std std-doc">Public Python API</span></a></p></td>
-<td><p>Lists importable public symbols.</p></td>
+<td><p><a class="reference internal" href="reference_verification.html"><span class="std std-doc">Reference Verification</span></a></p></td>
+<td><p>Records the generation source and coverage counts.</p></td>
 </tr>
 <tr class="row-even"><td><p>5</p></td>
-<td><p><a class="reference internal" href="reference_verification.html"><span class="std std-doc">Reference Verification</span></a></p></td>
-<td><p>Shows formula/reference anchors and future verification expansion.</p></td>
+<td><p><a class="reference internal" href="custom/index.html"><span class="std std-doc">Custom Extensions</span></a></p></td>
+<td><p>Shows where user-owned data, models, tests, and outputs plug in.</p></td>
 </tr>
 </tbody>
 </table>
@@ -559,95 +555,32 @@ want to read.</p>
 <thead>
 <tr class="row-odd"><th class="head"><p>Group</p></th>
 <th class="head"><p>Pages</p></th>
-<th class="head"><p>Owns</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Orientation</p></td>
-<td><p><a class="reference internal" href="documentation_map.html"><span class="std std-doc">Documentation Map</span></a>, <a class="reference internal" href="workflow.html"><span class="std std-doc">Workflow</span></a>, <a class="reference internal" href="legacy_callable_coverage.html"><span class="std std-doc">Legacy Coverage</span></a>, <a class="reference internal" href="reference_verification.html"><span class="std std-doc">Reference Verification</span></a>, <a class="reference internal" href="public_api.html"><span class="std std-doc">Public API</span></a></p></td>
-<td><p>How the package is organized and what is currently covered.</p></td>
+<td><p><a class="reference internal" href="documentation_map.html"><span class="std std-doc">Documentation Map</span></a>, <a class="reference internal" href="workflow.html"><span class="std std-doc">Workflow</span></a>, <a class="reference internal" href="legacy_callable_coverage.html"><span class="std std-doc">Legacy Callable Coverage</span></a>, <a class="reference internal" href="reference_verification.html"><span class="std std-doc">Reference Verification</span></a>, <a class="reference internal" href="public_api.html"><span class="std std-doc">Public Api</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Package Configuration</p></td>
-<td><p><a class="reference internal" href="meta.html"><span class="std std-doc">Meta</span></a></p></td>
-<td><p>Package-wide defaults used only when a direct function or runner policy does not pass a more specific value.</p></td>
+<td><p><a class="reference internal" href="meta.html"><span class="std std-doc">Package Configuration</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Data Pipeline</p></td>
 <td><p><a class="reference internal" href="data.html"><span class="std std-doc">Data</span></a>, <a class="reference internal" href="preprocessing.html"><span class="std std-doc">Preprocessing</span></a>, <a class="reference internal" href="data_analysis.html"><span class="std std-doc">Data Analysis</span></a></p></td>
-<td><p>Data loading, metadata, cleaning, summaries, and before/after checks. See <a class="reference internal" href="../datasets/index.html"><span class="std std-doc">FRED Datasets</span></a> for dataset pages.</p></td>
 </tr>
 <tr class="row-odd"><td><p>Feature Pipeline</p></td>
 <td><p><a class="reference internal" href="filters.html"><span class="std std-doc">Filters</span></a>, <a class="reference internal" href="feature_engineering.html"><span class="std std-doc">Feature Engineering</span></a>, <a class="reference internal" href="feature_analysis.html"><span class="std std-doc">Feature Analysis</span></a></p></td>
-<td><p>One-series filters/smoothers, targets, predictors, transforms, factor/selection tools, and feature diagnostics.</p></td>
 </tr>
 <tr class="row-even"><td><p>Forecast Pipeline</p></td>
 <td><p><a class="reference internal" href="window.html"><span class="std std-doc">Window</span></a>, <a class="reference internal" href="models.html"><span class="std std-doc">Models</span></a>, <a class="reference internal" href="model_ensemble.html"><span class="std std-doc">Model Ensemble</span></a>, <a class="reference internal" href="model_selection.html"><span class="std std-doc">Model Selection</span></a>, <a class="reference internal" href="forecasting.html"><span class="std std-doc">Forecasting</span></a>, <a class="reference internal" href="forecast_analysis.html"><span class="std std-doc">Forecast Analysis</span></a></p></td>
-<td><p>Timing, model fits, fit-time model composition, parameter search, runner execution, and forecast diagnostics.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Evaluation and Testing</p></td>
+<tr class="row-odd"><td><p>Evaluation And Testing</p></td>
 <td><p><a class="reference internal" href="metrics.html"><span class="std std-doc">Metrics</span></a>, <a class="reference internal" href="tests.html"><span class="std std-doc">Tests</span></a>, <a class="reference internal" href="evaluation.html"><span class="std std-doc">Evaluation</span></a></p></td>
-<td><p>Scores, statistical tests, benchmark comparisons, regimes, aggregation, and reports.</p></td>
 </tr>
-<tr class="row-even"><td><p>Explanation and Delivery</p></td>
-<td><p><a class="reference internal" href="interpretation.html"><span class="std std-doc">Interpretation</span></a>, <a class="reference internal" href="interpretation_dual.html"><span class="std std-doc">Dual Interpretation</span></a>, <a class="reference internal" href="output.html"><span class="std std-doc">Output</span></a>, <a class="reference internal" href="reporting.html"><span class="std std-doc">Reporting</span></a></p></td>
-<td><p>Attribution, observation-based dual interpretation, output generation, artifact writing, paper-table presets, and report/table rendering.</p></td>
+<tr class="row-even"><td><p>Explanation And Delivery</p></td>
+<td><p><a class="reference internal" href="interpretation.html"><span class="std std-doc">Interpretation</span></a>, <a class="reference internal" href="interpretation_dual.html"><span class="std std-doc">Dual Interpretation</span></a>, <a class="reference internal" href="output.html"><span class="std std-doc">Output</span></a>, <a class="reference internal" href="reporting.html"><span class="std std-doc">Reporting</span></a>, <a class="reference internal" href="pipeline.html"><span class="std std-doc">Pipeline</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p>Orchestration</p></td>
-<td><p><a class="reference internal" href="pipeline.html"><span class="std std-doc">Pipeline</span></a></p></td>
-<td><p>Comprehensive POOS engine: arms, t-code target resolution, relative RMSE + DM/CW/MCS, combinations, deferred interpretation, and a single report.</p></td>
-</tr>
-<tr class="row-even"><td><p>Custom Hooks</p></td>
+<tr class="row-odd"><td><p>Custom Hooks</p></td>
 <td><p><a class="reference internal" href="custom/index.html"><span class="std std-doc">Custom Extensions</span></a></p></td>
-<td><p>User-provided datasets, preprocessing, features, models, policies, tests, interpretation, and artifacts.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="what-to-check-first">
-<h2>What To Check First<a class="headerlink" href="#what-to-check-first" title="Link to this heading">#</a></h2>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>If you want to check…</p></th>
-<th class="head"><p>Open first</p></th>
-<th class="head"><p>Then open</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Current package structure</p></td>
-<td><p><a class="reference internal" href="documentation_map.html"><span class="std std-doc">Documentation Map</span></a></p></td>
-<td><p><a class="reference internal" href="workflow.html"><span class="std std-doc">Workflow Contract</span></a>, <a class="reference internal" href="public_api.html"><span class="std std-doc">Public Python API</span></a></p></td>
-</tr>
-<tr class="row-odd"><td><p>Package-wide defaults</p></td>
-<td><p><a class="reference internal" href="meta.html"><span class="std std-doc">Meta</span></a></p></td>
-<td><p><a class="reference internal" href="forecasting.html"><span class="std std-doc">Forecasting</span></a> for runner policy usage.</p></td>
-</tr>
-<tr class="row-even"><td><p>Whether old runtime features are covered</p></td>
-<td><p><a class="reference internal" href="legacy_callable_coverage.html"><span class="std std-doc">Legacy Callable Coverage</span></a></p></td>
-<td><p><a class="reference internal" href="reference_verification.html"><span class="std std-doc">Reference Verification</span></a></p></td>
-</tr>
-<tr class="row-odd"><td><p>Data and preprocessing behavior</p></td>
-<td><p><a class="reference internal" href="data.html"><span class="std std-doc">Data</span></a></p></td>
-<td><p><a class="reference internal" href="../datasets/index.html"><span class="std std-doc">FRED Datasets</span></a>, <a class="reference internal" href="preprocessing.html"><span class="std std-doc">Preprocessing</span></a></p></td>
-</tr>
-<tr class="row-even"><td><p>Paper replication settings</p></td>
-<td><p><a class="reference internal" href="../guide/gallery.html"><span class="std std-doc">Replication Gallery</span></a></p></td>
-<td><p><a class="reference internal" href="reference_verification.html"><span class="std std-doc">Reference Verification</span></a>, <a class="reference internal" href="forecasting.html"><span class="std std-doc">Forecasting</span></a></p></td>
-</tr>
-<tr class="row-odd"><td><p>Forecast runner behavior</p></td>
-<td><p><a class="reference internal" href="workflow.html"><span class="std std-doc">Workflow Contract</span></a></p></td>
-<td><p><a class="reference internal" href="window.html"><span class="std std-doc">Window</span></a>, <a class="reference internal" href="forecasting.html"><span class="std std-doc">Forecasting</span></a></p></td>
-</tr>
-<tr class="row-even"><td><p>Models and parameter search</p></td>
-<td><p><a class="reference internal" href="models.html"><span class="std std-doc">Models</span></a></p></td>
-<td><p><a class="reference internal" href="model_selection.html"><span class="std std-doc">Model Selection</span></a></p></td>
-</tr>
-<tr class="row-odd"><td><p>Evaluation and tests</p></td>
-<td><p><a class="reference internal" href="evaluation.html"><span class="std std-doc">Evaluation</span></a></p></td>
-<td><p><a class="reference internal" href="metrics.html"><span class="std std-doc">Metrics</span></a>, <a class="reference internal" href="tests.html"><span class="std std-doc">Tests</span></a></p></td>
-</tr>
-<tr class="row-even"><td><p>Interpretation, output, and reporting</p></td>
-<td><p><a class="reference internal" href="interpretation.html"><span class="std std-doc">Interpretation</span></a></p></td>
-<td><p><a class="reference internal" href="output.html"><span class="std std-doc">Output</span></a>, <a class="reference internal" href="reporting.html"><span class="std std-doc">Reporting</span></a></p></td>
 </tr>
 </tbody>
 </table>
@@ -663,15 +596,6 @@ want to read.</p>
 <li class="toctree-l1"><a class="reference internal" href="legacy_callable_coverage.html">Legacy Callable Coverage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
-</ul>
-</div>
-</section>
-<section id="custom-hooks">
-<h2>Custom Hooks<a class="headerlink" href="#custom-hooks" title="Link to this heading">#</a></h2>
-<div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="custom/index.html">Custom Extensions</a></li>
 </ul>
 </div>
 </section>
@@ -721,9 +645,9 @@ want to read.</p>
 </div>
 </section>
 <section id="evaluation-and-testing">
-<h2>Evaluation and Testing<a class="headerlink" href="#evaluation-and-testing" title="Link to this heading">#</a></h2>
+<h2>Evaluation And Testing<a class="headerlink" href="#evaluation-and-testing" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
@@ -732,15 +656,24 @@ want to read.</p>
 </div>
 </section>
 <section id="explanation-and-delivery">
-<h2>Explanation and Delivery<a class="headerlink" href="#explanation-and-delivery" title="Link to this heading">#</a></h2>
+<h2>Explanation And Delivery<a class="headerlink" href="#explanation-and-delivery" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+</div>
+</section>
+<section id="custom-hooks">
+<h2>Custom Hooks<a class="headerlink" href="#custom-hooks" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="custom/index.html">Custom Extensions</a></li>
 </ul>
 </div>
 </section>
@@ -795,15 +728,14 @@ want to read.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#first-review-path">First Review Path</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workflow-groups">Workflow Groups</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-to-check-first">What To Check First</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#orientation">Orientation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-hooks">Custom Hooks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-configuration">Package Configuration</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-pipeline">Data Pipeline</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-pipeline">Feature Pipeline</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forecast-pipeline">Forecast Pipeline</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluation-and-testing">Evaluation and Testing</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#explanation-and-delivery">Explanation and Delivery</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluation-and-testing">Evaluation And Testing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#explanation-and-delivery">Explanation And Delivery</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-hooks">Custom Hooks</a></li>
 </ul>
   </nav></div>
 

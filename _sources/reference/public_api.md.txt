@@ -2,81 +2,397 @@
 
 [Back to reference](index.md)
 
-The importable surface is module-based and pandas-first. The table below
-mirrors `macroforecast.__all__`: every symbol listed there should be importable
-from the top-level package. Module-level helpers that are not top-level
-convenience exports are documented on their module reference pages.
+`macroforecast.__version__`: `0.9.5`
+
+The top-level package uses lazy exports. Attribute access imports the owning semantic module on demand.
 
 ## Top-Level Exports
 
-| Symbol | Source | Description |
+| Symbol | Owner | Kind |
 | --- | --- | --- |
-| `meta`, `data`, `preprocessing`, `feature_engineering`, `filters`, `data_analysis`, `feature_analysis`, `feature_diagnostic`, `forecast_analysis`, `forecast_diagnostic`, `models`, `model_ensemble`, `model_selection`, `forecasting`, `metrics`, `tests`, `evaluation`, `window`, `interpretation`, `output`, `reporting` | package namespaces | Top-level module namespaces. `feature_diagnostic` and `forecast_diagnostic` are compatibility aliases for the corresponding analysis modules. |
-| `configure`, `get_config`, `get_option`, `reset_config`, `use_config`, `DEFAULT_RANDOM_SEED`, `StageDefaultScope`, `MetadataLevel` | `macroforecast.meta` | Global package defaults and config types. |
-| `DataBundle`, `DataSpec`, `VintagePanelSpec`, `VintageSource`, `VintageUnavailableError`, `RegimeDirection`, `SamePeriodPolicy`, `as_panel`, `attach_metadata`, `custom_dataset`, `metadata`, `panel_info`, `set_frequencies`, `spec`, `validate_panel` | `macroforecast.data` | Canonical panel, per-origin vintage, and metadata helpers. |
-| `align_frequency`, `chow_lin_disaggregate`, `infer_frequencies`, `frequency_hardening_issues`, `availability_lag`, `same_period_predictors`, `define_regime` | `macroforecast.data` | Frequency alignment/inference, Chow-Lin disaggregation, data availability, same-period predictor, and regime metadata policies. |
-| `load_fred_md`, `load_fred_qd`, `load_fred_sd`, `load_fred_md_sd`, `load_fred_qd_sd` | `macroforecast.data` | Dataset loaders. |
-| `load_custom_csv`, `load_custom_parquet`, `list_vintages`, `fred_md_vintages`, `fred_qd_vintages`, `custom_vintages`, `with_static_extras`, `combine` | `macroforecast.data` | Custom loading, vintage discovery, per-origin vintage sources, static extras, and panel combination. |
-| `reprocess`, `custom_preprocess`, `standardize_panel`, `PreprocessedData` | `macroforecast.preprocessing` | Direct pandas preprocessing. |
-| `PreprocessSpec`, `FittedPreprocessor`, `preprocess_spec`, `custom_preprocess_step` | `macroforecast.preprocessing` | Runner-compatible preprocessing fit/transform specs. |
-| `FeatureSet`, `FeatureSpec`, `FittedFeatureBuilder`, `build_features`, `feature_spec` | `macroforecast.feature_engineering` | Aligned forecast matrices, metadata, and runner-compatible feature specs. |
-| `direct_target`, `average_target`, `forward_average_target`, `path_targets` | `macroforecast.feature_engineering` | Direct, forward-average, and path target construction. |
-| `feature_matrix`, `compose_features` | `macroforecast.feature_engineering` | Paper-style feature blocks and sequential feature composition. |
-| `lag`, `mixed_frequency_lags`, `rolling_mean`, `moving_average_ladder`, `scale_features`, `pca_features`, `sparse_pca_chen_rohe_features`, `varimax_features`, `group_pca`, `maf_features`, `time_features`, `custom_features` | `macroforecast.feature_engineering` | Core direct pandas feature transforms. |
-| `transform_features`, `log_features`, `diff_features`, `log_diff_features`, `pct_change_features`, `cumsum_features`, `seasonal_lag`, `season_dummy`, `fourier_features`, `polynomial_features`, `interaction_features`, `hp_filter_features`, `hamilton_filter_features`, `savitzky_golay_features`, `wavelet_features`, `adaptive_ma_rf_features`, `asymmetric_trim_features`, `rank_space_features`, `moving_average_changes`, `align_reference_weights`, `weighted_aggregate`, `partial_least_squares_features`, `sliced_inverse_regression_features`, `dfm_features`, `variance_selection`, `correlation_selection`, `lasso_selection`, `lasso_path_selection`, `rfe_selection`, `boruta_selection`, `stability_selection`, `genetic_selection`, `select_features`, `feature_selection_requires_target`, `normalize_feature_selection_method`, `FeatureSelectionResult`, `random_projection_features`, `nystroem_features` | `macroforecast.feature_engineering` | Additional transform, seasonal, expansion, filter, supervised aggregation, supervised factor, feature-selection, and kernel-approximation feature functions. |
-| `lag_step`, `rolling_step`, `moving_average_step`, `marx_step`, `transform_step`, `seasonal_lag_step`, `season_dummy_step`, `fourier_step`, `time_step`, `polynomial_step`, `interaction_step`, `scale_step`, `pca_step`, `sparse_pca_chen_rohe_step`, `varimax_step`, `group_pca_step`, `maf_step`, `hamilton_step`, `random_projection_step`, `nystroem_step`, `partial_least_squares_step`, `sliced_inverse_regression_step`, `custom_step` | `macroforecast.feature_engineering` | Reusable step dictionaries for `compose_features` and runner-safe `feature_spec` pipelines. Feature selection uses individual `method` names in step mappings instead of a generic step builder. |
-| `pca_then_lags`, `lags_then_pca`, `moving_average_pca_lags` | `macroforecast.feature_engineering` | Convenience composed feature callables. |
-| `ModelFit`, `VolatilityFit`, `SavedModel`, `save_fit`, `load_fit` | `macroforecast.models` | Fitted model result wrappers and low-level fit persistence. |
-| `ols`, `ridge`, `nonneg_ridge`, `shrink_to_target_ridge`, `fused_difference_ridge`, `random_walk_ridge`, `tvp_ridge`, `lasso`, `elastic_net`, `adaptive_lasso`, `adaptive_elastic_net`, `group_lasso`, `sparse_group_lasso`, `bayesian_ridge`, `huber`, `kernel_ridge`, `knn`, `glmboost`, `pls`, `scaled_pca`, `supervised_pca`, `supervised_scaled_pca` | `macroforecast.models` | Linear, penalized, grouped, time-varying ridge, kernel, nearest-neighbor, and supervised dimension-reduction models. |
-| `supervised_aggregation`, `component_aggregation`, `rank_aggregation`, `assemblage_regression`, `albacore_components`, `albacore_ranks` | `macroforecast.models` | Generic supervised aggregation and Albacore/assemblage wrappers. |
-| `solve_nonnegative_ridge`, `solve_simplex_ridge`, `solve_target_shrinkage_ridge`, `solve_mean_aligned_ridge`, `solve_fused_difference_ridge` | `macroforecast.models` | Low-level constrained aggregation solver helpers returning weight vectors. |
-| `svr`, `linear_svr`, `nu_svr` | `macroforecast.models` | Support-vector regression models. |
-| `nn`, `lstm`, `gru`, `transformer`, `hemisphere_nn`, `density_hnn` | `macroforecast.models` | Torch-backed neural-network and density-forecast regressors; require `macroforecast[deep]`. |
-| `ar`, `arima`, `auto_arima`, `var`, `bvar_minnesota`, `bvar_normal_inverse_wishart`, `ets`, `holt_winters`, `theta_method`, `naive`, `seasonal_naive`, `random_walk_drift`, `stlf`, `far`, `favar` | `macroforecast.models` | Time-series, Bayesian VAR, exponential-smoothing, and factor-augmented forecasting models. |
-| `dfm_mixed_mariano_murasawa`, `dfm_unrestricted_midas`, `midas_almon`, `midas_beta`, `midas_step`, `restricted_midas`, `unrestricted_midas` | `macroforecast.models` | Mixed-frequency dynamic-factor and MIDAS models. |
-| `decision_tree`, `random_forest`, `extra_trees`, `gradient_boosting`, `mars`, `xgboost`, `lightgbm`, `lgb_plus`, `lgba_plus`, `catboost` | `macroforecast.models` | Tree, spline, ML, and LGB+ hybrid regressors. |
-| `quantile_regression_forest`, `macro_random_forest` | `macroforecast.models` | Macro-specific tree models. |
-| `LGBPlusRegressor`, `LGBAPlusRegressor` | `macroforecast.models` | LGB+ competition and LGB^A+ alternating estimator classes. |
-| `garch11`, `egarch`, `gjr_garch`, `tgarch`, `realized_garch` | `macroforecast.models` | Volatility models. |
-| `ModelSpec`, `ModelParameter`, `custom_model`, `get_model`, `list_model_specs`, `describe_model`, `model_search_space` | `macroforecast.models` | Model-owned defaults and hyperparameter spaces. |
-| `BaggingRegressor`, `BoogingRegressor`, `RandomSubspaceRegressor`, `StackingRegressor`, `SuperLearnerRegressor`, `MODEL_ENSEMBLE_BASE_ESTIMATORS`, `MODEL_ENSEMBLE_SPECS`, `bagging`, `subagging`, `random_subspace`, `stacking`, `super_learner`, `booging`, `custom_model_ensemble`, `get_model_ensemble`, `list_model_ensemble_bases`, `list_model_ensemble_specs`, `describe_model_ensemble`, `model_ensemble_search_space` | `macroforecast.model_ensemble` | Fit-time model-composition callables, estimator classes, and specs. |
-| `WindowSpec`, `EstimationWindow`, `ValWindow`, `TestWindow`, `AlignmentWindow`, `StagePolicy`, `Split` | `macroforecast.window` | Forecast experiment and stage timing objects. |
-| `from_cutoffs`, `estimation_expanding`, `estimation_rolling`, `estimation_fixed`, `val_last_block`, `val_poos`, `val_expanding`, `val_rolling_blocks`, `val_blocked_kfold`, `val_random_kfold`, `test_origins`, `alignment_drop_incomplete`, `alignment_keep_missing` | `macroforecast.window` | Component window builders. |
-| `last_block`, `poos`, `expanding`, `rolling_blocks`, `blocked_kfold`, `random_kfold` | `macroforecast.window` | Shortcut window specs. |
-| `stage_policy`, `custom_stage_policy`, `stage_index`, `stage_panel`, `last_block_split`, `poos_split`, `expanding_split`, `rolling_blocks_split`, `blocked_kfold_split`, `random_kfold_split`, `make_splitter`, `resolve_window`, `resolve_stage_policy`, `split_table`, `normalize_window_name` | `macroforecast.window` | Stage timing, resolver helpers, and train/val split inspection. |
-| `metrics` | `macroforecast.metrics` | Forecast scoring namespace, including point scores and risk-adjusted forecast-return metrics. Use `mf.metrics.rmse`, not `mf.rmse`. |
-| `tests` | `macroforecast.tests` | Forecast-comparison test namespace, including `mf.tests.custom_test`, `mf.tests.equal_predictive_tests`, `mf.tests.model_confidence_set`, `mf.tests.blocked_oob_reality_check`, `mf.tests.superior_predictive_ability_test`, `mf.tests.reality_check_test`, `mf.tests.stepm_test`, interval coverage, and PIT diagnostics. Use `mf.tests.dm_test`, not `mf.dm_test`. |
-| `EvaluationReport`, `evaluate_report`, `aggregate_scores`, `filter_oos_period`, `error_decomposition`, `benchmark_comparison`, `regime_scores` | `macroforecast.evaluation` | Multi-slice evaluation reports, OOS filtering, error decomposition, benchmark comparisons, and regime scoring. |
-| `evaluation` | `macroforecast.evaluation` | Evaluation namespace exposing report functions plus `metrics` and `tests`; raw metric/test functions are not re-exported directly from it. |
-| `pipeline` | `macroforecast.pipeline` | Comprehensive POOS pipeline namespace: `pipeline_spec`, `resolve_target`, `Arm`, `EvalSpec`, `CombinationContender`, `TCODE_TARGET_MAP`. |
-| `SearchSpec`, `SearchResult`, `SearchError`, `ParamDistribution`, `search_spec`, `select_params` | `macroforecast.model_selection` | Model-parameter selection over a supplied window and metric. |
-| `fixed`, `grid`, `random_search`, `cv_path`, `bayesian_search`, `genetic_search`, `custom_search`, `choice`, `uniform`, `log_uniform`, `randint` | `macroforecast.model_selection` | Search specification and distribution builders. |
-| `ForecastResult`, `run`, `run_forecast` | `macroforecast.forecasting` | Windowed forecast runner. |
-| `CombinationSpec`, `combination_spec`, `custom_combination`, `combine_mean`, `combine_median`, `combine_trimmed_mean`, `combine_winsorized_mean`, `combine_inverse_mspe`, `combine_dmspe`, `combine_best_n`, `combine_bates_granger`, `combine_granger_ramanathan`, `combine_constrained_ls`, `combine_eigenvector`, `combine_regularized`, `combine_linear_pool`, `combine_log_pool` | `macroforecast.forecasting` | Runner-integrated and direct forecast combination methods. |
+| `AlignmentWindow` | [`macroforecast.window`](window.md) | class |
+| `BaggingRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
+| `BoogingRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
+| `CombinationSpec` | [`macroforecast.forecasting`](forecasting.md) | class |
+| `DEFAULT_RANDOM_SEED` | [`macroforecast.meta`](meta.md) | data |
+| `DataBundle` | [`macroforecast.data`](data.md) | class |
+| `DataSpec` | [`macroforecast.data`](data.md) | class |
+| `EstimationWindow` | [`macroforecast.window`](window.md) | class |
+| `EvaluationReport` | [`macroforecast.evaluation`](evaluation.md) | class |
+| `FeatureSelectionResult` | [`macroforecast.feature_engineering`](feature_engineering.md) | class |
+| `FeatureSet` | [`macroforecast.feature_engineering`](feature_engineering.md) | class |
+| `FeatureSpec` | [`macroforecast.feature_engineering`](feature_engineering.md) | class |
+| `FittedFeatureBuilder` | [`macroforecast.feature_engineering`](feature_engineering.md) | class |
+| `FittedPreprocessor` | [`macroforecast.preprocessing`](preprocessing.md) | class |
+| `ForecastResult` | [`macroforecast.forecasting`](forecasting.md) | class |
+| `LGBAPlusRegressor` | [`macroforecast.models`](models.md) | class |
+| `LGBPlusRegressor` | [`macroforecast.models`](models.md) | class |
+| `MODEL_ENSEMBLE_BASE_ESTIMATORS` | [`macroforecast.model_ensemble`](model_ensemble.md) | data |
+| `MODEL_ENSEMBLE_SPECS` | [`macroforecast.model_ensemble`](model_ensemble.md) | data |
+| `MetadataLevel` | [`macroforecast.meta`](meta.md) | callable |
+| `ModelFit` | [`macroforecast.models`](models.md) | class |
+| `ModelParameter` | [`macroforecast.models`](models.md) | class |
+| `ModelSpec` | [`macroforecast.models`](models.md) | class |
+| `ParamDistribution` | [`macroforecast.model_selection`](model_selection.md) | class |
+| `PreprocessSpec` | [`macroforecast.preprocessing`](preprocessing.md) | class |
+| `PreprocessedData` | [`macroforecast.preprocessing`](preprocessing.md) | class |
+| `RandomSubspaceRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
+| `RegimeDirection` | [`macroforecast.data`](data.md) | callable |
+| `SamePeriodPolicy` | [`macroforecast.data`](data.md) | callable |
+| `SavedModel` | [`macroforecast.models`](models.md) | class |
+| `SearchError` | [`macroforecast.model_selection`](model_selection.md) | class |
+| `SearchResult` | [`macroforecast.model_selection`](model_selection.md) | class |
+| `SearchSpec` | [`macroforecast.model_selection`](model_selection.md) | class |
+| `Split` | [`macroforecast.window`](window.md) | callable |
+| `StackingRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
+| `StageDefaultScope` | [`macroforecast.meta`](meta.md) | callable |
+| `StagePolicy` | [`macroforecast.window`](window.md) | class |
+| `SuperLearnerRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
+| `TestWindow` | [`macroforecast.window`](window.md) | class |
+| `ValWindow` | [`macroforecast.window`](window.md) | class |
+| `VintagePanelSpec` | [`macroforecast.data`](data.md) | class |
+| `VintageSource` | [`macroforecast.data`](data.md) | class |
+| `VintageUnavailableError` | [`macroforecast.data`](data.md) | class |
+| `VolatilityFit` | [`macroforecast.models`](models.md) | class |
+| `WindowSpec` | [`macroforecast.window`](window.md) | class |
+| `adaptive_elastic_net` | [`macroforecast.models`](models.md) | function |
+| `adaptive_lasso` | [`macroforecast.models`](models.md) | function |
+| `adaptive_ma_rf_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `aggregate_scores` | [`macroforecast.evaluation`](evaluation.md) | function |
+| `albacore_components` | [`macroforecast.models`](models.md) | function |
+| `albacore_ranks` | [`macroforecast.models`](models.md) | function |
+| `align_frequency` | [`macroforecast.data`](data.md) | function |
+| `align_reference_weights` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `alignment_drop_incomplete` | [`macroforecast.window`](window.md) | function |
+| `alignment_keep_missing` | [`macroforecast.window`](window.md) | function |
+| `ar` | [`macroforecast.models`](models.md) | function |
+| `arima` | [`macroforecast.models`](models.md) | function |
+| `as_panel` | [`macroforecast.data`](data.md) | function |
+| `assemblage_regression` | [`macroforecast.models`](models.md) | function |
+| `asymmetric_trim_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `attach_metadata` | [`macroforecast.data`](data.md) | function |
+| `auto_arima` | [`macroforecast.models`](models.md) | function |
+| `availability_lag` | [`macroforecast.data`](data.md) | function |
+| `average_target` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `bagging` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `bayesian_ridge` | [`macroforecast.models`](models.md) | function |
+| `bayesian_search` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `benchmark_comparison` | [`macroforecast.evaluation`](evaluation.md) | function |
+| `blocked_kfold` | [`macroforecast.window`](window.md) | function |
+| `blocked_kfold_split` | [`macroforecast.window`](window.md) | function |
+| `booging` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `boruta_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `build_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `bvar_minnesota` | [`macroforecast.models`](models.md) | function |
+| `bvar_normal_inverse_wishart` | [`macroforecast.models`](models.md) | function |
+| `catboost` | [`macroforecast.models`](models.md) | function |
+| `choice` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `chow_lin_disaggregate` | [`macroforecast.data`](data.md) | function |
+| `combination_spec` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine` | [`macroforecast.data`](data.md) | function |
+| `combine_bates_granger` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_best_n` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_constrained_ls` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_dmspe` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_eigenvector` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_granger_ramanathan` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_inverse_mspe` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_linear_pool` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_log_pool` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_mean` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_median` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_regularized` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_trimmed_mean` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `combine_winsorized_mean` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `component_aggregation` | [`macroforecast.models`](models.md) | function |
+| `compose_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `configure` | [`macroforecast.meta`](meta.md) | function |
+| `correlation_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `cumsum_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `custom_combination` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `custom_dataset` | [`macroforecast.data`](data.md) | function |
+| `custom_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `custom_model` | [`macroforecast.models`](models.md) | function |
+| `custom_model_ensemble` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `custom_preprocess` | [`macroforecast.preprocessing`](preprocessing.md) | function |
+| `custom_preprocess_step` | [`macroforecast.preprocessing`](preprocessing.md) | function |
+| `custom_search` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `custom_stage_policy` | [`macroforecast.window`](window.md) | function |
+| `custom_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `custom_vintages` | [`macroforecast.data`](data.md) | function |
+| `cv_path` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `data` | [`macroforecast.data`](data.md) | module |
+| `data_analysis` | [`macroforecast.data_analysis`](data_analysis.md) | module |
+| `decision_tree` | [`macroforecast.models`](models.md) | function |
+| `define_regime` | [`macroforecast.data`](data.md) | function |
+| `density_hnn` | [`macroforecast.models`](models.md) | function |
+| `describe_model` | [`macroforecast.models`](models.md) | function |
+| `describe_model_ensemble` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `dfm_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `dfm_mixed_mariano_murasawa` | [`macroforecast.models`](models.md) | function |
+| `dfm_unrestricted_midas` | [`macroforecast.models`](models.md) | function |
+| `diff_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `direct_target` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `egarch` | [`macroforecast.models`](models.md) | function |
+| `elastic_net` | [`macroforecast.models`](models.md) | function |
+| `error_decomposition` | [`macroforecast.evaluation`](evaluation.md) | function |
+| `estimation_expanding` | [`macroforecast.window`](window.md) | function |
+| `estimation_fixed` | [`macroforecast.window`](window.md) | function |
+| `estimation_rolling` | [`macroforecast.window`](window.md) | function |
+| `ets` | [`macroforecast.models`](models.md) | function |
+| `evaluate_report` | [`macroforecast.evaluation`](evaluation.md) | function |
+| `evaluation` | [`macroforecast.evaluation`](evaluation.md) | module |
+| `expanding` | [`macroforecast.window`](window.md) | function |
+| `expanding_split` | [`macroforecast.window`](window.md) | function |
+| `extra_trees` | [`macroforecast.models`](models.md) | function |
+| `far` | [`macroforecast.models`](models.md) | function |
+| `favar` | [`macroforecast.models`](models.md) | function |
+| `feature_analysis` | [`macroforecast.feature_analysis`](feature_analysis.md) | module |
+| `feature_diagnostic` | `macroforecast.feature_diagnostic` | module |
+| `feature_engineering` | [`macroforecast.feature_engineering`](feature_engineering.md) | module |
+| `feature_matrix` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `feature_selection_requires_target` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `feature_spec` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `filter_oos_period` | [`macroforecast.evaluation`](evaluation.md) | function |
+| `filters` | [`macroforecast.filters`](filters.md) | module |
+| `fixed` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `forecast_analysis` | [`macroforecast.forecast_analysis`](forecast_analysis.md) | module |
+| `forecast_diagnostic` | `macroforecast.forecast_diagnostic` | module |
+| `forecasting` | [`macroforecast.forecasting`](forecasting.md) | module |
+| `forward_average_target` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `fourier_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `fourier_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `fred_md_vintages` | [`macroforecast.data`](data.md) | function |
+| `fred_qd_vintages` | [`macroforecast.data`](data.md) | function |
+| `frequency_hardening_issues` | [`macroforecast.data`](data.md) | function |
+| `from_cutoffs` | [`macroforecast.window`](window.md) | function |
+| `fused_difference_ridge` | [`macroforecast.models`](models.md) | function |
+| `garch11` | [`macroforecast.models`](models.md) | function |
+| `genetic_search` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `genetic_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `get_config` | [`macroforecast.meta`](meta.md) | function |
+| `get_model` | [`macroforecast.models`](models.md) | function |
+| `get_model_ensemble` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `get_option` | [`macroforecast.meta`](meta.md) | function |
+| `gjr_garch` | [`macroforecast.models`](models.md) | function |
+| `glmboost` | [`macroforecast.models`](models.md) | function |
+| `gradient_boosting` | [`macroforecast.models`](models.md) | function |
+| `grid` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `group_lasso` | [`macroforecast.models`](models.md) | function |
+| `group_pca` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `group_pca_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `gru` | [`macroforecast.models`](models.md) | function |
+| `hamilton_filter_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `hamilton_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `hemisphere_nn` | [`macroforecast.models`](models.md) | function |
+| `holt_winters` | [`macroforecast.models`](models.md) | function |
+| `hp_filter_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `huber` | [`macroforecast.models`](models.md) | function |
+| `infer_frequencies` | [`macroforecast.data`](data.md) | function |
+| `interaction_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `interaction_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `interpretation` | [`macroforecast.interpretation`](interpretation.md) | module |
+| `kernel_ridge` | [`macroforecast.models`](models.md) | function |
+| `knn` | [`macroforecast.models`](models.md) | function |
+| `lag` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `lag_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `lags_then_pca` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `lasso` | [`macroforecast.models`](models.md) | function |
+| `lasso_path_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `lasso_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `last_block` | [`macroforecast.window`](window.md) | function |
+| `last_block_split` | [`macroforecast.window`](window.md) | function |
+| `lgb_plus` | [`macroforecast.models`](models.md) | function |
+| `lgba_plus` | [`macroforecast.models`](models.md) | function |
+| `lightgbm` | [`macroforecast.models`](models.md) | function |
+| `linear_svr` | [`macroforecast.models`](models.md) | function |
+| `list_model_ensemble_bases` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `list_model_ensemble_specs` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `list_model_specs` | [`macroforecast.models`](models.md) | function |
+| `list_vintages` | [`macroforecast.data`](data.md) | function |
+| `load_custom_csv` | [`macroforecast.data`](data.md) | function |
+| `load_custom_parquet` | [`macroforecast.data`](data.md) | function |
+| `load_fit` | [`macroforecast.models`](models.md) | function |
+| `load_fred_md` | [`macroforecast.data`](data.md) | function |
+| `load_fred_md_sd` | [`macroforecast.data`](data.md) | function |
+| `load_fred_qd` | [`macroforecast.data`](data.md) | function |
+| `load_fred_qd_sd` | [`macroforecast.data`](data.md) | function |
+| `load_fred_sd` | [`macroforecast.data`](data.md) | function |
+| `log_diff_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `log_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `log_uniform` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `lstm` | [`macroforecast.models`](models.md) | function |
+| `macro_random_forest` | [`macroforecast.models`](models.md) | function |
+| `maf_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `maf_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `make_splitter` | [`macroforecast.window`](window.md) | function |
+| `mars` | [`macroforecast.models`](models.md) | function |
+| `marx_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `meta` | [`macroforecast.meta`](meta.md) | module |
+| `metadata` | [`macroforecast.data`](data.md) | function |
+| `metrics` | [`macroforecast.metrics`](metrics.md) | module |
+| `midas_almon` | [`macroforecast.models`](models.md) | function |
+| `midas_beta` | [`macroforecast.models`](models.md) | function |
+| `midas_step` | [`macroforecast.models`](models.md) | function |
+| `mixed_frequency_lags` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `model_ensemble` | [`macroforecast.model_ensemble`](model_ensemble.md) | module |
+| `model_ensemble_search_space` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `model_search_space` | [`macroforecast.models`](models.md) | function |
+| `model_selection` | [`macroforecast.model_selection`](model_selection.md) | module |
+| `models` | [`macroforecast.models`](models.md) | module |
+| `moving_average_changes` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `moving_average_ladder` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `moving_average_pca_lags` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `moving_average_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `naive` | [`macroforecast.models`](models.md) | function |
+| `nn` | [`macroforecast.models`](models.md) | function |
+| `nonneg_ridge` | [`macroforecast.models`](models.md) | function |
+| `normalize_feature_selection_method` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `normalize_window_name` | [`macroforecast.window`](window.md) | function |
+| `nu_svr` | [`macroforecast.models`](models.md) | function |
+| `nystroem_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `nystroem_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `ols` | [`macroforecast.models`](models.md) | function |
+| `output` | [`macroforecast.output`](output.md) | module |
+| `panel_info` | [`macroforecast.data`](data.md) | function |
+| `partial_least_squares_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `partial_least_squares_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `path_targets` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `pca_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `pca_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `pca_then_lags` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `pct_change_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `pipeline` | [`macroforecast.pipeline`](pipeline.md) | module |
+| `pls` | [`macroforecast.models`](models.md) | function |
+| `polynomial_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `polynomial_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `poos` | [`macroforecast.window`](window.md) | function |
+| `poos_split` | [`macroforecast.window`](window.md) | function |
+| `preprocess_spec` | [`macroforecast.preprocessing`](preprocessing.md) | function |
+| `preprocessing` | [`macroforecast.preprocessing`](preprocessing.md) | module |
+| `quantile_regression_forest` | [`macroforecast.models`](models.md) | function |
+| `randint` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `random_forest` | [`macroforecast.models`](models.md) | function |
+| `random_kfold` | [`macroforecast.window`](window.md) | function |
+| `random_kfold_split` | [`macroforecast.window`](window.md) | function |
+| `random_projection_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `random_projection_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `random_search` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `random_subspace` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `random_walk_drift` | [`macroforecast.models`](models.md) | function |
+| `random_walk_ridge` | [`macroforecast.models`](models.md) | function |
+| `rank_aggregation` | [`macroforecast.models`](models.md) | function |
+| `rank_space_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `realized_garch` | [`macroforecast.models`](models.md) | function |
+| `regime_scores` | [`macroforecast.evaluation`](evaluation.md) | function |
+| `reporting` | [`macroforecast.reporting`](reporting.md) | module |
+| `reprocess` | [`macroforecast.preprocessing`](preprocessing.md) | function |
+| `reset_config` | [`macroforecast.meta`](meta.md) | function |
+| `resolve_stage_policy` | [`macroforecast.window`](window.md) | function |
+| `resolve_window` | [`macroforecast.window`](window.md) | function |
+| `restricted_midas` | [`macroforecast.models`](models.md) | function |
+| `rfe_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `ridge` | [`macroforecast.models`](models.md) | function |
+| `rolling_blocks` | [`macroforecast.window`](window.md) | function |
+| `rolling_blocks_split` | [`macroforecast.window`](window.md) | function |
+| `rolling_mean` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `rolling_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `run` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `run_forecast` | [`macroforecast.forecasting`](forecasting.md) | function |
+| `same_period_predictors` | [`macroforecast.data`](data.md) | function |
+| `save_fit` | [`macroforecast.models`](models.md) | function |
+| `savitzky_golay_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `scale_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `scale_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `scaled_pca` | [`macroforecast.models`](models.md) | function |
+| `search_spec` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `season_dummy` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `season_dummy_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `seasonal_lag` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `seasonal_lag_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `seasonal_naive` | [`macroforecast.models`](models.md) | function |
+| `select_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `select_params` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `set_frequencies` | [`macroforecast.data`](data.md) | function |
+| `shrink_to_target_ridge` | [`macroforecast.models`](models.md) | function |
+| `sliced_inverse_regression_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `sliced_inverse_regression_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `solve_fused_difference_ridge` | [`macroforecast.models`](models.md) | function |
+| `solve_mean_aligned_ridge` | [`macroforecast.models`](models.md) | function |
+| `solve_nonnegative_ridge` | [`macroforecast.models`](models.md) | function |
+| `solve_simplex_ridge` | [`macroforecast.models`](models.md) | function |
+| `solve_target_shrinkage_ridge` | [`macroforecast.models`](models.md) | function |
+| `sparse_group_lasso` | [`macroforecast.models`](models.md) | function |
+| `sparse_pca_chen_rohe_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `sparse_pca_chen_rohe_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `spec` | [`macroforecast.data`](data.md) | function |
+| `split_table` | [`macroforecast.window`](window.md) | function |
+| `stability_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `stacking` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `stage_index` | [`macroforecast.window`](window.md) | function |
+| `stage_panel` | [`macroforecast.window`](window.md) | function |
+| `stage_policy` | [`macroforecast.window`](window.md) | function |
+| `standardize_panel` | [`macroforecast.preprocessing`](preprocessing.md) | function |
+| `stlf` | [`macroforecast.models`](models.md) | function |
+| `subagging` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `super_learner` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
+| `supervised_aggregation` | [`macroforecast.models`](models.md) | function |
+| `supervised_pca` | [`macroforecast.models`](models.md) | function |
+| `supervised_scaled_pca` | [`macroforecast.models`](models.md) | function |
+| `svr` | [`macroforecast.models`](models.md) | function |
+| `test_origins` | [`macroforecast.window`](window.md) | function |
+| `tests` | [`macroforecast.tests`](tests.md) | module |
+| `tgarch` | [`macroforecast.models`](models.md) | function |
+| `theta_method` | [`macroforecast.models`](models.md) | function |
+| `time_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `time_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `transform_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `transform_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `transformer` | [`macroforecast.models`](models.md) | function |
+| `tvp_ridge` | [`macroforecast.models`](models.md) | function |
+| `uniform` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `unrestricted_midas` | [`macroforecast.models`](models.md) | function |
+| `use_config` | [`macroforecast.meta`](meta.md) | function |
+| `val_blocked_kfold` | [`macroforecast.window`](window.md) | function |
+| `val_expanding` | [`macroforecast.window`](window.md) | function |
+| `val_last_block` | [`macroforecast.window`](window.md) | function |
+| `val_poos` | [`macroforecast.window`](window.md) | function |
+| `val_random_kfold` | [`macroforecast.window`](window.md) | function |
+| `val_rolling_blocks` | [`macroforecast.window`](window.md) | function |
+| `validate_panel` | [`macroforecast.data`](data.md) | function |
+| `var` | [`macroforecast.models`](models.md) | function |
+| `variance_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `varimax_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `varimax_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `wavelet_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `weighted_aggregate` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `window` | [`macroforecast.window`](window.md) | module |
+| `with_static_extras` | [`macroforecast.data`](data.md) | function |
+| `xgboost` | [`macroforecast.models`](models.md) | function |
 
 ## Submodules
 
-| Module | Purpose |
+| Module | Reference |
 | --- | --- |
-| `macroforecast.meta` | Global defaults. |
-| `macroforecast.data` | Data loading and study data specs. |
-| `macroforecast.preprocessing` | Pandas preprocessing functions. |
-| `macroforecast.filters` | Direct one-series filters and smoothers such as HP, Hamilton, Savitzky-Golay, wavelet-style components, and AlbaMA. |
-| `macroforecast.feature_engineering` | Direct-forecast target construction and composable ML feature transforms. |
-| `macroforecast.feature_analysis` | Feature-matrix analysis after feature engineering. |
-| `macroforecast.feature_diagnostic` | Compatibility alias for `macroforecast.feature_analysis`. |
-| `macroforecast.models` | Callable model fits. |
-| `macroforecast.model_ensemble` | Fit-time model composition over multiple member models. |
-| `macroforecast.window` | Macro forecasting time-frame specs. |
-| `macroforecast.model_selection` | Hyperparameter search and parameter selection. |
-| `macroforecast.forecasting` | Windowed runner and forecast combination. |
-| `macroforecast.forecast_analysis` | Forecast-result analysis after runner execution. |
-| `macroforecast.forecast_diagnostic` | Compatibility alias for `macroforecast.forecast_analysis`. |
-| `macroforecast.metrics` | Scoring metrics, forecast ranking, and metric resolution. |
-| `macroforecast.tests` | Forecast-comparison tests and residual diagnostics. |
-| `macroforecast.evaluation` | Evaluation reports, OOS filtering, error decomposition, benchmark comparisons, regime scoring, and namespace links to `metrics` and `tests`. |
-| `macroforecast.interpretation` | Model-native importance, model-agnostic effects, SHAP/anatomy attribution, OLS-as-attention, VAR interpretation, and deep optional helpers. |
-| `macroforecast.output` | Output generation, artifact writing, provenance collection, hashing, and compression. |
-| `macroforecast.reporting` | Presentation/report formatting, paper-table presets, and rendering without artifact writing. |
-| `macroforecast.pipeline` | Comprehensive POOS pipeline: spec generator, t-code target resolution, arms, combinations, evaluation. |
-| `macroforecast.data_analysis` | Single-panel diagnostics, summaries, and raw-versus-processed comparison. |
+| `macroforecast.meta` | [`macroforecast.meta`](meta.md) |
+| `macroforecast.data` | [`macroforecast.data`](data.md) |
+| `macroforecast.preprocessing` | [`macroforecast.preprocessing`](preprocessing.md) |
+| `macroforecast.feature_engineering` | [`macroforecast.feature_engineering`](feature_engineering.md) |
+| `macroforecast.data_analysis` | [`macroforecast.data_analysis`](data_analysis.md) |
+| `macroforecast.feature_analysis` | [`macroforecast.feature_analysis`](feature_analysis.md) |
+| `macroforecast.feature_diagnostic` | `macroforecast.feature_diagnostic` |
+| `macroforecast.filters` | [`macroforecast.filters`](filters.md) |
+| `macroforecast.forecast_analysis` | [`macroforecast.forecast_analysis`](forecast_analysis.md) |
+| `macroforecast.forecast_diagnostic` | `macroforecast.forecast_diagnostic` |
+| `macroforecast.models` | [`macroforecast.models`](models.md) |
+| `macroforecast.model_ensemble` | [`macroforecast.model_ensemble`](model_ensemble.md) |
+| `macroforecast.model_selection` | [`macroforecast.model_selection`](model_selection.md) |
+| `macroforecast.forecasting` | [`macroforecast.forecasting`](forecasting.md) |
+| `macroforecast.metrics` | [`macroforecast.metrics`](metrics.md) |
+| `macroforecast.tests` | [`macroforecast.tests`](tests.md) |
+| `macroforecast.evaluation` | [`macroforecast.evaluation`](evaluation.md) |
+| `macroforecast.window` | [`macroforecast.window`](window.md) |
+| `macroforecast.interpretation` | [`macroforecast.interpretation`](interpretation.md) |
+| `macroforecast.output` | [`macroforecast.output`](output.md) |
+| `macroforecast.reporting` | [`macroforecast.reporting`](reporting.md) |
+| `macroforecast.pipeline` | [`macroforecast.pipeline`](pipeline.md) |

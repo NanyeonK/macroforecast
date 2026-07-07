@@ -1,413 +1,485 @@
-# macroforecast.interpretation.dual
+# macroforecast.interpretation_dual
 
-[Back to interpretation](interpretation.md)
+[Back to reference](index.md)
 
-`macroforecast.interpretation.dual` is the dedicated namespace for the dual
-interpretation route in Goulet Coulombe, Goebel, and Klieber (2024), "Dual
-Interpretation of Machine Learning Forecasts" (`arXiv:2412.13076`). Standard
-variable-importance tools ask which predictor columns matter. Dual
-interpretation asks which historical training observations matter for a
-forecast.
+Observation-based dual interpretation for forecast results.
 
-The central identity is:
+## Public Symbols
 
-```text
-yhat_new = sum_i w_i(new) y_i
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `DualInterpretationResult` | class | Paper-aligned dual interpretation output bundle. |
+| `data_portfolio_diagnostics` | function | Return concentration, short-position, leverage, and turnover diagnostics. |
+| `dual_from_forecast_result` | function | Build a dual interpretation sidecar for a completed forecast result. |
+| `dual_interpretation` | function | Run the ridge/KRR/RF DualML interpretation path in one callable. |
+| `episode_group_weights` | function | Aggregate observation weights over named historical groups. |
+| `forecast_diagnostics` | function | Return concentration, short-position, leverage, and turnover diagnostics. |
+| `group_observation_weights` | function | Aggregate observation weights over named historical groups. |
+| `observation_contributions` | function | Convert observation weights into observation-level forecast contributions. |
+| `observation_weights` | function | Return DualML observation/data-portfolio weights. |
+| `outcome_contributions` | function | Convert observation weights into observation-level forecast contributions. |
+| `top_episodes` | function | Return the largest historical observations per forecast row. |
+| `top_observations` | function | Return the largest historical observations per forecast row. |
+
+## Callable And Class Reference
+
+### DualInterpretationResult
+
+Qualified name: `macroforecast.interpretation.dual.DualInterpretationResult`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.DualInterpretationResult(weights: pd.DataFrame, contributions: pd.DataFrame | None = None, diagnostics: pd.DataFrame | None = None, top_observations: pd.DataFrame | None = None, group_weights: pd.DataFrame | None = None, metadata: dict[str, Any] = <factory>, metadata_schema: dict[str, Any] = <factory>) -> None
 ```
 
-The weights `w_i(new)` are observation weights, also called data-portfolio
-weights in the paper/code. A positive weight means the model borrows from that
-historical outcome. A negative weight means the model uses that observation by
-contrast. A concentrated weight vector means the forecast relies on a small
-number of episodes. A high short position or high gross leverage means the
-forecast is extrapolative rather than a simple local average.
+#### Description
 
-Relation to Goulet Coulombe (2026), "Ordinary Least Squares as an Attention
-Mechanism": OLS-as-attention is the exact linear algebra route
-`X_test (X_train'X_train)^-1 X_train'`. It is available through
-`macroforecast.interpretation.ols_attention_weights()`,
-`ridge_attention_weights()`, `ols_attention_embedding()`, and
-`ols_attention_equivalence()`. This `dual` namespace is broader: it uses the
-same historical-observation idea for ridge/OLS, kernel ridge, and random
-forest data-portfolio weights, plus contribution, diagnostic, top-observation,
-and group tables.
+Paper-aligned dual interpretation output bundle.
 
-## Reference Sources
+Goulet Coulombe, Goebel, and Klieber's DualML code reports observation
+weights, observation contributions, and data-portfolio diagnostics as
+connected objects. The result container keeps that relation explicit while
+still exposing output-ready tables through ``to_tables``.
 
-| Source | Used for |
-| --- | --- |
-| Goulet Coulombe, Goebel, and Klieber (2024), "Dual Interpretation of Machine Learning Forecasts" | Paper terminology and interpretation target. |
-| Goulet Coulombe (2026), "Ordinary Least Squares as an Attention Mechanism" | Exact OLS/ridge attention identity and whitened embedding interpretation. |
-| `wiki/raw/paper_code/coulombe_site_github_20260530/dual_python/auxiliaries.py` | Ridge, kernel-ridge, and random-forest observation-weight formulas. |
-| `wiki/raw/paper_code/coulombe_site_github_20260530/DualML_R/DualML.R` | Forecast concentration, forecast short position, forecast leverage, and forecast turnover definitions. |
-| `wiki/raw/paper_code/coulombe_site_github_20260530/DualML_R/README.md` | Original model-route inventory: OLS, RF, LGB, RR, KRR, and NN. |
+#### Parameters
 
-Implemented now: ridge/OLS, kernel ridge, and sklearn-style random forest.
-Deferred routes: boosted-tree AXIL, LGB+/LGBA+ channel-specific weights, neural
-embedding-ridge approximation, and classification log-odds decomposition.
-
-## Public Functions
-
-| Function | Input | Output | Purpose |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `macroforecast.interpretation.dual.dual_interpretation()` | model, train features, train target, optional test features | `DualInterpretationResult` | Run the paper-aligned ridge/KRR/RF path and return all dual tables together. |
-| `macroforecast.interpretation.dual.dual_from_forecast_result()` | completed `ForecastResult`, model, train features, train target, optional test features | `ForecastResult` or `DualInterpretationResult` | Build a dual sidecar for a completed runner result. |
-| `macroforecast.interpretation.dual.observation_weights()` | model, `X_train`, optional `X_test` | long `DataFrame` | Compute historical observation/data-portfolio weights. |
-| `macroforecast.interpretation.dual.observation_contributions()` | weights and `y_train` | long `DataFrame` | Multiply observation weights by historical outcomes. |
-| `macroforecast.interpretation.dual.forecast_diagnostics()` | weights | `DataFrame` | Compute concentration, short position, leverage, gross leverage, and turnover. |
-| `macroforecast.interpretation.dual.top_observations()` | weights or contributions | long `DataFrame` | Return the largest historical observations for each forecast. |
-| `macroforecast.interpretation.dual.group_observation_weights()` | weights/contributions and a group mapping | `DataFrame` | Aggregate observation weights over user-defined regimes or episodes. |
-| `DualInterpretationResult.to_tables()` | result object | dict of `DataFrame` | Expand the result for `macroforecast.output`. |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `contributions` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `diagnostics` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `top_observations` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `group_weights` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `metadata_schema` | positional or keyword | `dict[str, Any]` | `<factory>` |
 
-Backward-compatible aliases are still available:
+#### Returns
 
-| Alias | Preferred name |
-| --- | --- |
-| `outcome_contributions` | `observation_contributions` |
-| `data_portfolio_diagnostics` | `forecast_diagnostics` |
-| `top_episodes` | `top_observations` |
-| `episode_group_weights` | `group_observation_weights` |
+`None`
 
-## Public Flow
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-dual = mf.interpretation.dual.dual_interpretation(
-    model,
-    X_train,
-    y_train,
-    X_test,
-    method="random_forest",
-    top_n=10,
-    groups={
-        "gfc": gfc_train_dates,
-        "covid": covid_train_dates,
-    },
-)
-
-tables = dual.to_tables(prefix="inflation")
+# Construct with the signature above:
+# mf.interpretation_dual.DualInterpretationResult(...)
 ```
 
-For completed forecast runs, attach the same result as a sidecar:
+#### Dataclass Fields
 
-```python
-result = mf.forecasting.run(feature_set, "ridge", window=window)
-
-result = mf.interpretation.dual.dual_from_forecast_result(
-    result,
-    fit,
-    X_train,
-    y_train,
-    X_test,
-    method="ridge",
-)
-
-# Equivalent method form:
-result = result.with_dual(fit, X_train, y_train, X_test, method="ridge")
-```
-
-`forecasting.run()` does not compute dual interpretation automatically. The
-completed forecast table does not contain the exact fitted estimator,
-training-feature matrix, training target, or forecast-row feature matrix. Those
-objects must be passed explicitly to avoid silent look-ahead or stale-design
-errors.
-
-For a ridge/KRR route, `model` can be `None`:
-
-```python
-dual = mf.interpretation.dual.dual_interpretation(
-    None,
-    X_train,
-    y_train,
-    X_test,
-    method="krr",
-    kernel="laplace",
-    sigma=1e-4,
-    lambda_=0.1,
-)
-```
-
-## dual_interpretation
-
-```python
-macroforecast.interpretation.dual.dual_interpretation(
-    model,
-    X_train,
-    y_train,
-    X_test=None,
-    *,
-    method="auto",
-    lambda_=1e-8,
-    kernel="linear",
-    sigma=1.0,
-    add_intercept=False,
-    ridge_penalty_scale="n_train",
-    normalize=False,
-    center=False,
-    include_base=False,
-    top_n=10,
-    top_sort_by="abs_weight",
-    top_q=0.05,
-    groups=None,
-    include_contributions=True,
-    include_diagnostics=True,
-    include_top_observations=True,
-    include_group_weights=None,
-)
-```
-
-Input:
-
-| Argument | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `model` | fitted model or `None` | required | Required for random-forest weights. Optional for ridge/KRR because weights are closed-form from `X_train` and `X_test`. |
-| `X_train` | pandas `DataFrame` | required | Training feature matrix. Its index becomes `train_index`. |
-| `y_train` | pandas `Series` or sequence | required | Training target aligned to `X_train`. If it is a `Series`, the index is aligned to `train_index`. |
-| `X_test` | pandas `DataFrame` or `None` | `None` | Forecast-row feature matrix. If omitted, each training row is explained against the training panel. |
-| `method` | string | `auto` | `auto`, `ridge`, `ols`, `krr`, `kernel_ridge`, `random_forest`, or `rf`. |
-| `lambda_` | float | `1e-8` | Ridge/KRR regularization. |
-| `kernel` | string | `linear` | KRR kernel: `linear`, `gaussian`, `rbf`, `laplace`, or `laplacian`. |
-| `sigma` | float | `1.0` | Kernel bandwidth convention used by the reviewed code: `exp(-sigma * distance)`. |
-| `add_intercept` | bool | `False` | Adds an unpenalized intercept for ridge/OLS. The paper code usually works with standardized no-intercept matrices. |
-| `ridge_penalty_scale` | string | `n_train` | Ridge penalty convention. `n_train` uses `n_train * lambda_`; `none` uses `lambda_`. |
-| `normalize` | bool | `False` | Re-normalize row weights to sum to one. Default is false because leverage and negative weights are meaningful diagnostics. |
-| `center` | bool | `False` | Center `y_train` before contribution calculation. |
-| `include_base` | bool | `False` | With `center=True`, add an explicit base-row contribution. |
-| `top_n` | int | `10` | Number of top observations returned per forecast row. |
-| `top_sort_by` | string | `abs_weight` | `abs_weight`, `weight`, `contribution`, or `abs_contribution`. |
-| `top_q` | float | `0.05` | Share of observations used in concentration. Values above `1` are treated as `1`. |
-| `groups` | mapping or `None` | `None` | Named historical episode groups, mapping group name to training-index labels. |
-| `include_*` | bool | varies | Include or skip contribution, diagnostic, top-observation, and group tables. |
-
-Output: `DualInterpretationResult`.
-
-| Field | Type | Meaning |
+| Field | Type | Default |
 | --- | --- | --- |
-| `weights` | `DataFrame` | Observation/data-portfolio weights. |
-| `contributions` | `DataFrame` or `None` | Observation-level forecast contributions. |
-| `diagnostics` | `DataFrame` or `None` | Forecast concentration, short position, leverage, gross leverage, and turnover. |
-| `top_observations` | `DataFrame` or `None` | Largest historical observations per forecast. |
-| `group_weights` | `DataFrame` or `None` | Group-level observation weights and contributions. |
-| `metadata` | dict | Paper route, implemented/deferred routes, and options used. |
+| `weights` | `pd.DataFrame` | `required` |
+| `contributions` | `pd.DataFrame \| None` | `None` |
+| `diagnostics` | `pd.DataFrame \| None` | `None` |
+| `top_observations` | `pd.DataFrame \| None` | `None` |
+| `group_weights` | `pd.DataFrame \| None` | `None` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
+| `metadata_schema` | `dict[str, Any]` | `default_factory` |
 
-## dual_from_forecast_result
+#### Public Methods
 
-```python
-macroforecast.interpretation.dual.dual_from_forecast_result(
-    result,
-    model,
-    X_train,
-    y_train,
-    X_test=None,
-    *,
-    attach=True,
-    sidecar_name="dual",
-    **dual_options,
-)
-```
-
-Input:
-
-| Argument | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `result` | `ForecastResult` | required | Completed forecast runner output. |
-| `model` | fitted model or `None` | required | Same model argument passed to `dual_interpretation(...)`. |
-| `X_train`, `y_train`, `X_test` | pandas objects | required except `X_test` | Exact design matrices used for the dual explanation. |
-| `attach` | bool | `True` | If true, return a copy of `ForecastResult` with the sidecar attached. If false, return the standalone `DualInterpretationResult`. |
-| `sidecar_name` | str | `dual` | Name used in `ForecastResult.sidecars` and output artifact names. |
-| `**dual_options` | keyword args | none | Forwarded to `dual_interpretation(...)`, such as `method`, `lambda_`, `kernel`, `groups`, and `top_n`. |
-
-Output: with `attach=True`, a new `ForecastResult`; with `attach=False`, a
-standalone `DualInterpretationResult`.
-
-## observation_weights
-
-```python
-macroforecast.interpretation.dual.observation_weights(
-    model,
-    X_train,
-    X_test=None,
-    *,
-    method="auto",
-    lambda_=1e-8,
-    kernel="linear",
-    sigma=1.0,
-    add_intercept=False,
-    ridge_penalty_scale="n_train",
-    normalize=False,
-)
-```
-
-Implemented routes:
-
-| Route | Formula / logic | Notes |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| Ridge / OLS | `W = X_test (X_train' X_train + n lambda I)^-1 X_train'` by default | Set `ridge_penalty_scale="none"` for `lambda I`. `add_intercept=True` adds an unpenalized intercept. |
-| Kernel ridge | `W = K_test (K_train + lambda I)^-1` | Kernels: `linear`, `gaussian`/`rbf`, `laplace`/`laplacian`. |
-| Random forest | For each tree, assign test and train rows to leaves; train rows in the same leaf share weight; average across trees | For sklearn forests, bootstrap sample counts are used when recoverable. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+| `to_tables` | `to_tables(self, *, prefix: str = "dual") -> dict[str, pd.DataFrame]` | Return output-ready tables with paper-aligned names. |
+### data_portfolio_diagnostics
 
-Output columns:
+Qualified name: `macroforecast.interpretation.dual.forecast_diagnostics`
 
-| Column | Meaning |
-| --- | --- |
-| `test_row`, `test_index` | Forecast-row position and index. |
-| `train_row`, `train_index` | Historical observation position and index. |
-| `weight`, `abs_weight` | Signed and absolute observation weight. |
-| `channel` | Implemented route: `ridge`, `krr`, or `random_forest`. |
-
-The dense matrix is attached as `attrs["weight_matrix"]` with shape
-`(n_test, n_train)`.
-
-## observation_contributions
+#### Signature
 
 ```python
-macroforecast.interpretation.dual.observation_contributions(
-    weights,
-    y_train,
-    *,
-    center=False,
-    include_base=False,
-)
+macroforecast.interpretation_dual.data_portfolio_diagnostics(weights: pd.DataFrame, *, top_q: float = 0.05) -> pd.DataFrame
 ```
 
-Input: an observation-weight table and the aligned training target.
+#### Description
 
-Output columns add:
+Return concentration, short-position, leverage, and turnover diagnostics.
 
-| Column | Meaning |
-| --- | --- |
-| `train_y` | Realized historical outcome. |
-| `centered_train_y` | `train_y - mean(y_train)` when `center=True`; otherwise `train_y`. |
-| `contribution` | `weight * train_y` by default. |
-| `prediction` | Sum of contributions for the forecast row. |
-| `channel` | `episode`, or `base` when `center=True` and `include_base=True`. |
+#### Parameters
 
-Default `center=False` preserves the exact identity
-`prediction = weights @ y_train`. Centering is useful for plots but changes the
-table into a base-plus-centered-contribution decomposition.
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `top_q` | keyword only | `float` | `0.05` |
 
-## forecast_diagnostics
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-macroforecast.interpretation.dual.forecast_diagnostics(weights, *, top_q=0.05)
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.data_portfolio_diagnostics(...)
 ```
+### dual_from_forecast_result
 
-Output:
+Qualified name: `macroforecast.interpretation.dual.dual_from_forecast_result`
 
-| Column | Paper/code meaning |
-| --- | --- |
-| `concentration` | Forecast concentration: sum of top absolute weights divided by total absolute weight. |
-| `short_position` | Forecast short position: signed sum of negative weights. |
-| `short_position_abs` | Absolute short-side exposure. |
-| `leverage` | Signed weight sum. |
-| `gross_leverage` | Sum of absolute weights. |
-| `turnover` | Sum of absolute weight changes relative to the previous forecast row. |
-| `top_q`, `top_k`, `n_train` | Diagnostic settings. |
-
-Negative weights are not automatically errors. In this paper they identify
-contrast-based use of historical observations. The caution is economic:
-macroeconomic shocks are often asymmetric, so a mirror-image historical
-analogy may be a weak explanation even if the model uses it.
-
-## top_observations
+#### Signature
 
 ```python
-macroforecast.interpretation.dual.top_observations(
-    weights,
-    *,
-    y_train=None,
-    n=10,
-    sort_by="abs_weight",
-)
+macroforecast.interpretation_dual.dual_from_forecast_result(result: Any, model: Any | None, X_train: pd.DataFrame, y_train: pd.Series | Sequence[float], X_test: pd.DataFrame | None = None, *, attach: bool = True, sidecar_name: str = "dual", **kwargs: Any) -> Any
 ```
 
-Input: observation weights or observation contributions. If `y_train` is
-provided and the table lacks `contribution`, contributions are computed first.
+#### Description
 
-Output: top historical observations per forecast row with a `rank` column.
-Supported `sort_by` values: `abs_weight`, `weight`, `contribution`, and
-`abs_contribution`.
+Build a dual interpretation sidecar for a completed forecast result.
 
-## group_observation_weights
+A forecast table cannot reconstruct the exact train/test feature matrices
+used by the fitted model. The caller therefore passes the fitted model,
+training features, training target, and forecast-row features explicitly.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `result` | positional or keyword | `Any` | `required` |
+| `model` | positional or keyword | `Any \| None` | `required` |
+| `X_train` | positional or keyword | `pd.DataFrame` | `required` |
+| `y_train` | positional or keyword | `pd.Series \| Sequence[float]` | `required` |
+| `X_test` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `attach` | keyword only | `bool` | `True` |
+| `sidecar_name` | keyword only | `str` | `"dual"` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`Any`
+
+#### Minimal Use
 
 ```python
-macroforecast.interpretation.dual.group_observation_weights(
-    weights,
-    groups,
-    *,
-    y_train=None,
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.dual_from_forecast_result(...)
 ```
+### dual_interpretation
 
-Input:
+Qualified name: `macroforecast.interpretation.dual.dual_interpretation`
 
-| Argument | Meaning |
-| --- | --- |
-| `weights` | Observation-weight or contribution table. |
-| `groups` | Mapping from group name to training-index labels. |
-| `y_train` | Optional training target used to create contributions before grouping. |
-
-Example:
+#### Signature
 
 ```python
-groups = {
-    "gfc": pd.period_range("2007Q4", "2009Q2", freq="Q").to_timestamp("Q"),
-    "covid": pd.period_range("2020Q1", "2021Q2", freq="Q").to_timestamp("Q"),
-}
-
-grouped = mf.interpretation.dual.group_observation_weights(
-    dual.weights,
-    groups,
-    y_train=y_train,
-)
+macroforecast.interpretation_dual.dual_interpretation(model: Any | None, X_train: pd.DataFrame, y_train: pd.Series | Sequence[float], X_test: pd.DataFrame | None = None, *, method: str = "auto", lambda_: float = 1e-08, kernel: str = "linear", sigma: float = 1.0, add_intercept: bool = False, ridge_penalty_scale: str = "n_train", normalize: bool = False, center: bool = False, include_base: bool = False, top_n: int = 10, top_sort_by: str = "abs_weight", top_q: float = 0.05, groups: Mapping[str, Sequence[Any]] | None = None, include_contributions: bool = True, include_diagnostics: bool = True, include_top_observations: bool = True, include_group_weights: bool | None = None) -> DualInterpretationResult
 ```
 
-Output columns: `test_row`, `test_index`, `episode_group`, `weight`,
-`abs_weight`, `n_episodes`, and, when available, `contribution` and
-`abs_contribution`.
+#### Description
 
-## Output Integration
+Run the ridge/KRR/RF DualML interpretation path in one callable.
 
-`DualInterpretationResult.to_tables(prefix="dual")` returns:
+#### Parameters
 
-| Table key | Meaning |
-| --- | --- |
-| `dual_observation_weights` | Long observation-weight table. |
-| `dual_observation_contributions` | Long contribution table, when requested. |
-| `dual_forecast_diagnostics` | Concentration, short-position, leverage, gross-leverage, and turnover table. |
-| `dual_top_observations` | Top historical observations per forecast row. |
-| `dual_group_observation_weights` | Group-level weights/contributions, when groups are provided. |
-| `dual_metadata` | Result metadata as key/value rows. |
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `model` | positional or keyword | `Any \| None` | `required` |
+| `X_train` | positional or keyword | `pd.DataFrame` | `required` |
+| `y_train` | positional or keyword | `pd.Series \| Sequence[float]` | `required` |
+| `X_test` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `method` | keyword only | `str` | `"auto"` |
+| `lambda_` | keyword only | `float` | `1e-08` |
+| `kernel` | keyword only | `str` | `"linear"` |
+| `sigma` | keyword only | `float` | `1.0` |
+| `add_intercept` | keyword only | `bool` | `False` |
+| `ridge_penalty_scale` | keyword only | `str` | `"n_train"` |
+| `normalize` | keyword only | `bool` | `False` |
+| `center` | keyword only | `bool` | `False` |
+| `include_base` | keyword only | `bool` | `False` |
+| `top_n` | keyword only | `int` | `10` |
+| `top_sort_by` | keyword only | `str` | `"abs_weight"` |
+| `top_q` | keyword only | `float` | `0.05` |
+| `groups` | keyword only | `Mapping[str, Sequence[Any]] \| None` | `None` |
+| `include_contributions` | keyword only | `bool` | `True` |
+| `include_diagnostics` | keyword only | `bool` | `True` |
+| `include_top_observations` | keyword only | `bool` | `True` |
+| `include_group_weights` | keyword only | `bool \| None` | `None` |
 
-The output module recognizes this result directly:
+#### Returns
+
+`DualInterpretationResult`
+
+#### Minimal Use
 
 ```python
-bundle = mf.output.bundle_outputs(
-    forecasts=result,
-    interpretation={"dual": dual},
-    metadata={"study": "inflation_dual"},
-)
-
-manifest = mf.output.write_artifacts(
-    bundle,
-    "results/inflation_dual",
-    layout="grouped",
-)
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.dual_interpretation(...)
 ```
+### episode_group_weights
 
-With `layout="grouped"`, dual tables are written under:
+Qualified name: `macroforecast.interpretation.dual.group_observation_weights`
 
-```text
-interpretation/dual/
-```
-
-The same grouped path is used when a `ForecastResult` contains a dual sidecar:
+#### Signature
 
 ```python
-result = result.with_dual(fit, X_train, y_train, X_test, method="ridge")
-mf.output.write_artifacts(result, "results/dual_run", layout="grouped")
+macroforecast.interpretation_dual.episode_group_weights(weights: pd.DataFrame, groups: Mapping[str, Sequence[Any]], *, y_train: pd.Series | Sequence[float] | None = None) -> pd.DataFrame
 ```
 
-This keeps DualML observation-based explanations separate from SHAP,
-oShapley/PBSV, PDP/ICE/ALE, and other feature-based interpretation outputs.
+#### Description
+
+Aggregate observation weights over named historical groups.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `groups` | positional or keyword | `Mapping[str, Sequence[Any]]` | `required` |
+| `y_train` | keyword only | `pd.Series \| Sequence[float] \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.episode_group_weights(...)
+```
+### forecast_diagnostics
+
+Qualified name: `macroforecast.interpretation.dual.forecast_diagnostics`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.forecast_diagnostics(weights: pd.DataFrame, *, top_q: float = 0.05) -> pd.DataFrame
+```
+
+#### Description
+
+Return concentration, short-position, leverage, and turnover diagnostics.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `top_q` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.forecast_diagnostics(...)
+```
+### group_observation_weights
+
+Qualified name: `macroforecast.interpretation.dual.group_observation_weights`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.group_observation_weights(weights: pd.DataFrame, groups: Mapping[str, Sequence[Any]], *, y_train: pd.Series | Sequence[float] | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Aggregate observation weights over named historical groups.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `groups` | positional or keyword | `Mapping[str, Sequence[Any]]` | `required` |
+| `y_train` | keyword only | `pd.Series \| Sequence[float] \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.group_observation_weights(...)
+```
+### observation_contributions
+
+Qualified name: `macroforecast.interpretation.dual.observation_contributions`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.observation_contributions(weights: pd.DataFrame, y_train: pd.Series | Sequence[float], *, center: bool = False, include_base: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Convert observation weights into observation-level forecast contributions.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `y_train` | positional or keyword | `pd.Series \| Sequence[float]` | `required` |
+| `center` | keyword only | `bool` | `False` |
+| `include_base` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.observation_contributions(...)
+```
+### observation_weights
+
+Qualified name: `macroforecast.interpretation.dual.observation_weights`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.observation_weights(model: Any | None, X_train: pd.DataFrame, X_test: pd.DataFrame | None = None, *, method: str = "auto", lambda_: float = 1e-08, kernel: str = "linear", sigma: float = 1.0, add_intercept: bool = False, ridge_penalty_scale: str = "n_train", normalize: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Return DualML observation/data-portfolio weights.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `model` | positional or keyword | `Any \| None` | `required` |
+| `X_train` | positional or keyword | `pd.DataFrame` | `required` |
+| `X_test` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `method` | keyword only | `str` | `"auto"` |
+| `lambda_` | keyword only | `float` | `1e-08` |
+| `kernel` | keyword only | `str` | `"linear"` |
+| `sigma` | keyword only | `float` | `1.0` |
+| `add_intercept` | keyword only | `bool` | `False` |
+| `ridge_penalty_scale` | keyword only | `str` | `"n_train"` |
+| `normalize` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.observation_weights(...)
+```
+### outcome_contributions
+
+Qualified name: `macroforecast.interpretation.dual.observation_contributions`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.outcome_contributions(weights: pd.DataFrame, y_train: pd.Series | Sequence[float], *, center: bool = False, include_base: bool = False) -> pd.DataFrame
+```
+
+#### Description
+
+Convert observation weights into observation-level forecast contributions.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `y_train` | positional or keyword | `pd.Series \| Sequence[float]` | `required` |
+| `center` | keyword only | `bool` | `False` |
+| `include_base` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.outcome_contributions(...)
+```
+### top_episodes
+
+Qualified name: `macroforecast.interpretation.dual.top_observations`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.top_episodes(weights: pd.DataFrame, *, y_train: pd.Series | Sequence[float] | None = None, n: int = 10, sort_by: str = "abs_weight") -> pd.DataFrame
+```
+
+#### Description
+
+Return the largest historical observations per forecast row.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `y_train` | keyword only | `pd.Series \| Sequence[float] \| None` | `None` |
+| `n` | keyword only | `int` | `10` |
+| `sort_by` | keyword only | `str` | `"abs_weight"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.top_episodes(...)
+```
+### top_observations
+
+Qualified name: `macroforecast.interpretation.dual.top_observations`
+
+#### Signature
+
+```python
+macroforecast.interpretation_dual.top_observations(weights: pd.DataFrame, *, y_train: pd.Series | Sequence[float] | None = None, n: int = 10, sort_by: str = "abs_weight") -> pd.DataFrame
+```
+
+#### Description
+
+Return the largest historical observations per forecast row.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `y_train` | keyword only | `pd.Series \| Sequence[float] \| None` | `None` |
+| `n` | keyword only | `int` | `10` |
+| `sort_by` | keyword only | `str` | `"abs_weight"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.interpretation_dual.top_observations(...)
+```

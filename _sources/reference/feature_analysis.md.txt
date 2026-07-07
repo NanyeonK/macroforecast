@@ -2,586 +2,859 @@
 
 [Back to reference](index.md)
 
-`macroforecast.feature_analysis` inspects feature matrices after
-`macroforecast.feature_engineering`. It does not create new predictors and does
-not fit a forecasting model. Its job is to make the constructed `X` auditable:
-missingness, high correlations, PCA/factor columns, lag/MARX structure, feature
-stage changes, and feature-selection stability.
+Feature-stage diagnostics for factors, lags, MARX transforms, selections, and distribution shift.
 
-`macroforecast.feature_diagnostic` remains available as a compatibility alias.
+## Public Symbols
 
-Accepted feature inputs are:
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `FeatureDiagnosticReport` | class | Container returned by :func:`diagnose_features`. |
+| `compare_feature_stages` | function | Compare feature-like panels across named construction stages. |
+| `custom_feature_diagnostic` | function | Run a user-supplied feature diagnostic and attach macroforecast metadata. |
+| `diagnose_features` | function | Run the standard feature-diagnostic suite on a feature matrix. |
+| `effective_window` | function | Return the nonzero source-observation count for each weighted feature date. |
+| `factor_diagnostics` | function | Summarize factor/component feature columns. |
+| `factor_loadings` | function | Approximate factor loadings as source-column correlations with factors. |
+| `factor_timeseries` | function | Return factor/component columns in long time-series form. |
+| `factor_variance` | function | Return scree-style variance and cumulative variance share by factor group. |
+| `feature_correlation` | function | Return long-form high-correlation feature pairs. |
+| `feature_correlation_matrix` | function | Return a full feature-correlation matrix, optionally cluster-ordered. |
+| `feature_overview` | function | Return shape, missingness, variance, and metadata coverage for features. |
+| `feature_target_correlation` | function | Return feature-to-target correlations. |
+| `lag_autocorrelation` | function | Return ACF or PACF values for lag/window feature columns. |
+| `lag_correlation_decay` | function | Return correlation decay across lag/window features. |
+| `lag_diagnostics` | function | Summarize feature columns that carry lag or window information. |
+| `marx_diagnostics` | function | Summarize MARX-style moving-average lag features. |
+| `marx_weight_decay` | function | Return implied equal lag weights for MARX moving-average features. |
+| `recent_weight_share` | function | Summarize adaptive feature weights into recent lag/lead buckets. |
+| `selection_similarity` | function | Return pairwise feature-selection stability across origins/folds/windows. |
+| `selection_stability` | function | Return selection frequency by feature across folds, windows, or origins. |
+| `stage_distribution_shift` | function | Return distribution-shift diagnostics between adjacent feature stages. |
 
-| Input | Meaning |
-| --- | --- |
-| `FeatureSet` | Uses `FeatureSet.X`, `FeatureSet.feature_metadata`, and `FeatureSet.metadata`. |
-| `pandas.DataFrame` | Uses the frame as `X`; reads `attrs["macroforecast_feature_metadata"]` when present. |
-| `DataBundle`, `DataSpec`, `(DataFrame, metadata)` | Uses the panel as the inspected matrix and carries metadata forward. |
+## Callable And Class Reference
 
-The DataFrame input must satisfy the canonical macroforecast panel contract:
-`DatetimeIndex` named `"date"`, sorted, no duplicate dates, numeric columns,
-finite values or `NaN`, and non-empty shape.
+### FeatureDiagnosticReport
 
-Learned filters and feature builders can also produce weight matrices. For
-example, `filters.albama()` returns `AlbaMAResult.weights`, where rows
-are source observations and columns are target feature dates. `feature_analysis`
-owns the diagnostic summaries of those weights:
+Qualified name: `macroforecast.feature_analysis.core.FeatureDiagnosticReport`
 
-| Callable | Input | Output | Purpose |
+#### Signature
+
+```python
+macroforecast.feature_analysis.FeatureDiagnosticReport(overview: dict[str, Any], correlation: pd.DataFrame | None = None, correlation_matrix: pd.DataFrame | None = None, target_correlation: pd.DataFrame | None = None, factors: pd.DataFrame | None = None, factor_variance: pd.DataFrame | None = None, factor_loadings: pd.DataFrame | None = None, factor_timeseries: pd.DataFrame | None = None, lags: pd.DataFrame | None = None, lag_autocorrelation: pd.DataFrame | None = None, lag_correlation_decay: pd.DataFrame | None = None, marx: pd.DataFrame | None = None, marx_weight_decay: pd.DataFrame | None = None, selection_stability: pd.DataFrame | None = None, selection_similarity: pd.DataFrame | None = None, stage_comparison: pd.DataFrame | None = None, stage_distribution_shift: pd.DataFrame | None = None, metadata: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Container returned by :func:`diagnose_features`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `effective_window(weights, threshold=1e-12)` | square source-by-target weight matrix | `Series` | Count nonzero source observations used at each target date. |
-| `recent_weight_share(weights, mode="one_sided")` | square source-by-target weight matrix | `DataFrame` | Summarize weight mass in recent lag/lead buckets. |
+| `overview` | positional or keyword | `dict[str, Any]` | `required` |
+| `correlation` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `correlation_matrix` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `target_correlation` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `factors` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `factor_variance` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `factor_loadings` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `factor_timeseries` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `lags` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `lag_autocorrelation` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `lag_correlation_decay` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `marx` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `marx_weight_decay` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `selection_stability` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `selection_similarity` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `stage_comparison` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `stage_distribution_shift` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
 
-## Public Flow
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-processed = mf.preprocessing.reprocess(data_spec)
-features = mf.feature_engineering.feature_spec(
-    target="INDPRO",
-    horizons=(1, 3, 6),
-    predictors="all",
-    lags=(0, 1, 2, 3),
-    pca_components=8,
-).fit_transform(processed)
-
-diagnostic = mf.feature_analysis.diagnose_features(
-    features,
-    include_correlation=True,
-    include_correlation_matrix=True,
-    include_lag_autocorrelation=True,
-    selections={"origin_1": ["pc1", "PAYEMS_lag0"]},
-    selection_similarity_metric="jaccard",
-)
-
-albama = mf.filters.albama(inflation, mode="one_sided")
-window = mf.feature_analysis.effective_window(albama.weights)
-shares = mf.feature_analysis.recent_weight_share(albama.weights, mode="one_sided")
+# Construct with the signature above:
+# mf.feature_analysis.FeatureDiagnosticReport(...)
 ```
 
-## effective_window
+#### Dataclass Fields
 
-```python
-macroforecast.feature_analysis.effective_window(
-    weights,
-    *,
-    threshold=1e-12,
-) -> pandas.Series
-```
-
-Input: a square weight matrix whose rows are source observations and whose
-columns are target feature dates. This is the shape returned by
-`AlbaMAResult.weights`.
-
-Output: one value per target date. The value is the number of source
-observations with absolute weight above `threshold`.
-
-## recent_weight_share
-
-```python
-macroforecast.feature_analysis.recent_weight_share(
-    weights,
-    *,
-    mode="one_sided",
-) -> pandas.DataFrame
-```
-
-Input: the same source-by-target weight matrix.
-
-Output for `mode="one_sided"`:
-
-| Column | Meaning |
-| --- | --- |
-| `y_t` | Weight on the target-date observation. |
-| `y_t_minus_1_2` | Weight on lags 1 and 2. |
-| `y_t_minus_3_5` | Weight on lags 3 through 5. |
-| `y_t_minus_6_plus` | Weight on lags 6 and older. |
-| `future_weight` | Weight assigned to future observations; should be zero for one-sided features. |
-
-Output for `mode="two_sided"` replaces `future_weight` with forward buckets
-`y_t_plus_1_2` and `y_t_plus_3_plus`.
-
-## diagnose_features
-
-```python
-macroforecast.feature_analysis.diagnose_features(
-    data,
-    *,
-    feature_metadata: pandas.DataFrame | None = None,
-    stages: Mapping[str, object] | None = None,
-    include_correlation: bool = False,
-    include_correlation_matrix: bool = False,
-    correlation_method: str = "pearson",
-    correlation_threshold: float | None = 0.9,
-    correlation_min_periods: int = 3,
-    correlation_order: str = "original",
-    correlation_scope: str = "all",
-    target=None,
-    include_target_correlation: bool = False,
-    high_missing_threshold: float = 0.5,
-    include_factors: bool = True,
-    include_factor_variance: bool = True,
-    include_factor_loadings: bool = False,
-    include_factor_timeseries: bool = False,
-    factor_source_data=None,
-    include_lags: bool = True,
-    include_lag_autocorrelation: bool = False,
-    include_lag_correlation_decay: bool = False,
-    include_marx: bool = True,
-    include_marx_weight_decay: bool = True,
-    include_stage_distribution_shift: bool = True,
-    selections: Mapping | Sequence | pandas.DataFrame | None = None,
-    selection_similarity_metric: str | None = None,
-) -> FeatureDiagnosticReport
-```
-
-### Input
-
-| Name | Type | Default | Choices |
-| --- | --- | --- | --- |
-| `data` | feature input | required | `FeatureSet`, `DataFrame`, `DataBundle`, `DataSpec`, or `(DataFrame, metadata)`. |
-| `feature_metadata` | `DataFrame` or `None` | auto | Overrides metadata stored on the input. |
-| `stages` | mapping or `None` | `None` | Named feature-like panels to compare in construction order. |
-| `include_correlation` | `bool` | `False` | Whether to compute high-correlation feature pairs. |
-| `include_correlation_matrix` | `bool` | `False` | Include a full correlation matrix. |
-| `correlation_method` | `str` | `"pearson"` | `"pearson"`, `"spearman"`, or `"kendall"`. |
-| `correlation_threshold` | float or `None` | `0.9` | Pair filter. Uses absolute correlation when `feature_correlation(..., absolute=True)`. `None` returns all non-missing pairs. |
-| `correlation_min_periods` | positive int | `3` | Minimum overlapping observations for correlation. |
-| `correlation_order` | `str` | `"original"` | `"original"` or `"clustered"` for the full correlation matrix. |
-| `correlation_scope` | `str` | `"all"` | `"all"`, `"within_block"`, or `"cross_block"`. Block comes from feature metadata `block`, then operation/source fallback. |
-| `target` | Series, DataFrame, array-like, string, or `None` | `None` | Target used by `include_target_correlation`. A string refers to a column in `data`. |
-| `include_target_correlation` | `bool` | `False` | Include feature-to-target correlation rows. |
-| `high_missing_threshold` | float | `0.5` | Features with missing-rate above this value are flagged in `overview`. |
-| `include_factors` | `bool` | `True` | Include PCA/factor/component diagnostics. |
-| `include_factor_variance` | `bool` | `True` | Include scree/cumulative-variance table for detected factor columns. |
-| `include_factor_loadings` | `bool` | `False` | Include source-factor correlation loadings. Use `factor_source_data` for original source variables. |
-| `include_factor_timeseries` | `bool` | `False` | Include long-form factor-score time series. |
-| `include_lags` | `bool` | `True` | Include lag/window diagnostics. |
-| `include_lag_autocorrelation` | `bool` | `False` | Include ACF table for detected lag/window columns. |
-| `include_lag_correlation_decay` | `bool` | `False` | Include lag-correlation decay against target or lag-0/current source columns. |
-| `include_marx` | `bool` | `True` | Include MARX-style moving-average lag diagnostics. |
-| `include_marx_weight_decay` | `bool` | `True` | Include equal lag weights implied by MARX moving-average windows. |
-| `include_stage_distribution_shift` | `bool` | `True` | When `stages` is supplied, include adjacent-stage distribution-shift diagnostics. |
-| `selections` | mapping, sequence, DataFrame, or `None` | `None` | Feature selections by origin/fold/window for stability counts. |
-| `selection_similarity_metric` | `str` or `None` | `None` | `"jaccard"` or `"kuncheva"` for pairwise selection similarity. |
-
-### Output
-
-Returns `FeatureDiagnosticReport`.
-
-| Field | Type | Meaning |
+| Field | Type | Default |
 | --- | --- | --- |
-| `overview` | `dict` | Shape, date range, missingness, zero-variance features, operation/source counts, and feature-metadata coverage. |
-| `correlation` | `DataFrame` or `None` | Long-form feature pairs above the requested correlation threshold. |
-| `correlation_matrix` | `DataFrame` or `None` | Full correlation matrix, optionally cluster-ordered. |
-| `target_correlation` | `DataFrame` or `None` | Feature-to-target correlation rows. |
-| `factors` | `DataFrame` or `None` | PCA/factor/component feature diagnostics. |
-| `factor_variance` | `DataFrame` or `None` | Scree-style variance and cumulative variance share. |
-| `factor_loadings` | `DataFrame` or `None` | Source-factor correlations for loading heatmaps. |
-| `factor_timeseries` | `DataFrame` or `None` | Long-form factor/component values by date. |
-| `lags` | `DataFrame` or `None` | Lag/window feature diagnostics. |
-| `lag_autocorrelation` | `DataFrame` or `None` | ACF/PACF style lag-feature autocorrelation table. |
-| `lag_correlation_decay` | `DataFrame` or `None` | Correlation decay by lag/window. |
-| `marx` | `DataFrame` or `None` | MARX-style moving-average lag diagnostics. |
-| `marx_weight_decay` | `DataFrame` or `None` | Equal lag weights implied by MARX windows. |
-| `selection_stability` | `DataFrame` or `None` | Per-feature selection frequency across origins/folds/windows. |
-| `selection_similarity` | `DataFrame` or `None` | Pairwise Jaccard or Kuncheva stability across origins/folds/windows. |
-| `stage_comparison` | `DataFrame` or `None` | Shape/missingness/column-delta comparison across named feature stages. |
-| `stage_distribution_shift` | `DataFrame` or `None` | Adjacent-stage mean, standard-deviation, missingness, and KS-statistic shifts. |
-| `metadata` | `dict` | Input metadata plus a compact `feature_analysis` stage. |
+| `overview` | `dict[str, Any]` | `required` |
+| `correlation` | `pd.DataFrame \| None` | `None` |
+| `correlation_matrix` | `pd.DataFrame \| None` | `None` |
+| `target_correlation` | `pd.DataFrame \| None` | `None` |
+| `factors` | `pd.DataFrame \| None` | `None` |
+| `factor_variance` | `pd.DataFrame \| None` | `None` |
+| `factor_loadings` | `pd.DataFrame \| None` | `None` |
+| `factor_timeseries` | `pd.DataFrame \| None` | `None` |
+| `lags` | `pd.DataFrame \| None` | `None` |
+| `lag_autocorrelation` | `pd.DataFrame \| None` | `None` |
+| `lag_correlation_decay` | `pd.DataFrame \| None` | `None` |
+| `marx` | `pd.DataFrame \| None` | `None` |
+| `marx_weight_decay` | `pd.DataFrame \| None` | `None` |
+| `selection_stability` | `pd.DataFrame \| None` | `None` |
+| `selection_similarity` | `pd.DataFrame \| None` | `None` |
+| `stage_comparison` | `pd.DataFrame \| None` | `None` |
+| `stage_distribution_shift` | `pd.DataFrame \| None` | `None` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
 
-`FeatureDiagnosticReport.to_dict()` converts tables to JSON-ready nested
-dictionaries/lists.
+#### Public Methods
 
-### Metadata
-
-`diagnose_features(...)` attaches one compact stage:
-
-```python
-diagnostic.metadata["feature_analysis"]
-```
-
-The stage records:
-
-| Key | Meaning |
-| --- | --- |
-| `overview` | Compact counts: observations, features, missing cells, high-missing feature count, zero-variance feature count. |
-| `options` | Correlation, factor, lag, MARX, selection, and stage-comparison choices. |
-| `tables` | Number of rows generated by each diagnostic table. |
-
-Returned diagnostic DataFrames also carry
-`attrs["macroforecast_metadata"] == diagnostic.metadata`.
-
-## Helper Functions
-
-### feature_overview
-
-```python
-macroforecast.feature_analysis.feature_overview(
-    data,
-    *,
-    feature_metadata: pandas.DataFrame | None = None,
-    high_missing_threshold: float = 0.5,
-) -> dict
-```
-
-Returns one compact dictionary. It is the quickest check for whether the feature
-matrix is sparse, constant, or missing feature metadata.
-
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
 ### compare_feature_stages
 
-```python
-macroforecast.feature_analysis.compare_feature_stages(
-    stages: Mapping[str, object] | None = None,
-    **named_stages,
-) -> pandas.DataFrame
-```
+Qualified name: `macroforecast.feature_analysis.core.compare_feature_stages`
 
-Compares named feature-like panels in order. The table reports observations,
-feature counts, missingness, zero-variance counts, and column additions/removals
-relative to the previous stage.
-
-Example:
+#### Signature
 
 ```python
-comparison = mf.feature_analysis.compare_feature_stages(
-    {
-        "base": processed.panel[["PAYEMS", "INDPRO"]],
-        "lagged": mf.feature_engineering.lag(processed, columns=["PAYEMS"], lags=(0, 1, 2)),
-    }
-)
+macroforecast.feature_analysis.compare_feature_stages(stages: Mapping[str, Any] | None = None, **named_stages: Any) -> pd.DataFrame
 ```
 
-### stage_distribution_shift
+#### Description
+
+Compare feature-like panels across named construction stages.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `stages` | positional or keyword | `Mapping[str, Any] \| None` | `None` |
+| `named_stages` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-macroforecast.feature_analysis.stage_distribution_shift(
-    stages: Mapping[str, object] | None = None,
-    *,
-    columns=None,
-    min_obs: int = 3,
-    **named_stages,
-) -> pandas.DataFrame
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.compare_feature_stages(...)
 ```
-
-Compares adjacent named stages column by column. Output columns include
-`stage_a`, `stage_b`, `feature`, observation counts, means, standard
-deviations, `mean_shift`, `sd_ratio`, missing-rate shift, and a two-sample
-KS-statistic. Use it to check whether scaling, lag construction, factor
-construction, or selection changed feature distributions unexpectedly.
-
-### feature_correlation
-
-```python
-macroforecast.feature_analysis.feature_correlation(
-    data,
-    *,
-    feature_metadata: pandas.DataFrame | None = None,
-    method: str = "pearson",
-    min_periods: int = 3,
-    threshold: float | None = 0.9,
-    absolute: bool = True,
-    max_pairs: int | None = None,
-    scope: str = "all",
-    block_column: str = "block",
-) -> pandas.DataFrame
-```
-
-Returns long-form pairs:
-
-| Column | Meaning |
-| --- | --- |
-| `feature_a`, `feature_b` | Pair names. |
-| `correlation`, `abs_correlation` | Signed and absolute correlation. |
-| `block_a`, `block_b` | Block labels from feature metadata when available. |
-| `operation_a`, `operation_b` | Feature operations from metadata when available. |
-| `source_a`, `source_b` | Source columns from metadata when available. |
-
-Use `threshold=None` for a full long-form correlation table.
-Use `scope="within_block"` or `scope="cross_block"` to restrict pairs using
-metadata blocks.
-
-### feature_target_correlation
-
-```python
-macroforecast.feature_analysis.feature_target_correlation(
-    data,
-    target,
-    *,
-    feature_metadata=None,
-    method: str = "pearson",
-    min_periods: int = 3,
-    absolute: bool = True,
-    max_features: int | None = None,
-) -> pandas.DataFrame
-```
-
-Returns one row per feature with correlation against the supplied target.
-Output columns include `feature`, `target`, `correlation`,
-`abs_correlation`, `operation`, `source`, `block`, and `n_obs`.
-
-### feature_correlation_matrix
-
-```python
-macroforecast.feature_analysis.feature_correlation_matrix(
-    data,
-    *,
-    method: str = "pearson",
-    min_periods: int = 3,
-    order: str = "original",
-    absolute_distance: bool = True,
-) -> pandas.DataFrame
-```
-
-Returns a square correlation matrix. `order="clustered"` reorders rows and
-columns so highly correlated features are adjacent; this is the callable table
-behind a clustered heatmap.
-
-### factor_diagnostics
-
-```python
-macroforecast.feature_analysis.factor_diagnostics(
-    data,
-    *,
-    feature_metadata: pandas.DataFrame | None = None,
-    operations: Sequence[str] = (...),
-    prefixes: Sequence[str] = ("pc", "factor", "maf"),
-) -> pandas.DataFrame
-```
-
-Detects factor/component features using either feature metadata
-(`operation in {"pca", "group_pca", "maf", ...}` or a non-null `component`) or
-name prefixes such as `pc1`, `factor1`, and `maf1`.
-
-Returned columns include `feature`, `group`, `operation`, `block`, `source`,
-`component`, `n_obs`, `missing_rate`, `mean`, `sd`, `variance`, and
-`variance_share`. `variance_share` is a diagnostic share of variance within the
-detected factor group. It is not the PCA model's explained-variance ratio unless
-the upstream transform recorded that exact quantity.
-
-### factor_variance
-
-```python
-macroforecast.feature_analysis.factor_variance(data, *, feature_metadata=None)
-```
-
-Returns scree-style rows with `variance_share` and
-`cumulative_variance_share`. This is the callable table behind scree and
-cumulative-variance views.
-
-### factor_loadings
-
-```python
-macroforecast.feature_analysis.factor_loadings(
-    data,
-    *,
-    source_data=None,
-    feature_metadata=None,
-    method="pearson",
-    max_sources=None,
-)
-```
-
-Approximates factor loadings as correlations between source variables and
-factor columns. Supply `source_data` when `data` contains only factor scores.
-Returned rows are long-form: `factor`, `source`, `loading`, `abs_loading`.
-
-### factor_timeseries
-
-```python
-macroforecast.feature_analysis.factor_timeseries(
-    data,
-    *,
-    feature_metadata=None,
-    operations=(...),
-    prefixes=("pc", "factor", "maf"),
-    max_factors=None,
-) -> pandas.DataFrame
-```
-
-Returns detected factor/component columns in long time-series form. Output
-columns are `date`, `factor`, `value`, `group`, `operation`, `component`, and
-`source`. Use this for factor-score line plots or factor stability checks
-without reconstructing the feature metadata manually.
-
-### lag_diagnostics
-
-```python
-macroforecast.feature_analysis.lag_diagnostics(
-    data,
-    *,
-    feature_metadata: pandas.DataFrame | None = None,
-    operations: Sequence[str] = (...),
-) -> pandas.DataFrame
-```
-
-Detects lag/window features using metadata fields `lag`, `window`,
-`operation`, or feature names such as `x_lag3`, `x_roll6_mean`, and
-`x_ma4_lag1`.
-
-Returned columns include `feature`, `operation`, `source`, `lag`, `window`,
-`n_obs`, `missing_rate`, `first_valid`, and `last_valid`.
-
-### lag_autocorrelation
-
-```python
-macroforecast.feature_analysis.lag_autocorrelation(
-    data,
-    *,
-    max_lag: int = 12,
-    kind: str = "acf",
-) -> pandas.DataFrame
-```
-
-Returns ACF or PACF values for detected lag/window feature columns. This is the
-callable table behind autocorrelation-per-lag and partial-autocorrelation views.
-
-### lag_correlation_decay
-
-```python
-macroforecast.feature_analysis.lag_correlation_decay(
-    data,
-    *,
-    target=None,
-    method="pearson",
-) -> pandas.DataFrame
-```
-
-Returns correlation decay by lag/window. If `target` is supplied, each lag
-feature is correlated with that target. Otherwise, each lag feature is compared
-with its same-source lag-0/current column when available.
-
-### marx_diagnostics
-
-```python
-macroforecast.feature_analysis.marx_diagnostics(
-    data,
-    *,
-    feature_metadata: pandas.DataFrame | None = None,
-) -> pandas.DataFrame
-```
-
-Detects MARX-style columns named like `x_ma4_lag1`. These are moving-average
-lag features, not PCA. The returned table adds `marx_formula` using the
-recorded starting lag and window. For example:
-
-```text
-mean(x[t-1]...x[t-4])
-```
-
-For `x_ma4_lag2`, the formula is `mean(x[t-2]...x[t-5])`.
-
-### marx_weight_decay
-
-```python
-macroforecast.feature_analysis.marx_weight_decay(
-    data,
-    *,
-    feature_metadata=None,
-) -> pandas.DataFrame
-```
-
-Returns the equal lag weights implied by each MARX moving-average feature.
-For `x_ma4_lag1`, the table has four rows with weight `0.25` for lags 1
-through 4 and cumulative weights from `0.25` to `1.0`. For `x_ma4_lag2`,
-the lag rows are 2 through 5, with the same equal weights.
-
-### selection_stability
-
-```python
-macroforecast.feature_analysis.selection_stability(
-    selections,
-    *,
-    all_features: Iterable[str] | None = None,
-) -> pandas.DataFrame
-```
-
-Accepts any of these inputs:
-
-| Input form | Example |
-| --- | --- |
-| Mapping of origin to selected names | `{"2020-01": ["x1", "x2"], "2020-02": ["x2"]}` |
-| Sequence of selected-name iterables | `[["x1"], ["x1", "x3"]]` |
-| Indicator DataFrame | rows are origins, columns are features, truthy values mean selected |
-| Long DataFrame | columns `feature`, `selected`, and optionally `origin`, `window`, `fold`, or `split` |
-
-The result is indexed by `feature` and includes `selected_count`,
-`selection_rate`, `n_origins`, `first_selected_origin`, and
-`last_selected_origin`.
-
-### selection_similarity
-
-```python
-macroforecast.feature_analysis.selection_similarity(
-    selections,
-    *,
-    metric: str = "jaccard",
-    all_features=None,
-    n_features=None,
-) -> pandas.DataFrame
-```
-
-Returns pairwise stability across origins/folds/windows. `metric="jaccard"`
-uses overlap divided by union. `metric="kuncheva"` adjusts overlap for expected
-random overlap using the declared or inferred feature universe size. Kuncheva
-stability is a fixed-selection-size measure; when two windows select different
-numbers of features, `score` is missing and the output still reports
-`selected_a`, `selected_b`, and `overlap`.
-
 ### custom_feature_diagnostic
 
-```python
-macroforecast.feature_analysis.custom_feature_diagnostic(
-    data,
-    func,
-    *,
-    name=None,
-    feature_metadata=None,
-    metadata=None,
-    **params,
-) -> pandas.DataFrame
-```
+Qualified name: `macroforecast.feature_analysis.core.custom_feature_diagnostic`
 
-Runs one user diagnostic on a feature matrix or `FeatureSet`. This is for
-inspection only; it does not create new predictors.
-
-Callable signature:
+#### Signature
 
 ```python
-func(X, *, feature_metadata=None, metadata=None, **params)
+macroforecast.feature_analysis.custom_feature_diagnostic(data: Any, func: Callable[..., Any], *, name: str | None = None, feature_metadata: pd.DataFrame | None = None, metadata: Mapping[str, Any] | None = None, **params: Any) -> pd.DataFrame
 ```
 
-Accepted callable outputs are `DataFrame`, `Series`, mapping, or a sequence
-convertible to a `DataFrame`. The returned table carries:
+#### Description
 
-| Attr | Meaning |
-| --- | --- |
-| `macroforecast_metadata_schema.kind` | Always `custom_feature_diagnostic`. |
-| `macroforecast_metadata_schema.method` | `name` or callable name. |
-| `macroforecast_metadata` | Input metadata plus a `custom_feature_diagnostic` stage. |
+Run a user-supplied feature diagnostic and attach macroforecast metadata.
 
-Example:
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `name` | keyword only | `str \| None` | `None` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
 
 ```python
-def block_missingness(X, *, feature_metadata=None, metadata=None, block="all"):
-    return pd.DataFrame(
-        [{"block": block, "missing_rate": float(X.isna().mean().mean())}]
-    )
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.custom_feature_diagnostic(...)
+```
+### diagnose_features
 
-diag = mf.feature_analysis.custom_feature_diagnostic(
-    features,
-    block_missingness,
-    name="block_missingness",
-    block="rates",
-)
+Qualified name: `macroforecast.feature_analysis.core.diagnose_features`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.diagnose_features(data: Any, *, feature_metadata: pd.DataFrame | None = None, stages: Mapping[str, Any] | None = None, include_correlation: bool = False, include_correlation_matrix: bool = False, correlation_method: CorrelationMethod = "pearson", correlation_threshold: float | None = 0.9, correlation_min_periods: int = 3, correlation_order: CorrelationOrder = "original", correlation_scope: CorrelationScope = "all", target: Any | None = None, include_target_correlation: bool = False, high_missing_threshold: float = 0.5, include_factors: bool = True, include_factor_variance: bool = True, include_factor_loadings: bool = False, include_factor_timeseries: bool = False, factor_source_data: Any | None = None, include_lags: bool = True, include_lag_autocorrelation: bool = False, include_lag_correlation_decay: bool = False, include_marx: bool = True, include_marx_weight_decay: bool = True, include_stage_distribution_shift: bool = True, selections: Mapping[Any, Iterable[str]] | Sequence[Iterable[str]] | pd.DataFrame | None = None, selection_similarity_metric: SelectionSimilarityMetric | None = None) -> FeatureDiagnosticReport
 ```
 
-## Boundary
+#### Description
 
-| Question | Use |
-| --- | --- |
-| Create predictors and target matrices | `mf.feature_engineering` |
-| Inspect feature matrix quality and metadata | `mf.feature_analysis` |
-| Compare raw and preprocessed panels | `mf.data_analysis` |
-| Inspect fitted model residuals or tuning trace | `mf.forecast_analysis` |
+Run the standard feature-diagnostic suite on a feature matrix.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `stages` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `include_correlation` | keyword only | `bool` | `False` |
+| `include_correlation_matrix` | keyword only | `bool` | `False` |
+| `correlation_method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `correlation_threshold` | keyword only | `float \| None` | `0.9` |
+| `correlation_min_periods` | keyword only | `int` | `3` |
+| `correlation_order` | keyword only | `CorrelationOrder` | `"original"` |
+| `correlation_scope` | keyword only | `CorrelationScope` | `"all"` |
+| `target` | keyword only | `Any \| None` | `None` |
+| `include_target_correlation` | keyword only | `bool` | `False` |
+| `high_missing_threshold` | keyword only | `float` | `0.5` |
+| `include_factors` | keyword only | `bool` | `True` |
+| `include_factor_variance` | keyword only | `bool` | `True` |
+| `include_factor_loadings` | keyword only | `bool` | `False` |
+| `include_factor_timeseries` | keyword only | `bool` | `False` |
+| `factor_source_data` | keyword only | `Any \| None` | `None` |
+| `include_lags` | keyword only | `bool` | `True` |
+| `include_lag_autocorrelation` | keyword only | `bool` | `False` |
+| `include_lag_correlation_decay` | keyword only | `bool` | `False` |
+| `include_marx` | keyword only | `bool` | `True` |
+| `include_marx_weight_decay` | keyword only | `bool` | `True` |
+| `include_stage_distribution_shift` | keyword only | `bool` | `True` |
+| `selections` | keyword only | `Mapping[Any, Iterable[str]] \| Sequence[Iterable[str]] \| pd.DataFrame \| None` | `None` |
+| `selection_similarity_metric` | keyword only | `SelectionSimilarityMetric \| None` | `None` |
+
+#### Returns
+
+`FeatureDiagnosticReport`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.diagnose_features(...)
+```
+### effective_window
+
+Qualified name: `macroforecast.feature_analysis.core.effective_window`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.effective_window(weights: Any, *, threshold: float = 1e-12) -> pd.Series
+```
+
+#### Description
+
+Return the nonzero source-observation count for each weighted feature date.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `Any` | `required` |
+| `threshold` | keyword only | `float` | `1e-12` |
+
+#### Returns
+
+`pd.Series`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.effective_window(...)
+```
+### factor_diagnostics
+
+Qualified name: `macroforecast.feature_analysis.core.factor_diagnostics`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.factor_diagnostics(data: Any, *, feature_metadata: pd.DataFrame | None = None, operations: Sequence[str] = ('pca', 'group_pca', 'maf', 'factor', 'factor_lag', 'scaled_pca', 'supervised_pca', 'supervised_scaled_pca'), prefixes: Sequence[str] = ('pc', 'factor', 'maf')) -> pd.DataFrame
+```
+
+#### Description
+
+Summarize factor/component feature columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `operations` | keyword only | `Sequence[str]` | `("pca", "group_pca", "maf", "factor", "factor_lag", "scaled_p...` |
+| `prefixes` | keyword only | `Sequence[str]` | `("pc", "factor", "maf")` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.factor_diagnostics(...)
+```
+### factor_loadings
+
+Qualified name: `macroforecast.feature_analysis.core.factor_loadings`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.factor_loadings(data: Any, *, source_data: Any | None = None, feature_metadata: pd.DataFrame | None = None, operations: Sequence[str] = ('pca', 'group_pca', 'maf', 'factor', 'factor_lag', 'scaled_pca', 'supervised_pca', 'supervised_scaled_pca'), prefixes: Sequence[str] = ('pc', 'factor', 'maf'), method: CorrelationMethod = "pearson", max_sources: int | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Approximate factor loadings as source-column correlations with factors.
+
+If `source_data` is supplied, its numeric columns are treated as original
+source variables. Otherwise, non-factor columns in `data` are used. This
+keeps the callable pandas-native without requiring a fitted PCA object.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `source_data` | keyword only | `Any \| None` | `None` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `operations` | keyword only | `Sequence[str]` | `("pca", "group_pca", "maf", "factor", "factor_lag", "scaled_p...` |
+| `prefixes` | keyword only | `Sequence[str]` | `("pc", "factor", "maf")` |
+| `method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `max_sources` | keyword only | `int \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.factor_loadings(...)
+```
+### factor_timeseries
+
+Qualified name: `macroforecast.feature_analysis.core.factor_timeseries`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.factor_timeseries(data: Any, *, feature_metadata: pd.DataFrame | None = None, operations: Sequence[str] = ('pca', 'group_pca', 'maf', 'factor', 'factor_lag', 'scaled_pca', 'supervised_pca', 'supervised_scaled_pca'), prefixes: Sequence[str] = ('pc', 'factor', 'maf'), max_factors: int | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Return factor/component columns in long time-series form.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `operations` | keyword only | `Sequence[str]` | `("pca", "group_pca", "maf", "factor", "factor_lag", "scaled_p...` |
+| `prefixes` | keyword only | `Sequence[str]` | `("pc", "factor", "maf")` |
+| `max_factors` | keyword only | `int \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.factor_timeseries(...)
+```
+### factor_variance
+
+Qualified name: `macroforecast.feature_analysis.core.factor_variance`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.factor_variance(data: Any, *, feature_metadata: pd.DataFrame | None = None, operations: Sequence[str] = ('pca', 'group_pca', 'maf', 'factor', 'factor_lag', 'scaled_pca', 'supervised_pca', 'supervised_scaled_pca'), prefixes: Sequence[str] = ('pc', 'factor', 'maf')) -> pd.DataFrame
+```
+
+#### Description
+
+Return scree-style variance and cumulative variance share by factor group.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `operations` | keyword only | `Sequence[str]` | `("pca", "group_pca", "maf", "factor", "factor_lag", "scaled_p...` |
+| `prefixes` | keyword only | `Sequence[str]` | `("pc", "factor", "maf")` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.factor_variance(...)
+```
+### feature_correlation
+
+Qualified name: `macroforecast.feature_analysis.core.feature_correlation`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.feature_correlation(data: Any, *, feature_metadata: pd.DataFrame | None = None, method: CorrelationMethod = "pearson", min_periods: int = 3, threshold: float | None = 0.9, absolute: bool = True, max_pairs: int | None = None, scope: CorrelationScope = "all", block_column: str = "block") -> pd.DataFrame
+```
+
+#### Description
+
+Return long-form high-correlation feature pairs.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `min_periods` | keyword only | `int` | `3` |
+| `threshold` | keyword only | `float \| None` | `0.9` |
+| `absolute` | keyword only | `bool` | `True` |
+| `max_pairs` | keyword only | `int \| None` | `None` |
+| `scope` | keyword only | `CorrelationScope` | `"all"` |
+| `block_column` | keyword only | `str` | `"block"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.feature_correlation(...)
+```
+### feature_correlation_matrix
+
+Qualified name: `macroforecast.feature_analysis.core.feature_correlation_matrix`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.feature_correlation_matrix(data: Any, *, method: CorrelationMethod = "pearson", min_periods: int = 3, order: CorrelationOrder = "original", absolute_distance: bool = True) -> pd.DataFrame
+```
+
+#### Description
+
+Return a full feature-correlation matrix, optionally cluster-ordered.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `min_periods` | keyword only | `int` | `3` |
+| `order` | keyword only | `CorrelationOrder` | `"original"` |
+| `absolute_distance` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.feature_correlation_matrix(...)
+```
+### feature_overview
+
+Qualified name: `macroforecast.feature_analysis.core.feature_overview`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.feature_overview(data: Any, *, feature_metadata: pd.DataFrame | None = None, high_missing_threshold: float = 0.5) -> dict[str, Any]
+```
+
+#### Description
+
+Return shape, missingness, variance, and metadata coverage for features.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `high_missing_threshold` | keyword only | `float` | `0.5` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.feature_overview(...)
+```
+### feature_target_correlation
+
+Qualified name: `macroforecast.feature_analysis.core.feature_target_correlation`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.feature_target_correlation(data: Any, target: Any, *, feature_metadata: pd.DataFrame | None = None, method: CorrelationMethod = "pearson", min_periods: int = 3, absolute: bool = True, max_features: int | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Return feature-to-target correlations.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `target` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `method` | keyword only | `CorrelationMethod` | `"pearson"` |
+| `min_periods` | keyword only | `int` | `3` |
+| `absolute` | keyword only | `bool` | `True` |
+| `max_features` | keyword only | `int \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.feature_target_correlation(...)
+```
+### lag_autocorrelation
+
+Qualified name: `macroforecast.feature_analysis.core.lag_autocorrelation`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.lag_autocorrelation(data: Any, *, feature_metadata: pd.DataFrame | None = None, columns: Iterable[str] | None = None, max_lag: int = 12, kind: AutocorrelationKind = "acf", operations: Sequence[str] = ('lag', 'mixed_frequency_lag', 'seasonal_lag', 'factor_lag', 'rolling_mean', 'moving_average', 'marx')) -> pd.DataFrame
+```
+
+#### Description
+
+Return ACF or PACF values for lag/window feature columns.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `max_lag` | keyword only | `int` | `12` |
+| `kind` | keyword only | `AutocorrelationKind` | `"acf"` |
+| `operations` | keyword only | `Sequence[str]` | `("lag", "mixed_frequency_lag", "seasonal_lag", "factor_lag", ...` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.lag_autocorrelation(...)
+```
+### lag_correlation_decay
+
+Qualified name: `macroforecast.feature_analysis.core.lag_correlation_decay`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.lag_correlation_decay(data: Any, *, target: str | pd.Series | None = None, feature_metadata: pd.DataFrame | None = None, operations: Sequence[str] = ('lag', 'mixed_frequency_lag', 'seasonal_lag', 'factor_lag', 'rolling_mean', 'moving_average', 'marx'), method: CorrelationMethod = "pearson") -> pd.DataFrame
+```
+
+#### Description
+
+Return correlation decay across lag/window features.
+
+If `target` is supplied, lag features are correlated with that target. If
+not, each lag feature is correlated with the same source's lag-0/current
+column when one is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `target` | keyword only | `str \| pd.Series \| None` | `None` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `operations` | keyword only | `Sequence[str]` | `("lag", "mixed_frequency_lag", "seasonal_lag", "factor_lag", ...` |
+| `method` | keyword only | `CorrelationMethod` | `"pearson"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.lag_correlation_decay(...)
+```
+### lag_diagnostics
+
+Qualified name: `macroforecast.feature_analysis.core.lag_diagnostics`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.lag_diagnostics(data: Any, *, feature_metadata: pd.DataFrame | None = None, operations: Sequence[str] = ('lag', 'mixed_frequency_lag', 'seasonal_lag', 'factor_lag', 'rolling_mean', 'moving_average', 'marx')) -> pd.DataFrame
+```
+
+#### Description
+
+Summarize feature columns that carry lag or window information.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+| `operations` | keyword only | `Sequence[str]` | `("lag", "mixed_frequency_lag", "seasonal_lag", "factor_lag", ...` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.lag_diagnostics(...)
+```
+### marx_diagnostics
+
+Qualified name: `macroforecast.feature_analysis.core.marx_diagnostics`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.marx_diagnostics(data: Any, *, feature_metadata: pd.DataFrame | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Summarize MARX-style moving-average lag features.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.marx_diagnostics(...)
+```
+### marx_weight_decay
+
+Qualified name: `macroforecast.feature_analysis.core.marx_weight_decay`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.marx_weight_decay(data: Any, *, feature_metadata: pd.DataFrame | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Return implied equal lag weights for MARX moving-average features.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `data` | positional or keyword | `Any` | `required` |
+| `feature_metadata` | keyword only | `pd.DataFrame \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.marx_weight_decay(...)
+```
+### recent_weight_share
+
+Qualified name: `macroforecast.feature_analysis.core.recent_weight_share`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.recent_weight_share(weights: Any, *, mode: str = "one_sided") -> pd.DataFrame
+```
+
+#### Description
+
+Summarize adaptive feature weights into recent lag/lead buckets.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `weights` | positional or keyword | `Any` | `required` |
+| `mode` | keyword only | `str` | `"one_sided"` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.recent_weight_share(...)
+```
+### selection_similarity
+
+Qualified name: `macroforecast.feature_analysis.core.selection_similarity`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.selection_similarity(selections: Mapping[Any, Iterable[str]] | Sequence[Iterable[str]] | pd.DataFrame, *, metric: SelectionSimilarityMetric = "jaccard", all_features: Iterable[str] | None = None, n_features: int | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Return pairwise feature-selection stability across origins/folds/windows.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `selections` | positional or keyword | `Mapping[Any, Iterable[str]] \| Sequence[Iterable[str]] \| pd.DataFrame` | `required` |
+| `metric` | keyword only | `SelectionSimilarityMetric` | `"jaccard"` |
+| `all_features` | keyword only | `Iterable[str] \| None` | `None` |
+| `n_features` | keyword only | `int \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.selection_similarity(...)
+```
+### selection_stability
+
+Qualified name: `macroforecast.feature_analysis.core.selection_stability`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.selection_stability(selections: Mapping[Any, Iterable[str]] | Sequence[Iterable[str]] | pd.DataFrame, *, all_features: Iterable[str] | None = None) -> pd.DataFrame
+```
+
+#### Description
+
+Return selection frequency by feature across folds, windows, or origins.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `selections` | positional or keyword | `Mapping[Any, Iterable[str]] \| Sequence[Iterable[str]] \| pd.DataFrame` | `required` |
+| `all_features` | keyword only | `Iterable[str] \| None` | `None` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.selection_stability(...)
+```
+### stage_distribution_shift
+
+Qualified name: `macroforecast.feature_analysis.core.stage_distribution_shift`
+
+#### Signature
+
+```python
+macroforecast.feature_analysis.stage_distribution_shift(stages: Mapping[str, Any] | None = None, *, columns: Iterable[str] | None = None, min_obs: int = 3, **named_stages: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return distribution-shift diagnostics between adjacent feature stages.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `stages` | positional or keyword | `Mapping[str, Any] \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `min_obs` | keyword only | `int` | `3` |
+| `named_stages` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_analysis.stage_distribution_shift(...)
+```

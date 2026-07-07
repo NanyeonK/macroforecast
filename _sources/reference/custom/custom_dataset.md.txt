@@ -1,90 +1,231 @@
-# custom_dataset
+# Custom Dataset
 
 [Back to custom extensions](index.md)
 
-Use custom data functions when the panel does not come from FRED-MD, FRED-QD,
-or FRED-SD. The output must still be a canonical `DataBundle`: a date-indexed
-numeric panel plus metadata that later stages can read.
+This page is generated from the live callable signatures.
 
-## Function Choices
+## Callable Reference
 
-| Function | Input | Output | Use case |
+### custom_dataset
+
+Qualified name: `macroforecast.data.panel.custom_dataset`
+
+#### Signature
+
+```python
+macroforecast.data.custom_dataset(frame: pd.DataFrame, *, date: str | None = None, columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", source_family: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, transform_codes: Mapping[str, int] | None = None, metadata: Mapping[str, Any] | None = None, strict: bool = True) -> DataBundle
+```
+
+#### Description
+
+Build a canonical custom ``DataBundle`` from an in-memory DataFrame.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `mf.data.custom_dataset(...)` | in-memory `DataFrame` | `DataBundle` | User code already loaded the data. |
-| `mf.data.load_custom_csv(...)` | CSV path | `DataBundle` | File source is CSV. |
-| `mf.data.load_custom_parquet(...)` | Parquet path | `DataBundle` | File source is Parquet. |
+| `frame` | positional or keyword | `pd.DataFrame` | `required` |
+| `date` | keyword only | `str \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom"` |
+| `source_family` | keyword only | `str` | `"custom"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `frequency_by_column` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `strict` | keyword only | `bool` | `True` |
 
-## custom_dataset
+#### Returns
 
-```python
-mf.data.custom_dataset(
-    data,
-    *,
-    date=None,
-    columns=None,
-    dataset="custom",
-    frequency=None,
-    transform_codes=None,
-    metadata=None,
-) -> mf.data.DataBundle
-```
+`DataBundle`
 
-### Input
-
-| Name | Type | Meaning |
-| --- | --- | --- |
-| `data` | `pandas.DataFrame` | User panel. It can contain a date column or already have a `DatetimeIndex`. |
-| `date` | str or `None` | Date column to move into the index. Use `None` when the index is already dates. |
-| `columns` | sequence or `None` | Optional variable subset after date handling. |
-| `dataset` | str | Dataset label stored in metadata. |
-| `frequency` | str or mapping or `None` | Panel frequency such as `monthly`, `quarterly`, or per-column frequency metadata. |
-| `transform_codes` | mapping or `None` | Optional FRED-style transformation code metadata by column. |
-| `metadata` | mapping or `None` | User metadata to merge into the bundle metadata. |
-
-### Output
-
-| Field | Contract |
-| --- | --- |
-| `bundle.panel` | Numeric `DataFrame`, sorted `DatetimeIndex` named `date`, no duplicate dates. |
-| `bundle.metadata["dataset"]` | Dataset name. |
-| `bundle.metadata["frequency"]` | Dataset-level or column-level frequency information when supplied. |
-| `bundle.metadata["transform_codes"]` | Transform-code metadata when supplied. |
-| `bundle.metadata["panel_normalization"]` | Normalization report for date/index/column conversion. |
-
-### Flow
+#### Minimal Use
 
 ```python
-bundle = mf.data.custom_dataset(
-    frame,
-    date="date",
-    dataset="local_macro",
-    frequency="monthly",
-    transform_codes={"target": 1, "x": 1},
-)
-
-processed = mf.preprocessing.reprocess(bundle, transform="none")
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.custom_dataset(...)
 ```
 
-This page stops at a processed panel. For the rest of the story -- a
-`TargetSpec`, a custom model, a scored horse race against a benchmark, and a
-one-line paper table -- continue to the full horse-race tutorial:
-[Your Data, Your Model, One Table](../../guide/custom_data_tutorial.md).
+### load_custom_csv
 
-## File Loaders
+Qualified name: `macroforecast.data.loaders.load_custom_csv`
+
+#### Signature
 
 ```python
-mf.data.load_custom_csv(path, *, date, columns=None, dataset="custom", ...)
-mf.data.load_custom_parquet(path, *, date, columns=None, dataset="custom", ...)
+macroforecast.data.load_custom_csv(path: str | Path, *, date: str | None = None, date_col: str | int | None = None, columns: Iterable[str] | None = None, series_columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, default_frequency: str | None = None, metadata: Mapping[str, Any] | None = None, transform_codes: Mapping[str, int] | None = None, cache_root: str | Path | None = None, strict: bool = True, na_values: str | Sequence[str] | Mapping[str, str | Sequence[str]] | None = None, date_format: str | None = None, dayfirst: bool = False) -> DataBundle
 ```
 
-The file loaders normalize the same panel contract as `custom_dataset()`.
-Use them when the file path itself should appear in the loader metadata.
+#### Description
 
-## Validation
+Load a user CSV into a canonical ``DataBundle``.
 
-| Problem | Behavior |
-| --- | --- |
-| Missing date column | raises loader/normalization error. |
-| Duplicate dates | raises unless permissive mode is explicitly requested by the loader. |
-| Non-numeric selected variables | coerced or reported by panel normalization. |
-| Missing frequency metadata | allowed, but frequency-aware downstream logic may need explicit `set_frequencies(...)`. |
+By default the CSV is read with pandas' normal parsing behavior and then
+normalized through :func:`as_panel`. ``na_values`` is passed to
+:func:`pandas.read_csv` when supplied. ``date_format`` and ``dayfirst`` parse
+the resolved date column before panel normalization, which is useful for
+strict loads with non-ISO or ambiguous dates.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `path` | positional or keyword | `str \| Path` | `required` |
+| `date` | keyword only | `str \| None` | `None` |
+| `date_col` | keyword only | `str \| int \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `series_columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `frequency_by_column` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `default_frequency` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `strict` | keyword only | `bool` | `True` |
+| `na_values` | keyword only | `str \| Sequence[str] \| Mapping[str, str \| Sequence[str]] \| None` | `None` |
+| `date_format` | keyword only | `str \| None` | `None` |
+| `dayfirst` | keyword only | `bool` | `False` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_custom_csv(...)
+```
+
+### load_custom_parquet
+
+Qualified name: `macroforecast.data.loaders.load_custom_parquet`
+
+#### Signature
+
+```python
+macroforecast.data.load_custom_parquet(path: str | Path, *, date: str | None = None, date_col: str | int | None = None, columns: Iterable[str] | None = None, series_columns: Iterable[str] | None = None, rename: Mapping[str, str] | None = None, dataset: str = "custom", frequency: str = "unknown", frequency_by_column: Mapping[str, str] | None = None, default_frequency: str | None = None, metadata: Mapping[str, Any] | None = None, transform_codes: Mapping[str, int] | None = None, cache_root: str | Path | None = None, strict: bool = True) -> DataBundle
+```
+
+#### Description
+
+No public docstring is available.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `path` | positional or keyword | `str \| Path` | `required` |
+| `date` | keyword only | `str \| None` | `None` |
+| `date_col` | keyword only | `str \| int \| None` | `None` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `series_columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `rename` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `frequency_by_column` | keyword only | `Mapping[str, str] \| None` | `None` |
+| `default_frequency` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `transform_codes` | keyword only | `Mapping[str, int] \| None` | `None` |
+| `cache_root` | keyword only | `str \| Path \| None` | `None` |
+| `strict` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`DataBundle`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.load_custom_parquet(...)
+```
+
+### custom_vintages
+
+Qualified name: `macroforecast.data.vintage.custom_vintages`
+
+#### Signature
+
+```python
+macroforecast.data.custom_vintages(source: Callable[[pd.Timestamp], DataBundle | pd.DataFrame] | Mapping[Any, DataBundle | pd.DataFrame] | pd.DataFrame, *, vintage_column: str | None = None, date_column: str | None = None, vintage_id: Callable[[Any], Any] | None = None, dataset: str = "custom_vintages", frequency: str = "unknown", strict: bool = True) -> VintageSource
+```
+
+#### Description
+
+Return a custom point-in-time source.
+
+``source`` may be a callable ``origin_date -> DataBundle | DataFrame``, a
+mapping from timestamp-parsable vintage keys to snapshots, or a grouped-wide
+DataFrame. The grouped-wide form has one ``vintage_column``, one
+``date_column``, and one numeric column per series; each vintage group is a
+complete wide snapshot. Every snapshot is normalized through
+:func:`as_panel` / :func:`custom_dataset` and then validated. Resolved
+snapshots are memoized by the stable identifier produced by ``vintage_id``
+(default: ``str(resolved_key)``). If a callable reads from a
+non-deterministic source whose content can change for the same identifier,
+run the forecast with runner/pipeline preprocessing caching disabled.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `source` | positional or keyword | `Callable[[pd.Timestamp], DataBundle \| pd.DataFrame] \| Mapping[Any, DataBundle \| pd.DataFrame] \| pd.DataFrame` | `required` |
+| `vintage_column` | keyword only | `str \| None` | `None` |
+| `date_column` | keyword only | `str \| None` | `None` |
+| `vintage_id` | keyword only | `Callable[[Any], Any] \| None` | `None` |
+| `dataset` | keyword only | `str` | `"custom_vintages"` |
+| `frequency` | keyword only | `str` | `"unknown"` |
+| `strict` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`VintageSource`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.custom_vintages(...)
+```
+
+### with_static_extras
+
+Qualified name: `macroforecast.data.vintage.with_static_extras`
+
+#### Signature
+
+```python
+macroforecast.data.with_static_extras(source: VintageSource, extra: DataBundle | pd.DataFrame, *, join: "Literal['outer', 'inner', 'left']" = "outer") -> VintageSource
+```
+
+#### Description
+
+Join non-revised extra columns observable before each origin.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `source` | positional or keyword | `VintageSource` | `required` |
+| `extra` | positional or keyword | `DataBundle \| pd.DataFrame` | `required` |
+| `join` | keyword only | `Literal['outer', 'inner', 'left']` | `"outer"` |
+
+#### Returns
+
+`VintageSource`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.data.with_static_extras(...)
+```

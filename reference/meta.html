@@ -52,7 +52,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="macroforecast.data" href="data.html" />
-    <link rel="prev" title="Custom Output" href="custom/custom_output.html" />
+    <link rel="prev" title="Public Python API" href="public_api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
@@ -400,21 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
-</ul>
-</details></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.meta</a></li>
@@ -440,19 +425,34 @@
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Extension Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">Custom Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">Custom Preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">Custom Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, And Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation And Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -516,734 +516,607 @@
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-meta">
 <h1>macroforecast.meta<a class="headerlink" href="#macroforecast-meta" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
-<section id="purpose">
-<h2>Purpose<a class="headerlink" href="#purpose" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code> stores package-wide execution settings. These settings are
-used when a run does not pass a more specific value through a direct function
-argument. They do not choose data, preprocessing, features, models, evaluation
-metrics, or output files.</p>
-<p>The module is intentionally small. It owns defaults and temporary overrides;
-direct function arguments and runner policies always take precedence over
-global settings.</p>
-</section>
-<section id="public-functions">
-<h2>Public Functions<a class="headerlink" href="#public-functions" title="Link to this heading">#</a></h2>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Function</p></th>
-<th class="head"><p>Purpose</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">configure</span></code></p></td>
-<td><p>Update one or more global execution settings.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_config</span></code></p></td>
-<td><p>Return the full active configuration.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_option</span></code></p></td>
-<td><p>Return one active configuration value.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_n_jobs</span></code></p></td>
-<td><p>Resolve the configured worker count (<code class="docutils literal notranslate"><span class="pre">'auto'</span></code> resolves to the CPU count).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reset_config</span></code></p></td>
-<td><p>Restore package defaults.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">use_config</span></code></p></td>
-<td><p>Temporarily override settings inside a <code class="docutils literal notranslate"><span class="pre">with</span></code> block.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="public-values">
-<h2>Public Values<a class="headerlink" href="#public-values" title="Link to this heading">#</a></h2>
+<p>Package-wide defaults such as random seed, worker count, metadata level, and context-managed overrides.</p>
+<section id="public-symbols">
+<h2>Public Symbols<a class="headerlink" href="#public-symbols" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Symbol</p></th>
-<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Summary</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DEFAULT_RANDOM_SEED</span></code></p></td>
-<td><p>Package default seed value, currently <code class="docutils literal notranslate"><span class="pre">42</span></code>.</p></td>
+<td><p>data</p></td>
+<td><p>int([x]) -&gt; integer</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">configure</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Update package-wide execution defaults and return the active config.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">get_config</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return a copy of the current package-wide execution defaults.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">get_option</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return one setting from the current package-wide execution defaults.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_n_jobs</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return the configured worker count, resolving <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> to the CPU count.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code></p></td>
-<td><p>Dictionary-like output schema for active meta settings.</p></td>
+<td><p>class</p></td>
+<td><p>dict() -&gt; new empty dictionary</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NJobs</span></code></p></td>
-<td><p>Accepted worker-count type: positive integer or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MetadataLevel</span></code></p></td>
+<td><p>callable</p></td>
+<td><p>No public docstring is available.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">OnError</span></code></p></td>
-<td><p>Stored failure-mode type: <code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;continue&quot;</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NJobs</span></code></p></td>
+<td><p>callable</p></td>
+<td><p>No public docstring is available.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span></code></p></td>
-<td><p>Runner stage-scope type: <code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">OnError</span></code></p></td>
+<td><p>callable</p></td>
+<td><p>No public docstring is available.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">MetadataLevel</span></code></p></td>
-<td><p>Runner metadata detail type: <code class="docutils literal notranslate"><span class="pre">&quot;minimal&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code>.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span></code></p></td>
+<td><p>callable</p></td>
+<td><p>No public docstring is available.</p></td>
 </tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="metaconfig">
-<h2>MetaConfig<a class="headerlink" href="#metaconfig" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code> is the output schema returned by <code class="docutils literal notranslate"><span class="pre">configure</span></code>, <code class="docutils literal notranslate"><span class="pre">get_config</span></code>,
-<code class="docutils literal notranslate"><span class="pre">reset_config</span></code>, and yielded by <code class="docutils literal notranslate"><span class="pre">use_config</span></code>.</p>
-<section id="output-schema">
-<h3>Output Schema<a class="headerlink" href="#output-schema" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Type</p></th>
-<th class="head"><p>Default</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">reset_config</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Reset package-wide execution defaults to their initial values.</p></td>
 </tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
-<td><p><code>int | None</code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">42</span></code></p></td>
-<td><p>Seed used by stochastic functions when no run-specific seed is supplied. <code class="docutils literal notranslate"><span class="pre">None</span></code> leaves stochastic components unseeded.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
-<td><p><code>int | “auto”</code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-<td><p>Default worker count. <code class="docutils literal notranslate"><span class="pre">1</span></code> means serial execution; <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> lets the package choose a bounded worker count.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">on_error</span></code></p></td>
-<td><p>failure mode</p></td>
-<td><p>stop on error</p></td>
-<td><p>Default cell failure behavior. See <a class="reference internal" href="#failure-mode-values">Failure Mode Values</a>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
-<td><p>Default verbosity level for future logging surfaces.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_preprocessing_scope</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code></p></td>
-<td><p>Default <code class="docutils literal notranslate"><span class="pre">forecasting.run(...,</span> <span class="pre">preprocessing_policy=...)</span></code> scope when preprocessing is supplied and no explicit policy is passed.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">default_feature_scope</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Default <code class="docutils literal notranslate"><span class="pre">feature_policy</span></code> scope.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_selection_scope</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Default <code class="docutils literal notranslate"><span class="pre">model_selection_policy</span></code> scope.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_level</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;minimal&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code></p></td>
-<td><p>Runner metadata detail. <code class="docutils literal notranslate"><span class="pre">minimal</span></code> suppresses per-origin stage records; <code class="docutils literal notranslate"><span class="pre">standard</span></code> and <code class="docutils literal notranslate"><span class="pre">full</span></code> currently keep the same stage ledger.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>The default seed is owned by <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.DEFAULT_RANDOM_SEED</span></code> and
-is exported as <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.DEFAULT_RANDOM_SEED</span></code>.</p>
-</section>
-<section id="failure-mode-values">
-<h3>Failure Mode Values<a class="headerlink" href="#failure-mode-values" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>User-facing mode</p></th>
-<th class="head"><p>Stored value</p></th>
-<th class="head"><p>Meaning</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Stop on error</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">raise</span></code></p></td>
-<td><p>Stop immediately when a supported execution cell fails.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Continue where supported</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">continue</span></code></p></td>
-<td><p>Record the failure and continue for call sites that support non-fatal errors.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">use_config</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Temporarily update package-wide execution defaults inside a context.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="stage-scope-aliases">
-<h3>Stage Scope Aliases<a class="headerlink" href="#stage-scope-aliases" title="Link to this heading">#</a></h3>
-<p>Stage-scope inputs are normalized before storage. Docs and metadata use the
-canonical stored values.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Accepted input</p></th>
-<th class="head"><p>Stored value</p></th>
-<th class="head"><p>Meaning</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code></p></td>
-<td><p>Fit the stage on the full panel.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;origin&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;available&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code></p></td>
-<td><p>Fit the stage on observations available at each forecast origin.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;fit&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;train&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;train_window&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Fit the stage on the model fit window.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Example output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
-    <span class="s2">&quot;n_jobs&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;on_error&quot;</span><span class="p">:</span> <span class="s2">&quot;raise&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;verbose&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;default_preprocessing_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;origin_available&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;default_feature_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;fit_window&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;default_selection_scope&quot;</span><span class="p">:</span> <span class="s2">&quot;fit_window&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;metadata_level&quot;</span><span class="p">:</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
-<span class="p">}</span>
+<section id="data-and-module-values">
+<h2>Data And Module Values<a class="headerlink" href="#data-and-module-values" title="Link to this heading">#</a></h2>
+<section id="default-random-seed">
+<h3><code class="docutils literal notranslate"><span class="pre">DEFAULT_RANDOM_SEED</span></code><a class="headerlink" href="#default-random-seed" title="Link to this heading">#</a></h3>
+<p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT_RANDOM_SEED</span> <span class="o">=</span> <span class="mi">42</span>
 </pre></div>
 </div>
 </section>
 </section>
+<section id="callable-and-class-reference">
+<h2>Callable And Class Reference<a class="headerlink" href="#callable-and-class-reference" title="Link to this heading">#</a></h2>
 <section id="configure">
-<h2>configure<a class="headerlink" href="#configure" title="Link to this heading">#</a></h2>
-<p>Update package-wide execution settings and return the active configuration.</p>
+<h3>configure<a class="headerlink" href="#configure" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.configure</span></code></p>
 <section id="signature">
-<h3>Signature<a class="headerlink" href="#signature" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="s2">&quot;auto&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">on_error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">default_preprocessing_scope</span><span class="p">:</span> <span class="s2">&quot;full_panel&quot;</span> <span class="o">|</span> <span class="s2">&quot;origin_available&quot;</span> <span class="o">|</span> <span class="s2">&quot;fit_window&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">default_feature_scope</span><span class="p">:</span> <span class="s2">&quot;full_panel&quot;</span> <span class="o">|</span> <span class="s2">&quot;origin_available&quot;</span> <span class="o">|</span> <span class="s2">&quot;fit_window&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">default_selection_scope</span><span class="p">:</span> <span class="s2">&quot;full_panel&quot;</span> <span class="o">|</span> <span class="s2">&quot;origin_available&quot;</span> <span class="o">|</span> <span class="s2">&quot;fit_window&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">metadata_level</span><span class="p">:</span> <span class="s2">&quot;minimal&quot;</span> <span class="o">|</span> <span class="s2">&quot;standard&quot;</span> <span class="o">|</span> <span class="s2">&quot;full&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetaConfig</span>
+<h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">:</span> <span class="n">NJobs</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">on_error</span><span class="p">:</span> <span class="n">OnError</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">default_preprocessing_scope</span><span class="p">:</span> <span class="n">StageDefaultScope</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">default_feature_scope</span><span class="p">:</span> <span class="n">StageDefaultScope</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">default_selection_scope</span><span class="p">:</span> <span class="n">StageDefaultScope</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">metadata_level</span><span class="p">:</span> <span class="n">MetadataLevel</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetaConfig</span>
 </pre></div>
 </div>
-<p>All inputs are keyword-only. Omitted inputs keep their current values.</p>
 </section>
-<section id="input">
-<h3>Input<a class="headerlink" href="#input" title="Link to this heading">#</a></h3>
+<section id="description">
+<h4>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h4>
+<p>Update package-wide execution defaults and return the active config.</p>
+</section>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
 <th class="head"><p>Type</p></th>
-<th class="head"><p>Default if omitted</p></th>
-<th class="head"><p>Allowed Values</p></th>
-<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
-<td><p><code>int | None</code></p></td>
-<td><p>keep current value</p></td>
-<td><p>non-negative integer or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Sets the default seed for stochastic components.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
-<td><p><code>int | “auto”</code></p></td>
-<td><p>keep current value</p></td>
-<td><p>positive integer or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></td>
-<td><p>Sets the default worker count.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NJobs</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">on_error</span></code></p></td>
-<td><p>failure mode</p></td>
-<td><p>keep current value</p></td>
-<td><p>Stop on error (<code class="docutils literal notranslate"><span class="pre">raise</span></code>) or continue where supported (<code class="docutils literal notranslate"><span class="pre">continue</span></code>)</p></td>
-<td><p>Sets default failure behavior.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OnError</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
-<td><p>keep current value</p></td>
-<td><p>non-negative integer</p></td>
-<td><p>Sets default verbosity.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_preprocessing_scope</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Sets the default preprocessing stage scope for <code class="docutils literal notranslate"><span class="pre">forecasting.run(...)</span></code>.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">default_feature_scope</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Sets the default feature-engineering stage scope.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_selection_scope</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Sets the default model-selection stage scope.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_level</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;minimal&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code></p></td>
-<td><p>Sets the default runner metadata detail.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Stage-scope inputs also accept the aliases listed in
-<a class="reference internal" href="#stage-scope-aliases">Stage Scope Aliases</a>. The returned <code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code> always
-stores the canonical value.</p>
-</section>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h3>
-<p>Returns <code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code>, a copy of the full active configuration after the update.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Output</p></th>
-<th class="head"><p>Type</p></th>
-<th class="head"><p>Meaning</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">config</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code></p></td>
-<td><p>The active package-wide execution settings.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MetadataLevel</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="side-effects">
-<h3>Side Effects<a class="headerlink" href="#side-effects" title="Link to this heading">#</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">configure</span></code> changes global package state. Later calls that consult
-<code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code> will see the updated values.</p>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code></p>
 </section>
-<section id="validation">
-<h3>Validation<a class="headerlink" href="#validation" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Condition</p></th>
-<th class="head"><p>Error</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code> is negative</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code> is not <code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> is not a positive integer or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code> or <code class="docutils literal notranslate"><span class="pre">ValueError</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">on_error</span></code> is not a supported failure mode</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code> is not a non-negative integer</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">TypeError</span></code> or <code class="docutils literal notranslate"><span class="pre">ValueError</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>stage default scope is not one of the allowed scopes</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_level</span></code> is not <code class="docutils literal notranslate"><span class="pre">&quot;minimal&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ValueError</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="example">
-<h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
+<section id="minimal-use">
+<h4>Minimal Use<a class="headerlink" href="#minimal-use" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-
-<span class="n">config</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
-    <span class="n">random_seed</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
-    <span class="n">n_jobs</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
-    <span class="n">on_error</span><span class="o">=</span><span class="s2">&quot;continue&quot;</span><span class="p">,</span>
-    <span class="n">default_feature_scope</span><span class="o">=</span><span class="s2">&quot;origin_available&quot;</span><span class="p">,</span>
-    <span class="n">metadata_level</span><span class="o">=</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="k">assert</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;random_seed&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.configure(...)</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="get-config">
-<h2>get_config<a class="headerlink" href="#get-config" title="Link to this heading">#</a></h2>
-<p>Return the active package-wide execution settings.</p>
+<h3>get_config<a class="headerlink" href="#get-config" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.get_config</span></code></p>
 <section id="id1">
-<h3>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">MetaConfig</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h3>Input<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
-<p>No input.</p>
+<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<p>Return a copy of the current package-wide execution defaults.</p>
 </section>
 <section id="id3">
-<h3>Output<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
-<p>Returns <code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code>.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Output</p></th>
-<th class="head"><p>Type</p></th>
-<th class="head"><p>Meaning</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">config</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code></p></td>
-<td><p>Copy of the active package-wide execution settings.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>The returned object is a copy. Mutating it does not change global package state.</p>
+<h4>Returns<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code></p>
 </section>
 <section id="id4">
-<h3>Example<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<h4>Minimal Use<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-
-<span class="n">config</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;n_jobs&quot;</span><span class="p">])</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.get_config(...)</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="get-option">
-<h2>get_option<a class="headerlink" href="#get-option" title="Link to this heading">#</a></h2>
-<p>Return one active configuration value.</p>
+<h3>get_option<a class="headerlink" href="#get-option" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.get_option</span></code></p>
 <section id="id5">
-<h3>Signature<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span>
+<h4>Signature<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
-<h3>Input<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<h4>Description<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<p>Return one setting from the current package-wide execution defaults.</p>
+</section>
+<section id="id7">
+<h4>Parameters<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
 <th class="head"><p>Type</p></th>
-<th class="head"><p>Allowed Values</p></th>
-<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p>positional or keyword</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
-<td><p>any <code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code> key</p></td>
-<td><p>Configuration key to read.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="id7">
-<h3>Output<a class="headerlink" href="#id7" title="Link to this heading">#</a></h3>
-<p>Returns the value for <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">name</span></code></p></th>
-<th class="head"><p>Output Type</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;random_seed&quot;</span></code></p></td>
-<td><p><code>int | None</code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;n_jobs&quot;</span></code></p></td>
-<td><p><code>int | “auto”</code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;on_error&quot;</span></code></p></td>
-<td><p>failure mode string</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;verbose&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;default_preprocessing_scope&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;default_feature_scope&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;default_selection_scope&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;metadata_level&quot;</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;minimal&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="errors">
-<h3>Errors<a class="headerlink" href="#errors" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Condition</p></th>
-<th class="head"><p>Error</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name</span></code> is not a known option</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">KeyError</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
 <section id="id8">
-<h3>Example<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<h4>Returns<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p>
+</section>
+<section id="id9">
+<h4>Minimal Use<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-
-<span class="n">seed</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">)</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.get_option(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="resolve-n-jobs">
+<h3>resolve_n_jobs<a class="headerlink" href="#resolve-n-jobs" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.resolve_n_jobs</span></code></p>
+<section id="id10">
+<h4>Signature<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">resolve_n_jobs</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h4>Description<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<p>Return the configured worker count, resolving <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> to the CPU count.</p>
+<p>This is the single resolution point so that <code class="docutils literal notranslate"><span class="pre">meta.configure(n_jobs=...)</span></code>
+actually controls parallelism in callers that opt in (e.g. tree ensembles).</p>
+</section>
+<section id="id12">
+<h4>Returns<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code></p>
+</section>
+<section id="id13">
+<h4>Minimal Use<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.resolve_n_jobs(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="metaconfig">
+<h3>MetaConfig<a class="headerlink" href="#metaconfig" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.MetaConfig</span></code></p>
+<section id="id14">
+<h4>Signature<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">MetaConfig</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id15">
+<h4>Description<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object’s
+(key, value) pairs
+dict(iterable) -&gt; new dictionary initialized as if via:
+d = {}
+for k, v in iterable:
+d[k] = v
+dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
+in the keyword argument list.  For example:  dict(one=1, two=2)</p>
+</section>
+<section id="id16">
+<h4>Returns<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<p>See the description and object-specific contract.</p>
+</section>
+<section id="id17">
+<h4>Minimal Use<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Construct with the signature above:</span>
+<span class="c1"># mf.meta.MetaConfig(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="metadatalevel">
+<h3>MetadataLevel<a class="headerlink" href="#metadatalevel" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">typing.Literal</span></code></p>
+<section id="id18">
+<h4>Signature<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">MetadataLevel</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id19">
+<h4>Description<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<p>No public docstring is available.</p>
+</section>
+<section id="id20">
+<h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">args</span></code></p></td>
+<td><p>var positional</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code></p></td>
+<td><p>var keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id21">
+<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<p>See the description and object-specific contract.</p>
+</section>
+<section id="id22">
+<h4>Minimal Use<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.MetadataLevel(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="njobs">
+<h3>NJobs<a class="headerlink" href="#njobs" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">typing.Union</span></code></p>
+<section id="id23">
+<h4>Signature<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">NJobs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id24">
+<h4>Description<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<p>No public docstring is available.</p>
+</section>
+<section id="id25">
+<h4>Parameters<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">args</span></code></p></td>
+<td><p>var positional</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code></p></td>
+<td><p>var keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id26">
+<h4>Returns<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<p>See the description and object-specific contract.</p>
+</section>
+<section id="id27">
+<h4>Minimal Use<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.NJobs(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="onerror">
+<h3>OnError<a class="headerlink" href="#onerror" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">typing.Literal</span></code></p>
+<section id="id28">
+<h4>Signature<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">OnError</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id29">
+<h4>Description<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<p>No public docstring is available.</p>
+</section>
+<section id="id30">
+<h4>Parameters<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">args</span></code></p></td>
+<td><p>var positional</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code></p></td>
+<td><p>var keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id31">
+<h4>Returns<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<p>See the description and object-specific contract.</p>
+</section>
+<section id="id32">
+<h4>Minimal Use<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.OnError(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="stagedefaultscope">
+<h3>StageDefaultScope<a class="headerlink" href="#stagedefaultscope" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">typing.Literal</span></code></p>
+<section id="id33">
+<h4>Signature<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">StageDefaultScope</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id34">
+<h4>Description<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<p>No public docstring is available.</p>
+</section>
+<section id="id35">
+<h4>Parameters<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">args</span></code></p></td>
+<td><p>var positional</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code></p></td>
+<td><p>var keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">unspecified</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id36">
+<h4>Returns<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<p>See the description and object-specific contract.</p>
+</section>
+<section id="id37">
+<h4>Minimal Use<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.StageDefaultScope(...)</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="reset-config">
-<h2>reset_config<a class="headerlink" href="#reset-config" title="Link to this heading">#</a></h2>
-<p>Restore package-wide execution settings to their defaults.</p>
-<section id="id9">
-<h3>Signature<a class="headerlink" href="#id9" title="Link to this heading">#</a></h3>
+<h3>reset_config<a class="headerlink" href="#reset-config" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.reset_config</span></code></p>
+<section id="id38">
+<h4>Signature<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">reset_config</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">MetaConfig</span>
 </pre></div>
 </div>
 </section>
-<section id="id10">
-<h3>Input<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
-<p>No input.</p>
+<section id="id39">
+<h4>Description<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
+<p>Reset package-wide execution defaults to their initial values.</p>
 </section>
-<section id="id11">
-<h3>Output<a class="headerlink" href="#id11" title="Link to this heading">#</a></h3>
-<p>Returns <code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code> after reset.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Reset Value</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">42</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">on_error</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;raise&quot;</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_preprocessing_scope</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">default_feature_scope</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_selection_scope</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_level</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
+<section id="id40">
+<h4>Returns<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code></p>
 </section>
-<section id="id12">
-<h3>Side Effects<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">reset_config</span></code> changes global package state.</p>
-</section>
-<section id="id13">
-<h3>Example<a class="headerlink" href="#id13" title="Link to this heading">#</a></h3>
+<section id="id41">
+<h4>Minimal Use<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-
-<span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">random_seed</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">reset_config</span><span class="p">()</span>
-
-<span class="k">assert</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;random_seed&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">42</span>
-<span class="k">assert</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;n_jobs&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.reset_config(...)</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="use-config">
-<h2>use_config<a class="headerlink" href="#use-config" title="Link to this heading">#</a></h2>
-<p>Temporarily override package-wide execution settings inside a context manager.</p>
-<section id="id14">
-<h3>Signature<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">use_config</span><span class="p">(</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="s2">&quot;auto&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">on_error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">default_preprocessing_scope</span><span class="p">:</span> <span class="s2">&quot;full_panel&quot;</span> <span class="o">|</span> <span class="s2">&quot;origin_available&quot;</span> <span class="o">|</span> <span class="s2">&quot;fit_window&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">default_feature_scope</span><span class="p">:</span> <span class="s2">&quot;full_panel&quot;</span> <span class="o">|</span> <span class="s2">&quot;origin_available&quot;</span> <span class="o">|</span> <span class="s2">&quot;fit_window&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">default_selection_scope</span><span class="p">:</span> <span class="s2">&quot;full_panel&quot;</span> <span class="o">|</span> <span class="s2">&quot;origin_available&quot;</span> <span class="o">|</span> <span class="s2">&quot;fit_window&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-    <span class="n">metadata_level</span><span class="p">:</span> <span class="s2">&quot;minimal&quot;</span> <span class="o">|</span> <span class="s2">&quot;standard&quot;</span> <span class="o">|</span> <span class="s2">&quot;full&quot;</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">MetaConfig</span><span class="p">]</span>
+<h3>use_config<a class="headerlink" href="#use-config" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.meta.config.use_config</span></code></p>
+<section id="id42">
+<h4>Signature<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">use_config</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">:</span> <span class="n">NJobs</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">on_error</span><span class="p">:</span> <span class="n">OnError</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">default_preprocessing_scope</span><span class="p">:</span> <span class="n">StageDefaultScope</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">default_feature_scope</span><span class="p">:</span> <span class="n">StageDefaultScope</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">default_selection_scope</span><span class="p">:</span> <span class="n">StageDefaultScope</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">metadata_level</span><span class="p">:</span> <span class="n">MetadataLevel</span> <span class="o">|</span> <span class="nb">object</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">UNSET</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">MetaConfig</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id15">
-<h3>Input<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
-<p>The inputs match <code class="docutils literal notranslate"><span class="pre">configure</span></code>.</p>
+<section id="id43">
+<h4>Description<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
+<p>Temporarily update package-wide execution defaults inside a context.</p>
+</section>
+<section id="id44">
+<h4>Parameters<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
 <th class="head"><p>Type</p></th>
-<th class="head"><p>Default if omitted</p></th>
-<th class="head"><p>Allowed Values</p></th>
-<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
-<td><p><code>int | None</code></p></td>
-<td><p>keep current value inside context</p></td>
-<td><p>non-negative integer or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Temporary default seed.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
-<td><p><code>int | “auto”</code></p></td>
-<td><p>keep current value inside context</p></td>
-<td><p>positive integer or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code></p></td>
-<td><p>Temporary worker count.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">NJobs</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">on_error</span></code></p></td>
-<td><p>failure mode</p></td>
-<td><p>keep current value inside context</p></td>
-<td><p>Stop on error (<code class="docutils literal notranslate"><span class="pre">raise</span></code>) or continue where supported (<code class="docutils literal notranslate"><span class="pre">continue</span></code>)</p></td>
-<td><p>Temporary failure behavior.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OnError</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
-<td><p>keep current value inside context</p></td>
-<td><p>non-negative integer</p></td>
-<td><p>Temporary verbosity.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_preprocessing_scope</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value inside context</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Temporary preprocessing default scope.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">default_feature_scope</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value inside context</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Temporary feature default scope.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_selection_scope</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value inside context</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;full_panel&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;origin_available&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fit_window&quot;</span></code></p></td>
-<td><p>Temporary model-selection default scope.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_level</span></code></p></td>
-<td><p>str</p></td>
-<td><p>keep current value inside context</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;minimal&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;standard&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;full&quot;</span></code></p></td>
-<td><p>Temporary metadata detail.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Stage-scope inputs use the same alias normalization as <code class="docutils literal notranslate"><span class="pre">configure</span></code>.</p>
-</section>
-<section id="id16">
-<h3>Output<a class="headerlink" href="#id16" title="Link to this heading">#</a></h3>
-<p>Yields <code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code>, the active configuration inside the context.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Output</p></th>
-<th class="head"><p>Type</p></th>
-<th class="head"><p>Meaning</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">config</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">MetaConfig</span></code></p></td>
-<td><p>Active temporary settings inside the <code class="docutils literal notranslate"><span class="pre">with</span></code> block.</p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">MetadataLevel</span> <span class="pre">|</span> <span class="pre">object</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;UNSET&gt;</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="id17">
-<h3>Side Effects<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">use_config</span></code> changes global package state only for the duration of the <code class="docutils literal notranslate"><span class="pre">with</span></code>
-block. The previous configuration is restored when the block exits, including
-when an exception is raised.</p>
+<section id="id45">
+<h4>Returns<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">Iterator[MetaConfig]</span></code></p>
 </section>
-<section id="id18">
-<h3>Example<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
+<section id="id46">
+<h4>Minimal Use<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-
-<span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">random_seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-
-<span class="k">with</span> <span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">use_config</span><span class="p">(</span><span class="n">random_seed</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="k">as</span> <span class="n">config</span><span class="p">:</span>
-    <span class="k">assert</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;random_seed&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">7</span>
-    <span class="c1"># Run code here with the temporary settings.</span>
-
-<span class="k">assert</span> <span class="n">mf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get_option</span><span class="p">(</span><span class="s2">&quot;random_seed&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">42</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.meta.use_config(...)</span>
 </pre></div>
 </div>
 </section>
 </section>
-<section id="usage-behavior">
-<h2>Usage Behavior<a class="headerlink" href="#usage-behavior" title="Link to this heading">#</a></h2>
-<p>Direct package functions can read <code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code> when no more specific
-value is provided by the caller.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Setting</p></th>
-<th class="head"><p>Use</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_seed</span></code></p></td>
-<td><p>Used as the default run seed and propagated to stochastic estimators where supported.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_jobs</span></code></p></td>
-<td><p>Used as the default worker count for run-level and selected model-level parallel work.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">on_error</span></code></p></td>
-<td><p>Default failure handling. <code class="docutils literal notranslate"><span class="pre">raise</span></code> stops on failure; <code class="docutils literal notranslate"><span class="pre">continue</span></code> continues where supported.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code></p></td>
-<td><p>Reserved as the package-wide verbosity setting.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_preprocessing_scope</span></code></p></td>
-<td><p>Used by <code class="docutils literal notranslate"><span class="pre">forecasting.run(...)</span></code> when <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code> is supplied without <code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">default_feature_scope</span></code></p></td>
-<td><p>Used by <code class="docutils literal notranslate"><span class="pre">forecasting.run(...)</span></code> when <code class="docutils literal notranslate"><span class="pre">feature_policy</span></code> is omitted.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">default_selection_scope</span></code></p></td>
-<td><p>Used by <code class="docutils literal notranslate"><span class="pre">forecasting.run(...)</span></code> when <code class="docutils literal notranslate"><span class="pre">model_selection_policy</span></code> is omitted.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_level</span></code></p></td>
-<td><p>Controls how much run-level metadata is recorded. <code class="docutils literal notranslate"><span class="pre">minimal</span></code> drops per-origin stage records; <code class="docutils literal notranslate"><span class="pre">standard</span></code> and <code class="docutils literal notranslate"><span class="pre">full</span></code> currently keep the same stage ledger.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Forecast results record the active config under <code class="docutils literal notranslate"><span class="pre">metadata[&quot;run&quot;][&quot;config&quot;]</span></code> so
-a completed run can be audited against the settings in force at execution time.</p>
 </section>
 </section>
 
@@ -1258,12 +1131,12 @@ a completed run can be audited against the settings in force at execution time.<
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="custom/custom_output.html"
+       href="public_api.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Custom Output</p>
+        <p class="prev-next-title">Public Python API</p>
       </div>
     </a>
     <a class="right-next"
@@ -1294,56 +1167,98 @@ a completed run can be audited against the settings in force at execution time.<
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#purpose">Purpose</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-functions">Public Functions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-values">Public Values</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#metaconfig">MetaConfig</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output-schema">Output Schema</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#failure-mode-values">Failure Mode Values</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-scope-aliases">Stage Scope Aliases</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-symbols">Public Symbols</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-and-module-values">Data And Module Values</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-random-seed"><code class="docutils literal notranslate"><span class="pre">DEFAULT_RANDOM_SEED</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure">configure</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#signature">Signature</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#input">Input</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#side-effects">Side Effects</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#validation">Validation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#callable-and-class-reference">Callable And Class Reference</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configure">configure</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#signature">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#returns">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-use">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-config">get_config</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Signature</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Input</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Output</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-config">get_config</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-option">get_option</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Signature</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Input</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Output</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#errors">Errors</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-option">get_option</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reset-config">reset_config</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Signature</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Input</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Output</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Side Effects</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resolve-n-jobs">resolve_n_jobs</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-config">use_config</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Signature</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Input</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Output</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Side Effects</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#metaconfig">MetaConfig</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-behavior">Usage Behavior</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#metadatalevel">MetadataLevel</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#njobs">NJobs</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#onerror">OnError</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stagedefaultscope">StageDefaultScope</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reset-config">reset_config</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-config">use_config</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">Minimal Use</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

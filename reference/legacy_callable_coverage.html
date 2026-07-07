@@ -400,21 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
-</ul>
-</details></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
@@ -440,19 +425,34 @@
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Extension Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">Custom Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">Custom Preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">Custom Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, And Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation And Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -516,224 +516,38 @@
   <section class="tex2jax_ignore mathjax_ignore" id="legacy-callable-coverage">
 <h1>Legacy Callable Coverage<a class="headerlink" href="#legacy-callable-coverage" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
-<p>This page tracks the old runtime/reference surface against the current
-callable-first package. It is a migration audit, not a public recipe grammar.</p>
-<p>Current verdict: the old statistical functionality is represented as callable
-modules. The intentionally removed surface is YAML/runtime/registry plumbing
-that will be rebuilt later as a wrapper around the callable API.</p>
-<p>Last updated: 2026-06-01.</p>
-<section id="intentional-removals">
-<h2>Intentional Removals<a class="headerlink" href="#intentional-removals" title="Link to this heading">#</a></h2>
-<p>These old surfaces are not gaps.</p>
+<p>The old layered-ops encyclopedia has been removed from the generated reference contract. Current coverage is tied to importable module surfaces and model specs.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Old surface</p></th>
-<th class="head"><p>Current decision</p></th>
-<th class="head"><p>Reason</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Old recipe schemas, validators, and parse helpers</p></td>
-<td><p>Removed for now</p></td>
-<td><p>Recipe/YAML support will be rebuilt as a thin wrapper over callables.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Old runtime dispatch nodes and materializers</p></td>
-<td><p>Removed for now</p></td>
-<td><p>Runner and direct callables now own execution.</p></td>
-</tr>
-<tr class="row-even"><td><p>Old compatibility shims and registries</p></td>
-<td><p>Removed</p></td>
-<td><p>Restoring compatibility shims would preserve the structure we are replacing.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">api/functions/*</span></code>, <code class="docutils literal notranslate"><span class="pre">functions/*</span></code> compatibility namespaces</p></td>
-<td><p>Removed</p></td>
-<td><p>Public API is now module-based: <code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">preprocessing</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code>, etc.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">option_docs.py</span></code> generated option tables</p></td>
-<td><p>Removed</p></td>
-<td><p>Function-level docs now document input, output, defaults, and choices directly.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Recipe/gallery contract pages</p></td>
-<td><p>Removed</p></td>
-<td><p>Recipe docs will be rewritten after the callable API stabilizes.</p></td>
-</tr>
-<tr class="row-even"><td><p>Paper-method recipe constructors</p></td>
-<td><p>Removed for now</p></td>
-<td><p>Paper methods should be expressed as callable combinations or future recipe presets.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Holiday feature op</p></td>
-<td><p>Intentionally omitted</p></td>
-<td><p>Package targets monthly and quarterly macro panels; public-holiday calendars are not a core axis.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="covered-callable-surface">
-<h2>Covered Callable Surface<a class="headerlink" href="#covered-callable-surface" title="Link to this heading">#</a></h2>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Area</p></th>
-<th class="head"><p>Current module</p></th>
-<th class="head"><p>Coverage</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Global defaults</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.meta</span></code></p></td>
-<td><p>Package-level config, seed/default management, context manager.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Data panels and metadata</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></p></td>
-<td><p>Canonical pandas panel, metadata attachment, custom CSV/parquet loading, FRED-MD/QD/SD loaders, vintage listing, frequency inference/alignment, Chow-Lin disaggregation, same-period policy, regime metadata.</p></td>
-</tr>
-<tr class="row-even"><td><p>Data summary and comparison</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data_analysis</span></code></p></td>
-<td><p>Single-panel summary and before/after analysis.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Preprocessing</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></p></td>
-<td><p>FRED-style transform codes, FRED-SD code suggestions, outlier handling, imputation, standardization, frame-edge handling, frequency alignment, reusable fit/transform specs.</p></td>
-</tr>
-<tr class="row-even"><td><p>Filters and smoothers</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.filters</span></code></p></td>
-<td><p>Direct one-series HP, Hamilton, Savitzky-Golay, wavelet-style, and AlbaMA filters/smoothers with metadata.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Feature construction</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Direct, average, and path targets; lags; rolling means; filter-to-feature wrappers including AlbaMA adaptive moving-average features with R-code-aligned terminal-node weights; MARX/MAF; mixed-frequency lags; time/season dummies; transforms; polynomial/interactions; PCA, group PCA, sparse PCA, varimax, PLS, SIR, DFM; random projection/Nystroem; selection methods; reusable feature specs.</p></td>
-</tr>
-<tr class="row-even"><td><p>Feature analysis</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_analysis</span></code></p></td>
-<td><p>Overview, correlation, target correlation, factor diagnostics, lag diagnostics, MARX diagnostics, AlbaMA/effective-window weight summaries, stage shift, selection stability/similarity, custom diagnostics.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Window and policies</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
-<td><p>Estimation/validation/test windows, expanding/rolling/fixed modes, blocked splits, origin generation, retrain/retune timing policies, stage panels.</p></td>
-</tr>
-<tr class="row-even"><td><p>Model selection</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></p></td>
-<td><p>Fixed/grid/random/Bayesian/genetic/custom search specs, distributions, parameter selection over supplied windows.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Models</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Linear/penalized/group/adaptive, supervised factor models, PCR-style composites through factor models, SVR, tree, MARS, Macro Random Forest, MIDAS/mixed-frequency, AR/VAR/BVAR/FAR/FAVAR/DFM, volatility, torch-backed NN/LSTM/GRU/Transformer/HNN, model-owned search spaces, save/load helpers.</p></td>
-</tr>
-<tr class="row-even"><td><p>Model ensemble</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></p></td>
-<td><p>Fit-time member-model composition: bagging, subagging, random subspace, stacking, Super Learner, Booging, and model-ensemble-owned search spaces.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Forecast runner</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></p></td>
-<td><p>Runner composition across windows, preprocessing specs, feature specs, model specs, model ensembles, model selection, direct/recursive/path-average policies, forecast-output combinations.</p></td>
-</tr>
-<tr class="row-even"><td><p>Metrics</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code></p></td>
-<td><p>Point, relative, directional, interval, density, quantile, QLIKE, Theil, OOS R-squared, ranking.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Tests</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></p></td>
-<td><p>DM/GW/DMP/HN, nested/encompassing tests, CPA, exact MCS, SPA/Reality/StepM benchmark tests, blocked OOB reality check, density/interval tests, PIT diagnostics, residual diagnostics, custom tests.</p></td>
-</tr>
-<tr class="row-even"><td><p>Evaluation reports</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></p></td>
-<td><p>Multi-slice evaluation, OOS filtering, benchmark comparisons, regime scoring, error decomposition, aggregation and ranking.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Forecast analysis</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis</span></code></p></td>
-<td><p>Forecast overview, fitted-vs-actual, residual views, rolling loss, scale view, tuning traces, coefficient/parameter stability, DFM diagnostics, ensemble diagnostics, stage update trace.</p></td>
-</tr>
-<tr class="row-even"><td><p>Interpretation</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code></p></td>
-<td><p>Native coefficients/importances, permutation/Strobl/LOFO, PDP/ALE/Friedman-H, SHAP variants, anatomy/PBSV forecast-accuracy attribution, forecast decomposition, cumulative contribution, group/lineage/transformation attribution, OLS attention, MRF GTVP, VAR IRF/FEVD/historical decomposition, neural attribution, LSTM hidden states, custom interpretation.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Output</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code></p></td>
-<td><p>Output table generation, selection/naming/bundling, artifact writing, manifest, hashes, provenance, gzip/zip compression.</p></td>
-</tr>
-<tr class="row-even"><td><p>Reporting</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.reporting</span></code></p></td>
-<td><p>Report-table formatting, accuracy/model-comparison/forecast-test presets, LaTeX/HTML/Markdown rendering, figure-ready data, report bundles.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Custom extensions</p></td>
-<td><p>Per-module custom hooks</p></td>
-<td><p>Custom datasets, preprocessing, feature steps, models, model ensembles, stage policies, combinations, diagnostics, interpretation, and artifacts. See <code class="docutils literal notranslate"><span class="pre">reference/custom/</span></code>; there is no separate <code class="docutils literal notranslate"><span class="pre">macroforecast.custom</span></code> module.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="remaining-real-gaps">
-<h2>Remaining Real Gaps<a class="headerlink" href="#remaining-real-gaps" title="Link to this heading">#</a></h2>
-<p>These are not old runtime cleanup items. They are possible future
-implementation work on top of the current callable API.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Priority</p></th>
-<th class="head"><p>Gap</p></th>
+<tr class="row-odd"><th class="head"><p>Legacy item</p></th>
 <th class="head"><p>Current status</p></th>
-<th class="head"><p>Proposed handling</p></th>
+<th class="head"><p>Replacement</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Medium</p></td>
-<td><p>Replication/report package builder</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">output</span></code> writes artifacts and <code class="docutils literal notranslate"><span class="pre">reporting</span></code> renders tables, but there is no one-call replication package assembler.</p></td>
-<td><p>Add as future callable after output/reporting settle; likely <code class="docutils literal notranslate"><span class="pre">reporting</span></code> or a small package module, not <code class="docutils literal notranslate"><span class="pre">output</span></code>.</p></td>
+<tr class="row-even"><td><p>Layer-spec registry pages</p></td>
+<td><p>Removed</p></td>
+<td><p>Generated module pages and model registry tables.</p></td>
 </tr>
-<tr class="row-odd"><td><p>Low</p></td>
-<td><p>External reference-verification expansions</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">tests/reference/</span></code> now contains core anchors, but not every paper formula against external source code or known-DGP simulations.</p></td>
-<td><p>Expand the reference suite incrementally as source-code fixtures or accepted known-DGP designs are added.</p></td>
+<tr class="row-odd"><td><p>Option-doc generated option tables</p></td>
+<td><p>Removed</p></td>
+<td><p>Function-first entries with signatures, parameters, returns, and docstrings.</p></td>
 </tr>
-<tr class="row-even"><td><p>Low</p></td>
-<td><p>Future YAML/recipe wrapper</p></td>
-<td><p>Intentionally absent.</p></td>
-<td><p>Rebuild later on top of the callable API, with no old runtime registry dependency.</p></td>
+<tr class="row-even"><td><p>Core ops registry</p></td>
+<td><p>Removed</p></td>
+<td><p>Direct public callables under semantic modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Former standalone callable namespace</p></td>
+<td><p>Removed</p></td>
+<td><p>Top-level lazy exports and semantic submodules such as <code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code>, and <code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p>Legacy layer/axis/option browse pages</p></td>
+<td><p>Removed</p></td>
+<td><p><a class="reference internal" href="documentation_map.html"><span class="std std-doc">Documentation Map</span></a>, <a class="reference internal" href="public_api.html"><span class="std std-doc">Public Python API</span></a>, and module pages.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-</section>
-<section id="no-current-action-needed">
-<h2>No Current Action Needed<a class="headerlink" href="#no-current-action-needed" title="Link to this heading">#</a></h2>
-<p>These areas looked like gaps in the old tree but are now covered or
-intentionally excluded:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Item</p></th>
-<th class="head"><p>Status</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Legacy diagnostic ops</p></td>
-<td><p>Covered by <code class="docutils literal notranslate"><span class="pre">feature_analysis</span></code>, <code class="docutils literal notranslate"><span class="pre">forecast_analysis</span></code>, and <code class="docutils literal notranslate"><span class="pre">data_analysis</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Old output ops</p></td>
-<td><p>Covered by <code class="docutils literal notranslate"><span class="pre">output</span></code> plus the new <code class="docutils literal notranslate"><span class="pre">reporting</span></code> module.</p></td>
-</tr>
-<tr class="row-even"><td><p>Legacy MIDAS feature/model split</p></td>
-<td><p>Covered by <code class="docutils literal notranslate"><span class="pre">mixed_frequency_lags()</span></code> and MIDAS model callables.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Legacy Chow-Lin op</p></td>
-<td><p>Covered by <code class="docutils literal notranslate"><span class="pre">data.chow_lin_disaggregate()</span></code> and <code class="docutils literal notranslate"><span class="pre">data.align_frequency(...,</span> <span class="pre">quarterly_to_monthly=&quot;chow_lin&quot;)</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p>Legacy blocked OOB reality check</p></td>
-<td><p>Covered by <code class="docutils literal notranslate"><span class="pre">tests.blocked_oob_reality_check()</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Full iterative MCS</p></td>
-<td><p>Covered by exact <code class="docutils literal notranslate"><span class="pre">tests.model_confidence_set()</span></code>; <code class="docutils literal notranslate"><span class="pre">tests.iterative_model_confidence_set()</span></code> remains a descriptive alias.</p></td>
-</tr>
-<tr class="row-even"><td><p>Reporting presets</p></td>
-<td><p>Covered by <code class="docutils literal notranslate"><span class="pre">reporting.accuracy_table()</span></code>, <code class="docutils literal notranslate"><span class="pre">reporting.model_comparison_table()</span></code>, and <code class="docutils literal notranslate"><span class="pre">reporting.forecast_test_table()</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p>Holiday features</p></td>
-<td><p>Intentionally excluded for monthly/quarterly macro workflows.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
 </section>
 
 
@@ -774,21 +588,6 @@ intentionally excluded:</p>
                 <dialog id="pst-secondary-sidebar-modal"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
-
-  <div class="sidebar-secondary-item">
-<div
-    id="pst-page-navigation-heading-2"
-    class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#intentional-removals">Intentional Removals</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#covered-callable-surface">Covered Callable Surface</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#remaining-real-gaps">Remaining Real Gaps</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#no-current-action-needed">No Current Action Needed</a></li>
-</ul>
-  </nav></div>
 
   <div class="sidebar-secondary-item">
 

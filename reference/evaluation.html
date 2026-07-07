@@ -400,21 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
-</ul>
-</details></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
@@ -440,19 +425,34 @@
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.evaluation</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Extension Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">Custom Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">Custom Preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">Custom Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, And Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation And Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -516,416 +516,711 @@
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-evaluation">
 <h1>macroforecast.evaluation<a class="headerlink" href="#macroforecast-evaluation" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
-<p><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code> owns evaluation reports. Raw scoring functions still
-live in <code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code>, and forecast-comparison statistical tests still
-live in <code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
-
-<span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">metrics</span> <span class="ow">is</span> <span class="n">mf</span><span class="o">.</span><span class="n">metrics</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">tests</span> <span class="ow">is</span> <span class="n">mf</span><span class="o">.</span><span class="n">tests</span>
-</pre></div>
-</div>
-<p>The public API contract is:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Namespace</p></th>
-<th class="head"><p>Owns</p></th>
-<th class="head"><p>Does not own</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code></p></td>
-<td><p>Forecast scoring, ranking, metric resolution.</p></td>
-<td><p>Statistical comparison tests.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></p></td>
-<td><p>Forecast-comparison tests, density diagnostics, residual diagnostics.</p></td>
-<td><p>General scoring tables.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></p></td>
-<td><p>Multi-slice evaluation reports, OOS-period filtering, benchmark comparisons, regime scoring, and error decomposition.</p></td>
-<td><p>Raw metric functions or statistical test functions.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Public defaults:</p>
+<p>Report-level aggregation, benchmark comparison, regime scores, and namespace access to metrics/tests.</p>
+<p>Guide context: <a class="reference internal" href="../guide/concepts/evaluation.html"><span class="std std-doc">../guide/concepts/evaluation.md</span></a>.</p>
+<section id="public-symbols">
+<h2>Public Symbols<a class="headerlink" href="#public-symbols" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Symbol</p></th>
-<th class="head"><p>Meaning</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Summary</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DEFAULT_METRICS</span></code></p></td>
-<td><p>Default metric tuple used by <code class="docutils literal notranslate"><span class="pre">evaluate_report(...)</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DEFAULT_SCORE_BY</span></code></p></td>
-<td><p>Default grouping columns for score aggregation.</p></td>
-</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BENCHMARK_METRICS</span></code></p></td>
-<td><p>Default benchmark-comparison metrics.</p></td>
+<td><p>data</p></td>
+<td><p>Built-in immutable sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DEFAULT_METRICS</span></code></p></td>
+<td><p>data</p></td>
+<td><p>Built-in immutable sequence.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DEFAULT_SCORE_BY</span></code></p></td>
+<td><p>data</p></td>
+<td><p>Built-in immutable sequence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code></p></td>
+<td><p>class</p></td>
+<td><p>Container returned by :func:<code class="docutils literal notranslate"><span class="pre">evaluate_report</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">aggregate_scores</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Evaluate the same forecasts over multiple explicit groupings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_comparison</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Evaluate candidate models relative to one benchmark model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">error_decomposition</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Decompose forecast MSE into squared bias and residual variance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">evaluate_report</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Build a multi-slice forecast evaluation report.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">filter_oos_period</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return forecast rows restricted to an out-of-sample date interval.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p>module</p></td>
+<td><p>No public docstring is available.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regime_scores</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Evaluate forecasts by regime labels.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">tests</span></code></p></td>
+<td><p>module</p></td>
+<td><p>No public docstring is available.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<section id="public-flow">
-<h2>Public Flow<a class="headerlink" href="#public-flow" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate_report</span><span class="p">(</span>
-    <span class="n">forecast_result</span><span class="p">,</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
-    <span class="n">benchmark_model</span><span class="o">=</span><span class="s2">&quot;historical_mean&quot;</span><span class="p">,</span>
-    <span class="n">time_frequency</span><span class="o">=</span><span class="s2">&quot;Q&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">scores</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">scores</span>
-<span class="n">ranking</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">ranking</span>
-<span class="n">by_regime</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">regime</span>
+</section>
+<section id="data-and-module-values">
+<h2>Data And Module Values<a class="headerlink" href="#data-and-module-values" title="Link to this heading">#</a></h2>
+<section id="benchmark-metrics">
+<h3><code class="docutils literal notranslate"><span class="pre">BENCHMARK_METRICS</span></code><a class="headerlink" href="#benchmark-metrics" title="Link to this heading">#</a></h3>
+<p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">BENCHMARK_METRICS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mae&quot;</span><span class="p">,</span> <span class="s2">&quot;mse_reduction&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="evaluate-report">
-<h2>evaluate_report<a class="headerlink" href="#evaluate-report" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate_report</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">),</span>
-    <span class="n">score_by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
-    <span class="n">aggregations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">rank_metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">rank_by</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">benchmark_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">benchmark_metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mae&quot;</span><span class="p">,</span> <span class="s2">&quot;mse_reduction&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
-    <span class="n">oos_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">oos_end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">regimes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">regime_column</span><span class="o">=</span><span class="s2">&quot;regime&quot;</span><span class="p">,</span>
-    <span class="n">target_column</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span>
-    <span class="n">state_column</span><span class="o">=</span><span class="s2">&quot;state&quot;</span><span class="p">,</span>
-    <span class="n">time_frequency</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">time_column</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">,</span>
-    <span class="n">time_bucket_column</span><span class="o">=</span><span class="s2">&quot;time_bucket&quot;</span><span class="p">,</span>
-    <span class="n">include_decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">decomposition_by</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">include_combined</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvaluationReport</span>
+<section id="default-metrics">
+<h3><code class="docutils literal notranslate"><span class="pre">DEFAULT_METRICS</span></code><a class="headerlink" href="#default-metrics" title="Link to this heading">#</a></h3>
+<p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT_METRICS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<section id="input">
-<h3>Input<a class="headerlink" href="#input" title="Link to this heading">#</a></h3>
+</section>
+<section id="default-score-by">
+<h3><code class="docutils literal notranslate"><span class="pre">DEFAULT_SCORE_BY</span></code><a class="headerlink" href="#default-score-by" title="Link to this heading">#</a></h3>
+<p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT_SCORE_BY</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="metrics">
+<h3><code class="docutils literal notranslate"><span class="pre">metrics</span></code><a class="headerlink" href="#metrics" title="Link to this heading">#</a></h3>
+<p>Kind: <code class="docutils literal notranslate"><span class="pre">module</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">module</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">metrics</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="tests">
+<h3><code class="docutils literal notranslate"><span class="pre">tests</span></code><a class="headerlink" href="#tests" title="Link to this heading">#</a></h3>
+<p>Kind: <code class="docutils literal notranslate"><span class="pre">module</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tests</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">module</span> <span class="n">macroforecast</span><span class="o">.</span><span class="n">tests</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="callable-and-class-reference">
+<h2>Callable And Class Reference<a class="headerlink" href="#callable-and-class-reference" title="Link to this heading">#</a></h2>
+<section id="evaluationreport">
+<h3>EvaluationReport<a class="headerlink" href="#evaluationreport" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation.report.EvaluationReport</span></code></p>
+<section id="signature">
+<h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">EvaluationReport</span><span class="p">(</span><span class="n">scores</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">ranking</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">aggregations</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">benchmark</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">regime</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">decomposition</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">metadata_schema</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</section>
+<section id="description">
+<h4>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h4>
+<p>Container returned by :func:<code class="docutils literal notranslate"><span class="pre">evaluate_report</span></code>.</p>
+</section>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
 <th class="head"><p>Type</p></th>
 <th class="head"><p>Default</p></th>
-<th class="head"><p>Choices</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code> or <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>required</p></td>
-<td><p>Forecast runner output or forecast-like table.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
-<td><p>sequence</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;mse&quot;,</span> <span class="pre">&quot;rmse&quot;,</span> <span class="pre">&quot;mae&quot;)</span></code></p></td>
-<td><p>Metric names accepted by <code class="docutils literal notranslate"><span class="pre">mf.metrics.get_metric(...)</span></code> or callables.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">score_by</span></code></p></td>
-<td><p>sequence</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;model&quot;,</span> <span class="pre">&quot;horizon&quot;)</span></code></p></td>
-<td><p>Main score grouping. Columns must exist.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">aggregations</span></code></p></td>
-<td><p>mapping, sequence, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>auto</p></td>
-<td><p>Extra groupings to evaluate. <code class="docutils literal notranslate"><span class="pre">None</span></code> creates model, horizon, model-horizon, and available target/state/regime/time slices.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rank_metric</span></code></p></td>
-<td><p>str or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>auto</p></td>
-<td><p>Metric used for <code class="docutils literal notranslate"><span class="pre">ranking</span></code>. Auto preference is <code class="docutils literal notranslate"><span class="pre">rmse</span></code>, <code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">mae</span></code>, <code class="docutils literal notranslate"><span class="pre">r2_oos</span></code>, <code class="docutils literal notranslate"><span class="pre">relative_mse</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rank_by</span></code></p></td>
-<td><p>sequence or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">score_by</span></code> without <code class="docutils literal notranslate"><span class="pre">model</span></code></p></td>
-<td><p>Ranking groups.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code></p></td>
-<td><p>str or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Model name used for relative metrics and benchmark table.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_metrics</span></code></p></td>
-<td><p>sequence</p></td>
-<td><p>default benchmark metrics</p></td>
-<td><p>Metrics for <code class="docutils literal notranslate"><span class="pre">benchmark_comparison</span></code>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">oos_start</span></code>, <code class="docutils literal notranslate"><span class="pre">oos_end</span></code></p></td>
-<td><p>date-like or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Restrict forecast rows before scoring. Dates are inclusive.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">regimes</span></code></p></td>
-<td><p>mapping, Series, str, or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Date-to-regime labels, existing regime column name, or no extra regime attachment.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regime_column</span></code></p></td>
-<td><p>str</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;regime&quot;</span></code></p></td>
-<td><p>Column used for regime scoring.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">target_column</span></code>, <code class="docutils literal notranslate"><span class="pre">state_column</span></code></p></td>
-<td><p>str</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&quot;target&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code></p></td>
-<td><p>Optional slice columns when present.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_frequency</span></code></p></td>
-<td><p>str or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Pandas period frequency such as <code class="docutils literal notranslate"><span class="pre">&quot;M&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;Q&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;A&quot;</span></code> for time-bucket aggregation.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_decomposition</span></code></p></td>
-<td><p>bool</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
-<td><p>Add MSE decomposition into squared bias and residual variance.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decomposition_by</span></code></p></td>
-<td><p>sequence or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">score_by</span></code></p></td>
-<td><p>Grouping used by <code class="docutils literal notranslate"><span class="pre">error_decomposition</span></code>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_combined</span></code></p></td>
-<td><p>bool</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
-<td><p>Include forecast-combination rows.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Custom scoring belongs in the <code class="docutils literal notranslate"><span class="pre">metrics</span></code> argument:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">mean_bias</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_pred</span><span class="p">)</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y_true</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-
-<span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate_report</span><span class="p">(</span>
-    <span class="n">forecast_result</span><span class="p">,</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="n">mean_bias</span><span class="p">),</span>
-    <span class="n">aggregations</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;model_target&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">),</span>
-        <span class="s2">&quot;model_regime&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;regime&quot;</span><span class="p">),</span>
-    <span class="p">},</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>Custom aggregation slices belong in <code class="docutils literal notranslate"><span class="pre">aggregations</span></code>. The value is a grouping
-tuple over existing forecast-table columns; evaluation still uses
-<code class="docutils literal notranslate"><span class="pre">mf.metrics.evaluate_forecasts()</span></code> to compute the metric table.
-When relative metrics are requested, every scoring or aggregation grouping must
-include <code class="docutils literal notranslate"><span class="pre">model</span></code>; the automatic aggregation set omits model-free slices such as
-<code class="docutils literal notranslate"><span class="pre">horizon</span></code> alone because benchmark-relative scores are candidate-model specific.</p>
-</section>
-<section id="output">
-<h3>Output<a class="headerlink" href="#output" title="Link to this heading">#</a></h3>
-<p>Returns <code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code>.</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Field</p></th>
-<th class="head"><p>Type</p></th>
-<th class="head"><p>Meaning</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scores</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Main metric table over <code class="docutils literal notranslate"><span class="pre">score_by</span></code>.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ranking</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code></p></td>
-<td><p>Ranked <code class="docutils literal notranslate"><span class="pre">scores</span></code> table.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">aggregations</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">DataFrame]</span></code></p></td>
-<td><p>Extra metric tables by requested or auto-discovered slices.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">pd.DataFrame]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;factory&gt;</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Candidate rows relative to <code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code>.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regime</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Regime-specific metric table when regime labels are available.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">decomposition</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Error decomposition table when requested.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
-<td><p>Input metadata plus compact <code class="docutils literal notranslate"><span class="pre">evaluation_report</span></code> stage.</p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;factory&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_schema</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;factory&gt;</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">EvaluationReport.to_dict()</span></code> serializes all tables into JSON-ready records.
-The serialized payload includes
-<code class="docutils literal notranslate"><span class="pre">metadata_schema={&quot;kind&quot;:</span> <span class="pre">&quot;evaluation_report&quot;,</span> <span class="pre">&quot;version&quot;:</span> <span class="pre">1}</span></code>.</p>
-<p>The metadata stage records options, table row counts, and forecast-table input
-shape:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;evaluation_report&quot;</span><span class="p">]</span>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="minimal-use">
+<h4>Minimal Use<a class="headerlink" href="#minimal-use" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Construct with the signature above:</span>
+<span class="c1"># mf.evaluation.EvaluationReport(...)</span>
 </pre></div>
 </div>
-<p>For paper/report output, keep evaluation and presentation separate:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">main_table</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">metric_report_table</span><span class="p">(</span>
-    <span class="n">report</span><span class="p">,</span>
-    <span class="n">columns</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
-    <span class="n">percent_columns</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;r2_oos&quot;</span><span class="p">,),</span>
-<span class="p">)</span>
-
-<span class="n">paper_tables</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">evaluation_report_tables</span><span class="p">(</span>
-    <span class="n">report</span><span class="p">,</span>
-    <span class="n">include</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;scores&quot;</span><span class="p">,</span> <span class="s2">&quot;ranking&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark&quot;</span><span class="p">,</span> <span class="s2">&quot;decomposition&quot;</span><span class="p">),</span>
-<span class="p">)</span>
-</pre></div>
+</section>
+<section id="dataclass-fields">
+<h4>Dataclass Fields<a class="headerlink" href="#dataclass-fields" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scores</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ranking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">aggregations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">pd.DataFrame]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">default_factory</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regime</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">decomposition</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">default_factory</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metadata_schema</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">default_factory</span></code></p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">metric_report_table(...)</span></code> creates one presentation-ready table.
-<code class="docutils literal notranslate"><span class="pre">evaluation_report_tables(...)</span></code> creates a named <code class="docutils literal notranslate"><span class="pre">ReportBundle</span></code> for the report’s
-main components.</p>
+</section>
+<section id="public-methods">
+<h4>Public Methods<a class="headerlink" href="#public-methods" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Signature</p></th>
+<th class="head"><p>Summary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">to_dict</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">to_dict(self)</span> <span class="pre">-&gt;</span> <span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p>No public docstring is available.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 </section>
 <section id="aggregate-scores">
-<h2>aggregate_scores<a class="headerlink" href="#aggregate-scores" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">aggregate_scores</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">groupings</span><span class="p">,</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">),</span>
-    <span class="n">benchmark_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+<h3>aggregate_scores<a class="headerlink" href="#aggregate-scores" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation.report.aggregate_scores</span></code></p>
+<section id="id1">
+<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">aggregate_scores</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">groupings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> <span class="s1">&#39;rmse&#39;</span><span class="p">,</span> <span class="s1">&#39;mae&#39;</span><span class="p">),</span> <span class="n">benchmark_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>Evaluates one forecast table over multiple explicit groupings.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tables</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">aggregate_scores</span><span class="p">(</span>
-    <span class="n">result</span><span class="p">,</span>
-    <span class="n">groupings</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,),</span>
-        <span class="s2">&quot;model_horizon_target&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">),</span>
-    <span class="p">},</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>All requested columns must exist. This function fails loudly instead of silently
-dropping unavailable dimensions.</p>
 </section>
-<section id="filter-oos-period">
-<h2>filter_oos_period<a class="headerlink" href="#filter-oos-period" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">filter_oos_period</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">end</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">date_column</span><span class="o">=</span><span class="s2">&quot;date&quot;</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
-</pre></div>
-</div>
-<p>Returns forecast rows inside an inclusive out-of-sample date interval. This is
-the callable replacement for an <code class="docutils literal notranslate"><span class="pre">oos_period</span></code> setting. Use it directly when you
-want to score only a subsample, or pass <code class="docutils literal notranslate"><span class="pre">oos_start</span></code>/<code class="docutils literal notranslate"><span class="pre">oos_end</span></code> to
-<code class="docutils literal notranslate"><span class="pre">evaluate_report(...)</span></code>.</p>
+<section id="id2">
+<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<p>Evaluate the same forecasts over multiple explicit groupings.</p>
 </section>
-<section id="error-decomposition">
-<h2>error_decomposition<a class="headerlink" href="#error-decomposition" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">error_decomposition</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
-    <span class="n">actual</span><span class="o">=</span><span class="s2">&quot;actual&quot;</span><span class="p">,</span>
-    <span class="n">prediction</span><span class="o">=</span><span class="s2">&quot;prediction&quot;</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+<section id="id3">
+<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">groupings</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">Sequence[str]]</span> <span class="pre">|</span> <span class="pre">Sequence[Sequence[str]]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str</span> <span class="pre">|</span> <span class="pre">MetricLike]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;mse&quot;,</span> <span class="pre">&quot;rmse&quot;,</span> <span class="pre">&quot;mae&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id4">
+<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">pd.DataFrame]</span></code></p>
+</section>
+<section id="id5">
+<h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.evaluation.aggregate_scores(...)</span>
 </pre></div>
 </div>
-<p>Decomposes MSE within each group as:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>mse = bias_squared + residual_variance
-</pre></div>
-</div>
-<p>where <code class="docutils literal notranslate"><span class="pre">bias</span></code> is the mean residual <code class="docutils literal notranslate"><span class="pre">actual</span> <span class="pre">-</span> <span class="pre">prediction</span></code>. Output columns
-include <code class="docutils literal notranslate"><span class="pre">n</span></code>, <code class="docutils literal notranslate"><span class="pre">mse</span></code>, <code class="docutils literal notranslate"><span class="pre">bias</span></code>, <code class="docutils literal notranslate"><span class="pre">bias_squared</span></code>, <code class="docutils literal notranslate"><span class="pre">residual_variance</span></code>,
-<code class="docutils literal notranslate"><span class="pre">bias_share</span></code>, and <code class="docutils literal notranslate"><span class="pre">variance_share</span></code>.</p>
+</section>
 </section>
 <section id="benchmark-comparison">
-<h2>benchmark_comparison<a class="headerlink" href="#benchmark-comparison" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">benchmark_comparison</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">benchmark_model</span><span class="p">,</span>
-    <span class="n">by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">),</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mse&quot;</span><span class="p">,</span> <span class="s2">&quot;relative_mae&quot;</span><span class="p">,</span> <span class="s2">&quot;mse_reduction&quot;</span><span class="p">,</span> <span class="s2">&quot;r2_oos&quot;</span><span class="p">),</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+<h3>benchmark_comparison<a class="headerlink" href="#benchmark-comparison" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation.report.benchmark_comparison</span></code></p>
+<section id="id6">
+<h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">benchmark_comparison</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">benchmark_model</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> <span class="s1">&#39;mae&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_mse&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_mae&#39;</span><span class="p">,</span> <span class="s1">&#39;mse_reduction&#39;</span><span class="p">,</span> <span class="s1">&#39;r2_oos&#39;</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p>Returns candidate model rows with benchmark-relative scores. The benchmark row
-itself is removed from the output. <code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code> must be present in the
-forecast table. The benchmark forecasts must already exist in the input table;
-this function does not generate them. Use the forecasting runner to generate a
-same-window benchmark, or append an external benchmark forecast table only after
-verifying identical date/origin/horizon/target support.</p>
+</section>
+<section id="id7">
+<h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<p>Evaluate candidate models relative to one benchmark model.</p>
+</section>
+<section id="id8">
+<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;model&quot;,</span> <span class="pre">&quot;horizon&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str</span> <span class="pre">|</span> <span class="pre">MetricLike]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;mse&quot;,</span> <span class="pre">&quot;mae&quot;,</span> <span class="pre">&quot;relative_mse&quot;,</span> <span class="pre">&quot;relative_mae&quot;,</span> <span class="pre">&quot;mse_reduction...</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id9">
+<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id10">
+<h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.evaluation.benchmark_comparison(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="error-decomposition">
+<h3>error_decomposition<a class="headerlink" href="#error-decomposition" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation.report.error_decomposition</span></code></p>
+<section id="id11">
+<h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">error_decomposition</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">actual</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;actual&quot;</span><span class="p">,</span> <span class="n">prediction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;prediction&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id12">
+<h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<p>Decompose forecast MSE into squared bias and residual variance.</p>
+</section>
+<section id="id13">
+<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;model&quot;,</span> <span class="pre">&quot;horizon&quot;)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">actual</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;actual&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prediction</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;prediction&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id14">
+<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id15">
+<h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.evaluation.error_decomposition(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="evaluate-report">
+<h3>evaluate_report<a class="headerlink" href="#evaluate-report" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation.report.evaluate_report</span></code></p>
+<section id="id16">
+<h4>Signature<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate_report</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> <span class="s1">&#39;rmse&#39;</span><span class="p">,</span> <span class="s1">&#39;mae&#39;</span><span class="p">),</span> <span class="n">score_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">aggregations</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rank_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">rank_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">benchmark_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">benchmark_metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> <span class="s1">&#39;mae&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_mse&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_mae&#39;</span><span class="p">,</span> <span class="s1">&#39;mse_reduction&#39;</span><span class="p">,</span> <span class="s1">&#39;r2_oos&#39;</span><span class="p">),</span> <span class="n">oos_start</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">oos_end</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">regimes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">regime_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;regime&quot;</span><span class="p">,</span> <span class="n">target_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">state_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="n">time_frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">time_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="n">time_bucket_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;time_bucket&quot;</span><span class="p">,</span> <span class="n">include_decomposition</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">decomposition_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvaluationReport</span>
+</pre></div>
+</div>
+</section>
+<section id="id17">
+<h4>Description<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<p>Build a multi-slice forecast evaluation report.</p>
+</section>
+<section id="id18">
+<h4>Parameters<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str</span> <span class="pre">|</span> <span class="pre">MetricLike]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;mse&quot;,</span> <span class="pre">&quot;rmse&quot;,</span> <span class="pre">&quot;mae&quot;)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">score_by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;model&quot;,</span> <span class="pre">&quot;horizon&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">aggregations</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">Sequence[str]]</span> <span class="pre">|</span> <span class="pre">Sequence[Sequence[str]]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rank_metric</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rank_by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_metrics</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str</span> <span class="pre">|</span> <span class="pre">MetricLike]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;mse&quot;,</span> <span class="pre">&quot;mae&quot;,</span> <span class="pre">&quot;relative_mse&quot;,</span> <span class="pre">&quot;relative_mae&quot;,</span> <span class="pre">&quot;mse_reduction...</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">oos_start</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">oos_end</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regimes</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[Any,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">regime_column</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;regime&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">target_column</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;target&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">state_column</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;state&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_frequency</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_column</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;date&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_bucket_column</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;time_bucket&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_decomposition</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">decomposition_by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">include_combined</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id19">
+<h4>Returns<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">EvaluationReport</span></code></p>
+</section>
+<section id="id20">
+<h4>Minimal Use<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.evaluation.evaluate_report(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="filter-oos-period">
+<h3>filter_oos_period<a class="headerlink" href="#filter-oos-period" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation.report.filter_oos_period</span></code></p>
+<section id="id21">
+<h4>Signature<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">filter_oos_period</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">date_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;date&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id22">
+<h4>Description<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<p>Return forecast rows restricted to an out-of-sample date interval.</p>
+</section>
+<section id="id23">
+<h4>Parameters<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">end</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">date_column</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;date&quot;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id24">
+<h4>Returns<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id25">
+<h4>Minimal Use<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.evaluation.filter_oos_period(...)</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="regime-scores">
-<h2>regime_scores<a class="headerlink" href="#regime-scores" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">regime_scores</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">regimes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">regime_column</span><span class="o">=</span><span class="s2">&quot;regime&quot;</span><span class="p">,</span>
-    <span class="n">by</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;regime&quot;</span><span class="p">),</span>
-    <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">),</span>
-    <span class="n">benchmark_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span>
+<h3>regime_scores<a class="headerlink" href="#regime-scores" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation.report.regime_scores</span></code></p>
+<section id="id26">
+<h4>Signature<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">regime_scores</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">regimes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">regime_column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;regime&quot;</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">,</span> <span class="s1">&#39;regime&#39;</span><span class="p">),</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;mse&#39;</span><span class="p">,</span> <span class="s1">&#39;rmse&#39;</span><span class="p">,</span> <span class="s1">&#39;mae&#39;</span><span class="p">),</span> <span class="n">benchmark_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">regimes</span></code> can be:</p>
+</section>
+<section id="id27">
+<h4>Description<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<p>Evaluate forecasts by regime labels.</p>
+</section>
+<section id="id28">
+<h4>Parameters<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Form</p></th>
-<th class="head"><p>Meaning</p></th>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
-<td><p>Use an existing <code class="docutils literal notranslate"><span class="pre">regime_column</span></code>.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forecasts</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
-<td><p>Use that existing column as the source and copy to <code class="docutils literal notranslate"><span class="pre">regime_column</span></code> when names differ.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">regimes</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[Any,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">pd.Series</span> <span class="pre">|</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>mapping or <code class="docutils literal notranslate"><span class="pre">Series</span></code></p></td>
-<td><p>Map forecast <code class="docutils literal notranslate"><span class="pre">date</span></code> values to regime labels.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">regime_column</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;regime&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">by</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;model&quot;,</span> <span class="pre">&quot;horizon&quot;,</span> <span class="pre">&quot;regime&quot;)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metrics</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sequence[str</span> <span class="pre">|</span> <span class="pre">MetricLike]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">(&quot;mse&quot;,</span> <span class="pre">&quot;rmse&quot;,</span> <span class="pre">&quot;mae&quot;)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">benchmark_model</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="boundary">
-<h2>Boundary<a class="headerlink" href="#boundary" title="Link to this heading">#</a></h2>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Question</p></th>
-<th class="head"><p>Use</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>One metric value or one metric table</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">mf.metrics</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p>Multi-slice report with ranking, OOS filtering, benchmark, regime, target/state/time aggregation, decomposition</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">mf.evaluation</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p>Diebold-Mariano, Clark-West, MCS, residual tests</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">mf.tests</span></code></p></td>
-</tr>
-</tbody>
-</table>
+<section id="id29">
+<h4>Returns<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id30">
+<h4>Minimal Use<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.evaluation.regime_scores(...)</span>
+</pre></div>
 </div>
+</section>
+</section>
 </section>
 </section>
 
@@ -976,18 +1271,76 @@ verifying identical date/origin/horizon/target support.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-flow">Public Flow</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-report">evaluate_report</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#input">Input</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#output">Output</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#public-symbols">Public Symbols</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-and-module-values">Data And Module Values</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-metrics"><code class="docutils literal notranslate"><span class="pre">BENCHMARK_METRICS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-metrics"><code class="docutils literal notranslate"><span class="pre">DEFAULT_METRICS</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-score-by"><code class="docutils literal notranslate"><span class="pre">DEFAULT_SCORE_BY</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#metrics"><code class="docutils literal notranslate"><span class="pre">metrics</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tests"><code class="docutils literal notranslate"><span class="pre">tests</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#aggregate-scores">aggregate_scores</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#filter-oos-period">filter_oos_period</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-decomposition">error_decomposition</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-comparison">benchmark_comparison</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#regime-scores">regime_scores</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#boundary">Boundary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#callable-and-class-reference">Callable And Class Reference</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluationreport">EvaluationReport</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#signature">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#returns">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#minimal-use">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dataclass-fields">Dataclass Fields</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#public-methods">Public Methods</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aggregate-scores">aggregate_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmark-comparison">benchmark_comparison</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-decomposition">error_decomposition</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-report">evaluate_report</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filter-oos-period">filter_oos_period</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#regime-scores">regime_scores</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Minimal Use</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

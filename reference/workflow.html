@@ -400,21 +400,6 @@
 <li class="toctree-l1"><a class="reference internal" href="reference_verification.html">Reference Verification</a></li>
 <li class="toctree-l1"><a class="reference internal" href="public_api.html">Public Python API</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">custom_dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">custom_preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">custom_features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">custom_model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, and Forecasting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation and Tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation and Analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
-</ul>
-</details></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Package Configuration</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="meta.html">macroforecast.meta</a></li>
@@ -440,19 +425,34 @@
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation and Testing</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="metrics.html">macroforecast.metrics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tests.html">macroforecast.tests</a></li>
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">macroforecast.evaluation</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation and Delivery</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanation And Delivery</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="interpretation.html">macroforecast.interpretation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation.dual</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interpretation_dual.html">macroforecast.interpretation_dual</a></li>
 <li class="toctree-l1"><a class="reference internal" href="output.html">macroforecast.output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reporting.html">macroforecast.reporting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html"><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">macroforecast.pipeline</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Custom Hooks</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="custom/index.html">Custom Extensions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom.html">Custom Extension Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_dataset.html">Custom Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_preprocess.html">Custom Preprocess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_features.html">Custom Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_model.html">Custom Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_window_selection_forecasting.html">Custom Window, Selection, And Forecasting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_evaluation_tests.html">Custom Evaluation Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_interpretation_analysis.html">Custom Interpretation And Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom/custom_output.html">Custom Output</a></li>
+</ul>
+</details></li>
 </ul>
 </div>
 </nav></div>
@@ -516,194 +516,54 @@
   <section class="tex2jax_ignore mathjax_ignore" id="workflow-contract">
 <h1>Workflow Contract<a class="headerlink" href="#workflow-contract" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
-<p><code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> keeps statistical functions callable and puts workflow
-composition in the forecasting runner.</p>
-<section id="ownership">
-<h2>Ownership<a class="headerlink" href="#ownership" title="Link to this heading">#</a></h2>
+<p>The current architecture is package-surface first. Users call Python functions and dataclass specs directly; the removed layered YAML/ops registry is not part of the live workflow.</p>
+<section id="module-ownership">
+<h2>Module Ownership<a class="headerlink" href="#module-ownership" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Module</p></th>
 <th class="head"><p>Owns</p></th>
-<th class="head"><p>Does not own</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.data</span></code></p></td>
-<td><p>Canonical pandas panels and metadata.</p></td>
-<td><p>Model-ready matrices.</p></td>
+<td><p>Loads or wraps a canonical pandas panel plus metadata.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing</span></code></p></td>
-<td><p>Callable data-cleaning transforms and reusable preprocessing specs.</p></td>
-<td><p>Expanding/rolling schedule decisions.</p></td>
+<td><p>Builds reusable preprocessing specs and applies window-local transforms.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.filters</span></code></p></td>
-<td><p>Callable one-series filters and smoothers, including HP, Hamilton, Savitzky-Golay, wavelet-style components, and AlbaMA.</p></td>
-<td><p>Panel feature matrices or forecast-origin scheduling.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
+<td><p>Defines estimation, validation, and test splits.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering</span></code></p></td>
-<td><p>Callable feature/target transforms, filter-to-feature wrappers, and reusable feature specs.</p></td>
-<td><p>Forecast-origin scheduling.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.feature_analysis</span></code></p></td>
-<td><p>Feature-matrix and learned-weight diagnostics after feature construction.</p></td>
-<td><p>Predictor construction or model fitting.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code></p></td>
-<td><p>Estimation mode, validation/test time frames, retrain/retune cadence, and reusable stage policies.</p></td>
-<td><p>Low-level transformation formulas.</p></td>
+<td><p>Builds target columns and predictor matrices.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.models</span></code></p></td>
-<td><p>Single-estimator model callables and model-owned hyperparameter spaces.</p></td>
-<td><p>Forecast loops, forecast combination, or fit-time model ensembles.</p></td>
+<td><p>Fits individual model families and owns model specs.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble</span></code></p></td>
-<td><p>Fit-time composition of multiple member models into one <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code>.</p></td>
-<td><p>Forecast-output combination after runner execution.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></p></td>
+<td><p>Tunes model-owned parameters.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection</span></code></p></td>
-<td><p>Parameter search over supplied data and validation windows.</p></td>
-<td><p>Global run orchestration.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></p></td>
+<td><p>Runs one model/target/horizon forecast job.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code></p></td>
-<td><p>Runner-level composition and forecast combination.</p></td>
-<td><p>Low-level transformation formulas.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline</span></code></p></td>
+<td><p>Runs and evaluates full multi-arm studies.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code></p></td>
-<td><p>Forecast scoring, forecast ranking, and metric resolution.</p></td>
-<td><p>Data splits, model fitting, or statistical tests.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></p></td>
+<td><p>Score forecasts and run forecast-comparison tests.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.tests</span></code></p></td>
-<td><p>Forecast-comparison statistical tests and residual diagnostics.</p></td>
-<td><p>Forecast scoring or model fitting.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.evaluation</span></code></p></td>
-<td><p>Namespace wrapper for <code class="docutils literal notranslate"><span class="pre">metrics</span></code> and <code class="docutils literal notranslate"><span class="pre">tests</span></code>.</p></td>
-<td><p>Callable metric/test functions.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.interpretation</span></code></p></td>
-<td><p>Post-fit importance and effect summaries.</p></td>
-<td><p>Model fitting, feature construction, or forecast testing.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code></p></td>
-<td><p>Output tables/JSON summaries, artifact writing, schema-aware manifests, hashes, compression, and provenance.</p></td>
-<td><p>Paper/report presentation style.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.reporting</span></code></p></td>
-<td><p>Presentation table formatting, LaTeX/HTML/Markdown rendering, and figure-ready data.</p></td>
-<td><p>Artifact writing or workflow design.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">macroforecast.output</span></code> and <code class="docutils literal notranslate"><span class="pre">macroforecast.reporting</span></code></p></td>
+<td><p>Collect artifacts and render tables.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="review-pages">
-<h2>Review Pages<a class="headerlink" href="#review-pages" title="Link to this heading">#</a></h2>
-<p>Use these pages before opening individual function references:</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>Page</p></th>
-<th class="head"><p>Use</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><a class="reference internal" href="documentation_map.html"><span class="std std-doc">Documentation Map</span></a></p></td>
-<td><p>Decide which page to inspect for a specific question.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legacy_callable_coverage.html"><span class="std std-doc">Legacy Callable Coverage</span></a></p></td>
-<td><p>Check whether an old runtime feature is covered, intentionally removed, or deferred.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="reference_verification.html"><span class="std std-doc">Reference Verification</span></a></p></td>
-<td><p>Check formula/reference anchors and future verification priorities.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="public_api.html"><span class="std std-doc">Public Python API</span></a></p></td>
-<td><p>Check importable public symbols.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="runner-loop">
-<h2>Runner Loop<a class="headerlink" href="#runner-loop" title="Link to this heading">#</a></h2>
-<p>The runner is the only module that combines stages:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">origin</span> <span class="ow">in</span> <span class="n">window</span><span class="o">.</span><span class="n">iter_origins</span><span class="p">(</span><span class="n">panel</span><span class="o">.</span><span class="n">index</span><span class="p">):</span>
-    <span class="n">preprocessing_fit_panel</span> <span class="o">=</span> <span class="n">rows_allowed_by</span><span class="p">(</span><span class="n">preprocessing_policy</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
-    <span class="n">fitted_preprocessing</span> <span class="o">=</span> <span class="n">preprocess_spec</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-        <span class="n">preprocessing_fit_panel</span><span class="p">,</span>
-        <span class="n">policy</span><span class="o">=</span><span class="n">preprocessing_policy</span><span class="o">.</span><span class="n">scope</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">processed</span> <span class="o">=</span> <span class="n">fitted_preprocessing</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">rows_needed_by_runner</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-
-    <span class="n">feature_fit_panel</span> <span class="o">=</span> <span class="n">rows_allowed_by</span><span class="p">(</span><span class="n">feature_policy</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
-    <span class="n">builder</span> <span class="o">=</span> <span class="n">feature_spec</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">feature_fit_panel</span><span class="p">)</span>
-    <span class="n">train_features</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">processed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">train_dates</span><span class="p">)</span>
-    <span class="n">test_features</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">processed</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">test_dates</span><span class="p">)</span>
-
-    <span class="n">model_selection_features</span> <span class="o">=</span> <span class="n">rows_allowed_by</span><span class="p">(</span><span class="n">model_selection_policy</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
-    <span class="n">selected_params</span> <span class="o">=</span> <span class="n">model_selection</span><span class="o">.</span><span class="n">select_params</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">model_selection_features</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-    <span class="n">fit</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">train_features</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">train_features</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">selected_params</span><span class="p">)</span>
-    <span class="n">forecast</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_features</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This keeps expanding, rolling, fixed-sample, retrain cadence, and retune cadence
-in <code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code> and <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting</span></code>, not inside individual
-preprocessing or feature functions. Full-sample preprocessing remains available
-through <code class="docutils literal notranslate"><span class="pre">reprocess(...)</span></code>; origin-local preprocessing uses <code class="docutils literal notranslate"><span class="pre">preprocess_spec(...)</span></code>
-inside the runner.</p>
-<p>Post-run objects follow the same separation:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">report</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">evaluation</span><span class="o">.</span><span class="n">evaluate_report</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-<span class="n">tests</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">tests</span><span class="o">.</span><span class="n">model_confidence_set</span><span class="p">(</span><span class="n">loss_panel</span><span class="p">)</span>
-<span class="n">explain</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">interpretation</span><span class="o">.</span><span class="n">permutation_importance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-
-<span class="n">bundle</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">bundle_outputs</span><span class="p">(</span>
-    <span class="n">forecasts</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-    <span class="n">evaluation</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
-    <span class="n">tests</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;mcs&quot;</span><span class="p">:</span> <span class="n">tests</span><span class="p">},</span>
-    <span class="n">interpretation</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;importance&quot;</span><span class="p">:</span> <span class="n">explain</span><span class="p">},</span>
-<span class="p">)</span>
-<span class="n">paper_table</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">reporting</span><span class="o">.</span><span class="n">report_table</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">scores</span><span class="p">)</span>
-<span class="n">manifest</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">write_artifacts</span><span class="p">(</span><span class="n">bundle</span><span class="p">,</span> <span class="s2">&quot;results/run_001&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">output</span></code> handles named outputs and files. <code class="docutils literal notranslate"><span class="pre">reporting</span></code> handles presentation
-formatting. Neither module decides the modeling design.</p>
-</section>
-<section id="stage-policies">
-<h2>Stage Policies<a class="headerlink" href="#stage-policies" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">window.stage_policy(...)</span></code> is the shared timing grammar for runner stages.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;origin_available&quot;</span><span class="p">)</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span><span class="s2">&quot;fit_window&quot;</span><span class="p">)</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">stage_policy</span><span class="p">(</span>
-    <span class="s2">&quot;fixed_reference&quot;</span><span class="p">,</span>
-    <span class="n">reference_start</span><span class="o">=</span><span class="s2">&quot;2000-01-01&quot;</span><span class="p">,</span>
-    <span class="n">reference_end</span><span class="o">=</span><span class="s2">&quot;2019-12-31&quot;</span><span class="p">,</span>
-    <span class="n">update</span><span class="o">=</span><span class="s2">&quot;never&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>The same policy object can be supplied as <code class="docutils literal notranslate"><span class="pre">preprocessing_policy</span></code>,
-<code class="docutils literal notranslate"><span class="pre">feature_policy</span></code>, or <code class="docutils literal notranslate"><span class="pre">model_selection_policy</span></code> in <code class="docutils literal notranslate"><span class="pre">forecasting.run(...)</span></code>. This makes
-full-sample, expanding, rolling, fixed-reference, and scheduled-refit designs
-expressible without putting time logic inside low-level transformation
-functions.</p>
-</section>
-<section id="one-shot-convenience">
-<h2>One-Shot Convenience<a class="headerlink" href="#one-shot-convenience" title="Link to this heading">#</a></h2>
-<p>The direct one-shot helpers remain useful:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">processed</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span><span class="n">panel</span><span class="p">)</span>
-<span class="n">features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">build_features</span><span class="p">(</span><span class="n">processed</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fit</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">ridge</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>They are convenience calls. For strict out-of-sample work, use
-<code class="docutils literal notranslate"><span class="pre">preprocess_spec(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">feature_spec(...)</span></code>, and <code class="docutils literal notranslate"><span class="pre">forecasting.run(...)</span></code> so fitted
-transforms are learned inside each training window.</p>
-</section>
-<section id="fit-policies">
-<h2>Fit Policies<a class="headerlink" href="#fit-policies" title="Link to this heading">#</a></h2>
-<p>Public time policy should come from <code class="docutils literal notranslate"><span class="pre">window</span></code>, not from feature functions. Older
-one-shot feature helpers may still expose narrow convenience arguments, but new
-runner-compatible code should use <code class="docutils literal notranslate"><span class="pre">feature_spec(...)</span></code> and let the runner decide
-which rows belong to each fit.</p>
+<section id="runner-shape">
+<h2>Runner Shape<a class="headerlink" href="#runner-shape" title="Link to this heading">#</a></h2>
+<p>A full study is declared as <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.pipeline_spec(...)</span></code> and executed by <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.run_pipeline(...)</span></code>. A single-model run is declared directly through <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.run(...)</span></code>.</p>
+<p>The reference pages are generated from these importable modules. No generated page depends on the removed core ops registry or layer-spec module.</p>
 </section>
 </section>
 
@@ -754,12 +614,8 @@ which rows belong to each fit.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ownership">Ownership</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#review-pages">Review Pages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runner-loop">Runner Loop</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stage-policies">Stage Policies</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-shot-convenience">One-Shot Convenience</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fit-policies">Fit Policies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-ownership">Module Ownership</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runner-shape">Runner Shape</a></li>
 </ul>
   </nav></div>
 

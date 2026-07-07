@@ -2,1166 +2,1666 @@
 
 [Back to reference](index.md)
 
-`macroforecast.tests` owns forecast-comparison tests and residual diagnostics.
-It does not compute general scoring tables, fit models, or choose windows.
+Forecast-comparison tests, residual tests, density diagnostics, and model-confidence-set procedures.
 
-Use the namespace form:
+Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md).
+
+## Public Symbols
+
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `TestResult` | class | Forecast comparison test result. |
+| `anatolyev_gerko_test` | function | Anatolyev-Gerko excess profitability directional accuracy test. |
+| `clark_west_test` | function | Clark-West nested forecast comparison test. |
+| `conditional_predictive_ability_test` | function | Giacomini-Rossi rolling fluctuation test or package recursive extension. |
+| `custom_test` | function | Run a user-supplied forecast test and coerce it to ``TestResult``. |
+| `cw_test` | function | Alias for :func:`clark_west_test`. |
+| `density_interval_tests` | function | Density and interval diagnostics for PIT values. |
+| `directional_accuracy_test` | function | Pesaran-Timmermann or Henriksson-Merton directional accuracy test. |
+| `dm_test` | function | Diebold-Mariano equal predictive ability test. |
+| `jarque_bera_test` | function | Jarque-Bera test of normality for a single series. |
+| `giacomini_white_test` | function | Giacomini-White (2006) conditional predictive ability (Wald) test. |
+| `var_serial_test` | function | Multivariate residual serial-correlation test for a VAR (vars::serial.test). |
+| `var_normality_test` | function | Multivariate normality test for VAR residuals (vars::normality.test). |
+| `var_arch_test` | function | Multivariate ARCH-LM test for VAR residuals (vars::arch.test, Lutkepohl). |
+| `granger_causality` | function | Granger causality test in a VAR (R vars::causality / statsmodels). |
+| `instantaneous_causality` | function | Instantaneous (contemporaneous) causality test in a VAR (vars::causality). |
+| `dmp_test` | function | Diebold-Mariano-Pesaran joint multi-horizon test on stacked losses. |
+| `dynamic_quantile_test` | function | Engle-Manganelli dynamic quantile test for VaR forecasts. |
+| `equal_predictive_tests` | function | Run multiple equal-predictive-ability tests and stack results. |
+| `enc_new_test` | function | ENC-NEW nested forecast encompassing test. |
+| `enc_t_test` | function | ENC-T nested forecast encompassing test. |
+| `gw_test` | function | Legacy GW-compatible DM-style equal predictive ability callable. |
+| `harvey_newbold_test` | function | Legacy forecast-encompassing covariance t approximation. |
+| `henriksson_merton_test` | function | Henriksson-Merton directional accuracy test. |
+| `hn_test` | function | Alias for :func:`harvey_newbold_test`. |
+| `interval_coverage_test` | function | Kupiec, Christoffersen, and duration diagnostics for forecast intervals. |
+| `blocked_oob_reality_check` | function | Legacy block-bootstrap benchmark-superiority screen. |
+| `iterative_model_confidence_set` | function | Descriptive alias for :func:`model_confidence_set`. |
+| `mincer_zarnowitz_test` | function | Mincer-Zarnowitz forecast-rationality regression. |
+| `model_confidence_set` | function | Exact Hansen-Lunde-Nason model confidence set. |
+| `multi_horizon_spa_test` | function | Quaedvlieg (2021) multi-horizon SPA test for one pair of models. |
+| `nested_tests` | function | Run multiple nested-model forecast tests and stack results. |
+| `pesaran_timmermann_test` | function | Pesaran-Timmermann directional accuracy test. |
+| `pit_autocorrelation_test` | function | Normal approximation test for serial dependence in PIT values. |
+| `pit_histogram` | function | Return PIT histogram counts against a uniform reference. |
+| `reality_check_test` | function | White reality check against a benchmark via ``arch.bootstrap``. |
+| `residual_diagnostics` | function | Run residual diagnostic tests and return one row per test. |
+| `shortfall_de_test` | function | Du-Escanciano expected shortfall tests on PIT values. |
+| `stepm_test` | function | Stepwise multiple-comparison test against a benchmark via ``arch.bootstrap``. |
+| `superior_predictive_ability_test` | function | White-Hansen superior predictive ability test via ``arch.bootstrap``. |
+
+## Callable And Class Reference
+
+### TestResult
+
+Qualified name: `macroforecast.tests.TestResult`
+
+#### Signature
+
+```python
+macroforecast.tests.TestResult(statistic: float | None, p_value: float | None, decision: bool, alternative: str, correction_policy: str | None = None, n_obs: int | None = None, metadata: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Forecast comparison test result.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `statistic` | positional or keyword | `float \| None` | `required` |
+| `p_value` | positional or keyword | `float \| None` | `required` |
+| `decision` | positional or keyword | `bool` | `required` |
+| `alternative` | positional or keyword | `str` | `required` |
+| `correction_policy` | positional or keyword | `str \| None` | `None` |
+| `n_obs` | positional or keyword | `int \| None` | `None` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-mf.tests.dm_test(loss_a, loss_b, horizon=1)
+# Construct with the signature above:
+# mf.tests.TestResult(...)
 ```
 
-Top-level shortcuts such as `mf.dm_test(...)` are intentionally not exported.
+#### Dataclass Fields
 
-## TestResult
+| Field | Type | Default |
+| --- | --- | --- |
+| `statistic` | `float \| None` | `required` |
+| `p_value` | `float \| None` | `required` |
+| `decision` | `bool` | `required` |
+| `alternative` | `str` | `required` |
+| `correction_policy` | `str \| None` | `None` |
+| `n_obs` | `int \| None` | `None` |
+| `metadata` | `dict[str, Any]` | `default_factory` |
 
-Most pairwise forecast-comparison tests return `TestResult`.
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `summary` | `summary(self) -> str` | No public docstring is available. |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
+| `to_json` | `to_json(self, path: str \| Path \| None = None, *, indent: int \| None = 2) -> str` | Return JSON text, and optionally write it to ``path``. |
+### anatolyev_gerko_test
+
+Qualified name: `macroforecast.tests.anatolyev_gerko_test`
+
+#### Signature
 
 ```python
-macroforecast.tests.TestResult(
-    statistic,
-    p_value,
-    decision,
-    alternative,
-    correction_policy=None,
-    n_obs=None,
-    metadata={},
-)
+macroforecast.tests.anatolyev_gerko_test(*args: Any, **kwargs: Any) -> TestResult
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `statistic` | Test statistic, or `None` when the sample is too small or degenerate. |
-| `p_value` | P-value, or `None` when unavailable. |
-| `decision` | `True` when the null is rejected at the supplied `alpha`. |
-| `alternative` | `two_sided` or `one_sided`. |
-| `correction_policy` | HAC or small-sample correction label. |
-| `n_obs` | Number of aligned observations used. |
-| `metadata` | Test-specific details. |
+#### Description
 
-Methods:
+Anatolyev-Gerko excess profitability directional accuracy test.
 
-| Method | Output |
-| --- | --- |
-| `to_dict()` | JSON-ready dictionary with `metadata_schema.kind="forecast_test_result"`. |
-| `to_json(path=None)` | JSON text and optional file write. |
-| `summary()` | Compact string summary. |
+#### Parameters
 
-## Custom Tests
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `Any` | `required` |
+| `kwargs` | var keyword | `Any` | `required` |
 
-### custom_test
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
 
 ```python
-macroforecast.tests.custom_test(
-    name,
-    func,
-    *args,
-    alternative="two_sided",
-    alpha=0.05,
-    correction_policy=None,
-    metadata=None,
-    **params,
-) -> TestResult
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.anatolyev_gerko_test(...)
 ```
-
-Runs a user-supplied forecast test and coerces the result to `TestResult`.
-
-The callable receives `*args` and `**params`. It may return:
-
-| Return type | Meaning |
-| --- | --- |
-| `TestResult` | Used directly, with custom metadata merged. |
-| mapping | Must contain `statistic` or `stat`, and may contain `p_value`/`pvalue`, `decision`, `alternative`, `correction_policy`, `n_obs`, and `metadata`. |
-| `(statistic, p_value)` | Decision is `p_value < alpha`. |
-| `(statistic, p_value, n_obs)` | Same as above plus sample size. |
-
-```python
-def sign_test_stat(loss_a, loss_b):
-    diff = pd.Series(loss_a).sub(pd.Series(loss_b)).dropna()
-    return {
-        "statistic": float((diff < 0).mean()),
-        "p_value": 0.04,
-        "n_obs": len(diff),
-    }
-
-result = mf.tests.custom_test(
-    "sign_loss_test",
-    sign_test_stat,
-    loss_a,
-    loss_b,
-)
-```
-
-`custom_test()` records the callable name, parameters, `alpha`, and
-`custom=True` in `result.metadata`.
-
-## Equal Predictive Accuracy
-
-### dm_test
-
-```python
-macroforecast.tests.dm_test(
-    loss_a,
-    loss_b,
-    *,
-    horizon=1,
-    correction="hln",
-    kernel="acf",
-    input_type="loss",
-    power=2.0,
-    alternative="two_sided",
-    alpha=0.05,
-)
-```
-
-Input: two aligned loss series by default. Set `input_type="error"` to match
-`forecast::dm.test(e1, e2, h, power, varestimator)` from the R `forecast`
-package: the function then computes `abs(e1)^power - abs(e2)^power` internally.
-Output: `TestResult` for the Diebold-Mariano equal predictive accuracy test.
-`correction="hln"` applies the Harvey-Leybourne-Newbold small-sample
-correction. P-values use a Student-t reference distribution with `df=n-1`,
-matching `forecast/R/DM2.R::dm.test`.
-
-`kernel="acf"` matches the R `varestimator="acf"` autocovariance estimator.
-`kernel="bartlett"` or `"newey_west"` uses the Bartlett-weighted estimator,
-matching the R `varestimator="bartlett"` option.
-
-R/source alignment:
-
-| Setting | Alignment |
-| --- | --- |
-| `input_type="error"`, `correction="hln"`, `kernel="acf"` | Same statistic and Student-t p-value as `forecast/R/DM2.R::dm.test(varestimator="acf")`. |
-| `input_type="error"`, `correction="hln"`, `kernel="bartlett"` or `"newey_west"` | Same statistic and Student-t p-value as `forecast/R/DM2.R::dm.test(varestimator="bartlett")`. |
-| `input_type="loss"` | Uses the same DM statistic after accepting precomputed losses. This is convenient for custom losses, but it is not a direct call-equivalent to R `forecast::dm.test(e1, e2)`. |
-| `correction="none"` | Omits the Harvey-Leybourne-Newbold small-sample factor used by `forecast::dm.test`. |
-| `kernel="parzen"` or `"andrews"` | Macroforecast extension. These HAC estimators are not options in R `forecast::dm.test`. |
-
-Returned metadata includes `statistic_type="t"`,
-`null_hypothesis="equal predictive accuracy"`, `p_value_status`,
-`p_value_reference`, `source_reference`, `r_reference`, `r_alignment`, and
-`r_argument_mapping`.
-
-### gw_test
-
-```python
-macroforecast.tests.gw_test(
-    loss_a,
-    loss_b,
-    *,
-    horizon=1,
-    correction="hln",
-    kernel="acf",
-    input_type="loss",
-    power=2.0,
-    alternative="two_sided",
-)
-```
-
-Input: two aligned loss series. Output: `TestResult` using the package's legacy
-GW-compatible DM-style loss-differential surface. This callable preserves the
-public `gw_test` name but computes the same aligned HAC loss-differential
-statistic as `dm_test`. The conditional Giacomini-White Wald test is
-`giacomini_white_test(...)`; the Giacomini-Rossi fluctuation path is
-`conditional_predictive_ability_test(...)`.
-
-Source boundary: `gw_test()` does not claim exact R-package alignment. It
-preserves the legacy callable surface by reusing the DM/HLN loss-differential
-statistic on aligned inputs. See also `giacomini_white_test(...)` and
-`conditional_predictive_ability_test(...)`.
-
-### dmp_test
-
-```python
-macroforecast.tests.dmp_test(
-    loss_differences,
-    *,
-    kernel="newey_west",
-    alpha=0.05,
-)
-```
-
-Input: one loss-difference series or a sequence of loss-difference series.
-Output: `TestResult` for a stacked Diebold-Mariano-Pesaran-style joint test.
-
-The test stacks finite loss-difference values, computes a HAC standard error
-for the stacked mean, and reports a two-sided standard-normal p-value. No exact
-R-package comparator is claimed in the checked R sources. Metadata records
-`statistic_type="z"`, `null_hypothesis`, `p_value_status`,
-`p_value_reference`, `source_reference`, and `r_alignment`.
-
-### equal_predictive_tests
-
-```python
-macroforecast.tests.equal_predictive_tests(
-    loss_a,
-    loss_b,
-    *,
-    tests=("dm", "gw", "dmp"),
-    error_a=None,
-    error_b=None,
-    horizon=1,
-    correction="hln",
-    kernel="acf",
-    alpha=0.05,
-) -> pandas.DataFrame
-```
-
-Runs multiple equal-predictive-ability tests and stacks one row per test.
-Supported names are `dm`, `gw`, `dmp`, and `hn`. `hn` requires `error_a` and
-`error_b` because Harvey-Newbold is an encompassing test on forecast errors.
-
-Output: a `pandas.DataFrame` with one row per requested test. The table keeps
-the full component metadata in the `metadata` column and also promotes the
-paper-facing fields below to top-level columns.
-
-| Column | Meaning |
-| --- | --- |
-| `test`, `name` | Requested key and display name. |
-| `statistic_type`, `statistic` | Reference family (`t` or `z`) and test statistic. |
-| `p_value`, `p_value_status`, `p_value_reference` | P-value, availability flag, and reference distribution. |
-| `decision`, `alternative`, `null_hypothesis` | Rejection flag, alternative direction, and null statement. |
-| `correction_policy`, `n_obs` | Small-sample/HAC policy and aligned observation count. |
-| `source_reference`, `external_reference`, `r_reference`, `r_alignment` | Provenance and source-comparison fields. |
-| `metadata` | Full `TestResult.metadata` dictionary for the component test. |
-
-Current source alignment by row:
-
-| Test | R/source status |
-| --- | --- |
-| `dm` | Exact `forecast::dm.test` alignment only under the settings listed in `dm_test`. |
-| `gw` | Legacy GW-compatible DM-style surface; no exact R comparator claimed. |
-| `dmp` | Macroforecast stacked HAC screen; no exact R comparator claimed. |
-| `hn` | Legacy encompassing covariance approximation; not `forecast::dm.test`. |
-
-For paper output, pass this table to
-`macroforecast.reporting.test_report_table(...)`. For an appendix/audit table
-that spells out source and R alignment, use
-`macroforecast.reporting.test_provenance_table(...)`.
-
-### harvey_newbold_test
-
-```python
-macroforecast.tests.harvey_newbold_test(
-    error_a,
-    error_b,
-    *,
-    horizon=1,
-    kernel="newey_west",
-    small_sample=True,
-    alpha=0.05,
-)
-```
-
-Input: two forecast-error series. Output: one-sided `TestResult` for the legacy
-forecast-error covariance approximation.
-
-Source note: this is not `forecast::dm.test`. The R `forecast` package function
-implements Harvey-Leybourne-Newbold Diebold-Mariano equal-accuracy testing.
-`harvey_newbold_test()` remains a callable encompassing-style covariance
-approximation and records that distinction in `result.metadata`.
-
-The callable forms `d_t = e_a,t * (e_a,t - e_b,t)`, computes a HAC standard
-error, optionally applies an HLN-style small-sample factor, and reports a
-one-sided Student-t upper-tail p-value. Metadata records
-`statistic_type="t"`, `p_value_status`, `p_value_reference`,
-`source_reference`, `r_reference=None`, and `r_alignment`.
-
-Alias: `hn_test`.
-
-## Nested And Encompassing Tests
-
 ### clark_west_test
 
-```python
-macroforecast.tests.clark_west_test(
-    loss_small,
-    loss_large,
-    forecast_small,
-    forecast_large,
-    *,
-    horizon=1,
-    cw_adjustment=True,
-    kernel="newey_west",
-    alpha=0.05,
-)
-```
+Qualified name: `macroforecast.tests.clark_west_test`
 
-Input: small-model loss, large-model loss, and both forecast series. Output:
-one-sided `TestResult` for the Clark-West nested forecast comparison.
-
-Statistic:
-
-```text
-q_t = e_r,t^2 - e_u,t^2 + (f_r,t - f_u,t)^2
-z = mean(q_t) / sqrt(LRV(q_t) / n)
-```
-
-Here `r` is the restricted/small model and `u` is the unrestricted/large model.
-The implementation follows the standard adjusted MSPE differential used by
-Clark-West references such as GAUSS `cwTest` and HypothesisTests.jl
-`ClarkWestTest`. Archived R examples can differ by sign convention, so this
-page treats the formula above as the package contract.
-
-Alias: `cw_test`.
-
-### enc_new_test
+#### Signature
 
 ```python
-macroforecast.tests.enc_new_test(
-    error_small,
-    error_large,
-    *,
-    critical_value=None,
-    alpha=0.05,
-)
+macroforecast.tests.clark_west_test(loss_small: Any, loss_large: Any, forecast_small: Any, forecast_large: Any, *, horizon: int = 1, cw_adjustment: bool = True, kernel: str = "newey_west", alpha: float = 0.05) -> TestResult
 ```
 
-Input: restricted/small-model forecast errors and unrestricted/large-model
-forecast errors. Output: one-sided `TestResult`.
+#### Description
 
-Statistic:
+Clark-West nested forecast comparison test.
 
-```text
-c_t = e_r,t * (e_r,t - e_u,t)
-ENC-NEW = n * mean(c_t) / mean(e_u,t^2)
-```
+#### Parameters
 
-Default `p_value` is `None` because Clark-McCracken nested forecast
-encompassing tests have nonstandard distributions. Pass a design-appropriate
-`critical_value` to get a boolean decision.
-
-### enc_t_test
-
-```python
-macroforecast.tests.enc_t_test(
-    error_small,
-    error_large,
-    *,
-    horizon=1,
-    kernel="newey_west",
-    critical_value=None,
-    normal_approximation=False,
-    alpha=0.05,
-)
-```
-
-Input: restricted/small-model forecast errors and unrestricted/large-model
-forecast errors. Output: one-sided `TestResult`.
-
-Statistic:
-
-```text
-c_t = e_r,t * (e_r,t - e_u,t)
-ENC-T = mean(c_t) / sqrt(LRV(c_t) / n)
-```
-
-Default `p_value` is `None`. Set `normal_approximation=True` only for
-diagnostic screening, or pass `critical_value` for a design-specific decision.
-
-### nested_tests
-
-```python
-macroforecast.tests.nested_tests(
-    loss_small,
-    loss_large,
-    *,
-    forecast_small=None,
-    forecast_large=None,
-    error_small=None,
-    error_large=None,
-    tests=("clark_west", "enc_new", "enc_t"),
-    horizon=1,
-    kernel="newey_west",
-    enc_critical_value=None,
-    enc_normal_approximation=False,
-    alpha=0.05,
-) -> pandas.DataFrame
-```
-
-Runs multiple nested-model tests and stacks one row per test. Clark-West
-requires `forecast_small` and `forecast_large`; `enc_new` and `enc_t` require
-`error_small` and `error_large`. This separation is intentional because
-Clark-West is an adjusted MSPE differential while ENC-NEW and ENC-T are
-forecast-error encompassing covariance statistics.
-
-## Directional Accuracy Tests
-
-### directional_accuracy_test
-
-```python
-macroforecast.tests.directional_accuracy_test(
-    y_true,
-    y_pred,
-    *,
-    threshold=0.0,
-    method="pesaran_timmermann",
-    alpha=0.05,
-)
-```
-
-Input: realized values and forecasts. Output: `TestResult`. Supported methods
-are `pesaran_timmermann`, `anatolyev_gerko`, and `henriksson_merton`.
-
-The `pesaran_timmermann` and `anatolyev_gerko` branches are aligned with
-R `tstests/R/dac.R::dac_test` and `rugarch/R/rugarch-tests.R::DACTest`. The
-p-value is a one-sided upper-tail normal p-value, `1 - Phi(statistic)`.
-Forecasts that are constant after subtracting `threshold` are rejected because
-the directional tests are undefined for a constant sign forecast.
-
-Options:
-
-| Option | Default | Choices | Meaning |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `threshold` | `0.0` | numeric | Values above this threshold are positive-direction observations. |
-| `method` | `"pesaran_timmermann"` | `"pesaran_timmermann"`, `"anatolyev_gerko"`, `"henriksson_merton"` | Directional statistic to compute. |
-| `alpha` | `0.05` | probability in `(0, 1)` | Rejection level. |
+| `loss_small` | positional or keyword | `Any` | `required` |
+| `loss_large` | positional or keyword | `Any` | `required` |
+| `forecast_small` | positional or keyword | `Any` | `required` |
+| `forecast_large` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `cw_adjustment` | keyword only | `bool` | `True` |
+| `kernel` | keyword only | `str` | `"newey_west"` |
+| `alpha` | keyword only | `float` | `0.05` |
 
-Method notes:
+#### Returns
 
-| Method | Null | Statistic input |
-| --- | --- | --- |
-| `pesaran_timmermann` | No sign predictability. | Exact R alignment with `.pt_test` / `DACTest(test="PT")`: sign hit rate versus independence-implied sign hit rate. |
-| `anatolyev_gerko` | No excess profitability. | Exact R alignment with `.ag_test` / `DACTest(test="AG")`: `sign(forecast) * actual` excess profitability, using raw actual and forecast values after threshold subtraction. |
-| `henriksson_merton` | No market-timing skill. | Macroforecast extension. No exact comparator in `tstests::dac_test` or `rugarch::DACTest`; statistic is based on up/down conditional hit rates. |
+`TestResult`
 
-R/source alignment:
-
-| Branch | R comparator | Notes |
-| --- | --- | --- |
-| `pesaran_timmermann` | `tstests/R/dac.R::.pt_test`; `rugarch/R/rugarch-tests.R::DACTest(test="PT")` | Uses `x_t=1{actual>0}`, `y_t=1{forecast>0}`, `z_t=1{forecast*actual>0}`, and `p.value=1-pnorm(statistic)`. |
-| `anatolyev_gerko` | `tstests/R/dac.R::.ag_test`; `rugarch/R/rugarch-tests.R::DACTest(test="AG")` | Uses `r_t=sign(forecast)*actual`, excess-profitability variance `V_EP`, and `p.value=1-pnorm(statistic)`. |
-| `henriksson_merton` | None | Kept as a callable screening diagnostic, not claimed as an R-package-aligned DAC branch. |
-
-Zero rule: R uses strict positivity, `actual > 0` and `forecast > 0`.
-`macroforecast` applies the same strict rule after subtracting `threshold`, so
-values equal to `threshold` are treated as non-positive.
-
-Aliases:
-
-| Alias | Equivalent call |
-| --- | --- |
-| `pesaran_timmermann_test(y_true, y_pred)` | `directional_accuracy_test(..., method="pesaran_timmermann")` |
-| `anatolyev_gerko_test(y_true, y_pred)` | `directional_accuracy_test(..., method="anatolyev_gerko")` |
-| `henriksson_merton_test(y_true, y_pred)` | `directional_accuracy_test(..., method="henriksson_merton")` |
-
-## Forecast Rationality
-
-### mincer_zarnowitz_test
+#### Minimal Use
 
 ```python
-macroforecast.tests.mincer_zarnowitz_test(
-    y_true,
-    y_pred,
-    *,
-    hac_lags=0,
-    alpha=0.05,
-) -> TestResult
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.clark_west_test(...)
 ```
-
-Runs the Mincer-Zarnowitz actual-on-forecast regression
-`actual = intercept + slope * forecast + error` and tests the joint null
-`intercept = 0` and `slope = 1`. The covariance matrix is the statsmodels OLS
-HAC covariance with `maxlags=hac_lags`; the reported statistic is the two-
-constraint Wald statistic with a chi-square reference.
-
-Returned metadata includes `intercept`, `slope`, `wald_statistic`,
-`f_statistic`, `hac_lags`, `null_hypothesis`, and the regression/covariance
-contract. In the pipeline, request `"mz"` in `EvalSpec.tests`; the evaluator
-uses `hac_lags=horizon-1` by default unless overridden with
-`test_options={"mz": {"hac_lags": ...}}`.
-
-## Density And Interval Diagnostics
-
-### density_interval_tests
-
-```python
-macroforecast.tests.density_interval_tests(
-    pit,
-    *,
-    alpha=0.05,
-    n_bins=10,
-    pit_lag=1,
-)
-```
-
-Input: probability integral transform values in `[0, 1]`. Output: JSON-ready
-dictionary with `metadata_schema.kind="density_interval_tests"` plus
-Berkowitz, KS, Kupiec POF, Christoffersen independence, Engle-Manganelli DQ,
-Du-Escanciano shortfall, PIT histogram, and PIT autocorrelation diagnostics.
-
-Options:
-
-| Option | Default | Meaning |
-| --- | --- | --- |
-| `alpha` | `0.05` | Tail probability for VaR/shortfall-style hit tests. |
-| `n_bins` | `10` | Number of PIT histogram bins. |
-| `pit_lag` | `1` | Lag used for PIT autocorrelation, Berkowitz AR lag, and Du-Escanciano conditional shortfall lag. |
-
-Output keys:
-
-| Key | Meaning |
-| --- | --- |
-| `berkowitz` | Berkowitz density LR test plus Jarque-Bera normality check after normal score transform. |
-| `ks` | Kolmogorov-Smirnov test against uniform PIT. |
-| `kupiec_pof` | Unconditional hit-rate test at `alpha`. |
-| `christoffersen_independence` | Markov independence test for hits. |
-| `engle_manganelli_dq` | PIT hit-only DQ proxy. Use `dynamic_quantile_test(...)` for the full Engle-Manganelli VaR DQ test. |
-| `du_escanciano_shortfall` | Du-Escanciano unconditional and conditional shortfall tests. |
-| `pit_histogram` | One record per histogram bin. |
-| `pit_autocorrelation` | `TestResult` dictionary for serial PIT dependence. |
-| `r_reference`, `r_alignment` | Composite provenance metadata. Component-level diagnostics also carry their own R/source metadata. |
-
-R/source alignment:
-
-| Diagnostic | Reference |
-| --- | --- |
-| Berkowitz | `tstests/R/berkowitz.R::berkowitz_test`: PIT to normal scores, ARIMA(`pit_lag`,0,0) unrestricted likelihood versus Normal(0,1); LR df is `2 + pit_lag`. |
-| Du-Escanciano shortfall | `tstests/R/shortfall_de.R::shortfall_de_test`: cumulative tail shortfall mean test and portmanteau test on centered tail shortfall autocorrelations. |
-| Kupiec/Christoffersen | `tstests/R/var_cp.R::var_cp_test` and `rugarch/R/rugarch-tests.R`: Bernoulli/transition likelihood-ratio construction. |
-| PIT hit-only DQ proxy | No direct R comparator. It is a PIT-hit lag diagnostic inside this composite wrapper, not the full Engle-Manganelli VaR DQ test. |
-
-Boundary handling: values outside `[0, 1]` raise. Boundary PIT values `0` and
-`1` are accepted as PIT values but clipped internally for the normal-score
-Berkowitz transform to avoid infinite ARIMA inputs.
-
-### shortfall_de_test
-
-```python
-macroforecast.tests.shortfall_de_test(
-    pit,
-    *,
-    alpha=0.05,
-    lags=1,
-    boot=False,
-    n_boot=2000,
-    random_state=0,
-) -> dict
-```
-
-Input: PIT values in `[0, 1]`. Output: JSON-ready dictionary with
-`metadata_schema.kind="shortfall_de_test"`.
-
-The unconditional statistic is the sample mean of cumulative tail shortfall,
-`mean((alpha - pit) * 1{pit <= alpha} / alpha)`. The conditional statistic is
-a portmanteau statistic on autocorrelations of that series centered by
-`alpha / 2`. With `boot=False`, the unconditional p-value uses the
-Du-Escanciano normal approximation and the conditional p-value uses
-`Chi-squared(lags)`. With `boot=True`, both p-values use simulated uniform PIT
-draws with the same sample size.
-
-### dynamic_quantile_test
-
-```python
-macroforecast.tests.dynamic_quantile_test(
-    y_true,
-    var,
-    *,
-    alpha=0.05,
-    lag=1,
-    lag_hit=1,
-    lag_var=1,
-) -> TestResult
-```
-
-Input: realized values and one-step-ahead lower-tail VaR forecasts. Output:
-`TestResult` for the Engle-Manganelli dynamic quantile test.
-
-This is the full VaR DQ callable. It is separate from
-`density_interval_tests(...)` because the exact DQ statistic needs realized
-values and VaR forecasts, not PIT values alone.
-
-R/source alignment: `segMGarch/R/DQtest.R::DQtest`. The hit series is
-`1 - alpha` when `y_true < var` and `-alpha` otherwise. The regressor matrix
-contains a constant, lag-aligned VaR forecasts, `lag_hit` lagged hit columns,
-and lagged squared realized values. The statistic is
-`Hit' X (X'X)^(-1) X' Hit / (alpha * (1 - alpha))`, with a chi-squared
-reference distribution using the number of columns of `X`.
-
-R argument mapping: `segMGarch::DQtest` names the VaR probability
-`VaR_level` and converts it internally to the lower-tail probability
-`1 - VaR_level`. `macroforecast` accepts the lower-tail probability directly
-as `alpha`; therefore a 5% lower-tail VaR is `alpha=0.05`, corresponding to
-`VaR_level=0.95` in the R function.
-
-Source: https://rdrr.io/cran/segMGarch/src/R/DQtest.R
-
-Options:
-
-| Option | Default | Meaning |
-| --- | --- | --- |
-| `alpha` | `0.05` | Lower-tail probability. A 5% VaR uses `alpha=0.05`. |
-| `lag` | `1` | Lag used for squared realized values. |
-| `lag_hit` | `1` | Number of lagged hit columns. |
-| `lag_var` | `1` | Lag alignment for VaR forecasts. |
-
-### pit_histogram
-
-```python
-macroforecast.tests.pit_histogram(pit, *, n_bins=10) -> pandas.DataFrame
-```
-
-Returns one row per PIT histogram bin with observed count, expected count under
-uniformity, and deviation.
-
-### pit_autocorrelation_test
-
-```python
-macroforecast.tests.pit_autocorrelation_test(
-    pit,
-    *,
-    lag=1,
-    alpha=0.05,
-) -> TestResult
-```
-
-Runs a normal-approximation test for serial dependence in PIT values.
-
-### interval_coverage_test
-
-```python
-macroforecast.tests.interval_coverage_test(
-    y_true,
-    lower,
-    upper,
-    *,
-    alpha=0.05,
-) -> dict
-```
-
-Runs Kupiec POF, Christoffersen independence, combined conditional coverage,
-and Christoffersen-Pelletier duration diagnostics for forecast intervals.
-`alpha` is the expected non-coverage rate, so a 90% interval uses
-`alpha=0.10`.
-
-Boundary cases follow the likelihood-ratio convention used by R
-`tstests::var_cp_test` and `rugarch::VaRTest`: zero violations do not
-automatically imply a passing Kupiec statistic; the restricted Bernoulli
-likelihood is compared with the boundary unrestricted likelihood.
-
-The `christoffersen_pelletier_duration` output follows the duration-test
-logic in `tstests/R/var_cp.R::.duration_test`: durations between interval
-misses are modeled with a Weibull likelihood, and the no-memory exponential
-restriction is tested by setting the Weibull shape parameter to `1`. The
-duration statistic is unavailable when there is one or fewer misses.
-
-Coverage output:
-
-| Key | Meaning |
-| --- | --- |
-| `kupiec_pof` | Unconditional coverage LR. Carries `tstests` and `rugarch` references. |
-| `christoffersen_independence` | First-order Markov independence LR plus transition counts `n00`, `n01`, `n10`, `n11`. |
-| `christoffersen_conditional_coverage` | Sum of Kupiec and independence LR statistics with chi-squared df 2. |
-| `christoffersen_pelletier_duration` | Weibull duration LR for the exponential no-memory restriction. |
-| `r_reference`, `rugarch_reference`, `r_alignment` | Package-level provenance. |
-
-Duration likelihood note: the duration construction is the same in
-`tstests` and `rugarch`. The implemented density/survival likelihood follows
-`rugarch/R/rugarch-tests.R::VaRDurTest`, which is the internally consistent
-Christoffersen-Pelletier Weibull likelihood form.
-
-## Conditional Predictive Ability
-
 ### conditional_predictive_ability_test
 
+Qualified name: `macroforecast.tests.conditional_predictive_ability_test`
+
+#### Signature
+
 ```python
-macroforecast.tests.conditional_predictive_ability_test(
-    loss_a,
-    loss_b,
-    *,
-    method="giacomini_rossi",
-    window_ratio=0.5,
-    dmv_fullsample=True,
-    lag_truncate=0,
-    alpha=0.05,
-)
+macroforecast.tests.conditional_predictive_ability_test(loss_a: Any, loss_b: Any, *, method: str = "giacomini_rossi", window_ratio: float = 0.5, dmv_fullsample: bool = True, lag_truncate: int = 0, alpha: float = 0.05) -> dict[str, Any]
 ```
 
-Input: two aligned loss series. Output: JSON-ready dictionary with
-`metadata_schema.kind="conditional_predictive_ability"`, a fluctuation
-statistic, critical value, decision, time path, window size, loss-difference
-orientation, and source-alignment metadata.
+#### Description
 
-Supported methods: `giacomini_rossi`, `recursive_fluctuation`.
+Giacomini-Rossi rolling fluctuation test or package recursive extension.
 
-The `giacomini_rossi` branch is aligned with
-`murphydiagram/R/procs.R::fluctuation_test`, which implements Proposition 1 of
-Giacomini and Rossi (2010). It computes rolling-window Diebold-Mariano-type
-statistics for the loss difference `loss_a - loss_b`, uses Bartlett HAC
-variance, and compares the supremum absolute statistic with the tabulated
-critical values from Giacomini-Rossi Table 1. Positive path values mean
-`loss_a` is larger than `loss_b` over that window, so the final statistic is
-two-sided because it uses the supremum absolute path.
+#### Parameters
 
-R alignment:
-
-| R package / function | macroforecast branch | Alignment |
-| --- | --- | --- |
-| `murphydiagram/R/procs.R::fluctuation_test` | `method="giacomini_rossi"` | Same `ld <- loss1 - loss2`, same `mu` grid, same Table 1 critical values, same `lag_truncate in 0:5`, same Bartlett HAC convention, same `dmv_fullsample` and rolling-denominator branches. |
-| None | `method="recursive_fluctuation"` | Package extension over expanding-prefix loss windows. It reuses the same Bartlett HAC helper but does not claim to implement a named R-package test. |
-
-Options:
-
-| Option | Default | Choices | Meaning |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `method` | `"giacomini_rossi"` | `"giacomini_rossi"`, `"recursive_fluctuation"` | `giacomini_rossi` is R-aligned; `recursive_fluctuation` is a package extension over expanding loss windows. |
-| `window_ratio` | `0.5` | `0.1`, `0.2`, ..., `0.9` for `giacomini_rossi` | Rolling window size as a fraction of the evaluation sample. |
-| `dmv_fullsample` | `True` | boolean | If `True`, estimate HAC variance on the full loss-difference sample, matching the R default. If `False`, use each rolling window's HAC variance. |
-| `lag_truncate` | `0` | `0`, `1`, ..., `5` | Bartlett HAC truncation lag, matching the R package's allowed range. |
-| `alpha` | `0.05` | `0.05`, `0.10` for `giacomini_rossi` | Test size used to select the tabulated critical value. |
+| `loss_a` | positional or keyword | `Any` | `required` |
+| `loss_b` | positional or keyword | `Any` | `required` |
+| `method` | keyword only | `str` | `"giacomini_rossi"` |
+| `window_ratio` | keyword only | `float` | `0.5` |
+| `dmv_fullsample` | keyword only | `bool` | `True` |
+| `lag_truncate` | keyword only | `int` | `0` |
+| `alpha` | keyword only | `float` | `0.05` |
 
-Pipeline note: when `"gr"` is requested through `EvalSpec.tests`, the evaluator
-sets `lag_truncate=min(horizon - 1, 5)` unless the user supplies
-`test_options={"gr": {"lag_truncate": ...}}`. This accounts for the MA(h-1)
-dependence of h-step loss differentials while preserving the public callable's
-standalone default.
+#### Returns
 
-Output fields:
+`dict[str, Any]`
 
-| Field | Meaning |
-| --- | --- |
-| `statistic` | Supremum absolute value of the fluctuation path. |
-| `time_path` | Rolling or recursive fluctuation path before the supremum is taken. |
-| `critical_value`, `critical_band`, `decision` | Tabulated Giacomini-Rossi comparison when available; `None` for the recursive extension. |
-| `variance_scope` | `"full_sample"` when `dmv_fullsample=True`; `"rolling_window"` otherwise. |
-| `loss_difference_orientation` | Always `loss_a - loss_b`; positive path values mean `loss_a` has larger loss. |
-| `source_reference`, `external_reference`, `r_reference`, `r_alignment` | Source and R-package comparison metadata. |
-| `requested_method`, `method`, `alias_warning` | The user-supplied method, normalized method, and any alias caveat. |
+#### Minimal Use
 
-`method="rossi_sekhposyan"` remains accepted as a legacy alias for
-`recursive_fluctuation`, but Rossi-Sekhposyan forecast rationality is a
-different test family and is not represented by this loss-comparison callable.
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.conditional_predictive_ability_test(...)
+```
+### custom_test
 
-## Multiple-Model Tests
+Qualified name: `macroforecast.tests.custom_test`
 
+#### Signature
+
+```python
+macroforecast.tests.custom_test(name: str, func: Callable[..., Any], *args: Any, alternative: str = "two_sided", alpha: float = 0.05, correction_policy: str | None = None, metadata: Mapping[str, Any] | None = None, **params: Any) -> TestResult
+```
+
+#### Description
+
+Run a user-supplied forecast test and coerce it to ``TestResult``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `name` | positional or keyword | `str` | `required` |
+| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `args` | var positional | `Any` | `required` |
+| `alternative` | keyword only | `str` | `"two_sided"` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `correction_policy` | keyword only | `str \| None` | `None` |
+| `metadata` | keyword only | `Mapping[str, Any] \| None` | `None` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.custom_test(...)
+```
+### cw_test
+
+Qualified name: `macroforecast.tests.cw_test`
+
+#### Signature
+
+```python
+macroforecast.tests.cw_test(*args: Any, **kwargs: Any) -> TestResult
+```
+
+#### Description
+
+Alias for :func:`clark_west_test`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `Any` | `required` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.cw_test(...)
+```
+### density_interval_tests
+
+Qualified name: `macroforecast.tests.density_interval_tests`
+
+#### Signature
+
+```python
+macroforecast.tests.density_interval_tests(pit: Any, *, alpha: float = 0.05, n_bins: int = 10, pit_lag: int = 1) -> dict[str, Any]
+```
+
+#### Description
+
+Density and interval diagnostics for PIT values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `pit` | positional or keyword | `Any` | `required` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `n_bins` | keyword only | `int` | `10` |
+| `pit_lag` | keyword only | `int` | `1` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.density_interval_tests(...)
+```
+### directional_accuracy_test
+
+Qualified name: `macroforecast.tests.directional_accuracy_test`
+
+#### Signature
+
+```python
+macroforecast.tests.directional_accuracy_test(y_true: Any, y_pred: Any, *, threshold: float = 0.0, method: str = "pesaran_timmermann", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Pesaran-Timmermann or Henriksson-Merton directional accuracy test.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `y_pred` | positional or keyword | `Any` | `required` |
+| `threshold` | keyword only | `float` | `0.0` |
+| `method` | keyword only | `str` | `"pesaran_timmermann"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.directional_accuracy_test(...)
+```
+### dm_test
+
+Qualified name: `macroforecast.tests.dm_test`
+
+#### Signature
+
+```python
+macroforecast.tests.dm_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Diebold-Mariano equal predictive ability test.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_a` | positional or keyword | `Any` | `required` |
+| `loss_b` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `correction` | keyword only | `str` | `"hln"` |
+| `kernel` | keyword only | `str` | `"acf"` |
+| `input_type` | keyword only | `str` | `"loss"` |
+| `power` | keyword only | `float` | `2.0` |
+| `alternative` | keyword only | `str` | `"two_sided"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.dm_test(...)
+```
+### jarque_bera_test
+
+Qualified name: `macroforecast.tests.jarque_bera_test`
+
+#### Signature
+
+```python
+macroforecast.tests.jarque_bera_test(series: Any, *, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Jarque-Bera test of normality for a single series.
+
+Uses population (1/n) skewness and excess-kurtosis moments, JB ~ chi2(2),
+matching ``tseries::jarque.bera.test``. The decision rejects normality when
+p < alpha.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `series` | positional or keyword | `Any` | `required` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.jarque_bera_test(...)
+```
+### giacomini_white_test
+
+Qualified name: `macroforecast.tests.giacomini_white_test`
+
+#### Signature
+
+```python
+macroforecast.tests.giacomini_white_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, instruments: Any | None = None, alpha: float = 0.05, small_sample: bool = True) -> TestResult
+```
+
+#### Description
+
+Giacomini-White (2006) conditional predictive ability (Wald) test.
+
+Tests H0: ``E[h_{t-1} * dL_t] = 0`` where ``dL_t = loss_a - loss_b`` is the
+loss differential and ``h_{t-1}`` is a test-function instrument available at
+the forecast origin (default ``[1, dL_{t-h}]``). ``instruments`` may be
+supplied as an array aligned to ``dL_t``. ``Omega`` is a HAC estimator of
+``R_t = h_{t-1} * dL_t`` built from lags ``0..horizon-1`` -- the known
+dependence order of an h-step-ahead loss differential, the same order
+``dm_test`` uses.
+
+``small_sample=True`` (default -- see CHANGELOG, p-values for horizon > 1
+change relative to prior releases): WP-A1's Monte Carlo size validation
+(``tests/mc/test_giacomini_white_size.py``, following on WP-V3) found the
+*original* Bartlett-tapered-HAC + chi2(q) construction genuinely oversized
+for horizon > 1 (2-2.5x nominal at h=4; confirmed NOT a small-n artifact,
+it does not vanish out to n=100,000). Root cause, isolated by direct
+comparison of the estimated HAC covariance against its true population
+value: the linear Bartlett taper ``1 - lag/h`` applied to lags 1..h-1
+systematically discards a large, non-vanishing fraction of the *known*
+(finite-order, exactly h-1-dependent) autocovariance of an h-step loss
+differential -- e.g. at h=4 the taper's population expectation is only
+~69% of the true long-run variance (matches the closed-form taper-weight
+calculation exactly). ``dm_test`` never had this problem because it
+already uses an UNTAPERED ("acf") sum over the same lags (matching R's
+``forecast::dm.test``) -- appropriate because the true autocovariance is
+*exactly* zero beyond lag h-1 here, so tapering (whose purpose is
+guaranteeing positive semi-definiteness for general, not-known-finite-
+order processes) only throws away real signal.
+
+The corrected estimator: (a) sums UNTAPERED sample autocovariances over
+lags ``0..bandwidth`` (``bandwidth = horizon - 1``), matching ``dm_test``;
+(b) falls back to a smaller bandwidth (down to 0) if that untapered sum is
+not positive semi-definite -- untapered sums lose Newey-West's automatic
+PSD guarantee, so this mirrors ``_long_run_variance``'s own existing
+non-positive-variance fallback; (c) references the Wald statistic against
+``F(q, ESS - q)`` (Hotelling-style, statistic scaled by ``q``) rather than
+chi2(q) whenever a HAC lag was actually used, with
+``ESS = n / (1 + 2 * bandwidth_used)`` the standard effective-sample-size
+correction for serially dependent data -- this mops up the residual
+(much smaller than the taper bias, but still real at small n) finite-
+sample over-rejection of a Wald test built on an estimated multi-
+dimensional covariance. At horizon=1 (bandwidth=0, already well-
+calibrated per WP-V3/WP-A1 MC results) this reduces exactly to the
+original chi2(q) reference -- verified by MC to introduce no regression.
+
+``small_sample=False`` restores the pre-WP-A1 behavior exactly: Bartlett-
+tapered HAC + chi2(q) reference, for users who need bit-identical
+backward-compatible p-values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_a` | positional or keyword | `Any` | `required` |
+| `loss_b` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `instruments` | keyword only | `Any \| None` | `None` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `small_sample` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.giacomini_white_test(...)
+```
+### var_serial_test
+
+Qualified name: `macroforecast.tests.var_serial_test`
+
+#### Signature
+
+```python
+macroforecast.tests.var_serial_test(panel: Any, *, n_lag: int = 1, test_lags: int | None = None, trend: str = "c", adjusted: bool = False, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Multivariate residual serial-correlation test for a VAR (vars::serial.test).
+
+Lutkepohl Portmanteau / LM test of no autocorrelation in the VAR residual
+vector up to ``test_lags`` lags (statsmodels VARResults.test_whiteness).
+Rejects no-serial-correlation when p < alpha.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `Any` | `required` |
+| `n_lag` | keyword only | `int` | `1` |
+| `test_lags` | keyword only | `int \| None` | `None` |
+| `trend` | keyword only | `str` | `"c"` |
+| `adjusted` | keyword only | `bool` | `False` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.var_serial_test(...)
+```
+### var_normality_test
+
+Qualified name: `macroforecast.tests.var_normality_test`
+
+#### Signature
+
+```python
+macroforecast.tests.var_normality_test(panel: Any, *, n_lag: int = 1, trend: str = "c", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Multivariate normality test for VAR residuals (vars::normality.test).
+
+Doornik-Hansen / Lutkepohl joint test of skewness and kurtosis on the
+standardised VAR residuals (statsmodels VARResults.test_normality). Rejects
+multivariate normality when p < alpha.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `Any` | `required` |
+| `n_lag` | keyword only | `int` | `1` |
+| `trend` | keyword only | `str` | `"c"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.var_normality_test(...)
+```
+### var_arch_test
+
+Qualified name: `macroforecast.tests.var_arch_test`
+
+#### Signature
+
+```python
+macroforecast.tests.var_arch_test(panel: Any, *, n_lag: int = 1, arch_lags: int = 5, trend: str = "c", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Multivariate ARCH-LM test for VAR residuals (vars::arch.test, Lutkepohl).
+
+Regresses the vech of the residual outer products on ``arch_lags`` of its own
+lags and forms the multivariate ARCH-LM statistic
+``VARCH_LM = T * N * R2_m`` with ``R2_m = 1 - tr(Omega Omega0^-1)/N`` and
+``N = K(K+1)/2``, chi-squared with ``arch_lags * N^2`` df. Rejects no
+multivariate ARCH when p < alpha.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `Any` | `required` |
+| `n_lag` | keyword only | `int` | `1` |
+| `arch_lags` | keyword only | `int` | `5` |
+| `trend` | keyword only | `str` | `"c"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.var_arch_test(...)
+```
+### granger_causality
+
+Qualified name: `macroforecast.tests.granger_causality`
+
+#### Signature
+
+```python
+macroforecast.tests.granger_causality(panel: Any, *, caused: str, causing: str | Sequence[str], n_lag: int = 1, kind: str = "f", trend: str = "c", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Granger causality test in a VAR (R vars::causality / statsmodels).
+
+Tests whether ``causing`` Granger-causes ``caused`` in a VAR(``n_lag``) fit on
+``panel``. ``kind='f'`` uses the F statistic, ``'wald'`` the chi-squared Wald.
+The decision rejects non-causality (i.e. ``causing`` does Granger-cause
+``caused``) when p < alpha.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `Any` | `required` |
+| `caused` | keyword only | `str` | `required` |
+| `causing` | keyword only | `str \| Sequence[str]` | `required` |
+| `n_lag` | keyword only | `int` | `1` |
+| `kind` | keyword only | `str` | `"f"` |
+| `trend` | keyword only | `str` | `"c"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.granger_causality(...)
+```
+### instantaneous_causality
+
+Qualified name: `macroforecast.tests.instantaneous_causality`
+
+#### Signature
+
+```python
+macroforecast.tests.instantaneous_causality(panel: Any, *, caused: str, causing: str | Sequence[str] | None = None, n_lag: int = 1, trend: str = "c", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Instantaneous (contemporaneous) causality test in a VAR (vars::causality).
+
+Tests for contemporaneous correlation between the residuals of ``caused`` and
+the other variables (or ``causing`` if given). Rejects no-instantaneous-
+causality when p < alpha.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `panel` | positional or keyword | `Any` | `required` |
+| `caused` | keyword only | `str` | `required` |
+| `causing` | keyword only | `str \| Sequence[str] \| None` | `None` |
+| `n_lag` | keyword only | `int` | `1` |
+| `trend` | keyword only | `str` | `"c"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.instantaneous_causality(...)
+```
+### dmp_test
+
+Qualified name: `macroforecast.tests.dmp_test`
+
+#### Signature
+
+```python
+macroforecast.tests.dmp_test(loss_differences: Any, *, kernel: str = "newey_west", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Diebold-Mariano-Pesaran joint multi-horizon test on stacked losses.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_differences` | positional or keyword | `Any` | `required` |
+| `kernel` | keyword only | `str` | `"newey_west"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.dmp_test(...)
+```
+### dynamic_quantile_test
+
+Qualified name: `macroforecast.tests.dynamic_quantile_test`
+
+#### Signature
+
+```python
+macroforecast.tests.dynamic_quantile_test(y_true: Any, var: Any, *, alpha: float = 0.05, lag: int = 1, lag_hit: int = 1, lag_var: int = 1) -> TestResult
+```
+
+#### Description
+
+Engle-Manganelli dynamic quantile test for VaR forecasts.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `var` | positional or keyword | `Any` | `required` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `lag` | keyword only | `int` | `1` |
+| `lag_hit` | keyword only | `int` | `1` |
+| `lag_var` | keyword only | `int` | `1` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.dynamic_quantile_test(...)
+```
+### equal_predictive_tests
+
+Qualified name: `macroforecast.tests.equal_predictive_tests`
+
+#### Signature
+
+```python
+macroforecast.tests.equal_predictive_tests(loss_a: Any, loss_b: Any, *, tests: Sequence[str] = ('dm', 'gw', 'dmp'), error_a: Any | None = None, error_b: Any | None = None, horizon: int = 1, correction: str = "hln", kernel: str = "acf", alpha: float = 0.05) -> pd.DataFrame
+```
+
+#### Description
+
+Run multiple equal-predictive-ability tests and stack results.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_a` | positional or keyword | `Any` | `required` |
+| `loss_b` | positional or keyword | `Any` | `required` |
+| `tests` | keyword only | `Sequence[str]` | `("dm", "gw", "dmp")` |
+| `error_a` | keyword only | `Any \| None` | `None` |
+| `error_b` | keyword only | `Any \| None` | `None` |
+| `horizon` | keyword only | `int` | `1` |
+| `correction` | keyword only | `str` | `"hln"` |
+| `kernel` | keyword only | `str` | `"acf"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.equal_predictive_tests(...)
+```
+### enc_new_test
+
+Qualified name: `macroforecast.tests.enc_new_test`
+
+#### Signature
+
+```python
+macroforecast.tests.enc_new_test(error_small: Any, error_large: Any, *, critical_value: float | None = None, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+ENC-NEW nested forecast encompassing test.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `error_small` | positional or keyword | `Any` | `required` |
+| `error_large` | positional or keyword | `Any` | `required` |
+| `critical_value` | keyword only | `float \| None` | `None` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.enc_new_test(...)
+```
+### enc_t_test
+
+Qualified name: `macroforecast.tests.enc_t_test`
+
+#### Signature
+
+```python
+macroforecast.tests.enc_t_test(error_small: Any, error_large: Any, *, horizon: int = 1, kernel: str = "newey_west", critical_value: float | None = None, normal_approximation: bool = False, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+ENC-T nested forecast encompassing test.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `error_small` | positional or keyword | `Any` | `required` |
+| `error_large` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `kernel` | keyword only | `str` | `"newey_west"` |
+| `critical_value` | keyword only | `float \| None` | `None` |
+| `normal_approximation` | keyword only | `bool` | `False` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.enc_t_test(...)
+```
+### gw_test
+
+Qualified name: `macroforecast.tests.gw_test`
+
+#### Signature
+
+```python
+macroforecast.tests.gw_test(loss_a: Any, loss_b: Any, *, horizon: int = 1, correction: str = "hln", kernel: str = "acf", input_type: str = "loss", power: float = 2.0, alternative: str = "two_sided", alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Legacy GW-compatible DM-style equal predictive ability callable.
+
+This callable keeps the public ``gw_test`` surface but computes the same HAC
+loss-differential statistic as :func:`dm_test`. For the conditional
+Giacomini-White Wald test, use :func:`giacomini_white_test`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_a` | positional or keyword | `Any` | `required` |
+| `loss_b` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `correction` | keyword only | `str` | `"hln"` |
+| `kernel` | keyword only | `str` | `"acf"` |
+| `input_type` | keyword only | `str` | `"loss"` |
+| `power` | keyword only | `float` | `2.0` |
+| `alternative` | keyword only | `str` | `"two_sided"` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.gw_test(...)
+```
+### harvey_newbold_test
+
+Qualified name: `macroforecast.tests.harvey_newbold_test`
+
+#### Signature
+
+```python
+macroforecast.tests.harvey_newbold_test(error_a: Any, error_b: Any, *, horizon: int = 1, kernel: str = "newey_west", small_sample: bool = True, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Legacy forecast-encompassing covariance t approximation.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `error_a` | positional or keyword | `Any` | `required` |
+| `error_b` | positional or keyword | `Any` | `required` |
+| `horizon` | keyword only | `int` | `1` |
+| `kernel` | keyword only | `str` | `"newey_west"` |
+| `small_sample` | keyword only | `bool` | `True` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.harvey_newbold_test(...)
+```
+### henriksson_merton_test
+
+Qualified name: `macroforecast.tests.henriksson_merton_test`
+
+#### Signature
+
+```python
+macroforecast.tests.henriksson_merton_test(*args: Any, **kwargs: Any) -> TestResult
+```
+
+#### Description
+
+Henriksson-Merton directional accuracy test.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `Any` | `required` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.henriksson_merton_test(...)
+```
+### hn_test
+
+Qualified name: `macroforecast.tests.hn_test`
+
+#### Signature
+
+```python
+macroforecast.tests.hn_test(*args: Any, **kwargs: Any) -> TestResult
+```
+
+#### Description
+
+Alias for :func:`harvey_newbold_test`.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `Any` | `required` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.hn_test(...)
+```
+### interval_coverage_test
+
+Qualified name: `macroforecast.tests.interval_coverage_test`
+
+#### Signature
+
+```python
+macroforecast.tests.interval_coverage_test(y_true: Any, lower: Any, upper: Any, *, alpha: float = 0.05) -> dict[str, Any]
+```
+
+#### Description
+
+Kupiec, Christoffersen, and duration diagnostics for forecast intervals.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `lower` | positional or keyword | `Any` | `required` |
+| `upper` | positional or keyword | `Any` | `required` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.interval_coverage_test(...)
+```
 ### blocked_oob_reality_check
 
-```python
-macroforecast.tests.blocked_oob_reality_check(
-    loss_panel,
-    *,
-    benchmark,
-    loss="squared_error",
-    alpha=0.05,
-    n_boot=1000,
-    block_length=4,
-    bootstrap_method="fixed_block_bootstrap",
-    random_state=0,
-    target="target",
-    horizon="horizon",
-    origin="origin",
-    model="model_id",
-) -> pandas.DataFrame
-```
+Qualified name: `macroforecast.tests.blocked_oob_reality_check`
 
-Block-bootstrap one-sided benchmark-superiority screen against a named
-benchmark model. This is the direct callable replacement for the legacy
-`blocked_oob_reality_check` operation. It is intentionally documented as a
-legacy screen, not as the exact White Reality Check.
-
-Inputs:
-
-| Form | Required columns |
-| --- | --- |
-| Long panel | `origin`, `model_id`, `squared_error`; optional `target` and `horizon`. Column names are configurable. |
-| Wide matrix | One column per model, including the `benchmark` column. The index is treated as origin order. |
-
-Long-panel input must have one row per target/horizon/origin/model key. If the
-loss table contains duplicate rows for that key, aggregate them explicitly
-before calling; the test helpers do not average duplicates silently.
-
-Output: one row per candidate model and target/horizon group.
-
-| Column | Meaning |
-| --- | --- |
-| `target`, `horizon` | Group labels. Wide input uses `"all"` for both. |
-| `model` | Candidate model tested against the benchmark. |
-| `benchmark` | Benchmark model name. |
-| `mean_diff` | `benchmark_loss - candidate_loss`; positive means candidate has lower loss. |
-| `statistic` | Mean loss differential scaled by bootstrap standard error. |
-| `p_value` | Pairwise one-sided block-bootstrap p-value for no improvement over benchmark. |
-| `decision` | `True` when `p_value < alpha`. |
-| `familywise_p_value` | Max-bootstrap p-value adjusted across all candidate models in the same target/horizon group. |
-| `familywise_decision` | `True` when `familywise_p_value < alpha`. |
-| `familywise_n_obs` | Complete-case origins used for the family-wise adjustment. |
-| `n_obs` | Number of aligned origins. |
-| `block_length`, `n_boot`, `bootstrap_method` | Bootstrap settings used. |
-| `source_reference`, `r_reference`, `r_alignment` | Provenance metadata. `r_reference` is `None` because this legacy screen has no exact R-package comparator. |
-
-The returned table carries
-`attrs["macroforecast_metadata_schema"]["kind"] = "blocked_oob_reality_check"`.
-
-R/source comparison:
-
-| Function | Status |
-| --- | --- |
-| `blocked_oob_reality_check(...)` | No exact R-package comparator. It computes pairwise and family-wise max-centered block bootstrap p-values from precomputed benchmark/candidate loss differences. |
-| `ttrTests/R/dataSnoop.R::dataSnoop(test="RC" or "SPA")` | Strategy-specific data-snooping code. It rebuilds technical-trading parameter-grid performance on each bootstrapped price sample, so it is not the same API contract. |
-| `reality_check_test(...)`, `superior_predictive_ability_test(...)`, `stepm_test(...)` | Exact multiple-comparison callable family for White RC, Hansen SPA, and Romano-Wolf StepM using the optional `arch.bootstrap` backend. |
-
-Pipeline integration: request `"spa"`, `"rc"`, or `"stepm"` in
-`macroforecast.pipeline.EvalSpec.tests` to run these full-set comparisons per
-`(target, horizon)` against `EvalSpec.benchmark`. Per-test bootstrap controls
-enter through `EvalSpec.test_options`, for example
-`test_options={"spa": {"n_boot": 999, "block_length": 5, "random_state": 123}}`.
-The results append rows to `PipelineReport.mcs` with `test`, `contender`,
-`superior`, `reject`, `p_value`, and sample-size metadata.
-
-Size caveat: MC diagnostics currently show that the arch-backed SPA/RC/StepM
-family is correctly sized for iid equal-loss nulls but over-rejects by roughly
-1.5-2x nominal size when losses have serial dependence. Result dictionaries
-carry `metadata["size_caveat"]` and each computed record carries the same
-machine-readable payload. Treat these as diagnostic under dependent losses;
-prefer `multi_horizon_spa_test` (`"uspa"`/`"aspa"`) for pairwise multi-horizon
-questions or `model_confidence_set` for dependent-loss set comparisons.
-
-### superior_predictive_ability_test
+#### Signature
 
 ```python
-macroforecast.tests.superior_predictive_ability_test(
-    loss_panel,
-    *,
-    benchmark,
-    loss="squared_error",
-    alpha=0.05,
-    n_boot=1000,
-    block_length="auto",
-    bootstrap_method="stationary_bootstrap",
-    p_value_type="consistent",
-    studentize=True,
-    nested=False,
-    random_state=0,
-    target="target",
-    horizon="horizon",
-    origin="origin",
-    model="model_id",
-) -> dict
+macroforecast.tests.blocked_oob_reality_check(loss_panel: pd.DataFrame, *, benchmark: str, loss: str = "squared_error", alpha: float = 0.05, n_boot: int = 1000, block_length: int | str = 4, bootstrap_method: str = "fixed_block_bootstrap", random_state: int = 0, target: str = "target", horizon: str = "horizon", origin: str = "origin", model: str = "model_id") -> pd.DataFrame
 ```
 
-Input: long or wide loss panel with a named benchmark model. Output:
-JSON-ready dictionary with one record per target/horizon group. The record
-contains `p_values` for `lower`, `consistent`, and `upper` SPA p-value
-variants, `critical_values`, selected `p_value`, `superior_models`, and
-backend metadata.
+#### Description
 
-Backend alignment: delegates to `arch.bootstrap.SPA`. The backend takes
-benchmark losses and candidate losses, forms loss differentials internally as
-`benchmark_loss - candidate_loss`, and reports `lower`, `consistent`, and
-`upper` p-values from Hansen's recentering choices. Positive
-`mean_loss_difference` in the output means the candidate has lower average loss
-than the benchmark.
+Legacy block-bootstrap benchmark-superiority screen.
 
-The returned dictionary includes `metadata["size_caveat"]` documenting the
-dependent-loss over-rejection caveat above.
+The input can be either a long per-origin loss panel with model and loss
+columns, or a wide loss matrix whose columns are model names. Positive
+``mean_diff`` means the candidate has lower average loss than the
+benchmark. This callable is not the exact White Reality Check; use
+``reality_check_test``/``superior_predictive_ability_test``/``stepm_test``
+for the arch-backed multiple-comparison procedures.
 
-R/source comparison: archived R `ttrTests/R/dataSnoop.R::dataSnoop(test="SPA")`
-implements Hansen SPA for technical-trading rule parameter grids. It recomputes
-strategy performance on each bootstrapped price sample, so it is not a direct
-general loss-matrix API. `macroforecast` keeps the general forecast-evaluation
-contract and records this as conceptual R alignment in each output record.
+#### Parameters
 
-Options:
-
-| Option | Default | Choices | Meaning |
+| Name | Kind | Type | Default |
 | --- | --- | --- | --- |
-| `bootstrap_method` | `"stationary_bootstrap"` | `"stationary_bootstrap"`, `"fixed_block_bootstrap"` | Bootstrap family. Fixed-block inputs are mapped to `arch`'s moving-block backend. |
-| `p_value_type` | `"consistent"` | `"lower"`, `"consistent"`, `"upper"` | Which SPA p-value variant to use for `p_value` and `decision`. |
-| `studentize` | `True` | boolean | Passed to `arch.bootstrap.SPA`. |
-| `nested` | `False` | boolean | Passed to `arch.bootstrap.SPA` for nested model sets. |
+| `loss_panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `benchmark` | keyword only | `str` | `required` |
+| `loss` | keyword only | `str` | `"squared_error"` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `n_boot` | keyword only | `int` | `1000` |
+| `block_length` | keyword only | `int \| str` | `4` |
+| `bootstrap_method` | keyword only | `str` | `"fixed_block_bootstrap"` |
+| `random_state` | keyword only | `int` | `0` |
+| `target` | keyword only | `str` | `"target"` |
+| `horizon` | keyword only | `str` | `"horizon"` |
+| `origin` | keyword only | `str` | `"origin"` |
+| `model` | keyword only | `str` | `"model_id"` |
 
-### reality_check_test
+#### Returns
 
-```python
-macroforecast.tests.reality_check_test(
-    loss_panel,
-    *,
-    benchmark,
-    loss="squared_error",
-    alpha=0.05,
-    n_boot=1000,
-    block_length="auto",
-    bootstrap_method="stationary_bootstrap",
-    p_value_type="consistent",
-    studentize=True,
-    nested=False,
-    random_state=0,
-    target="target",
-    horizon="horizon",
-    origin="origin",
-    model="model_id",
-) -> dict
-```
+`pd.DataFrame`
 
-Input and output follow `superior_predictive_ability_test(...)`. Backend:
-`arch.bootstrap.RealityCheck`. In the current `arch` backend this class is a
-Reality Check alias over the same SPA machinery, with the same p-value fields.
-Use this when the research design calls for the White Reality Check against a
-benchmark model.
-
-The returned dictionary includes the same `metadata["size_caveat"]` dependent-
-loss disclosure as SPA.
-
-R/source comparison: archived R `ttrTests/R/dataSnoop.R::dataSnoop(test="RC")`
-implements White's Reality Check for technical-trading rule grids. As with SPA,
-the R function is strategy-generator specific; `macroforecast` uses
-precomputed benchmark and candidate forecast-loss series.
-
-### stepm_test
+#### Minimal Use
 
 ```python
-macroforecast.tests.stepm_test(
-    loss_panel,
-    *,
-    benchmark,
-    loss="squared_error",
-    alpha=0.05,
-    n_boot=1000,
-    block_length="auto",
-    bootstrap_method="stationary_bootstrap",
-    studentize=True,
-    nested=False,
-    random_state=0,
-    target="target",
-    horizon="horizon",
-    origin="origin",
-    model="model_id",
-) -> dict
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.blocked_oob_reality_check(...)
 ```
-
-Input: long or wide loss panel with a named benchmark model. Output:
-JSON-ready dictionary with `superior_models` for each target/horizon group.
-Backend: `arch.bootstrap.StepM`.
-
-The returned dictionary includes the same `metadata["size_caveat"]` dependent-
-loss disclosure as SPA and RC.
-
-R/source comparison: `oosanalysis-R-library/R/stepm.R::stepm` implements a
-generic Romano-Wolf stepdown loop from supplied test statistics and bootstrap
-test-statistic draws. `macroforecast` delegates to `arch.bootstrap.StepM`, which
-constructs the benchmark-vs-candidate loss-difference statistics using the SPA
-backend and then applies the stepdown procedure. The objective is aligned, but
-the inputs are higher level in `macroforecast`: forecast-loss panel in,
-superior model names out.
-
-### multi_horizon_spa_test
-
-```python
-macroforecast.tests.multi_horizon_spa_test(
-    loss_a,
-    loss_b=None,
-    *,
-    statistic="uspa",
-    weights=None,
-    alpha=0.05,
-    n_boot=999,
-    block_length=3,
-    hac_bandwidth="auto",
-    random_state=0,
-    alternative="greater",
-) -> TestResult
-```
-
-Pairwise multi-horizon SPA test from Quaedvlieg (2021, JBES). The input is a
-loss-differential panel with one column per horizon, or two aligned loss panels
-where the differential is `loss_a - loss_b`. `statistic="uspa"` uses the
-minimum of the horizon-specific studentized statistics; `statistic="aspa"` uses
-the studentized weighted average, with equal weights by default. The test is
-one-sided: positive differentials favor `loss_b` under the two-panel contract.
-
-Defaults follow the paper's simulation section where possible:
-`block_length=3` and `n_boot=999`. The original statistic uses a Quadratic
-Spectral HAC estimator; bootstrap statistics use the natural block-mean
-variance estimator from Algorithm 1. `hac_bandwidth="auto"` uses this module's
-standard automatic HAC bandwidth convention because the paper specifies the QS
-kernel but not a fixed bandwidth in Algorithm 1.
-
-Pipeline integration: request `"uspa"` or `"aspa"` in
-`macroforecast.pipeline.EvalSpec.tests` to run this test jointly across all
-horizons for each `(target, contender, benchmark)` triple. Pipeline rows land in
-`PipelineReport.significance` with `horizon="joint"` so per-horizon accuracy
-tables do not treat them as ordinary horizons. Requesting either name with a
-single-horizon spec raises at `pipeline_spec(...)` build time.
-
-### model_confidence_set
-
-```python
-macroforecast.tests.model_confidence_set(
-    loss_panel,
-    *,
-    loss="squared_error",
-    alpha=0.10,
-    n_boot=1000,
-    block_length="auto",
-    bootstrap_method="mcs_fixed_block",
-    statistic="max",
-    random_state=0,
-    target="target",
-    horizon="horizon",
-    origin="origin",
-    model="model_id",
-) -> dict
-```
-
-Exact Hansen-Lunde-Nason model confidence set callable aligned with the R
-`MCS` package's `MCSprocedure`. It constructs pairwise loss-difference
-statistics, bootstraps those loss-difference means, removes one model per step,
-tracks cumulative MCS p-values, and records included and rejected model sets by
-target/horizon group.
-
-Inputs:
-
-| Form | Required columns |
-| --- | --- |
-| Long panel | `origin`, `model_id`, and the selected loss column. `target` and `horizon` are optional grouping columns. |
-| Wide matrix | Numeric model-loss columns. The target/horizon labels are set to `"all"`. |
-
-Long-panel input must have one row per target/horizon/origin/model key. Duplicate
-loss rows are rejected instead of being averaged inside the pivot step.
-
-Options:
-
-| Option | Default | Choices | Meaning |
-| --- | --- | --- | --- |
-| `statistic` | `"max"` | `"max"`, `"range"` | `"max"` maps to R `statistic="Tmax"` over `d_i.`; `"range"` maps to R `statistic="TR"` over pairwise `d_ij`. |
-| `bootstrap_method` | `"mcs_fixed_block"` | `"mcs_fixed_block"`, `"stationary_bootstrap"`, `"fixed_block_bootstrap"` | `mcs_fixed_block` follows R `MCS/R/internalFunctions.R::GetIndices`; the other choices are package extensions. |
-| `block_length` | `"auto"` | positive int or `"auto"` | Block length. `"auto"` follows the R rule conceptually: selected AR order across loss columns, with a minimum of 3. |
-
-Output: JSON-ready dictionary with
-`metadata_schema.kind="model_confidence_set"`.
-
-| Key | Meaning |
-| --- | --- |
-| `mcs_inclusion` | Included model records by target, horizon, and alpha after the iterative procedure stops. |
-| `mcs_rejections` | Eliminated model records by target, horizon, and alpha. |
-| `p_values` | Final stopping-test p-value by target and horizon. |
-| `iteration_path` | One record per removal step, including active models, statistic, p-value, cumulative MCS p-value, removed model, rejected model if any, and mean losses. |
-| `block_lengths_used` | Block length used by target and horizon. |
-
-R/source alignment:
-
-| R source | Python contract |
-| --- | --- |
-| `MCS/R/MCSprocedure.R::MCSprocedure` | Sequential elimination until one model remains; included/excluded sets are determined by `p-Value for H_{0,M_k}` relative to `alpha`. |
-| `MCS/R/internalFunctions.R::GetD` | Pairwise loss differences `d_ij` and model-average differences `d_i.`. |
-| `MCS/R/internalFunctions.R::GetIndices` | Default `bootstrap_method="mcs_fixed_block"` samples consecutive fixed blocks and truncates to sample length. |
-
-`block_length="auto"` follows the same rule conceptually as R `k=NULL`: choose
-the maximum selected AR order across loss columns and enforce a minimum of 3.
-For bit-level reproducibility across software stacks, pass an explicit integer
-`block_length`.
-
-**Coverage under a global null with many ties (WP-A1 Step 0).** Monte Carlo
-size/coverage validation (`tests/mc/test_mcs_coverage.py`) confirms the MCS
-inclusion guarantee `P(true best retained) >= 1-alpha` holds when one model
-has a genuine (even small) loss advantage over the rest. But when **all**
-candidate models are exactly tied (an exact global null with `K` symmetric
-models, no true best), `P(all K models jointly retained)` is measurably
-**below** the naive `1-alpha` reading of the guarantee -- e.g. ~0.82, not
-~0.90, at `alpha=0.10`, `K=5`. This was cross-checked directly against R's
-own `MCS::MCSprocedure` on the identical design (subprocess-Rscript bridge,
-R=200 replications, `B=500`): R reproduces the same ~0.82 rate
-(`rate=0.8200`, 99% CI `[0.7401,0.8841]`), matching this package's own
-longer-run measurement (`rate=0.8180`, CI `[0.7846,0.8483]`, n_reps=1000).
-Since the reference R implementation shows the identical behavior, this is a
-property of the Hansen-Lunde-Nason sequential-elimination procedure itself
-under many exact ties, not a `macroforecast` defect -- treat `alpha` as
-calibrated for "is there a worse model to eliminate" one step at a time,
-not as a literal `1-alpha` bound on "are all K models jointly retained"
-when many of them are exactly tied.
-
 ### iterative_model_confidence_set
 
+Qualified name: `macroforecast.tests.iterative_model_confidence_set`
+
+#### Signature
+
 ```python
-macroforecast.tests.iterative_model_confidence_set(
-    loss_panel,
-    *,
-    loss="squared_error",
-    alpha=0.10,
-    n_boot=1000,
-    block_length="auto",
-    bootstrap_method="mcs_fixed_block",
-    statistic="max",
-    random_state=0,
-    target="target",
-    horizon="horizon",
-    origin="origin",
-    model="model_id",
-)
+macroforecast.tests.iterative_model_confidence_set(loss_panel: pd.DataFrame, *, loss: str = "squared_error", alpha: float = 0.1, n_boot: int = 1000, block_length: int | str = "auto", bootstrap_method: str = "mcs_fixed_block", statistic: str = "max", random_state: int = 0, target: str = "target", horizon: str = "horizon", origin: str = "origin", model: str = "model_id") -> dict[str, Any]
 ```
 
-Descriptive alias for `model_confidence_set(...)`. It calls the same exact MCS
-engine and returns the same fields, with
-`metadata_schema.kind="iterative_model_confidence_set"` so older code can trace
-which callable produced the result.
+#### Description
 
-## Residual Diagnostics
+Descriptive alias for :func:`model_confidence_set`.
 
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `loss` | keyword only | `str` | `"squared_error"` |
+| `alpha` | keyword only | `float` | `0.1` |
+| `n_boot` | keyword only | `int` | `1000` |
+| `block_length` | keyword only | `int \| str` | `"auto"` |
+| `bootstrap_method` | keyword only | `str` | `"mcs_fixed_block"` |
+| `statistic` | keyword only | `str` | `"max"` |
+| `random_state` | keyword only | `int` | `0` |
+| `target` | keyword only | `str` | `"target"` |
+| `horizon` | keyword only | `str` | `"horizon"` |
+| `origin` | keyword only | `str` | `"origin"` |
+| `model` | keyword only | `str` | `"model_id"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.iterative_model_confidence_set(...)
+```
+### mincer_zarnowitz_test
+
+Qualified name: `macroforecast.tests.mincer_zarnowitz_test`
+
+#### Signature
+
+```python
+macroforecast.tests.mincer_zarnowitz_test(y_true: Any, y_pred: Any, *, hac_lags: int = 0, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Mincer-Zarnowitz forecast-rationality regression.
+
+Regresses actual values on a constant and the forecast, then tests the joint
+null ``intercept = 0`` and ``slope = 1`` using a HAC covariance matrix.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `y_pred` | positional or keyword | `Any` | `required` |
+| `hac_lags` | keyword only | `int` | `0` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.mincer_zarnowitz_test(...)
+```
+### model_confidence_set
+
+Qualified name: `macroforecast.tests.model_confidence_set`
+
+#### Signature
+
+```python
+macroforecast.tests.model_confidence_set(loss_panel: pd.DataFrame, *, loss: str = "squared_error", alpha: float = 0.1, n_boot: int = 1000, block_length: int | str = "auto", bootstrap_method: str = "mcs_fixed_block", statistic: str = "max", random_state: int = 0, target: str = "target", horizon: str = "horizon", origin: str = "origin", model: str = "model_id") -> dict[str, Any]
+```
+
+#### Description
+
+Exact Hansen-Lunde-Nason model confidence set.
+
+This is the canonical MCS callable. It follows the R ``MCS`` package's
+``MCSprocedure`` structure: pairwise loss differences are bootstrapped,
+either ``Tmax`` or ``TR`` is evaluated, one model is removed each step, and
+included/excluded sets are determined from the cumulative MCS p-values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `loss` | keyword only | `str` | `"squared_error"` |
+| `alpha` | keyword only | `float` | `0.1` |
+| `n_boot` | keyword only | `int` | `1000` |
+| `block_length` | keyword only | `int \| str` | `"auto"` |
+| `bootstrap_method` | keyword only | `str` | `"mcs_fixed_block"` |
+| `statistic` | keyword only | `str` | `"max"` |
+| `random_state` | keyword only | `int` | `0` |
+| `target` | keyword only | `str` | `"target"` |
+| `horizon` | keyword only | `str` | `"horizon"` |
+| `origin` | keyword only | `str` | `"origin"` |
+| `model` | keyword only | `str` | `"model_id"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.model_confidence_set(...)
+```
+### multi_horizon_spa_test
+
+Qualified name: `macroforecast.tests.multi_horizon_spa_test`
+
+#### Signature
+
+```python
+macroforecast.tests.multi_horizon_spa_test(loss_a: Any, loss_b: Any | None = None, *, statistic: str = "uspa", weights: Sequence[float] | None = None, alpha: float = 0.05, n_boot: int = 999, block_length: int = 3, hac_bandwidth: int | str = "auto", random_state: int = 0, alternative: str = "greater") -> TestResult
+```
+
+#### Description
+
+Quaedvlieg (2021) multi-horizon SPA test for one pair of models.
+
+The input is a loss-differential panel with one column per horizon. Pass a
+single panel as ``loss_a`` to use it directly, or pass two aligned loss
+panels and the differential is ``loss_a - loss_b``. With the two-panel
+contract, positive means model ``loss_b`` has lower loss than model
+``loss_a``. ``statistic="uspa"`` tests uniform superior predictive ability
+with the minimum horizon-specific studentized statistic; ``"aspa"`` tests
+average superior predictive ability with the studentized weighted average.
+
+Implementation notes
+Quaedvlieg's Algorithm 1 uses a moving-block bootstrap for studentized
+statistics and, in the simulation section, sets block length to 3 and
+``B=999``. Those are the defaults here. The paper specifies a Quadratic
+Spectral HAC estimator for the original statistic but does not pin the HAC
+bandwidth in Algorithm 1; ``hac_bandwidth="auto"`` uses the same automatic
+bandwidth convention as this module's other HAC helpers, while an integer
+pins it. Bootstrap statistics use the paper's natural block-mean variance
+estimator.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_a` | positional or keyword | `Any` | `required` |
+| `loss_b` | positional or keyword | `Any \| None` | `None` |
+| `statistic` | keyword only | `str` | `"uspa"` |
+| `weights` | keyword only | `Sequence[float] \| None` | `None` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `n_boot` | keyword only | `int` | `999` |
+| `block_length` | keyword only | `int` | `3` |
+| `hac_bandwidth` | keyword only | `int \| str` | `"auto"` |
+| `random_state` | keyword only | `int` | `0` |
+| `alternative` | keyword only | `str` | `"greater"` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.multi_horizon_spa_test(...)
+```
+### nested_tests
+
+Qualified name: `macroforecast.tests.nested_tests`
+
+#### Signature
+
+```python
+macroforecast.tests.nested_tests(loss_small: Any, loss_large: Any, *, forecast_small: Any | None = None, forecast_large: Any | None = None, error_small: Any | None = None, error_large: Any | None = None, tests: Sequence[str] = ('clark_west', 'enc_new', 'enc_t'), horizon: int = 1, kernel: str = "newey_west", enc_critical_value: float | None = None, enc_normal_approximation: bool = False, alpha: float = 0.05) -> pd.DataFrame
+```
+
+#### Description
+
+Run multiple nested-model forecast tests and stack results.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_small` | positional or keyword | `Any` | `required` |
+| `loss_large` | positional or keyword | `Any` | `required` |
+| `forecast_small` | keyword only | `Any \| None` | `None` |
+| `forecast_large` | keyword only | `Any \| None` | `None` |
+| `error_small` | keyword only | `Any \| None` | `None` |
+| `error_large` | keyword only | `Any \| None` | `None` |
+| `tests` | keyword only | `Sequence[str]` | `("clark_west", "enc_new", "enc_t")` |
+| `horizon` | keyword only | `int` | `1` |
+| `kernel` | keyword only | `str` | `"newey_west"` |
+| `enc_critical_value` | keyword only | `float \| None` | `None` |
+| `enc_normal_approximation` | keyword only | `bool` | `False` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.nested_tests(...)
+```
+### pesaran_timmermann_test
+
+Qualified name: `macroforecast.tests.pesaran_timmermann_test`
+
+#### Signature
+
+```python
+macroforecast.tests.pesaran_timmermann_test(*args: Any, **kwargs: Any) -> TestResult
+```
+
+#### Description
+
+Pesaran-Timmermann directional accuracy test.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `args` | var positional | `Any` | `required` |
+| `kwargs` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.pesaran_timmermann_test(...)
+```
+### pit_autocorrelation_test
+
+Qualified name: `macroforecast.tests.pit_autocorrelation_test`
+
+#### Signature
+
+```python
+macroforecast.tests.pit_autocorrelation_test(pit: Any, *, lag: int = 1, alpha: float = 0.05) -> TestResult
+```
+
+#### Description
+
+Normal approximation test for serial dependence in PIT values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `pit` | positional or keyword | `Any` | `required` |
+| `lag` | keyword only | `int` | `1` |
+| `alpha` | keyword only | `float` | `0.05` |
+
+#### Returns
+
+`TestResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.pit_autocorrelation_test(...)
+```
+### pit_histogram
+
+Qualified name: `macroforecast.tests.pit_histogram`
+
+#### Signature
+
+```python
+macroforecast.tests.pit_histogram(pit: Any, *, n_bins: int = 10) -> pd.DataFrame
+```
+
+#### Description
+
+Return PIT histogram counts against a uniform reference.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `pit` | positional or keyword | `Any` | `required` |
+| `n_bins` | keyword only | `int` | `10` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.pit_histogram(...)
+```
+### reality_check_test
+
+Qualified name: `macroforecast.tests.reality_check_test`
+
+#### Signature
+
+```python
+macroforecast.tests.reality_check_test(loss_panel: pd.DataFrame, *, benchmark: str, loss: str = "squared_error", alpha: float = 0.05, n_boot: int = 1000, block_length: int | str = "auto", bootstrap_method: str = "stationary_bootstrap", p_value_type: str = "consistent", studentize: bool = True, nested: bool = False, random_state: int = 0, target: str = "target", horizon: str = "horizon", origin: str = "origin", model: str = "model_id") -> dict[str, Any]
+```
+
+#### Description
+
+White reality check against a benchmark via ``arch.bootstrap``.
+
+Size caveat: this shares the arch-backed SPA path's dependent-loss
+over-rejection disclosure. The return payload includes
+``metadata.size_caveat``; prefer ``model_confidence_set`` under dependent
+losses.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `benchmark` | keyword only | `str` | `required` |
+| `loss` | keyword only | `str` | `"squared_error"` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `n_boot` | keyword only | `int` | `1000` |
+| `block_length` | keyword only | `int \| str` | `"auto"` |
+| `bootstrap_method` | keyword only | `str` | `"stationary_bootstrap"` |
+| `p_value_type` | keyword only | `str` | `"consistent"` |
+| `studentize` | keyword only | `bool` | `True` |
+| `nested` | keyword only | `bool` | `False` |
+| `random_state` | keyword only | `int` | `0` |
+| `target` | keyword only | `str` | `"target"` |
+| `horizon` | keyword only | `str` | `"horizon"` |
+| `origin` | keyword only | `str` | `"origin"` |
+| `model` | keyword only | `str` | `"model_id"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.reality_check_test(...)
+```
 ### residual_diagnostics
 
+Qualified name: `macroforecast.tests.residual_diagnostics`
+
+#### Signature
+
 ```python
-macroforecast.tests.residual_diagnostics(
-    residuals,
-    *,
-    tests=(
-        "ljung_box_q",
-        "arch_lm",
-        "jarque_bera_normality",
-        "durbin_watson",
-    ),
-    lag=10,
-    alpha=0.05,
-    model_df=0,
-    exog=None,
-    demean_arch=False,
-)
+macroforecast.tests.residual_diagnostics(residuals: Any, *, tests: Sequence[str] = ('ljung_box_q', 'arch_lm', 'jarque_bera_normality', 'durbin_watson'), lag: int = 10, alpha: float = 0.05, model_df: int = 0, exog: Any | None = None, demean_arch: bool = False) -> pd.DataFrame
 ```
 
-Input: residual series. Output: one-row-per-test pandas `DataFrame` with
-`test`, `statistic`, `p_value`, `decision`, `lag_used`, `df`, `n_obs`,
-`source_reference`, `r_reference`, `r_alignment`, and `status`. The result carries
-`attrs["macroforecast_metadata_schema"] = {"kind": "residual_diagnostics",
-"version": 1, ...}`.
+#### Description
 
-Supported tests:
+Run residual diagnostic tests and return one row per test.
 
-| Name | Meaning |
-| --- | --- |
-| `ljung_box_q` | Ljung-Box serial-correlation diagnostic, aligned with `stats::Box.test(type="Ljung-Box")`; `model_df` maps to R `fitdf`. |
-| `breusch_godfrey_serial_correlation` | Breusch-Godfrey Chisq LM diagnostic under the residual-series contract; default is equivalent to testing `residuals ~ 1`, and `exog` supplies additional original-regression design columns. |
-| `arch_lm` | Engle ARCH LM diagnostic, aligned with `FinTS::ArchTest`; `demean_arch=True` matches its `demean=TRUE` option. |
-| `jarque_bera_normality` | Jarque-Bera normality diagnostic using the same population-moment formula as `tseries::jarque.bera.test`. |
-| `durbin_watson` | Durbin-Watson statistic aligned with the statistic in `lmtest::dwtest`; p-value is not supplied because `lmtest`'s exact p-value uses a model-design distribution not available from residuals alone. |
+#### Parameters
 
-Options:
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `residuals` | positional or keyword | `Any` | `required` |
+| `tests` | keyword only | `Sequence[str]` | `("ljung_box_q", "arch_lm", "jarque_bera_normality", "durbin_w...` |
+| `lag` | keyword only | `int` | `10` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `model_df` | keyword only | `int` | `0` |
+| `exog` | keyword only | `Any \| None` | `None` |
+| `demean_arch` | keyword only | `bool` | `False` |
 
-| Option | Default | Meaning |
-| --- | --- | --- |
-| `lag` | `10` | Maximum lag for Ljung-Box, ARCH-LM, and Breusch-Godfrey. |
-| `alpha` | `0.05` | Rejection level used for `decision`. |
-| `model_df` | `0` | Degrees of freedom consumed by the fitted model. Used in Ljung-Box p-values and ARCH-LM degrees-of-freedom adjustment. |
-| `exog` | `None` | Optional design matrix for the Breusch-Godfrey auxiliary regression. If omitted, an intercept-only design is used. |
-| `demean_arch` | `False` | Demean residuals before ARCH-LM, matching `FinTS::ArchTest(demean=TRUE)` when enabled. |
+#### Returns
 
-Source-alignment notes:
+`pd.DataFrame`
 
-| Diagnostic | Source logic |
-| --- | --- |
-| Ljung-Box | `stats::Box.test(type="Ljung-Box")`: `Q = n(n+2) sum rho_k^2/(n-k)`, chi-squared df `lag - model_df`; `model_df` is R `fitdf`. |
-| ARCH-LM | `FinTS/R/ArchTest.R::ArchTest`: optionally demean residuals, embed `x^2`, regress current squared residuals on lagged squared residuals, statistic is effective sample size times auxiliary `R^2`. `model_df` is a statsmodels degrees-of-freedom adjustment beyond the R API. |
-| Jarque-Bera | `tseries/R/test.R::jarque.bera.test`: population central moments, `n * skewness^2 / 6 + n * (kurtosis - 3)^2 / 24`, chi-squared df `2`. |
-| Breusch-Godfrey | `lmtest/R/bgtest.R::bgtest`: R takes a fitted model or formula. `macroforecast` takes residuals and optional `exog`, then applies the same Chisq LM auxiliary formula with fill-zero lagged residual columns under that residual-series contract. |
-| Durbin-Watson | `lmtest/R/dwtest.R::dwtest`: statistic `sum(diff(residuals)^2) / sum(residuals^2)`. P-values are omitted because R's exact/asymptotic p-value depends on the original regression design matrix. |
+#### Minimal Use
 
-- `jarque_bera_test` -- Jarque-Bera normality test (single series, chi2 df=2; tseries::jarque.bera.test convention).
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.residual_diagnostics(...)
+```
+### shortfall_de_test
 
-- `granger_causality` -- Granger causality test in a VAR (vars::causality; F or Wald).
-- `instantaneous_causality` -- instantaneous (contemporaneous) causality test in a VAR.
+Qualified name: `macroforecast.tests.shortfall_de_test`
 
-- `giacomini_white_test` -- Giacomini-White (2006) CONDITIONAL predictive ability Wald test, instrument [1, dL_{t-h}]. **Default changed (WP-A1):** `small_sample=True` uses an untapered ("acf"-style) HAC over lags 0..horizon-1 (matching `dm_test`'s own kernel convention, with a bandwidth-shrink-on-non-PSD fallback) referenced against `F(q, ESS-q)` with `ESS = n/(1+2*bandwidth_used)` whenever horizon > 1 -- the original Bartlett-tapered-HAC + chi2(q) construction was Monte Carlo-confirmed oversized (2-2.5x nominal) for horizon > 1, non-vanishing out to n=100,000 (see `tests/mc/test_giacomini_white_size.py`). `small_sample=False` restores the exact pre-WP-A1 Bartlett-HAC + chi2(q) p-values. horizon=1 is unaffected either way.
+#### Signature
 
-- `var_serial_test` -- multivariate residual serial-correlation (Portmanteau/LM) test for a VAR (vars::serial.test).
+```python
+macroforecast.tests.shortfall_de_test(pit: Any, *, alpha: float = 0.05, lags: int = 1, boot: bool = False, n_boot: int = 2000, random_state: int = 0) -> dict[str, Any]
+```
 
-- `var_normality_test` -- multivariate normality (Doornik-Hansen/Lutkepohl JB) test for VAR residuals (vars::normality.test).
+#### Description
 
-- `var_arch_test` -- multivariate ARCH-LM test for VAR residuals (vars::arch.test, Lutkepohl).
+Du-Escanciano expected shortfall tests on PIT values.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `pit` | positional or keyword | `Any` | `required` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `lags` | keyword only | `int` | `1` |
+| `boot` | keyword only | `bool` | `False` |
+| `n_boot` | keyword only | `int` | `2000` |
+| `random_state` | keyword only | `int` | `0` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.shortfall_de_test(...)
+```
+### stepm_test
+
+Qualified name: `macroforecast.tests.stepm_test`
+
+#### Signature
+
+```python
+macroforecast.tests.stepm_test(loss_panel: pd.DataFrame, *, benchmark: str, loss: str = "squared_error", alpha: float = 0.05, n_boot: int = 1000, block_length: int | str = "auto", bootstrap_method: str = "stationary_bootstrap", studentize: bool = True, nested: bool = False, random_state: int = 0, target: str = "target", horizon: str = "horizon", origin: str = "origin", model: str = "model_id") -> dict[str, Any]
+```
+
+#### Description
+
+Stepwise multiple-comparison test against a benchmark via ``arch.bootstrap``.
+
+Size caveat: dependent-null Monte Carlo diagnostics mirror the arch-backed
+SPA/RC over-rejection disclosure. The return payload includes
+``metadata.size_caveat``; prefer ``model_confidence_set`` under dependent
+losses.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `benchmark` | keyword only | `str` | `required` |
+| `loss` | keyword only | `str` | `"squared_error"` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `n_boot` | keyword only | `int` | `1000` |
+| `block_length` | keyword only | `int \| str` | `"auto"` |
+| `bootstrap_method` | keyword only | `str` | `"stationary_bootstrap"` |
+| `studentize` | keyword only | `bool` | `True` |
+| `nested` | keyword only | `bool` | `False` |
+| `random_state` | keyword only | `int` | `0` |
+| `target` | keyword only | `str` | `"target"` |
+| `horizon` | keyword only | `str` | `"horizon"` |
+| `origin` | keyword only | `str` | `"origin"` |
+| `model` | keyword only | `str` | `"model_id"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.stepm_test(...)
+```
+### superior_predictive_ability_test
+
+Qualified name: `macroforecast.tests.superior_predictive_ability_test`
+
+#### Signature
+
+```python
+macroforecast.tests.superior_predictive_ability_test(loss_panel: pd.DataFrame, *, benchmark: str, loss: str = "squared_error", alpha: float = 0.05, n_boot: int = 1000, block_length: int | str = "auto", bootstrap_method: str = "stationary_bootstrap", p_value_type: str = "consistent", studentize: bool = True, nested: bool = False, random_state: int = 0, target: str = "target", horizon: str = "horizon", origin: str = "origin", model: str = "model_id") -> dict[str, Any]
+```
+
+#### Description
+
+White-Hansen superior predictive ability test via ``arch.bootstrap``.
+
+Size caveat: dependent-null Monte Carlo diagnostics currently show roughly
+1.5-2x nominal over-rejection when losses are serially correlated. The return
+payload includes ``metadata.size_caveat``; prefer ``multi_horizon_spa_test``
+(``uspa``/``aspa``) or ``model_confidence_set`` under dependent losses.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_panel` | positional or keyword | `pd.DataFrame` | `required` |
+| `benchmark` | keyword only | `str` | `required` |
+| `loss` | keyword only | `str` | `"squared_error"` |
+| `alpha` | keyword only | `float` | `0.05` |
+| `n_boot` | keyword only | `int` | `1000` |
+| `block_length` | keyword only | `int \| str` | `"auto"` |
+| `bootstrap_method` | keyword only | `str` | `"stationary_bootstrap"` |
+| `p_value_type` | keyword only | `str` | `"consistent"` |
+| `studentize` | keyword only | `bool` | `True` |
+| `nested` | keyword only | `bool` | `False` |
+| `random_state` | keyword only | `int` | `0` |
+| `target` | keyword only | `str` | `"target"` |
+| `horizon` | keyword only | `str` | `"horizon"` |
+| `origin` | keyword only | `str` | `"origin"` |
+| `model` | keyword only | `str` | `"model_id"` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.superior_predictive_ability_test(...)
+```

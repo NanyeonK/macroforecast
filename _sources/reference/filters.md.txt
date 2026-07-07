@@ -2,244 +2,462 @@
 
 [Back to reference](index.md)
 
-## Purpose
+One-series filters, smoothers, decompositions, and adaptive moving averages.
 
-`macroforecast.filters` contains direct one-series filter and smoother
-callables. These functions transform a single time series and return the
-filtered components plus metadata. They do not create forecast targets, do not
-build a model-ready feature matrix, and do not decide train/validation/test
-windows.
+## Public Symbols
 
-Use `macroforecast.feature_engineering` when the same filters need to become
-panel features such as `{column}_hp_cycle`, `{column}_hamilton_cycle`,
-`{column}_savgol`, or `{column}_albama`.
+| Symbol | Kind | Summary |
+| --- | --- | --- |
+| `AlbaMA` | class | Alias class for the Goulet Coulombe-Klieber AlbaMA smoother. |
+| `AlbaMAResult` | class | Result returned by the AlbaMA adaptive moving-average feature builder. |
+| `AdaptiveMovingAverage` | class | Reusable AlbaMA adaptive moving-average feature builder. |
+| `FilterResult` | class | Result returned by direct one-series filter callables. |
+| `albama` | function | Create Goulet Coulombe-Klieber AlbaMA features for one time series. |
+| `hamilton_filter` | function | Apply Hamilton's trend-cycle regression filter to one series. |
+| `hp_filter` | function | Apply the two-sided Hodrick-Prescott filter to one series. |
+| `savitzky_golay` | function | Apply the centered Savitzky-Golay filter to one series. |
+| `wavelet_filter` | function | Create causal rolling approximation/detail components for one series. |
+| `stl_decompose` | function | Seasonal-Trend decomposition using Loess (STL). |
 
-## Public Functions
+## Callable And Class Reference
 
-| Callable | Input | Output | Purpose |
-| --- | --- | --- | --- |
-| `hp_filter(y, lamb=129600.0, component="both")` | One numeric series. | `FilterResult` with `cycle` and/or `trend`. | Two-sided Hodrick-Prescott filter. |
-| `hamilton_filter(y, h=8, p=4, fit_policy="expanding")` | One numeric series. | `FilterResult` with `cycle` and/or `trend`. | Hamilton regression filter with expanding or full-sample fit policy. |
-| `savitzky_golay(y, window_length=5, polyorder=2)` | One numeric series. | `FilterResult` with `savgol`. | Centered Savitzky-Golay local polynomial smoother. |
-| `wavelet_filter(y, n_levels=3, wavelet="db4")` | One numeric series. | `FilterResult` with `wA{level}` and `wD{level}` columns. | Existing causal rolling multi-resolution approximation. |
-| `albama(y, mode="one_sided")` | One numeric series. | `AlbaMAResult` with `smoothed`, `weights`, and metadata. | Goulet Coulombe-Klieber adaptive learning-based moving average. |
-| `AlbaMA(...)`, `AdaptiveMovingAverage(...)` | Estimator-style smoother settings. | Object with `fit`, `fit_transform`, and `result`. | Class wrappers around `albama()`. |
+### AlbaMA
 
-## Output Objects
+Qualified name: `macroforecast.filters.albama.AlbaMA`
 
-### FilterResult
+#### Signature
 
 ```python
-macroforecast.filters.FilterResult(
-    values: pandas.DataFrame,
-    method: str,
-    params: dict,
-    metadata: dict,
-    source: str | None = None,
-)
+macroforecast.filters.AlbaMA(*, mode: AlbaMAMode | str = "one_sided", n_estimators: int = 500, min_samples_leaf: int = 6, sample_fraction: float = 0.6, random_state: int | None = 42, replace: bool = True, inbag_rule: InbagRule | str = "single", min_train_size: int = 2) -> None
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `values` | Filtered component frame indexed like the input series. |
-| `method` | Canonical filter name, such as `hp_filter` or `hamilton_filter`. |
-| `params` | Resolved parameter values. |
-| `metadata` | Provenance, fit policy, backend, and formula notes. |
-| `source` | Source series name when available. |
+#### Description
 
-`FilterResult.component(name)` returns one component column from `values`.
+Alias class for the Goulet Coulombe-Klieber AlbaMA smoother.
 
-### AlbaMAResult
+#### Parameters
 
-`albama()` returns `AlbaMAResult`, not `FilterResult`, because the learned
-observation-weight matrix is central to the method.
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `mode` | keyword only | `AlbaMAMode \| str` | `"one_sided"` |
+| `n_estimators` | keyword only | `int` | `500` |
+| `min_samples_leaf` | keyword only | `int` | `6` |
+| `sample_fraction` | keyword only | `float` | `0.6` |
+| `random_state` | keyword only | `int \| None` | `42` |
+| `replace` | keyword only | `bool` | `True` |
+| `inbag_rule` | keyword only | `InbagRule \| str` | `"single"` |
+| `min_train_size` | keyword only | `int` | `2` |
 
-| Field | Meaning |
-| --- | --- |
-| `smoothed` | Adaptive moving-average series. |
-| `weights` | Source-date by target-date observation-weight matrix. |
-| `mode` | `"one_sided"` or `"two_sided"`. |
-| `backend` | Current backend identifier. |
-| `params` | Resolved tree-bagging settings. |
-| `metadata` | Paper reference, R-code reference, and weight-extraction notes. |
+#### Returns
 
-## Flow
+`None`
+
+#### Minimal Use
 
 ```python
 import macroforecast as mf
-
-hp = mf.filters.hp_filter(inflation, lamb=129600.0)
-cycle = hp.component("cycle")
-
-ham = mf.filters.hamilton_filter(inflation, h=24, p=12, fit_policy="expanding")
-trend = ham.component("trend")
-
-sg = mf.filters.savitzky_golay(inflation, window_length=13, polyorder=2)
-smooth = sg.component("savgol")
-
-albama = mf.filters.albama(inflation, mode="one_sided")
-adaptive = albama.smoothed
-weights = albama.weights
+# Construct with the signature above:
+# mf.filters.AlbaMA(...)
 ```
 
-For panel feature construction:
+#### Public Methods
 
-```python
-features = mf.feature_engineering.hp_filter_features(panel, columns=["CPIAUCSL"])
-albama_features = mf.feature_engineering.adaptive_ma_rf_features(
-    panel,
-    columns=["CPIAUCSL"],
-    sided="one",
-)
-```
-
-## Leakage Boundary
-
-| Filter | Default fit policy | Forecasting caution |
+| Method | Signature | Summary |
 | --- | --- | --- |
-| `hp_filter` | Full input, two-sided. | Not runner-safe on an unsplit panel; use only for retrospective analysis or already training-only data. |
-| `hamilton_filter` | Expanding by default. | Can be causal when `fit_policy="expanding"`; `full_sample` is retrospective. |
-| `savitzky_golay` | Full input, centered window. | Not runner-safe on an unsplit panel. |
-| `wavelet_filter` | Causal rolling approximation. | Past-only by construction, but current implementation is not a true DWT backend. |
-| `albama` | One-sided by default. | `mode="one_sided"` is real-time; `mode="two_sided"` is retrospective. |
+| `fit` | `fit(self, y: Any, *, dates: Any \| None = None, name: str \| None = None) -> "'AdaptiveMovingAverage'"` | No public docstring is available. |
+| `fit_transform` | `fit_transform(self, y: Any, *, dates: Any \| None = None, name: str \| None = None) -> AlbaMAResult` | No public docstring is available. |
+| `result` | `result(self) -> AlbaMAResult` | No public docstring is available. |
+### AlbaMAResult
 
-## AlbaMA Reference
+Qualified name: `macroforecast.filters.albama.AlbaMAResult`
 
-`albama()` implements the adaptive learning-based moving average from Goulet
-Coulombe and Klieber (2025). The method fits a bagged tree ensemble to one
-series with deterministic time as the only predictor:
-
-```text
-y_t = f(t) + error_t
-```
-
-Each tree partitions the time axis into terminal-node intervals. The tree
-prediction is the within-leaf average, so the ensemble prediction is a learned
-moving average. The learned weight matrix explains the implicit look-back
-window at each date.
-
-Reference:
-
-> Goulet Coulombe, Philippe, and Karin Klieber. 2025. "An Adaptive Moving
-> Average for Macroeconomic Monitoring." arXiv:2501.13222v1.
-> <https://arxiv.org/abs/2501.13222>
-
-R-code alignment:
-
-| R source | Python mapping |
-| --- | --- |
-| `ranger(MAIN ~ Time_Trend, keep.inbag=TRUE)` | Manual `DecisionTreeRegressor` bagging with stored in-bag counts. |
-| `predict(..., type="terminalNodes")` | `tree.apply(...)` terminal-node IDs. |
-| `Albama_center` | `albama(..., mode="two_sided")`. |
-| `Albama_right` recursive loop | `albama(..., mode="one_sided")`. |
-
-The Python backend is method-aligned with the R code, but it does not promise
-bit-level equality to `ranger` because tree split and randomization semantics
-differ across backends.
-
-## Function Details
-
-### hp_filter
+#### Signature
 
 ```python
-macroforecast.filters.hp_filter(
-    y,
-    *,
-    dates=None,
-    lamb=129600.0,
-    component="both",
-    interpolate_missing=True,
-    name=None,
-) -> FilterResult
+macroforecast.filters.AlbaMAResult(smoothed: pd.Series, weights: pd.DataFrame, mode: str, backend: str, params: dict[str, Any], metadata: dict[str, Any]) -> None
 ```
 
-`component` is `cycle`, `trend`, or `both`. Missing values are linearly
-interpolated before filtering when `interpolate_missing=True`.
+#### Description
 
-### hamilton_filter
+Result returned by the AlbaMA adaptive moving-average feature builder.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `smoothed` | positional or keyword | `pd.Series` | `required` |
+| `weights` | positional or keyword | `pd.DataFrame` | `required` |
+| `mode` | positional or keyword | `str` | `required` |
+| `backend` | positional or keyword | `str` | `required` |
+| `params` | positional or keyword | `dict[str, Any]` | `required` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `required` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.filters.hamilton_filter(
-    y,
-    *,
-    dates=None,
-    h=8,
-    p=4,
-    component="both",
-    fit_policy="expanding",
-    min_train_size=None,
-    missing="drop",
-    name=None,
-) -> FilterResult
+import macroforecast as mf
+# Construct with the signature above:
+# mf.filters.AlbaMAResult(...)
 ```
 
-The formula is:
+#### Dataclass Fields
 
-```text
-y[t+h] = alpha + beta_0 y[t] + ... + beta_{p-1} y[t-p+1] + error[t+h].
-```
+| Field | Type | Default |
+| --- | --- | --- |
+| `smoothed` | `pd.Series` | `required` |
+| `weights` | `pd.DataFrame` | `required` |
+| `mode` | `str` | `required` |
+| `backend` | `str` | `required` |
+| `params` | `dict[str, Any]` | `required` |
+| `metadata` | `dict[str, Any]` | `required` |
+### AdaptiveMovingAverage
 
-The trend is the fitted value and the cycle is the residual, both labeled at
-`t+h`. `fit_policy="expanding"` estimates each row with earlier completed
-Hamilton-regression rows. `fit_policy="full_sample"` reproduces the ordinary
-in-sample filter style.
+Qualified name: `macroforecast.filters.albama.AdaptiveMovingAverage`
 
-### savitzky_golay
+#### Signature
 
 ```python
-macroforecast.filters.savitzky_golay(
-    y,
-    *,
-    dates=None,
-    window_length=5,
-    polyorder=2,
-    derivative=0,
-    interpolate_missing=True,
-    name=None,
-) -> FilterResult
+macroforecast.filters.AdaptiveMovingAverage(*, mode: AlbaMAMode | str = "one_sided", n_estimators: int = 500, min_samples_leaf: int = 6, sample_fraction: float = 0.6, random_state: int | None = 42, replace: bool = True, inbag_rule: InbagRule | str = "single", min_train_size: int = 2) -> None
 ```
 
-This is a centered local-polynomial smoother through
-`scipy.signal.savgol_filter`.
+#### Description
 
-### wavelet_filter
+Reusable AlbaMA adaptive moving-average feature builder.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `mode` | keyword only | `AlbaMAMode \| str` | `"one_sided"` |
+| `n_estimators` | keyword only | `int` | `500` |
+| `min_samples_leaf` | keyword only | `int` | `6` |
+| `sample_fraction` | keyword only | `float` | `0.6` |
+| `random_state` | keyword only | `int \| None` | `42` |
+| `replace` | keyword only | `bool` | `True` |
+| `inbag_rule` | keyword only | `InbagRule \| str` | `"single"` |
+| `min_train_size` | keyword only | `int` | `2` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
 
 ```python
-macroforecast.filters.wavelet_filter(
-    y,
-    *,
-    dates=None,
-    n_levels=3,
-    wavelet="db4",
-    name=None,
-) -> FilterResult
+import macroforecast as mf
+# Construct with the signature above:
+# mf.filters.AdaptiveMovingAverage(...)
 ```
 
-The current implementation returns causal rolling approximation/detail columns
-`wA{level}` and `wD{level}`. The `wavelet` argument is recorded for provenance;
-it is not yet a true discrete-wavelet backend.
+#### Public Methods
 
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `fit` | `fit(self, y: Any, *, dates: Any \| None = None, name: str \| None = None) -> "'AdaptiveMovingAverage'"` | No public docstring is available. |
+| `fit_transform` | `fit_transform(self, y: Any, *, dates: Any \| None = None, name: str \| None = None) -> AlbaMAResult` | No public docstring is available. |
+| `result` | `result(self) -> AlbaMAResult` | No public docstring is available. |
+### FilterResult
+
+Qualified name: `macroforecast.filters.core.FilterResult`
+
+#### Signature
+
+```python
+macroforecast.filters.FilterResult(values: pd.DataFrame, method: str, params: dict[str, Any], metadata: dict[str, Any], source: str | None = None) -> None
+```
+
+#### Description
+
+Result returned by direct one-series filter callables.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `values` | positional or keyword | `pd.DataFrame` | `required` |
+| `method` | positional or keyword | `str` | `required` |
+| `params` | positional or keyword | `dict[str, Any]` | `required` |
+| `metadata` | positional or keyword | `dict[str, Any]` | `required` |
+| `source` | positional or keyword | `str \| None` | `None` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.filters.FilterResult(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `values` | `pd.DataFrame` | `required` |
+| `method` | `str` | `required` |
+| `params` | `dict[str, Any]` | `required` |
+| `metadata` | `dict[str, Any]` | `required` |
+| `source` | `str \| None` | `None` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `component` | `component(self, name: str) -> pd.Series` | Return one named component from ``values``. |
 ### albama
 
+Qualified name: `macroforecast.filters.albama.albama`
+
+#### Signature
+
 ```python
-macroforecast.filters.albama(
-    y,
-    *,
-    dates=None,
-    mode="one_sided",
-    n_estimators=500,
-    min_samples_leaf=6,
-    sample_fraction=0.6,
-    random_state=42,
-    replace=True,
-    inbag_rule="single",
-    min_train_size=2,
-    name=None,
-) -> AlbaMAResult
+macroforecast.filters.albama(y: Any, *, dates: Any | None = None, mode: AlbaMAMode | str = "one_sided", n_estimators: int = 500, min_samples_leaf: int = 6, sample_fraction: float = 0.6, random_state: int | None = 42, replace: bool = True, inbag_rule: InbagRule | str = "single", min_train_size: int = 2, name: str | None = None) -> AlbaMAResult
 ```
 
-`inbag_rule="single"` mirrors the R code condition
-`inbag.counts[[tree]] == 1`. Use `macroforecast.feature_analysis` to summarize
-the returned weights.
+#### Description
 
-- `stl_decompose` -- Seasonal-Trend decomposition using Loess (STL): trend, seasonal and remainder components (stats::stl / statsmodels STL). Two-sided full-sample.
+Create Goulet Coulombe-Klieber AlbaMA features for one time series.
+
+AlbaMA is a learned feature transform, not a multivariate forecast model.
+It fits bagged CART trees with a deterministic time trend as the only
+regressor. The output is the tree-averaged adaptive moving average plus a
+date-by-date observation-weight matrix.
+
+R alignment:
+- Goulet Coulombe and Klieber's `AlbaMA/AMA_main.R` uses
+  `ranger(MAIN ~ Time_Trend, keep.inbag = TRUE, terminalNodes)`.
+- This port uses explicit `DecisionTreeRegressor` bagging so the in-bag
+  counts needed for terminal-node co-membership weights are stored directly
+  instead of relying on private sklearn RandomForest attributes.
+- `mode="two_sided"` mirrors `Albama_center`; `mode="one_sided"` mirrors
+  the recursive `Albama_right` loop.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `dates` | keyword only | `Any \| None` | `None` |
+| `mode` | keyword only | `AlbaMAMode \| str` | `"one_sided"` |
+| `n_estimators` | keyword only | `int` | `500` |
+| `min_samples_leaf` | keyword only | `int` | `6` |
+| `sample_fraction` | keyword only | `float` | `0.6` |
+| `random_state` | keyword only | `int \| None` | `42` |
+| `replace` | keyword only | `bool` | `True` |
+| `inbag_rule` | keyword only | `InbagRule \| str` | `"single"` |
+| `min_train_size` | keyword only | `int` | `2` |
+| `name` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`AlbaMAResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.filters.albama(...)
+```
+### hamilton_filter
+
+Qualified name: `macroforecast.filters.core.hamilton_filter`
+
+#### Signature
+
+```python
+macroforecast.filters.hamilton_filter(y: Any, *, dates: Any | None = None, h: int = 8, p: int = 4, component: str = "both", fit_policy: str = "expanding", min_train_size: int | None = None, missing: str = "drop", name: str | None = None) -> FilterResult
+```
+
+#### Description
+
+Apply Hamilton's trend-cycle regression filter to one series.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `dates` | keyword only | `Any \| None` | `None` |
+| `h` | keyword only | `int` | `8` |
+| `p` | keyword only | `int` | `4` |
+| `component` | keyword only | `str` | `"both"` |
+| `fit_policy` | keyword only | `str` | `"expanding"` |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `missing` | keyword only | `str` | `"drop"` |
+| `name` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`FilterResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.filters.hamilton_filter(...)
+```
+### hp_filter
+
+Qualified name: `macroforecast.filters.core.hp_filter`
+
+#### Signature
+
+```python
+macroforecast.filters.hp_filter(y: Any, *, dates: Any | None = None, lamb: float = 129600.0, component: str = "both", interpolate_missing: bool = True, name: str | None = None) -> FilterResult
+```
+
+#### Description
+
+Apply the two-sided Hodrick-Prescott filter to one series.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `dates` | keyword only | `Any \| None` | `None` |
+| `lamb` | keyword only | `float` | `129600.0` |
+| `component` | keyword only | `str` | `"both"` |
+| `interpolate_missing` | keyword only | `bool` | `True` |
+| `name` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`FilterResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.filters.hp_filter(...)
+```
+### savitzky_golay
+
+Qualified name: `macroforecast.filters.core.savitzky_golay`
+
+#### Signature
+
+```python
+macroforecast.filters.savitzky_golay(y: Any, *, dates: Any | None = None, window_length: int = 5, polyorder: int = 2, derivative: int = 0, interpolate_missing: bool = True, name: str | None = None) -> FilterResult
+```
+
+#### Description
+
+Apply the centered Savitzky-Golay filter to one series.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `dates` | keyword only | `Any \| None` | `None` |
+| `window_length` | keyword only | `int` | `5` |
+| `polyorder` | keyword only | `int` | `2` |
+| `derivative` | keyword only | `int` | `0` |
+| `interpolate_missing` | keyword only | `bool` | `True` |
+| `name` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`FilterResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.filters.savitzky_golay(...)
+```
+### wavelet_filter
+
+Qualified name: `macroforecast.filters.core.wavelet_filter`
+
+#### Signature
+
+```python
+macroforecast.filters.wavelet_filter(y: Any, *, dates: Any | None = None, n_levels: int = 3, wavelet: str = "db4", name: str | None = None) -> FilterResult
+```
+
+#### Description
+
+Create causal rolling approximation/detail components for one series.
+
+This is the package's existing wavelet-style filter helper. It records the
+requested wavelet name for provenance, but the current implementation is a
+causal rolling multi-resolution approximation rather than a true DWT.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `dates` | keyword only | `Any \| None` | `None` |
+| `n_levels` | keyword only | `int` | `3` |
+| `wavelet` | keyword only | `str` | `"db4"` |
+| `name` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`FilterResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.filters.wavelet_filter(...)
+```
+### stl_decompose
+
+Qualified name: `macroforecast.filters.core.stl_decompose`
+
+#### Signature
+
+```python
+macroforecast.filters.stl_decompose(y: Any, *, period: int | None = None, seasonal: int = 7, trend: int | None = None, robust: bool = False, dates: Any | None = None, name: str | None = None) -> FilterResult
+```
+
+#### Description
+
+Seasonal-Trend decomposition using Loess (STL).
+
+Decomposes a single series into trend, seasonal and remainder components
+(Cleveland et al. 1990; R ``stats::stl`` / statsmodels ``STL``). ``period`` is
+the seasonal period (inferred from a monthly/quarterly/weekly DatetimeIndex
+when omitted). This is a two-sided full-sample decomposition, so the
+components are not real-time safe as forecasting features without a per-origin
+refit (``fit_policy='full_input_two_sided'``).
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y` | positional or keyword | `Any` | `required` |
+| `period` | keyword only | `int \| None` | `None` |
+| `seasonal` | keyword only | `int` | `7` |
+| `trend` | keyword only | `int \| None` | `None` |
+| `robust` | keyword only | `bool` | `False` |
+| `dates` | keyword only | `Any \| None` | `None` |
+| `name` | keyword only | `str \| None` | `None` |
+
+#### Returns
+
+`FilterResult`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.filters.stl_decompose(...)
+```
