@@ -127,6 +127,7 @@ def _snapshot():
             horizons=horizons, window=win,
             arms=[Arm(name="M", model=model, features=feats, is_benchmark=True, params=params)],
             evaluation=EvalSpec(benchmark="M", metrics=("rmse",)), n_jobs=1,
+            on_unsupported_direct="warn",
         )
         f = run_pipeline(spec).forecasts
         if f.empty:

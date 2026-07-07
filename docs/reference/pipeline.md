@@ -77,6 +77,12 @@ I(2) price/level series are reduced to the first-difference object (`reduce_i2`)
 | 6 | direct_average | log_growth |
 | 7 | direct_average | growth |
 
+Unsupported direct-like model combinations are rejected at spec-build time by
+default. `pipeline_spec(..., on_unsupported_direct="warn")` preserves the old
+warning-only weak-benchmark behavior, and
+`pipeline_spec(..., on_unsupported_direct="reroute")` runs only the affected
+arm-target cells as `forecast_policy="recursive"`.
+
 ## Example
 
 ```python

@@ -98,7 +98,9 @@ Full feature-step parameters are on the
 [Feature Engineering reference page](../reference/feature_engineering.md), and
 model search spaces and presets are on the
 [Models reference page](../reference/models.md) and, for fit-time ensembles, the
-[Model Ensemble reference page](../reference/model_ensemble.md).
+[Model Ensemble reference page](../reference/model_ensemble.md). The generated
+[Model x Forecast Policy Matrix](model_policy_matrix.md) states which forecast
+policies are supported for each registered model.
 
 ```{toctree}
 :hidden:
@@ -116,4 +118,5 @@ models/mixed_frequency
 models/assemblage
 models/composite
 models/spline
+model_policy_matrix
 ```

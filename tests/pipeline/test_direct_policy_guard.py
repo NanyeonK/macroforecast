@@ -1,21 +1,21 @@
 """WP5: direct-policy guard for iterated/state-space models.
 
-``ar``/``far`` had a CRITICAL stale-persistence defect under the
+``ar``/``far``/``var`` had a CRITICAL stale-persistence defect under the
 ``direct``/``direct_average`` forecast policy (see CHANGELOG [Unreleased], GCLS
 replication Bug 3), fixed by giving them a true direct-projection mode. The other
-iterated/state-space models -- target-kind statsmodels forecasters, panel VAR/DFM
+iterated/state-space models -- target-kind statsmodels forecasters, panel BVAR/DFM
 models, and ``favar`` -- still forecast a horizon by ITERATING their own dynamics,
-so the same defect remains latent for them under direct-like policies. Rather than
-reject the combination (deliberate use, e.g. an intentionally weak benchmark,
-stays possible), ``pipeline_spec`` emits a ``UserWarning`` at spec-build time.
+so the same defect remains latent for them under direct-like policies.
+``pipeline_spec`` now rejects those combinations by default, with explicit
+``warn`` and ``reroute`` opt-outs.
 
-These tests pin: (1) the warning fires for a representative target-kind and
-panel-kind guarded model under ``direct``/``direct_average``; (2) it does NOT fire
-for ``ar``/``far`` (excluded -- they have the real fix) or for a genuine
-supervised model, nor for ``recursive``/``path_average`` policies; (3) the guarded
-model set is derived from ``macroforecast.list_model_specs()`` so it cannot
-silently rot as the models lane adds or removes models; (4) the warning has ZERO
-effect on the computed forecasts.
+These tests pin: (1) default ``error`` rejects; (2) ``warn`` preserves the old
+warning-only behavior; (3) ``reroute`` emits rows labeled ``recursive``; (4) the
+guard does NOT fire for ``ar``/``far``/``var`` (excluded -- they have the real
+fix) or for a genuine supervised model, nor for ``recursive``/``path_average``
+policies; (5) the guarded model set is derived from
+``macroforecast.list_model_specs()`` so it cannot silently rot as the models
+lane adds or removes models.
 """
 import warnings
 
@@ -47,7 +47,7 @@ def _toy_inputs():
     return bundle, win
 
 
-def _spec(model_name, policy, *, arm_name=None):
+def _spec(model_name, policy, *, arm_name=None, on_unsupported_direct="error"):
     bundle, win = _toy_inputs()
     return pipeline_spec(
         data=bundle,
@@ -56,43 +56,55 @@ def _spec(model_name, policy, *, arm_name=None):
         window=win,
         arms=[Arm(name=arm_name or model_name.upper(), model=model_name, is_benchmark=True)],
         evaluation=EvalSpec(benchmark=arm_name or model_name.upper(), metrics=("rmse",)),
+        on_unsupported_direct=on_unsupported_direct,
     )
 
 
 def test_guard_set_matches_model_specs():
-    """The hardcoded guard set must equal (target-kind | panel-kind) + favar,
-    exactly the formula the WP5 spec calls for -- so it cannot silently rot as
-    the models lane adds/removes models without updating this set too.
+    """The hardcoded guard set must equal target/panel models without direct
+    projection support, plus favar, so it cannot silently rot as models move.
     """
     df = mf.list_model_specs()
-    expected = set(df.loc[df["input_kind"].isin(["target", "panel"]), "name"]) | {"favar"}
+    expected = {
+        str(row["name"])
+        for _, row in df.iterrows()
+        if row["input_kind"] in {"target", "panel"}
+        and "direct" not in mf.get_model(str(row["name"])).default_params
+    } | {"favar"}
     assert DIRECT_POLICY_GUARD_MODELS == expected
-    # ar/far deliberately excluded even though they share favar's input_kind.
+    # ar/far deliberately excluded even though they share favar's input_kind;
+    # var deliberately excluded from the panel bucket after issue #442.
     assert "ar" not in DIRECT_POLICY_GUARD_MODELS
     assert "far" not in DIRECT_POLICY_GUARD_MODELS
+    assert "var" not in DIRECT_POLICY_GUARD_MODELS
+
+
+def test_default_errors_for_guarded_model_under_direct():
+    with pytest.raises(ValueError, match="on_unsupported_direct='warn'"):
+        _spec("arima", "direct")
 
 
 @pytest.mark.parametrize("model_name", ["arima", "ets", "theta_method"])
-def test_warns_for_target_kind_model_under_direct(model_name):
+def test_warn_mode_warns_for_target_kind_model_under_direct(model_name):
     with pytest.warns(UserWarning, match=model_name):
-        _spec(model_name, "direct")
+        _spec(model_name, "direct", on_unsupported_direct="warn")
 
 
-@pytest.mark.parametrize("model_name", ["var", "bvar_minnesota", "dfm_unrestricted_midas"])
-def test_warns_for_panel_kind_model_under_direct_average(model_name):
+@pytest.mark.parametrize("model_name", ["bvar_minnesota", "dfm_unrestricted_midas"])
+def test_warn_mode_warns_for_panel_kind_model_under_direct_average(model_name):
     with pytest.warns(UserWarning, match=model_name):
-        _spec(model_name, "direct_average")
+        _spec(model_name, "direct_average", on_unsupported_direct="warn")
 
 
 def test_warns_for_favar_under_direct():
     with pytest.warns(UserWarning, match="favar"):
-        _spec("favar", "direct")
+        _spec("favar", "direct", on_unsupported_direct="warn")
 
 
-@pytest.mark.parametrize("model_name", ["ar", "far"])
+@pytest.mark.parametrize("model_name", ["ar", "far", "var"])
 @pytest.mark.parametrize("policy", ["direct", "direct_average"])
-def test_no_warning_for_ar_far_direct_projection_models(model_name, policy):
-    """ar/far are EXCLUDED: they now have a validated direct-projection mode."""
+def test_no_warning_for_direct_projection_models(model_name, policy):
+    """ar/far/var are EXCLUDED: they have validated direct-projection modes."""
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
         _spec(model_name, policy)
@@ -134,18 +146,16 @@ def test_no_warning_for_non_direct_like_policies(policy):
 
 
 def test_guard_does_not_change_forecasts():
-    """The guard is a pure ``warnings.warn`` at spec-build time: it must not move
-    a single forecast number. Pin by running the identical spec twice -- once
-    with warnings surfaced normally, once with them filtered out -- and requiring
-    byte-identical output.
+    """``warn`` mode preserves the old warning-only behavior and does not move a
+    single forecast number.
     """
-    spec_warn = _spec("arima", "direct")
     with pytest.warns(UserWarning):
+        spec_warn = _spec("arima", "direct", on_unsupported_direct="warn")
         with_warning = run_pipeline(spec_warn).forecasts
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        spec_quiet = _spec("arima", "direct")
+        spec_quiet = _spec("arima", "direct", on_unsupported_direct="warn")
     quiet = run_pipeline(spec_quiet).forecasts
 
     assert not with_warning.empty
@@ -156,3 +166,12 @@ def test_guard_does_not_change_forecasts():
         quiet[cols].reset_index(drop=True),
         atol=1e-12,
     )
+
+
+def test_reroute_mode_labels_rows_recursive():
+    with pytest.warns(UserWarning, match="Rerouting"):
+        spec = _spec("naive", "direct", on_unsupported_direct="reroute")
+    out = run_pipeline(spec).forecasts
+    assert not out.empty
+    assert set(out["forecast_policy"]) == {"recursive"}
+    assert spec.policy_overrides == {("NAIVE", "Y"): "recursive"}

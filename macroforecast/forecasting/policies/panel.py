@@ -53,10 +53,16 @@ def forecast_panel_origin(
         return []
     row = item["row"]
     records: list[dict[str, Any]] = []
+    requested_horizon = int(row.get("horizon", 1))
     for model_run in model_runs:
         model_spec = model_run.spec
         _validate_panel_selection(selection, model_run)
-        best_params = _panel_fit_params(model_spec, target=target)
+        best_params = _panel_fit_params(
+            model_spec,
+            target=target,
+            forecast_policy=forecast_policy,
+            horizon=requested_horizon,
+        )
         fit_params = _actual_model_params(model_spec, best_params)
         fit = model_spec(DataBundle(fit_panel, dict(metadata)), **best_params)
         stored_model = (
@@ -90,7 +96,6 @@ def forecast_panel_origin(
         else:
             pred = _prediction_series(fit.predict(test_panel), index=test_panel.index)
         y_test = test_panel[target] if target in test_panel.columns else pd.Series(dtype=float)
-        requested_horizon = int(row.get("horizon", 1))
         for date, value in pred.items():
             step_horizon = _panel_prediction_horizon(
                 date,
@@ -150,10 +155,23 @@ def forecast_panel_origin(
 # ---------------------------------------------------------------------------
 
 
-def _panel_fit_params(model_spec: ModelSpec, *, target: str) -> dict[str, Any]:
+def _panel_fit_params(
+    model_spec: ModelSpec,
+    *,
+    target: str,
+    forecast_policy: ForecastPolicy,
+    horizon: int,
+) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if "target" in model_spec.default_params and model_spec.params.get("target") is None:
         params["target"] = target
+    if (
+        model_spec.name == "var"
+        and forecast_policy in {"direct", "direct_average"}
+        and "direct" in model_spec.default_params
+    ):
+        params["direct"] = True
+        params["direct_horizon"] = int(horizon)
     return params
 
 
