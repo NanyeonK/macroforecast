@@ -135,6 +135,28 @@ For a runnable end-to-end example, see the single-forecast and full-study
 snippets in [Getting Started](../getting_started.md) and the step-by-step
 pipeline in the [Replication Gallery](../gallery.md#a-complete-pipeline-step-by-step).
 
+## Seeds, parallelism, and model storage
+
+`pipeline_spec(..., seed=...)` is the run-level reproducibility knob for the
+pipeline. During `run_pipeline(spec)`, it temporarily becomes the active
+`mf.configure(random_seed=...)` value, so model-owned random search and parallel
+workers see the same seed. Stochastic model fits derive a stable per-arm
+`random_state` from `(seed, arm name)` only when the arm did not explicitly pass
+`random_state` in `params`; explicit model params win. The report records these
+effective values under `report.provenance["effective_seeds"]`.
+
+`n_jobs="auto"` resolves to a concrete cell-worker count plus a per-worker model
+thread budget. On Linux it honors CPU affinity; on macOS and Windows it falls
+back to `os.cpu_count()`. Parallel workers cap common BLAS/OpenMP thread
+environment variables before running forecast cells and receive the data payload
+once per worker rather than once per cell.
+
+Pipeline model persistence is opt-in. `pipeline_spec(...)` defaults to
+`save_models=False`; pass `save_models=True` and `model_store=...` only when you
+need fitted-model pickles. Large projected stores warn before execution. Remove
+old model fits with `mf.pipeline.purge_model_store(...)`. The lower-level
+`mf.forecasting.run(...)` keeps its historical `save_models=True` default.
+
 ## Incremental horse races
 
 Long paper projects often grow a model comparison over many months. Use
@@ -177,6 +199,12 @@ second = run_pipeline(later)
 The second run reuses the stored `(target, horizon, arm)` cells for `AR` and `RF`
 and computes only `GBM`. The shared `preprocessing_cache_dir` also reuses the
 prepared per-origin preprocessing base when the preprocessing spec is unchanged.
+Result-store identities include the data content fingerprint, the effective
+selection seed, arm/model/features/preprocessing choices, and the backend package
+versions that own the arm's numerical fit. Vintage-aware specs additionally hash
+the enumerable vintage labels, reference calendar, and a bounded latest-vintage
+panel fingerprint. Stores created before this identity hardening will miss and
+recompute cells once, then reuse normally under the new digest.
 
 For custom code, reuse is opt-in. A custom model function, feature step,
 preprocessing step, metric, or loss must carry a stable `__mf_digest__` string to be
@@ -194,6 +222,13 @@ model = mf.models.custom_model("my_model", fit_model, mf_digest="my-model-v1")
 
 When a custom object lacks a digest, `run_pipeline()` emits a warning for that
 undigestible cell and includes the reason from the result-store identity layer.
+
+Checkpoint rescoring also verifies identity for new checkpoints. Each completed
+cell writes a small manifest next to its `h<h>/origin_*.parquet` files. `rescore()`
+refuses manifest-bearing cells whose stored digest no longer matches the current
+spec/data identity; pass `allow_stale=True` only when intentionally scoring stale
+forecasts. Older checkpoint directories that lack manifests still rescore, but
+emit a warning because they can only be matched by directory name.
 
 ## Reference
 

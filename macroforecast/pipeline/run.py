@@ -15,6 +15,7 @@ import re
 import tempfile
 import dataclasses as _dc
 from collections.abc import Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Mapping, NamedTuple
 
@@ -31,6 +32,14 @@ from macroforecast.pipeline.spec import (
 from macroforecast.pipeline.result_store import ResultCellIdentity, ResultStore, result_cell_identity
 
 
+_BLAS_THREAD_ENV_VARS = (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+)
+_WORKER_DATA_BY_TOKEN: dict[str, Any] = {}
 def _safe_segment(value: str) -> str:
     """Make a target/arm name safe to use as a single filesystem path segment."""
     return re.sub(r"[^0-9A-Za-z._-]+", "_", str(value)).strip("_") or "x"
@@ -47,6 +56,18 @@ def _cell_checkpoint_path(spec: PipelineSpec, arm: Arm, target: ResolvedTarget):
         return None
     cell = f"{_safe_segment(target.name)}__{_safe_segment(arm.name)}"
     return Path(spec.checkpoint_dir) / cell
+
+
+def _cell_checkpoint_manifest_path(
+    spec: PipelineSpec,
+    arm: Arm,
+    target: ResolvedTarget,
+    horizon: int,
+) -> Path | None:
+    cell_dir = _cell_checkpoint_path(spec, arm, target)
+    if cell_dir is None:
+        return None
+    return cell_dir / f"h{int(horizon)}" / "cell_manifest.json"
 
 
 def _effective_target_for_arm(
@@ -123,6 +144,13 @@ def _run_one_arm_target(
         preprocessing_store=preprocessing_store,
         checkpoint_path=_cell_checkpoint_path(spec, arm, target),
     )
+    _write_checkpoint_cell_manifests(
+        spec,
+        arm,
+        target,
+        effective_target,
+        horizons=run_horizons,
+    )
     frame = result.to_frame().copy()
     if "vintage_boundary_audit" in result.metadata:
         frame.attrs["macroforecast_vintage_boundary_audit"] = result.metadata[
@@ -138,6 +166,67 @@ def _run_one_arm_target(
     if "target" not in frame.columns:
         frame["target"] = effective_target.name
     return frame
+
+
+def _write_checkpoint_cell_manifests(
+    spec: PipelineSpec,
+    arm: Arm,
+    path_target: ResolvedTarget,
+    effective_target: ResolvedTarget,
+    *,
+    horizons: Sequence[int],
+) -> None:
+    if spec.checkpoint_dir is None:
+        return
+    data_identity = _data_identity(spec.data)
+    for horizon in horizons:
+        manifest_path = _cell_checkpoint_manifest_path(spec, arm, path_target, int(horizon))
+        if manifest_path is None:
+            continue
+        identity = result_cell_identity(
+            spec,
+            arm,
+            effective_target,
+            horizon=int(horizon),
+            data_identity=data_identity,
+        )
+        payload = {
+            "schema": "macroforecast_checkpoint_cell_manifest",
+            "version": 1,
+            "target": path_target.name,
+            "effective_target": effective_target.name,
+            "arm": arm.name,
+            "horizon": int(horizon),
+            "digest": identity.digest,
+            "cell_echo": identity.cell_echo,
+            "data_fingerprint": identity.data_fingerprint,
+            "undigestible_reason": identity.reason,
+        }
+        _write_json_atomic(manifest_path, payload)
+
+
+def _write_json_atomic(path: Path, payload: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    encoded = (
+        json.dumps(payload, sort_keys=True, ensure_ascii=True, default=str) + "\n"
+    ).encode("utf-8")
+    fd, tmp_path = tempfile.mkstemp(
+        suffix=".tmp",
+        prefix=f".{path.name}.",
+        dir=path.parent,
+    )
+    try:
+        os.write(fd, encoded)
+    except OSError:
+        os.close(fd)
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+    else:
+        os.close(fd)
+    os.replace(tmp_path, path)
 
 
 def _empty_arm_warning(arm_name: str, target_name: str) -> str:
@@ -336,45 +425,86 @@ def _execute_cell(
         # shared-spec arms. The namespace additionally isolates arms/specs that
         # resolve to a different effective preprocessing_policy.
         store = PreprocessorStore(spec.preprocessing_cache_dir, namespace=namespace)
-    return _run_one_arm_target(
-        spec, arm, target,
-        preprocessing_cache=preprocessing_cache,
-        preprocessing_store=store,
-        horizons=list(cell.horizons),
-    )
+    from macroforecast.meta.config import _use_pipeline_arm_alias
+
+    with _use_pipeline_arm_alias(arm.name):
+        return _run_one_arm_target(
+            spec, arm, target,
+            preprocessing_cache=preprocessing_cache,
+            preprocessing_store=store,
+            horizons=list(cell.horizons),
+        )
+
+
+def _cap_worker_blas_threads() -> None:
+    for var in _BLAS_THREAD_ENV_VARS:
+        os.environ[var] = "1"
+
+
+def _parallel_worker_initializer(
+    data_token: str,
+    data: Any,
+    model_threads: int,
+    seed: int | None,
+) -> None:
+    """Initialize one process-pool worker before any forecast task executes."""
+
+    _cap_worker_blas_threads()
+    _WORKER_DATA_BY_TOKEN[str(data_token)] = data
+
+    import macroforecast as mf
+    from macroforecast.meta.config import _set_pipeline_random_seed
+
+    mf.meta.configure(n_jobs=int(model_threads), random_seed=seed)
+    _set_pipeline_random_seed(seed)
+
+
+def _parallel_worker_probe() -> dict[str, Any]:
+    """Return worker initializer state for tests."""
+
+    from macroforecast.meta import get_config
+    from macroforecast.meta.config import _get_pipeline_random_seed
+
+    return {
+        "blas_env": {var: os.environ.get(var) for var in _BLAS_THREAD_ENV_VARS},
+        "n_jobs": get_config()["n_jobs"],
+        "random_seed": get_config()["random_seed"],
+        "pipeline_seed": _get_pipeline_random_seed(),
+        "data_tokens": sorted(_WORKER_DATA_BY_TOKEN),
+    }
+
+
+def _spec_with_worker_data(spec: PipelineSpec, data_token: str) -> PipelineSpec:
+    if data_token not in _WORKER_DATA_BY_TOKEN:
+        raise RuntimeError(f"worker data token {data_token!r} was not initialized")
+    return _dc.replace(spec, data=_WORKER_DATA_BY_TOKEN[data_token])
 
 
 def _parallel_cell_worker(
-    args: "tuple[PipelineSpec, _Cell]",
+    args: "tuple[PipelineSpec, _Cell, str]",
 ) -> "tuple[_Cell, pd.DataFrame | None, str | None]":
     """Module-level worker: execute ONE cell (its single ``run()``) in a subprocess,
     returning any error text.
 
-    Caps nested BLAS/OpenMP threads to one so a pool of ``n_jobs`` processes does
-    not oversubscribe the cores. Returns ``(cell, frame, error)`` where exactly one
-    of ``frame``/``error`` is set, so the parent isolates per-cell failures.
+    Worker initialization caps nested BLAS/OpenMP threads and installs the shared
+    data payload once per process. Task payloads carry only a data-less spec plus
+    the cell identity. Returns ``(cell, frame, error)`` where exactly one of
+    ``frame``/``error`` is set, so the parent isolates per-cell failures.
     """
-    for var in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
-                "NUMEXPR_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
-        os.environ.setdefault(var, "1")
-    spec, cell = args
-    # Pin this worker's model-internal thread budget from the AUTO allocator so the
-    # parallelizable models (RF/GBM/XGB/LGBM) inside the cell use exactly
-    # spec.model_threads threads -- using the leftover cores while keeping
-    # cell_workers * model_threads <= cores (no oversubscription). Only changes the
-    # thread COUNT, never the numerical result (tree training is deterministic in
-    # random_state regardless of n_jobs). This runs in the worker's own process, so
-    # it does not touch the parent's meta config.
-    import macroforecast as mf
-
-    mf.meta.configure(n_jobs=int(spec.model_threads))
+    spec_without_data, cell, data_token = args
     try:
+        spec = _spec_with_worker_data(spec_without_data, data_token)
         # No in-memory cache across processes (preprocessing_cache=None); each cell
         # recomputes its own preprocessing unless spec.preprocessing_cache_dir is set,
         # in which case _execute_cell builds an on-disk PreprocessorStore the workers
         # share so each per-(spec, target, origin) fit is computed once overall.
         return cell, _execute_cell(spec, cell, preprocessing_cache=None), None
-    except Exception as exc:  # isolate the failure; the parent records it
+    except Exception as exc:
+        # Sanctioned broad boundary: per-cell isolation must match the serial
+        # path exactly (which also catches Exception) -- a custom model raising
+        # a user-defined exception type must fail its OWN cell, not the whole
+        # n_jobs run. The failure is recorded with its type and surfaced by the
+        # failed-cell warnings.
         return cell, None, f"{type(exc).__name__}: {exc}"
 
 
@@ -642,6 +772,54 @@ def _warn_result_store_version_mismatches(metadata: Mapping[str, Any] | None) ->
     )
 
 
+@contextmanager
+def _pipeline_seed_context(spec: PipelineSpec):
+    from macroforecast.meta import use_config
+    from macroforecast.meta.config import _use_pipeline_random_seed
+
+    with use_config(random_seed=spec.seed), _use_pipeline_random_seed(spec.seed):
+        yield
+
+
+def _result_store_model_count(spec: PipelineSpec, cells: Sequence[_Cell]) -> int:
+    return int(sum(len(cell.horizons) for cell in cells))
+
+
+def _projected_origin_count(spec: PipelineSpec) -> int | None:
+    index = (
+        getattr(spec.data, "reference_calendar", None)
+        if is_vintage_aware(spec)
+        else _panel_index(spec.data)
+    )
+    if not isinstance(index, pd.DatetimeIndex):
+        return None
+    try:
+        return sum(1 for _ in spec.window.iter_origins(index))
+    except (AttributeError, TypeError, ValueError, KeyError, IndexError):
+        return None
+
+
+def _warn_large_model_store(spec: PipelineSpec, cells: Sequence[_Cell]) -> None:
+    if not spec.save_models:
+        return
+    n_origins = _projected_origin_count(spec)
+    if n_origins is None:
+        return
+    n_fits = _result_store_model_count(spec, cells) * int(n_origins)
+    if n_fits <= 5_000:
+        return
+    import warnings as _warnings
+
+    _warnings.warn(
+        "save_models=True is projected to write "
+        f"{n_fits:,} model fits ({n_fits * 2:,} files: pickle + JSON metadata) "
+        f"under {spec.model_store!r}; pass save_models=False or purge old fits "
+        "with mf.pipeline.purge_model_store(...).",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
 def _run_cells(
     spec: PipelineSpec,
 ) -> "tuple[pd.DataFrame, list[dict[str, Any]], list[dict[str, Any]], dict[str, Any] | None]":
@@ -660,6 +838,7 @@ def _run_cells(
     if not cells:
         return pd.DataFrame(), [], [], result_store_metadata
     _validate_parallel_picklable(spec)
+    _warn_large_model_store(spec, cells)
 
     # Auto-manage a run-scoped on-disk preprocessing cache dir when the caller
     # left preprocessing_cache_dir unset and n_jobs>1 (see _resolve_run_cache_dir).
@@ -699,9 +878,21 @@ def _run_cells(
             # only, not output.
             if pending_cells:
                 dispatch = _lpt_dispatch_order(spec, pending_cells)
-                with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                data_token = f"{os.getpid()}:{id(spec)}:{len(pending_cells)}"
+                spec_payload = _dc.replace(spec, data=None)
+                with ProcessPoolExecutor(
+                    max_workers=max_workers,
+                    initializer=_parallel_worker_initializer,
+                    initargs=(
+                        data_token,
+                        spec.data,
+                        int(spec.model_threads),
+                        spec.seed,
+                    ),
+                ) as executor:
                     for cell, frame, error in executor.map(
-                        _parallel_cell_worker, [(spec, c) for c in dispatch]
+                        _parallel_cell_worker,
+                        [(spec_payload, c, data_token) for c in dispatch],
                     ):
                         if error is not None:
                             failed.append(_cell_failure(spec, cell, error))
@@ -855,7 +1046,8 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     Per-cell failures are isolated -- see :func:`run_pipeline` /
     ``PipelineReport.failed_cells`` for how they are surfaced.
     """
-    master, _failed, _empty, _result_store = _run_cells(spec)
+    with _pipeline_seed_context(spec):
+        master, _failed, _empty, _result_store = _run_cells(spec)
     return master
 
 
@@ -991,6 +1183,10 @@ def _data_identity(data: Any) -> dict[str, Any]:
     than raising -- provenance collection must never break a run.
     """
     from macroforecast.data import metadata as _bundle_metadata
+    from macroforecast.data import VintagePanelSpec
+
+    if isinstance(data, VintagePanelSpec):
+        return _vintage_data_identity(data)
 
     try:
         meta = dict(_bundle_metadata(data))
@@ -1029,6 +1225,197 @@ def _data_identity(data: Any) -> dict[str, Any]:
         "start": start,
         "end": end,
         "fingerprint": fingerprint,
+    }
+
+
+def _vintage_data_identity(data: Any) -> dict[str, Any]:
+    source = getattr(data, "source", None)
+    calendar = getattr(data, "reference_calendar", None)
+    calendar_summary = _calendar_identity(calendar)
+    source_kind = str(getattr(source, "kind", type(source).__name__))
+    labels: tuple[Any, ...]
+    try:
+        labels = tuple(source.available_vintages()) if source is not None else ()
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        labels = ()
+
+    source_digest = getattr(source, "__mf_digest__", None)
+    if not labels and source_digest is None:
+        fingerprint: dict[str, Any] = {
+            "algorithm": "sha256",
+            "method": "undigestible",
+            "reason": (
+                "vintage source cannot enumerate available_vintages() and has "
+                "no __mf_digest__; result-store reuse is disabled for this cell"
+            ),
+        }
+        return {
+            "dataset": getattr(source, "dataset", None),
+            "source_family": source_kind,
+            "vintage": None,
+            "frequency": getattr(source, "frequency", None),
+            "n_rows": None,
+            "n_columns": None,
+            "start": calendar_summary.get("start"),
+            "end": calendar_summary.get("end"),
+            "reference_calendar": calendar_summary,
+            "actuals_vintage": getattr(data, "actuals_vintage", None),
+            "fingerprint": fingerprint,
+        }
+
+    last_panel_identity: dict[str, Any] | None = None
+    dataset = getattr(source, "dataset", None)
+    frequency = getattr(source, "frequency", None)
+    last_vintage = labels[-1] if labels else None
+    if labels:
+        resolved = _resolve_vintage_boundary_bundle(source, last_vintage, calendar)
+        if resolved is None:
+            fingerprint = {
+                "algorithm": "sha256",
+                "method": "undigestible",
+                "reason": (
+                    "vintage source available_vintages() enumerated labels but "
+                    "the last vintage could not be resolved for a content fingerprint"
+                ),
+            }
+            return {
+                "dataset": dataset,
+                "source_family": source_kind,
+                "vintage": None,
+                "frequency": frequency,
+                "n_rows": None,
+                "n_columns": None,
+                "start": calendar_summary.get("start"),
+                "end": calendar_summary.get("end"),
+                "reference_calendar": calendar_summary,
+                "actuals_vintage": getattr(data, "actuals_vintage", None),
+                "fingerprint": fingerprint,
+            }
+        bundle, resolved_origin = resolved
+        meta = dict(getattr(bundle, "metadata", {}) or {})
+        dataset = meta.get("dataset", dataset)
+        frequency = meta.get("frequency", frequency)
+        panel = getattr(bundle, "panel", None)
+        if isinstance(panel, pd.DataFrame):
+            last_panel_identity = _vintage_panel_identity(
+                panel,
+                vintage=meta.get("vintage", last_vintage),
+                resolved_at=resolved_origin,
+            )
+
+    label_payload = [str(label) for label in labels]
+    labels_digest = hashlib.sha256(
+        json.dumps(label_payload, sort_keys=True, ensure_ascii=True).encode("utf-8")
+    ).hexdigest()
+    payload = {
+        "source_kind": source_kind,
+        "source_mf_digest": None if source_digest is None else str(source_digest),
+        "actuals_vintage": getattr(data, "actuals_vintage", None),
+        "reference_calendar": calendar_summary,
+        "available_vintages_sha256": labels_digest,
+        "n_available_vintages": len(labels),
+        # Boundary by design: resolving every vintage just to build a cache key is
+        # too expensive for long FRED histories. The latest resolvable vintage's
+        # panel fingerprint detects refreshed current content while the full label
+        # digest detects additions/removals/relabeling across the vintage set.
+        "content_boundary": "last_available_vintage",
+        "last_vintage": str(last_vintage) if last_vintage is not None else None,
+        "last_panel": last_panel_identity,
+    }
+    fingerprint = {
+        "algorithm": "sha256",
+        "method": "vintage_last_available_boundary",
+        "value": hashlib.sha256(
+            json.dumps(payload, sort_keys=True, ensure_ascii=True, default=str).encode("utf-8")
+        ).hexdigest(),
+        "boundary": "available_vintages labels + reference calendar + last resolved vintage panel",
+        "available_vintages": {
+            "n": int(len(labels)),
+            "first": str(labels[0]) if labels else None,
+            "last": str(labels[-1]) if labels else None,
+            "sha256": labels_digest,
+        },
+        "source_mf_digest": None if source_digest is None else str(source_digest),
+        "last_panel": last_panel_identity,
+    }
+    return {
+        "dataset": dataset,
+        "source_family": source_kind,
+        "vintage": str(last_vintage) if last_vintage is not None else None,
+        "frequency": frequency,
+        "n_rows": None if last_panel_identity is None else last_panel_identity.get("n_rows"),
+        "n_columns": None if last_panel_identity is None else last_panel_identity.get("n_columns"),
+        "start": calendar_summary.get("start"),
+        "end": calendar_summary.get("end"),
+        "reference_calendar": calendar_summary,
+        "actuals_vintage": getattr(data, "actuals_vintage", None),
+        "fingerprint": fingerprint,
+    }
+
+
+def _resolve_vintage_boundary_bundle(
+    source: Any,
+    last_vintage: Any,
+    calendar: Any,
+) -> tuple[Any, pd.Timestamp] | None:
+    from macroforecast.data import VintageUnavailableError
+
+    candidates: list[pd.Timestamp] = []
+    try:
+        candidates.append(pd.Timestamp(last_vintage))
+    except (TypeError, ValueError, pd.errors.OutOfBoundsDatetime):
+        pass
+    if isinstance(calendar, pd.DatetimeIndex) and len(calendar):
+        candidates.append(pd.Timestamp(calendar[-1]))
+    for origin in candidates:
+        try:
+            return source.resolve(origin), origin
+        except (VintageUnavailableError, AttributeError, TypeError, ValueError, KeyError):
+            continue
+    return None
+
+
+def _vintage_panel_identity(
+    panel: pd.DataFrame,
+    *,
+    vintage: Any,
+    resolved_at: pd.Timestamp,
+) -> dict[str, Any]:
+    n_rows, n_columns = panel.shape
+    start = end = None
+    if len(panel.index):
+        try:
+            start = panel.index[0].isoformat()
+            end = panel.index[-1].isoformat()
+        except AttributeError:
+            start = str(panel.index[0])
+            end = str(panel.index[-1])
+    return {
+        "vintage": str(vintage),
+        "resolved_at": pd.Timestamp(resolved_at).isoformat(),
+        "n_rows": int(n_rows),
+        "n_columns": int(n_columns),
+        "start": start,
+        "end": end,
+        "columns": [str(column) for column in panel.columns],
+        "fingerprint": _panel_fingerprint(panel),
+    }
+
+
+def _calendar_identity(calendar: Any) -> dict[str, Any]:
+    if not isinstance(calendar, pd.DatetimeIndex) or calendar.empty:
+        return {"start": None, "end": None, "n_origins": 0, "frequency": None}
+    frequency = calendar.freqstr
+    if frequency is None:
+        try:
+            frequency = pd.infer_freq(calendar)
+        except ValueError:
+            frequency = None
+    return {
+        "start": calendar[0].isoformat(),
+        "end": calendar[-1].isoformat(),
+        "n_origins": int(len(calendar)),
+        "frequency": frequency,
     }
 
 
@@ -1086,6 +1473,63 @@ def _spec_echo(spec: PipelineSpec) -> dict[str, Any]:
     }
 
 
+def _effective_seed_metadata(spec: PipelineSpec) -> dict[str, Any]:
+    from macroforecast.forecasting.model_resolution import _resolve_model_runs
+    from macroforecast.meta.config import _derive_random_state
+
+    arm_seeds: dict[str, Any] = {}
+    for arm in spec.arms:
+        try:
+            model_runs = _resolve_model_runs(arm.model, preset=None, params=arm.params)
+        except (TypeError, ValueError, ImportError) as exc:
+            arm_seeds[arm.name] = {
+                "source": "unavailable",
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+            continue
+        records: list[dict[str, Any]] = []
+        for model_run in model_runs:
+            model_spec = model_run.spec
+            if "random_state" not in model_spec.default_params:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": None,
+                        "source": "not_applicable",
+                    }
+                )
+            elif "random_state" in model_spec.params:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": model_spec.params.get("random_state"),
+                        "source": "explicit_param",
+                    }
+                )
+            elif spec.seed is None:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": None,
+                        "source": "disabled",
+                    }
+                )
+            else:
+                records.append(
+                    {
+                        "model": model_spec.name,
+                        "random_state": _derive_random_state(spec.seed, arm.name),
+                        "source": "derived_from_pipeline_seed",
+                    }
+                )
+        arm_seeds[arm.name] = records[0] if len(records) == 1 else records
+    return {
+        "spec_seed": spec.seed,
+        "selection_seed": spec.seed,
+        "model_random_states": arm_seeds,
+    }
+
+
 def _merge_vintage_boundary_audits(audits: Any) -> dict[str, Any]:
     records = [dict(audit) for audit in audits if isinstance(audit, Mapping)]
     violations: list[dict[str, Any]] = []
@@ -1112,11 +1556,7 @@ def _reference_calendar_summary(spec: PipelineSpec) -> dict[str, Any] | None:
     calendar = getattr(spec.data, "reference_calendar", None)
     if not isinstance(calendar, pd.DatetimeIndex) or calendar.empty:
         return None
-    return {
-        "start": calendar[0].isoformat(),
-        "end": calendar[-1].isoformat(),
-        "n_origins": int(len(calendar)),
-    }
+    return _calendar_identity(calendar)
 
 
 def _compact_vintage_map_summary(
@@ -1236,6 +1676,7 @@ def _audit(
     # content fingerprint), and WHAT WAS ASKED FOR (a plain echo of the
     # resolved spec's key choices) -- see the module-level comment above.
     if getattr(spec, "provenance_level", "full") == "full":
+        provenance["effective_seeds"] = _effective_seed_metadata(spec)
         provenance["environment"] = _environment_provenance()
         provenance["data"] = _data_identity(spec.data)
         provenance["spec_echo"] = _spec_echo(spec)
@@ -1303,43 +1744,44 @@ def run_pipeline(spec: PipelineSpec):
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.spec import PipelineReport
 
-    master, failed_cells, empty_cells, result_store_metadata = _run_cells(spec)
-    evaluation_error = None
-    try:
-        results = evaluate(master, spec)
-    except Exception as exc:
-        # Sanctioned broad boundary: whatever the evaluation layer raises, the
-        # computed master forecast frame must survive into the partial report
-        # (hours of POOS compute otherwise vanish); the error itself is
-        # preserved verbatim and re-surfaced via the RuntimeWarning below.
-        import warnings as _warnings
+    with _pipeline_seed_context(spec):
+        master, failed_cells, empty_cells, result_store_metadata = _run_cells(spec)
+        evaluation_error = None
+        try:
+            results = evaluate(master, spec)
+        except Exception as exc:
+            # Sanctioned broad boundary: whatever the evaluation layer raises, the
+            # computed master forecast frame must survive into the partial report
+            # (hours of POOS compute otherwise vanish); the error itself is
+            # preserved verbatim and re-surfaced via the RuntimeWarning below.
+            import warnings as _warnings
 
-        evaluation_error = f"{type(exc).__name__}: {exc}"
-        _warnings.warn(
-            "pipeline evaluation failed after forecast cells completed; returning "
-            "a partial PipelineReport with the master forecast frame intact and "
-            f"empty evaluation tables. Evaluation error: {evaluation_error}",
-            RuntimeWarning,
-            stacklevel=2,
+            evaluation_error = f"{type(exc).__name__}: {exc}"
+            _warnings.warn(
+                "pipeline evaluation failed after forecast cells completed; returning "
+                "a partial PipelineReport with the master forecast frame intact and "
+                f"empty evaluation tables. Evaluation error: {evaluation_error}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            results = {
+                "forecasts": master,
+                "accuracy": pd.DataFrame(),
+                "significance": pd.DataFrame(),
+                "mcs": pd.DataFrame(),
+                "density": pd.DataFrame(),
+                "calibration": pd.DataFrame(),
+            }
+        provenance, leakage = _audit(
+            spec,
+            execution_metadata={
+                "vintage_boundary_audits": master.attrs.get(
+                    "macroforecast_vintage_boundary_audits"
+                ),
+                "vintage_sources": master.attrs.get("macroforecast_vintage_sources"),
+                "result_store": result_store_metadata,
+            },
         )
-        results = {
-            "forecasts": master,
-            "accuracy": pd.DataFrame(),
-            "significance": pd.DataFrame(),
-            "mcs": pd.DataFrame(),
-            "density": pd.DataFrame(),
-            "calibration": pd.DataFrame(),
-        }
-    provenance, leakage = _audit(
-        spec,
-        execution_metadata={
-            "vintage_boundary_audits": master.attrs.get(
-                "macroforecast_vintage_boundary_audits"
-            ),
-            "vintage_sources": master.attrs.get("macroforecast_vintage_sources"),
-            "result_store": result_store_metadata,
-        },
-    )
     # Mirror per-cell failures and zero-row cells into the leakage audit so any
     # consumer that reads only the audit still sees that some arms failed to run or
     # that some (target, horizon) cells silently produced no forecasts.

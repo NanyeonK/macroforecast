@@ -1,6 +1,7 @@
 """Global execution settings for macroforecast."""
 from __future__ import annotations
 
+import hashlib
 from contextlib import contextmanager
 from threading import RLock
 from typing import Any, Iterator, Literal, TypedDict, cast
@@ -12,6 +13,7 @@ StageDefaultScope = Literal["full_panel", "origin_available", "fit_window"]
 MetadataLevel = Literal["minimal", "standard", "full"]
 
 DEFAULT_RANDOM_SEED: int = 42
+_MAX_DERIVED_RANDOM_STATE = 2**31
 
 
 class MetaConfig(TypedDict):
@@ -39,6 +41,8 @@ _DEFAULT_CONFIG: MetaConfig = {
 _CONFIG: dict[str, Any] = dict(_DEFAULT_CONFIG)
 _LOCK = RLock()
 _MISSING = object()
+_PIPELINE_RANDOM_SEED: int | None = None
+_PIPELINE_ARM_ALIAS: str | None = None
 
 
 def configure(
@@ -116,6 +120,73 @@ def resolve_n_jobs() -> int:
     if value == "auto":
         return os.cpu_count() or 1
     return int(value)
+
+
+def _derive_random_state(seed: int | None, alias: str) -> int | None:
+    """Derive a stable model-level random state from a run seed and arm alias."""
+
+    if seed is None:
+        return None
+    payload = f"{int(seed)}\0{alias}".encode("utf-8")
+    digest = hashlib.blake2b(payload, digest_size=8).digest()
+    return int.from_bytes(digest, byteorder="big", signed=False) % _MAX_DERIVED_RANDOM_STATE
+
+
+def _get_pipeline_random_seed() -> int | None:
+    with _LOCK:
+        return _PIPELINE_RANDOM_SEED
+
+
+def _get_pipeline_arm_alias() -> str | None:
+    with _LOCK:
+        return _PIPELINE_ARM_ALIAS
+
+
+def _set_pipeline_random_seed(seed: int | None) -> int | None:
+    global _PIPELINE_RANDOM_SEED
+    normalized = _normalize_random_seed(seed)
+    with _LOCK:
+        previous = _PIPELINE_RANDOM_SEED
+        _PIPELINE_RANDOM_SEED = normalized
+        return previous
+
+
+def _restore_pipeline_random_seed(previous: int | None) -> None:
+    global _PIPELINE_RANDOM_SEED
+    with _LOCK:
+        _PIPELINE_RANDOM_SEED = previous
+
+
+def _set_pipeline_arm_alias(alias: str | None) -> str | None:
+    global _PIPELINE_ARM_ALIAS
+    with _LOCK:
+        previous = _PIPELINE_ARM_ALIAS
+        _PIPELINE_ARM_ALIAS = None if alias is None else str(alias)
+        return previous
+
+
+def _restore_pipeline_arm_alias(previous: str | None) -> None:
+    global _PIPELINE_ARM_ALIAS
+    with _LOCK:
+        _PIPELINE_ARM_ALIAS = previous
+
+
+@contextmanager
+def _use_pipeline_random_seed(seed: int | None) -> Iterator[int | None]:
+    previous = _set_pipeline_random_seed(seed)
+    try:
+        yield seed
+    finally:
+        _restore_pipeline_random_seed(previous)
+
+
+@contextmanager
+def _use_pipeline_arm_alias(alias: str | None) -> Iterator[str | None]:
+    previous = _set_pipeline_arm_alias(alias)
+    try:
+        yield alias
+    finally:
+        _restore_pipeline_arm_alias(previous)
 
 
 def reset_config() -> MetaConfig:

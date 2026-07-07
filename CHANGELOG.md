@@ -13,6 +13,29 @@ full per-version honesty-pass history embedded in repo documentation.
   salvage are surfaced with warnings/status metadata instead of silent omission.
   `custom_model(..., mf_digest=...)` stamps the fit callable for result-store
   reuse and validates input kind, signature, and presets up front.
+- `pipeline/run.py`, `pipeline/spec.py`, `pipeline/parallelism.py`,
+  `forecasting/runner.py`, `forecasting/policies`, `pipeline/model_store.py`
+  (runtime integrity lane): unified pipeline seeding so `PipelineSpec.seed`
+  drives model selection, parallel workers, and per-arm derived model
+  `random_state` values unless an explicit model param overrides it; reports now
+  record `provenance["effective_seeds"]`. `n_jobs="auto"` now falls back to
+  `os.cpu_count()` where CPU affinity is unavailable, parallel workers initialize
+  BLAS/OpenMP caps before cell work and receive `spec.data` once per process, and
+  vintage source caches persist per worker. Pipeline `save_models` now defaults
+  to `False`; opt-in large model stores warn before execution and
+  `mf.pipeline.purge_model_store(...)` deletes stored fit sidecars/pickles.
+- `reporting/figures.py`, `docs/guide/figures.md` (feature, paper figures
+  lane): added optional-matplotlib paper figure helpers for cumulative
+  loss-differential/CSSED plots, Giacomini-Rossi fluctuation paths, PIT
+  histograms, and actual-vs-forecast paths. The plotting extra is exposed as
+  `macroforecast[plots]`, while the `ci` extra remains point/table-only.
+- `.github/workflows`, `.github/RELEASE_CHECKLIST.md`, `CITATION.cff`,
+  `THIRD_PARTY_NOTICES.md`, `docs/guide/citing.md`, `.readthedocs.yaml`,
+  `CONTRIBUTING.md` (CI/release hygiene): repaired stale CI trust checks,
+  added weekly optional-extra coverage, validated manual release versions
+  against `pyproject.toml`, added citation metadata/docs, corrected third-party
+  notice paths, and documented the lockfile's non-enforced CI role.
+
 - `tools/docgen`, `docs/reference`, `README.md`, `docs/conf.py` (docs,
   issue #421): replaced the broken layered-ops/OptionDoc generator with a
   current public-API reference renderer and restored
@@ -98,6 +121,24 @@ full per-version honesty-pass history embedded in repo documentation.
   horse race no longer re-fits or re-transforms the shared per-origin
   preprocessing base. Default `result_store=None` leaves the existing execution
   path unchanged.
+
+- `pipeline/result_store.py`, `pipeline/run.py`, `pipeline/rescore.py`,
+  `preprocessing/cache.py`, `preprocessing/specs.py`,
+  `forecasting/preprocessing_stage.py` (fix, identity lane): hardened
+  content-derived identity for result stores, preprocessing disk caches, and
+  checkpoint rescoring. Result-store digests now include effective selection
+  seed, arm-relevant backend package versions, and a vintage-aware fingerprint
+  over enumerable vintage labels, reference calendar, and the bounded latest
+  resolved vintage panel. Existing result stores will recompute once under the
+  new digest shape, then reuse normally; macroforecast package-version
+  mismatches still warn on reuse instead of invalidating. Preprocessing disk
+  caches now require `__mf_digest__` for custom callables, reject undigested
+  lambda custom steps, and skip disk get/put with a warning for undigestible
+  named custom steps. `rescore()` now verifies checkpoint cell manifests and
+  refuses stale cells by default, with explicit `allow_stale=True` override and
+  legacy-cell warnings. Origin-available preprocessing now applies fitted
+  standardization before custom steps at transform time, matching fit order, and
+  `fit_window` plus custom steps warns about the row-local/stateless contract.
 
 - `data/vintage.py`, `forecasting/runner.py`, `pipeline/run.py`,
   `forecasting/checkpoint.py` (feature, per-origin vintages): added the

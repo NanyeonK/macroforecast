@@ -25,6 +25,7 @@ Install optional extras only when you need the corresponding backends:
 | `lightgbm` | LightGBM model family. |
 | `catboost` | CatBoost model family. |
 | `arch` | ARCH/GARCH volatility backends. |
+| `plots` | Matplotlib-backed paper figure helpers. |
 | `macro_random_forest` | Macro Random Forest support utilities. |
 | `interpretation` | SHAP/anatomy interpretation backends. |
 | `deep` | Torch and Captum neural/attribution backends. |

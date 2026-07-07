@@ -13,14 +13,23 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+import json
+import warnings
 
 import pandas as pd
 
 from macroforecast.forecasting.checkpoint import load_checkpoint_frame
-from macroforecast.pipeline.run import _cell_checkpoint_path, _environment_provenance
+from macroforecast.pipeline.result_store import result_cell_identity
+from macroforecast.pipeline.run import (
+    _cell_checkpoint_manifest_path,
+    _cell_checkpoint_path,
+    _data_identity,
+    _effective_target_for_arm,
+    _environment_provenance,
+)
 
 
-def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
+def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = False) -> "Any":
     """Re-score a saved pipeline run from its checkpoint directory alone.
 
     Walks every (target, arm, horizon) cell ``spec`` describes, loads that cell's
@@ -44,6 +53,11 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
         from ``checkpoint_dir`` regardless of what ``spec.checkpoint_dir`` says.
         Every field that determines a cell's identity (targets, arms, horizons)
         must match the original run, or cells will not be found.
+    allow_stale:
+        By default, checkpoint cells that carry a manifest are reused only when
+        the current spec/data identity digest matches the stored digest. Set
+        ``allow_stale=True`` to intentionally score stale checkpoint cells after
+        changing a model, feature, preprocessing, or data identity.
 
     Returns
     -------
@@ -76,15 +90,20 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
         If no cell under ``checkpoint_dir`` yields any checkpoint records at all
         (an empty or entirely-mismatched directory) -- a clear, actionable error
         instead of a silently-empty report.
+        Also raised when manifest-bearing checkpoint cells do not match the
+        current spec identity and ``allow_stale`` is false.
     """
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.spec import PipelineReport
 
     checkpoint_root = Path(checkpoint_dir)
     probe_spec = _with_checkpoint_dir(spec, checkpoint_root)
+    data_identity = _data_identity(spec.data)
 
     frames: list[pd.DataFrame] = []
     empty_cells: list[dict[str, Any]] = []
+    stale_cells: list[str] = []
+    unverified_cells: list[str] = []
     any_cell_dir_found = False
     for target in spec.targets:
         for arm in spec.arms:
@@ -94,6 +113,18 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
                 h_dir = cell_dir / f"h{int(h)}"
                 if h_dir.exists():
                     any_cell_dir_found = True
+                    status = _checkpoint_cell_identity_status(
+                        spec,
+                        probe_spec,
+                        arm,
+                        target,
+                        horizon=int(h),
+                        data_identity=data_identity,
+                    )
+                    if status.kind == "stale":
+                        stale_cells.append(status.label)
+                    elif status.kind == "unverified":
+                        unverified_cells.append(status.label)
                 frame = load_checkpoint_frame(h_dir)
                 if frame.empty:
                     continue
@@ -107,6 +138,14 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
             if not arm_produced_any_horizon:
                 empty_cells.append({"target": target.name, "arm": arm.name})
 
+    if stale_cells and not allow_stale:
+        raise ValueError(
+            "rescore refused stale checkpoint cell(s) whose stored identity no "
+            "longer matches the current spec/data: "
+            f"stale_cells={stale_cells}. Re-run the pipeline into a fresh "
+            "checkpoint_dir, or pass allow_stale=True to score these stale "
+            "forecasts intentionally."
+        )
     if not frames:
         if not any_cell_dir_found:
             raise ValueError(
@@ -119,6 +158,21 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
         raise ValueError(
             f"rescore: checkpoint directories exist under {checkpoint_root!r} but "
             "every one is empty (a partial/interrupted run?) -- nothing to re-score."
+        )
+    if unverified_cells:
+        warnings.warn(
+            "rescore could not verify checkpoint cell identity for legacy or "
+            "undigestible cell(s); reusing by directory name only: "
+            f"{unverified_cells}",
+            UserWarning,
+            stacklevel=2,
+        )
+    if stale_cells and allow_stale:
+        warnings.warn(
+            "rescore is reusing stale checkpoint cell(s) because allow_stale=True: "
+            f"{stale_cells}",
+            UserWarning,
+            stacklevel=2,
         )
 
     master = pd.concat(frames, ignore_index=True)
@@ -133,6 +187,9 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
             "(indistinguishable from never-run), and empty_cells is best-effort "
             "(an arm with zero checkpoint rows for every horizon)."
         ),
+        "rescore_unverified_cells": tuple(unverified_cells),
+        "rescore_stale_cells": tuple(stale_cells),
+        "rescore_allow_stale": bool(allow_stale),
     }
     # Same "full" (default) / "basic" opt-out as a live run_pipeline() report --
     # a rescored report still benefits from knowing WHERE the re-scoring ran
@@ -145,6 +202,8 @@ def rescore(checkpoint_dir: str | Path, spec: "Any") -> "Any":
     leakage_audit = {
         "rescored_from": str(checkpoint_root),
         "empty_cells": list(empty_cells),
+        "unverified_cells": list(unverified_cells),
+        "stale_cells": list(stale_cells),
     }
 
     return PipelineReport(
@@ -176,6 +235,46 @@ def _with_checkpoint_dir(spec: "Any", checkpoint_dir: Path) -> "Any":
     import dataclasses as _dc
 
     return _dc.replace(spec, checkpoint_dir=str(checkpoint_dir))
+
+
+class _IdentityStatus:
+    def __init__(self, kind: str, label: str) -> None:
+        self.kind = kind
+        self.label = label
+
+
+def _checkpoint_cell_identity_status(
+    spec: "Any",
+    probe_spec: "Any",
+    arm: "Any",
+    target: "Any",
+    *,
+    horizon: int,
+    data_identity: "Any",
+) -> _IdentityStatus:
+    label = f"{target.name}/{arm.name}/h{int(horizon)}"
+    manifest_path = _cell_checkpoint_manifest_path(probe_spec, arm, target, int(horizon))
+    if manifest_path is None or not manifest_path.exists():
+        return _IdentityStatus("unverified", label)
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return _IdentityStatus("unverified", label)
+    if manifest.get("schema") != "macroforecast_checkpoint_cell_manifest":
+        return _IdentityStatus("unverified", label)
+    current = result_cell_identity(
+        spec,
+        arm,
+        _effective_target_for_arm(spec, arm, target),
+        horizon=int(horizon),
+        data_identity=data_identity,
+    )
+    stored_digest = manifest.get("digest")
+    if stored_digest is None or current.digest is None:
+        return _IdentityStatus("unverified", label)
+    if str(stored_digest) != current.digest:
+        return _IdentityStatus("stale", label)
+    return _IdentityStatus("ok", label)
 
 
 __all__ = ["rescore"]

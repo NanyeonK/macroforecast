@@ -1066,6 +1066,9 @@ def _json_ready(value: Any) -> Any:
     if isinstance(value, list):
         return [_json_ready(item) for item in value]
     if callable(value):
+        marker = getattr(value, "__mf_digest__", None)
+        if marker is not None:
+            return {"callable": _callable_name(value), "mf_digest": str(marker)}
         return _callable_name(value)
     return value
 

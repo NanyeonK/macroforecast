@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
+from macroforecast.preprocessing.clean import apply_standardization_state
 
 
 def _panel() -> pd.DataFrame:
@@ -378,6 +379,110 @@ def test_preprocess_spec_fit_window_policy_applies_outlier_and_mean_state():
     assert transform_stage["fit_period"]["end"] == "2020-04-01"
     assert transform_stage["transform_period"]["start"] == "2020-05-01"
     assert transform_stage["output_period"]["n_rows"] == 1
+
+
+def _copy_x_custom_step(panel: pd.DataFrame, metadata=None) -> pd.DataFrame:
+    out = panel.copy()
+    out["x_seen_by_custom"] = out["x"]
+    return out
+
+
+def test_origin_available_transform_standardizes_before_custom_steps():
+    metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=6, freq="MS"),
+                "x": [1.0, 2.0, 3.0, 100.0, 101.0, 102.0],
+            }
+        ),
+        date="date",
+        metadata=metadata,
+    )
+    pre = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="zscore",
+        frame="keep",
+        custom_steps=[
+            mf.preprocessing.custom_preprocess_step("copy_x", _copy_x_custom_step)
+        ],
+    )
+
+    fitted = pre.fit((panel.iloc[:3], metadata))
+    transformed = fitted.transform((panel.iloc[3:4], metadata), history=panel.iloc[:3])
+
+    assert np.isclose(
+        transformed.panel["x_seen_by_custom"].iloc[0],
+        transformed.panel["x"].iloc[0],
+    )
+    assert transformed.panel["x_seen_by_custom"].iloc[0] > 50.0
+
+
+def test_origin_available_transform_without_custom_steps_matches_old_order():
+    metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=6, freq="MS"),
+                "x": [1.0, 2.0, 3.0, 100.0, 101.0, 102.0],
+            }
+        ),
+        date="date",
+        metadata=metadata,
+    )
+    pre = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="zscore",
+        frame="keep",
+    )
+
+    fitted = pre.fit((panel.iloc[:3], metadata))
+    transformed = fitted.transform((panel.iloc[3:4], metadata), history=panel.iloc[:3])
+
+    combined = pd.concat([panel.iloc[:3], panel.iloc[3:4]]).sort_index()
+    old_order = mf.preprocessing.reprocess(
+        (combined, metadata),
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="none",
+        frame="keep",
+        warn_metadata=False,
+    ).panel.reindex(panel.iloc[3:4].index)
+    old_order = apply_standardization_state(old_order, fitted.standardization_state)
+
+    pd.testing.assert_frame_equal(transformed.panel, old_order)
+
+
+def test_fit_window_custom_steps_warn_stateless_contract():
+    metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": pd.date_range("2020-01-01", periods=4, freq="MS"),
+                "x": [1.0, 2.0, 3.0, 4.0],
+            }
+        ),
+        date="date",
+        metadata=metadata,
+    )
+    pre = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="none",
+        frame="keep",
+        custom_steps=[
+            mf.preprocessing.custom_preprocess_step("copy_x", _copy_x_custom_step)
+        ],
+    )
+
+    with pytest.warns(UserWarning, match="row-local/stateless"):
+        pre.fit((panel, metadata), policy="fit_window")
 
 
 def test_preprocess_spec_rejects_non_preprocessing_options_early():

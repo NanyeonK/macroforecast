@@ -14,6 +14,7 @@ Guide context: [../guide/index.md](../guide/index.md).
 | `auto_parallelism` | function | Return ``(cell_workers, model_threads)`` saturating ``cores``. |
 | `rescore` | function | Re-score a saved pipeline run from its checkpoint directory alone. |
 | `result_store_summary` | function | Summarise result-store manifests, one row per readable cell manifest. |
+| `purge_model_store` | function | Delete saved model fits matching the supplied filters and return a count. |
 | `purge_result_store` | function | Delete result-store cells matching the supplied filters and return a count. |
 | `run_arms` | function | Execute every cell and concatenate into one master forecast frame. |
 | `run_pipeline` | function | Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport. |
@@ -113,7 +114,7 @@ Qualified name: `macroforecast.pipeline.rescore.rescore`
 #### Signature
 
 ```python
-macroforecast.pipeline.rescore(checkpoint_dir: str | Path, spec: "'Any'") -> "'Any'"
+macroforecast.pipeline.rescore(checkpoint_dir: str | Path, spec: "'Any'", *, allow_stale: bool = False) -> "'Any'"
 ```
 
 #### Description
@@ -140,6 +141,11 @@ spec:
     from ``checkpoint_dir`` regardless of what ``spec.checkpoint_dir`` says.
     Every field that determines a cell's identity (targets, arms, horizons)
     must match the original run, or cells will not be found.
+allow_stale:
+    By default, checkpoint cells that carry a manifest are reused only when
+    the current spec/data identity digest matches the stored digest. Set
+    ``allow_stale=True`` to intentionally score stale checkpoint cells after
+    changing a model, feature, preprocessing, or data identity.
 
 Returns
 PipelineReport
@@ -170,6 +176,8 @@ ValueError
     If no cell under ``checkpoint_dir`` yields any checkpoint records at all
     (an empty or entirely-mismatched directory) -- a clear, actionable error
     instead of a silently-empty report.
+    Also raised when manifest-bearing checkpoint cells do not match the
+    current spec identity and ``allow_stale`` is false.
 
 #### Parameters
 
@@ -177,6 +185,7 @@ ValueError
 | --- | --- | --- | --- |
 | `checkpoint_dir` | positional or keyword | `str \| Path` | `required` |
 | `spec` | positional or keyword | `'Any'` | `required` |
+| `allow_stale` | keyword only | `bool` | `False` |
 
 #### Returns
 
@@ -219,6 +228,45 @@ Summarise result-store manifests, one row per readable cell manifest.
 import macroforecast as mf
 # Call with the signature above:
 # mf.pipeline.result_store_summary(...)
+```
+### purge_model_store
+
+Qualified name: `macroforecast.pipeline.model_store.purge_model_store`
+
+#### Signature
+
+```python
+macroforecast.pipeline.purge_model_store(store: str | Path, *, before: str | datetime | None = None, aliases: Sequence[str] | None = None) -> int
+```
+
+#### Description
+
+Delete saved model fits matching the supplied filters and return a count.
+
+Pipeline model stores contain one alias directory per arm/model and one JSON
+sidecar per fitted origin/horizon. Each matching sidecar is deleted together
+with its recorded pickle path when that pickle lives under ``store``.
+``before`` filters by the sidecar file modification time because legacy model
+sidecars do not record a creation timestamp.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `store` | positional or keyword | `str \| Path` | `required` |
+| `before` | keyword only | `str \| datetime \| None` | `None` |
+| `aliases` | keyword only | `Sequence[str] \| None` | `None` |
+
+#### Returns
+
+`int`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.purge_model_store(...)
 ```
 ### purge_result_store
 
@@ -874,7 +922,7 @@ Qualified name: `macroforecast.pipeline.spec.PipelineSpec`
 #### Signature
 
 ```python
-macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
+macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
 ```
 
 #### Description
@@ -894,7 +942,7 @@ Validated, frozen configuration produced by :func:`pipeline_spec`.
 | `preprocessing` | positional or keyword | `Any \| None` | `None` |
 | `preprocessing_policy` | positional or keyword | `Any \| None` | `None` |
 | `combinations` | positional or keyword | `tuple[CombinationContender, ...]` | `()` |
-| `save_models` | positional or keyword | `bool` | `True` |
+| `save_models` | positional or keyword | `bool` | `False` |
 | `model_store` | positional or keyword | `str` | `"trained_model"` |
 | `checkpoint_dir` | positional or keyword | `str \| None` | `None` |
 | `result_store` | positional or keyword | `str \| None` | `None` |
@@ -931,7 +979,7 @@ import macroforecast as mf
 | `preprocessing` | `Any \| None` | `None` |
 | `preprocessing_policy` | `Any \| None` | `None` |
 | `combinations` | `tuple[CombinationContender, ...]` | `()` |
-| `save_models` | `bool` | `True` |
+| `save_models` | `bool` | `False` |
 | `model_store` | `str` | `"trained_model"` |
 | `checkpoint_dir` | `str \| None` | `None` |
 | `result_store` | `str \| None` | `None` |
@@ -1229,7 +1277,7 @@ Qualified name: `macroforecast.pipeline.spec.pipeline_spec`
 #### Signature
 
 ```python
-macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = True, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
+macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
 ```
 
 #### Description
@@ -1270,6 +1318,14 @@ only omits the "environment"/"data"/"spec_echo" blocks.
 forecast cells. When left at ``None`` (the default), the runner follows the
 original execution path exactly.
 
+``seed`` is the pipeline run seed. During :func:`run_pipeline`, it temporarily
+becomes the package meta ``random_seed`` so model selection and parallel
+workers see the same effective seed. For model specs with a ``random_state``
+default, pipeline fits derive a stable per-arm value from ``(seed, arm)`` when
+the caller did not explicitly supply ``random_state``; explicit model params
+always take precedence. Low-level :func:`macroforecast.forecasting.run` keeps
+the model registry defaults unless it is called from this pipeline context.
+
 ``on_unsupported_direct`` controls what happens when a model that only
 iterates its own dynamics is combined with ``direct`` or ``direct_average``:
 ``"error"`` (default) rejects the spec, ``"warn"`` preserves the old weak
@@ -1290,7 +1346,7 @@ cells as ``recursive``.
 | `preprocessing` | keyword only | `Any \| None` | `None` |
 | `preprocessing_policy` | keyword only | `Any \| None` | `None` |
 | `tcode_target_map` | keyword only | `Mapping[int, tuple[str, str]] \| None` | `None` |
-| `save_models` | keyword only | `bool` | `True` |
+| `save_models` | keyword only | `bool` | `False` |
 | `model_store` | keyword only | `str` | `"trained_model"` |
 | `checkpoint_dir` | keyword only | `str \| None` | `None` |
 | `result_store` | keyword only | `str \| Path \| None` | `None` |

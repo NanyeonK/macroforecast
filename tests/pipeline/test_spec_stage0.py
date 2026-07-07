@@ -97,7 +97,7 @@ def test_pipeline_spec_builds_and_resolves():
     spec = _basic_spec()
     assert spec.horizons == (1, 3)
     assert spec.targets[0].transform == "log_growth"
-    assert spec.save_models is True
+    assert spec.save_models is False
 
 
 def test_validation_benchmark_must_exist():

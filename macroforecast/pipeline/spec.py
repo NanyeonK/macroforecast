@@ -466,7 +466,10 @@ class PipelineSpec:
     preprocessing: Any | None = None
     preprocessing_policy: Any | None = None
     combinations: tuple[CombinationContender, ...] = ()
-    save_models: bool = True
+    # Pipeline runs default to forecast/evaluation artifacts only. Enabling this
+    # writes one pickle + JSON manifest per fitted model/origin/horizon under
+    # ``model_store``; large horse races can create many files.
+    save_models: bool = False
     model_store: str = "trained_model"
     # When set, each (target, arm, horizon) forecast cell persists its lean
     # forecast records incrementally under
@@ -482,10 +485,10 @@ class PipelineSpec:
     # Native fan-out: when >1, the (arm x target x horizon) cells run across a
     # process pool. Default 1 keeps the sequential, cross-horizon EM-sharing path
     # byte-for-byte unchanged. The parallel path is deterministic (every cell uses
-    # ``seed``) and produces forecasts numerically identical to ``n_jobs=1``; it
-    # trades the shared per-origin preprocessing cache (each worker recomputes its
-    # own EM) for wall-clock parallelism. Memory scales with ``n_jobs`` because
-    # every worker holds the data panel.
+    # the effective meta random seed and derived per-arm model seeds) and produces
+    # forecasts numerically identical to ``n_jobs=1`` except where stochastic model
+    # or selection streams are intentionally changed by ``seed``. Memory scales
+    # with ``n_jobs`` because every worker holds the data panel.
     n_jobs: int = 1
     # Model-internal thread budget per cell worker, set by the AUTO allocator.
     # In parallel mode (n_jobs>1) each worker pins its tree-ensemble (RF/GBM/XGB/
@@ -1166,7 +1169,7 @@ def pipeline_spec(
     preprocessing: Any | None = None,
     preprocessing_policy: Any | None = None,
     tcode_target_map: Mapping[int, tuple[str, str]] | None = None,
-    save_models: bool = True,
+    save_models: bool = False,
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
     result_store: str | Path | None = None,
@@ -1212,6 +1215,14 @@ def pipeline_spec(
     ``result_store`` is an optional directory for cross-run reuse of completed
     forecast cells. When left at ``None`` (the default), the runner follows the
     original execution path exactly.
+
+    ``seed`` is the pipeline run seed. During :func:`run_pipeline`, it temporarily
+    becomes the package meta ``random_seed`` so model selection and parallel
+    workers see the same effective seed. For model specs with a ``random_state``
+    default, pipeline fits derive a stable per-arm value from ``(seed, arm)`` when
+    the caller did not explicitly supply ``random_state``; explicit model params
+    always take precedence. Low-level :func:`macroforecast.forecasting.run` keeps
+    the model registry defaults unless it is called from this pipeline context.
 
     ``on_unsupported_direct`` controls what happens when a model that only
     iterates its own dynamics is combined with ``direct`` or ``direct_average``:

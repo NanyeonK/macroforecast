@@ -1,0 +1,29 @@
+name: ci-extras
+
+# Weekly optional-dependency sweep for non-deep extras installed by [dev].
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
+
+jobs:
+  optional-extras:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install optional extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run non-slow optional-dependency suite
+        run: |
+          pytest tests/ -q -m 'not slow and not mc and not rparity'
