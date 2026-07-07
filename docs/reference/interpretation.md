@@ -99,7 +99,7 @@ Model, forecast, and observation attribution helpers.
 Kind: `module`
 
 ```python
-dual = <module 'macroforecast.interpretation.dual' from '/home/nanyeon99/project/mf-docgen/macroforecast/interpretation/dual.py'>
+dual = <module macroforecast.interpretation.dual>
 ```
 
 ## Callable And Class Reference

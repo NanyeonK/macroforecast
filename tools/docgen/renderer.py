@@ -1002,6 +1002,8 @@ def _stable_repr(value: Any) -> str:
         return "(" + ", ".join(_stable_repr(item) for item in value) + ("," if len(value) == 1 else "") + ")"
     if isinstance(value, list):
         return "[" + ", ".join(_stable_repr(item) for item in value) + "]"
+    if inspect.ismodule(value):
+        return f"<module {value.__name__}>"
     if callable(value):
         return _qualname(value)
     return _clean_annotation_text(repr(value))
@@ -1009,10 +1011,22 @@ def _stable_repr(value: Any) -> str:
 
 def _render_public_methods(obj: Any) -> str:
     rows: list[str] = []
+    cls = obj if inspect.isclass(obj) else type(obj)
+    builtin_names = {
+        attr
+        for base in cls.__mro__
+        if base.__module__ == "builtins"
+        for attr in vars(base)
+    }
     for name, member in inspect.getmembers(obj):
         if name.startswith("_"):
             continue
         if not callable(member):
+            continue
+        if name in builtin_names:
+            # Inherited builtin methods (dict.update, list.append, ...) have
+            # interpreter-version-dependent docstrings; documenting them here
+            # would make the generated pages environment-sensitive.
             continue
         rows.append(f"| `{name}` | `{_cell(_signature(name, member))}` | {_cell(_summary(member))} |")
     if not rows:

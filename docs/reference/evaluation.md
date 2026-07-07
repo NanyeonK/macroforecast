@@ -51,14 +51,14 @@ DEFAULT_SCORE_BY = ("model", "horizon")
 Kind: `module`
 
 ```python
-metrics = <module 'macroforecast.metrics' from '/home/nanyeon99/project/mf-docgen/macroforecast/metrics.py'>
+metrics = <module macroforecast.metrics>
 ```
 ### `tests`
 
 Kind: `module`
 
 ```python
-tests = <module 'macroforecast.tests' from '/home/nanyeon99/project/mf-docgen/macroforecast/tests.py'>
+tests = <module macroforecast.tests>
 ```
 
 ## Callable And Class Reference

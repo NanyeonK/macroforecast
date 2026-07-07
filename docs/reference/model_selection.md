@@ -158,13 +158,6 @@ import macroforecast as mf
 # Construct with the signature above:
 # mf.model_selection.SearchError(...)
 ```
-
-#### Public Methods
-
-| Method | Signature | Summary |
-| --- | --- | --- |
-| `add_note` | `add_note(...)` | Exception.add_note(note) -- |
-| `with_traceback` | `with_traceback(...)` | Exception.with_traceback(tb) -- |
 ### SearchResult
 
 Qualified name: `macroforecast.model_selection.types.SearchResult`

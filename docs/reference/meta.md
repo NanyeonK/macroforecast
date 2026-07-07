@@ -188,22 +188,6 @@ import macroforecast as mf
 # Construct with the signature above:
 # mf.meta.MetaConfig(...)
 ```
-
-#### Public Methods
-
-| Method | Signature | Summary |
-| --- | --- | --- |
-| `clear` | `clear(...)` | D.clear() -> None.  Remove all items from D. |
-| `copy` | `copy(...)` | D.copy() -> a shallow copy of D |
-| `fromkeys` | `fromkeys(iterable, value=None, /)` | Create a new dictionary with keys from iterable and values set to value. |
-| `get` | `get(self, key, default=None, /)` | Return the value for key if key is in the dictionary, else default. |
-| `items` | `items(...)` | D.items() -> a set-like object providing a view on D's items |
-| `keys` | `keys(...)` | D.keys() -> a set-like object providing a view on D's keys |
-| `pop` | `pop(...)` | D.pop(k[,d]) -> v, remove specified key and return the corresponding value. |
-| `popitem` | `popitem(self, /)` | Remove and return a (key, value) pair as a 2-tuple. |
-| `setdefault` | `setdefault(self, key, default=None, /)` | Insert key with a value of default if key is not in the dictionary. |
-| `update` | `update(...)` | D.update([E, ]**F) -> None.  Update D from dict/iterable E and F. |
-| `values` | `values(...)` | D.values() -> an object providing a view on D's values |
 ### MetadataLevel
 
 Qualified name: `typing.Literal`

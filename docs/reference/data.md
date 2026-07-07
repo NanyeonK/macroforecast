@@ -321,13 +321,6 @@ import macroforecast as mf
 # Construct with the signature above:
 # mf.data.VintageUnavailableError(...)
 ```
-
-#### Public Methods
-
-| Method | Signature | Summary |
-| --- | --- | --- |
-| `add_note` | `add_note(...)` | Exception.add_note(note) -- |
-| `with_traceback` | `with_traceback(...)` | Exception.with_traceback(tb) -- |
 ### as_panel
 
 Qualified name: `macroforecast.data.panel.as_panel`
