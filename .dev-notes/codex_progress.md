@@ -1,28 +1,58 @@
-# Codex Progress - mf-vintagefix
+# Codex progress: eval correctness + subsamples lane
 
-## 2026-07-07 12:42 KST - Initial Read
+Date: 2026-07-07
+Worktree: `/home/nanyeon99/project/mf-eval`
 
-- Read `.dev-notes/workplan_vintagefix_codex.md` and `.dev-notes/lane_ground_rules.md`.
-- Initial status: worktree has untracked lane notes only; no tracked file edits yet.
-- Decision: keep all code edits inside the owned vintage runner, `data/vintage.py`, loader/panel validation paths, docs guide, tests, and changelog.
-- Decision: implement the `custom_vintages` long-frame fix by documenting the actual accepted grouped-wide snapshot schema and adding validation, not by extending to true long-tidy, because the existing parser and tests already define grouped snapshots and this lane favors bounded onboarding fixes.
-- Gate plan: run new/changed test files first, then `tests/forecasting`, then `tests/data`, then `mypy macroforecast`; update this file with every command and result.
+## Decisions
 
-## 2026-07-07 12:49 KST - Implementation Decisions
+- Read `.dev-notes/workplan_eval_codex.md` and `.dev-notes/lane_ground_rules.md` before code edits.
+- Keep changes scoped to the owned eval/reporting/tests/docs regions; `spec.py` edits are limited to EvalSpec, eval test validation, and pipeline_spec eval validation.
+- Preserve byte-identity for default `EvalSpec.subsamples=None`: no `subsample` column is added unless the user explicitly configures subsamples.
+- Add a public frozen `SubsampleWindow` dataclass and export it from `macroforecast.pipeline`.
+- Treat paper-table subsample reports explicitly: default to the `"full"` subsample when present, with an optional `subsample=` selector for other windows.
 
-- A1: added a one-time latest-vintage/reference-calendar overlap check in the vintage actual resolver. Empty overlap raises before feature construction; low reference-calendar coverage warns once.
-- A2: added `VintagePanelSpec.first_release_max_vintages` (default `12`) and made first-release actual resolution walk forward until a non-missing target observation is found. Missing-forever target dates are counted in `metadata["vintage_source"]["first_release_actuals"]` and warn once per run.
-- A3: changed `with_static_extras()` to truncate extras to rows strictly before each `origin_date` before joining. Cache/vintage identity now includes the origin date because the joined extras content can differ for the same base vintage across origins.
-- B1: custom mapping vintage keys now fail at `custom_vintages()` construction if timestamp parsing fails; callable-only vintage sources now fail at `VintagePanelSpec(..., actuals_vintage="first_release")` because they do not expose a release calendar.
-- B2 deviation: did not refactor `combine()`/`align_frequency()` frequency alignment duplication; only improved the weekly error message and added a recipe smoke test, as instructed.
-- B3: duplicate-date panel errors now add a pivot-to-wide hint when a low-cardinality non-numeric column suggests long-format input.
-- B4: added `load_custom_csv(na_values=..., date_format=..., dayfirst=...)` with defaults preserving the existing read path when unset.
+## Gate Log
 
-## 2026-07-07 12:50 KST - Gate Results
-
-- PASS: `~/project/macroforecast/.venv/bin/python -m pytest tests/forecasting/test_vintage_runner.py tests/data/test_vintage.py tests/data/test_combine.py tests/data/test_panel_hardening.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> 52 passed, 8 expected warnings.
-- PASS: `~/project/macroforecast/.venv/bin/python -m pytest tests/forecasting --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> 156 passed, 66 expected warnings.
-- PASS: `~/project/macroforecast/.venv/bin/python -m pytest tests/data --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> 50 passed, 7 expected warnings.
-- PASS: `~/project/macroforecast/.venv/bin/python -m mypy macroforecast` -> Success: no issues found in 109 source files.
+- PASS: focused changed-test run
+  `~/project/macroforecast/.venv/bin/python -m pytest tests/evaluation/test_tests.py tests/pipeline/test_evalspec_threading.py tests/pipeline/test_rescore.py tests/reporting/test_reporting.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider`
+  -> 83 passed, 2 expected RuntimeWarnings for intentionally short rescore subsamples.
+- Initial run of the same focused set found one test fixture issue:
+  `test_rescore_can_add_subsamples_to_checkpointed_run` used an `early` window
+  too short for DM; widened the window and reran green.
+- PASS: `~/project/macroforecast/.venv/bin/python -m pytest tests/evaluation --timeout=300 --timeout-method=thread -q -p no:cacheprovider`
+  -> 55 passed.
+- PASS after adding the direct reporting subsample-selector unit test:
+  `~/project/macroforecast/.venv/bin/python -m pytest tests/reporting/test_reporting.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider`
+  -> 15 passed.
+- PASS after one contract-test update:
+  `~/project/macroforecast/.venv/bin/python -m pytest tests/pipeline/test_gcls_style_e2e.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider`
+  -> 2 passed.
+- PASS: `~/project/macroforecast/.venv/bin/python -m pytest tests/pipeline --timeout=300 --timeout-method=thread -q -p no:cacheprovider`
+  -> 215 passed, 51 pre-existing/expected warnings.
+  Initial pipeline directory run failed because `test_gcls_style_e2e.py` still
+  expected non-default `primary_axis` to be accepted; updated it to the new
+  required rejection contract.
+- PASS: bounded MC smoke for new RC/StepM dependent-null test path:
+  `~/project/macroforecast/.venv/bin/python - <<'PY' ...`
+  -> `reality_check_test computed 20`, `stepm_test computed 20`, and both
+  returned `metadata.size_caveat.status == known_dependent_loss_size_distortion`.
+- PASS: `~/project/macroforecast/.venv/bin/python -m mypy macroforecast`
+  -> Success: no issues found in 109 source files.
+- PASS: docs/changelog check:
+  `rg -n "mcs_method|primary_axis|multiple_testing|by=\\(" ...` shows only
+  intentional reserved-field/changelog/progress mentions; new `SubsampleWindow`,
+  `ex_covid`, `mz`, `size_caveat`, and GR lag docs are present.
 - PASS: `git diff --check` -> no whitespace errors.
-- Docs/CHANGELOG: updated `docs/guide/vintages.md` for FRED month-start calendars, grouped-wide custom snapshots, first-release walks, and static-extra truncation; updated `CHANGELOG.md` under `[Unreleased]`.
+- PASS: no new blanket exceptions:
+  `git diff -U0 -- ... | rg "^\\+.*except (Exception|:)|^\\+.*except Exception|^\\+.*except:"`
+  -> no added lines. Existing broad catches remain outside this lane.
+
+## Deviations
+
+- The plan requested the `<30 forecast observations` subsample warning at
+  `pipeline_spec` build time. That count is not knowable until a master forecast
+  frame exists, so parse/name/range validation is in `pipeline_spec` and the
+  observation-count warning is emitted by `evaluate()`.
+- SPA/RC/StepM root-cause work stopped at disclosure plus MC pins. The existing
+  MC sweep already ruled out a simple block-length-resolution fix, and replacing
+  the arch bootstrap statistic is outside this lane.

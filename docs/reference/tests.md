@@ -159,16 +159,17 @@ macroforecast.tests.gw_test(
 )
 ```
 
-Input: two aligned loss series. Output: `TestResult` using the package's
-Giacomini-White-compatible loss differential surface. This callable uses the
-same aligned DM-style loss-differential statistic; conditional predictive
-ability with time-varying fluctuation paths is exposed separately through
+Input: two aligned loss series. Output: `TestResult` using the package's legacy
+GW-compatible DM-style loss-differential surface. This callable preserves the
+public `gw_test` name but computes the same aligned HAC loss-differential
+statistic as `dm_test`. The conditional Giacomini-White Wald test is
+`giacomini_white_test(...)`; the Giacomini-Rossi fluctuation path is
 `conditional_predictive_ability_test(...)`.
 
 Source boundary: `gw_test()` does not claim exact R-package alignment. It
 preserves the legacy callable surface by reusing the DM/HLN loss-differential
-statistic on aligned inputs. For the package's time-varying conditional
-predictive-ability path, use `conditional_predictive_ability_test(...)`.
+statistic on aligned inputs. See also `giacomini_white_test(...)` and
+`conditional_predictive_ability_test(...)`.
 
 ### dmp_test
 
@@ -445,6 +446,32 @@ Aliases:
 | `anatolyev_gerko_test(y_true, y_pred)` | `directional_accuracy_test(..., method="anatolyev_gerko")` |
 | `henriksson_merton_test(y_true, y_pred)` | `directional_accuracy_test(..., method="henriksson_merton")` |
 
+## Forecast Rationality
+
+### mincer_zarnowitz_test
+
+```python
+macroforecast.tests.mincer_zarnowitz_test(
+    y_true,
+    y_pred,
+    *,
+    hac_lags=0,
+    alpha=0.05,
+) -> TestResult
+```
+
+Runs the Mincer-Zarnowitz actual-on-forecast regression
+`actual = intercept + slope * forecast + error` and tests the joint null
+`intercept = 0` and `slope = 1`. The covariance matrix is the statsmodels OLS
+HAC covariance with `maxlags=hac_lags`; the reported statistic is the two-
+constraint Wald statistic with a chi-square reference.
+
+Returned metadata includes `intercept`, `slope`, `wald_statistic`,
+`f_statistic`, `hac_lags`, `null_hypothesis`, and the regression/covariance
+contract. In the pipeline, request `"mz"` in `EvalSpec.tests`; the evaluator
+uses `hac_lags=horizon-1` by default unless overridden with
+`test_options={"mz": {"hac_lags": ...}}`.
+
 ## Density And Interval Diagnostics
 
 ### density_interval_tests
@@ -684,6 +711,12 @@ Options:
 | `lag_truncate` | `0` | `0`, `1`, ..., `5` | Bartlett HAC truncation lag, matching the R package's allowed range. |
 | `alpha` | `0.05` | `0.05`, `0.10` for `giacomini_rossi` | Test size used to select the tabulated critical value. |
 
+Pipeline note: when `"gr"` is requested through `EvalSpec.tests`, the evaluator
+sets `lag_truncate=min(horizon - 1, 5)` unless the user supplies
+`test_options={"gr": {"lag_truncate": ...}}`. This accounts for the MA(h-1)
+dependence of h-step loss differentials while preserving the public callable's
+standalone default.
+
 Output fields:
 
 | Field | Meaning |
@@ -775,6 +808,14 @@ enter through `EvalSpec.test_options`, for example
 The results append rows to `PipelineReport.mcs` with `test`, `contender`,
 `superior`, `reject`, `p_value`, and sample-size metadata.
 
+Size caveat: MC diagnostics currently show that the arch-backed SPA/RC/StepM
+family is correctly sized for iid equal-loss nulls but over-rejects by roughly
+1.5-2x nominal size when losses have serial dependence. Result dictionaries
+carry `metadata["size_caveat"]` and each computed record carries the same
+machine-readable payload. Treat these as diagnostic under dependent losses;
+prefer `multi_horizon_spa_test` (`"uspa"`/`"aspa"`) for pairwise multi-horizon
+questions or `model_confidence_set` for dependent-loss set comparisons.
+
 ### superior_predictive_ability_test
 
 ```python
@@ -810,6 +851,9 @@ benchmark losses and candidate losses, forms loss differentials internally as
 `upper` p-values from Hansen's recentering choices. Positive
 `mean_loss_difference` in the output means the candidate has lower average loss
 than the benchmark.
+
+The returned dictionary includes `metadata["size_caveat"]` documenting the
+dependent-loss over-rejection caveat above.
 
 R/source comparison: archived R `ttrTests/R/dataSnoop.R::dataSnoop(test="SPA")`
 implements Hansen SPA for technical-trading rule parameter grids. It recomputes
@@ -855,6 +899,9 @@ Reality Check alias over the same SPA machinery, with the same p-value fields.
 Use this when the research design calls for the White Reality Check against a
 benchmark model.
 
+The returned dictionary includes the same `metadata["size_caveat"]` dependent-
+loss disclosure as SPA.
+
 R/source comparison: archived R `ttrTests/R/dataSnoop.R::dataSnoop(test="RC")`
 implements White's Reality Check for technical-trading rule grids. As with SPA,
 the R function is strategy-generator specific; `macroforecast` uses
@@ -885,6 +932,9 @@ macroforecast.tests.stepm_test(
 Input: long or wide loss panel with a named benchmark model. Output:
 JSON-ready dictionary with `superior_models` for each target/horizon group.
 Backend: `arch.bootstrap.StepM`.
+
+The returned dictionary includes the same `metadata["size_caveat"]` dependent-
+loss disclosure as SPA and RC.
 
 R/source comparison: `oosanalysis-R-library/R/stepm.R::stepm` implements a
 generic Romano-Wolf stepdown loop from supplied test statistics and bootstrap

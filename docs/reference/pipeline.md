@@ -54,7 +54,7 @@ In one line: **arm × target × horizon → cell = one run(); arm = contender.**
 - `TargetSpec` -- a target and how its forecast object is defined (transform, policy, reduce_i2).
 - `ResolvedTarget` -- a target with its forecast policy and transform resolved.
 - `InterpretSpec` -- ML interpretation request (methods, which_fit, background, top_k).
-- `EvalSpec` -- benchmark, metrics, tests, loss, primary_axis, MCS settings, subsamples, calibration_alpha. `metrics` and `tests` are live configuration (see "Custom metrics, significance tests, and loss" below), not documentation-only fields; `metrics`/`tests` also carry the opt-in density/calibration names (see "Density and interval forecasting" below).
+- `EvalSpec` -- benchmark, metrics, tests, loss, per-test options, MCS alpha, evaluation-window subsamples, and calibration alpha. `metrics` and `tests` are live configuration (see "Custom metrics, significance tests, and loss" below), not documentation-only fields; `metrics`/`tests` also carry the opt-in density/calibration names (see "Density and interval forecasting" below). `by`, `primary_axis`, and `multiple_testing` are reserved and rejected when set away from their defaults.
 - `CombinationContender` -- a forecast combination that becomes an additional contender.
 - `PipelineReport` -- output: forecasts, accuracy, significance, mcs, density, calibration, provenance, leakage_audit, interpretation, failed_cells. `failed_cells` lists any `(target, arm, horizon-group)` cell whose `run()` raised; the rest of the cells still ran and the failures are also mirrored into `leakage_audit["failed_cells"]`. `density`/`calibration` are empty frames unless `EvalSpec.metrics`/`tests` explicitly requests a density metric or calibration test. `provenance` is self-certifying by default (`pipeline_spec(..., provenance_level="full")`, the default) -- see "Provenance" below.
 - `TCODE_TARGET_MAP` -- FRED t-code to (forecast_policy, target_transform) mapping.
@@ -415,18 +415,25 @@ metrics and tests actually named are computed, and unsupported names fail fast.
   DM only (`significance` carries no `cw_*` columns, `mcs` is empty);
   `tests=()` yields `accuracy` only. Supported significance names are
   `"dm"`, `"cw"`, `"gw"`, `"enc_new"`, `"enc_t"`, `"pt"`, `"hm"`, `"ag"`,
-  `"gr"`, `"uspa"`, `"aspa"`, `"mcs"`, `"spa"`, `"rc"`, and `"stepm"` plus
+  `"gr"`, `"mz"`, `"uspa"`, `"aspa"`, `"mcs"`, `"spa"`, `"rc"`, and `"stepm"` plus
   the calibration names below. Unsupported names raise `ValueError` at `pipeline_spec(...)` build time
   rather than being silently dropped. The newly wired pairwise tests append
   long-form rows to `PipelineReport.significance` with `test`, `statistic`,
-  `p_value`, `reject`, and `n_obs`; `pt`/`hm`/`ag` test the contender's own
-  directional skill on the benchmark-aligned sample. `"uspa"` and `"aspa"`
+  `p_value`, `reject`, `status`, and `n_obs`; `pt`/`hm`/`ag` test the contender's own
+  directional skill on the benchmark-aligned sample. Degenerate directional
+  inputs emit `status="degenerate"` rows instead of aborting evaluation.
+  ENC-NEW/ENC-T rows with no configured critical value or p-value emit
+  `status="inconclusive"` and `reject=None`. `"gr"` defaults its HAC
+  `lag_truncate` to `min(horizon - 1, 5)` unless overridden in
+  `test_options["gr"]`. `"mz"` runs the Mincer-Zarnowitz actual-on-forecast
+  rationality regression with default `hac_lags=horizon-1`. `"uspa"` and `"aspa"`
   run jointly across all horizons for each target/contender/benchmark triple
   and write `horizon="joint"` rows to `PipelineReport.significance`; requesting
   them with only one horizon raises at spec-build time. `"spa"`, `"rc"`, and
   `"stepm"` compare the full contender set against the benchmark and append rows
   to `PipelineReport.mcs`. `"spa"`, `"rc"`, and `"stepm"` require the `arch`
-  extra (`pip install "macroforecast[arch]"`).
+  extra (`pip install "macroforecast[arch]"`) and carry a dependent-loss
+  size-caveat disclosure in their result metadata.
 - **`test_options: Mapping[str, Mapping[str, Any]]`** -- optional per-test keyword
   options. The outer key must be present in `tests`, and every option name is
   checked against that test's public callable when `pipeline_spec(...)` is
@@ -435,6 +442,9 @@ metrics and tests actually named are computed, and unsupported names fail fast.
   controls such as `{"gr": {"window_ratio": 0.4}}`; `uspa`/`aspa` accept the
   `multi_horizon_spa_test(...)` options, including `n_boot`, `block_length`,
   `weights`, and `random_state`.
+- **`dm_kwargs: Mapping[str, Any]`** -- compatibility alias for
+  `test_options["dm"]`. It is merged into `test_options["dm"]` at spec-build
+  time; if both sources set the same key, `test_options["dm"]` wins.
 - **`loss: Callable[[y_true, y_pred], ndarray] | None`** (default `None` = squared
   error) -- a per-observation loss threaded into the Diebold-Mariano loss
   differential and the Model Confidence Set's loss matrix, enabling asymmetric-
@@ -462,6 +472,36 @@ evaluation = EvalSpec(
 
 `rescore(checkpoint_dir, spec)` honors all of this automatically -- it calls the
 same `evaluate(master, spec)` the live run does.
+
+## Evaluation-window subsamples
+
+`EvalSpec.subsamples` evaluates the same fixed POOS forecast frame on named
+target-date windows. It does not refit models and does not create new forecast
+cells. The filter is applied to the forecast target date (`report.forecasts.date`)
+before accuracy, significance, MCS/set-comparison, density, and calibration
+tables are computed.
+
+```python
+from macroforecast.pipeline import EvalSpec, SubsampleWindow
+
+evaluation = EvalSpec(
+    benchmark="AR",
+    tests=("dm", "mcs"),
+    subsamples={
+        "full": SubsampleWindow(),
+        "ex_covid": SubsampleWindow(exclude=(("2020-03-01", "2021-12-31"),)),
+        "post_gfc": SubsampleWindow(start="2010-01-01"),
+    },
+)
+```
+
+When `subsamples` is unset, the default output shape is unchanged and no
+`subsample` column is added. When it is set, evaluation tables gain a
+`subsample` column and tests run independently within each named window.
+Bounds are inclusive date strings. `pipeline_spec(...)` validates date parsing,
+nonempty names, and `start < end`; `evaluate()` warns if a subsample leaves fewer
+than 30 forecast observations in a `(target, horizon)` cell. `rescore(...)`
+honors new subsamples automatically because it reuses `evaluate(master, spec)`.
 
 ## Density and interval forecasting (Phase 1)
 

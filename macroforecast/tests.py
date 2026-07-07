@@ -154,10 +154,11 @@ def gw_test(
     alternative: str = "two_sided",
     alpha: float = 0.05,
 ) -> TestResult:
-    """Giacomini-White-style equal predictive ability callable.
+    """Legacy GW-compatible DM-style equal predictive ability callable.
 
-    This callable keeps the legacy GW surface. It uses the same HAC loss
-    differential statistic as the legacy implementation.
+    This callable keeps the public ``gw_test`` surface but computes the same HAC
+    loss-differential statistic as :func:`dm_test`. For the conditional
+    Giacomini-White Wald test, use :func:`giacomini_white_test`.
     """
 
     result = dm_test(
@@ -173,17 +174,18 @@ def gw_test(
     )
     return _replace_metadata(
         result,
-        name="Giacomini-White",
+        name="GW-compatible DM-style loss differential",
         null_hypothesis="zero mean aligned loss differential",
         source_reference="macroforecast legacy GW-compatible DM-style loss-differential surface",
-        external_reference="Giacomini-White conditional predictive ability is not implemented by this callable",
+        external_reference="See giacomini_white_test for the conditional Giacomini-White Wald test",
         r_reference=None,
         r_alignment=(
             "No exact R comparator is claimed. This callable preserves the legacy GW surface "
             "by reusing the DM/HLN loss-differential statistic on aligned inputs. Use "
-            "conditional_predictive_ability_test for the package's Giacomini-Rossi "
-            "time-varying CPA path."
+            "giacomini_white_test for the conditional Giacomini-White Wald test and "
+            "conditional_predictive_ability_test for the Giacomini-Rossi fluctuation path."
         ),
+        see_also=["giacomini_white_test", "conditional_predictive_ability_test"],
     )
 
 
@@ -591,6 +593,81 @@ def anatolyev_gerko_test(*args: Any, **kwargs: Any) -> TestResult:
 
     kwargs.setdefault("method", "anatolyev_gerko")
     return directional_accuracy_test(*args, **kwargs)
+
+
+def mincer_zarnowitz_test(
+    y_true: Any,
+    y_pred: Any,
+    *,
+    hac_lags: int = 0,
+    alpha: float = 0.05,
+) -> TestResult:
+    """Mincer-Zarnowitz forecast-rationality regression.
+
+    Regresses actual values on a constant and the forecast, then tests the joint
+    null ``intercept = 0`` and ``slope = 1`` using a HAC covariance matrix.
+    """
+
+    _validate_alpha(alpha)
+    hac_lags = int(hac_lags)
+    if hac_lags < 0:
+        raise ValueError("hac_lags must be nonnegative")
+    frame = _aligned_frame(y_true, y_pred, names=("actual", "forecast"))
+    if len(frame) < 3:
+        return TestResult(
+            None,
+            None,
+            False,
+            "forecast_rationality",
+            None,
+            int(len(frame)),
+            {
+                "name": "Mincer-Zarnowitz",
+                "p_value_status": "insufficient_observations",
+                "hac_lags": int(hac_lags),
+            },
+        )
+    y = frame["actual"].to_numpy(dtype=float)
+    forecast = frame["forecast"].to_numpy(dtype=float)
+    x = np.column_stack([np.ones_like(forecast), forecast])
+
+    import statsmodels.api as sm
+    from scipy import stats as _stats
+
+    fit = sm.OLS(y, x).fit()
+    robust = fit.get_robustcov_results(cov_type="HAC", maxlags=hac_lags)
+    params = np.asarray(robust.params, dtype=float)
+    cov = np.asarray(robust.cov_params(), dtype=float)
+    restriction = params - np.asarray([0.0, 1.0], dtype=float)
+    cov_inv = np.linalg.pinv(cov)
+    wald = float(restriction @ cov_inv @ restriction)
+    df = 2
+    f_stat = float(wald / df)
+    p_value = float(_stats.chi2.sf(wald, df=df))
+    return TestResult(
+        statistic=wald,
+        p_value=p_value,
+        decision=bool(p_value < alpha),
+        alternative="forecast_rationality",
+        correction_policy=f"hac_lags_{hac_lags}",
+        n_obs=int(len(frame)),
+        metadata={
+            "name": "Mincer-Zarnowitz",
+            "intercept": float(params[0]),
+            "slope": float(params[1]),
+            "wald_statistic": wald,
+            "f_statistic": f_stat,
+            "df_constraints": df,
+            "hac_lags": int(hac_lags),
+            "null_hypothesis": "intercept=0 and slope=1",
+            "regression": "actual = intercept + slope * forecast + error",
+            "covariance": "statsmodels OLS HAC covariance",
+            "p_value_reference": "chi-square reference with df=2",
+            "p_value_status": "available",
+            "source_reference": "Mincer-Zarnowitz forecast-rationality regression",
+            "r_reference": None,
+        },
+    )
 
 
 def density_interval_tests(
@@ -1344,6 +1421,23 @@ def model_confidence_set(
     )
 
 
+_ARCH_DEPENDENT_LOSS_SIZE_CAVEAT: dict[str, Any] = {
+    "status": "known_dependent_loss_size_distortion",
+    "scope": "superior_predictive_ability_test, reality_check_test, stepm_test with serially dependent losses",
+    "finding": (
+        "Monte Carlo diagnostics show roughly 1.5-2x nominal over-rejection "
+        "under an equal-predictive-ability null when losses have nonzero AR(1) "
+        "dependence; iid-null diagnostics are correctly sized."
+    ),
+    "recommendation": (
+        "Use uspa/aspa for multi-horizon pairwise tests or model_confidence_set "
+        "for dependent-loss set comparison; treat arch-backed SPA/RC/StepM "
+        "dependent-loss p-values as diagnostic."
+    ),
+    "tracked_by": "tests/mc/test_spa_size.py and companion RC/StepM MC tests",
+}
+
+
 def superior_predictive_ability_test(
     loss_panel: pd.DataFrame,
     *,
@@ -1362,7 +1456,13 @@ def superior_predictive_ability_test(
     origin: str = "origin",
     model: str = "model_id",
 ) -> dict[str, Any]:
-    """White-Hansen superior predictive ability test via ``arch.bootstrap``."""
+    """White-Hansen superior predictive ability test via ``arch.bootstrap``.
+
+    Size caveat: dependent-null Monte Carlo diagnostics currently show roughly
+    1.5-2x nominal over-rejection when losses are serially correlated. The return
+    payload includes ``metadata.size_caveat``; prefer ``multi_horizon_spa_test``
+    (``uspa``/``aspa``) or ``model_confidence_set`` under dependent losses.
+    """
 
     return _arch_benchmark_multiple_comparison(
         loss_panel,
@@ -1402,7 +1502,13 @@ def reality_check_test(
     origin: str = "origin",
     model: str = "model_id",
 ) -> dict[str, Any]:
-    """White reality check against a benchmark via ``arch.bootstrap``."""
+    """White reality check against a benchmark via ``arch.bootstrap``.
+
+    Size caveat: this shares the arch-backed SPA path's dependent-loss
+    over-rejection disclosure. The return payload includes
+    ``metadata.size_caveat``; prefer ``model_confidence_set`` under dependent
+    losses.
+    """
 
     return _arch_benchmark_multiple_comparison(
         loss_panel,
@@ -1441,7 +1547,13 @@ def stepm_test(
     origin: str = "origin",
     model: str = "model_id",
 ) -> dict[str, Any]:
-    """Stepwise multiple-comparison test against a benchmark via ``arch.bootstrap``."""
+    """Stepwise multiple-comparison test against a benchmark via ``arch.bootstrap``.
+
+    Size caveat: dependent-null Monte Carlo diagnostics mirror the arch-backed
+    SPA/RC over-rejection disclosure. The return payload includes
+    ``metadata.size_caveat``; prefer ``model_confidence_set`` under dependent
+    losses.
+    """
 
     return _arch_benchmark_multiple_comparison(
         loss_panel,
@@ -2270,6 +2382,7 @@ def _arch_benchmark_multiple_comparison(
                 "backend": f"arch.bootstrap.{cls.__name__}",
                 "loss_orientation": "positive mean_loss_difference means candidate loss is lower than benchmark loss",
                 "mean_loss_difference": mean_loss_difference,
+                "size_caveat": dict(_ARCH_DEPENDENT_LOSS_SIZE_CAVEAT),
                 **references,
             }
         )
@@ -2281,6 +2394,8 @@ def _arch_benchmark_multiple_comparison(
     }[test]
     return _json_ready({
         "metadata_schema": {"kind": kind, "version": 1},
+        "metadata": {"size_caveat": dict(_ARCH_DEPENDENT_LOSS_SIZE_CAVEAT)},
+        "size_caveat": dict(_ARCH_DEPENDENT_LOSS_SIZE_CAVEAT),
         "records": records,
         "backend": f"arch.bootstrap.{cls.__name__}",
         "reference_note": (
@@ -4410,6 +4525,7 @@ __all__ = [
     "interval_coverage_test",
     "blocked_oob_reality_check",
     "iterative_model_confidence_set",
+    "mincer_zarnowitz_test",
     "model_confidence_set",
     "multi_horizon_spa_test",
     "nested_tests",
