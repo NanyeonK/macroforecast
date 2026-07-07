@@ -176,6 +176,7 @@ _LAZY_EXPORTS = {
     "bvar_minnesota": ".models",
     "bvar_normal_inverse_wishart": ".models",
     "catboost": ".models",
+    "csr": ".models",
     "custom_model": ".models",
     "component_aggregation": ".models",
     "dfm_mixed_mariano_murasawa": ".models",

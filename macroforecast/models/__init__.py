@@ -38,6 +38,7 @@ from .linear import (
     supervised_pca,
     supervised_scaled_pca,
 )
+from .model_averaging import csr
 from .neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
 from .nonparametric import kernel_ridge, knn
 from .persistence import SavedModel, load_fit, save_fit
@@ -149,8 +150,9 @@ __all__ = [
     "bvar_minnesota",
     "bvar_normal_inverse_wishart",
     "catboost",
-    "custom_model",
     "component_aggregation",
+    "csr",
+    "custom_model",
     "dfm_mixed_mariano_murasawa",
     "dfm_unrestricted_midas",
     "decision_tree",

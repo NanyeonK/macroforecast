@@ -17,3 +17,4 @@
 ## Gate log
 
 - `~/project/macroforecast/.venv/bin/python -m pytest tests/evaluation/test_metrics.py tests/pipeline/test_evalspec_threading.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> passed (`49 passed`, one existing rescore warning).
+- `~/project/macroforecast/.venv/bin/python -m pytest tests/models/test_standard_estimators.py --timeout=300 --timeout-method=thread -q -p no:cacheprovider` -> passed (`4 passed`) after CSR addition.

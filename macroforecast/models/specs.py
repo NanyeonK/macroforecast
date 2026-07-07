@@ -38,6 +38,7 @@ from macroforecast.models.linear import (
     supervised_pca,
     supervised_scaled_pca,
 )
+from macroforecast.models.model_averaging import csr
 from macroforecast.models.neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
 from macroforecast.models.nonparametric import kernel_ridge, knn
 from macroforecast.models.spline import mars
@@ -982,6 +983,26 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         method="cv_path",
         backend="internal + scipy.optimize.minimize(SLSQP)",
         description="Inflation-specific rank-space Albacore wrapper.",
+    ),
+    "csr": _spec(
+        "csr",
+        "model_averaging",
+        csr,
+        default_params={"k": 4, "max_subsets": 5000, "random_state": 1071},
+        parameters=(
+            _p("k", 4, "int", "Subset size for each OLS member."),
+            _p(
+                "max_subsets",
+                5000,
+                "int",
+                "Maximum distinct subsets to average before seeded subset sampling.",
+                False,
+            ),
+            _p("random_state", 1071, "int | None", "Seed for subset sampling.", False),
+        ),
+        method="none",
+        backend="internal numpy.linalg.lstsq",
+        description="Complete Subset Regression; averages OLS forecasts over k-predictor subsets.",
     ),
     "random_walk_ridge": _spec(
         "random_walk_ridge",
