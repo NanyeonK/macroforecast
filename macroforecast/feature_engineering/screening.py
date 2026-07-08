@@ -226,11 +226,11 @@ def _screen_scores(
             random_state=random_state,
         )
     x_resid, y_resid = _partial_residualize(x, y, controls_matrix)
-    x_scaled, _center, scale = _standardize_matrix(x_resid)
+    x_scaled, _center, _scale = _standardize_matrix(x_resid)
     model.fit(x_scaled, y_resid)
-    scores = np.abs(np.asarray(model.coef_, dtype=float)) / scale
+    scores = np.abs(np.asarray(model.coef_, dtype=float))
     scores = np.nan_to_num(scores, nan=0.0, posinf=0.0, neginf=0.0)
-    return scores, "absolute_sparse_coefficient", {
+    return scores, "absolute_standardized_sparse_coefficient", {
         "alpha": float(alpha),
         "l1_ratio": None if method == "lasso" else float(l1_ratio),
         "max_iter": int(max_iter),

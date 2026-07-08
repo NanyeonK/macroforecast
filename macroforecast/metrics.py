@@ -87,7 +87,10 @@ def mad(y_true: Any, y_pred: Any) -> float:
 
     For forecast errors ``e = actual - prediction``, ``mad`` is
     ``median(|e - median(e)|)`` over the evaluation window. This differs from
-    ``medae``, which is the uncentered ``median(|e|)``.
+    ``medae``, which is the uncentered ``median(|e|)``. Because centering makes
+    ``mad`` invariant to a constant forecast bias, it is a dispersion/spread
+    metric rather than an accuracy metric and should not be used as a selection
+    objective when calibration matters.
     """
 
     truth, pred = _aligned_values(y_true, y_pred)

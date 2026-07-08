@@ -62,6 +62,22 @@ def test_explicit_ic_search_spec_selects_ar2_and_bic_is_stricter() -> None:
     assert bic.method == "information_criterion:bic"
 
 
+def test_information_criterion_search_spec_allows_aicc() -> None:
+    y = _ar2(n=500, seed=11, sigma=0.5)
+    spec = SearchSpec(
+        method="information_criterion",
+        criterion="aicc",
+        param_grid={"n_lag": (1, 2, 4, 6, 12)},
+    )
+
+    result = mf.model_selection.select_params("ar", y, search=spec)
+
+    assert result.best_params["n_lag"] in {1, 2, 4, 6, 12}
+    assert np.isfinite(result.best_score)
+    assert result.metric == "aicc"
+    assert result.method == "information_criterion:aicc"
+
+
 def test_information_criterion_search_errors_for_non_ic_model() -> None:
     X, y = pd.DataFrame({"x": np.arange(30.0)}), pd.Series(np.arange(30.0))
     spec = SearchSpec(

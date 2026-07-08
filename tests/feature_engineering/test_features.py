@@ -1475,6 +1475,37 @@ def test_predictor_screen_methods_select_signal(method: str) -> None:
     assert result.scores["x1"] >= result.scores["x2"]
 
 
+@pytest.mark.parametrize("method", ["lasso", "elastic_net"])
+def test_predictor_screen_sparse_methods_rank_standardized_coefficients(method: str) -> None:
+    from macroforecast.feature_engineering.screening import fit_predictor_screen
+
+    rng = np.random.default_rng(321)
+    periods = 180
+    signal = rng.standard_normal(periods)
+    weaker = rng.standard_normal(periods)
+    X = pd.DataFrame(
+        {
+            "large_scale_signal": 100.0 * signal,
+            "small_scale_weaker": weaker,
+        }
+    )
+    y = pd.Series(signal + 0.35 * weaker + 0.02 * rng.standard_normal(periods))
+
+    result = fit_predictor_screen(
+        X,
+        y,
+        method=method,
+        top_k=1,
+        min_k=1,
+        threshold=0.0,
+        alpha=0.001,
+        l1_ratio=0.5,
+    )
+
+    assert result.selected_columns == ("large_scale_signal",)
+    assert result.scores["large_scale_signal"] > result.scores["small_scale_weaker"]
+
+
 def test_feature_spec_composes_predictor_screen_then_pca() -> None:
     periods = 40
     dates = pd.date_range("2000-01-01", periods=periods, freq="MS")

@@ -5,6 +5,14 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `analysis`, `feature_engineering`, `model_selection`, `metrics.py`, docs/tests
+  (stage-2 review fixes): changed `axis_contribution(...)` to default to
+  date-aggregated Driscoll-Kraay standard errors (`vcov="driscoll_kraay"`) while
+  preserving identical point estimates and retaining the legacy row-stacked HAC
+  path as `vcov="hac"`. Added date-clustered CR0 and explicit HC0 covariance
+  choices, made sparse predictor-screen ranking use standardized coefficient
+  magnitudes, documented `mad` as a dispersion metric rather than an accuracy
+  objective, and allowed `criterion="aicc"` through information-criterion search.
 - `models/timeseries.py`, `models/specs.py`, `pipeline/spec.py`, docs/tests
   (feature, A1 benchmark lane): added the target-only `hist_mean` historical
   (prevailing) mean benchmark with optional rolling `window`, direct-safe policy
