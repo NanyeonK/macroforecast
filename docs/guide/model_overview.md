@@ -79,7 +79,7 @@ Each family has a detail page with a per-model table of inputs, optional depende
 
 - [Linear and regularized](models/linear.md) — 16 models
 - [Factor models](models/factor.md) — 2 models
-- [Classical time series](models/timeseries.md) — 13 models
+- [Classical time series](models/timeseries.md) — 14 models
 - [Bayesian state-space](models/bayesian.md) — 1 models
 - [Model averaging](models/model_averaging.md) — 2 models
 - [Tree ensembles](models/tree.md) — 11 models
