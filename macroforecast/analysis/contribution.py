@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
 
 Outcome = Literal["r2", "squared_error", "absolute_error"]
+Vcov = Literal["hc0", "hac", "driscoll_kraay", "cluster"]
 
 
 def axis_contribution(
@@ -18,6 +19,8 @@ def axis_contribution(
     fixed_effects: tuple[str, ...] = ("target", "horizon", "date"),
     interactions: Mapping[str, pd.Series] | None = None,
     hac_lags: int | None = None,
+    vcov: Vcov = "driscoll_kraay",
+    cluster_by: str = "date",
     weights: Any = None,
     reference: str | None = None,
 ) -> pd.DataFrame:
@@ -43,11 +46,24 @@ def axis_contribution(
     OOS R2. Pass ``reference=`` to make the base explicit; if omitted, the helper
     infers it deterministically and records that choice in ``attrs``.
 
-    Standard errors come from :func:`macroforecast.data_analysis.newey_west`, a
-    Bartlett/Newey-West HAC covariance for OLS. Rows are sorted by ``date`` (or
-    ``origin`` when no date column exists) before fitting; ``hac_lags=None`` uses
-    zero lags. This is a descriptive attribution regression for forecast-error
-    decomposition. It does not identify causal effects of model-design features.
+    Standard errors default to ``vcov="driscoll_kraay"``. This aggregates OLS
+    score contributions within each distinct ``date`` and applies a Bartlett HAC
+    kernel over the ordered dates, making the reported inference robust to
+    within-date cross-sectional dependence and date-serial correlation. When
+    ``hac_lags=None``, the bandwidth is the Newey-West fixed rule
+    ``floor(4 * (T / 100) ** (2 / 9))`` over the number of distinct dates,
+    truncated at ``T - 1``. This is a behavior change from the original
+    row-stacked HAC path; coefficients are unchanged, but standard errors now
+    match the GCLS-style panel inference by default.
+
+    Other covariance choices are explicit: ``vcov="cluster"`` uses one-way
+    date-clustered CR0 scores with no serial kernel, ``vcov="hc0"`` uses White
+    HC0 on stacked rows, and ``vcov="hac"`` preserves the legacy single-index
+    row-stacked Newey-West calculation. The legacy ``"hac"`` option is not a
+    panel estimator because adjacent rows may be different targets, horizons, or
+    contenders at the same date. This is a descriptive attribution regression
+    for forecast-error decomposition. It does not identify causal effects of
+    model-design features.
 
     Returns
     -------
@@ -65,9 +81,14 @@ def axis_contribution(
         raise ValueError("outcome must be one of 'r2', 'squared_error', or 'absolute_error'")
     if hac_lags is not None and int(hac_lags) < 0:
         raise ValueError("hac_lags must be nonnegative or None")
+    vcov_key = _normalize_vcov(vcov)
 
     _require_columns(master, ("actual", "prediction"))
     work = _sort_for_hac(master.copy())
+    if vcov_key in {"driscoll_kraay", "cluster"}:
+        if cluster_by != "date":
+            raise ValueError("cluster_by currently only supports 'date'")
+        _require_columns(work, (cluster_by,))
     y, outcome_meta = _outcome_values(work, outcome=outcome, reference=reference)
     work["_mf_axis_outcome"] = y
 
@@ -112,10 +133,18 @@ def axis_contribution(
         fit_y = y_fit * sqrt_w
         fit_x = x_ranked.mul(sqrt_w, axis=0)
 
-    from macroforecast.data_analysis import newey_west
-
-    lags = 0 if hac_lags is None else int(hac_lags)
-    fit = newey_west(fit_x, fit_y, lags=lags, add_intercept=False)
+    fit = _axis_ols_inference(
+        fit_x,
+        fit_y,
+        vcov=vcov_key,
+        hac_lags=hac_lags,
+        cluster_values=(
+            work.loc[finite, cluster_by]
+            if vcov_key in {"driscoll_kraay", "cluster"}
+            else None
+        ),
+        cluster_by=cluster_by,
+    )
     by_name = {
         str(row["name"]): row
         for row in fit["coefficients"]
@@ -141,7 +170,9 @@ def axis_contribution(
                 "outcome": outcome,
                 "fe_spec": fe_spec,
                 "hac_lags": int(fit["lags"]),
-                "covariance": "newey_west_bartlett",
+                "vcov": str(fit["vcov"]),
+                "cluster_by": fit.get("cluster_by"),
+                "covariance": str(fit["covariance"]),
                 "reference": outcome_meta.get("reference"),
             }
         )
@@ -160,6 +191,8 @@ def axis_contribution(
             "outcome",
             "fe_spec",
             "hac_lags",
+            "vcov",
+            "cluster_by",
             "covariance",
             "reference",
         ],
@@ -192,12 +225,17 @@ def axis_contribution(
         "fixed_effects": list(fixed_effects),
         "fe_spec": fe_spec,
         "hac_lags": int(fit["lags"]),
-        "hac_lag_source": "default_zero" if hac_lags is None else "user",
+        "hac_lag_source": str(fit["lag_source"]),
+        "vcov": str(fit["vcov"]),
+        "covariance": str(fit["covariance"]),
+        "cluster_by": fit.get("cluster_by"),
+        "n_clusters": fit.get("n_clusters"),
+        "single_cluster_fallback": bool(fit.get("single_cluster_fallback", False)),
         "weights": "provided" if weights_used else None,
         "n_obs": int(fit["n_obs"]),
         "n_coef": int(fit["n_coef"]),
         "dropped_collinear_columns": dropped_columns,
-        "estimator": "OLS with dummy-absorbed fixed effects and Newey-West HAC covariance",
+        "estimator": "OLS with dummy-absorbed fixed effects and explicit covariance choice",
         "causal_interpretation": False,
     }
     result.attrs["macroforecast_metadata_schema"] = {
@@ -213,6 +251,246 @@ def _require_columns(frame: pd.DataFrame, columns: Sequence[str]) -> None:
     missing = [column for column in columns if column not in frame.columns]
     if missing:
         raise ValueError(f"axis_contribution requires column(s): {missing}")
+
+
+def _normalize_vcov(vcov: str) -> Vcov:
+    key = str(vcov).lower()
+    allowed = {"hc0", "hac", "driscoll_kraay", "cluster"}
+    if key not in allowed:
+        raise ValueError(
+            "vcov must be one of 'hc0', 'hac', 'driscoll_kraay', or 'cluster'"
+        )
+    return cast(Vcov, key)
+
+
+def _axis_ols_inference(
+    x: pd.DataFrame,
+    y: pd.Series,
+    *,
+    vcov: Vcov,
+    hac_lags: int | None,
+    cluster_values: pd.Series | None,
+    cluster_by: str,
+) -> dict[str, Any]:
+    if vcov == "hc0":
+        return _stacked_newey_west(
+            x,
+            y,
+            lags=0,
+            vcov="hc0",
+            covariance="white_hc0_stacked",
+            lag_source="not_applicable",
+        )
+    if vcov == "hac":
+        lags = 0 if hac_lags is None else int(hac_lags)
+        return _stacked_newey_west(
+            x,
+            y,
+            lags=lags,
+            vcov="hac",
+            covariance="newey_west_bartlett_stacked",
+            lag_source="default_zero" if hac_lags is None else "user",
+        )
+    if cluster_values is None:
+        raise ValueError(f"vcov={vcov!r} requires cluster values")
+    groups = _date_cluster_values(cluster_values, cluster_by=cluster_by)
+    group_count = int(groups.nunique(dropna=False))
+    if vcov == "cluster":
+        lags = 0
+        lag_source = "not_applicable"
+    else:
+        lags = _panel_hac_lags(group_count, hac_lags)
+        lag_source = "newey_west_rule_dates" if hac_lags is None else "user"
+    return _panel_score_sandwich(
+        x,
+        y,
+        groups,
+        lags=lags,
+        vcov=vcov,
+        covariance=(
+            "driscoll_kraay_bartlett_date"
+            if vcov == "driscoll_kraay"
+            else "cluster_date_cr0"
+        ),
+        lag_source=lag_source,
+        cluster_by=cluster_by,
+    )
+
+
+def _stacked_newey_west(
+    x: pd.DataFrame,
+    y: pd.Series,
+    *,
+    lags: int,
+    vcov: Vcov,
+    covariance: str,
+    lag_source: str,
+) -> dict[str, Any]:
+    names, beta, bread, scores, n_obs, k = _ols_score_components(x, y)
+    meat = _bartlett_meat(scores, int(lags))
+    return _sandwich_result(
+        names,
+        beta,
+        bread,
+        meat,
+        n_obs=n_obs,
+        k=k,
+        lags=int(lags),
+        vcov=vcov,
+        covariance=covariance,
+        lag_source=lag_source,
+        cluster_by=None,
+        n_clusters=None,
+        single_cluster_fallback=False,
+        kernel="bartlett" if vcov == "hac" else None,
+    )
+
+
+def _panel_hac_lags(n_groups: int, hac_lags: int | None) -> int:
+    if n_groups <= 1:
+        return 0
+    if hac_lags is None:
+        lags = int(np.floor(4.0 * (n_groups / 100.0) ** (2.0 / 9.0)))
+    else:
+        lags = int(hac_lags)
+    return min(lags, n_groups - 1)
+
+
+def _date_cluster_values(values: pd.Series, *, cluster_by: str) -> pd.Series:
+    if values.isna().any():
+        raise ValueError(f"vcov clustering requires non-missing {cluster_by!r} values")
+    dates = pd.to_datetime(values)
+    if pd.isna(dates).any():
+        raise ValueError(f"vcov clustering requires valid {cluster_by!r} values")
+    return pd.Series(dates, index=values.index, name=cluster_by)
+
+
+def _panel_score_sandwich(
+    x: pd.DataFrame,
+    y: pd.Series,
+    groups: pd.Series,
+    *,
+    lags: int,
+    vcov: Vcov,
+    covariance: str,
+    lag_source: str,
+    cluster_by: str,
+) -> dict[str, Any]:
+    names, beta, bread, scores, n_obs, k = _ols_score_components(x, y)
+    group_scores = _aggregate_scores_by_group(scores, groups)
+    n_groups = int(group_scores.shape[0])
+    single_cluster_fallback = n_groups <= 1
+    if single_cluster_fallback:
+        meat = scores.T @ scores
+        lags = 0
+    else:
+        meat = _bartlett_meat(group_scores, int(lags))
+
+    return _sandwich_result(
+        names,
+        beta,
+        bread,
+        meat,
+        n_obs=n_obs,
+        k=k,
+        lags=int(lags),
+        vcov=vcov,
+        covariance=covariance,
+        lag_source=lag_source,
+        cluster_by=cluster_by,
+        n_clusters=n_groups,
+        single_cluster_fallback=single_cluster_fallback,
+        kernel="bartlett" if vcov == "driscoll_kraay" else None,
+    )
+
+
+def _ols_score_components(
+    x: pd.DataFrame,
+    y: pd.Series,
+) -> tuple[list[str], np.ndarray, np.ndarray, np.ndarray, int, int]:
+    names = [str(column) for column in x.columns]
+    x_mat = np.asarray(x, dtype=float)
+    y_vec = np.asarray(y, dtype=float).ravel()
+    n_obs, k = x_mat.shape
+    if n_obs <= k:
+        raise ValueError("axis_contribution needs more observations than coefficients")
+    xtx = x_mat.T @ x_mat
+    bread = np.linalg.inv(xtx)
+    beta = bread @ (x_mat.T @ y_vec)
+    resid = y_vec - x_mat @ beta
+    scores = x_mat * resid[:, None]
+    return names, beta, bread, scores, int(n_obs), int(k)
+
+
+def _sandwich_result(
+    names: list[str],
+    beta: np.ndarray,
+    bread: np.ndarray,
+    meat: np.ndarray,
+    *,
+    n_obs: int,
+    k: int,
+    lags: int,
+    vcov: Vcov,
+    covariance: str,
+    lag_source: str,
+    cluster_by: str | None,
+    n_clusters: int | None,
+    single_cluster_fallback: bool,
+    kernel: str | None,
+) -> dict[str, Any]:
+    from scipy import stats as _stats
+
+    vcov_matrix = bread @ meat @ bread
+    se = np.sqrt(np.maximum(np.diag(vcov_matrix), 0.0))
+    tstat = np.divide(beta, se, out=np.full_like(beta, np.nan), where=se > 0)
+    pval = 2.0 * _stats.t.sf(np.abs(tstat), df=n_obs - k)
+    coefficients = [
+        {
+            "name": names[i],
+            "estimate": float(beta[i]),
+            "std_error": float(se[i]),
+            "t_value": float(tstat[i]),
+            "p_value": float(pval[i]),
+        }
+        for i in range(k)
+    ]
+    return {
+        "n_obs": int(n_obs),
+        "n_coef": int(k),
+        "names": names,
+        "lags": int(lags),
+        "kernel": kernel,
+        "coefficients": coefficients,
+        "estimate": beta.tolist(),
+        "std_error": se.tolist(),
+        "t_value": tstat.tolist(),
+        "p_value": pval.tolist(),
+        "vcov": vcov,
+        "covariance": covariance,
+        "lag_source": lag_source,
+        "cluster_by": cluster_by,
+        "n_clusters": n_clusters,
+        "single_cluster_fallback": single_cluster_fallback,
+        "vcov_matrix": vcov_matrix.tolist(),
+    }
+
+
+def _aggregate_scores_by_group(scores: np.ndarray, groups: pd.Series) -> np.ndarray:
+    frame = pd.DataFrame(scores)
+    frame["_mf_cluster"] = groups.to_numpy()
+    aggregated = frame.groupby("_mf_cluster", sort=True).sum(numeric_only=True)
+    return np.asarray(aggregated, dtype=float)
+
+
+def _bartlett_meat(scores: np.ndarray, lags: int) -> np.ndarray:
+    band = min(max(int(lags), 0), scores.shape[0] - 1)
+    meat = scores.T @ scores
+    for lag in range(1, band + 1):
+        weight = 1.0 - lag / (band + 1.0)
+        gamma = scores[lag:].T @ scores[:-lag]
+        meat += weight * (gamma + gamma.T)
+    return meat
 
 
 def _sort_for_hac(frame: pd.DataFrame) -> pd.DataFrame:

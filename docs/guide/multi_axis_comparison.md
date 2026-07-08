@@ -100,7 +100,7 @@ contrib = mf.axis_contribution(
     outcome="r2",
     reference="linear_base",
     fixed_effects=("target", "horizon", "date"),
-    hac_lags=0,
+    vcov="driscoll_kraay",
 )
 
 contrib[["feature", "level", "coef", "se", "p"]]
@@ -108,7 +108,12 @@ contrib[["feature", "level", "coef", "se", "p"]]
 
 The contribution table is intentionally tidy: one row per estimated tag level or
 interaction term. It can be sent directly to `DataFrame.to_latex()` or joined to
-your own reporting labels.
+your own reporting labels. `vcov="driscoll_kraay"` is the GCLS-style inference
+choice: it aggregates score contributions by forecast date and applies a
+Bartlett kernel across dates, covering both same-date cross-sectional dependence
+and serial dependence across forecast dates. The helper uses this estimator by
+default; `vcov="cluster"` gives date-clustered CR0 standard errors, while
+`vcov="hac"` keeps the legacy row-stacked Newey-West calculation for comparison.
 
 ## State Interactions
 
@@ -130,6 +135,7 @@ state_contrib = mf.axis_contribution(
     outcome="squared_error",
     interactions={"macro_u": macro_state},
     fixed_effects=("target", "horizon", "date"),
+    vcov="driscoll_kraay",
     hac_lags=1,
 )
 ```
