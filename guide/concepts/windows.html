@@ -563,7 +563,8 @@ split whose training block grows through the fold:</p>
 <p>Use information-criterion selection when candidates should be scored on the fit
 sample instead of a held-out validation block. The fitted model must expose
 <code class="docutils literal notranslate"><span class="pre">ssr_</span></code>, <code class="docutils literal notranslate"><span class="pre">nobs_</span></code>, and <code class="docutils literal notranslate"><span class="pre">n_params_</span></code>; AR/FAR-style RSS models do, while generic
-supervised regressors do not promise that interface:</p>
+supervised regressors do not promise that interface. <code class="docutils literal notranslate"><span class="pre">criterion</span></code> accepts <code class="docutils literal notranslate"><span class="pre">&quot;aic&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;aicc&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;bic&quot;</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">search</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">SearchSpec</span><span class="p">(</span>
     <span class="n">method</span><span class="o">=</span><span class="s2">&quot;information_criterion&quot;</span><span class="p">,</span>
     <span class="n">criterion</span><span class="o">=</span><span class="s2">&quot;bic&quot;</span><span class="p">,</span>

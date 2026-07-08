@@ -593,7 +593,7 @@ metadata, so changing tags does not change result-store cell digests.</p>
     <span class="n">outcome</span><span class="o">=</span><span class="s2">&quot;r2&quot;</span><span class="p">,</span>
     <span class="n">reference</span><span class="o">=</span><span class="s2">&quot;linear_base&quot;</span><span class="p">,</span>
     <span class="n">fixed_effects</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">),</span>
-    <span class="n">hac_lags</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">vcov</span><span class="o">=</span><span class="s2">&quot;driscoll_kraay&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">contrib</span><span class="p">[[</span><span class="s2">&quot;feature&quot;</span><span class="p">,</span> <span class="s2">&quot;level&quot;</span><span class="p">,</span> <span class="s2">&quot;coef&quot;</span><span class="p">,</span> <span class="s2">&quot;se&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">]]</span>
@@ -601,7 +601,12 @@ metadata, so changing tags does not change result-store cell digests.</p>
 </div>
 <p>The contribution table is intentionally tidy: one row per estimated tag level or
 interaction term. It can be sent directly to <code class="docutils literal notranslate"><span class="pre">DataFrame.to_latex()</span></code> or joined to
-your own reporting labels.</p>
+your own reporting labels. <code class="docutils literal notranslate"><span class="pre">vcov=&quot;driscoll_kraay&quot;</span></code> is the GCLS-style inference
+choice: it aggregates score contributions by forecast date and applies a
+Bartlett kernel across dates, covering both same-date cross-sectional dependence
+and serial dependence across forecast dates. The helper uses this estimator by
+default; <code class="docutils literal notranslate"><span class="pre">vcov=&quot;cluster&quot;</span></code> gives date-clustered CR0 standard errors, while
+<code class="docutils literal notranslate"><span class="pre">vcov=&quot;hac&quot;</span></code> keeps the legacy row-stacked Newey-West calculation for comparison.</p>
 </section>
 <section id="state-interactions">
 <h2>State Interactions<a class="headerlink" href="#state-interactions" title="Link to this heading">#</a></h2>
@@ -621,6 +626,7 @@ with the treatment regressors it builds from the tag columns.</p>
     <span class="n">outcome</span><span class="o">=</span><span class="s2">&quot;squared_error&quot;</span><span class="p">,</span>
     <span class="n">interactions</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;macro_u&quot;</span><span class="p">:</span> <span class="n">macro_state</span><span class="p">},</span>
     <span class="n">fixed_effects</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">),</span>
+    <span class="n">vcov</span><span class="o">=</span><span class="s2">&quot;driscoll_kraay&quot;</span><span class="p">,</span>
     <span class="n">hac_lags</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>

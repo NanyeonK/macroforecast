@@ -567,7 +567,10 @@ Median absolute deviation of forecast errors around their median.
 
 For forecast errors ``e = actual - prediction``, ``mad`` is
 ``median(|e - median(e)|)`` over the evaluation window. This differs from
-``medae``, which is the uncentered ``median(|e|)``.
+``medae``, which is the uncentered ``median(|e|)``. Because centering makes
+``mad`` invariant to a constant forecast bias, it is a dispersion/spread
+metric rather than an accuracy metric and should not be used as a selection
+objective when calibration matters.
 
 #### Parameters
 

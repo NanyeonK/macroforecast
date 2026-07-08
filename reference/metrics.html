@@ -1632,7 +1632,10 @@
 <p>Median absolute deviation of forecast errors around their median.</p>
 <p>For forecast errors <code class="docutils literal notranslate"><span class="pre">e</span> <span class="pre">=</span> <span class="pre">actual</span> <span class="pre">-</span> <span class="pre">prediction</span></code>, <code class="docutils literal notranslate"><span class="pre">mad</span></code> is
 <code class="docutils literal notranslate"><span class="pre">median(|e</span> <span class="pre">-</span> <span class="pre">median(e)|)</span></code> over the evaluation window. This differs from
-<code class="docutils literal notranslate"><span class="pre">medae</span></code>, which is the uncentered <code class="docutils literal notranslate"><span class="pre">median(|e|)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">medae</span></code>, which is the uncentered <code class="docutils literal notranslate"><span class="pre">median(|e|)</span></code>. Because centering makes
+<code class="docutils literal notranslate"><span class="pre">mad</span></code> invariant to a constant forecast bias, it is a dispersion/spread
+metric rather than an accuracy metric and should not be used as a selection
+objective when calibration matters.</p>
 </section>
 <section id="id68">
 <h4>Parameters<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
