@@ -66,6 +66,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `align_reference_weights` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `alignment_drop_incomplete` | [`macroforecast.window`](window.md) | function |
 | `alignment_keep_missing` | [`macroforecast.window`](window.md) | function |
+| `analysis` | `macroforecast.analysis` | module |
 | `ar` | [`macroforecast.models`](models.md) | function |
 | `arima` | [`macroforecast.models`](models.md) | function |
 | `as_panel` | [`macroforecast.data`](data.md) | function |
@@ -75,6 +76,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `auto_arima` | [`macroforecast.models`](models.md) | function |
 | `availability_lag` | [`macroforecast.data`](data.md) | function |
 | `average_target` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `axis_contribution` | `macroforecast.analysis` | function |
 | `bagging` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
 | `bayesian_ridge` | [`macroforecast.models`](models.md) | function |
 | `bayesian_search` | [`macroforecast.model_selection`](model_selection.md) | function |
@@ -389,6 +391,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `macroforecast.data_analysis` | [`macroforecast.data_analysis`](data_analysis.md) |
 | `macroforecast.feature_analysis` | [`macroforecast.feature_analysis`](feature_analysis.md) |
 | `macroforecast.feature_diagnostic` | `macroforecast.feature_diagnostic` |
+| `macroforecast.analysis` | `macroforecast.analysis` |
 | `macroforecast.filters` | [`macroforecast.filters`](filters.md) |
 | `macroforecast.forecast_analysis` | [`macroforecast.forecast_analysis`](forecast_analysis.md) |
 | `macroforecast.forecast_diagnostic` | `macroforecast.forecast_diagnostic` |

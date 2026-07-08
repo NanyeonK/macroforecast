@@ -44,6 +44,14 @@ full per-version honesty-pass history embedded in repo documentation.
   `selection_frequency_table(...)`; opt-out remains the default and writes no
   sidecars. Added `direct_target(..., transform="log_average_value")` and
   `impute="zero"` for direct and fit-window preprocessing.
+- `pipeline/spec.py`, `pipeline/run.py`, `analysis`, docs/tests (feature, A3
+  tags + contribution lane): added first-class scalar `Arm.tags` that propagate
+  to master forecast rows as `tag_<key>` columns without entering result-store
+  cell digests, echo in pipeline provenance, and work in serial/parallel runs.
+  Added `mf.axis_contribution(...)` / `mf.analysis.axis_contribution(...)` for
+  descriptive treatment-style regressions of forecast-error outcomes on tag
+  features with target-horizon-date fixed effects, Newey-West HAC standard
+  errors, user-supplied state interactions, and benchmark-relative pseudo-R2.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now
