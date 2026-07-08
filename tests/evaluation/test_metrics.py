@@ -28,6 +28,7 @@ def test_point_relative_and_direction_metrics() -> None:
     assert mf.metrics.rmse(actual, model) == np.sqrt(mf.metrics.mse(actual, model))
     assert mf.metrics.mae(actual, model) == np.mean([0.0, 0.5, 0.5])
     assert mf.metrics.bias(actual, model) == np.mean([0.0, -0.5, 0.5])
+    assert mf.metrics.mad(actual, model) == 0.5
     assert mf.metrics.medae(actual, model) == 0.5
     assert np.isclose(
         mf.metrics.mape(actual, model), np.mean([0.0, 0.25, 0.125]) * 100.0
@@ -45,6 +46,17 @@ def test_point_relative_and_direction_metrics() -> None:
 
     with pytest.raises(ValueError, match="support must match"):
         mf.metrics.relative_mse(actual.iloc[:2], model.iloc[:2], bench)
+
+
+def test_mad_hand_computed_oracle() -> None:
+    actual = pd.Series([11.0, 14.0, 10.0, 17.0, 41.0, np.nan], index=list("abcdef"))
+    forecast = pd.Series([10.0, 12.0, 8.0, 15.0, 21.0, 0.0], index=list("abcdef"))
+
+    assert mf.metrics.mad(actual, forecast) == 0.0
+    assert mf.metrics.medae(actual, forecast) == 2.0
+    assert mf.metrics.mad(actual, forecast) != mf.metrics.medae(actual, forecast)
+    assert mf.metrics.get_metric("mad") is mf.metrics.mad
+    assert mf.metrics.metric_kind("mad") == "point"
 
 
 def test_forecast_return_sign_and_risk_adjusted_metrics() -> None:

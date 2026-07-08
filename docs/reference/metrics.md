@@ -26,6 +26,7 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 | `interval_width` | function | Mean forecast interval width. |
 | `log_score` | function | Alias for Gaussian negative log score; lower is better. |
 | `mae` | function | Mean absolute error. |
+| `mad` | function | Median absolute deviation of forecast errors around their median. |
 | `mape` | function | Mean absolute percentage error on the 0-100 scale. |
 | `max_drawdown` | function | Return the most negative drawdown of a forecast-return path. |
 | `medae` | function | Median absolute error. |
@@ -549,6 +550,42 @@ Mean absolute error.
 import macroforecast as mf
 # Call with the signature above:
 # mf.metrics.mae(...)
+```
+### mad
+
+Qualified name: `macroforecast.metrics.mad`
+
+#### Signature
+
+```python
+macroforecast.metrics.mad(y_true: Any, y_pred: Any) -> float
+```
+
+#### Description
+
+Median absolute deviation of forecast errors around their median.
+
+For forecast errors ``e = actual - prediction``, ``mad`` is
+``median(|e - median(e)|)`` over the evaluation window. This differs from
+``medae``, which is the uncentered ``median(|e|)``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `y_true` | positional or keyword | `Any` | `required` |
+| `y_pred` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`float`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.metrics.mad(...)
 ```
 ### mape
 

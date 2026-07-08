@@ -17,6 +17,7 @@ from macroforecast.models.assemblage import (
     rank_aggregation,
     supervised_aggregation,
 )
+from macroforecast.models.bayesian import ucsv
 from macroforecast.models.linear import (
     adaptive_elastic_net,
     adaptive_lasso,
@@ -38,6 +39,7 @@ from macroforecast.models.linear import (
     supervised_pca,
     supervised_scaled_pca,
 )
+from macroforecast.models.model_averaging import csr, jma
 from macroforecast.models.neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
 from macroforecast.models.nonparametric import kernel_ridge, knn
 from macroforecast.models.spline import mars
@@ -983,6 +985,73 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         method="cv_path",
         backend="internal + scipy.optimize.minimize(SLSQP)",
         description="Inflation-specific rank-space Albacore wrapper.",
+    ),
+    "csr": _spec(
+        "csr",
+        "model_averaging",
+        csr,
+        default_params={"k": 4, "max_subsets": 5000, "random_state": 1071},
+        parameters=(
+            _p("k", 4, "int", "Subset size for each OLS member."),
+            _p(
+                "max_subsets",
+                5000,
+                "int",
+                "Maximum distinct subsets to average before seeded subset sampling.",
+                False,
+            ),
+            _p("random_state", 1071, "int | None", "Seed for subset sampling.", False),
+        ),
+        method="none",
+        backend="internal numpy.linalg.lstsq",
+        description="Complete Subset Regression; averages OLS forecasts over k-predictor subsets.",
+    ),
+    "jma": _spec(
+        "jma",
+        "model_averaging",
+        jma,
+        default_params={"candidates": "nested", "max_iter": 1000, "tol": 1e-9},
+        parameters=(
+            _p(
+                "candidates",
+                "nested",
+                "str",
+                "Candidate model family; currently nested ordered OLS models.",
+                False,
+            ),
+            _p("max_iter", 1000, "int", "SLSQP solver iteration cap.", False),
+            _p("tol", 1e-9, "float", "SLSQP solver tolerance.", False),
+        ),
+        method="none",
+        backend="internal numpy.linalg + scipy.optimize.minimize(SLSQP)",
+        description="Jackknife Model Averaging with simplex weights chosen by OLS leave-one-out CV.",
+    ),
+    "ucsv": _spec(
+        "ucsv",
+        "bayesian",
+        ucsv,
+        default_params={
+            "n_draws": 5000,
+            "burn": 1000,
+            "gamma": 0.2,
+            "random_state": 1071,
+        },
+        parameters=(
+            _p("n_draws", 5000, "int", "Total Gibbs sampler draws.", False),
+            _p("burn", 1000, "int", "Initial draws discarded as burn-in.", False),
+            _p(
+                "gamma",
+                0.2,
+                "float",
+                "Random-walk innovation variance for both log-volatility states.",
+                False,
+            ),
+            _p("random_state", 1071, "int | None", "Gibbs sampler seed.", False),
+        ),
+        method="none",
+        input_kind="target",
+        backend="internal Gibbs sampler",
+        description="Stock-Watson UCSV target-only benchmark with horizon-invariant final-trend forecasts.",
     ),
     "random_walk_ridge": _spec(
         "random_walk_ridge",
