@@ -39,8 +39,11 @@ trivial act of listing the directory.
 """
 from __future__ import annotations
 
+import json
+import os
 import re
-from collections.abc import Mapping
+import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -70,10 +73,32 @@ LEAN_FORECAST_COLUMNS: tuple[str, ...] = (
 )
 
 _ORIGIN_FILE_RE = re.compile(r"^origin_(-?\d+)\.parquet$")
+_ORIGIN_SELECTION_FILE_RE = re.compile(r"^origin_(-?\d+)_selection\.jsonl$")
+
+SELECTION_HISTORY_COLUMNS: tuple[str, ...] = (
+    "target",
+    "arm",
+    "horizon",
+    "origin",
+    "origin_pos",
+    "date",
+    "kind",
+    "name",
+    "value",
+    "model",
+    "step",
+    "method",
+    "score",
+    "source",
+)
 
 
 def _origin_filename(origin_pos: Any) -> str:
     return f"origin_{int(origin_pos)}.parquet"
+
+
+def _origin_selection_filename(origin_pos: Any) -> str:
+    return f"origin_{int(origin_pos)}_selection.jsonl"
 
 
 def _quantile_column_name(level: float) -> str:
@@ -201,6 +226,73 @@ def append_origin_records(
     tmp_path.replace(final_path)
 
 
+def append_origin_selection_records(
+    checkpoint_path: str | Path,
+    origin_pos: Any,
+    records: Sequence[Mapping[str, Any]],
+) -> None:
+    """Atomically persist one origin's optional selection-history sidecar.
+
+    The sidecar is newline-delimited JSON next to ``origin_<pos>.parquet``. It is
+    intentionally independent of the lean forecast parquet schema, so enabling
+    selection history does not perturb checkpoint/rescore forecast loading.
+    """
+    directory = Path(checkpoint_path)
+    directory.mkdir(parents=True, exist_ok=True)
+    final_path = directory / _origin_selection_filename(origin_pos)
+    fd, tmp_name = tempfile.mkstemp(
+        suffix=".tmp",
+        prefix=f".{final_path.name}.",
+        dir=directory,
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            for record in records:
+                payload = json.dumps(
+                    dict(record),
+                    sort_keys=True,
+                    ensure_ascii=True,
+                    default=_json_default,
+                )
+                handle.write(payload + "\n")
+        Path(tmp_name).replace(final_path)
+    except OSError:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
+
+
+def load_selection_history_frame(checkpoint_path: str | Path) -> pd.DataFrame:
+    """Load optional selection-history JSONL sidecars from one checkpoint dir."""
+    directory = Path(checkpoint_path)
+    empty = pd.DataFrame(columns=list(SELECTION_HISTORY_COLUMNS))
+    if not directory.exists():
+        return empty
+    records: list[dict[str, Any]] = []
+    for path in sorted(directory.glob("origin_*_selection.jsonl")):
+        match = _ORIGIN_SELECTION_FILE_RE.match(path.name)
+        if match is None:
+            continue
+        forecast_path = directory / _origin_filename(int(match.group(1)))
+        if not forecast_path.exists():
+            continue
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                for line in handle:
+                    text = line.strip()
+                    if not text:
+                        continue
+                    records.append(json.loads(text))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+    if not records:
+        return empty
+    frame = pd.DataFrame.from_records(records)
+    for column in SELECTION_HISTORY_COLUMNS:
+        if column not in frame.columns:
+            frame[column] = pd.NA
+    return frame
+
+
 def load_checkpoint_frame(checkpoint_path: str | Path) -> pd.DataFrame:
     """Load all persisted lean records as a single frame (empty if none/missing).
 
@@ -236,3 +328,14 @@ def load_checkpoint_frame(checkpoint_path: str | Path) -> pd.DataFrame:
             _quantile_dict_from_wide(row) for row in result.to_dict(orient="records")
         ]
     return result
+
+
+def _json_default(value: Any) -> Any:
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except (TypeError, ValueError):
+            pass
+    return str(value)

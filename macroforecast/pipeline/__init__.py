@@ -8,6 +8,7 @@ from .rescore import rescore
 from .model_store import purge_model_store
 from .result_store import purge_result_store, result_store_summary
 from .run import run_arms, run_pipeline
+from .selection_history import selection_frequency_table, selection_history
 from .spec import (
     TCODE_TARGET_MAP,
     Arm,
@@ -36,6 +37,8 @@ __all__ = [
     "purge_result_store",
     "run_arms",
     "run_pipeline",
+    "selection_history",
+    "selection_frequency_table",
     "interpret_pipeline",
     "PipelineReport",
     "evaluate",

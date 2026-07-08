@@ -45,6 +45,7 @@ from macroforecast.forecasting.types import ForecastResult
 from macroforecast.forecasting.checkpoint import (
     LEAN_FORECAST_COLUMNS,
     append_origin_records,
+    append_origin_selection_records,
     completed_origin_positions,
     load_checkpoint_frame,
 )
@@ -202,6 +203,7 @@ def run(
     preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None,
     preprocessing_store: PreprocessorStore | None = None,
     checkpoint_path: str | Path | None = None,
+    selection_history: bool = False,
 ) -> ForecastResult:
     """Run a windowed macro forecasting experiment.
 
@@ -229,6 +231,8 @@ def run(
         future_feature_policy,
         forecast_policy=policy,
     )
+    if selection_history and checkpoint_path is None:
+        raise ValueError("selection_history=True requires checkpoint_path")
     if isinstance(data, FeatureSet) and len(horizon_values) > 1:
         raise ValueError(
             "FeatureSet input is already target-constructed; run each prebuilt "
@@ -261,6 +265,7 @@ def run(
             preprocessing_cache=preprocessing_cache,
             preprocessing_store=preprocessing_store,
             checkpoint_path=checkpoint_path,
+            selection_history=selection_history,
         )
     config = get_config()
     model_random_seed = _get_pipeline_random_seed()
@@ -355,6 +360,7 @@ def run(
             preprocessing_cache=preprocessing_cache,
             preprocessing_store=preprocessing_store,
             checkpoint_path=checkpoint_path,
+            selection_history=selection_history,
         )
 
     panel = _coerce_runner_panel(data)
@@ -633,11 +639,12 @@ def run(
                 # actually need tuning and are left with no usable folds.
                 allow_degenerate=True,
             )
+        feature_step_metadata = fitted_features.to_metadata()
         stage_records.append(
             _origin_stage_record(
                 "feature_engineering",
                 item,
-                fitted_features.to_metadata(),
+                feature_step_metadata,
                 updated=feature_updated,
             )
         )
@@ -670,6 +677,7 @@ def run(
             if policy == "path_average"
             else _single_target(test_features.y),
             "preprocessed": preprocessing is not None,
+            "feature_step_metadata": feature_step_metadata,
         }
         origin_records = _fit_predict_origin(
             origin_item,
@@ -696,6 +704,12 @@ def run(
             continue
         records.extend(origin_records)
         if checkpoint_path is not None and origin_pos is not None:
+            if selection_history:
+                append_origin_selection_records(
+                    checkpoint_path,
+                    origin_pos,
+                    _selection_history_origin_records(origin_item, origin_records),
+                )
             append_origin_records(checkpoint_path, origin_pos, origin_records)
 
     if checkpoint_path is not None:
@@ -764,6 +778,7 @@ def _run_multiple_horizons(
     preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None,
     preprocessing_store: PreprocessorStore | None = None,
     checkpoint_path: str | Path | None = None,
+    selection_history: bool = False,
 ) -> ForecastResult:
     # The per-origin EM/factor fit is horizon-independent (it uses only the
     # origin_available rows), and the shared cache is keyed on origin_pos alone.
@@ -806,6 +821,7 @@ def _run_multiple_horizons(
             # Pass the bare per-cell directory through and let run() namespace it
             # exactly once -- the same path a single-horizon run produces.
             checkpoint_path=checkpoint_path,
+            selection_history=selection_history,
         )
         for horizon_value in horizons
     ]
@@ -1137,6 +1153,7 @@ def _run_vintage_aware(
     preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None,
     preprocessing_store: PreprocessorStore | None,
     checkpoint_path: str | Path | None,
+    selection_history: bool,
 ) -> ForecastResult:
     """Run one resolved vintage per forecast origin."""
 
@@ -1429,11 +1446,12 @@ def _run_vintage_aware(
                 reference_index,
                 allow_degenerate=True,
             )
+        feature_step_metadata = fitted_features.to_metadata()
         stage_records.append(
             _origin_stage_record(
                 "feature_engineering",
                 item,
-                fitted_features.to_metadata(),
+                feature_step_metadata,
                 updated=feature_updated,
             )
         )
@@ -1470,6 +1488,7 @@ def _run_vintage_aware(
             if forecast_policy == "path_average"
             else _single_target(actual_test_features.y),
             "preprocessed": preprocessing is not None,
+            "feature_step_metadata": feature_step_metadata,
         }
         origin_records = _fit_predict_origin(
             origin_item,
@@ -1495,6 +1514,12 @@ def _run_vintage_aware(
             continue
         records.extend(origin_records)
         if checkpoint_path is not None:
+            if selection_history:
+                append_origin_selection_records(
+                    checkpoint_path,
+                    origin_pos,
+                    _selection_history_origin_records(origin_item, origin_records),
+                )
             append_origin_records(checkpoint_path, origin_pos, origin_records)
 
     if checkpoint_path is not None:
@@ -2311,6 +2336,146 @@ def _checkpoint_record_key(record: Mapping[str, Any]) -> tuple[Any, ...]:
         record.get("horizon"),
         record.get("date"),
     )
+
+
+def _selection_history_origin_records(
+    item: Mapping[str, Any],
+    origin_records: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    """Build optional per-origin feature/parameter selection-history rows."""
+    first_record = origin_records[0] if origin_records else {}
+    row = item.get("row", {})
+    if not isinstance(row, Mapping):
+        row = {}
+    base = {
+        "target": item.get("target_name") or first_record.get("target"),
+        "arm": None,
+        "horizon": item.get("forecast_horizon") or first_record.get("horizon"),
+        "origin": row.get("origin", first_record.get("origin")),
+        "origin_pos": row.get("origin_pos", first_record.get("origin_pos")),
+        "date": first_record.get("date"),
+    }
+
+    records: list[dict[str, Any]] = []
+    records.extend(_selection_history_feature_records(base, item))
+    records.extend(_selection_history_param_records(base, origin_records))
+    return records
+
+
+def _selection_history_feature_records(
+    base: Mapping[str, Any],
+    item: Mapping[str, Any],
+) -> list[dict[str, Any]]:
+    metadata = item.get("feature_step_metadata")
+    if not isinstance(metadata, Mapping):
+        return []
+    steps = metadata.get("feature_steps")
+    if not isinstance(steps, Sequence):
+        return []
+    out: list[dict[str, Any]] = []
+    for step in steps:
+        if not isinstance(step, Mapping):
+            continue
+        fit_state = step.get("fit_state")
+        if not isinstance(fit_state, Mapping):
+            continue
+        selected = fit_state.get("selected_columns")
+        if not isinstance(selected, Sequence) or isinstance(selected, (str, bytes)):
+            continue
+        scores = fit_state.get("scores")
+        score_map = scores if isinstance(scores, Mapping) else {}
+        controls = fit_state.get("controls")
+        control_set = set(controls) if isinstance(controls, Sequence) else set()
+        method = fit_state.get("method") or step.get("method")
+        for name in selected:
+            key = str(name)
+            out.append(
+                {
+                    **base,
+                    "kind": "feature",
+                    "name": key,
+                    "value": 1,
+                    "model": None,
+                    "step": step.get("step"),
+                    "method": method,
+                    "score": _history_scalar(score_map.get(key)),
+                    "source": "control" if key in control_set else step.get("method"),
+                }
+            )
+    return out
+
+
+def _selection_history_param_records(
+    base: Mapping[str, Any],
+    origin_records: Sequence[Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for record in origin_records:
+        params = record.get("params")
+        if not isinstance(params, Mapping):
+            continue
+        model = str(record.get("model"))
+        for name, value in _flatten_scalar_history_items(params):
+            scalar = _history_scalar(value)
+            key = (model, name, repr(scalar))
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(
+                {
+                    **base,
+                    "kind": "param",
+                    "name": name,
+                    "value": scalar,
+                    "model": model,
+                    "step": None,
+                    "method": "model_params",
+                    "score": None,
+                    "source": "params",
+                }
+            )
+    return out
+
+
+def _flatten_scalar_history_items(
+    values: Mapping[str, Any],
+    *,
+    prefix: str = "",
+) -> list[tuple[str, Any]]:
+    out: list[tuple[str, Any]] = []
+    for key, value in values.items():
+        name = f"{prefix}.{key}" if prefix else str(key)
+        if isinstance(value, Mapping):
+            out.extend(_flatten_scalar_history_items(value, prefix=name))
+        elif _is_history_scalar(value):
+            out.append((name, value))
+    return out
+
+
+def _is_history_scalar(value: Any) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, (str, int, float, bool, pd.Timestamp)):
+        return True
+    if hasattr(value, "item"):
+        try:
+            scalar = value.item()
+        except (TypeError, ValueError):
+            return False
+        return isinstance(scalar, (str, int, float, bool)) or scalar is None
+    return False
+
+
+def _history_scalar(value: Any) -> Any:
+    if isinstance(value, pd.Timestamp):
+        return value.isoformat()
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except (TypeError, ValueError):
+            return value
+    return value
 
 
 def _merge_checkpoint_records(

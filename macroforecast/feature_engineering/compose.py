@@ -39,6 +39,49 @@ from macroforecast.feature_engineering.transforms import (
     varimax_features,
 )
 
+
+def predictor_screen(
+    *,
+    method: str = "t_stat",
+    name: str = "screen",
+    input: str = "panel",
+    columns: Iterable[str] | None = None,
+    threshold: float | None = None,
+    top_k: int | None = None,
+    min_k: int | None = None,
+    controls: Iterable[str] | None = None,
+    alpha: float = 0.001,
+    l1_ratio: float = 0.5,
+    max_iter: int = 20000,
+    min_train_size: int | None = None,
+    include: bool = True,
+    drop_missing: bool = False,
+    random_state: int | None = 0,
+    warn_full_sample: bool = True,
+) -> dict[str, Any]:
+    """Return a target-aware predictor-screen step for ``feature_spec``."""
+
+    return _step(
+        name=name,
+        method="predictor_screen",
+        input=input,
+        include=include,
+        columns=columns,
+        screen_method=method,
+        threshold=threshold,
+        top_k=top_k,
+        min_k=min_k,
+        controls=controls,
+        alpha=alpha,
+        l1_ratio=l1_ratio,
+        max_iter=max_iter,
+        min_train_size=min_train_size,
+        drop_missing=drop_missing,
+        random_state=random_state,
+        warn_full_sample=warn_full_sample,
+    )
+
+
 def lag_step(
     *,
     name: str = "lag",
@@ -1310,6 +1353,7 @@ def _run_feature_step(
     if method in {
         "partial_least_squares",
         "sliced_inverse_regression",
+        "predictor_screen",
         "variance_selection",
         "correlation_selection",
         "lasso_selection",

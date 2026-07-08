@@ -476,7 +476,7 @@ def _validate_fit_window_options(options: dict[str, Any]) -> None:
     if method in {"em_factor", "em_multivariate", "linear"}:
         raise ValueError(
             "policy='fit_window' currently supports impute='none', "
-            "impute='mean', and impute='forward_fill'. Use "
+            "impute='mean', impute='zero', and impute='forward_fill'. Use "
             "policy='origin_available' for EM or linear imputation -- it now "
             "fits imputation only on rows observable at each forecast origin, "
             "so it is leak-free for pseudo-out-of-sample runs."
@@ -748,7 +748,7 @@ def _fit_impute_state(panel: pd.DataFrame, options: dict[str, Any]) -> dict[str,
     if method in {"em_factor", "em_multivariate", "linear"}:
         raise ValueError(
             "policy='fit_window' currently supports impute='none', "
-            "impute='mean', and impute='forward_fill'. Use "
+            "impute='mean', impute='zero', and impute='forward_fill'. Use "
             "policy='origin_available' for EM or linear imputation -- it now "
             "fits imputation only on rows observable at each forecast origin, "
             "so it is leak-free for pseudo-out-of-sample runs."
@@ -758,6 +758,8 @@ def _fit_impute_state(panel: pd.DataFrame, options: dict[str, Any]) -> dict[str,
     numeric = panel.select_dtypes("number")
     if method == "mean":
         return {"method": "mean", "means": _series_dict(numeric.mean())}
+    if method == "zero":
+        return {"method": "zero"}
     if method == "forward_fill":
         return {"method": "forward_fill", "columns": [str(column) for column in panel.columns]}
     raise ValueError(f"unknown imputation method {method!r}")
@@ -779,6 +781,8 @@ def _apply_impute_state(
             raise ValueError("mean imputation state is invalid")
         fill_values = {column: float(value) for column, value in means.items() if column in result.columns}
         return result.fillna(fill_values)
+    if method == "zero":
+        return result.fillna(0)
     if method == "forward_fill":
         if train_context is None:
             return result.ffill()

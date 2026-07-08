@@ -590,6 +590,12 @@ class PipelineSpec:
     # resumes without recomputing finished origins. None (default) disables
     # checkpointing and is byte-for-byte the prior behavior.
     checkpoint_dir: str | None = None
+    # Optional per-origin selection history sidecars. When enabled, each
+    # checkpointed (target, arm, horizon, origin) writes the selected feature
+    # names and scalar model parameters next to its lean forecast parquet file.
+    # Disabled by default to keep checkpointing at its existing forecast-only
+    # cost and schema.
+    selection_history: bool = False
     # When set, run_pipeline stores each digestible (target, horizon, arm) cell's
     # master-frame rows under ``<result_store>/cells`` and reuses matching cells
     # across separate run_pipeline calls. None (default) disables this path and
@@ -1287,6 +1293,7 @@ def pipeline_spec(
     save_models: bool = False,
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
+    selection_history: bool = False,
     result_store: str | Path | None = None,
     n_jobs: int | str = 1,
     preprocessing_cache_dir: str | bool | None = None,
@@ -1356,6 +1363,8 @@ def pipeline_spec(
         raise ValueError(
             f"provenance_level must be 'full' or 'basic', got {provenance_level!r}"
         )
+    if selection_history and checkpoint_dir is None:
+        raise ValueError("selection_history=True requires checkpoint_dir")
     # n_jobs is a positive int OR the literal "auto"; the auto split is computed
     # below once the cell count (targets x arms x horizons) is known.
     auto_jobs = n_jobs == "auto"
@@ -1467,6 +1476,7 @@ def pipeline_spec(
         preprocessing=preprocessing, preprocessing_policy=preprocessing_policy,
         save_models=bool(save_models), model_store=str(model_store),
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
+        selection_history=bool(selection_history),
         result_store=(str(result_store) if result_store is not None else None),
         n_jobs=n_jobs,
         model_threads=int(model_threads),

@@ -12,7 +12,9 @@ Guide context: [../guide/concepts/running.md](../guide/concepts/running.md).
 | --- | --- | --- |
 | `ForecastResult` | class | Forecast runner output. |
 | `LEAN_FORECAST_COLUMNS` | data | Built-in immutable sequence. |
+| `SELECTION_HISTORY_COLUMNS` | data | Built-in immutable sequence. |
 | `load_checkpoint_frame` | function | Load all persisted lean records as a single frame (empty if none/missing). |
+| `load_selection_history_frame` | function | Load optional selection-history JSONL sidecars from one checkpoint dir. |
 | `CombinationSpec` | class | Forecast-combination request consumed by ``forecasting.run``. |
 | `combine_best_n` | function | Average the historically best ``n`` models by MSPE. |
 | `combine_bates_granger` | function | Bates-Granger (1969) minimum error-variance combination (full covariance). |
@@ -41,6 +43,13 @@ Kind: `data`
 
 ```python
 LEAN_FORECAST_COLUMNS = ("target", "horizon", "origin", "origin_pos", "date", "model", "prediction", "actual", "forecast_policy", "target_transform", "variance_prediction", "vintage_id", "actuals_vintage_id")
+```
+### `SELECTION_HISTORY_COLUMNS`
+
+Kind: `data`
+
+```python
+SELECTION_HISTORY_COLUMNS = ("target", "arm", "horizon", "origin", "origin_pos", "date", "kind", "name", "value", "model", "step", "method", "score", "source")
 ```
 
 ## Callable And Class Reference
@@ -147,6 +156,37 @@ the forecasts came from a live run or a checkpoint.
 import macroforecast as mf
 # Call with the signature above:
 # mf.forecasting.load_checkpoint_frame(...)
+```
+### load_selection_history_frame
+
+Qualified name: `macroforecast.forecasting.checkpoint.load_selection_history_frame`
+
+#### Signature
+
+```python
+macroforecast.forecasting.load_selection_history_frame(checkpoint_path: str | Path) -> pd.DataFrame
+```
+
+#### Description
+
+Load optional selection-history JSONL sidecars from one checkpoint dir.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `checkpoint_path` | positional or keyword | `str \| Path` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.forecasting.load_selection_history_frame(...)
 ```
 ### CombinationSpec
 
@@ -785,7 +825,7 @@ Qualified name: `macroforecast.forecasting.runner.run`
 #### Signature
 
 ```python
-macroforecast.forecasting.run(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None) -> ForecastResult
+macroforecast.forecasting.run(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None, selection_history: bool = False) -> ForecastResult
 ```
 
 #### Description
@@ -832,6 +872,7 @@ the pipeline with one ``Arm`` per model when comparing models.
 | `preprocessing_cache` | keyword only | `dict[Any, FittedPreprocessor \| _PreparedStage \| FittedFeatureBuilder] \| None` | `None` |
 | `preprocessing_store` | keyword only | `PreprocessorStore \| None` | `None` |
 | `checkpoint_path` | keyword only | `str \| Path \| None` | `None` |
+| `selection_history` | keyword only | `bool` | `False` |
 
 #### Returns
 
@@ -851,7 +892,7 @@ Qualified name: `macroforecast.forecasting.runner.run`
 #### Signature
 
 ```python
-macroforecast.forecasting.run_forecast(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None) -> ForecastResult
+macroforecast.forecasting.run_forecast(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None, selection_history: bool = False) -> ForecastResult
 ```
 
 #### Description
@@ -898,6 +939,7 @@ the pipeline with one ``Arm`` per model when comparing models.
 | `preprocessing_cache` | keyword only | `dict[Any, FittedPreprocessor \| _PreparedStage \| FittedFeatureBuilder] \| None` | `None` |
 | `preprocessing_store` | keyword only | `PreprocessorStore \| None` | `None` |
 | `checkpoint_path` | keyword only | `str \| Path \| None` | `None` |
+| `selection_history` | keyword only | `bool` | `False` |
 
 #### Returns
 

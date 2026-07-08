@@ -591,6 +591,8 @@ def impute_missing(
         return panel.copy()
     if method == "mean":
         return mean_impute_clean(panel)
+    if method == "zero":
+        return zero_fill_leading_clean(panel)
     if method == "forward_fill":
         return forward_fill_clean(panel)
     if method == "linear":
@@ -885,6 +887,9 @@ def _normalize_impute(value: str) -> str:
         "none": "none",
         "none_propagate": "none",
         "mean": "mean",
+        "zero": "zero",
+        "zeros": "zero",
+        "zero_fill": "zero",
         "forward_fill": "forward_fill",
         "ffill": "forward_fill",
         "linear": "linear",

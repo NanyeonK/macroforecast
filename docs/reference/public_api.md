@@ -271,6 +271,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `polynomial_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `poos` | [`macroforecast.window`](window.md) | function |
 | `poos_split` | [`macroforecast.window`](window.md) | function |
+| `predictor_screen` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `preprocess_spec` | [`macroforecast.preprocessing`](preprocessing.md) | function |
 | `preprocessing` | [`macroforecast.preprocessing`](preprocessing.md) | module |
 | `quantile_regression_forest` | [`macroforecast.models`](models.md) | function |
@@ -317,6 +318,8 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `seasonal_naive` | [`macroforecast.models`](models.md) | function |
 | `select_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `select_params` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `selection_frequency_table` | [`macroforecast.pipeline`](pipeline.md) | function |
+| `selection_history` | [`macroforecast.pipeline`](pipeline.md) | function |
 | `set_frequencies` | [`macroforecast.data`](data.md) | function |
 | `shrink_to_target_ridge` | [`macroforecast.models`](models.md) | function |
 | `sliced_inverse_regression_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
