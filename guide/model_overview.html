@@ -424,6 +424,8 @@
 <li class="toctree-l1"><a class="reference internal" href="models/linear.html">Linear and regularized</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models/factor.html">Factor models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models/timeseries.html">Classical time series</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/bayesian.html">Bayesian state-space</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models/model_averaging.html">Model averaging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models/tree.html">Tree ensembles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models/support_vector.html">Support vector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models/nonparametric.html">Nonparametric</a></li>
@@ -594,11 +596,12 @@ PCA are refit inside every training window.</p>
 <section id="choosing-a-model">
 <h2>Choosing a model<a class="headerlink" href="#choosing-a-model" title="Link to this heading">#</a></h2>
 <p><strong>Few predictors and a mostly linear signal.</strong> Start from the benchmarks <code class="docutils literal notranslate"><span class="pre">ar</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ols</span></code>, and <code class="docutils literal notranslate"><span class="pre">arima</span></code>. They anchor any comparison and are cheap to refit at every
-origin.</p>
+<code class="docutils literal notranslate"><span class="pre">ols</span></code>, <code class="docutils literal notranslate"><span class="pre">arima</span></code>, and the target-only <code class="docutils literal notranslate"><span class="pre">ucsv</span></code> inflation benchmark. They anchor any
+comparison and are cheap to refit at every origin except for MCMC-based UCSV.</p>
 <p><strong>Many predictors.</strong> Regularize. <code class="docutils literal notranslate"><span class="pre">ridge</span></code> shrinks all coefficients, <code class="docutils literal notranslate"><span class="pre">lasso</span></code> and
 <code class="docutils literal notranslate"><span class="pre">elastic_net</span></code> also select variables, and <code class="docutils literal notranslate"><span class="pre">adaptive_lasso</span></code> and <code class="docutils literal notranslate"><span class="pre">group_lasso</span></code> add
-structured selection across feature blocks.</p>
+structured selection across feature blocks. For forecast averaging over many
+candidate regressions, use <code class="docutils literal notranslate"><span class="pre">csr</span></code> or <code class="docutils literal notranslate"><span class="pre">jma</span></code>.</p>
 <p><strong>Latent factor structure.</strong> When series move together, extract common factors
 with <code class="docutils literal notranslate"><span class="pre">far</span></code> and <code class="docutils literal notranslate"><span class="pre">favar</span></code>, or use a dynamic factor model from the mixed-frequency
 family.</p>
@@ -617,6 +620,8 @@ dynamics in longer panels.</p>
 <li><p><a class="reference internal" href="models/linear.html"><span class="std std-doc">Linear and regularized</span></a> — 16 models</p></li>
 <li><p><a class="reference internal" href="models/factor.html"><span class="std std-doc">Factor models</span></a> — 2 models</p></li>
 <li><p><a class="reference internal" href="models/timeseries.html"><span class="std std-doc">Classical time series</span></a> — 14 models</p></li>
+<li><p><a class="reference internal" href="models/bayesian.html"><span class="std std-doc">Bayesian state-space</span></a> — 1 models</p></li>
+<li><p><a class="reference internal" href="models/model_averaging.html"><span class="std std-doc">Model averaging</span></a> — 2 models</p></li>
 <li><p><a class="reference internal" href="models/tree.html"><span class="std std-doc">Tree ensembles</span></a> — 11 models</p></li>
 <li><p><a class="reference internal" href="models/support_vector.html"><span class="std std-doc">Support vector</span></a> — 3 models</p></li>
 <li><p><a class="reference internal" href="models/nonparametric.html"><span class="std std-doc">Nonparametric</span></a> — 2 models</p></li>

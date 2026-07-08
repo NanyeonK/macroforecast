@@ -27,6 +27,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `SupervisedPCARegressor` | class | Original-style SPCA with iterative screening, PCA, and projection. |
 | `SupervisedScaledPCARegressor` | class | Hounyo-Li supervised scaled PCA: predictive-slope scaling plus SPCA. |
 | `TVPRidgeRegressor` | class | Time-varying parameter ridge / 2SRR estimator. |
+| `ucsv` | function | Fit Stock-Watson unobserved-components stochastic-volatility model. |
 | `VolatilityFit` | class | Fitted volatility model wrapper. |
 | `adaptive_elastic_net` | function | Fit adaptive elastic net using initial coefficient-based column weights. |
 | `adaptive_lasso` | function | Fit adaptive lasso using initial coefficient-based penalty weights. |
@@ -45,8 +46,9 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `bvar_minnesota` | function | Fit a FAVAR::BVAR-style Bayesian VAR with Minnesota prior variances. |
 | `bvar_normal_inverse_wishart` | function | Fit a FAVAR::BVAR-style Bayesian VAR with normal-Wishart priors. |
 | `catboost` | function | Fit a CatBoost regressor. Requires the `catboost` extra. |
-| `custom_model` | function | Build a user-owned ``ModelSpec`` without registering a package model. |
 | `component_aggregation` | function | Fit component-space supervised aggregation weights. |
+| `csr` | function | Fit Complete Subset Regression. |
+| `custom_model` | function | Build a user-owned ``ModelSpec`` without registering a package model. |
 | `dfm_mixed_mariano_murasawa` | function | Fit a monthly/quarterly DynamicFactorMQ model with MM aggregation. |
 | `dfm_unrestricted_midas` | function | Fit DFM factors plus unrestricted MIDAS lag coefficients. |
 | `decision_tree` | function | Fit a CART regression tree. |
@@ -69,6 +71,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `gru` | function | Fit a torch-backed GRU regressor. Requires ``macroforecast[deep]``. |
 | `hemisphere_nn` | function | Fit a torch-backed Hemisphere neural network mean/variance forecaster. |
 | `huber` | function | Fit robust Huber regression. |
+| `jma` | function | Fit Jackknife Model Averaging. |
 | `holt_winters` | function | Fit Holt-Winters exponential smoothing for target-only forecasts. |
 | `kernel_ridge` | function | Fit sklearn kernel ridge regression. |
 | `knn` | function | Fit sklearn k-nearest-neighbor regression. |
@@ -145,6 +148,7 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `bvar_normal_inverse_wishart` | `timeseries` | `panel` | `standard` | none | no | FAVAR::BVAR-aligned Bayesian VAR with normal/inverse-Wishart prior controls. |
 | `catboost` | `tree` | `supervised` | `standard` | `catboost` | no | CatBoost regressor. |
 | `component_aggregation` | `assemblage` | `supervised` | `standard` | none | no | Component-space supervised aggregation; generic Albacorecomps primitive. |
+| `csr` | `model_averaging` | `supervised` | `standard` | none | no | Complete Subset Regression; averages OLS forecasts over k-predictor subsets. |
 | `decision_tree` | `tree` | `supervised` | `standard` | none | no | CART regression tree. |
 | `density_hnn` | `neural` | `supervised` | `standard` | `deep` | no | Paper-faithful Density Hemisphere neural network with prior-DNN OOB volatility emphasis and OOB volatility rescaling. |
 | `dfm_mixed_mariano_murasawa` | `mixed_frequency` | `panel` | `standard` | none | no | Mixed-frequency dynamic factor model using Mariano-Murasawa quarterly aggregation. |
@@ -166,6 +170,7 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `hist_mean` | `timeseries` | `target` | `standard` | none | no | Historical (prevailing) mean benchmark of the transformed target. |
 | `holt_winters` | `timeseries` | `target` | `standard` | none | no | Holt-Winters exponential smoothing target-only forecasting model. |
 | `huber` | `linear` | `supervised` | `standard` | none | no | Robust Huber regression. |
+| `jma` | `model_averaging` | `supervised` | `standard` | none | no | Jackknife Model Averaging with simplex weights chosen by OLS leave-one-out CV. |
 | `kernel_ridge` | `nonparametric` | `supervised` | `standard` | none | yes | Kernel ridge regression. |
 | `knn` | `nonparametric` | `supervised` | `standard` | none | yes | K-nearest-neighbor regression. |
 | `lasso` | `linear` | `supervised` | `standard` | none | no | Lasso regression. |
@@ -206,6 +211,7 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `theta_method` | `timeseries` | `target` | `standard` | none | no | Theta method target-only forecasting model. |
 | `transformer` | `neural` | `supervised` | `standard` | `deep` | no | Torch-backed Transformer encoder regressor. |
 | `tvp_ridge` | `linear` | `supervised` | `standard` | none | no | Goulet Coulombe TVP ridge / 2SRR estimator. |
+| `ucsv` | `bayesian` | `target` | `standard` | none | no | Stock-Watson UCSV target-only benchmark with horizon-invariant final-trend forecasts. |
 | `unrestricted_midas` | `mixed_frequency` | `supervised` | `standard` | none | no | Unrestricted MIDAS over explicit lag columns. |
 | `var` | `timeseries` | `panel` | `standard` | none | no | R vars::VAR-aligned vector autoregression point forecast. |
 | `xgboost` | `tree` | `supervised` | `standard` | `xgboost` | no | XGBoost regressor. |
@@ -699,6 +705,35 @@ Component-space supervised aggregation; generic Albacorecomps primitive.
 | `small` | `alpha`: `(0.01, 0.1, 1.0)` |
 | `standard` | `alpha`: `(0.001, 0.01, 0.1, 1.0, 10.0)` |
 | `wide` | `alpha`: `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0)` |
+
+### csr
+
+Family: `model_averaging`
+
+#### Fit Signature
+
+```python
+macroforecast.models.csr(X: Any, y: Any | None = None, *, k: int = 4, max_subsets: int = 5000, random_state: int | None = 1071) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `supervised` |
+| `default_preset` | `standard` |
+| `default_search_method` | `none` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Complete Subset Regression; averages OLS forecasts over k-predictor subsets.
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `k` | `4` | `int` | True | Subset size for each OLS member. |
+| `max_subsets` | `5000` | `int` | False | Maximum distinct subsets to average before seeded subset sampling. |
+| `random_state` | `1071` | `int \| None` | False | Seed for subset sampling. |
 
 ### decision_tree
 
@@ -1548,6 +1583,35 @@ Robust Huber regression.
 | `small` | `epsilon`: `(1.1, 1.35, 1.75)` |
 | `standard` | `epsilon`: `(1.1, 1.35, 1.5, 1.75, 2.0)` |
 | `wide` | `epsilon`: `(1.01, 1.1, 1.35, 1.5, 1.75, 2.0, 2.5)` |
+
+### jma
+
+Family: `model_averaging`
+
+#### Fit Signature
+
+```python
+macroforecast.models.jma(X: Any, y: Any | None = None, *, candidates: "Literal['nested']" = "nested", max_iter: int = 1000, tol: float = 1e-09) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `supervised` |
+| `default_preset` | `standard` |
+| `default_search_method` | `none` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Jackknife Model Averaging with simplex weights chosen by OLS leave-one-out CV.
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `candidates` | `"nested"` | `str` | False | Candidate model family; currently nested ordered OLS models. |
+| `max_iter` | `1000` | `int` | False | SLSQP solver iteration cap. |
+| `tol` | `1e-09` | `float` | False | SLSQP solver tolerance. |
 
 ### kernel_ridge
 
@@ -3113,6 +3177,36 @@ Goulet Coulombe TVP ridge / 2SRR estimator.
 | `standard` | `lambda_candidates`: `((0.0024787521766663585, 0.015877422572448646, 0.10170139230422684, 0.6514390575310555, 4.172733883598097, 26.728068975964966, 171.20422512253052, 1096.6331584284585, 7024.384376636005, 44994.05794134296, 288205.36312940903, 1846073.3513931935, 11824855.657505034, 75743041.96271756, 485165195.4097903),)` |
 | `wide` | `lambda_candidates`: `((0.00033546262790251185, 0.001661557273173934, 0.00822974704902003, 0.040762203978366246, 0.20189651799465547, 1.0, 4.953032424395122, 24.532530197109374, 121.51041751873497, 601.8450378720822, 2980.9579870417283, 14764.781565577294, 73130.44183341571, 362217.44961124816, 1794074.7726062182, 8886110.520507872, 44013193.53483411, 217998774.67921108, 1079754999.464535, 5348061522.750579, 26489122129.84347),)` |
 
+### ucsv
+
+Family: `bayesian`
+
+#### Fit Signature
+
+```python
+macroforecast.models.ucsv(y: Any, *, n_draws: int = 5000, burn: int = 1000, gamma: float = 0.2, random_state: int | None = 1071) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `target` |
+| `default_preset` | `standard` |
+| `default_search_method` | `none` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Stock-Watson UCSV target-only benchmark with horizon-invariant final-trend forecasts.
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `n_draws` | `5000` | `int` | False | Total Gibbs sampler draws. |
+| `burn` | `1000` | `int` | False | Initial draws discarded as burn-in. |
+| `gamma` | `0.2` | `float` | False | Random-walk innovation variance for both log-volatility states. |
+| `random_state` | `1071` | `int \| None` | False | Gibbs sampler seed. |
+
 ### unrestricted_midas
 
 Family: `mixed_frequency`
@@ -3236,7 +3330,7 @@ XGBoost regressor.
 Kind: `data`
 
 ```python
-MODEL_SPECS = dict(77 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, catboost, ...)
+MODEL_SPECS = dict(80 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, catboost, ...)
 ```
 
 ## Callable And Class Reference

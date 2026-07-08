@@ -433,6 +433,7 @@
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reporting.html">Paper Tables</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../figures.html">Paper Figures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../multi_axis_comparison.html">Multi-Axis Forecast Comparisons</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../custom_data_tutorial.html">Your Data, Your Model, One Table</a></li>
 </ul>
 </div>
@@ -727,6 +728,39 @@ refuses manifest-bearing cells whose stored digest no longer matches the current
 spec/data identity; pass <code class="docutils literal notranslate"><span class="pre">allow_stale=True</span></code> only when intentionally scoring stale
 forecasts. Older checkpoint directories that lack manifests still rescore, but
 emit a warning because they can only be matched by directory name.</p>
+<p>Selection-history logging is opt-in on checkpointed pipeline runs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">pipeline_spec</span><span class="p">(</span>
+    <span class="n">data</span><span class="o">=</span><span class="n">bundle</span><span class="p">,</span>
+    <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">TargetSpec</span><span class="p">(</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">)],</span>
+    <span class="n">horizons</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="n">window</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+    <span class="n">arms</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">Arm</span><span class="p">(</span>
+            <span class="s2">&quot;RIDGE&quot;</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="s2">&quot;ridge&quot;</span><span class="p">,</span>
+            <span class="n">features</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+                <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+                <span class="n">feature_steps</span><span class="o">=</span><span class="p">[</span><span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">predictor_screen</span><span class="p">(</span><span class="n">top_k</span><span class="o">=</span><span class="mi">40</span><span class="p">)],</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+    <span class="n">evaluation</span><span class="o">=</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="o">=</span><span class="s2">&quot;RIDGE&quot;</span><span class="p">),</span>
+    <span class="n">checkpoint_dir</span><span class="o">=</span><span class="s2">&quot;cache/checkpoints&quot;</span><span class="p">,</span>
+    <span class="n">selection_history</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">report</span> <span class="o">=</span> <span class="n">run_pipeline</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+<span class="n">history</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">selection_history</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+<span class="n">freq</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">selection_frequency_table</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each completed origin writes <code class="docutils literal notranslate"><span class="pre">origin_&lt;pos&gt;_selection.jsonl</span></code> next to its forecast
+parquet file. <code class="docutils literal notranslate"><span class="pre">selection_history(...)</span></code> also accepts a checkpoint directory or a
+rescored report, returning tidy rows with <code class="docutils literal notranslate"><span class="pre">arm</span></code>, <code class="docutils literal notranslate"><span class="pre">origin</span></code>, <code class="docutils literal notranslate"><span class="pre">horizon</span></code>, <code class="docutils literal notranslate"><span class="pre">kind</span></code>,
+<code class="docutils literal notranslate"><span class="pre">name</span></code>, and <code class="docutils literal notranslate"><span class="pre">value</span></code>; feature-screen selections use <code class="docutils literal notranslate"><span class="pre">kind=&quot;feature&quot;</span></code> and selected
+model parameters use <code class="docutils literal notranslate"><span class="pre">kind=&quot;param&quot;</span></code>. With the default
+<code class="docutils literal notranslate"><span class="pre">selection_history=False</span></code>, no sidecars are written.</p>
 </section>
 <section id="reference">
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>

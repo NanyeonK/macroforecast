@@ -67,6 +67,7 @@ Guide context: [../guide/concepts/features.md](../guide/concepts/features.md).
 | `pca_then_lags` | function | Create PCA factors and lagged PCA factors in one direct call. |
 | `partial_least_squares_features` | function | Create target-aware PLS latent-component scores. |
 | `partial_least_squares_step` | function | Return a target-aware PLS step for ``feature_spec``. |
+| `predictor_screen` | function | Return a target-aware predictor-screen step for ``feature_spec``. |
 | `pct_change_features` | function | Create simple-growth features. |
 | `polynomial_features` | function | Create polynomial expansion features with readable column names. |
 | `polynomial_step` | function | Return a reusable polynomial-expansion step. |
@@ -2542,6 +2543,52 @@ Return a target-aware PLS step for ``feature_spec``.
 import macroforecast as mf
 # Call with the signature above:
 # mf.feature_engineering.partial_least_squares_step(...)
+```
+### predictor_screen
+
+Qualified name: `macroforecast.feature_engineering.compose.predictor_screen`
+
+#### Signature
+
+```python
+macroforecast.feature_engineering.predictor_screen(*, method: str = "t_stat", name: str = "screen", input: str = "panel", columns: Iterable[str] | None = None, threshold: float | None = None, top_k: int | None = None, min_k: int | None = None, controls: Iterable[str] | None = None, alpha: float = 0.001, l1_ratio: float = 0.5, max_iter: int = 20000, min_train_size: int | None = None, include: bool = True, drop_missing: bool = False, random_state: int | None = 0, warn_full_sample: bool = True) -> dict[str, Any]
+```
+
+#### Description
+
+Return a target-aware predictor-screen step for ``feature_spec``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `method` | keyword only | `str` | `"t_stat"` |
+| `name` | keyword only | `str` | `"screen"` |
+| `input` | keyword only | `str` | `"panel"` |
+| `columns` | keyword only | `Iterable[str] \| None` | `None` |
+| `threshold` | keyword only | `float \| None` | `None` |
+| `top_k` | keyword only | `int \| None` | `None` |
+| `min_k` | keyword only | `int \| None` | `None` |
+| `controls` | keyword only | `Iterable[str] \| None` | `None` |
+| `alpha` | keyword only | `float` | `0.001` |
+| `l1_ratio` | keyword only | `float` | `0.5` |
+| `max_iter` | keyword only | `int` | `20000` |
+| `min_train_size` | keyword only | `int \| None` | `None` |
+| `include` | keyword only | `bool` | `True` |
+| `drop_missing` | keyword only | `bool` | `False` |
+| `random_state` | keyword only | `int \| None` | `0` |
+| `warn_full_sample` | keyword only | `bool` | `True` |
+
+#### Returns
+
+`dict[str, Any]`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.feature_engineering.predictor_screen(...)
 ```
 ### pct_change_features
 

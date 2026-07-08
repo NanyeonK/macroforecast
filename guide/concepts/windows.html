@@ -433,6 +433,7 @@
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reporting.html">Paper Tables</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../figures.html">Paper Figures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../multi_axis_comparison.html">Multi-Axis Forecast Comparisons</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../custom_data_tutorial.html">Your Data, Your Model, One Table</a></li>
 </ul>
 </div>
@@ -529,6 +530,47 @@ splits), <code class="docutils literal notranslate"><span class="pre">expanding<
 (consecutive tail time blocks), and <code class="docutils literal notranslate"><span class="pre">blocked_kfold</span></code> (chronological blocked
 folds). Use <code class="docutils literal notranslate"><span class="pre">random_kfold</span></code> only when reproducing papers that explicitly used
 random iid folds.</p>
+</section>
+<section id="model-selection-routes">
+<h2>Model selection routes<a class="headerlink" href="#model-selection-routes" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code> controls the candidate grid and, when needed, the selection route.
+The default route scores every Cartesian grid point on the window’s validation
+splits. This keeps ordinary holdout and POOS designs on the <code class="docutils literal notranslate"><span class="pre">WindowSpec</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">window</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">window</span><span class="o">.</span><span class="n">from_cutoffs</span><span class="p">(</span>
+    <span class="n">test_start</span><span class="o">=</span><span class="s2">&quot;1985-01-01&quot;</span><span class="p">,</span>
+    <span class="n">val_method</span><span class="o">=</span><span class="s2">&quot;poos&quot;</span><span class="p">,</span>
+    <span class="n">val_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+    <span class="n">retune_every</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">search</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">grid</span><span class="p">({</span><span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]})</span>
+</pre></div>
+</div>
+<p>Use a validation-splitter override when the validation scheme belongs to the
+selection rule rather than to the outer estimation/test window. Explicit fold
+boundaries are end-exclusive positions inside the current selection sample;
+date labels map to the position just after that label. With
+<code class="docutils literal notranslate"><span class="pre">within_fold=&quot;expanding&quot;</span></code>, each validation block becomes one single-observation
+split whose training block grows through the fold:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">search</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span>
+    <span class="p">{</span><span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;qN&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]},</span>
+    <span class="n">validation_splitter</span><span class="o">=</span><span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">explicit_folds</span><span class="p">(</span>
+        <span class="p">[</span><span class="mi">80</span><span class="p">,</span> <span class="mi">130</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="mi">240</span><span class="p">],</span>
+        <span class="n">within_fold</span><span class="o">=</span><span class="s2">&quot;expanding&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Use information-criterion selection when candidates should be scored on the fit
+sample instead of a held-out validation block. The fitted model must expose
+<code class="docutils literal notranslate"><span class="pre">ssr_</span></code>, <code class="docutils literal notranslate"><span class="pre">nobs_</span></code>, and <code class="docutils literal notranslate"><span class="pre">n_params_</span></code>; AR/FAR-style RSS models do, while generic
+supervised regressors do not promise that interface:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">search</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">SearchSpec</span><span class="p">(</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;information_criterion&quot;</span><span class="p">,</span>
+    <span class="n">criterion</span><span class="o">=</span><span class="s2">&quot;bic&quot;</span><span class="p">,</span>
+    <span class="n">param_grid</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;n_lag&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">)},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="per-arm-windows-and-no-validation-fits">
 <h2>Per-arm windows and no-validation fits<a class="headerlink" href="#per-arm-windows-and-no-validation-fits" title="Link to this heading">#</a></h2>
@@ -660,6 +702,7 @@ and the retrain/retune cadence then govern how often models are refit across the
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#estimation-modes">Estimation modes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validation-designs">Validation designs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-selection-routes">Model selection routes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#per-arm-windows-and-no-validation-fits">Per-arm windows and no-validation fits</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#retrain-and-retune-cadence">Retrain and retune cadence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callable">Key Callable</a></li>

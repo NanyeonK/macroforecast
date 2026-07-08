@@ -18,6 +18,8 @@ Guide context: [../guide/index.md](../guide/index.md).
 | `purge_result_store` | function | Delete result-store cells matching the supplied filters and return a count. |
 | `run_arms` | function | Execute every cell and concatenate into one master forecast frame. |
 | `run_pipeline` | function | Execute the full pipeline: run arms, evaluate, and assemble a PipelineReport. |
+| `selection_history` | function | Return tidy per-origin selection-history rows. |
+| `selection_frequency_table` | function | Summarize selection frequencies over distinct checkpoint origins. |
 | `interpret_pipeline` | function | Interpret the interpretable arms of a completed pipeline run. |
 | `PipelineReport` | class | Standard pipeline output (mutable: interpretation is filled in later). |
 | `evaluate` | function | Run the full evaluation: combinations -> accuracy + significance + MCS |
@@ -321,7 +323,9 @@ applied to one target over the window for a horizon-group -- not an arm.)
 Columns include arm, model, contender, target, horizon, origin, date,
 prediction, actual, target_transform, forecast_policy. Each cell runs its arm
 with its own preprocessing/features/model against its target's resolved
-(forecast_policy, target_transform).
+(forecast_policy, target_transform). Arm tags are emitted as flat
+``tag_<key>`` columns; if that name already exists in a forecast frame, the
+run raises rather than overwriting a compute-produced column.
 
 The pipeline MANAGES atomic ``run()`` calls over (target, arm, horizon-group)
 cells. When ``spec.n_jobs > 1`` the cells run across a process pool, one horizon
@@ -381,6 +385,74 @@ See the description and object-specific contract.
 import macroforecast as mf
 # Call with the signature above:
 # mf.pipeline.run_pipeline(...)
+```
+### selection_history
+
+Qualified name: `macroforecast.pipeline.selection_history.selection_history`
+
+#### Signature
+
+```python
+macroforecast.pipeline.selection_history(report_or_store: Any) -> pd.DataFrame
+```
+
+#### Description
+
+Return tidy per-origin selection-history rows.
+
+``report_or_store`` may be a ``PipelineReport`` from ``run_pipeline`` or
+``rescore``, a checkpoint root path, or an already-loaded DataFrame. Live and
+rescored reports are resolved through their spec/checkpoint provenance so the
+returned ``target`` and ``arm`` labels use the original unsanitized names.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `report_or_store` | positional or keyword | `Any` | `required` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.selection_history(...)
+```
+### selection_frequency_table
+
+Qualified name: `macroforecast.pipeline.selection_history.selection_frequency_table`
+
+#### Signature
+
+```python
+macroforecast.pipeline.selection_frequency_table(history: Any, *, by: Sequence[str] = ('arm', 'horizon', 'kind', 'name')) -> pd.DataFrame
+```
+
+#### Description
+
+Summarize selection frequencies over distinct checkpoint origins.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `history` | positional or keyword | `Any` | `required` |
+| `by` | keyword only | `Sequence[str]` | `("arm", "horizon", "kind", "name")` |
+
+#### Returns
+
+`pd.DataFrame`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.selection_frequency_table(...)
 ```
 ### interpret_pipeline
 
@@ -638,7 +710,7 @@ Qualified name: `macroforecast.pipeline.spec.Arm`
 #### Signature
 
 ```python
-macroforecast.pipeline.Arm(name: str, model: Any, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, features: Any | None = None, feature_policy: Any | None = None, params: Mapping[str, Any] | None = None, model_selection: Any | None = None, model_selection_metric: str = "mse", window: Any | None = None, interpret: InterpretSpec | tuple[str, ...] | None = None, is_benchmark: bool = False, nested_in_benchmark: bool = False, metadata: Mapping[str, Any] = <factory>) -> None
+macroforecast.pipeline.Arm(name: str, model: Any, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, features: Any | None = None, feature_policy: Any | None = None, params: Mapping[str, Any] | None = None, model_selection: Any | None = None, model_selection_metric: str = "mse", window: Any | None = None, interpret: InterpretSpec | tuple[str, ...] | None = None, is_benchmark: bool = False, nested_in_benchmark: bool = False, metadata: Mapping[str, Any] = <factory>, tags: Mapping[str, ArmTagValue] | None = None) -> None
 ```
 
 #### Description
@@ -647,7 +719,9 @@ A target-agnostic configuration: preprocessing + features + a single model.
 
 An arm is NOT itself a cell. Applied to a target and a horizon it forms one
 cell (executed by one ``run()`` call); in the evaluation it appears as exactly
-one contender (one arm = one contender).
+one contender (one arm = one contender). ``tags`` are descriptive scalar
+labels for post-run designs; they become ``tag_<key>`` columns in the master
+forecast frame but do not affect result-store cell digests.
 
 #### Parameters
 
@@ -667,6 +741,7 @@ one contender (one arm = one contender).
 | `is_benchmark` | positional or keyword | `bool` | `False` |
 | `nested_in_benchmark` | positional or keyword | `bool` | `False` |
 | `metadata` | positional or keyword | `Mapping[str, Any]` | `<factory>` |
+| `tags` | positional or keyword | `Mapping[str, ArmTagValue] \| None` | `None` |
 
 #### Returns
 
@@ -698,6 +773,7 @@ import macroforecast as mf
 | `is_benchmark` | `bool` | `False` |
 | `nested_in_benchmark` | `bool` | `False` |
 | `metadata` | `Mapping[str, Any]` | `default_factory` |
+| `tags` | `Mapping[str, ArmTagValue] \| None` | `None` |
 ### CombinationContender
 
 Qualified name: `macroforecast.pipeline.spec.CombinationContender`
@@ -922,7 +998,7 @@ Qualified name: `macroforecast.pipeline.spec.PipelineSpec`
 #### Signature
 
 ```python
-macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
+macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, selection_history: bool = False, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
 ```
 
 #### Description
@@ -945,6 +1021,7 @@ Validated, frozen configuration produced by :func:`pipeline_spec`.
 | `save_models` | positional or keyword | `bool` | `False` |
 | `model_store` | positional or keyword | `str` | `"trained_model"` |
 | `checkpoint_dir` | positional or keyword | `str \| None` | `None` |
+| `selection_history` | positional or keyword | `bool` | `False` |
 | `result_store` | positional or keyword | `str \| None` | `None` |
 | `n_jobs` | positional or keyword | `int` | `1` |
 | `model_threads` | positional or keyword | `int` | `1` |
@@ -982,6 +1059,7 @@ import macroforecast as mf
 | `save_models` | `bool` | `False` |
 | `model_store` | `str` | `"trained_model"` |
 | `checkpoint_dir` | `str \| None` | `None` |
+| `selection_history` | `bool` | `False` |
 | `result_store` | `str \| None` | `None` |
 | `n_jobs` | `int` | `1` |
 | `model_threads` | `int` | `1` |
@@ -1282,7 +1360,7 @@ Qualified name: `macroforecast.pipeline.spec.pipeline_spec`
 #### Signature
 
 ```python
-macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
+macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, selection_history: bool = False, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
 ```
 
 #### Description
@@ -1354,6 +1432,7 @@ cells as ``recursive``.
 | `save_models` | keyword only | `bool` | `False` |
 | `model_store` | keyword only | `str` | `"trained_model"` |
 | `checkpoint_dir` | keyword only | `str \| None` | `None` |
+| `selection_history` | keyword only | `bool` | `False` |
 | `result_store` | keyword only | `str \| Path \| None` | `None` |
 | `n_jobs` | keyword only | `int \| str` | `1` |
 | `preprocessing_cache_dir` | keyword only | `str \| bool \| None` | `None` |

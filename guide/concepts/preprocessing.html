@@ -433,6 +433,7 @@
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reporting.html">Paper Tables</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../figures.html">Paper Figures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../multi_axis_comparison.html">Multi-Axis Forecast Comparisons</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../custom_data_tutorial.html">Your Data, Your Model, One Table</a></li>
 </ul>
 </div>
@@ -534,6 +535,11 @@ execution. Pass the returned <code class="docutils literal notranslate"><span cl
 <span class="c1"># Pass prep_spec to Arm(..., preprocessing=prep_spec) or forecasting.run(...).</span>
 </pre></div>
 </div>
+<p>For deterministic missing-value handling, <code class="docutils literal notranslate"><span class="pre">impute=&quot;zero&quot;</span></code> replaces remaining
+missing cells with zero before standardization. The same option is available in
+<code class="docutils literal notranslate"><span class="pre">preprocess_spec(...)</span></code>; under <code class="docutils literal notranslate"><span class="pre">policy=&quot;fit_window&quot;</span></code> the zero-imputation state is
+fit on the training window and then applied before the fitted standardization
+state.</p>
 </section>
 <section id="executed-walkthrough">
 <h2>Executed walkthrough<a class="headerlink" href="#executed-walkthrough" title="Link to this heading">#</a></h2>

@@ -50,6 +50,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `SuperLearnerRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
 | `TestWindow` | [`macroforecast.window`](window.md) | class |
 | `ValWindow` | [`macroforecast.window`](window.md) | class |
+| `ValidationSplitterSpec` | [`macroforecast.model_selection`](model_selection.md) | class |
 | `VintagePanelSpec` | [`macroforecast.data`](data.md) | class |
 | `VintageSource` | [`macroforecast.data`](data.md) | class |
 | `VintageUnavailableError` | [`macroforecast.data`](data.md) | class |
@@ -65,6 +66,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `align_reference_weights` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `alignment_drop_incomplete` | [`macroforecast.window`](window.md) | function |
 | `alignment_keep_missing` | [`macroforecast.window`](window.md) | function |
+| `analysis` | `macroforecast.analysis` | module |
 | `ar` | [`macroforecast.models`](models.md) | function |
 | `arima` | [`macroforecast.models`](models.md) | function |
 | `as_panel` | [`macroforecast.data`](data.md) | function |
@@ -74,6 +76,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `auto_arima` | [`macroforecast.models`](models.md) | function |
 | `availability_lag` | [`macroforecast.data`](data.md) | function |
 | `average_target` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `axis_contribution` | `macroforecast.analysis` | function |
 | `bagging` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
 | `bayesian_ridge` | [`macroforecast.models`](models.md) | function |
 | `bayesian_search` | [`macroforecast.model_selection`](model_selection.md) | function |
@@ -108,6 +111,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `compose_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `configure` | [`macroforecast.meta`](meta.md) | function |
 | `correlation_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `csr` | [`macroforecast.models`](models.md) | function |
 | `cumsum_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `custom_combination` | [`macroforecast.forecasting`](forecasting.md) | function |
 | `custom_dataset` | [`macroforecast.data`](data.md) | function |
@@ -144,6 +148,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `evaluation` | [`macroforecast.evaluation`](evaluation.md) | module |
 | `expanding` | [`macroforecast.window`](window.md) | function |
 | `expanding_split` | [`macroforecast.window`](window.md) | function |
+| `explicit_folds` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `extra_trees` | [`macroforecast.models`](models.md) | function |
 | `far` | [`macroforecast.models`](models.md) | function |
 | `favar` | [`macroforecast.models`](models.md) | function |
@@ -193,6 +198,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `interaction_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `interaction_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `interpretation` | [`macroforecast.interpretation`](interpretation.md) | module |
+| `jma` | [`macroforecast.models`](models.md) | function |
 | `kernel_ridge` | [`macroforecast.models`](models.md) | function |
 | `knn` | [`macroforecast.models`](models.md) | function |
 | `lag` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
@@ -269,6 +275,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `polynomial_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `poos` | [`macroforecast.window`](window.md) | function |
 | `poos_split` | [`macroforecast.window`](window.md) | function |
+| `predictor_screen` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `preprocess_spec` | [`macroforecast.preprocessing`](preprocessing.md) | function |
 | `preprocessing` | [`macroforecast.preprocessing`](preprocessing.md) | module |
 | `quantile_regression_forest` | [`macroforecast.models`](models.md) | function |
@@ -285,6 +292,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `rank_aggregation` | [`macroforecast.models`](models.md) | function |
 | `rank_space_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `realized_garch` | [`macroforecast.models`](models.md) | function |
+| `recursive_threefold` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `regime_scores` | [`macroforecast.evaluation`](evaluation.md) | function |
 | `reporting` | [`macroforecast.reporting`](reporting.md) | module |
 | `reprocess` | [`macroforecast.preprocessing`](preprocessing.md) | function |
@@ -314,6 +322,8 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `seasonal_naive` | [`macroforecast.models`](models.md) | function |
 | `select_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `select_params` | [`macroforecast.model_selection`](model_selection.md) | function |
+| `selection_frequency_table` | [`macroforecast.pipeline`](pipeline.md) | function |
+| `selection_history` | [`macroforecast.pipeline`](pipeline.md) | function |
 | `set_frequencies` | [`macroforecast.data`](data.md) | function |
 | `shrink_to_target_ridge` | [`macroforecast.models`](models.md) | function |
 | `sliced_inverse_regression_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
@@ -351,6 +361,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `transform_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `transformer` | [`macroforecast.models`](models.md) | function |
 | `tvp_ridge` | [`macroforecast.models`](models.md) | function |
+| `ucsv` | [`macroforecast.models`](models.md) | function |
 | `uniform` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `unrestricted_midas` | [`macroforecast.models`](models.md) | function |
 | `use_config` | [`macroforecast.meta`](meta.md) | function |
@@ -361,6 +372,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `val_random_kfold` | [`macroforecast.window`](window.md) | function |
 | `val_rolling_blocks` | [`macroforecast.window`](window.md) | function |
 | `validate_panel` | [`macroforecast.data`](data.md) | function |
+| `validation_splitter` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `var` | [`macroforecast.models`](models.md) | function |
 | `variance_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `varimax_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
@@ -382,6 +394,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `macroforecast.data_analysis` | [`macroforecast.data_analysis`](data_analysis.md) |
 | `macroforecast.feature_analysis` | [`macroforecast.feature_analysis`](feature_analysis.md) |
 | `macroforecast.feature_diagnostic` | `macroforecast.feature_diagnostic` |
+| `macroforecast.analysis` | `macroforecast.analysis` |
 | `macroforecast.filters` | [`macroforecast.filters`](filters.md) |
 | `macroforecast.forecast_analysis` | [`macroforecast.forecast_analysis`](forecast_analysis.md) |
 | `macroforecast.forecast_diagnostic` | `macroforecast.forecast_diagnostic` |

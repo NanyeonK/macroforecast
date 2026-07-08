@@ -230,6 +230,42 @@ spec/data identity; pass `allow_stale=True` only when intentionally scoring stal
 forecasts. Older checkpoint directories that lack manifests still rescore, but
 emit a warning because they can only be matched by directory name.
 
+Selection-history logging is opt-in on checkpointed pipeline runs:
+
+```python
+spec = pipeline_spec(
+    data=bundle,
+    targets=[TargetSpec("INDPRO")],
+    horizons=[1, 3],
+    window=window,
+    arms=[
+        Arm(
+            "RIDGE",
+            model="ridge",
+            features=mf.feature_engineering.feature_spec(
+                target="INDPRO",
+                predictors="all",
+                feature_steps=[mf.feature_engineering.predictor_screen(top_k=40)],
+            ),
+        )
+    ],
+    evaluation=EvalSpec(benchmark="RIDGE"),
+    checkpoint_dir="cache/checkpoints",
+    selection_history=True,
+)
+report = run_pipeline(spec)
+
+history = mf.pipeline.selection_history(report)
+freq = mf.pipeline.selection_frequency_table(history)
+```
+
+Each completed origin writes `origin_<pos>_selection.jsonl` next to its forecast
+parquet file. `selection_history(...)` also accepts a checkpoint directory or a
+rescored report, returning tidy rows with `arm`, `origin`, `horizon`, `kind`,
+`name`, and `value`; feature-screen selections use `kind="feature"` and selected
+model parameters use `kind="param"`. With the default
+`selection_history=False`, no sidecars are written.
+
 ## Reference
 
 - [Forecasting reference page](../../reference/forecasting.md) — `run`, `ForecastResult`, forecast policy options, and stage policy definitions.

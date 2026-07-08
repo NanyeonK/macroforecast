@@ -784,127 +784,131 @@
 <td><p>function</p></td>
 <td><p>Return a target-aware PLS step for <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pct_change_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">predictor_screen</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Return a target-aware predictor-screen step for <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pct_change_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create simple-growth features.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">polynomial_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">polynomial_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create polynomial expansion features with readable column names.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">polynomial_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">polynomial_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable polynomial-expansion step.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_projection_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_projection_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create Gaussian random-projection features.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_projection_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_projection_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable Gaussian random-projection step.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rank_space_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rank_space_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Sort each row into rank-space features for supervised aggregation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rfe_selection</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rfe_selection</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Select columns by recursive feature elimination.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_mean</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_mean</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create rolling-mean feature columns from a canonical panel.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable rolling-mean step for <code class="docutils literal notranslate"><span class="pre">compose_features</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">savitzky_golay_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">savitzky_golay_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Smooth columns with a centered Savitzky-Golay filter.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scale_features</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scale_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Scale features with either expanding or explicit full-sample fitting.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scale_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scale_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable scaling step for <code class="docutils literal notranslate"><span class="pre">compose_features</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">season_dummy</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create month or quarter seasonal dummies from the date index.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">season_dummy_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">season_dummy_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable date-index seasonal-dummy step.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_lag</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create seasonal lag features such as 12-month or 4-quarter lags.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_lag_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_lag_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable seasonal-lag step.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">select_features</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">select_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Fit one feature-selection rule on a training matrix.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create Sliced Inverse Regression factors from a target signal.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a target-aware SIR step for <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create Chen-Rohe sparse component analysis factors.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable Chen-Rohe sparse component step.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stability_selection</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Select columns by repeated sparse-model subsampling frequency.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_features</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create deterministic date-index features.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">time_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable deterministic trend/month/quarter/year step.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transform_step</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transform_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable deterministic column transform step.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transform_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transform_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Apply a simple column-wise transformation as feature engineering.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">varimax_features</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">varimax_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Rotate factor-score columns with an orthogonal varimax rotation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">varimax_step</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">varimax_step</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Return a reusable orthogonal varimax-rotation step.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variance_selection</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">variance_selection</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Select columns with the largest sample variance.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">wavelet_features</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">wavelet_features</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Create rolling multi-resolution approximation/detail features.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">weighted_aggregate</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">weighted_aggregate</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Apply aligned component weights to a panel and return one aggregate.</p></td>
 </tr>
@@ -6327,21 +6331,142 @@ external split has already made the input sample training-only.</p>
 </div>
 </section>
 </section>
-<section id="pct-change-features">
-<h3>pct_change_features<a class="headerlink" href="#pct-change-features" title="Link to this heading">#</a></h3>
-<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.pct_change_features</span></code></p>
+<section id="predictor-screen">
+<h3>predictor_screen<a class="headerlink" href="#predictor-screen" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.predictor_screen</span></code></p>
 <section id="id281">
 <h4>Signature<a class="headerlink" href="#id281" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">pct_change_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">predictor_screen</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;t_stat&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;screen&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">controls</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">l1_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20000</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id282">
 <h4>Description<a class="headerlink" href="#id282" title="Link to this heading">#</a></h4>
-<p>Create simple-growth features.</p>
+<p>Return a target-aware predictor-screen step for <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code>.</p>
 </section>
 <section id="id283">
 <h4>Parameters<a class="headerlink" href="#id283" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;t_stat&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;screen&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">input</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;panel&quot;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">columns</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Iterable[str]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">top_k</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_k</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">controls</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Iterable[str]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.001</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">l1_ratio</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_iter</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">20000</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_train_size</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">include</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">drop_missing</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">warn_full_sample</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id284">
+<h4>Returns<a class="headerlink" href="#id284" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
+</section>
+<section id="id285">
+<h4>Minimal Use<a class="headerlink" href="#id285" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.feature_engineering.predictor_screen(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="pct-change-features">
+<h3>pct_change_features<a class="headerlink" href="#pct-change-features" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.pct_change_features</span></code></p>
+<section id="id286">
+<h4>Signature<a class="headerlink" href="#id286" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">pct_change_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id287">
+<h4>Description<a class="headerlink" href="#id287" title="Link to this heading">#</a></h4>
+<p>Create simple-growth features.</p>
+</section>
+<section id="id288">
+<h4>Parameters<a class="headerlink" href="#id288" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6380,12 +6505,12 @@ external split has already made the input sample training-only.</p>
 </table>
 </div>
 </section>
-<section id="id284">
-<h4>Returns<a class="headerlink" href="#id284" title="Link to this heading">#</a></h4>
+<section id="id289">
+<h4>Returns<a class="headerlink" href="#id289" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id285">
-<h4>Minimal Use<a class="headerlink" href="#id285" title="Link to this heading">#</a></h4>
+<section id="id290">
+<h4>Minimal Use<a class="headerlink" href="#id290" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.pct_change_features(...)</span>
@@ -6396,18 +6521,18 @@ external split has already made the input sample training-only.</p>
 <section id="polynomial-features">
 <h3>polynomial_features<a class="headerlink" href="#polynomial-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.polynomial_features</span></code></p>
-<section id="id286">
-<h4>Signature<a class="headerlink" href="#id286" title="Link to this heading">#</a></h4>
+<section id="id291">
+<h4>Signature<a class="headerlink" href="#id291" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">polynomial_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">degree</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">include_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">interaction_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id287">
-<h4>Description<a class="headerlink" href="#id287" title="Link to this heading">#</a></h4>
+<section id="id292">
+<h4>Description<a class="headerlink" href="#id292" title="Link to this heading">#</a></h4>
 <p>Create polynomial expansion features with readable column names.</p>
 </section>
-<section id="id288">
-<h4>Parameters<a class="headerlink" href="#id288" title="Link to this heading">#</a></h4>
+<section id="id293">
+<h4>Parameters<a class="headerlink" href="#id293" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6456,12 +6581,12 @@ external split has already made the input sample training-only.</p>
 </table>
 </div>
 </section>
-<section id="id289">
-<h4>Returns<a class="headerlink" href="#id289" title="Link to this heading">#</a></h4>
+<section id="id294">
+<h4>Returns<a class="headerlink" href="#id294" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id290">
-<h4>Minimal Use<a class="headerlink" href="#id290" title="Link to this heading">#</a></h4>
+<section id="id295">
+<h4>Minimal Use<a class="headerlink" href="#id295" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.polynomial_features(...)</span>
@@ -6472,18 +6597,18 @@ external split has already made the input sample training-only.</p>
 <section id="polynomial-step">
 <h3>polynomial_step<a class="headerlink" href="#polynomial-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.polynomial_step</span></code></p>
-<section id="id291">
-<h4>Signature<a class="headerlink" href="#id291" title="Link to this heading">#</a></h4>
+<section id="id296">
+<h4>Signature<a class="headerlink" href="#id296" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">polynomial_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;polynomial&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">degree</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">include_bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">interaction_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id292">
-<h4>Description<a class="headerlink" href="#id292" title="Link to this heading">#</a></h4>
+<section id="id297">
+<h4>Description<a class="headerlink" href="#id297" title="Link to this heading">#</a></h4>
 <p>Return a reusable polynomial-expansion step.</p>
 </section>
-<section id="id293">
-<h4>Parameters<a class="headerlink" href="#id293" title="Link to this heading">#</a></h4>
+<section id="id298">
+<h4>Parameters<a class="headerlink" href="#id298" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6537,12 +6662,12 @@ external split has already made the input sample training-only.</p>
 </table>
 </div>
 </section>
-<section id="id294">
-<h4>Returns<a class="headerlink" href="#id294" title="Link to this heading">#</a></h4>
+<section id="id299">
+<h4>Returns<a class="headerlink" href="#id299" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id295">
-<h4>Minimal Use<a class="headerlink" href="#id295" title="Link to this heading">#</a></h4>
+<section id="id300">
+<h4>Minimal Use<a class="headerlink" href="#id300" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.polynomial_step(...)</span>
@@ -6553,18 +6678,18 @@ external split has already made the input sample training-only.</p>
 <section id="random-projection-features">
 <h3>random_projection_features<a class="headerlink" href="#random-projection-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.random_projection_features</span></code></p>
-<section id="id296">
-<h4>Signature<a class="headerlink" href="#id296" title="Link to this heading">#</a></h4>
+<section id="id301">
+<h4>Signature<a class="headerlink" href="#id301" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">random_projection_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rp&quot;</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id297">
-<h4>Description<a class="headerlink" href="#id297" title="Link to this heading">#</a></h4>
+<section id="id302">
+<h4>Description<a class="headerlink" href="#id302" title="Link to this heading">#</a></h4>
 <p>Create Gaussian random-projection features.</p>
 </section>
-<section id="id298">
-<h4>Parameters<a class="headerlink" href="#id298" title="Link to this heading">#</a></h4>
+<section id="id303">
+<h4>Parameters<a class="headerlink" href="#id303" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6618,12 +6743,12 @@ external split has already made the input sample training-only.</p>
 </table>
 </div>
 </section>
-<section id="id299">
-<h4>Returns<a class="headerlink" href="#id299" title="Link to this heading">#</a></h4>
+<section id="id304">
+<h4>Returns<a class="headerlink" href="#id304" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id300">
-<h4>Minimal Use<a class="headerlink" href="#id300" title="Link to this heading">#</a></h4>
+<section id="id305">
+<h4>Minimal Use<a class="headerlink" href="#id305" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.random_projection_features(...)</span>
@@ -6634,18 +6759,18 @@ external split has already made the input sample training-only.</p>
 <section id="random-projection-step">
 <h3>random_projection_step<a class="headerlink" href="#random-projection-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.random_projection_step</span></code></p>
-<section id="id301">
-<h4>Signature<a class="headerlink" href="#id301" title="Link to this heading">#</a></h4>
+<section id="id306">
+<h4>Signature<a class="headerlink" href="#id306" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">random_projection_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rp&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fit_policy</span><span class="p">:</span> <span class="n">FitPolicy</span> <span class="o">=</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id302">
-<h4>Description<a class="headerlink" href="#id302" title="Link to this heading">#</a></h4>
+<section id="id307">
+<h4>Description<a class="headerlink" href="#id307" title="Link to this heading">#</a></h4>
 <p>Return a reusable Gaussian random-projection step.</p>
 </section>
-<section id="id303">
-<h4>Parameters<a class="headerlink" href="#id303" title="Link to this heading">#</a></h4>
+<section id="id308">
+<h4>Parameters<a class="headerlink" href="#id308" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6714,12 +6839,12 @@ external split has already made the input sample training-only.</p>
 </table>
 </div>
 </section>
-<section id="id304">
-<h4>Returns<a class="headerlink" href="#id304" title="Link to this heading">#</a></h4>
+<section id="id309">
+<h4>Returns<a class="headerlink" href="#id309" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id305">
-<h4>Minimal Use<a class="headerlink" href="#id305" title="Link to this heading">#</a></h4>
+<section id="id310">
+<h4>Minimal Use<a class="headerlink" href="#id310" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.random_projection_step(...)</span>
@@ -6730,21 +6855,21 @@ external split has already made the input sample training-only.</p>
 <section id="rank-space-features">
 <h3>rank_space_features<a class="headerlink" href="#rank-space-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.aggregation.rank_space_features</span></code></p>
-<section id="id306">
-<h4>Signature<a class="headerlink" href="#id306" title="Link to this heading">#</a></h4>
+<section id="id311">
+<h4>Signature<a class="headerlink" href="#id311" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">rank_space_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rank_&quot;</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id307">
-<h4>Description<a class="headerlink" href="#id307" title="Link to this heading">#</a></h4>
+<section id="id312">
+<h4>Description<a class="headerlink" href="#id312" title="Link to this heading">#</a></h4>
 <p>Sort each row into rank-space features for supervised aggregation.</p>
 <p>The primitive is generic order-statistic feature construction. It is the
 reusable form of <code class="docutils literal notranslate"><span class="pre">x.transformation</span></code> in the R <code class="docutils literal notranslate"><span class="pre">assemblage</span></code> package used
 for Albacoreranks.</p>
 </section>
-<section id="id308">
-<h4>Parameters<a class="headerlink" href="#id308" title="Link to this heading">#</a></h4>
+<section id="id313">
+<h4>Parameters<a class="headerlink" href="#id313" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6783,12 +6908,12 @@ for Albacoreranks.</p>
 </table>
 </div>
 </section>
-<section id="id309">
-<h4>Returns<a class="headerlink" href="#id309" title="Link to this heading">#</a></h4>
+<section id="id314">
+<h4>Returns<a class="headerlink" href="#id314" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id310">
-<h4>Minimal Use<a class="headerlink" href="#id310" title="Link to this heading">#</a></h4>
+<section id="id315">
+<h4>Minimal Use<a class="headerlink" href="#id315" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.rank_space_features(...)</span>
@@ -6799,18 +6924,18 @@ for Albacoreranks.</p>
 <section id="rfe-selection">
 <h3>rfe_selection<a class="headerlink" href="#rfe-selection" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.feature_selection.rfe_selection</span></code></p>
-<section id="id311">
-<h4>Signature<a class="headerlink" href="#id311" title="Link to this heading">#</a></h4>
+<section id="id316">
+<h4>Signature<a class="headerlink" href="#id316" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">rfe_selection</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_features</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">estimator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">use_cv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cv_folds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id312">
-<h4>Description<a class="headerlink" href="#id312" title="Link to this heading">#</a></h4>
+<section id="id317">
+<h4>Description<a class="headerlink" href="#id317" title="Link to this heading">#</a></h4>
 <p>Select columns by recursive feature elimination.</p>
 </section>
-<section id="id313">
-<h4>Parameters<a class="headerlink" href="#id313" title="Link to this heading">#</a></h4>
+<section id="id318">
+<h4>Parameters<a class="headerlink" href="#id318" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6884,12 +7009,12 @@ for Albacoreranks.</p>
 </table>
 </div>
 </section>
-<section id="id314">
-<h4>Returns<a class="headerlink" href="#id314" title="Link to this heading">#</a></h4>
+<section id="id319">
+<h4>Returns<a class="headerlink" href="#id319" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id315">
-<h4>Minimal Use<a class="headerlink" href="#id315" title="Link to this heading">#</a></h4>
+<section id="id320">
+<h4>Minimal Use<a class="headerlink" href="#id320" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.rfe_selection(...)</span>
@@ -6900,18 +7025,18 @@ for Albacoreranks.</p>
 <section id="rolling-mean">
 <h3>rolling_mean<a class="headerlink" href="#rolling-mean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.rolling_mean</span></code></p>
-<section id="id316">
-<h4>Signature<a class="headerlink" href="#id316" title="Link to this heading">#</a></h4>
+<section id="id321">
+<h4>Signature<a class="headerlink" href="#id321" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">rolling_mean</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,),</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shift</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id317">
-<h4>Description<a class="headerlink" href="#id317" title="Link to this heading">#</a></h4>
+<section id="id322">
+<h4>Description<a class="headerlink" href="#id322" title="Link to this heading">#</a></h4>
 <p>Create rolling-mean feature columns from a canonical panel.</p>
 </section>
-<section id="id318">
-<h4>Parameters<a class="headerlink" href="#id318" title="Link to this heading">#</a></h4>
+<section id="id323">
+<h4>Parameters<a class="headerlink" href="#id323" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -6960,12 +7085,12 @@ for Albacoreranks.</p>
 </table>
 </div>
 </section>
-<section id="id319">
-<h4>Returns<a class="headerlink" href="#id319" title="Link to this heading">#</a></h4>
+<section id="id324">
+<h4>Returns<a class="headerlink" href="#id324" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id320">
-<h4>Minimal Use<a class="headerlink" href="#id320" title="Link to this heading">#</a></h4>
+<section id="id325">
+<h4>Minimal Use<a class="headerlink" href="#id325" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.rolling_mean(...)</span>
@@ -6976,18 +7101,18 @@ for Albacoreranks.</p>
 <section id="rolling-step">
 <h3>rolling_step<a class="headerlink" href="#rolling-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.rolling_step</span></code></p>
-<section id="id321">
-<h4>Signature<a class="headerlink" href="#id321" title="Link to this heading">#</a></h4>
+<section id="id326">
+<h4>Signature<a class="headerlink" href="#id326" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">rolling_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rolling_mean&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">windows</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,),</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shift</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id322">
-<h4>Description<a class="headerlink" href="#id322" title="Link to this heading">#</a></h4>
+<section id="id327">
+<h4>Description<a class="headerlink" href="#id327" title="Link to this heading">#</a></h4>
 <p>Return a reusable rolling-mean step for <code class="docutils literal notranslate"><span class="pre">compose_features</span></code>.</p>
 </section>
-<section id="id323">
-<h4>Parameters<a class="headerlink" href="#id323" title="Link to this heading">#</a></h4>
+<section id="id328">
+<h4>Parameters<a class="headerlink" href="#id328" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7041,12 +7166,12 @@ for Albacoreranks.</p>
 </table>
 </div>
 </section>
-<section id="id324">
-<h4>Returns<a class="headerlink" href="#id324" title="Link to this heading">#</a></h4>
+<section id="id329">
+<h4>Returns<a class="headerlink" href="#id329" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id325">
-<h4>Minimal Use<a class="headerlink" href="#id325" title="Link to this heading">#</a></h4>
+<section id="id330">
+<h4>Minimal Use<a class="headerlink" href="#id330" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.rolling_step(...)</span>
@@ -7057,21 +7182,21 @@ for Albacoreranks.</p>
 <section id="savitzky-golay-features">
 <h3>savitzky_golay_features<a class="headerlink" href="#savitzky-golay-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.savitzky_golay_features</span></code></p>
-<section id="id326">
-<h4>Signature<a class="headerlink" href="#id326" title="Link to this heading">#</a></h4>
+<section id="id331">
+<h4>Signature<a class="headerlink" href="#id331" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">savitzky_golay_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">window_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">polyorder</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">derivative</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id327">
-<h4>Description<a class="headerlink" href="#id327" title="Link to this heading">#</a></h4>
+<section id="id332">
+<h4>Description<a class="headerlink" href="#id332" title="Link to this heading">#</a></h4>
 <p>Smooth columns with a centered Savitzky-Golay filter.</p>
 <p>The scipy filter uses a centered local window by default. It is direct-only
 and warns by default because centered smoothing can leak future values
 relative to a forecasting origin.</p>
 </section>
-<section id="id328">
-<h4>Parameters<a class="headerlink" href="#id328" title="Link to this heading">#</a></h4>
+<section id="id333">
+<h4>Parameters<a class="headerlink" href="#id333" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7125,12 +7250,12 @@ relative to a forecasting origin.</p>
 </table>
 </div>
 </section>
-<section id="id329">
-<h4>Returns<a class="headerlink" href="#id329" title="Link to this heading">#</a></h4>
+<section id="id334">
+<h4>Returns<a class="headerlink" href="#id334" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id330">
-<h4>Minimal Use<a class="headerlink" href="#id330" title="Link to this heading">#</a></h4>
+<section id="id335">
+<h4>Minimal Use<a class="headerlink" href="#id335" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.savitzky_golay_features(...)</span>
@@ -7141,22 +7266,22 @@ relative to a forecasting origin.</p>
 <section id="scale-features">
 <h3>scale_features<a class="headerlink" href="#scale-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.scale_features</span></code></p>
-<section id="id331">
-<h4>Signature<a class="headerlink" href="#id331" title="Link to this heading">#</a></h4>
+<section id="id336">
+<h4>Signature<a class="headerlink" href="#id336" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">scale_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;zscore&quot;</span><span class="p">,</span> <span class="n">fit_policy</span><span class="p">:</span> <span class="n">FitPolicy</span> <span class="o">=</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id332">
-<h4>Description<a class="headerlink" href="#id332" title="Link to this heading">#</a></h4>
+<section id="id337">
+<h4>Description<a class="headerlink" href="#id337" title="Link to this heading">#</a></h4>
 <p>Scale features with either expanding or explicit full-sample fitting.</p>
 <p><code class="docutils literal notranslate"><span class="pre">fit_policy='expanding'</span></code> estimates scaling parameters using observations
 available through each row’s date. <code class="docutils literal notranslate"><span class="pre">fit_policy='full_sample'</span></code> is useful
 for exploratory transforms but should not be used before a forecasting
 split unless the caller deliberately accepts full-sample leakage.</p>
 </section>
-<section id="id333">
-<h4>Parameters<a class="headerlink" href="#id333" title="Link to this heading">#</a></h4>
+<section id="id338">
+<h4>Parameters<a class="headerlink" href="#id338" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7210,12 +7335,12 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 </table>
 </div>
 </section>
-<section id="id334">
-<h4>Returns<a class="headerlink" href="#id334" title="Link to this heading">#</a></h4>
+<section id="id339">
+<h4>Returns<a class="headerlink" href="#id339" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id335">
-<h4>Minimal Use<a class="headerlink" href="#id335" title="Link to this heading">#</a></h4>
+<section id="id340">
+<h4>Minimal Use<a class="headerlink" href="#id340" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.scale_features(...)</span>
@@ -7226,18 +7351,18 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 <section id="scale-step">
 <h3>scale_step<a class="headerlink" href="#scale-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.scale_step</span></code></p>
-<section id="id336">
-<h4>Signature<a class="headerlink" href="#id336" title="Link to this heading">#</a></h4>
+<section id="id341">
+<h4>Signature<a class="headerlink" href="#id341" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">scale_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;zscore&quot;</span><span class="p">,</span> <span class="n">fit_policy</span><span class="p">:</span> <span class="n">FitPolicy</span> <span class="o">=</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id337">
-<h4>Description<a class="headerlink" href="#id337" title="Link to this heading">#</a></h4>
+<section id="id342">
+<h4>Description<a class="headerlink" href="#id342" title="Link to this heading">#</a></h4>
 <p>Return a reusable scaling step for <code class="docutils literal notranslate"><span class="pre">compose_features</span></code>.</p>
 </section>
-<section id="id338">
-<h4>Parameters<a class="headerlink" href="#id338" title="Link to this heading">#</a></h4>
+<section id="id343">
+<h4>Parameters<a class="headerlink" href="#id343" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7296,12 +7421,12 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 </table>
 </div>
 </section>
-<section id="id339">
-<h4>Returns<a class="headerlink" href="#id339" title="Link to this heading">#</a></h4>
+<section id="id344">
+<h4>Returns<a class="headerlink" href="#id344" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id340">
-<h4>Minimal Use<a class="headerlink" href="#id340" title="Link to this heading">#</a></h4>
+<section id="id345">
+<h4>Minimal Use<a class="headerlink" href="#id345" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.scale_step(...)</span>
@@ -7312,18 +7437,18 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 <section id="season-dummy">
 <h3>season_dummy<a class="headerlink" href="#season-dummy" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.season_dummy</span></code></p>
-<section id="id341">
-<h4>Signature<a class="headerlink" href="#id341" title="Link to this heading">#</a></h4>
+<section id="id346">
+<h4>Signature<a class="headerlink" href="#id346" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">season_dummy</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">drop_first</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id342">
-<h4>Description<a class="headerlink" href="#id342" title="Link to this heading">#</a></h4>
+<section id="id347">
+<h4>Description<a class="headerlink" href="#id347" title="Link to this heading">#</a></h4>
 <p>Create month or quarter seasonal dummies from the date index.</p>
 </section>
-<section id="id343">
-<h4>Parameters<a class="headerlink" href="#id343" title="Link to this heading">#</a></h4>
+<section id="id348">
+<h4>Parameters<a class="headerlink" href="#id348" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7357,12 +7482,12 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 </table>
 </div>
 </section>
-<section id="id344">
-<h4>Returns<a class="headerlink" href="#id344" title="Link to this heading">#</a></h4>
+<section id="id349">
+<h4>Returns<a class="headerlink" href="#id349" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id345">
-<h4>Minimal Use<a class="headerlink" href="#id345" title="Link to this heading">#</a></h4>
+<section id="id350">
+<h4>Minimal Use<a class="headerlink" href="#id350" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.season_dummy(...)</span>
@@ -7373,18 +7498,18 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 <section id="season-dummy-step">
 <h3>season_dummy_step<a class="headerlink" href="#season-dummy-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.season_dummy_step</span></code></p>
-<section id="id346">
-<h4>Signature<a class="headerlink" href="#id346" title="Link to this heading">#</a></h4>
+<section id="id351">
+<h4>Signature<a class="headerlink" href="#id351" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">season_dummy_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;season_dummy&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">drop_first</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id347">
-<h4>Description<a class="headerlink" href="#id347" title="Link to this heading">#</a></h4>
+<section id="id352">
+<h4>Description<a class="headerlink" href="#id352" title="Link to this heading">#</a></h4>
 <p>Return a reusable date-index seasonal-dummy step.</p>
 </section>
-<section id="id348">
-<h4>Parameters<a class="headerlink" href="#id348" title="Link to this heading">#</a></h4>
+<section id="id353">
+<h4>Parameters<a class="headerlink" href="#id353" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7423,12 +7548,12 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 </table>
 </div>
 </section>
-<section id="id349">
-<h4>Returns<a class="headerlink" href="#id349" title="Link to this heading">#</a></h4>
+<section id="id354">
+<h4>Returns<a class="headerlink" href="#id354" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id350">
-<h4>Minimal Use<a class="headerlink" href="#id350" title="Link to this heading">#</a></h4>
+<section id="id355">
+<h4>Minimal Use<a class="headerlink" href="#id355" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.season_dummy_step(...)</span>
@@ -7439,18 +7564,18 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 <section id="seasonal-lag">
 <h3>seasonal_lag<a class="headerlink" href="#seasonal-lag" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.seasonal_lag</span></code></p>
-<section id="id351">
-<h4>Signature<a class="headerlink" href="#id351" title="Link to this heading">#</a></h4>
+<section id="id356">
+<h4>Signature<a class="headerlink" href="#id356" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">seasonal_lag</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">season_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">lags</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id352">
-<h4>Description<a class="headerlink" href="#id352" title="Link to this heading">#</a></h4>
+<section id="id357">
+<h4>Description<a class="headerlink" href="#id357" title="Link to this heading">#</a></h4>
 <p>Create seasonal lag features such as 12-month or 4-quarter lags.</p>
 </section>
-<section id="id353">
-<h4>Parameters<a class="headerlink" href="#id353" title="Link to this heading">#</a></h4>
+<section id="id358">
+<h4>Parameters<a class="headerlink" href="#id358" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7494,12 +7619,12 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 </table>
 </div>
 </section>
-<section id="id354">
-<h4>Returns<a class="headerlink" href="#id354" title="Link to this heading">#</a></h4>
+<section id="id359">
+<h4>Returns<a class="headerlink" href="#id359" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id355">
-<h4>Minimal Use<a class="headerlink" href="#id355" title="Link to this heading">#</a></h4>
+<section id="id360">
+<h4>Minimal Use<a class="headerlink" href="#id360" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.seasonal_lag(...)</span>
@@ -7510,18 +7635,18 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 <section id="seasonal-lag-step">
 <h3>seasonal_lag_step<a class="headerlink" href="#seasonal-lag-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.seasonal_lag_step</span></code></p>
-<section id="id356">
-<h4>Signature<a class="headerlink" href="#id356" title="Link to this heading">#</a></h4>
+<section id="id361">
+<h4>Signature<a class="headerlink" href="#id361" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">seasonal_lag_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;seasonal_lag&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">season_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">lags</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id357">
-<h4>Description<a class="headerlink" href="#id357" title="Link to this heading">#</a></h4>
+<section id="id362">
+<h4>Description<a class="headerlink" href="#id362" title="Link to this heading">#</a></h4>
 <p>Return a reusable seasonal-lag step.</p>
 </section>
-<section id="id358">
-<h4>Parameters<a class="headerlink" href="#id358" title="Link to this heading">#</a></h4>
+<section id="id363">
+<h4>Parameters<a class="headerlink" href="#id363" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7570,12 +7695,12 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 </table>
 </div>
 </section>
-<section id="id359">
-<h4>Returns<a class="headerlink" href="#id359" title="Link to this heading">#</a></h4>
+<section id="id364">
+<h4>Returns<a class="headerlink" href="#id364" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id360">
-<h4>Minimal Use<a class="headerlink" href="#id360" title="Link to this heading">#</a></h4>
+<section id="id365">
+<h4>Minimal Use<a class="headerlink" href="#id365" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.seasonal_lag_step(...)</span>
@@ -7586,18 +7711,18 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 <section id="select-features">
 <h3>select_features<a class="headerlink" href="#select-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.feature_selection.select_features</span></code></p>
-<section id="id361">
-<h4>Signature<a class="headerlink" href="#id361" title="Link to this heading">#</a></h4>
+<section id="id366">
+<h4>Signature<a class="headerlink" href="#id366" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">select_features</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_features</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;variance_selection&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureSelectionResult</span>
 </pre></div>
 </div>
 </section>
-<section id="id362">
-<h4>Description<a class="headerlink" href="#id362" title="Link to this heading">#</a></h4>
+<section id="id367">
+<h4>Description<a class="headerlink" href="#id367" title="Link to this heading">#</a></h4>
 <p>Fit one feature-selection rule on a training matrix.</p>
 </section>
-<section id="id363">
-<h4>Parameters<a class="headerlink" href="#id363" title="Link to this heading">#</a></h4>
+<section id="id368">
+<h4>Parameters<a class="headerlink" href="#id368" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7646,12 +7771,12 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 </table>
 </div>
 </section>
-<section id="id364">
-<h4>Returns<a class="headerlink" href="#id364" title="Link to this heading">#</a></h4>
+<section id="id369">
+<h4>Returns<a class="headerlink" href="#id369" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">FeatureSelectionResult</span></code></p>
 </section>
-<section id="id365">
-<h4>Minimal Use<a class="headerlink" href="#id365" title="Link to this heading">#</a></h4>
+<section id="id370">
+<h4>Minimal Use<a class="headerlink" href="#id370" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.select_features(...)</span>
@@ -7662,21 +7787,21 @@ split unless the caller deliberately accepts full-sample leakage.</p>
 <section id="sliced-inverse-regression-features">
 <h3>sliced_inverse_regression_features<a class="headerlink" href="#sliced-inverse-regression-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.sliced_inverse_regression_features</span></code></p>
-<section id="id366">
-<h4>Signature<a class="headerlink" href="#id366" title="Link to this heading">#</a></h4>
+<section id="id371">
+<h4>Signature<a class="headerlink" href="#id371" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">sliced_inverse_regression_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n_slices</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">scaling_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;scaled_pca&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sir&quot;</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id367">
-<h4>Description<a class="headerlink" href="#id367" title="Link to this heading">#</a></h4>
+<section id="id372">
+<h4>Description<a class="headerlink" href="#id372" title="Link to this heading">#</a></h4>
 <p>Create Sliced Inverse Regression factors from a target signal.</p>
 <p>SIR is target-aware, so this direct callable fits on all target-aligned rows.
 For runner-safe use, call <code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_step()</span></code> inside
 <code class="docutils literal notranslate"><span class="pre">feature_spec()</span></code> so the directions are fitted only on each fit window.</p>
 </section>
-<section id="id368">
-<h4>Parameters<a class="headerlink" href="#id368" title="Link to this heading">#</a></h4>
+<section id="id373">
+<h4>Parameters<a class="headerlink" href="#id373" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7740,12 +7865,12 @@ For runner-safe use, call <code class="docutils literal notranslate"><span class
 </table>
 </div>
 </section>
-<section id="id369">
-<h4>Returns<a class="headerlink" href="#id369" title="Link to this heading">#</a></h4>
+<section id="id374">
+<h4>Returns<a class="headerlink" href="#id374" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id370">
-<h4>Minimal Use<a class="headerlink" href="#id370" title="Link to this heading">#</a></h4>
+<section id="id375">
+<h4>Minimal Use<a class="headerlink" href="#id375" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.sliced_inverse_regression_features(...)</span>
@@ -7756,18 +7881,18 @@ For runner-safe use, call <code class="docutils literal notranslate"><span class
 <section id="sliced-inverse-regression-step">
 <h3>sliced_inverse_regression_step<a class="headerlink" href="#sliced-inverse-regression-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.sliced_inverse_regression_step</span></code></p>
-<section id="id371">
-<h4>Signature<a class="headerlink" href="#id371" title="Link to this heading">#</a></h4>
+<section id="id376">
+<h4>Signature<a class="headerlink" href="#id376" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">sliced_inverse_regression_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sir&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n_slices</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">scaling_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;scaled_pca&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id372">
-<h4>Description<a class="headerlink" href="#id372" title="Link to this heading">#</a></h4>
+<section id="id377">
+<h4>Description<a class="headerlink" href="#id377" title="Link to this heading">#</a></h4>
 <p>Return a target-aware SIR step for <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code>.</p>
 </section>
-<section id="id373">
-<h4>Parameters<a class="headerlink" href="#id373" title="Link to this heading">#</a></h4>
+<section id="id378">
+<h4>Parameters<a class="headerlink" href="#id378" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7836,12 +7961,12 @@ For runner-safe use, call <code class="docutils literal notranslate"><span class
 </table>
 </div>
 </section>
-<section id="id374">
-<h4>Returns<a class="headerlink" href="#id374" title="Link to this heading">#</a></h4>
+<section id="id379">
+<h4>Returns<a class="headerlink" href="#id379" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id375">
-<h4>Minimal Use<a class="headerlink" href="#id375" title="Link to this heading">#</a></h4>
+<section id="id380">
+<h4>Minimal Use<a class="headerlink" href="#id380" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.sliced_inverse_regression_step(...)</span>
@@ -7852,22 +7977,22 @@ For runner-safe use, call <code class="docutils literal notranslate"><span class
 <section id="sparse-pca-chen-rohe-features">
 <h3>sparse_pca_chen_rohe_features<a class="headerlink" href="#sparse-pca-chen-rohe-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.sparse_pca_chen_rohe_features</span></code></p>
-<section id="id376">
-<h4>Signature<a class="headerlink" href="#id376" title="Link to this heading">#</a></h4>
+<section id="id381">
+<h4>Signature<a class="headerlink" href="#id381" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">sparse_pca_chen_rohe_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">zeta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">var_innovations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id377">
-<h4>Description<a class="headerlink" href="#id377" title="Link to this heading">#</a></h4>
+<section id="id382">
+<h4>Description<a class="headerlink" href="#id382" title="Link to this heading">#</a></h4>
 <p>Create Chen-Rohe sparse component analysis factors.</p>
 <p>The loading matrix is learned from complete input rows and then applied to
 the same panel, so this direct callable is a full-sample transform. Use
 <code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_step()</span></code> inside <code class="docutils literal notranslate"><span class="pre">feature_spec()</span></code> when the runner
 must fit loadings only on each training window.</p>
 </section>
-<section id="id378">
-<h4>Parameters<a class="headerlink" href="#id378" title="Link to this heading">#</a></h4>
+<section id="id383">
+<h4>Parameters<a class="headerlink" href="#id383" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -7941,12 +8066,12 @@ must fit loadings only on each training window.</p>
 </table>
 </div>
 </section>
-<section id="id379">
-<h4>Returns<a class="headerlink" href="#id379" title="Link to this heading">#</a></h4>
+<section id="id384">
+<h4>Returns<a class="headerlink" href="#id384" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id380">
-<h4>Minimal Use<a class="headerlink" href="#id380" title="Link to this heading">#</a></h4>
+<section id="id385">
+<h4>Minimal Use<a class="headerlink" href="#id385" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.sparse_pca_chen_rohe_features(...)</span>
@@ -7957,18 +8082,18 @@ must fit loadings only on each training window.</p>
 <section id="sparse-pca-chen-rohe-step">
 <h3>sparse_pca_chen_rohe_step<a class="headerlink" href="#sparse-pca-chen-rohe-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.sparse_pca_chen_rohe_step</span></code></p>
-<section id="id381">
-<h4>Signature<a class="headerlink" href="#id381" title="Link to this heading">#</a></h4>
+<section id="id386">
+<h4>Signature<a class="headerlink" href="#id386" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">sparse_pca_chen_rohe_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sca&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_components</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">zeta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">var_innovations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fit_policy</span><span class="p">:</span> <span class="n">FitPolicy</span> <span class="o">=</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id382">
-<h4>Description<a class="headerlink" href="#id382" title="Link to this heading">#</a></h4>
+<section id="id387">
+<h4>Description<a class="headerlink" href="#id387" title="Link to this heading">#</a></h4>
 <p>Return a reusable Chen-Rohe sparse component step.</p>
 </section>
-<section id="id383">
-<h4>Parameters<a class="headerlink" href="#id383" title="Link to this heading">#</a></h4>
+<section id="id388">
+<h4>Parameters<a class="headerlink" href="#id388" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8052,12 +8177,12 @@ must fit loadings only on each training window.</p>
 </table>
 </div>
 </section>
-<section id="id384">
-<h4>Returns<a class="headerlink" href="#id384" title="Link to this heading">#</a></h4>
+<section id="id389">
+<h4>Returns<a class="headerlink" href="#id389" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id385">
-<h4>Minimal Use<a class="headerlink" href="#id385" title="Link to this heading">#</a></h4>
+<section id="id390">
+<h4>Minimal Use<a class="headerlink" href="#id390" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.sparse_pca_chen_rohe_step(...)</span>
@@ -8068,18 +8193,18 @@ must fit loadings only on each training window.</p>
 <section id="stability-selection">
 <h3>stability_selection<a class="headerlink" href="#stability-selection" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.feature_selection.stability_selection</span></code></p>
-<section id="id386">
-<h4>Signature<a class="headerlink" href="#id386" title="Link to this heading">#</a></h4>
+<section id="id391">
+<h4>Signature<a class="headerlink" href="#id391" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">stability_selection</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_features</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">n_subsamples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">subsample_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">pi_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.6</span><span class="p">,</span> <span class="n">base_estimator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;lasso&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">l1_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id387">
-<h4>Description<a class="headerlink" href="#id387" title="Link to this heading">#</a></h4>
+<section id="id392">
+<h4>Description<a class="headerlink" href="#id392" title="Link to this heading">#</a></h4>
 <p>Select columns by repeated sparse-model subsampling frequency.</p>
 </section>
-<section id="id388">
-<h4>Parameters<a class="headerlink" href="#id388" title="Link to this heading">#</a></h4>
+<section id="id393">
+<h4>Parameters<a class="headerlink" href="#id393" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8163,12 +8288,12 @@ must fit loadings only on each training window.</p>
 </table>
 </div>
 </section>
-<section id="id389">
-<h4>Returns<a class="headerlink" href="#id389" title="Link to this heading">#</a></h4>
+<section id="id394">
+<h4>Returns<a class="headerlink" href="#id394" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id390">
-<h4>Minimal Use<a class="headerlink" href="#id390" title="Link to this heading">#</a></h4>
+<section id="id395">
+<h4>Minimal Use<a class="headerlink" href="#id395" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.stability_selection(...)</span>
@@ -8179,18 +8304,18 @@ must fit loadings only on each training window.</p>
 <section id="time-features">
 <h3>time_features<a class="headerlink" href="#time-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.time_features</span></code></p>
-<section id="id391">
-<h4>Signature<a class="headerlink" href="#id391" title="Link to this heading">#</a></h4>
+<section id="id396">
+<h4>Signature<a class="headerlink" href="#id396" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">time_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">trend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">month</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">quarter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">year</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id392">
-<h4>Description<a class="headerlink" href="#id392" title="Link to this heading">#</a></h4>
+<section id="id397">
+<h4>Description<a class="headerlink" href="#id397" title="Link to this heading">#</a></h4>
 <p>Create deterministic date-index features.</p>
 </section>
-<section id="id393">
-<h4>Parameters<a class="headerlink" href="#id393" title="Link to this heading">#</a></h4>
+<section id="id398">
+<h4>Parameters<a class="headerlink" href="#id398" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8234,12 +8359,12 @@ must fit loadings only on each training window.</p>
 </table>
 </div>
 </section>
-<section id="id394">
-<h4>Returns<a class="headerlink" href="#id394" title="Link to this heading">#</a></h4>
+<section id="id399">
+<h4>Returns<a class="headerlink" href="#id399" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id395">
-<h4>Minimal Use<a class="headerlink" href="#id395" title="Link to this heading">#</a></h4>
+<section id="id400">
+<h4>Minimal Use<a class="headerlink" href="#id400" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.time_features(...)</span>
@@ -8250,18 +8375,18 @@ must fit loadings only on each training window.</p>
 <section id="time-step">
 <h3>time_step<a class="headerlink" href="#time-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.time_step</span></code></p>
-<section id="id396">
-<h4>Signature<a class="headerlink" href="#id396" title="Link to this heading">#</a></h4>
+<section id="id401">
+<h4>Signature<a class="headerlink" href="#id401" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">time_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">trend</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">month</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">quarter</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">year</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id397">
-<h4>Description<a class="headerlink" href="#id397" title="Link to this heading">#</a></h4>
+<section id="id402">
+<h4>Description<a class="headerlink" href="#id402" title="Link to this heading">#</a></h4>
 <p>Return a reusable deterministic trend/month/quarter/year step.</p>
 </section>
-<section id="id398">
-<h4>Parameters<a class="headerlink" href="#id398" title="Link to this heading">#</a></h4>
+<section id="id403">
+<h4>Parameters<a class="headerlink" href="#id403" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8310,12 +8435,12 @@ must fit loadings only on each training window.</p>
 </table>
 </div>
 </section>
-<section id="id399">
-<h4>Returns<a class="headerlink" href="#id399" title="Link to this heading">#</a></h4>
+<section id="id404">
+<h4>Returns<a class="headerlink" href="#id404" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id400">
-<h4>Minimal Use<a class="headerlink" href="#id400" title="Link to this heading">#</a></h4>
+<section id="id405">
+<h4>Minimal Use<a class="headerlink" href="#id405" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.time_step(...)</span>
@@ -8326,18 +8451,18 @@ must fit loadings only on each training window.</p>
 <section id="transform-step">
 <h3>transform_step<a class="headerlink" href="#transform-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.transform_step</span></code></p>
-<section id="id401">
-<h4>Signature<a class="headerlink" href="#id401" title="Link to this heading">#</a></h4>
+<section id="id406">
+<h4>Signature<a class="headerlink" href="#id406" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">transform_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id402">
-<h4>Description<a class="headerlink" href="#id402" title="Link to this heading">#</a></h4>
+<section id="id407">
+<h4>Description<a class="headerlink" href="#id407" title="Link to this heading">#</a></h4>
 <p>Return a reusable deterministic column transform step.</p>
 </section>
-<section id="id403">
-<h4>Parameters<a class="headerlink" href="#id403" title="Link to this heading">#</a></h4>
+<section id="id408">
+<h4>Parameters<a class="headerlink" href="#id408" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8386,12 +8511,12 @@ must fit loadings only on each training window.</p>
 </table>
 </div>
 </section>
-<section id="id404">
-<h4>Returns<a class="headerlink" href="#id404" title="Link to this heading">#</a></h4>
+<section id="id409">
+<h4>Returns<a class="headerlink" href="#id409" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id405">
-<h4>Minimal Use<a class="headerlink" href="#id405" title="Link to this heading">#</a></h4>
+<section id="id410">
+<h4>Minimal Use<a class="headerlink" href="#id410" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.transform_step(...)</span>
@@ -8402,21 +8527,21 @@ must fit loadings only on each training window.</p>
 <section id="transform-features">
 <h3>transform_features<a class="headerlink" href="#transform-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.transform_features</span></code></p>
-<section id="id406">
-<h4>Signature<a class="headerlink" href="#id406" title="Link to this heading">#</a></h4>
+<section id="id411">
+<h4>Signature<a class="headerlink" href="#id411" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">transform_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id407">
-<h4>Description<a class="headerlink" href="#id407" title="Link to this heading">#</a></h4>
+<section id="id412">
+<h4>Description<a class="headerlink" href="#id412" title="Link to this heading">#</a></h4>
 <p>Apply a simple column-wise transformation as feature engineering.</p>
 <p>These helpers are separate from preprocessing t-codes. Use them when the
 model feature set needs extra ML transforms after the canonical panel has
 already been cleaned.</p>
 </section>
-<section id="id408">
-<h4>Parameters<a class="headerlink" href="#id408" title="Link to this heading">#</a></h4>
+<section id="id413">
+<h4>Parameters<a class="headerlink" href="#id413" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8460,12 +8585,12 @@ already been cleaned.</p>
 </table>
 </div>
 </section>
-<section id="id409">
-<h4>Returns<a class="headerlink" href="#id409" title="Link to this heading">#</a></h4>
+<section id="id414">
+<h4>Returns<a class="headerlink" href="#id414" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id410">
-<h4>Minimal Use<a class="headerlink" href="#id410" title="Link to this heading">#</a></h4>
+<section id="id415">
+<h4>Minimal Use<a class="headerlink" href="#id415" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.transform_features(...)</span>
@@ -8476,21 +8601,21 @@ already been cleaned.</p>
 <section id="varimax-features">
 <h3>varimax_features<a class="headerlink" href="#varimax-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.varimax_features</span></code></p>
-<section id="id411">
-<h4>Signature<a class="headerlink" href="#id411" title="Link to this heading">#</a></h4>
+<section id="id416">
+<h4>Signature<a class="headerlink" href="#id416" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">varimax_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-07</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;varimax&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id412">
-<h4>Description<a class="headerlink" href="#id412" title="Link to this heading">#</a></h4>
+<section id="id417">
+<h4>Description<a class="headerlink" href="#id417" title="Link to this heading">#</a></h4>
 <p>Rotate factor-score columns with an orthogonal varimax rotation.</p>
 <p>This direct callable fits the rotation on all complete rows. Use
 <code class="docutils literal notranslate"><span class="pre">varimax_step()</span></code> inside <code class="docutils literal notranslate"><span class="pre">feature_spec()</span></code> when the rotation must be fit
 only on a forecasting window’s feature-fit panel.</p>
 </section>
-<section id="id413">
-<h4>Parameters<a class="headerlink" href="#id413" title="Link to this heading">#</a></h4>
+<section id="id418">
+<h4>Parameters<a class="headerlink" href="#id418" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8549,12 +8674,12 @@ only on a forecasting window’s feature-fit panel.</p>
 </table>
 </div>
 </section>
-<section id="id414">
-<h4>Returns<a class="headerlink" href="#id414" title="Link to this heading">#</a></h4>
+<section id="id419">
+<h4>Returns<a class="headerlink" href="#id419" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id415">
-<h4>Minimal Use<a class="headerlink" href="#id415" title="Link to this heading">#</a></h4>
+<section id="id420">
+<h4>Minimal Use<a class="headerlink" href="#id420" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.varimax_features(...)</span>
@@ -8565,18 +8690,18 @@ only on a forecasting window’s feature-fit panel.</p>
 <section id="varimax-step">
 <h3>varimax_step<a class="headerlink" href="#varimax-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.compose.varimax_step</span></code></p>
-<section id="id416">
-<h4>Signature<a class="headerlink" href="#id416" title="Link to this heading">#</a></h4>
+<section id="id421">
+<h4>Signature<a class="headerlink" href="#id421" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">varimax_step</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;varimax&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;panel&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-07</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fit_policy</span><span class="p">:</span> <span class="n">FitPolicy</span> <span class="o">=</span> <span class="s2">&quot;expanding&quot;</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">warn_full_sample</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id417">
-<h4>Description<a class="headerlink" href="#id417" title="Link to this heading">#</a></h4>
+<section id="id422">
+<h4>Description<a class="headerlink" href="#id422" title="Link to this heading">#</a></h4>
 <p>Return a reusable orthogonal varimax-rotation step.</p>
 </section>
-<section id="id418">
-<h4>Parameters<a class="headerlink" href="#id418" title="Link to this heading">#</a></h4>
+<section id="id423">
+<h4>Parameters<a class="headerlink" href="#id423" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8645,12 +8770,12 @@ only on a forecasting window’s feature-fit panel.</p>
 </table>
 </div>
 </section>
-<section id="id419">
-<h4>Returns<a class="headerlink" href="#id419" title="Link to this heading">#</a></h4>
+<section id="id424">
+<h4>Returns<a class="headerlink" href="#id424" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
-<section id="id420">
-<h4>Minimal Use<a class="headerlink" href="#id420" title="Link to this heading">#</a></h4>
+<section id="id425">
+<h4>Minimal Use<a class="headerlink" href="#id425" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.varimax_step(...)</span>
@@ -8661,18 +8786,18 @@ only on a forecasting window’s feature-fit panel.</p>
 <section id="variance-selection">
 <h3>variance_selection<a class="headerlink" href="#variance-selection" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.feature_selection.variance_selection</span></code></p>
-<section id="id421">
-<h4>Signature<a class="headerlink" href="#id421" title="Link to this heading">#</a></h4>
+<section id="id426">
+<h4>Signature<a class="headerlink" href="#id426" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">variance_selection</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_features</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">min_train_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id422">
-<h4>Description<a class="headerlink" href="#id422" title="Link to this heading">#</a></h4>
+<section id="id427">
+<h4>Description<a class="headerlink" href="#id427" title="Link to this heading">#</a></h4>
 <p>Select columns with the largest sample variance.</p>
 </section>
-<section id="id423">
-<h4>Parameters<a class="headerlink" href="#id423" title="Link to this heading">#</a></h4>
+<section id="id428">
+<h4>Parameters<a class="headerlink" href="#id428" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8711,12 +8836,12 @@ only on a forecasting window’s feature-fit panel.</p>
 </table>
 </div>
 </section>
-<section id="id424">
-<h4>Returns<a class="headerlink" href="#id424" title="Link to this heading">#</a></h4>
+<section id="id429">
+<h4>Returns<a class="headerlink" href="#id429" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id425">
-<h4>Minimal Use<a class="headerlink" href="#id425" title="Link to this heading">#</a></h4>
+<section id="id430">
+<h4>Minimal Use<a class="headerlink" href="#id430" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.variance_selection(...)</span>
@@ -8727,18 +8852,18 @@ only on a forecasting window’s feature-fit panel.</p>
 <section id="wavelet-features">
 <h3>wavelet_features<a class="headerlink" href="#wavelet-features" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.transforms.wavelet_features</span></code></p>
-<section id="id426">
-<h4>Signature<a class="headerlink" href="#id426" title="Link to this heading">#</a></h4>
+<section id="id431">
+<h4>Signature<a class="headerlink" href="#id431" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">wavelet_features</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_levels</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">wavelet</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;db4&quot;</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id427">
-<h4>Description<a class="headerlink" href="#id427" title="Link to this heading">#</a></h4>
+<section id="id432">
+<h4>Description<a class="headerlink" href="#id432" title="Link to this heading">#</a></h4>
 <p>Create rolling multi-resolution approximation/detail features.</p>
 </section>
-<section id="id428">
-<h4>Parameters<a class="headerlink" href="#id428" title="Link to this heading">#</a></h4>
+<section id="id433">
+<h4>Parameters<a class="headerlink" href="#id433" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8782,12 +8907,12 @@ only on a forecasting window’s feature-fit panel.</p>
 </table>
 </div>
 </section>
-<section id="id429">
-<h4>Returns<a class="headerlink" href="#id429" title="Link to this heading">#</a></h4>
+<section id="id434">
+<h4>Returns<a class="headerlink" href="#id434" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id430">
-<h4>Minimal Use<a class="headerlink" href="#id430" title="Link to this heading">#</a></h4>
+<section id="id435">
+<h4>Minimal Use<a class="headerlink" href="#id435" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.wavelet_features(...)</span>
@@ -8798,20 +8923,20 @@ only on a forecasting window’s feature-fit panel.</p>
 <section id="weighted-aggregate">
 <h3>weighted_aggregate<a class="headerlink" href="#weighted-aggregate" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.feature_engineering.aggregation.weighted_aggregate</span></code></p>
-<section id="id431">
-<h4>Signature<a class="headerlink" href="#id431" title="Link to this heading">#</a></h4>
+<section id="id436">
+<h4>Signature<a class="headerlink" href="#id436" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">weighted_aggregate</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">FeatureInput</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;weighted_aggregate&quot;</span><span class="p">,</span> <span class="n">drop_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
-<section id="id432">
-<h4>Description<a class="headerlink" href="#id432" title="Link to this heading">#</a></h4>
+<section id="id437">
+<h4>Description<a class="headerlink" href="#id437" title="Link to this heading">#</a></h4>
 <p>Apply aligned component weights to a panel and return one aggregate.</p>
 <p>Albacore uses this object as a learned core-inflation index. This callable
 keeps the operation generic for any component-to-aggregate macro panel.</p>
 </section>
-<section id="id433">
-<h4>Parameters<a class="headerlink" href="#id433" title="Link to this heading">#</a></h4>
+<section id="id438">
+<h4>Parameters<a class="headerlink" href="#id438" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -8860,12 +8985,12 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 </table>
 </div>
 </section>
-<section id="id434">
-<h4>Returns<a class="headerlink" href="#id434" title="Link to this heading">#</a></h4>
+<section id="id439">
+<h4>Returns<a class="headerlink" href="#id439" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
-<section id="id435">
-<h4>Minimal Use<a class="headerlink" href="#id435" title="Link to this heading">#</a></h4>
+<section id="id440">
+<h4>Minimal Use<a class="headerlink" href="#id440" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.feature_engineering.weighted_aggregate(...)</span>
@@ -9384,7 +9509,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id280">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pct-change-features">pct_change_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#predictor-screen">predictor_screen</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id281">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id282">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id283">Parameters</a></li>
@@ -9392,7 +9517,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id285">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polynomial-features">polynomial_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pct-change-features">pct_change_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id286">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id287">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id288">Parameters</a></li>
@@ -9400,7 +9525,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id290">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polynomial-step">polynomial_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polynomial-features">polynomial_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id291">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id292">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id293">Parameters</a></li>
@@ -9408,7 +9533,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id295">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-projection-features">random_projection_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#polynomial-step">polynomial_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id296">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id297">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id298">Parameters</a></li>
@@ -9416,7 +9541,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id300">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-projection-step">random_projection_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-projection-features">random_projection_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id301">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id302">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id303">Parameters</a></li>
@@ -9424,7 +9549,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id305">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rank-space-features">rank_space_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#random-projection-step">random_projection_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id306">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id307">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id308">Parameters</a></li>
@@ -9432,7 +9557,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id310">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rfe-selection">rfe_selection</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rank-space-features">rank_space_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id311">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id312">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id313">Parameters</a></li>
@@ -9440,7 +9565,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id315">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rolling-mean">rolling_mean</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rfe-selection">rfe_selection</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id316">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id317">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id318">Parameters</a></li>
@@ -9448,7 +9573,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id320">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rolling-step">rolling_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rolling-mean">rolling_mean</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id321">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id322">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id323">Parameters</a></li>
@@ -9456,7 +9581,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id325">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#savitzky-golay-features">savitzky_golay_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rolling-step">rolling_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id326">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id327">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id328">Parameters</a></li>
@@ -9464,7 +9589,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id330">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scale-features">scale_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#savitzky-golay-features">savitzky_golay_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id331">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id332">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id333">Parameters</a></li>
@@ -9472,7 +9597,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id335">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scale-step">scale_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scale-features">scale_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id336">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id337">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id338">Parameters</a></li>
@@ -9480,7 +9605,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id340">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#season-dummy">season_dummy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scale-step">scale_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id341">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id342">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id343">Parameters</a></li>
@@ -9488,7 +9613,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id345">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#season-dummy-step">season_dummy_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#season-dummy">season_dummy</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id346">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id347">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id348">Parameters</a></li>
@@ -9496,7 +9621,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id350">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seasonal-lag">seasonal_lag</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#season-dummy-step">season_dummy_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id351">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id352">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id353">Parameters</a></li>
@@ -9504,7 +9629,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id355">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seasonal-lag-step">seasonal_lag_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seasonal-lag">seasonal_lag</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id356">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id357">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id358">Parameters</a></li>
@@ -9512,7 +9637,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id360">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#select-features">select_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seasonal-lag-step">seasonal_lag_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id361">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id362">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id363">Parameters</a></li>
@@ -9520,7 +9645,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id365">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sliced-inverse-regression-features">sliced_inverse_regression_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#select-features">select_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id366">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id367">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id368">Parameters</a></li>
@@ -9528,7 +9653,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id370">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sliced-inverse-regression-step">sliced_inverse_regression_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sliced-inverse-regression-features">sliced_inverse_regression_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id371">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id372">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id373">Parameters</a></li>
@@ -9536,7 +9661,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id375">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-pca-chen-rohe-features">sparse_pca_chen_rohe_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sliced-inverse-regression-step">sliced_inverse_regression_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id376">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id377">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id378">Parameters</a></li>
@@ -9544,7 +9669,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id380">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-pca-chen-rohe-step">sparse_pca_chen_rohe_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-pca-chen-rohe-features">sparse_pca_chen_rohe_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id381">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id382">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id383">Parameters</a></li>
@@ -9552,7 +9677,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id385">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stability-selection">stability_selection</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-pca-chen-rohe-step">sparse_pca_chen_rohe_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id386">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id387">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id388">Parameters</a></li>
@@ -9560,7 +9685,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id390">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-features">time_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#stability-selection">stability_selection</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id391">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id392">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id393">Parameters</a></li>
@@ -9568,7 +9693,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id395">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-step">time_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-features">time_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id396">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id397">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id398">Parameters</a></li>
@@ -9576,7 +9701,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id400">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transform-step">transform_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#time-step">time_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id401">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id402">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id403">Parameters</a></li>
@@ -9584,7 +9709,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id405">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transform-features">transform_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transform-step">transform_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id406">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id407">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id408">Parameters</a></li>
@@ -9592,7 +9717,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id410">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#varimax-features">varimax_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#transform-features">transform_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id411">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id412">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id413">Parameters</a></li>
@@ -9600,7 +9725,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id415">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#varimax-step">varimax_step</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#varimax-features">varimax_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id416">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id417">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id418">Parameters</a></li>
@@ -9608,7 +9733,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id420">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variance-selection">variance_selection</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#varimax-step">varimax_step</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id421">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id422">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id423">Parameters</a></li>
@@ -9616,7 +9741,7 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id425">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wavelet-features">wavelet_features</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variance-selection">variance_selection</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id426">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id427">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id428">Parameters</a></li>
@@ -9624,12 +9749,20 @@ keeps the operation generic for any component-to-aggregate macro panel.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id430">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weighted-aggregate">weighted_aggregate</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#wavelet-features">wavelet_features</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id431">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id432">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id433">Parameters</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id434">Returns</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id435">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weighted-aggregate">weighted_aggregate</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id436">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id437">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id438">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id439">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id440">Minimal Use</a></li>
 </ul>
 </li>
 </ul>

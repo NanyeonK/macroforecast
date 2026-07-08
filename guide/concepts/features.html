@@ -433,6 +433,7 @@
 <li class="toctree-l1"><a class="reference internal" href="evaluation.html">Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../reporting.html">Paper Tables</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../figures.html">Paper Figures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../multi_axis_comparison.html">Multi-Axis Forecast Comparisons</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../custom_data_tutorial.html">Your Data, Your Model, One Table</a></li>
 </ul>
 </div>
@@ -565,6 +566,32 @@ or to an <code class="docutils literal notranslate"><span class="pre">Arm</span>
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>Target-aware feature steps can also screen predictors inside each runner fit
+window before downstream projections:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">screened_factors</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
+    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
+    <span class="n">horizon</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="n">feature_steps</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">predictor_screen</span><span class="p">(</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;t_stat&quot;</span><span class="p">,</span>       <span class="c1"># &quot;delta_r2&quot;, &quot;lasso&quot;, and &quot;elastic_net&quot; also work</span>
+            <span class="n">top_k</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+            <span class="n">min_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">controls</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">],</span>
+            <span class="n">include</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">pca_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;F_screen&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;screen&quot;</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">predictor_screen(...)</span></code> is fitted only on the feature-stage training panel and
+the resolved direct target. <code class="docutils literal notranslate"><span class="pre">controls</span></code> are partialled out for scoring and always
+retained in the transformed feature set; <code class="docutils literal notranslate"><span class="pre">min_k</span></code> provides a deterministic
+fallback when the threshold is too strict.</p>
+<p>Direct-average targets include <code class="docutils literal notranslate"><span class="pre">transform=&quot;log_average_value&quot;</span></code> for cases where
+the forecast object is <code class="docutils literal notranslate"><span class="pre">log(mean(y[t+1],</span> <span class="pre">...,</span> <span class="pre">y[t+h]))</span></code> rather than the mean of
+log changes.</p>
 </section>
 <section id="executed-walkthrough">
 <h2>Executed walkthrough<a class="headerlink" href="#executed-walkthrough" title="Link to this heading">#</a></h2>
