@@ -50,6 +50,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `SuperLearnerRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
 | `TestWindow` | [`macroforecast.window`](window.md) | class |
 | `ValWindow` | [`macroforecast.window`](window.md) | class |
+| `ValidationSplitterSpec` | [`macroforecast.model_selection`](model_selection.md) | class |
 | `VintagePanelSpec` | [`macroforecast.data`](data.md) | class |
 | `VintageSource` | [`macroforecast.data`](data.md) | class |
 | `VintageUnavailableError` | [`macroforecast.data`](data.md) | class |
@@ -144,6 +145,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `evaluation` | [`macroforecast.evaluation`](evaluation.md) | module |
 | `expanding` | [`macroforecast.window`](window.md) | function |
 | `expanding_split` | [`macroforecast.window`](window.md) | function |
+| `explicit_folds` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `extra_trees` | [`macroforecast.models`](models.md) | function |
 | `far` | [`macroforecast.models`](models.md) | function |
 | `favar` | [`macroforecast.models`](models.md) | function |
@@ -285,6 +287,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `rank_aggregation` | [`macroforecast.models`](models.md) | function |
 | `rank_space_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `realized_garch` | [`macroforecast.models`](models.md) | function |
+| `recursive_threefold` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `regime_scores` | [`macroforecast.evaluation`](evaluation.md) | function |
 | `reporting` | [`macroforecast.reporting`](reporting.md) | module |
 | `reprocess` | [`macroforecast.preprocessing`](preprocessing.md) | function |
@@ -361,6 +364,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `val_random_kfold` | [`macroforecast.window`](window.md) | function |
 | `val_rolling_blocks` | [`macroforecast.window`](window.md) | function |
 | `validate_panel` | [`macroforecast.data`](data.md) | function |
+| `validation_splitter` | [`macroforecast.model_selection`](model_selection.md) | function |
 | `var` | [`macroforecast.models`](models.md) | function |
 | `variance_selection` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `varimax_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |

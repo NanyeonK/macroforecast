@@ -360,6 +360,82 @@ def test_result_store_custom_callable_requires_digest_opt_in(tmp_path):
     assert missed.provenance["result_store"]["n_computed"] == 1
 
 
+def test_result_store_digest_tracks_validation_splitter_boundaries(tmp_path):
+    model = _recording_model()
+    first_search = mf.model_selection.grid(
+        {"offset": [0.0]},
+        validation_splitter=mf.model_selection.explicit_folds([20, 30, 40]),
+    )
+    changed_search = mf.model_selection.grid(
+        {"offset": [0.0]},
+        validation_splitter=mf.model_selection.explicit_folds([21, 30, 40]),
+    )
+    first = _spec(
+        tmp_path,
+        arms=[Arm("A", model=model, features=_features(), model_selection=first_search)],
+    )
+    changed = _spec(
+        tmp_path,
+        arms=[Arm("A", model=model, features=_features(), model_selection=changed_search)],
+    )
+
+    first_identity = result_cell_identity(
+        first,
+        first.arms[0],
+        first.targets[0],
+        horizon=1,
+        data_identity=_data_identity(first.data),
+    )
+    changed_identity = result_cell_identity(
+        changed,
+        changed.arms[0],
+        changed.targets[0],
+        horizon=1,
+        data_identity=_data_identity(changed.data),
+    )
+
+    assert first_identity.digest is not None
+    assert changed_identity.digest is not None
+    assert first_identity.digest != changed_identity.digest
+
+
+def test_result_store_callable_validation_splitter_requires_digest(tmp_path):
+    def splitter(index):
+        midpoint = len(index) // 2
+        return [(np.arange(midpoint), np.arange(midpoint, len(index)))]
+
+    search = mf.model_selection.grid(
+        {"offset": [0.0]},
+        validation_splitter=splitter,
+    )
+    spec = _spec(
+        tmp_path,
+        arms=[Arm("A", model=_recording_model(), features=_features(), model_selection=search)],
+    )
+
+    identity = result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+    assert identity.digest is None
+    assert "validation_splitter" in str(identity.reason)
+
+    splitter.__mf_digest__ = "splitter-v1"
+    digestible = result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+    assert digestible.digest is not None
+    selection_echo = digestible.cell_echo["arm"]["model_selection"]
+    assert selection_echo["validation_splitter"]["mf_digest"] == "splitter-v1"
+
+
 def test_result_store_version_mismatch_warns_once_and_reuses(tmp_path):
     run_pipeline(_spec(tmp_path, arms=[Arm("A", model=_recording_model(), features=_features())]))
     manifest_path = next((tmp_path / "results" / "cells").glob("*.json"))

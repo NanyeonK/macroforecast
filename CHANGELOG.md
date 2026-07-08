@@ -26,6 +26,14 @@ full per-version honesty-pass history embedded in repo documentation.
   forecasts. `dm` now also accepts `small_sample=False` through
   `test_options` for the plain Diebold-Mariano statistic with asymptotic-normal
   p-values while preserving the HLN/t default.
+- `model_selection`, `forecasting/policies`, `pipeline/result_store.py`, docs/tests
+  (validation-splitter/IC lane): added composable validation splitters on
+  `SearchSpec`, including explicit fold boundaries with fixed or within-fold
+  expanding validation and a recursive-threefold preset. `SearchSpec` now also
+  supports `method="information_criterion"` with AIC/BIC scoring on the fit
+  sample and the existing forecasting `retune_every` cache cadence. Result-store
+  cell digests now include splitter boundaries and reject callable splitters
+  without `__mf_digest__`.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

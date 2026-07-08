@@ -34,6 +34,52 @@ splits), `expanding` (walk-forward expanding train/val splits), `rolling_blocks`
 folds). Use `random_kfold` only when reproducing papers that explicitly used
 random iid folds.
 
+## Model selection routes
+
+`SearchSpec` controls the candidate grid and, when needed, the selection route.
+The default route scores every Cartesian grid point on the window's validation
+splits. This keeps ordinary holdout and POOS designs on the `WindowSpec`:
+
+```python
+window = mf.window.from_cutoffs(
+    test_start="1985-01-01",
+    val_method="poos",
+    val_size=24,
+    retune_every=12,
+)
+search = mf.model_selection.grid({"alpha": [0.01, 0.1, 1.0]})
+```
+
+Use a validation-splitter override when the validation scheme belongs to the
+selection rule rather than to the outer estimation/test window. Explicit fold
+boundaries are end-exclusive positions inside the current selection sample;
+date labels map to the position just after that label. With
+`within_fold="expanding"`, each validation block becomes one single-observation
+split whose training block grows through the fold:
+
+```python
+search = mf.model_selection.grid(
+    {"K": [1, 2, 3], "qN": [0, 1]},
+    validation_splitter=mf.model_selection.explicit_folds(
+        [80, 130, 190, 240],
+        within_fold="expanding",
+    ),
+)
+```
+
+Use information-criterion selection when candidates should be scored on the fit
+sample instead of a held-out validation block. The fitted model must expose
+`ssr_`, `nobs_`, and `n_params_`; AR/FAR-style RSS models do, while generic
+supervised regressors do not promise that interface:
+
+```python
+search = mf.model_selection.SearchSpec(
+    method="information_criterion",
+    criterion="bic",
+    param_grid={"n_lag": (1, 2, 4, 6, 12)},
+)
+```
+
 ## Per-arm windows and no-validation fits
 
 An arm may declare its own per-arm window via `Arm(window=...)`. When an arm has

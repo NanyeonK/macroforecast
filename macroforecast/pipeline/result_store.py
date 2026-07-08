@@ -610,6 +610,11 @@ def _object_identity(value: Any) -> Any:
 def _assert_safe_generic_callables(value: Any, *, path: str = "value") -> None:
     if value is None or isinstance(value, (str, bytes, int, float, bool)):
         return
+    if _is_search_spec(value):
+        splitter = getattr(value, "validation_splitter", None)
+        if callable(splitter):
+            _callable_digest(splitter, path=f"{path}.validation_splitter")
+        return
     if callable(value):
         _callable_digest(value, path=path)
         return
@@ -620,6 +625,14 @@ def _assert_safe_generic_callables(value: Any, *, path: str = "value") -> None:
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         for idx, item in enumerate(value):
             _assert_safe_generic_callables(item, path=f"{path}[{idx}]")
+
+
+def _is_search_spec(value: Any) -> bool:
+    try:
+        from macroforecast.model_selection import SearchSpec
+    except ImportError:
+        return False
+    return isinstance(value, SearchSpec)
 
 
 def _callable_digest(*candidates: Any, path: str) -> str:
