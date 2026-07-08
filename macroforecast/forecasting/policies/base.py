@@ -132,9 +132,16 @@ def _fit_one_model_at_origin(
         use_model_default_selection and bool(model_spec.search_spaces)
     )
     selection_metadata: dict[str, Any] | None = None
-    uses_ic = ic_selection_enabled and str(
+    selected_method = (
+        str(getattr(selected, "method", "")).lower().replace("-", "_")
+        if selected is not None
+        else ""
+    )
+    explicit_ic = selected_method in {"information_criterion", "ic"}
+    model_owned_ic = str(
         getattr(model_spec, "selection_method", "cv")
     ).lower() in ("bic", "aic", "aicc")
+    uses_ic = explicit_ic or (ic_selection_enabled and model_owned_ic)
     if should_select and uses_ic:
         # Information-criterion models (AR, FM) select their order by BIC/AIC on
         # the full training sample, so they need no validation split. This is
@@ -143,12 +150,19 @@ def _fit_one_model_at_origin(
         # what preserves the horizon-1 direct==path invariant (a CV split would
         # score the order on a truncated sample and pick a different order).
         if retune or cache_key not in cfg.param_cache:
+            criterion = (
+                str(selected.criterion).lower()
+                if explicit_ic and selected is not None and selected.criterion is not None
+                else "bic"
+                if explicit_ic
+                else str(model_spec.selection_method).lower()
+            )
             result = select_by_information_criterion(
                 model_spec,
                 X_sel,
                 y_sel,
                 search=selected,
-                criterion=str(model_spec.selection_method).lower(),
+                criterion=criterion,
                 fixed_params=ic_fixed_params,
             )
             cfg.param_cache[cache_key] = dict(result.best_params)
@@ -184,16 +198,20 @@ def _fit_one_model_at_origin(
             if reused_metadata_extras and isinstance(selection_metadata, dict):
                 selection_metadata = {**selection_metadata, **reused_metadata_extras}
         elif retune or cache_key not in cfg.param_cache:
+            splitter_override = (
+                selected is not None and selected.validation_splitter is not None
+            )
             result = select_params(
                 model_spec,
                 X_sel,
                 y_sel,
                 search=selected,
-                splits=selection_splits,
+                splits=None if splitter_override else selection_splits,
                 metric=cfg.selection_metric,
                 maximize=cfg.maximize_selection,
                 random_state=cfg.selection_random_state if selected is None else None,
-                allow_non_temporal_splits=allow_non_temporal_splits,
+                allow_non_temporal_splits=allow_non_temporal_splits
+                or splitter_override,
             )
             cfg.param_cache[cache_key] = dict(result.best_params)
             selection_metadata = {

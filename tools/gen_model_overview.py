@@ -65,12 +65,13 @@ PCA are refit inside every training window.
 _MODEL_GUIDE = """## Choosing a model
 
 **Few predictors and a mostly linear signal.** Start from the benchmarks `ar`,
-`ols`, and `arima`. They anchor any comparison and are cheap to refit at every
-origin.
+`ols`, `arima`, and the target-only `ucsv` inflation benchmark. They anchor any
+comparison and are cheap to refit at every origin except for MCMC-based UCSV.
 
 **Many predictors.** Regularize. `ridge` shrinks all coefficients, `lasso` and
 `elastic_net` also select variables, and `adaptive_lasso` and `group_lasso` add
-structured selection across feature blocks.
+structured selection across feature blocks. For forecast averaging over many
+candidate regressions, use `csr` or `jma`.
 
 **Latent factor structure.** When series move together, extract common factors
 with `far` and `favar`, or use a dynamic factor model from the mixed-frequency
@@ -88,14 +89,14 @@ dynamics in longer panels.
 """
 
 _GUIDE_MODELS = {
-    "ar", "ols", "arima", "ridge", "lasso", "elastic_net", "adaptive_lasso",
+    "ar", "ols", "arima", "ucsv", "ridge", "lasso", "elastic_net", "adaptive_lasso",
     "group_lasso", "far", "favar", "random_forest", "xgboost", "lightgbm",
     "macro_random_forest", "lstm", "gru", "garch11", "egarch", "gjr_garch",
-    "realized_garch",
+    "realized_garch", "csr", "jma",
 }
 
 _FAMILY_ORDER = [
-    "linear", "factor", "timeseries", "tree", "support_vector",
+    "linear", "factor", "timeseries", "bayesian", "model_averaging", "tree", "support_vector",
     "nonparametric", "neural", "volatility", "mixed_frequency",
     "assemblage", "composite", "spline",
 ]
@@ -103,6 +104,8 @@ _FAMILY_TITLES = {
     "linear": "Linear and regularized",
     "factor": "Factor models",
     "timeseries": "Classical time series",
+    "bayesian": "Bayesian state-space",
+    "model_averaging": "Model averaging",
     "tree": "Tree ensembles",
     "support_vector": "Support vector",
     "nonparametric": "Nonparametric",
@@ -126,6 +129,12 @@ _FAMILY_INTROS = {
     "timeseries": "Classical time series models work from the target's own "
     "history, including autoregressions, ARIMA, and exponential smoothing, and "
     "serve as the standard benchmarks.",
+    "bayesian": "Bayesian state-space models estimate latent target components "
+    "and posterior forecast summaries; UCSV is the canonical inflation trend "
+    "benchmark with stochastic volatility.",
+    "model_averaging": "Model averaging methods combine many candidate "
+    "regressions, either by averaging complete subsets or by optimizing "
+    "cross-validation weights.",
     "tree": "Tree ensembles average or boost many decision trees. They capture "
     "nonlinearity and interactions automatically and are the workhorses behind "
     "the largest reported macro forecasting gains.",

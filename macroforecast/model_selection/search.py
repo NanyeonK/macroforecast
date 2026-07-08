@@ -36,6 +36,7 @@ from macroforecast.model_selection.runner import (
     parameter_columns,
     trial_frame,
 )
+from macroforecast.model_selection.splitters import resolve_validation_splitter
 from macroforecast.model_selection.types import (
     SearchError,
     SearchResult,
@@ -105,11 +106,22 @@ def select_params(
         else fixed(random_state=random_state)
     )
     spec = _prepare_search_spec(spec)
+    if spec.method == "information_criterion":
+        return select_by_information_criterion(
+            model,
+            X,
+            y,
+            search=spec,
+            criterion=spec.criterion or "bic",
+            fixed_params=fixed_params,
+            preset=preset,
+        )
     metric_fn = get_metric(metric)
     validation_splits, split_name, split_metadata = _resolve_selection_splits(
-        len(frame),
+        frame.index,
         window=window,
         splits=splits,
+        validation_splitter=spec.validation_splitter,
         allow_non_temporal_splits=allow_non_temporal_splits,
     )
     base_params = dict(fixed_params or {})
@@ -323,15 +335,34 @@ def _model_metadata(model_spec: ModelSpec | None) -> dict[str, Any]:
 
 
 def _resolve_selection_splits(
-    n_obs: int,
+    index: pd.Index,
     *,
     window: WindowSpec | str | None,
     splits: Sequence[tuple[Any, Any]] | None,
+    validation_splitter: Any | None = None,
     allow_non_temporal_splits: bool = False,
 ) -> tuple[list[Split], str, dict[str, Any]]:
+    n_obs = len(index)
     if splits is not None and window is not None:
         raise ValueError("pass either window or splits, not both")
     if splits is None:
+        if validation_splitter is not None:
+            resolved, split_name, metadata = resolve_validation_splitter(
+                index,
+                validation_splitter,
+            )
+            temporal_order = bool(metadata.get("temporal_order", True))
+            resolved = _normalize_splits(
+                resolved,
+                n_obs,
+                allow_non_temporal_splits=allow_non_temporal_splits
+                or not temporal_order,
+            )
+            return (
+                resolved,
+                split_name,
+                {**metadata, "split_summary": _split_summary(resolved)},
+            )
         window_spec = resolve_window(window)
         resolved = window_spec.split(n_obs)
         allow_non_temporal_splits = (
@@ -461,6 +492,8 @@ def _has_search_overrides(**values: Any) -> bool:
 def _prepare_search_spec(spec: SearchSpec) -> SearchSpec:
     prepared = replace(spec)
     prepared.method = _normalize_method(prepared.method)
+    if prepared.criterion is not None:
+        prepared.criterion = str(prepared.criterion).lower()
     prepared.param_grid = {
         key: _as_tuple(value) for key, value in prepared.param_grid.items()
     }
@@ -483,8 +516,18 @@ def _validate_search_spec(spec: SearchSpec) -> None:
         "bayesian",
         "genetic",
         "custom",
+        "information_criterion",
     }:
         raise ValueError(f"Unknown search method {spec.method!r}")
+    if spec.criterion is not None:
+        criterion = str(spec.criterion).lower()
+        if spec.method == "information_criterion" and criterion not in {"aic", "bic"}:
+            raise ValueError("information_criterion search criterion must be 'aic' or 'bic'")
+    if spec.method == "information_criterion":
+        if spec.param_distributions:
+            raise ValueError("information_criterion search requires param_grid, not distributions")
+        if spec.validation_splitter is not None:
+            raise ValueError("information_criterion search does not use validation_splitter")
     if spec.n_iter < 1:
         raise ValueError("n_iter must be at least 1")
     if spec.population_size < 2:
@@ -633,8 +676,9 @@ def _gaussian_information_criterion(
         denom = n - k - 1
         penalty = (2.0 * k * (k + 1) / denom) if denom > 0 else float("inf")
         return 2.0 * k - 2.0 * loglik + penalty
-    # bic / sic / schwarz
-    return k * math.log(n) - 2.0 * loglik
+    if crit in {"bic", "sic", "schwarz"}:
+        return k * math.log(n) - 2.0 * loglik
+    raise ValueError("criterion must be one of: aic, aicc, bic")
 
 
 def select_by_information_criterion(
@@ -671,41 +715,89 @@ def select_by_information_criterion(
     rng = np.random.default_rng(spec.random_state)
     base_params = dict(fixed_params or {})
     candidates = _candidates(spec, rng)
+    criterion_key = str(spec.criterion or criterion).lower()
 
     rows: list[dict[str, Any]] = []
     best: tuple[float, dict[str, Any]] | None = None
-    for candidate in candidates:
+    for trial, candidate in enumerate(candidates):
         params = {**base_params, **candidate}
         try:
             fitted = fit_model(frame, target, **params)
-            estimator = getattr(fitted, "estimator", fitted)
-            ssr = getattr(estimator, "ssr_", None)
-            nobs = getattr(estimator, "nobs_", None)
-            n_params = getattr(estimator, "n_params_", None)
-            if ssr is None or nobs is None or n_params is None:
-                raise AttributeError(
-                    "model does not expose ssr_/nobs_/n_params_ required for "
-                    f"{criterion!r} information-criterion selection"
-                )
-            score = _gaussian_information_criterion(ssr, int(nobs), int(n_params), criterion)
-            rows.append({**candidate, "score": float(score),
-                         "nobs": int(nobs), "n_params": int(n_params)})
-        except Exception as exc:  # noqa: BLE001 - record and skip bad candidates
-            rows.append({**candidate, "score": float("inf"), "status": f"error: {exc}"})
+            ssr, nobs, n_params = _ic_inputs(fitted, criterion=criterion_key)
+            score = _gaussian_information_criterion(
+                ssr,
+                int(nobs),
+                int(n_params),
+                criterion_key,
+            )
+            rows.append({
+                "trial": trial,
+                **candidate,
+                "score": float(score),
+                "nobs": int(nobs),
+                "n_params": int(n_params),
+                "status": "ok",
+                "error": None,
+            })
+        except (AttributeError, TypeError, ValueError, np.linalg.LinAlgError) as exc:
+            rows.append({
+                "trial": trial,
+                **candidate,
+                "score": float("inf"),
+                "status": "error",
+                "error": str(exc),
+            })
             continue
         if best is None or score < best[0]:
             best = (float(score), dict(candidate))
 
+    trials = _ic_trial_frame(rows)
     if best is None:
-        raise ValueError("information-criterion selection produced no valid candidate")
+        first_error = (
+            trials["error"].dropna().iloc[0] if "error" in trials else "unknown error"
+        )
+        raise SearchError(
+            f"All information-criterion parameter trials failed: {first_error}",
+            trials=trials,
+        )
     return SearchResult(
         best_params=dict(best[1]),
         best_score=float(best[0]),
-        trials=pd.DataFrame(rows),
-        metric=str(criterion),
-        method=f"information_criterion:{criterion}",
+        trials=trials,
+        metric=criterion_key,
+        method=f"information_criterion:{criterion_key}",
         window="none",
-        metadata={"criterion": str(criterion),
-                  "n_candidates": int(len(candidates)),
-                  "validation": "none"},
+        metadata={
+            "criterion": criterion_key,
+            "n_candidates": int(len(candidates)),
+            "validation": "none",
+            **_model_metadata(model_spec),
+        },
     )
+
+
+def _ic_inputs(fitted: Any, *, criterion: str) -> tuple[float, int, int]:
+    estimator = getattr(fitted, "estimator", fitted)
+    ssr = getattr(estimator, "ssr_", None)
+    nobs = getattr(estimator, "nobs_", None)
+    n_params = getattr(estimator, "n_params_", None)
+    if ssr is None or nobs is None or n_params is None:
+        raise AttributeError(
+            "information-criterion selection requires a fitted model exposing "
+            f"ssr_, nobs_, and n_params_; {criterion!r} cannot be computed for "
+            f"{type(estimator).__name__}"
+        )
+    return float(ssr), int(nobs), int(n_params)
+
+
+def _ic_trial_frame(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    frame = pd.DataFrame(rows)
+    if frame.empty:
+        raise ValueError("information-criterion search produced no trials")
+    for column in ("nobs", "n_params"):
+        if column not in frame:
+            frame[column] = np.nan
+    first = ["trial"]
+    last = ["score", "nobs", "n_params", "status", "error"]
+    middle = [col for col in frame.columns if col not in set(first + last)]
+    return frame[first + middle + last].sort_values("trial").reset_index(drop=True)

@@ -12,6 +12,7 @@ import pandas as pd
 from macroforecast.metrics import MetricLike
 
 DistributionKind = Literal["float", "log_float", "int", "categorical"]
+WithinFoldMode = Literal["fixed", "expanding"]
 
 
 @dataclass(frozen=True)
@@ -82,6 +83,34 @@ class ParamDistribution:
         raise ValueError(f"Unknown distribution kind: {self.kind!r}")
 
 
+@dataclass(frozen=True)
+class ValidationSplitterSpec:
+    """Validation-split rule carried by a ``SearchSpec``."""
+
+    method: str
+    explicit_folds: tuple[Any, ...] = ()
+    within_fold: WithinFoldMode = "fixed"
+    params: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        method = str(self.method).lower().replace("-", "_")
+        object.__setattr__(self, "method", method)
+        if self.within_fold not in {"fixed", "expanding"}:
+            raise ValueError("within_fold must be 'fixed' or 'expanding'")
+        object.__setattr__(self, "explicit_folds", tuple(self.explicit_folds))
+        object.__setattr__(self, "params", dict(self.params))
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a JSON-ready splitter specification."""
+
+        return {
+            "method": self.method,
+            "explicit_folds": _json_ready(self.explicit_folds),
+            "within_fold": self.within_fold,
+            "params": _json_ready(self.params),
+        }
+
+
 @dataclass
 class SearchSpec:
     """Parameter-search specification consumed by ``select_params``."""
@@ -97,11 +126,13 @@ class SearchSpec:
     custom_func: Callable[..., Any] | None = None
     custom_params: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+    criterion: str | None = None
+    validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None
 
     def to_metadata(self) -> dict[str, Any]:
         """Return search-level metadata without trial results."""
 
-        return _json_ready({
+        out = {
             "method": self.method,
             "n_iter": self.n_iter,
             "random_state": self.random_state,
@@ -115,7 +146,14 @@ class SearchSpec:
                 "params": _json_ready(self.custom_params),
             },
             "metadata": self.metadata,
-        })
+        }
+        if self.criterion is not None:
+            out["criterion"] = self.criterion
+        if self.validation_splitter is not None:
+            out["validation_splitter"] = _splitter_json_ready(
+                self.validation_splitter
+            )
+        return _json_ready(out)
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-ready full search specification."""
@@ -243,6 +281,8 @@ class SearchResult:
 def _json_ready(value: Any) -> Any:
     if isinstance(value, ParamDistribution):
         return value.to_dict()
+    if isinstance(value, ValidationSplitterSpec):
+        return value.to_dict()
     if isinstance(value, SearchTrial):
         return value.to_dict()
     if isinstance(value, Mapping):
@@ -278,6 +318,15 @@ def _json_ready(value: Any) -> Any:
     return value
 
 
+def _splitter_json_ready(value: Any) -> Any:
+    if callable(value) and not isinstance(value, ValidationSplitterSpec):
+        return {
+            "callable": _callable_name(value),
+            "mf_digest": getattr(value, "__mf_digest__", None),
+        }
+    return _json_ready(value)
+
+
 def _callable_name(func: Callable[..., Any]) -> str:
     module = getattr(func, "__module__", "")
     qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
@@ -289,4 +338,5 @@ __all__ = [
     "SearchError",
     "SearchResult",
     "SearchSpec",
+    "ValidationSplitterSpec",
 ]

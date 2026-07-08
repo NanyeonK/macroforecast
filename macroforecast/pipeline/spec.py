@@ -7,16 +7,79 @@ execution (``run_pipeline``), interpretation, and reporting layers build on thes
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 import importlib.util
 import inspect
+import math
 from numbers import Integral
 from pathlib import Path
 from typing import Any, Literal, TypeAlias, cast
 
 import numpy as np
 import pandas as pd
+
+
+ArmTagValue = str | int | float | bool
+
+
+class _FrozenTagMapping(Mapping[str, ArmTagValue]):
+    """Small immutable, pickleable mapping used for ``Arm.tags``."""
+
+    def __init__(self, items: Sequence[tuple[str, ArmTagValue]]) -> None:
+        self._items = tuple(items)
+        self._dict = dict(self._items)
+
+    def __getitem__(self, key: str) -> ArmTagValue:
+        return self._dict[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._dict)
+
+    def __len__(self) -> int:
+        return len(self._dict)
+
+    def __repr__(self) -> str:
+        return repr(self._dict)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Mapping):
+            return dict(self._items) == dict(other)
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self._items)
+
+
+def _canonical_tags(tags: Mapping[str, ArmTagValue] | None) -> Mapping[str, ArmTagValue]:
+    if tags is None:
+        return _FrozenTagMapping(())
+    if not isinstance(tags, Mapping):
+        raise TypeError("Arm.tags must be a mapping of identifier keys to scalar values")
+    items: list[tuple[str, ArmTagValue]] = []
+    for key, value in tags.items():
+        if not isinstance(key, str) or not key.isidentifier():
+            raise ValueError(
+                "Arm.tags keys must be valid identifiers so they can become "
+                f"'tag_<key>' columns, got {key!r}"
+            )
+        if isinstance(value, bool):
+            canonical: ArmTagValue = bool(value)
+        elif isinstance(value, str):
+            canonical = str(value)
+        elif isinstance(value, int):
+            canonical = int(value)
+        elif isinstance(value, float):
+            if not math.isfinite(value):
+                raise ValueError(f"Arm.tags value for {key!r} must be finite")
+            canonical = float(value)
+        else:
+            raise TypeError(
+                "Arm.tags values must be scalar str, int, float, or bool; "
+                f"{key!r} has {type(value).__name__}"
+            )
+        items.append((key, canonical))
+    return _FrozenTagMapping(sorted(items, key=lambda item: item[0]))
 
 
 # t-code (FRED-MD/QD integration order) -> (forecast_policy, target_transform).
@@ -96,7 +159,9 @@ class Arm:
 
     An arm is NOT itself a cell. Applied to a target and a horizon it forms one
     cell (executed by one ``run()`` call); in the evaluation it appears as exactly
-    one contender (one arm = one contender).
+    one contender (one arm = one contender). ``tags`` are descriptive scalar
+    labels for post-run designs; they become ``tag_<key>`` columns in the master
+    forecast frame but do not affect result-store cell digests.
     """
 
     name: str
@@ -120,6 +185,14 @@ class Arm:
     # otherwise CW is silently invalid. Diebold-Mariano is reported regardless.
     nested_in_benchmark: bool = False
     metadata: Mapping[str, Any] = field(default_factory=dict)
+    # Free-form scalar labels for post-run designs. The runner exposes each tag
+    # as a flat ``tag_<key>`` forecast column; tags are descriptive metadata and
+    # are intentionally excluded from result-store cell digests. Placed after
+    # ``metadata`` so existing positional ``Arm(...)`` calls keep their meaning.
+    tags: Mapping[str, ArmTagValue] | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "tags", _canonical_tags(self.tags))
 
 
 @dataclass(frozen=True)
@@ -590,6 +663,12 @@ class PipelineSpec:
     # resumes without recomputing finished origins. None (default) disables
     # checkpointing and is byte-for-byte the prior behavior.
     checkpoint_dir: str | None = None
+    # Optional per-origin selection history sidecars. When enabled, each
+    # checkpointed (target, arm, horizon, origin) writes the selected feature
+    # names and scalar model parameters next to its lean forecast parquet file.
+    # Disabled by default to keep checkpointing at its existing forecast-only
+    # cost and schema.
+    selection_history: bool = False
     # When set, run_pipeline stores each digestible (target, horizon, arm) cell's
     # master-frame rows under ``<result_store>/cells`` and reuses matching cells
     # across separate run_pipeline calls. None (default) disables this path and
@@ -840,7 +919,7 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
     # input_kind == "target": iterate their own one-step dynamics.
     "arima", "auto_arima", "ets", "holt_winters", "naive", "random_walk_drift",
-    "seasonal_naive", "stlf", "theta_method",
+    "seasonal_naive", "stlf", "theta_method", "ucsv",
     # input_kind == "panel": iterate their own dynamics at the panel level.
     "bvar_minnesota", "bvar_normal_inverse_wishart",
     "dfm_mixed_mariano_murasawa", "dfm_unrestricted_midas",
@@ -1287,6 +1366,7 @@ def pipeline_spec(
     save_models: bool = False,
     model_store: str = "trained_model",
     checkpoint_dir: str | None = None,
+    selection_history: bool = False,
     result_store: str | Path | None = None,
     n_jobs: int | str = 1,
     preprocessing_cache_dir: str | bool | None = None,
@@ -1356,6 +1436,8 @@ def pipeline_spec(
         raise ValueError(
             f"provenance_level must be 'full' or 'basic', got {provenance_level!r}"
         )
+    if selection_history and checkpoint_dir is None:
+        raise ValueError("selection_history=True requires checkpoint_dir")
     # n_jobs is a positive int OR the literal "auto"; the auto split is computed
     # below once the cell count (targets x arms x horizons) is known.
     auto_jobs = n_jobs == "auto"
@@ -1467,6 +1549,7 @@ def pipeline_spec(
         preprocessing=preprocessing, preprocessing_policy=preprocessing_policy,
         save_models=bool(save_models), model_store=str(model_store),
         checkpoint_dir=(str(checkpoint_dir) if checkpoint_dir is not None else None),
+        selection_history=bool(selection_history),
         result_store=(str(result_store) if result_store is not None else None),
         n_jobs=n_jobs,
         model_threads=int(model_threads),

@@ -23,6 +23,7 @@ TargetTransform = Literal[
     "growth",
     "log_growth",
     "average_value",
+    "log_average_value",
     "average_change",
     "average_growth",
     "average_log_growth",
@@ -697,6 +698,10 @@ def _normalize_target_transform(value: str) -> TargetTransform:
         "future_average": "average_value",
         "mean_future": "average_value",
         "direct_average_value": "average_value",
+        "log_average_value": "log_average_value",
+        "log_avg_value": "log_average_value",
+        "log_mean_value": "log_average_value",
+        "log_direct_average_value": "log_average_value",
         "average_change": "average_change",
         "avg_change": "average_change",
         "mean_change": "average_change",
@@ -959,6 +964,10 @@ def _normalize_feature_method(value: str) -> str:
         "sliced_inverse_regression": "sliced_inverse_regression",
         "sliced_inverse_regression_features": "sliced_inverse_regression",
         "sir": "sliced_inverse_regression",
+        "predictor_screen": "predictor_screen",
+        "screen_predictors": "predictor_screen",
+        "predictor_screening": "predictor_screen",
+        "screen": "predictor_screen",
         "variance_selection": "variance_selection",
         "select_by_variance": "variance_selection",
         "correlation_selection": "correlation_selection",
@@ -1332,6 +1341,8 @@ def _target_formula(source: str, *, horizon: int, transform: str) -> str:
         return f"{source}[t+{horizon}] / {source}[t] - 1"
     if transform == "log_growth":
         return f"log({source}[t+{horizon}]) - log({source}[t])"
+    if transform == "log_average_value":
+        return f"log(mean({source}[t+s] for s=1..{horizon}))"
     if transform.startswith("average_"):
         inner = transform.removeprefix("average_")
         return f"mean({_path_target_formula(source, step='s', transform=inner)} for s=1..{horizon})"

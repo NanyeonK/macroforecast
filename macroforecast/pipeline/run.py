@@ -81,6 +81,35 @@ def _effective_target_for_arm(
     return _dc.replace(target, policy=policy)
 
 
+def _arm_tag_columns(arm: Arm) -> dict[str, Any]:
+    tags = getattr(arm, "tags", None) or {}
+    return {f"tag_{key}": value for key, value in tags.items()}
+
+
+def _drop_arm_tag_columns(frame: pd.DataFrame, arm: Arm) -> pd.DataFrame:
+    columns = [column for column in _arm_tag_columns(arm) if column in frame.columns]
+    if not columns:
+        return frame
+    return frame.drop(columns=columns)
+
+
+def _apply_arm_tags(frame: pd.DataFrame, arm: Arm) -> pd.DataFrame:
+    tag_columns = _arm_tag_columns(arm)
+    if not tag_columns:
+        return frame
+    out = frame.copy()
+    collisions = sorted(column for column in tag_columns if column in out.columns)
+    if collisions:
+        raise ValueError(
+            f"arm {arm.name!r} tag column(s) collide with existing forecast "
+            f"column(s): {collisions}. Use tag keys that do not produce an "
+            "existing 'tag_<key>' column."
+        )
+    for column, value in tag_columns.items():
+        out[column] = value
+    return out
+
+
 def _run_one_arm_target(
     spec: PipelineSpec,
     arm: Arm,
@@ -143,6 +172,7 @@ def _run_one_arm_target(
         preprocessing_cache=preprocessing_cache,
         preprocessing_store=preprocessing_store,
         checkpoint_path=_cell_checkpoint_path(spec, arm, target),
+        selection_history=bool(spec.selection_history),
     )
     _write_checkpoint_cell_manifests(
         spec,
@@ -165,7 +195,8 @@ def _run_one_arm_target(
     # ensure the target column carries the resolved target name
     if "target" not in frame.columns:
         frame["target"] = effective_target.name
-    return frame
+    return _apply_arm_tags(frame, arm)
+
 
 
 def _write_checkpoint_cell_manifests(
@@ -699,6 +730,7 @@ def _result_store_load(
 ) -> "tuple[pd.DataFrame | None, ResultCellIdentity | None]":
     if store is None or data_identity is None or metadata is None:
         return None, None
+    arm = spec.arms[cell.arm_idx]
     identity = _result_store_identity(spec, cell, data_identity)
     if identity.digest is None:
         metadata["n_undigestible"] += 1
@@ -732,7 +764,8 @@ def _result_store_load(
                 "running_version": running_version,
             }
         )
-    return hit.frame, identity
+    frame = _drop_arm_tag_columns(hit.frame, arm)
+    return _apply_arm_tags(frame, arm), identity
 
 
 def _result_store_note_computed(
@@ -740,6 +773,7 @@ def _result_store_note_computed(
     metadata: dict[str, Any] | None,
     identity: ResultCellIdentity | None,
     frame: pd.DataFrame,
+    arm: Arm,
 ) -> None:
     if metadata is not None:
         metadata["n_computed"] += 1
@@ -747,7 +781,7 @@ def _result_store_note_computed(
         return
     store.write(
         identity.digest,
-        frame,
+        _drop_arm_tag_columns(frame, arm),
         data_fingerprint=identity.data_fingerprint,
         cell_echo=identity.cell_echo,
     )
@@ -903,6 +937,7 @@ def _run_cells(
                                     result_store_metadata,
                                     result_identities.get(cell),
                                     frame,
+                                    spec.arms[cell.arm_idx],
                                 )
                             except Exception as exc:
                                 failed.append(
@@ -954,6 +989,7 @@ def _run_cells(
                         result_store_metadata,
                         result_identities.get(cell),
                         frame,
+                        arm,
                     )
                     results[cell] = frame
                 except Exception as exc:
@@ -1038,7 +1074,9 @@ def run_arms(spec: PipelineSpec) -> pd.DataFrame:
     Columns include arm, model, contender, target, horizon, origin, date,
     prediction, actual, target_transform, forecast_policy. Each cell runs its arm
     with its own preprocessing/features/model against its target's resolved
-    (forecast_policy, target_transform).
+    (forecast_policy, target_transform). Arm tags are emitted as flat
+    ``tag_<key>`` columns; if that name already exists in a forecast frame, the
+    run raises rather than overwriting a compute-produced column.
 
     The pipeline MANAGES atomic ``run()`` calls over (target, arm, horizon-group)
     cells. When ``spec.n_jobs > 1`` the cells run across a process pool, one horizon
@@ -1468,6 +1506,7 @@ def _spec_echo(
                 "model": _model_default_name(a.model),
                 "is_benchmark": bool(a.is_benchmark),
                 "nested_in_benchmark": bool(a.nested_in_benchmark),
+                "tags": dict(getattr(a, "tags", {}) or {}),
             }
             for a in spec.arms
         ],
@@ -1478,6 +1517,7 @@ def _spec_echo(
         "model_threads": spec.model_threads,
         "preprocessing_cache_dir": spec.preprocessing_cache_dir,
         "checkpoint_dir": spec.checkpoint_dir,
+        "selection_history": bool(spec.selection_history),
     }
 
 

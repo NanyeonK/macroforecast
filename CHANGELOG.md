@@ -26,6 +26,40 @@ full per-version honesty-pass history embedded in repo documentation.
   forecasts. `dm` now also accepts `small_sample=False` through
   `test_options` for the plain Diebold-Mariano statistic with asymptotic-normal
   p-values while preserving the HLN/t default.
+- `model_selection`, `forecasting/policies`, `pipeline/result_store.py`, docs/tests
+  (validation-splitter/IC lane): added composable validation splitters on
+  `SearchSpec`, including explicit fold boundaries with fixed or within-fold
+  expanding validation and a recursive-threefold preset. `SearchSpec` now also
+  supports `method="information_criterion"` with AIC/BIC scoring on the fit
+  sample and the existing forecasting `retune_every` cache cadence. Result-store
+  cell digests now include splitter boundaries and reject callable splitters
+  without `__mf_digest__`.
+- `feature_engineering`, `forecasting/checkpoint.py`, `pipeline`, `preprocessing`,
+  docs/tests (feature, A5 screening/logging lane): added runner-safe
+  `predictor_screen(...)` feature steps with `t_stat`, `delta_r2`, `lasso`, and
+  `elastic_net` scoring, fit-window-only selection, always-retained controls,
+  and deterministic `min_k` fallback. Checkpointed pipelines can now opt into
+  per-origin selection sidecars via `pipeline_spec(..., selection_history=True)`
+  and inspect them with `selection_history(...)` and
+  `selection_frequency_table(...)`; opt-out remains the default and writes no
+  sidecars. Added `direct_target(..., transform="log_average_value")` and
+  `impute="zero"` for direct and fit-window preprocessing.
+- `pipeline/spec.py`, `pipeline/run.py`, `analysis`, docs/tests (feature, A3
+  tags + contribution lane): added first-class scalar `Arm.tags` that propagate
+  to master forecast rows as `tag_<key>` columns without entering result-store
+  cell digests, echo in pipeline provenance, and work in serial/parallel runs.
+  Added `mf.axis_contribution(...)` / `mf.analysis.axis_contribution(...)` for
+  descriptive treatment-style regressions of forecast-error outcomes on tag
+  features with target-horizon-date fixed effects, Newey-West HAC standard
+  errors, user-supplied state interactions, and benchmark-relative pseudo-R2.
+- `models`, `metrics.py`, docs/tests (standard estimators lane): added
+  Stock-Watson UCSV, Complete Subset Regression (`csr`), Jackknife Model
+  Averaging (`jma`), and the `mad` median absolute forecast-error metric.
+  Stochastic estimators expose `random_state` for pipeline-derived per-arm seeds.
+- `models/bayesian.py`, `metrics.py`, docs/tests (standard estimators fix):
+  corrected the UCSV KSC mixture signs/offset and redefined `mad` as median
+  absolute deviation around median forecast errors, with regression oracles for
+  KSC moments, constant-volatility recovery, and accuracy-table threading.
 - `pipeline/spec.py`, `pipeline/run.py`, `pipeline/evaluate.py`,
   `models/specs.py`, `reporting`, docs/tests (bugfix, fail-fast lane):
   model names, custom models, evaluation metrics, and combination contenders now

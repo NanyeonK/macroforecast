@@ -15,19 +15,23 @@ Guide context: [../guide/concepts/models_and_arms.md](../guide/concepts/models_a
 | `SearchError` | class | Raised when parameter search cannot select any successful candidate. |
 | `SearchResult` | class | Result returned by ``select_params``. |
 | `SearchSpec` | class | Parameter-search specification consumed by ``select_params``. |
+| `ValidationSplitterSpec` | class | Validation-split rule carried by a ``SearchSpec``. |
 | `bayesian_search` | function | Sequential Gaussian-process Bayesian search request. |
 | `choice` | function | Categorical distribution over explicit values. |
 | `custom_search` | function | Build a user-supplied parameter-search request. |
 | `cv_path` | function | Evaluate an ordered one-parameter path, commonly lasso/ridge alpha values. |
+| `explicit_folds` | function | Build fixed-boundary validation folds for a ``SearchSpec``. |
 | `fixed` | function | Evaluate one fixed parameter set without tuning. |
 | `genetic_search` | function | Lightweight genetic-style stochastic search over parameter distributions. |
 | `grid` | function | Grid-search over explicit parameter values. |
 | `log_uniform` | function | Continuous log-uniform distribution for positive parameters. |
 | `random_search` | function | Seeded random search over parameter distributions. |
 | `randint` | function | Inclusive integer distribution. |
+| `recursive_threefold` | function | Build recursive three-fold validation with expanding train blocks. |
 | `select_params` | function | Select model parameters by temporal validation. |
 | `search_spec` | function | Build a SearchSpec from a registered model's owned search space. |
 | `uniform` | function | Continuous uniform distribution. |
+| `validation_splitter` | function | Build a named validation-splitter override for a ``SearchSpec``. |
 
 ## Callable And Class Reference
 
@@ -223,7 +227,7 @@ Qualified name: `macroforecast.model_selection.types.SearchSpec`
 #### Signature
 
 ```python
-macroforecast.model_selection.SearchSpec(method: str, param_grid: dict[str, tuple[Any, ...]] = <factory>, param_distributions: dict[str, ParamDistribution] = <factory>, n_iter: int = 20, random_state: int | None = None, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, custom_func: Callable[..., Any] | None = None, custom_params: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>) -> None
+macroforecast.model_selection.SearchSpec(method: str, param_grid: dict[str, tuple[Any, ...]] = <factory>, param_distributions: dict[str, ParamDistribution] = <factory>, n_iter: int = 20, random_state: int | None = None, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, custom_func: Callable[..., Any] | None = None, custom_params: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>, criterion: str | None = None, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None) -> None
 ```
 
 #### Description
@@ -245,6 +249,8 @@ Parameter-search specification consumed by ``select_params``.
 | `custom_func` | positional or keyword | `Callable[..., Any] \| None` | `None` |
 | `custom_params` | positional or keyword | `dict[str, Any]` | `<factory>` |
 | `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
+| `criterion` | positional or keyword | `str \| None` | `None` |
+| `validation_splitter` | positional or keyword | `ValidationSplitterSpec \| Callable[..., Any] \| str \| None` | `None` |
 
 #### Returns
 
@@ -273,6 +279,8 @@ import macroforecast as mf
 | `custom_func` | `Callable[..., Any] \| None` | `None` |
 | `custom_params` | `dict[str, Any]` | `default_factory` |
 | `metadata` | `dict[str, Any]` | `default_factory` |
+| `criterion` | `str \| None` | `None` |
+| `validation_splitter` | `ValidationSplitterSpec \| Callable[..., Any] \| str \| None` | `None` |
 
 #### Public Methods
 
@@ -281,6 +289,55 @@ import macroforecast as mf
 | `to_dict` | `to_dict(self) -> dict[str, Any]` | Return a JSON-ready full search specification. |
 | `to_json` | `to_json(self, path: str \| Path \| None = None, *, indent: int \| None = 2) -> str` | Return JSON text, and optionally write it to ``path``. |
 | `to_metadata` | `to_metadata(self) -> dict[str, Any]` | Return search-level metadata without trial results. |
+### ValidationSplitterSpec
+
+Qualified name: `macroforecast.model_selection.types.ValidationSplitterSpec`
+
+#### Signature
+
+```python
+macroforecast.model_selection.ValidationSplitterSpec(method: str, explicit_folds: tuple[Any, ...] = (), within_fold: WithinFoldMode = "fixed", params: dict[str, Any] = <factory>) -> None
+```
+
+#### Description
+
+Validation-split rule carried by a ``SearchSpec``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `method` | positional or keyword | `str` | `required` |
+| `explicit_folds` | positional or keyword | `tuple[Any, ...]` | `()` |
+| `within_fold` | positional or keyword | `WithinFoldMode` | `"fixed"` |
+| `params` | positional or keyword | `dict[str, Any]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.model_selection.ValidationSplitterSpec(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `method` | `str` | `required` |
+| `explicit_folds` | `tuple[Any, ...]` | `()` |
+| `within_fold` | `WithinFoldMode` | `"fixed"` |
+| `params` | `dict[str, Any]` | `default_factory` |
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `to_dict` | `to_dict(self) -> dict[str, Any]` | Return a JSON-ready splitter specification. |
 ### bayesian_search
 
 Qualified name: `macroforecast.model_selection.builders.bayesian_search`
@@ -415,6 +472,38 @@ import macroforecast as mf
 # Call with the signature above:
 # mf.model_selection.cv_path(...)
 ```
+### explicit_folds
+
+Qualified name: `macroforecast.model_selection.splitters.explicit_folds`
+
+#### Signature
+
+```python
+macroforecast.model_selection.explicit_folds(boundaries: Sequence[Any], *, within_fold: str = "fixed") -> ValidationSplitterSpec
+```
+
+#### Description
+
+Build fixed-boundary validation folds for a ``SearchSpec``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `boundaries` | positional or keyword | `Sequence[Any]` | `required` |
+| `within_fold` | keyword only | `str` | `"fixed"` |
+
+#### Returns
+
+`ValidationSplitterSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.model_selection.explicit_folds(...)
+```
 ### fixed
 
 Qualified name: `macroforecast.model_selection.builders.fixed`
@@ -489,7 +578,7 @@ Qualified name: `macroforecast.model_selection.builders.grid`
 #### Signature
 
 ```python
-macroforecast.model_selection.grid(param_grid: dict[str, Iterable[Any] | Any]) -> SearchSpec
+macroforecast.model_selection.grid(param_grid: dict[str, Iterable[Any] | Any], *, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None) -> SearchSpec
 ```
 
 #### Description
@@ -501,6 +590,7 @@ Grid-search over explicit parameter values.
 | Name | Kind | Type | Default |
 | --- | --- | --- | --- |
 | `param_grid` | positional or keyword | `dict[str, Iterable[Any] \| Any]` | `required` |
+| `validation_splitter` | keyword only | `ValidationSplitterSpec \| Callable[..., Any] \| str \| None` | `None` |
 
 #### Returns
 
@@ -609,6 +699,31 @@ Inclusive integer distribution.
 import macroforecast as mf
 # Call with the signature above:
 # mf.model_selection.randint(...)
+```
+### recursive_threefold
+
+Qualified name: `macroforecast.model_selection.splitters.recursive_threefold`
+
+#### Signature
+
+```python
+macroforecast.model_selection.recursive_threefold() -> ValidationSplitterSpec
+```
+
+#### Description
+
+Build recursive three-fold validation with expanding train blocks.
+
+#### Returns
+
+`ValidationSplitterSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.model_selection.recursive_threefold(...)
 ```
 ### select_params
 
@@ -733,4 +848,36 @@ Continuous uniform distribution.
 import macroforecast as mf
 # Call with the signature above:
 # mf.model_selection.uniform(...)
+```
+### validation_splitter
+
+Qualified name: `macroforecast.model_selection.splitters.validation_splitter`
+
+#### Signature
+
+```python
+macroforecast.model_selection.validation_splitter(method: str, **params: Any) -> ValidationSplitterSpec
+```
+
+#### Description
+
+Build a named validation-splitter override for a ``SearchSpec``.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `method` | positional or keyword | `str` | `required` |
+| `params` | var keyword | `Any` | `required` |
+
+#### Returns
+
+`ValidationSplitterSpec`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.model_selection.validation_splitter(...)
 ```
