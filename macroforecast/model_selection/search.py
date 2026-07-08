@@ -521,8 +521,10 @@ def _validate_search_spec(spec: SearchSpec) -> None:
         raise ValueError(f"Unknown search method {spec.method!r}")
     if spec.criterion is not None:
         criterion = str(spec.criterion).lower()
-        if spec.method == "information_criterion" and criterion not in {"aic", "bic"}:
-            raise ValueError("information_criterion search criterion must be 'aic' or 'bic'")
+        if spec.method == "information_criterion" and criterion not in {"aic", "aicc", "bic"}:
+            raise ValueError(
+                "information_criterion search criterion must be 'aic', 'aicc', or 'bic'"
+            )
     if spec.method == "information_criterion":
         if spec.param_distributions:
             raise ValueError("information_criterion search requires param_grid, not distributions")

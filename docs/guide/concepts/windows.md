@@ -70,7 +70,8 @@ search = mf.model_selection.grid(
 Use information-criterion selection when candidates should be scored on the fit
 sample instead of a held-out validation block. The fitted model must expose
 `ssr_`, `nobs_`, and `n_params_`; AR/FAR-style RSS models do, while generic
-supervised regressors do not promise that interface:
+supervised regressors do not promise that interface. `criterion` accepts `"aic"`,
+`"aicc"`, or `"bic"`:
 
 ```python
 search = mf.model_selection.SearchSpec(
