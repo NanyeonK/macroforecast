@@ -49,13 +49,42 @@ def test_search_spec_uses_model_owned_space_without_fitting() -> None:
     assert search.n_iter == 5
     assert set(search.param_distributions) == {
         "n_estimators",
+        "max_features",
         "max_depth",
         "min_samples_leaf",
     }
     assert search.metadata["model"] == "random_forest"
+    assert search.param_distributions["max_features"].choices[0] == pytest.approx(
+        1.0 / 3.0
+    )
     assert (
         search.to_dict()["param_distributions"]["n_estimators"]["kind"] == "categorical"
     )
+
+
+def test_random_forest_search_space_is_rf_specific() -> None:
+    rf = mf.models.get_model("random_forest")
+    extra_trees = mf.models.get_model("extra_trees")
+    qrf = mf.models.get_model("quantile_regression_forest")
+
+    standard = rf.search_space("standard")
+    wide = rf.search_space("wide")
+
+    assert set(standard) == {
+        "n_estimators",
+        "max_features",
+        "max_depth",
+        "min_samples_leaf",
+    }
+    assert 500 in standard["n_estimators"]
+    assert standard["max_features"][0] == pytest.approx(1.0 / 3.0)
+    assert None in wide["max_features"]
+    assert extra_trees.search_space("standard") == {
+        "n_estimators": (100, 200, 500),
+        "max_depth": (3, 5, 10, None),
+        "min_samples_leaf": (1, 3, 5),
+    }
+    assert qrf.search_space("standard") == extra_trees.search_space("standard")
 
 
 def test_search_spec_threads_genetic_options_from_model_space() -> None:

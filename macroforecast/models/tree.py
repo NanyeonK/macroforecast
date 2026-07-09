@@ -63,7 +63,8 @@ def random_forest(
     X: Any,
     y: Any | None = None,
     *,
-    n_estimators: int = 200,
+    n_estimators: int = 500,
+    max_features: float | int | str | None = 1.0 / 3.0,
     max_depth: int | None = None,
     min_samples_leaf: int = 1,
     random_state: int = 0,
@@ -78,6 +79,7 @@ def random_forest(
     # passes through tree parameters and records the fit metadata.
     params = {
         "n_estimators": int(n_estimators),
+        "max_features": max_features,
         "max_depth": max_depth,
         "min_samples_leaf": int(min_samples_leaf),
         "random_state": int(random_state),

@@ -529,6 +529,27 @@ _FOREST_SPACES: SearchSpaces = {
     },
 }
 
+_RANDOM_FOREST_SPACES: SearchSpaces = {
+    "small": {
+        "n_estimators": (50, 100),
+        "max_features": (1.0 / 3.0,),
+        "max_depth": (3, 5, None),
+        "min_samples_leaf": (1, 3),
+    },
+    "standard": {
+        "n_estimators": (100, 200, 500),
+        "max_features": (1.0 / 3.0,),
+        "max_depth": (3, 5, 10, None),
+        "min_samples_leaf": (1, 3, 5),
+    },
+    "wide": {
+        "n_estimators": (100, 200, 500, 1000),
+        "max_features": (1.0 / 3.0, "sqrt", 0.5, None),
+        "max_depth": (3, 5, 10, 20, None),
+        "min_samples_leaf": (1, 2, 3, 5, 10),
+    },
+}
+
 _BOOSTING_SPACES: SearchSpaces = {
     "small": {
         "n_estimators": (50, 100),
@@ -3484,20 +3505,27 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "tree",
         random_forest,
         default_params={
-            "n_estimators": 200,
+            "n_estimators": 500,
+            "max_features": 1.0 / 3.0,
             "max_depth": None,
             "min_samples_leaf": 1,
             "random_state": 0,
             "n_jobs": None,
         },
         parameters=(
-            _p("n_estimators", 200, "int", "Number of trees."),
+            _p("n_estimators", 500, "int", "Number of trees."),
+            _p(
+                "max_features",
+                1.0 / 3.0,
+                "float | int | str | None",
+                "Features considered at each split.",
+            ),
             _p("max_depth", None, "int | None", "Maximum depth per tree."),
             _p("min_samples_leaf", 1, "int", "Minimum samples per terminal leaf."),
             _p("random_state", 0, "int", "Forest random seed.", False),
             _p("n_jobs", None, "int | None", "Parallel worker count (None resolves to meta.configure(n_jobs)).", False),
         ),
-        spaces=_FOREST_SPACES,
+        spaces=_RANDOM_FOREST_SPACES,
         method="random",
         backend="sklearn.ensemble.RandomForestRegressor",
         description="Random forest regression.",

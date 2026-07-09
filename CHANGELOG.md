@@ -5,6 +5,14 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/tree.py`, `models/specs.py`, docs/tests (DEFAULT CHANGED,
+  random_forest migration): changed registered `random_forest` defaults to
+  `n_estimators=500` and `max_features=1/3` with `random_state=0` unchanged.
+  Default-RF forecasts, model-selection outcomes, feature importances, and
+  interpretation outputs can move intentionally. To recover the old 200-tree,
+  all-feature split behavior, pass explicit params such as
+  `{"n_estimators": 200, "max_features": 1.0, "random_state": 0}` or
+  `max_features=None` for sklearn all-feature semantics.
 - `pipeline/run.py`, `pipeline/spec.py`, docs/tests (reliability, parallel
   executor lane): replaced parallel cell `ProcessPoolExecutor.map(...)`
   collection with explicit submitted futures, heartbeat timeout detection, loud

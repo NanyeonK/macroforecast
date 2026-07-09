@@ -2083,6 +2083,7 @@ def test_forecasting_runner_supports_random_forest_model() -> None:
         params={
             "random_forest": {
                 "n_estimators": 10,
+                "max_features": 1.0,
                 "max_depth": 3,
                 "random_state": 0,
                 "n_jobs": 1,
@@ -2095,6 +2096,47 @@ def test_forecasting_runner_supports_random_forest_model() -> None:
     assert set(table["model"]) == {"random_forest"}
     assert table["prediction"].notna().all()
     assert result.metadata["models"][0]["spec"]["params"]["n_estimators"] == 10
+    assert result.metadata["models"][0]["spec"]["params"]["max_features"] == 1.0
+
+
+def test_forecasting_runner_uses_random_forest_registered_defaults(tmp_path) -> None:
+    panel = _panel()
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=24),
+        val=mf.window.val_last_block(size=6),
+        test=mf.window.test_origins(
+            first_origin=panel.index[-2],
+            last_origin=panel.index[-2],
+            horizon=1,
+        ),
+    )
+    features = mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1", "x2"],
+        lags=(0, 1),
+    )
+
+    result = mf.forecasting.run(
+        panel,
+        "random_forest",
+        window=window,
+        features=features,
+        model_selection={"random_forest": None},
+        model_store=tmp_path / "trained_model",
+    )
+    table = result.to_frame()
+    stored = table["stored_model"].dropna().iloc[0]
+    metadata = json.loads(Path(stored["metadata_path"]).read_text(encoding="utf-8"))
+    default_params = metadata["model_spec"]["default_params"]
+    fit_metadata = metadata["fit"]["fit"]["metadata"]
+
+    assert set(table["model"]) == {"random_forest"}
+    assert table["prediction"].notna().all()
+    assert default_params["n_estimators"] == 500
+    assert default_params["max_features"] == pytest.approx(1.0 / 3.0)
+    assert fit_metadata["n_estimators"] == 500
+    assert fit_metadata["max_features"] == pytest.approx(1.0 / 3.0)
 
 
 def test_forecasting_runner_records_quantile_predictions() -> None:

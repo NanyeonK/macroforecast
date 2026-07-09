@@ -2413,7 +2413,7 @@ Family: `tree`
 #### Fit Signature
 
 ```python
-macroforecast.models.random_forest(X: Any, y: Any | None = None, *, n_estimators: int = 200, max_depth: int | None = None, min_samples_leaf: int = 1, random_state: int = 0, n_jobs: int | None = None, **kwargs: Any) -> ModelFit
+macroforecast.models.random_forest(X: Any, y: Any | None = None, *, n_estimators: int = 500, max_features: float | int | str | None = 0.3333333333333333, max_depth: int | None = None, min_samples_leaf: int = 1, random_state: int = 0, n_jobs: int | None = None, **kwargs: Any) -> ModelFit
 ```
 
 | Field | Value |
@@ -2431,7 +2431,8 @@ Random forest regression.
 
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
-| `n_estimators` | `200` | `int` | True | Number of trees. |
+| `n_estimators` | `500` | `int` | True | Number of trees. |
+| `max_features` | `0.3333333333333333` | `float \| int \| str \| None` | True | Features considered at each split. |
 | `max_depth` | `None` | `int \| None` | True | Maximum depth per tree. |
 | `min_samples_leaf` | `1` | `int` | True | Minimum samples per terminal leaf. |
 | `random_state` | `0` | `int` | False | Forest random seed. |
@@ -2441,9 +2442,9 @@ Random forest regression.
 
 | Preset | Parameters |
 | --- | --- |
-| `small` | `max_depth`: `(3, 5, None)`, `min_samples_leaf`: `(1, 3)`, `n_estimators`: `(50, 100)` |
-| `standard` | `max_depth`: `(3, 5, 10, None)`, `min_samples_leaf`: `(1, 3, 5)`, `n_estimators`: `(100, 200, 500)` |
-| `wide` | `max_depth`: `(3, 5, 10, 20, None)`, `min_samples_leaf`: `(1, 2, 3, 5, 10)`, `n_estimators`: `(100, 200, 500, 1000)` |
+| `small` | `max_depth`: `(3, 5, None)`, `max_features`: `(0.3333333333333333,)`, `min_samples_leaf`: `(1, 3)`, `n_estimators`: `(50, 100)` |
+| `standard` | `max_depth`: `(3, 5, 10, None)`, `max_features`: `(0.3333333333333333,)`, `min_samples_leaf`: `(1, 3, 5)`, `n_estimators`: `(100, 200, 500)` |
+| `wide` | `max_depth`: `(3, 5, 10, 20, None)`, `max_features`: `(0.3333333333333333, "sqrt", 0.5, None)`, `min_samples_leaf`: `(1, 2, 3, 5, 10)`, `n_estimators`: `(100, 200, 500, 1000)` |
 
 ### random_walk_drift
 

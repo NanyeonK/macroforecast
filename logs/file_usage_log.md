@@ -1,5 +1,24 @@
 # File Usage Log
 
+## 2026-07-09 - FIX5 random_forest defaults
+
+- `macroforecast/models/tree.py`: changed `random_forest` defaults to
+  `n_estimators=500` and `max_features=1.0 / 3.0`, recording and passing
+  `max_features` through to `RandomForestRegressor`.
+- `macroforecast/models/specs.py`: updated registered `random_forest`
+  defaults/parameter metadata and added `_RANDOM_FOREST_SPACES` so
+  `extra_trees` and `quantile_regression_forest` keep the shared forest spaces.
+- `tests/models/test_models.py`: added new-default metadata/estimator tests and
+  explicit old-param compatibility coverage against sklearn all-feature splits.
+- `tests/model_selection/test_search_specs.py`: pinned RF-specific search-space
+  keys and confirmed `extra_trees`/QRF spaces remain unchanged.
+- `tests/forecasting/test_forecasting.py`: added default-RF forecasting smoke
+  and explicit `max_features` params preservation coverage.
+- `docs/reference/models.md` and `docs/guide/models/tree.md`: regenerated after
+  the RF signature/search-space metadata change.
+- `CHANGELOG.md`: documented the DEFAULT CHANGED migration note.
+- `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
 ## 2026-07-09 - FIX2 parallel executor reliability
 
 - `macroforecast/pipeline/run.py`: replaced parallel cell `executor.map` with

@@ -20,6 +20,25 @@ def _xy(n: int = 60) -> tuple[pd.DataFrame, pd.Series]:
     return X, y
 
 
+def _rf_xy(n: int = 72, p: int = 8) -> tuple[pd.DataFrame, pd.Series]:
+    idx = pd.date_range("2000-01-31", periods=n, freq="ME")
+    rng = np.random.default_rng(20260709)
+    values = rng.normal(size=(n, p))
+    X = pd.DataFrame(values, columns=[f"x{i}" for i in range(p)], index=idx)
+    signal = (
+        1.5 * X["x0"]
+        - 0.7 * X["x1"]
+        + 0.4 * X["x2"] * X["x3"]
+        + np.sin(X["x4"])
+    )
+    y = pd.Series(
+        signal.to_numpy() + 0.15 * rng.normal(size=n),
+        index=idx,
+        name="y",
+    )
+    return X, y
+
+
 def _matlab_style_spca_reference(
     X_train: pd.DataFrame,
     y_train: pd.Series,
@@ -1060,6 +1079,20 @@ def test_model_specs_record_backend_extra_and_scaling_metadata() -> None:
     assert realized_garch_spec.requires_extra is None
 
 
+def test_random_forest_model_spec_records_new_defaults() -> None:
+    spec = mf.models.get_model("random_forest")
+    parameters = {parameter.name: parameter for parameter in spec.parameters}
+
+    assert spec.default_params["n_estimators"] == 500
+    assert spec.default_params["max_features"] == pytest.approx(1.0 / 3.0)
+    assert spec.default_params["random_state"] == 0
+    assert spec.default_params["n_jobs"] is None
+    assert parameters["n_estimators"].default == 500
+    assert parameters["max_features"].default == pytest.approx(1.0 / 3.0)
+    assert parameters["max_features"].kind == "float | int | str | None"
+    assert parameters["n_jobs"].default is None
+
+
 def test_pls_and_far_fit() -> None:
     X, y = _xy()
 
@@ -1283,6 +1316,50 @@ def test_tree_model_records_feature_importance_diagnostics() -> None:
         "x2",
     }
     assert np.isfinite(importance.to_numpy(dtype=float)).all()
+
+
+def test_random_forest_wrapper_records_new_defaults() -> None:
+    X, y = _rf_xy()
+
+    fit = mf.models.random_forest(X, y, n_jobs=1)
+    pred = fit.predict(X.iloc[-8:])
+
+    assert fit.metadata["n_estimators"] == 500
+    assert fit.metadata["max_features"] == pytest.approx(1.0 / 3.0)
+    assert fit.metadata["random_state"] == 0
+    assert fit.estimator.n_estimators == 500
+    assert fit.estimator.max_features == pytest.approx(1.0 / 3.0)
+    assert np.isfinite(pred.to_numpy(dtype=float)).all()
+
+
+def test_random_forest_explicit_old_params_reproduce_old_behavior() -> None:
+    from sklearn.ensemble import RandomForestRegressor
+
+    X, y = _rf_xy()
+    holdout = X.iloc[-12:]
+
+    reference = RandomForestRegressor(
+        n_estimators=200,
+        max_depth=None,
+        min_samples_leaf=1,
+        random_state=0,
+        n_jobs=1,
+    ).fit(X, y)
+    old_fit = mf.models.random_forest(
+        X,
+        y,
+        n_estimators=200,
+        max_features=None,
+        random_state=0,
+        n_jobs=1,
+    )
+    new_fit = mf.models.random_forest(X, y, n_jobs=1)
+
+    assert old_fit.metadata["n_estimators"] == 200
+    assert old_fit.metadata["max_features"] is None
+    np.testing.assert_allclose(old_fit.predict(holdout), reference.predict(holdout))
+    assert np.isfinite(new_fit.predict(holdout).to_numpy(dtype=float)).all()
+    assert not np.allclose(new_fit.predict(holdout), old_fit.predict(holdout))
 
 
 def test_basic_tree_models_fit_and_predict() -> None:
