@@ -5,6 +5,11 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/bayesian.py`, `models/specs.py`, tests (feature, UCSV knobs):
+  added UCSV initial-prior variance parameters for the observation and
+  trend-innovation log-volatility states. The new defaults preserve the current
+  implicit prior variance and default forecast anchor exactly; `random_state`
+  remains the MCMC reproducibility knob.
 - `forecasting/policies`, tests (bug-fix, model-selection params lane): explicit
   model params now pin matching model-owned hyperparameters out of the effective
   IC/CV search space instead of being silently overwritten by default model

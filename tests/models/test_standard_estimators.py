@@ -238,6 +238,56 @@ def test_ucsv_is_deterministic_given_random_state() -> None:
     )
 
 
+def test_ucsv_default_prior_knobs_leave_default_forecast_unchanged() -> None:
+    idx = pd.date_range("2001-01-31", periods=24, freq="ME")
+    base = np.linspace(-1.0, 1.0, len(idx))
+    y = pd.Series(
+        0.7 + 0.04 * np.arange(len(idx)) + 0.2 * np.sin(2.5 * base) + 0.05 * base**2,
+        index=idx,
+        name="y",
+    )
+
+    fit = mf.models.ucsv(y)
+    forecast = float(fit.predict(pd.DataFrame(index=range(3))).iloc[0])
+
+    assert forecast == pytest.approx(1.7893321991278723, abs=1e-12)
+    assert fit.metadata["initial_obs_log_vol_variance"] == 10.0
+    assert fit.metadata["initial_level_log_vol_variance"] == 10.0
+
+
+def test_ucsv_prior_variance_knobs_change_forecast_reproducibly() -> None:
+    y, _tau = _local_level_sv(seed=23, n=72)
+    base = mf.models.ucsv(y, n_draws=140, burn=50, gamma=0.05, random_state=77)
+    paper_like_params = {
+        "n_draws": 140,
+        "burn": 50,
+        "gamma": 0.05,
+        "initial_obs_log_vol_variance": 0.12,
+        "initial_level_log_vol_variance": 0.12,
+        "random_state": 77,
+    }
+
+    first = mf.models.get_model("ucsv", params=paper_like_params).fit(y)
+    second = mf.models.get_model("ucsv", params=paper_like_params).fit(y)
+
+    np.testing.assert_allclose(
+        first.diagnostics["trend"].to_numpy(dtype=float),
+        second.diagnostics["trend"].to_numpy(dtype=float),
+    )
+    assert first.metadata["initial_obs_log_vol_variance"] == 0.12
+    assert first.metadata["initial_level_log_vol_variance"] == 0.12
+    assert float(first.predict(pd.DataFrame(index=range(1))).iloc[0]) == pytest.approx(
+        float(second.predict(pd.DataFrame(index=range(1))).iloc[0]),
+        abs=1e-12,
+    )
+    assert not np.isclose(
+        float(first.predict(pd.DataFrame(index=range(1))).iloc[0]),
+        float(base.predict(pd.DataFrame(index=range(1))).iloc[0]),
+        rtol=0.0,
+        atol=1e-8,
+    )
+
+
 def test_ucsv_forecast_is_horizon_invariant_final_trend() -> None:
     y, _tau = _local_level_sv(seed=17, n=70)
 
@@ -260,8 +310,21 @@ def test_ucsv_default_draws_runtime_guard_on_500_obs() -> None:
     assert elapsed < 60.0
 
 
-def test_ucsv_model_spec_is_target_kind_and_exposes_random_state() -> None:
+def test_ucsv_model_spec_is_target_kind_and_exposes_reproducibility_knobs() -> None:
     spec = mf.models.get_model("ucsv")
 
     assert spec.input_kind == "target"
     assert spec.default_params["random_state"] == 1071
+    assert spec.default_params["initial_obs_log_vol_variance"] == 10.0
+    assert spec.default_params["initial_level_log_vol_variance"] == 10.0
+    assert "initial_obs_log_vol_variance" in {param.name for param in spec.parameters}
+    assert "initial_level_log_vol_variance" in {param.name for param in spec.parameters}
+
+
+def test_ucsv_initial_prior_variances_must_be_positive() -> None:
+    y, _tau = _local_level_sv(seed=29, n=24)
+
+    with pytest.raises(ValueError, match="initial_obs_log_vol_variance"):
+        mf.models.ucsv(y, n_draws=20, burn=5, initial_obs_log_vol_variance=0.0)
+    with pytest.raises(ValueError, match="initial_level_log_vol_variance"):
+        mf.models.ucsv(y, n_draws=20, burn=5, initial_level_log_vol_variance=-1.0)

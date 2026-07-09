@@ -1,5 +1,20 @@
 # File Usage Log
 
+## 2026-07-09 - FIX3 UCSV knobs
+
+- `macroforecast/models/bayesian.py`: added UCSV initial-prior variance
+  parameters for the observation and trend-innovation log-volatility states,
+  threaded into the Gibbs sampler's log-volatility state initialization while
+  preserving the current implicit `10.0` defaults and existing `random_state`.
+- `macroforecast/models/specs.py`: exposed the new UCSV parameters in the model
+  registry so model params and `Arm.params` can pass them through.
+- `tests/models/test_standard_estimators.py`: added UCSV default-forecast anchor
+  coverage, deterministic custom-prior coverage, registry exposure checks, and
+  validation checks for positive prior variances.
+- `CHANGELOG.md`: documented the additive UCSV knobs and defaults-unchanged
+  behavior.
+- `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
 ## 2026-07-09 - FIX1 params pin
 
 - `macroforecast/forecasting/policies/base.py`: implemented explicit-param

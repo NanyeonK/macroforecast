@@ -29,6 +29,7 @@ _KSC_VAR = np.asarray(
 _LOG_2PI = float(np.log(2.0 * np.pi))
 # Pragmatic safeguard; it should bind only for extreme log-volatility draws.
 _LOG_VOL_CLIP = (-20.0, 20.0)
+_DEFAULT_INITIAL_LOG_VOL_VARIANCE = 10.0
 
 
 class _UCSVForecaster:
@@ -38,6 +39,8 @@ class _UCSVForecaster:
         n_draws: int = 5000,
         burn: int = 1000,
         gamma: float = 0.2,
+        initial_obs_log_vol_variance: float = _DEFAULT_INITIAL_LOG_VOL_VARIANCE,
+        initial_level_log_vol_variance: float = _DEFAULT_INITIAL_LOG_VOL_VARIANCE,
         random_state: int | None = 1071,
     ) -> None:
         if int(n_draws) < 1:
@@ -48,9 +51,15 @@ class _UCSVForecaster:
             raise ValueError("burn must be smaller than n_draws")
         if float(gamma) <= 0.0:
             raise ValueError("gamma must be positive")
+        if float(initial_obs_log_vol_variance) <= 0.0:
+            raise ValueError("initial_obs_log_vol_variance must be positive")
+        if float(initial_level_log_vol_variance) <= 0.0:
+            raise ValueError("initial_level_log_vol_variance must be positive")
         self.n_draws = int(n_draws)
         self.burn = int(burn)
         self.gamma = float(gamma)
+        self.initial_obs_log_vol_variance = float(initial_obs_log_vol_variance)
+        self.initial_level_log_vol_variance = float(initial_level_log_vol_variance)
         self.random_state = random_state
         self.forecast_: float = 0.0
         self.trend_: np.ndarray | None = None
@@ -83,12 +92,14 @@ class _UCSVForecaster:
                 values - tau,
                 obs_log_vol,
                 state_variance=self.gamma,
+                initial_variance=self.initial_obs_log_vol_variance,
                 rng=rng,
             )
             level_log_vol = _sample_log_volatility(
                 np.diff(tau),
                 level_log_vol,
                 state_variance=self.gamma,
+                initial_variance=self.initial_level_log_vol_variance,
                 rng=rng,
             )
             tau = _sample_ucsv_trend(
@@ -150,6 +161,7 @@ def _sample_log_volatility(
     current_log_vol: np.ndarray,
     *,
     state_variance: float,
+    initial_variance: float,
     rng: np.random.Generator,
 ) -> np.ndarray:
     if len(shocks) == 0:
@@ -163,7 +175,7 @@ def _sample_log_volatility(
         state_variance=float(state_variance),
         rng=rng,
         initial_mean=float(np.median(adjusted)),
-        initial_variance=10.0,
+        initial_variance=float(initial_variance),
     )
     return np.clip(sampled, *_LOG_VOL_CLIP)
 
@@ -258,6 +270,8 @@ def ucsv(
     n_draws: int = 5000,
     burn: int = 1000,
     gamma: float = 0.2,
+    initial_obs_log_vol_variance: float = _DEFAULT_INITIAL_LOG_VOL_VARIANCE,
+    initial_level_log_vol_variance: float = _DEFAULT_INITIAL_LOG_VOL_VARIANCE,
     random_state: int | None = 1071,
 ) -> ModelFit:
     """Fit Stock-Watson unobserved-components stochastic-volatility model.
@@ -273,7 +287,10 @@ def ucsv(
     state `tau_T`, so UCSV forecasts are horizon-invariant by construction.
     `gamma` is the random-walk innovation variance for both log-volatility
     states; paper-specific settings such as Medeiros et al.'s volatility
-    smoothing values can be supplied through this parameter.
+    smoothing values can be supplied through this parameter. The
+    `initial_obs_log_vol_variance` and `initial_level_log_vol_variance`
+    parameters control the initial-prior variance for the observation and trend
+    innovation log-volatility states, respectively.
     """
 
     target = as_series(y).dropna().astype(float)
@@ -281,6 +298,8 @@ def ucsv(
         n_draws=int(n_draws),
         burn=int(burn),
         gamma=float(gamma),
+        initial_obs_log_vol_variance=float(initial_obs_log_vol_variance),
+        initial_level_log_vol_variance=float(initial_level_log_vol_variance),
         random_state=random_state,
     ).fit(target)
     trend = (
@@ -299,6 +318,8 @@ def ucsv(
             "n_draws": int(n_draws),
             "burn": int(burn),
             "gamma": float(gamma),
+            "initial_obs_log_vol_variance": float(initial_obs_log_vol_variance),
+            "initial_level_log_vol_variance": float(initial_level_log_vol_variance),
             "random_state": random_state,
             "n_kept": int(estimator.n_kept_),
             "forecast_is_final_trend": True,
