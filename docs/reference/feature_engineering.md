@@ -107,7 +107,7 @@ Guide context: [../guide/concepts/features.md](../guide/concepts/features.md).
 Kind: `data`
 
 ```python
-FeatureInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.DataFrame
+FeatureInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.core.frame.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.core.frame.DataFrame
 ```
 
 ## Callable And Class Reference

@@ -3184,7 +3184,7 @@ Family: `bayesian`
 #### Fit Signature
 
 ```python
-macroforecast.models.ucsv(y: Any, *, n_draws: int = 5000, burn: int = 1000, gamma: float = 0.2, random_state: int | None = 1071) -> ModelFit
+macroforecast.models.ucsv(y: Any, *, n_draws: int = 5000, burn: int = 1000, gamma: float = 0.2, initial_obs_log_vol_variance: float = 10.0, initial_level_log_vol_variance: float = 10.0, random_state: int | None = 1071) -> ModelFit
 ```
 
 | Field | Value |
@@ -3205,6 +3205,8 @@ Stock-Watson UCSV target-only benchmark with horizon-invariant final-trend forec
 | `n_draws` | `5000` | `int` | False | Total Gibbs sampler draws. |
 | `burn` | `1000` | `int` | False | Initial draws discarded as burn-in. |
 | `gamma` | `0.2` | `float` | False | Random-walk innovation variance for both log-volatility states. |
+| `initial_obs_log_vol_variance` | `10.0` | `float` | False | Initial-prior variance for the observation log-volatility state. |
+| `initial_level_log_vol_variance` | `10.0` | `float` | False | Initial-prior variance for the trend-innovation log-volatility state. |
 | `random_state` | `1071` | `int \| None` | False | Gibbs sampler seed. |
 
 ### unrestricted_midas

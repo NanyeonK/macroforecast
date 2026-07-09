@@ -1,5 +1,18 @@
 # File Usage Log
 
+## 2026-07-09 - FIX3 UCSV docs regeneration
+
+- `docs/reference/models.md`: regenerated reference docs so the UCSV signature
+  and parameter table include `initial_obs_log_vol_variance` and
+  `initial_level_log_vol_variance`.
+- `docs/reference/feature_engineering.md`: regenerated incidentally from the
+  doc generator; this captures pre-existing pandas-repr drift
+  (`pandas.DataFrame` -> `pandas.core.frame.DataFrame`).
+- `docs/reference/preprocessing.md`: regenerated incidentally from the doc
+  generator; this captures pre-existing pandas-repr drift
+  (`pandas.DataFrame` -> `pandas.core.frame.DataFrame`).
+- `logs/file_usage_log.md`: recorded this builder doc-regeneration summary.
+
 ## 2026-07-09 - FIX3 UCSV knobs
 
 - `macroforecast/models/bayesian.py`: added UCSV initial-prior variance
