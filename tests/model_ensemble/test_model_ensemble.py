@@ -328,11 +328,14 @@ def test_forecasting_runner_combines_model_ensemble_aliases() -> None:
     assert {tuple(item["models"]) for item in combined["combination"].dropna()} == {
         ("linear", "bagged")
     }
-    bagged_selection = (
-        bagged.forecasts["model_selection"].dropna().iloc[0]
-    )
-    assert bagged_selection["metadata"]["model_family"] == "model_ensemble"
-    assert bagged_selection["best_params"]["n_estimators"] == 2
+    # FIX1: explicit Arm/model params pin matching SearchSpec keys. Here every
+    # requested candidate key is pinned by explicit params, so no selection runs
+    # and the explicit n_estimators=3 value wins over the old fixed-search value.
+    assert bagged.forecasts["model_selection"].isna().all()
+    bagged_params = bagged.forecasts["params"].dropna().iloc[0]
+    assert bagged_params["base"] == "ridge"
+    assert bagged_params["n_estimators"] == 3
+    assert bagged_params["random_state"] == 0
     base = master
     for key, group in base.groupby(["date", "origin_pos", "horizon"], sort=False):
         assert np.isclose(
