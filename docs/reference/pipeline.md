@@ -998,7 +998,7 @@ Qualified name: `macroforecast.pipeline.spec.PipelineSpec`
 #### Signature
 
 ```python
-macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, selection_history: bool = False, result_store: str | None = None, n_jobs: int = 1, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
+macroforecast.pipeline.PipelineSpec(data: Any, targets: tuple[ResolvedTarget, ...], horizons: tuple[int, ...], window: Any, arms: tuple[Arm, ...], evaluation: EvalSpec, preprocessing: Any | None = None, preprocessing_policy: Any | None = None, combinations: tuple[CombinationContender, ...] = (), save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, selection_history: bool = False, result_store: str | None = None, n_jobs: int = 1, parallel_cell_timeout: float | None = 3600.0, model_threads: int = 1, preprocessing_cache_dir: str | Literal[False] | None = None, seed: int | None = 42, provenance: Mapping[str, Any] = <factory>, provenance_level: "Literal['full', 'basic']" = "full", policy_overrides: Mapping[tuple[str, str], str] = <factory>) -> None
 ```
 
 #### Description
@@ -1024,6 +1024,7 @@ Validated, frozen configuration produced by :func:`pipeline_spec`.
 | `selection_history` | positional or keyword | `bool` | `False` |
 | `result_store` | positional or keyword | `str \| None` | `None` |
 | `n_jobs` | positional or keyword | `int` | `1` |
+| `parallel_cell_timeout` | positional or keyword | `float \| None` | `3600.0` |
 | `model_threads` | positional or keyword | `int` | `1` |
 | `preprocessing_cache_dir` | positional or keyword | `str \| Literal[False] \| None` | `None` |
 | `seed` | positional or keyword | `int \| None` | `42` |
@@ -1062,6 +1063,7 @@ import macroforecast as mf
 | `selection_history` | `bool` | `False` |
 | `result_store` | `str \| None` | `None` |
 | `n_jobs` | `int` | `1` |
+| `parallel_cell_timeout` | `float \| None` | `3600.0` |
 | `model_threads` | `int` | `1` |
 | `preprocessing_cache_dir` | `str \| Literal[False] \| None` | `None` |
 | `seed` | `int \| None` | `42` |
@@ -1360,7 +1362,7 @@ Qualified name: `macroforecast.pipeline.spec.pipeline_spec`
 #### Signature
 
 ```python
-macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, selection_history: bool = False, result_store: str | Path | None = None, n_jobs: int | str = 1, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
+macroforecast.pipeline.pipeline_spec(*, data: Any, targets: Sequence[str | TargetSpec], horizons: Sequence[int] | int, window: Any, arms: Sequence[Arm], evaluation: EvalSpec, combinations: Sequence[CombinationContender] = (), preprocessing: Any | None = None, preprocessing_policy: Any | None = None, tcode_target_map: Mapping[int, tuple[str, str]] | None = None, save_models: bool = False, model_store: str = "trained_model", checkpoint_dir: str | None = None, selection_history: bool = False, result_store: str | Path | None = None, n_jobs: int | str = 1, parallel_cell_timeout: float | int | None = 3600.0, preprocessing_cache_dir: str | bool | None = None, seed: int | None = 42, provenance: Mapping[str, Any] | None = None, provenance_level: "Literal['full', 'basic']" = "full", on_unsupported_direct: "Literal['error', 'warn', 'reroute']" = "error") -> PipelineSpec
 ```
 
 #### Description
@@ -1376,6 +1378,9 @@ threads (stored as ``PipelineSpec.model_threads``). When ``n_jobs > 1``,
 every arm's model, features, preprocessing, policies, and model-selection
 objects must be pickleable because cells run in worker processes. Define
 custom callables at module scope, or use ``n_jobs=1`` for local closures.
+``parallel_cell_timeout`` is a positive finite parent-side heartbeat timeout,
+in seconds, for that parallel cell pool; pass ``None`` to disable timeout
+detection while keeping broken worker pools loud.
 
 Model names, evaluation metric names, combination methods, and combination
 ``over=`` contenders are resolved during spec construction. Unknown names
@@ -1435,6 +1440,7 @@ cells as ``recursive``.
 | `selection_history` | keyword only | `bool` | `False` |
 | `result_store` | keyword only | `str \| Path \| None` | `None` |
 | `n_jobs` | keyword only | `int \| str` | `1` |
+| `parallel_cell_timeout` | keyword only | `float \| int \| None` | `3600.0` |
 | `preprocessing_cache_dir` | keyword only | `str \| bool \| None` | `None` |
 | `seed` | keyword only | `int \| None` | `42` |
 | `provenance` | keyword only | `Mapping[str, Any] \| None` | `None` |

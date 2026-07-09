@@ -5,6 +5,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/run.py`, `pipeline/spec.py`, docs/tests (reliability, parallel
+  executor lane): replaced parallel cell `ProcessPoolExecutor.map(...)`
+  collection with explicit submitted futures, heartbeat timeout detection, loud
+  failed-cell reporting for stalled or broken pools, and bounded worker cleanup.
+  Added `pipeline_spec(..., parallel_cell_timeout=...)` as an additive execution
+  knob; result-store cell digests and serial/parallel forecast numbers remain
+  unchanged.
 - `window/core.py`, docs/tests (feature, horizon rolling-size lane): added
   optional horizon-dependent rolling estimation sizes via callable
   `R(base, horizon)` rules or explicit `size_by_horizon` mappings. Fixed-size

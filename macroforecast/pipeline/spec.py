@@ -12,7 +12,7 @@ from dataclasses import dataclass, field, replace
 import importlib.util
 import inspect
 import math
-from numbers import Integral
+from numbers import Integral, Real
 from pathlib import Path
 from typing import Any, Literal, TypeAlias, cast
 
@@ -682,6 +682,11 @@ class PipelineSpec:
     # or selection streams are intentionally changed by ``seed``. Memory scales
     # with ``n_jobs`` because every worker holds the data panel.
     n_jobs: int = 1
+    # Parent-side heartbeat timeout for parallel cell execution, in seconds.
+    # Applies only when n_jobs>1. A positive finite value bounds pool stalls or
+    # dead workers; None explicitly disables timeout-based stall detection while
+    # leaving broken-pool failures loud.
+    parallel_cell_timeout: float | None = 3600.0
     # Model-internal thread budget per cell worker, set by the AUTO allocator.
     # In parallel mode (n_jobs>1) each worker pins its tree-ensemble (RF/GBM/XGB/
     # LGBM) internal n_jobs to this value so cell_workers * model_threads <= cores
@@ -1351,6 +1356,21 @@ def _resolve_preprocessing_cache_dir(value: str | bool | None) -> str | Literal[
     return str(value)
 
 
+def _normalize_parallel_cell_timeout(value: float | int | None) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise ValueError(
+            "parallel_cell_timeout must be a positive finite number of seconds or None"
+        )
+    timeout = float(value)
+    if not math.isfinite(timeout) or timeout <= 0.0:
+        raise ValueError(
+            "parallel_cell_timeout must be a positive finite number of seconds or None"
+        )
+    return timeout
+
+
 def pipeline_spec(
     *,
     data: Any,
@@ -1369,6 +1389,7 @@ def pipeline_spec(
     selection_history: bool = False,
     result_store: str | Path | None = None,
     n_jobs: int | str = 1,
+    parallel_cell_timeout: float | int | None = 3600.0,
     preprocessing_cache_dir: str | bool | None = None,
     seed: int | None = 42,
     provenance: Mapping[str, Any] | None = None,
@@ -1386,6 +1407,9 @@ def pipeline_spec(
     every arm's model, features, preprocessing, policies, and model-selection
     objects must be pickleable because cells run in worker processes. Define
     custom callables at module scope, or use ``n_jobs=1`` for local closures.
+    ``parallel_cell_timeout`` is a positive finite parent-side heartbeat timeout,
+    in seconds, for that parallel cell pool; pass ``None`` to disable timeout
+    detection while keeping broken worker pools loud.
 
     Model names, evaluation metric names, combination methods, and combination
     ``over=`` contenders are resolved during spec construction. Unknown names
@@ -1438,6 +1462,7 @@ def pipeline_spec(
         )
     if selection_history and checkpoint_dir is None:
         raise ValueError("selection_history=True requires checkpoint_dir")
+    parallel_cell_timeout = _normalize_parallel_cell_timeout(parallel_cell_timeout)
     # n_jobs is a positive int OR the literal "auto"; the auto split is computed
     # below once the cell count (targets x arms x horizons) is known.
     auto_jobs = n_jobs == "auto"
@@ -1552,6 +1577,7 @@ def pipeline_spec(
         selection_history=bool(selection_history),
         result_store=(str(result_store) if result_store is not None else None),
         n_jobs=n_jobs,
+        parallel_cell_timeout=parallel_cell_timeout,
         model_threads=int(model_threads),
         preprocessing_cache_dir=_resolve_preprocessing_cache_dir(preprocessing_cache_dir),
         seed=seed,

@@ -1,5 +1,23 @@
 # File Usage Log
 
+## 2026-07-09 - FIX2 parallel executor reliability
+
+- `macroforecast/pipeline/run.py`: replaced parallel cell `executor.map` with
+  submitted futures collected through a heartbeat timeout, records timeout or
+  broken-pool failures via failed cells, preserves completed result-store writes,
+  and shuts down failed pools without unbounded waits.
+- `macroforecast/pipeline/spec.py`: added validated
+  `parallel_cell_timeout` execution control with default `3600.0` seconds and
+  explicit `None` opt-out for timeout detection.
+- `tests/pipeline/test_parallel_executor_reliability.py`: added stress coverage
+  for slow cells, killed workers, result-store resume after partial timeout,
+  serial-vs-parallel numerical equality, and timeout validation.
+- `docs/reference/pipeline.md`: regenerated public API reference for the new
+  `PipelineSpec` field and `pipeline_spec(...)` argument.
+- `CHANGELOG.md`: documented the reliability-only executor hardening and
+  unchanged-number/result-store semantics.
+- `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
 ## 2026-07-09 - FIX4 horizon-dependent rolling window
 
 - `macroforecast/window/core.py`: added optional rolling `size_rule` and

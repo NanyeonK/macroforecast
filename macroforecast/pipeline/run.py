@@ -539,6 +539,184 @@ def _parallel_cell_worker(
         return cell, None, f"{type(exc).__name__}: {exc}"
 
 
+_PARALLEL_EXECUTOR_SHUTDOWN_GRACE_SECONDS = 1.0
+
+
+def _parallel_timeout_error(timeout: float) -> str:
+    return f"ParallelExecutorTimeout: no cell completed within {timeout} seconds"
+
+
+def _parallel_executor_error(exc: BaseException) -> str:
+    return f"ParallelExecutorError: {type(exc).__name__}: {exc}"
+
+
+def _terminate_parallel_executor_workers(executor: Any) -> bool:
+    """Best-effort immediate process cleanup for a failed ProcessPoolExecutor."""
+
+    for method_name in ("terminate_workers", "kill_workers"):
+        method = getattr(executor, method_name, None)
+        if callable(method):
+            try:
+                method()
+            except Exception:
+                continue
+            else:
+                return True
+
+    processes = list((getattr(executor, "_processes", None) or {}).values())
+    if not processes:
+        return False
+    for process in processes:
+        try:
+            if process.is_alive():
+                process.terminate()
+        except Exception:
+            pass
+    for process in processes:
+        try:
+            process.join(timeout=_PARALLEL_EXECUTOR_SHUTDOWN_GRACE_SECONDS)
+        except Exception:
+            pass
+    for process in processes:
+        try:
+            if process.is_alive():
+                kill = getattr(process, "kill", None)
+                if callable(kill):
+                    kill()
+        except Exception:
+            pass
+    for process in processes:
+        try:
+            process.join(timeout=_PARALLEL_EXECUTOR_SHUTDOWN_GRACE_SECONDS)
+        except Exception:
+            pass
+    return False
+
+
+def _shutdown_parallel_executor(
+    executor: Any,
+    *,
+    failure: bool,
+) -> None:
+    """Shut down a process pool without waiting forever on failed workers."""
+
+    if failure and _terminate_parallel_executor_workers(executor):
+        return
+    try:
+        executor.shutdown(wait=not failure, cancel_futures=failure)
+    except TypeError:  # pragma: no cover - Python <3.9 compatibility guard.
+        executor.shutdown(wait=not failure)
+
+
+def _collect_parallel_cells(
+    spec: PipelineSpec,
+    executor: Any,
+    dispatch: "Sequence[_Cell]",
+    spec_payload: PipelineSpec,
+    data_token: str,
+    result_store: ResultStore | None,
+    result_store_metadata: dict[str, Any] | None,
+    result_identities: "Mapping[_Cell, ResultCellIdentity | None]",
+    results: "dict[_Cell, pd.DataFrame]",
+    failed: "list[dict[str, Any]]",
+) -> str | None:
+    """Collect submitted parallel cells, returning an executor-level error if any."""
+
+    from concurrent.futures import TimeoutError as FutureTimeoutError
+    from concurrent.futures import as_completed
+    from concurrent.futures.process import BrokenProcessPool
+
+    future_to_cell: dict[Any, _Cell] = {}
+    try:
+        for cell in dispatch:
+            future = executor.submit(_parallel_cell_worker, (spec_payload, cell, data_token))
+            future_to_cell[future] = cell
+    except BrokenProcessPool as exc:
+        error_text = _parallel_executor_error(exc)
+        submitted = set(future_to_cell.values())
+        unresolved = [cell for cell in dispatch if cell not in submitted]
+        unresolved.extend(future_to_cell.values())
+        for cell in unresolved:
+            failed.append(_cell_failure(spec, cell, error_text))
+        return error_text
+    except Exception as exc:
+        error_text = _parallel_executor_error(exc)
+        submitted = set(future_to_cell.values())
+        unresolved = [cell for cell in dispatch if cell not in submitted]
+        unresolved.extend(future_to_cell.values())
+        for cell in unresolved:
+            failed.append(_cell_failure(spec, cell, error_text))
+        return error_text
+
+    pending = set(future_to_cell)
+    processed: set[Any] = set()
+    timeout = spec.parallel_cell_timeout
+
+    while pending:
+        try:
+            future = next(as_completed(pending, timeout=timeout))
+        except FutureTimeoutError:
+            if timeout is None:
+                error_text = "ParallelExecutorError: TimeoutError while timeout is disabled"
+            else:
+                error_text = _parallel_timeout_error(float(timeout))
+            break
+        except BrokenProcessPool as exc:
+            error_text = _parallel_executor_error(exc)
+            break
+        except Exception as exc:
+            error_text = _parallel_executor_error(exc)
+            break
+
+        pending.remove(future)
+        cell = future_to_cell[future]
+        try:
+            returned_cell, frame, error = future.result()
+        except BrokenProcessPool as exc:
+            error_text = _parallel_executor_error(exc)
+            break
+        except Exception as exc:
+            error_text = _parallel_executor_error(exc)
+            break
+
+        if returned_cell != cell:
+            error_text = (
+                "ParallelExecutorError: worker returned result for "
+                f"{returned_cell!r} while parent expected {cell!r}"
+            )
+            break
+        if error is not None:
+            failed.append(_cell_failure(spec, cell, error))
+        elif frame is not None:
+            try:
+                _result_store_note_computed(
+                    result_store,
+                    result_store_metadata,
+                    result_identities.get(cell),
+                    frame,
+                    spec.arms[cell.arm_idx],
+                )
+            except Exception as exc:
+                failed.append(
+                    _cell_failure(
+                        spec,
+                        cell,
+                        f"{type(exc).__name__}: {exc}",
+                    )
+                )
+            else:
+                results[cell] = frame
+        processed.add(future)
+    else:
+        return None
+
+    for future in future_to_cell:
+        if future not in processed:
+            future.cancel()
+            failed.append(_cell_failure(spec, future_to_cell[future], error_text))
+    return error_text
+
+
 def _cell_failure(spec: PipelineSpec, cell: _Cell, error: str) -> dict[str, Any]:
     """A structured record of one failed cell (identity + error)."""
     arm = spec.arms[cell.arm_idx]
@@ -914,7 +1092,7 @@ def _run_cells(
                 dispatch = _lpt_dispatch_order(spec, pending_cells)
                 data_token = f"{os.getpid()}:{id(spec)}:{len(pending_cells)}"
                 spec_payload = _dc.replace(spec, data=None)
-                with ProcessPoolExecutor(
+                executor = ProcessPoolExecutor(
                     max_workers=max_workers,
                     initializer=_parallel_worker_initializer,
                     initargs=(
@@ -923,32 +1101,26 @@ def _run_cells(
                         int(spec.model_threads),
                         spec.seed,
                     ),
-                ) as executor:
-                    for cell, frame, error in executor.map(
-                        _parallel_cell_worker,
-                        [(spec_payload, c, data_token) for c in dispatch],
-                    ):
-                        if error is not None:
-                            failed.append(_cell_failure(spec, cell, error))
-                        elif frame is not None:
-                            try:
-                                _result_store_note_computed(
-                                    result_store,
-                                    result_store_metadata,
-                                    result_identities.get(cell),
-                                    frame,
-                                    spec.arms[cell.arm_idx],
-                                )
-                            except Exception as exc:
-                                failed.append(
-                                    _cell_failure(
-                                        spec,
-                                        cell,
-                                        f"{type(exc).__name__}: {exc}",
-                                    )
-                                )
-                            else:
-                                results[cell] = frame
+                )
+                executor_failure: str | None = "ParallelExecutorError: collection interrupted"
+                try:
+                    executor_failure = _collect_parallel_cells(
+                        spec,
+                        executor,
+                        dispatch,
+                        spec_payload,
+                        data_token,
+                        result_store,
+                        result_store_metadata,
+                        result_identities,
+                        results,
+                        failed,
+                    )
+                finally:
+                    _shutdown_parallel_executor(
+                        executor,
+                        failure=executor_failure is not None,
+                    )
         else:
             # One shared per-target cache: arms of the same target reuse the per-origin
             # FittedPreprocessor/_PreparedStage (Gap A's original sharing) AND the
@@ -1514,6 +1686,7 @@ def _spec_echo(
         "evaluation": evaluation,
         "seed": spec.seed,
         "n_jobs": spec.n_jobs,
+        "parallel_cell_timeout": spec.parallel_cell_timeout,
         "model_threads": spec.model_threads,
         "preprocessing_cache_dir": spec.preprocessing_cache_dir,
         "checkpoint_dir": spec.checkpoint_dir,
