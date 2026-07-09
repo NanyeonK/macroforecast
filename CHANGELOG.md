@@ -5,6 +5,11 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/policies`, tests (bug-fix, model-selection params lane): explicit
+  model params now pin matching model-owned hyperparameters out of the effective
+  IC/CV search space instead of being silently overwritten by default model
+  selection. Arms whose explicit params were previously overridden can produce
+  changed forecasts; this is the intended correction.
 - `analysis`, `feature_engineering`, `model_selection`, `metrics.py`, docs/tests
   (stage-2 review fixes): changed `axis_contribution(...)` to default to
   date-aggregated Driscoll-Kraay standard errors (`vcov="driscoll_kraay"`) while

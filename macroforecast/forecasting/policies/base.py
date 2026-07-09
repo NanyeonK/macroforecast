@@ -6,7 +6,7 @@ through (Phase 3 of the runner decomposition; bodies moved verbatim from
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -74,6 +74,13 @@ class _FitOutcome:
     prediction: pd.Series | None
 
 
+@dataclass(frozen=True)
+class _EffectiveSelection:
+    model_spec: ModelSpec
+    search: SearchSpec | None
+    should_select: bool
+
+
 def _fit_one_model_at_origin(
     model_run: _ModelRun,
     X_fit: pd.DataFrame,
@@ -128,9 +135,14 @@ def _fit_one_model_at_origin(
     selected, use_model_default_selection = _selection_for_model(
         cfg.selection, model_run
     )
-    should_select = selected is not None or (
-        use_model_default_selection and bool(model_spec.search_spaces)
+    effective_selection = _effective_selection_after_pinning(
+        model_spec,
+        selected,
+        use_model_default_selection=use_model_default_selection,
     )
+    selection_model_spec = effective_selection.model_spec
+    selected = effective_selection.search
+    should_select = effective_selection.should_select
     selection_metadata: dict[str, Any] | None = None
     selected_method = (
         str(getattr(selected, "method", "")).lower().replace("-", "_")
@@ -158,7 +170,7 @@ def _fit_one_model_at_origin(
                 else str(model_spec.selection_method).lower()
             )
             result = select_by_information_criterion(
-                model_spec,
+                selection_model_spec,
                 X_sel,
                 y_sel,
                 search=selected,
@@ -202,7 +214,7 @@ def _fit_one_model_at_origin(
                 selected is not None and selected.validation_splitter is not None
             )
             result = select_params(
-                model_spec,
+                selection_model_spec,
                 X_sel,
                 y_sel,
                 search=selected,
@@ -270,6 +282,100 @@ def _fit_one_model_at_origin(
         stored_model=stored_model,
         prediction=prediction,
     )
+
+
+def _effective_selection_after_pinning(
+    model_spec: ModelSpec,
+    selected: SearchSpec | None,
+    *,
+    use_model_default_selection: bool,
+) -> _EffectiveSelection:
+    """Remove explicitly fixed model-owned params from candidate search spaces."""
+
+    if selected is None and not use_model_default_selection:
+        return _EffectiveSelection(
+            model_spec=model_spec,
+            search=None,
+            should_select=False,
+        )
+    model_space = model_spec.search_space()
+    pinned_keys = set(model_spec.params) & set(model_space)
+    if selected is not None:
+        effective_search, removed_keys = _search_without_pinned_keys(
+            selected,
+            pinned_keys,
+        )
+        should_select = True
+        if removed_keys and not _search_candidate_keys(effective_search):
+            should_select = False
+        return _EffectiveSelection(
+            model_spec=model_spec,
+            search=effective_search,
+            should_select=should_select,
+        )
+    if not model_space:
+        return _EffectiveSelection(
+            model_spec=model_spec,
+            search=None,
+            should_select=False,
+        )
+    effective_space = {
+        key: values for key, values in model_space.items() if key not in pinned_keys
+    }
+    if not effective_space:
+        return _EffectiveSelection(
+            model_spec=model_spec,
+            search=None,
+            should_select=False,
+        )
+    return _EffectiveSelection(
+        model_spec=_model_spec_with_search_space(model_spec, effective_space),
+        search=None,
+        should_select=True,
+    )
+
+
+def _model_spec_with_search_space(
+    model_spec: ModelSpec,
+    search_space: Mapping[str, Sequence[Any]],
+) -> ModelSpec:
+    preset = model_spec.preset or model_spec.default_preset
+    search_spaces = dict(model_spec.search_spaces)
+    search_spaces[preset] = {
+        key: tuple(values) for key, values in search_space.items()
+    }
+    return replace(model_spec, search_spaces=search_spaces)
+
+
+def _search_without_pinned_keys(
+    selected: SearchSpec,
+    pinned_keys: set[str],
+) -> tuple[SearchSpec, set[str]]:
+    removed_keys = (
+        pinned_keys & (set(selected.param_grid) | set(selected.param_distributions))
+    )
+    if not removed_keys:
+        return selected, set()
+    return (
+        replace(
+            selected,
+            param_grid={
+                key: values
+                for key, values in selected.param_grid.items()
+                if key not in removed_keys
+            },
+            param_distributions={
+                key: distribution
+                for key, distribution in selected.param_distributions.items()
+                if key not in removed_keys
+            },
+        ),
+        removed_keys,
+    )
+
+
+def _search_candidate_keys(search: SearchSpec) -> set[str]:
+    return set(search.param_grid) | set(search.param_distributions)
 
 
 def _with_derived_random_state(

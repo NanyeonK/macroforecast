@@ -36,6 +36,52 @@ def _window() -> mf.window.WindowSpec:
     )
 
 
+class _SelectionProbeFit:
+    def __init__(self, *, offset: float, slope: float) -> None:
+        self.offset = float(offset)
+        self.slope = float(slope)
+
+    def predict(self, X: pd.DataFrame) -> pd.Series:
+        x = pd.DataFrame(X).iloc[:, 0]
+        return pd.Series(
+            self.offset + self.slope * x.to_numpy(),
+            index=x.index,
+            name="prediction",
+        )
+
+
+def _selection_probe_model(
+    X: pd.DataFrame,
+    y: pd.Series,
+    *,
+    offset: float = 0.0,
+    slope: float = 0.0,
+) -> _SelectionProbeFit:
+    return _SelectionProbeFit(offset=offset, slope=slope)
+
+
+def _selection_probe_spec() -> mf.models.ModelSpec:
+    return mf.models.custom_model(
+        "selection_probe",
+        _selection_probe_model,
+        search_spaces={
+            "standard": {
+                "offset": (0.0, 1.0),
+                "slope": (1.0, 2.0),
+            }
+        },
+    )
+
+
+def _single_lag_features() -> mf.feature_engineering.FeatureSpec:
+    return mf.feature_engineering.feature_spec(
+        target="y",
+        horizon=1,
+        predictors=["x1"],
+        lags=(0,),
+    )
+
+
 def _mixed_panel(n: int = 48) -> mf.data.DataBundle:
     idx = pd.date_range("2000-01-31", periods=n, freq="ME", name="date")
     t = np.arange(n, dtype=float)
@@ -1551,9 +1597,8 @@ def test_forecasting_runner_single_model_per_call_with_stage_policies() -> None:
         assert len(result.metadata["models"]) == 1
 
     ridge_table = results["ridge"].to_frame()
-    ridge_selection = ridge_table["model_selection"].dropna().iloc[0]
-    assert ridge_selection["window"] == "explicit_splits"
-    assert ridge_selection["metadata"]["split_source"] == "explicit"
+    assert ridge_table["model_selection"].isna().all()
+    assert ridge_table["params"].map(lambda value: value == {"alpha": 0.1}).all()
 
 
 def test_forecasting_run_rejects_multiple_models() -> None:
@@ -1625,6 +1670,109 @@ def test_forecasting_runner_records_fixed_and_selected_model_params() -> None:
     selected_params = selected.to_frame()["params"].iloc[0]
 
     assert selected_params == {"fit_intercept": False, "alpha": 0.1}
+
+
+def test_forecasting_runner_pins_explicit_params_during_default_selection() -> None:
+    panel = _panel()
+    model = _selection_probe_spec()
+    features = _single_lag_features()
+
+    partial = mf.forecasting.run(
+        panel,
+        model,
+        window=_window(),
+        features=features,
+        params={"offset": 5.0},
+        save_models=False,
+    )
+    partial_row = partial.to_frame().iloc[0]
+    partial_selection = partial_row["model_selection"]
+
+    assert partial_selection["retuned"] is True
+    assert set(partial_selection["best_params"]) == {"slope"}
+    assert partial_row["params"]["offset"] == 5.0
+    assert "slope" in partial_row["params"]
+
+    explicit_search = mf.forecasting.run(
+        panel,
+        model,
+        window=_window(),
+        features=features,
+        params={"offset": 5.0},
+        model_selection=mf.model_selection.grid(
+            {"offset": (0.0, 1.0), "slope": (1.0, 2.0)}
+        ),
+        save_models=False,
+    )
+    explicit_search_row = explicit_search.to_frame().iloc[0]
+
+    assert set(explicit_search_row["model_selection"]["best_params"]) == {"slope"}
+    assert explicit_search_row["params"]["offset"] == 5.0
+
+    all_pinned = mf.forecasting.run(
+        panel,
+        model,
+        window=_window(),
+        features=features,
+        params={"offset": 5.0, "slope": 9.0},
+        save_models=False,
+    )
+    all_pinned_table = all_pinned.to_frame()
+
+    assert all_pinned_table["model_selection"].isna().all()
+    assert (
+        all_pinned_table["params"].map(lambda value: value["offset"]).eq(5.0).all()
+    )
+    assert (
+        all_pinned_table["params"].map(lambda value: value["slope"]).eq(9.0).all()
+    )
+
+    ic_pinned = mf.forecasting.run(
+        panel,
+        "ar",
+        window=_window(),
+        target="y",
+        params={"n_lag": 2},
+        save_models=False,
+    )
+    ic_pinned_table = ic_pinned.to_frame()
+
+    assert ic_pinned_table["model_selection"].isna().all()
+    assert ic_pinned_table["params"].map(lambda value: value["n_lag"]).eq(2).all()
+    assert ic_pinned_table["params"].map(lambda value: value["direct"] is True).all()
+
+
+def test_forecasting_runner_no_params_still_runs_default_selection() -> None:
+    result = mf.forecasting.run(
+        _panel(),
+        _selection_probe_spec(),
+        window=_window(),
+        features=_single_lag_features(),
+        save_models=False,
+    )
+    row = result.to_frame().iloc[0]
+
+    assert row["model_selection"]["retuned"] is True
+    assert set(row["model_selection"]["best_params"]) == {"offset", "slope"}
+    assert set(row["params"]) == {"offset", "slope"}
+
+
+def test_forecasting_runner_model_selection_none_still_disables_default_search() -> None:
+    model = _selection_probe_spec()
+
+    result = mf.forecasting.run(
+        _panel(),
+        model,
+        window=_window(),
+        features=_single_lag_features(),
+        params={"offset": 5.0},
+        model_selection={model.name: None},
+        save_models=False,
+    )
+    table = result.to_frame()
+
+    assert table["model_selection"].isna().all()
+    assert table["params"].map(lambda value: value == {"offset": 5.0}).all()
 
 
 def test_forecasting_runner_supports_model_specific_standardization_params() -> None:
