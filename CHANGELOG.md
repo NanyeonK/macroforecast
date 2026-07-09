@@ -5,6 +5,12 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `window/core.py`, docs/tests (feature, horizon rolling-size lane): added
+  optional horizon-dependent rolling estimation sizes via callable
+  `R(base, horizon)` rules or explicit `size_by_horizon` mappings. Fixed-size
+  rolling windows keep their existing metadata shape, origin planning, and
+  forecast numbers; matching a rule-resolved size to an explicit fixed size
+  produces identical deterministic OLS forecasts.
 - `models/bayesian.py`, `models/specs.py`, tests (feature, UCSV knobs):
   added UCSV initial-prior variance parameters for the observation and
   trend-innovation log-volatility states. The new defaults preserve the current

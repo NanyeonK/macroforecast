@@ -1,5 +1,21 @@
 # File Usage Log
 
+## 2026-07-09 - FIX4 horizon-dependent rolling window
+
+- `macroforecast/window/core.py`: added optional rolling `size_rule` and
+  `size_by_horizon` support, resolved against the injected test horizon during
+  origin planning while preserving fixed rolling-window behavior.
+- `tests/window/test_horizon_dependent_rolling.py`: added coverage for
+  horizon-rule sizing, explicit per-horizon sizing, map-only default origins,
+  fixed rolling origin/metadata regression, same-R deterministic OLS forecast
+  equality, fixed forecast golden predictions, and validation errors.
+- `docs/reference/window.md`: regenerated public API reference after the
+  `EstimationWindow`, `estimation_rolling`, and `from_cutoffs` signatures
+  changed.
+- `CHANGELOG.md`: documented the additive horizon-dependent rolling-size API and
+  fixed-window parity guarantee.
+- `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
 ## 2026-07-09 - FIX3 UCSV docs regeneration
 
 - `docs/reference/models.md`: regenerated reference docs so the UCSV signature

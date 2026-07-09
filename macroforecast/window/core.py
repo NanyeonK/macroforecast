@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypeAlias, cast
 
@@ -52,6 +52,15 @@ def _check_positive_int(name: str, value: int) -> int:
     out = int(value)
     if out < 1:
         raise ValueError(f"{name} must be at least 1")
+    return out
+
+
+def _check_positive_integer_like(name: str, value: Any) -> int:
+    if not _is_position_step(value):
+        raise ValueError(f"{name} must be a positive integer")
+    out = int(value)
+    if out < 1:
+        raise ValueError(f"{name} must be a positive integer")
     return out
 
 
@@ -152,10 +161,58 @@ def _resolve_position(
     return pos
 
 
-def _default_first_origin_position(estimation: EstimationWindow, n_samples: int) -> int:
+def _callable_descriptor(func: Callable[[int, int], int]) -> str:
+    name = getattr(func, "__name__", None)
+    if isinstance(name, str) and name:
+        return name
+    return repr(func)
+
+
+def _resolve_rolling_estimation_size(
+    estimation: EstimationWindow,
+    *,
+    horizon: int,
+) -> int:
+    h = _check_positive_integer_like("horizon", horizon)
+    if estimation.mode != "rolling":
+        raise ValueError("horizon-dependent estimation size requires rolling mode")
+    if estimation.size_by_horizon is not None:
+        if h not in estimation.size_by_horizon:
+            raise ValueError(f"size_by_horizon is missing horizon {h}")
+        return _check_positive_integer_like(
+            f"size_by_horizon[{h}]",
+            estimation.size_by_horizon[h],
+        )
+    if estimation.size_rule is not None:
+        if estimation.size is None:
+            raise ValueError("size_rule requires a base rolling size")
+        try:
+            resolved = estimation.size_rule(int(estimation.size), h)
+        except Exception as exc:  # noqa: BLE001 - preserve user-facing context.
+            raise ValueError(
+                f"size_rule failed to resolve rolling size for horizon {h}"
+            ) from exc
+        return _check_positive_integer_like(
+            f"size_rule result for horizon {h}",
+            resolved,
+        )
+    if estimation.size is None:
+        raise ValueError("rolling estimation window requires size")
+    return int(estimation.size)
+
+
+def _default_first_origin_position(
+    estimation: EstimationWindow,
+    n_samples: int,
+    *,
+    horizon: int,
+) -> int:
     minimum = estimation.min_size
     if minimum is None:
-        minimum = estimation.size
+        if estimation.mode == "rolling":
+            minimum = _resolve_rolling_estimation_size(estimation, horizon=horizon)
+        else:
+            minimum = estimation.size
     if minimum is None:
         minimum = max(1, n_samples // 2)
     return int(minimum) + int(estimation.embargo)
@@ -166,14 +223,13 @@ def _estimation_start_position(
     *,
     estimation_start_bound: int,
     estimation_end_pos: int,
+    horizon: int,
 ) -> int:
     mode = estimation.mode.lower().replace("-", "_")
     if mode == "expanding":
         return int(estimation_start_bound)
     if mode == "rolling":
-        size = estimation.size or estimation.min_size
-        if size is None:
-            raise ValueError("rolling estimation window requires size or min_size")
+        size = _resolve_rolling_estimation_size(estimation, horizon=horizon)
         return max(int(estimation_start_bound), int(estimation_end_pos) - int(size) + 1)
     if mode == "fixed":
         return int(estimation_start_bound)
@@ -239,6 +295,8 @@ class EstimationWindow:
     end: Any | None = None
     min_size: int | None = None
     size: int | None = None
+    size_rule: Callable[[int, int], int] | None = None
+    size_by_horizon: Mapping[int, int] | None = None
     embargo: int = 0
     retrain_every: TemporalCadence = 1
 
@@ -259,9 +317,36 @@ class EstimationWindow:
                 "size",
                 _check_positive_int("size", self.size),
             )
+        if self.size_rule is not None and self.size_by_horizon is not None:
+            raise ValueError("size_rule and size_by_horizon are mutually exclusive")
+        if self.size_rule is not None and not callable(self.size_rule):
+            raise ValueError("size_rule must be callable")
+        if self.size_by_horizon is not None:
+            if not isinstance(self.size_by_horizon, Mapping):
+                raise ValueError("size_by_horizon must be a mapping")
+            if not self.size_by_horizon:
+                raise ValueError("size_by_horizon must not be empty")
+            checked_sizes: dict[int, int] = {}
+            for raw_horizon, raw_size in self.size_by_horizon.items():
+                h = _check_positive_integer_like("size_by_horizon horizon", raw_horizon)
+                checked_sizes[h] = _check_positive_integer_like(
+                    f"size_by_horizon[{h}]",
+                    raw_size,
+                )
+            object.__setattr__(self, "size_by_horizon", checked_sizes)
         object.__setattr__(self, "embargo", _check_nonnegative_int("embargo", self.embargo))
-        if mode == "rolling" and self.size is None:
-            raise ValueError("rolling estimation window requires size")
+        has_horizon_size = (
+            self.size_rule is not None or self.size_by_horizon is not None
+        )
+        if mode != "rolling" and has_horizon_size:
+            raise ValueError(
+                "size_rule and size_by_horizon are only valid for rolling estimation"
+            )
+        if mode == "rolling":
+            if self.size_rule is not None and self.size is None:
+                raise ValueError("size_rule requires a base rolling size")
+            if not has_horizon_size and self.size is None:
+                raise ValueError("rolling estimation window requires size")
         object.__setattr__(
             self,
             "retrain_every",
@@ -269,7 +354,7 @@ class EstimationWindow:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out = {
             "mode": self.mode,
             "start": _json_ready(self.start),
             "end": _json_ready(self.end),
@@ -278,6 +363,14 @@ class EstimationWindow:
             "embargo": self.embargo,
             "retrain_every": _json_ready(self.retrain_every),
         }
+        if self.size_rule is not None:
+            out["size_rule"] = _callable_descriptor(self.size_rule)
+        if self.size_by_horizon is not None:
+            out["size_by_horizon"] = {
+                int(horizon): int(size)
+                for horizon, size in sorted(self.size_by_horizon.items())
+            }
+        return out
 
 
 @dataclass(frozen=True)
@@ -823,6 +916,7 @@ class WindowSpec:
         first_default = estimation_start_bound + _default_first_origin_position(
             self.estimation,
             n,
+            horizon=horizon,
         )
         last_default = (
             n - horizon - (1 if exclude_origin else 0)
@@ -897,6 +991,7 @@ class WindowSpec:
                 self.estimation,
                 estimation_start_bound=estimation_start_bound,
                 estimation_end_pos=estimation_end_pos,
+                horizon=horizon,
             )
             if estimation_end_pos < estimation_start_pos:
                 continue
@@ -1111,6 +1206,8 @@ def from_cutoffs(
     estimation_start: Any | None = None,
     mode: str = "expanding",
     estimation_size: int | None = None,
+    estimation_size_rule: Callable[[int, int], int] | None = None,
+    estimation_size_by_horizon: Mapping[int, int] | None = None,
     estimation_min_size: int | None = None,
     embargo: int = 0,
     retrain_every: TemporalCadence = 1,
@@ -1161,6 +1258,14 @@ def from_cutoffs(
     """
 
     mode_key = str(mode).lower().replace("-", "_")
+    has_horizon_size = (
+        estimation_size_rule is not None or estimation_size_by_horizon is not None
+    )
+    if mode_key != "rolling" and has_horizon_size:
+        raise ValueError(
+            "estimation_size_rule and estimation_size_by_horizon are only valid "
+            "when mode='rolling'"
+        )
     if mode_key == "expanding":
         estimation = estimation_expanding(
             start=estimation_start,
@@ -1169,11 +1274,21 @@ def from_cutoffs(
             retrain_every=retrain_every,
         )
     elif mode_key == "rolling":
-        if estimation_size is None:
+        if (
+            estimation_size is None
+            and estimation_size_rule is None
+            and estimation_size_by_horizon is None
+        ):
             raise ValueError("estimation_size is required when mode='rolling'")
+        if estimation_size_rule is not None and estimation_size is None:
+            raise ValueError(
+                "estimation_size is required when estimation_size_rule is supplied"
+            )
         estimation = estimation_rolling(
             start=estimation_start,
             size=estimation_size,
+            size_rule=estimation_size_rule,
+            size_by_horizon=estimation_size_by_horizon,
             min_size=estimation_min_size,
             embargo=embargo,
             retrain_every=retrain_every,
@@ -1293,17 +1408,21 @@ def estimation_expanding(
 def estimation_rolling(
     *,
     start: Any | None = None,
-    size: int,
+    size: int | None = None,
+    size_rule: Callable[[int, int], int] | None = None,
+    size_by_horizon: Mapping[int, int] | None = None,
     min_size: int | None = None,
     embargo: int = 0,
     retrain_every: TemporalCadence = 1,
 ) -> EstimationWindow:
-    """Estimation rule with a fixed trailing sample size at each test origin."""
+    """Estimation rule with a trailing sample size at each test origin."""
 
     return EstimationWindow(
         mode="rolling",
         start=start,
         size=size,
+        size_rule=size_rule,
+        size_by_horizon=size_by_horizon,
         min_size=min_size,
         embargo=embargo,
         retrain_every=retrain_every,

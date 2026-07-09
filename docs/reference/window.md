@@ -24,7 +24,7 @@ Guide context: [../guide/concepts/windows.md](../guide/concepts/windows.md).
 | `custom_stage_policy` | function | Create a stage policy whose sample labels are supplied by a callable. |
 | `estimation_expanding` | function | Estimation rule that expands from ``start`` through each test origin. |
 | `estimation_fixed` | function | Estimation rule with a fixed start and optional fixed end bound. |
-| `estimation_rolling` | function | Estimation rule with a fixed trailing sample size at each test origin. |
+| `estimation_rolling` | function | Estimation rule with a trailing sample size at each test origin. |
 | `expanding` | function | Configure expanding-window train/val splits. |
 | `expanding_split` | function | Yield expanding-window validation splits. |
 | `from_cutoffs` | function | Build a window from common estimation/test cutoff dates. |
@@ -109,7 +109,7 @@ Qualified name: `macroforecast.window.core.EstimationWindow`
 #### Signature
 
 ```python
-macroforecast.window.EstimationWindow(mode: str = "expanding", start: Any | None = None, end: Any | None = None, min_size: int | None = None, size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> None
+macroforecast.window.EstimationWindow(mode: str = "expanding", start: Any | None = None, end: Any | None = None, min_size: int | None = None, size: int | None = None, size_rule: Callable[[int, int], int] | None = None, size_by_horizon: Mapping[int, int] | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> None
 ```
 
 #### Description
@@ -125,6 +125,8 @@ Pre-test estimation-sample rule applied at each test origin.
 | `end` | positional or keyword | `Any \| None` | `None` |
 | `min_size` | positional or keyword | `int \| None` | `None` |
 | `size` | positional or keyword | `int \| None` | `None` |
+| `size_rule` | positional or keyword | `Callable[[int, int], int] \| None` | `None` |
+| `size_by_horizon` | positional or keyword | `Mapping[int, int] \| None` | `None` |
 | `embargo` | positional or keyword | `int` | `0` |
 | `retrain_every` | positional or keyword | `TemporalCadence` | `1` |
 
@@ -149,6 +151,8 @@ import macroforecast as mf
 | `end` | `Any \| None` | `None` |
 | `min_size` | `int \| None` | `None` |
 | `size` | `int \| None` | `None` |
+| `size_rule` | `Callable[[int, int], int] \| None` | `None` |
+| `size_by_horizon` | `Mapping[int, int] \| None` | `None` |
 | `embargo` | `int` | `0` |
 | `retrain_every` | `TemporalCadence` | `1` |
 
@@ -687,19 +691,21 @@ Qualified name: `macroforecast.window.core.estimation_rolling`
 #### Signature
 
 ```python
-macroforecast.window.estimation_rolling(*, start: Any | None = None, size: int, min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> EstimationWindow
+macroforecast.window.estimation_rolling(*, start: Any | None = None, size: int | None = None, size_rule: Callable[[int, int], int] | None = None, size_by_horizon: Mapping[int, int] | None = None, min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1) -> EstimationWindow
 ```
 
 #### Description
 
-Estimation rule with a fixed trailing sample size at each test origin.
+Estimation rule with a trailing sample size at each test origin.
 
 #### Parameters
 
 | Name | Kind | Type | Default |
 | --- | --- | --- | --- |
 | `start` | keyword only | `Any \| None` | `None` |
-| `size` | keyword only | `int` | `required` |
+| `size` | keyword only | `int \| None` | `None` |
+| `size_rule` | keyword only | `Callable[[int, int], int] \| None` | `None` |
+| `size_by_horizon` | keyword only | `Mapping[int, int] \| None` | `None` |
 | `min_size` | keyword only | `int \| None` | `None` |
 | `embargo` | keyword only | `int` | `0` |
 | `retrain_every` | keyword only | `TemporalCadence` | `1` |
@@ -791,7 +797,7 @@ Qualified name: `macroforecast.window.core.from_cutoffs`
 #### Signature
 
 ```python
-macroforecast.window.from_cutoffs(*, test_start: Any, test_end: Any | None = None, estimation_start: Any | None = None, mode: str = "expanding", estimation_size: int | None = None, estimation_min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1, val_method: str = "last_block", val_size: int | None = None, val_ratio: float = 0.2, val_min_train_size: int | None = None, val_n_splits: int = 5, val_horizon: int | None = None, val_step: int = 1, val_embargo: int | None = None, val_random_state: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True, horizon: int = 1, step: TestStep = 1, drop_incomplete: bool = True, exclude: Sequence[tuple[Any | None, Any | None]] = (), alignment: AlignmentWindow | None = None, metadata: dict[str, Any] | None = None) -> WindowSpec
+macroforecast.window.from_cutoffs(*, test_start: Any, test_end: Any | None = None, estimation_start: Any | None = None, mode: str = "expanding", estimation_size: int | None = None, estimation_size_rule: Callable[[int, int], int] | None = None, estimation_size_by_horizon: Mapping[int, int] | None = None, estimation_min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1, val_method: str = "last_block", val_size: int | None = None, val_ratio: float = 0.2, val_min_train_size: int | None = None, val_n_splits: int = 5, val_horizon: int | None = None, val_step: int = 1, val_embargo: int | None = None, val_random_state: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True, horizon: int = 1, step: TestStep = 1, drop_incomplete: bool = True, exclude: Sequence[tuple[Any | None, Any | None]] = (), alignment: AlignmentWindow | None = None, metadata: dict[str, Any] | None = None) -> WindowSpec
 ```
 
 #### Description
@@ -830,6 +836,8 @@ set the embargoes explicitly when the forecasting protocol requires it.
 | `estimation_start` | keyword only | `Any \| None` | `None` |
 | `mode` | keyword only | `str` | `"expanding"` |
 | `estimation_size` | keyword only | `int \| None` | `None` |
+| `estimation_size_rule` | keyword only | `Callable[[int, int], int] \| None` | `None` |
+| `estimation_size_by_horizon` | keyword only | `Mapping[int, int] \| None` | `None` |
 | `estimation_min_size` | keyword only | `int \| None` | `None` |
 | `embargo` | keyword only | `int` | `0` |
 | `retrain_every` | keyword only | `TemporalCadence` | `1` |
