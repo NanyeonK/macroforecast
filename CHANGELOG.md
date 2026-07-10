@@ -5,6 +5,12 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/linear.py`, `models/specs.py`, docs/tests (feature, ADD3 PLS score
+  projection): added opt-in `score_projection="x_weights_raw"` to the existing
+  `pls` model, using fitted PLS x-weights to project factor scores before the
+  external OLS forecast head. The default remains
+  `score_projection="transform"` and preserves existing sklearn-transform PLS
+  predictions.
 - `models/timeseries.py`, `models/specs.py`, docs/tests (feature, ADD2 AR
   lane): added the general target-only `ar_bic` model with internal
   AIC/AICc/BIC lag selection, selectable IC parameter counts, OLS/Yule-Walker/

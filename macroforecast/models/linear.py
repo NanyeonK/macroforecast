@@ -1302,18 +1302,12 @@ def _resolve_glmboost_candidate_count(
     return max(1, min(n_features, max(lower, raw)))
 
 
-class _PLSCompositeRegressor:
-    """PLS regression with optional Hounyo-Li-style control residualization."""
+PLSScoreProjection = Literal["transform", "x_weights_raw"]
+_PLS_SCORE_PROJECTIONS = ("transform", "x_weights_raw")
 
-    # Source alignment:
-    # - Hounyo-Li's MATLAB baseline PLS_emp002.m first residualizes ytplush on
-    #   wt, then calls plsregress() on standardized predictors and the residual,
-    #   extracts stats.W, builds factors, re-estimates factor coefficients, and
-    #   adds the control forecast back.
-    # - macroforecast keeps that forecasting contract but delegates the PLS
-    #   component extraction to sklearn.cross_decomposition.PLSRegression. The
-    #   optional control block mirrors wt. With no controls, include_constant=True
-    #   gives the usual intercept-only residualization.
+
+class _PLSCompositeRegressor:
+    """PLS regression with optional control residualization and external score head."""
 
     def __init__(
         self,
@@ -1326,8 +1320,12 @@ class _PLSCompositeRegressor:
         include_constant: bool = True,
         drop_control_columns: bool = True,
         quadratic_factors: bool = False,
+        score_projection: PLSScoreProjection = "transform",
         **kwargs: Any,
     ) -> None:
+        if score_projection not in _PLS_SCORE_PROJECTIONS:
+            allowed = ", ".join(repr(value) for value in _PLS_SCORE_PROJECTIONS)
+            raise ValueError(f"score_projection must be one of: {allowed}")
         self.n_components = max(1, int(n_components))
         self.scale = bool(scale)
         self.max_iter = int(max_iter)
@@ -1336,6 +1334,7 @@ class _PLSCompositeRegressor:
         self.include_constant = bool(include_constant)
         self.drop_control_columns = bool(drop_control_columns)
         self.quadratic_factors = bool(quadratic_factors)
+        self.score_projection = score_projection
         self.kwargs = dict(kwargs)
         self.x_mean_: pd.Series | None = None
         self.x_scale_: pd.Series | None = None
@@ -1358,12 +1357,18 @@ class _PLSCompositeRegressor:
         if self.scale:
             self.x_mean_ = frame.mean(axis=0)
             self.x_scale_ = _safe_series_scale(frame.std(axis=0, ddof=1))
-            standardized_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+            standardized_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(
+                dtype=float
+            )
         else:
             self.x_mean_ = pd.Series(0.0, index=frame.columns)
             self.x_scale_ = pd.Series(1.0, index=frame.columns)
             standardized_values = frame.to_numpy(dtype=float)
-        standardized = pd.DataFrame(standardized_values, index=frame.index, columns=frame.columns)
+        standardized = pd.DataFrame(
+            standardized_values,
+            index=frame.index,
+            columns=frame.columns,
+        )
 
         control_frame = _control_matrix(
             standardized,
@@ -1383,8 +1388,16 @@ class _PLSCompositeRegressor:
         y_values = target.to_numpy(dtype=float)
         control_values = control_frame.to_numpy(dtype=float)
         self.control_coef_ = _least_squares_coef(control_values, y_values)
-        residual = y_values - control_values @ self.control_coef_ if control_values.size else y_values.copy()
-        resolved_components = min(self.n_components, factor_frame.shape[1], len(factor_frame))
+        residual = (
+            y_values - control_values @ self.control_coef_
+            if control_values.size
+            else y_values.copy()
+        )
+        resolved_components = min(
+            self.n_components,
+            factor_frame.shape[1],
+            len(factor_frame),
+        )
         resolved_components = max(1, int(resolved_components))
         model = PLSRegression(
             n_components=resolved_components,
@@ -1394,7 +1407,14 @@ class _PLSCompositeRegressor:
             **self.kwargs,
         )
         model.fit(factor_frame.to_numpy(dtype=float), residual)
-        factors = np.asarray(model.transform(factor_frame.to_numpy(dtype=float)), dtype=float)
+        loadings = np.asarray(model.x_weights_, dtype=float)
+        if self.score_projection == "transform":
+            factors = np.asarray(
+                model.transform(factor_frame.to_numpy(dtype=float)),
+                dtype=float,
+            )
+        else:
+            factors = factor_frame.to_numpy(dtype=float) @ loadings
         self.factor_coefs_ = _least_squares_coef(factors, residual)
         self.factor_square_coefs_ = (
             _least_squares_coef(factors**2, residual)
@@ -1402,7 +1422,7 @@ class _PLSCompositeRegressor:
             else np.zeros(resolved_components, dtype=float)
         )
         self.factor_features_ = tuple(str(column) for column in factor_frame.columns)
-        self.factor_loadings_ = np.asarray(model.x_weights_, dtype=float)
+        self.factor_loadings_ = loadings
         self.n_components_ = resolved_components
         self.pls_model_ = model
         return self
@@ -1414,10 +1434,26 @@ class _PLSCompositeRegressor:
         if self.x_mean_ is None or self.x_scale_ is None:
             raise ValueError("pls is missing fitted scaling state")
         frame = frame.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
-        values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float) if self.scale else frame.to_numpy(dtype=float)
-        standardized = pd.DataFrame(values, index=frame.index, columns=self.x_mean_.index)
-        factor_values = standardized.reindex(columns=list(self.factor_features_), fill_value=0.0).to_numpy(dtype=float)
-        factors = np.asarray(self.pls_model_.transform(factor_values), dtype=float)
+        values = (
+            ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+            if self.scale
+            else frame.to_numpy(dtype=float)
+        )
+        standardized = pd.DataFrame(
+            values,
+            index=frame.index,
+            columns=self.x_mean_.index,
+        )
+        factor_values = standardized.reindex(
+            columns=list(self.factor_features_),
+            fill_value=0.0,
+        ).to_numpy(dtype=float)
+        if self.score_projection == "transform":
+            factors = np.asarray(self.pls_model_.transform(factor_values), dtype=float)
+        else:
+            if self.factor_loadings_ is None:
+                raise ValueError("pls is missing fitted score projection state")
+            factors = factor_values @ self.factor_loadings_
         columns = [f"pls_factor{i}" for i in range(1, self.n_components_ + 1)]
         return pd.DataFrame(factors, index=frame.index, columns=columns)
 
@@ -1429,14 +1465,24 @@ class _PLSCompositeRegressor:
         if self.x_mean_ is None or self.x_scale_ is None:
             raise ValueError("pls is missing fitted scaling state")
         frame = frame.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
-        values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float) if self.scale else frame.to_numpy(dtype=float)
-        standardized = pd.DataFrame(values, index=frame.index, columns=self.x_mean_.index)
+        values = (
+            ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+            if self.scale
+            else frame.to_numpy(dtype=float)
+        )
+        standardized = pd.DataFrame(
+            values,
+            index=frame.index,
+            columns=self.x_mean_.index,
+        )
         control_values = _control_matrix(
             standardized,
             self.control_columns,
             include_constant=self.include_constant,
         ).to_numpy(dtype=float)
-        control_part = control_values @ self.control_coef_ if control_values.size else 0.0
+        control_part = (
+            control_values @ self.control_coef_ if control_values.size else 0.0
+        )
         factor_part = factors @ self.factor_coefs_
         if self.quadratic_factors and self.factor_square_coefs_ is not None:
             factor_part = factor_part + (factors**2) @ self.factor_square_coefs_
@@ -1455,10 +1501,14 @@ def pls(
     include_constant: bool = True,
     drop_control_columns: bool = True,
     quadratic_factors: bool = False,
+    score_projection: Literal["transform", "x_weights_raw"] = "transform",
     **kwargs: Any,
 ) -> ModelFit:
     """Fit partial least squares regression."""
 
+    if score_projection not in _PLS_SCORE_PROJECTIONS:
+        allowed = ", ".join(repr(value) for value in _PLS_SCORE_PROJECTIONS)
+        raise ValueError(f"score_projection must be one of: {allowed}")
     frame, target = resolve_xy(X, y)
     requested_components = max(1, int(n_components))
     factor_columns = _factor_columns(
@@ -1477,7 +1527,8 @@ def pls(
         "include_constant": bool(include_constant),
         "drop_control_columns": bool(drop_control_columns),
         "quadratic_factors": bool(quadratic_factors),
-        "source": "sklearn PLSRegression with optional Hounyo-Li PLS_emp002-style controls",
+        "score_projection": score_projection,
+        "source": "sklearn PLSRegression with optional control residualization",
         **kwargs,
     }
     metadata = {
@@ -1486,11 +1537,13 @@ def pls(
         "resolved_n_components": resolved_components,
         "backend": "sklearn.cross_decomposition.PLSRegression",
         "implementation_note": (
-            "Uses sklearn PLS latent components; when control_columns or "
-            "include_constant are set, y is residualized on the control block "
-            "and the control forecast is added back, matching the Hounyo-Li "
-            "PLS_emp002.m forecasting contract. quadratic_factors=True adds "
-            "the PLS_PC2.m squared-factor forecast head."
+            "Uses sklearn PLS latent component extraction with an external "
+            "forecast head. When control_columns or include_constant are set, "
+            "y is residualized on the control block and the control forecast "
+            "is added back. score_projection='transform' uses sklearn "
+            "transform scores; score_projection='x_weights_raw' projects "
+            "factor predictors through fitted PLS x-weights. "
+            "quadratic_factors=True adds a separate squared-score forecast head."
         ),
     }
     return fit_estimator(
@@ -1503,6 +1556,7 @@ def pls(
             include_constant=bool(include_constant),
             drop_control_columns=bool(drop_control_columns),
             quadratic_factors=bool(quadratic_factors),
+            score_projection=score_projection,
             **kwargs,
         ),
         frame,

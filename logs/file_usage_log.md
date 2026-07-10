@@ -1,5 +1,20 @@
 # File Usage Log
 
+## 2026-07-10 - ADD3 pls score projection
+
+- `macroforecast/models/linear.py`: added `score_projection` to `pls`, keeping
+  the default sklearn-transform path and adding opt-in raw x-weight score
+  projection with the existing external forecast head.
+- `macroforecast/models/specs.py`: registered the non-tunable
+  `score_projection` parameter with default `"transform"` and preserved existing
+  PLS search spaces.
+- `tests/models/test_models.py`: added PLS default-anchor, raw-score oracle,
+  quadratic raw-head, validation, and registry coverage.
+- `docs/reference/models.md` and `docs/guide/models/composite.md`: regenerated
+  generated model docs for the new PLS option and generalized PLS wording.
+- `CHANGELOG.md` and `logs/file_usage_log.md`: recorded this additive option
+  and file-touch summary.
+
 ## 2026-07-10 - ADD2 ar_bic doc-drift regen
 
 - `docs/reference/pipeline.md`: regenerated with `python3 -m tools.docgen`

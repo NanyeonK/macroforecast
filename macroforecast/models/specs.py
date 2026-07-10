@@ -2248,6 +2248,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "include_constant": True,
             "drop_control_columns": True,
             "quadratic_factors": False,
+            "score_projection": "transform",
         },
         parameters=(
             _p("n_components", 3, "int", "Number of latent PLS components."),
@@ -2285,7 +2286,14 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "quadratic_factors",
                 False,
                 "bool",
-                "Whether to add the Hounyo-Li PC2 squared-factor forecast head.",
+                "Whether to add a separate squared-score forecast head.",
+                False,
+            ),
+            _p(
+                "score_projection",
+                "transform",
+                "Literal['transform', 'x_weights_raw']",
+                "How fitted PLS scores are projected for the external forecast head.",
                 False,
             ),
         ),
@@ -2295,7 +2303,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "wide": {"n_components": (1, 2, 3, 5, 8, 10, 12, 20)},
         },
         backend="sklearn.cross_decomposition.PLSRegression",
-        description="Partial least squares regression with optional Hounyo-Li-style control residualization.",
+        description="Partial least squares regression with optional control residualization.",
     ),
     "pcr": _spec(
         "pcr",

@@ -224,6 +224,86 @@ def _control_residualized_pcr_reference(
     return np.asarray(prediction, dtype=float)
 
 
+def _control_residualized_pls_reference(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_test: pd.DataFrame,
+    *,
+    n_components: int,
+    score_projection: str = "transform",
+    control_columns: tuple[str, ...] = (),
+    include_constant: bool = True,
+    drop_control_columns: bool = True,
+    scale: bool = True,
+    quadratic_factors: bool = False,
+) -> tuple[np.ndarray, np.ndarray]:
+    from sklearn.cross_decomposition import PLSRegression
+
+    frame = X_train.astype(float)
+    test_frame = X_test.astype(float).reindex(columns=frame.columns, fill_value=0.0)
+    if scale:
+        x_mean = frame.mean(axis=0)
+        x_scale = frame.std(axis=0, ddof=1)
+        x_scale = x_scale.where(np.isfinite(x_scale) & (x_scale > 1e-12), 1.0)
+        z_train = (frame - x_mean) / x_scale
+        z_test = (test_frame - x_mean) / x_scale
+    else:
+        z_train = frame
+        z_test = test_frame
+
+    control_parts_train = []
+    control_parts_test = []
+    if control_columns:
+        control_parts_train.append(
+            z_train.loc[:, list(control_columns)].to_numpy(dtype=float)
+        )
+        control_parts_test.append(
+            z_test.loc[:, list(control_columns)].to_numpy(dtype=float)
+        )
+    if include_constant:
+        control_parts_train.append(np.ones((len(z_train), 1), dtype=float))
+        control_parts_test.append(np.ones((len(z_test), 1), dtype=float))
+    if control_parts_train:
+        w_train = np.column_stack(control_parts_train)
+        w_test = np.column_stack(control_parts_test)
+    else:
+        w_train = np.empty((len(z_train), 0), dtype=float)
+        w_test = np.empty((len(z_test), 0), dtype=float)
+
+    factor_columns = [
+        str(column)
+        for column in z_train.columns
+        if not (drop_control_columns and str(column) in control_columns)
+    ]
+    factor_train = z_train.loc[:, factor_columns].to_numpy(dtype=float)
+    factor_test = z_test.loc[:, factor_columns].to_numpy(dtype=float)
+    y_values = y_train.to_numpy(dtype=float)
+    control_coef = (
+        np.linalg.pinv(w_train) @ y_values if w_train.size else np.empty(0)
+    )
+    residual = y_values - w_train @ control_coef if w_train.size else y_values.copy()
+    k = max(1, min(int(n_components), len(factor_columns), len(z_train)))
+
+    model = PLSRegression(n_components=k, scale=False, max_iter=500, tol=1e-6)
+    model.fit(factor_train, residual)
+    loadings = np.asarray(model.x_weights_, dtype=float)
+    if score_projection == "transform":
+        factors = np.asarray(model.transform(factor_train), dtype=float)
+        factor_test_scores = np.asarray(model.transform(factor_test), dtype=float)
+    else:
+        factors = factor_train @ loadings
+        factor_test_scores = factor_test @ loadings
+
+    factor_coef = np.linalg.pinv(factors) @ residual
+    prediction = factor_test_scores @ factor_coef
+    if quadratic_factors:
+        factor_square_coef = np.linalg.pinv(factors**2) @ residual
+        prediction = prediction + (factor_test_scores**2) @ factor_square_coef
+    if w_test.size:
+        prediction = prediction + w_test @ control_coef
+    return np.asarray(prediction, dtype=float), factor_test_scores
+
+
 def test_linear_models_return_model_fit_with_series_predictions() -> None:
     X, y = _xy()
     fit = mf.models.ridge(X, y, alpha=0.5)
@@ -1632,7 +1712,51 @@ def test_pls_default_clamps_components_to_available_predictors() -> None:
     assert fit.estimator.control_names_ == ("const",)
 
 
-def test_pls_supports_hounyo_li_control_residualization() -> None:
+def test_pls_default_transform_predictions_unchanged() -> None:
+    idx = pd.RangeIndex(40)
+    grid = np.linspace(-2.0, 2.0, len(idx))
+    X = pd.DataFrame(
+        {
+            "x1": np.sin(1.1 * grid) + 0.15 * grid,
+            "x2": np.cos(0.7 * grid) - 0.05 * grid**2,
+            "x3": grid**2 - 0.3 * grid,
+            "x4": np.sin(2.3 * grid) * np.cos(0.4 * grid),
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        0.8 + 1.2 * X["x1"] - 0.6 * X["x2"] + 0.35 * X["x3"] + 0.2 * X["x4"],
+        index=idx,
+        name="y",
+    )
+    expected = np.asarray(
+        [
+            float.fromhex("0x1.4d30fbf8c2b4ap+1"),
+            float.fromhex("0x1.5be6b8040faacp+1"),
+            float.fromhex("0x1.6ab9fa0f247c0p+1"),
+            float.fromhex("0x1.79d7dc24bee04p+1"),
+            float.fromhex("0x1.895d048b07dedp+1"),
+            float.fromhex("0x1.9954760410fc1p+1"),
+        ],
+        dtype=float,
+    )
+
+    default_fit = mf.models.pls(X, y, n_components=3)
+    explicit_fit = mf.models.pls(X, y, n_components=3, score_projection="transform")
+
+    assert default_fit.metadata["score_projection"] == "transform"
+    assert explicit_fit.metadata["score_projection"] == "transform"
+    assert np.array_equal(
+        default_fit.predict(X.iloc[-6:]).to_numpy(dtype=float),
+        expected,
+    )
+    assert np.array_equal(
+        explicit_fit.predict(X.iloc[-6:]).to_numpy(dtype=float),
+        expected,
+    )
+
+
+def test_pls_supports_control_residualization() -> None:
     X, y = _xy(48)
     X = X.assign(control=y.shift(1).bfill())
 
@@ -1652,8 +1776,131 @@ def test_pls_supports_hounyo_li_control_residualization() -> None:
     assert "control" not in fit.estimator.factor_features_
     assert fit.estimator.factor_square_coefs_.shape == (2,)
     assert fit.diagnostics["factor_loadings"].shape[1] == 2
-    assert "PLS_emp002.m" in fit.metadata["implementation_note"]
+    assert "external forecast head" in fit.metadata["implementation_note"]
     assert len(fit.predict(X.iloc[-4:])) == 4
+
+
+def test_pls_x_weights_raw_matches_documented_score_construction() -> None:
+    idx = pd.RangeIndex(44)
+    grid = np.linspace(-1.4, 1.8, len(idx))
+    X = pd.DataFrame(
+        {
+            "control": 0.4 + 0.2 * grid,
+            "x1": np.sin(1.3 * grid),
+            "x2": np.cos(0.8 * grid) + 0.1 * grid,
+            "x3": grid**2 - 0.25 * grid,
+            "x4": np.sin(2.1 * grid) + 0.05 * grid**3,
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        1.1
+        + 0.7 * X["control"]
+        + 1.2 * X["x1"]
+        - 0.6 * X["x2"]
+        + 0.35 * X["x3"]
+        - 0.25 * X["x4"],
+        index=idx,
+        name="y",
+    )
+    X_train = X.iloc[:36]
+    y_train = y.iloc[:36]
+    X_test = X.iloc[36:41]
+
+    fit = mf.models.pls(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        score_projection="x_weights_raw",
+    )
+    expected_pred, expected_scores = _control_residualized_pls_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        score_projection="x_weights_raw",
+    )
+    transform_scores = mf.models.pls(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        score_projection="transform",
+    ).estimator.transform(X_test)
+
+    assert fit.metadata["score_projection"] == "x_weights_raw"
+    np.testing.assert_allclose(
+        fit.estimator.transform(X_test).to_numpy(dtype=float),
+        expected_scores,
+        atol=1e-12,
+        rtol=0.0,
+    )
+    np.testing.assert_allclose(
+        fit.predict(X_test).to_numpy(dtype=float),
+        expected_pred,
+        atol=1e-12,
+        rtol=0.0,
+    )
+    assert not np.allclose(
+        fit.estimator.transform(X_test).to_numpy(dtype=float),
+        transform_scores.to_numpy(dtype=float),
+    )
+
+
+def test_pls_x_weights_raw_quadratic_head_matches_reference() -> None:
+    X, y = _xy(50)
+    X = X.assign(
+        control=np.linspace(-0.5, 0.5, len(X)),
+        x3=np.cos(np.linspace(0.0, 4.0, len(X))),
+    )
+    y = y + 0.35 * X["x3"] ** 2 + 0.4 * X["control"]
+    X_train = X.iloc[:40]
+    y_train = y.iloc[:40]
+    X_test = X.iloc[40:45]
+
+    fit = mf.models.pls(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        quadratic_factors=True,
+        score_projection="x_weights_raw",
+    )
+    expected_pred, _ = _control_residualized_pls_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        quadratic_factors=True,
+        score_projection="x_weights_raw",
+    )
+
+    assert fit.metadata["quadratic_factors"] is True
+    assert fit.estimator.factor_square_coefs_.shape == (2,)
+    np.testing.assert_allclose(
+        fit.predict(X_test).to_numpy(dtype=float),
+        expected_pred,
+        atol=1e-12,
+        rtol=0.0,
+    )
+
+
+def test_pls_score_projection_validation_and_registry() -> None:
+    X, y = _xy()
+    spec = mf.models.get_model("pls")
+    parameters = {parameter.name: parameter for parameter in spec.parameters}
+
+    assert spec.default_params["score_projection"] == "transform"
+    assert parameters["score_projection"].default == "transform"
+    assert parameters["score_projection"].tunable is False
+    assert all(
+        "score_projection" not in space for space in spec.search_spaces.values()
+    )
+    with pytest.raises(ValueError, match="score_projection.*transform.*x_weights_raw"):
+        mf.models.pls(X, y, score_projection="raw")  # type: ignore[arg-type]
 
 
 def test_nn_model_fit() -> None:

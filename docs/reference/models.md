@@ -194,7 +194,7 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `nu_svr` | `support_vector` | `supervised` | `standard` | none | yes | Nu support-vector regression. |
 | `ols` | `linear` | `supervised` | `standard` | none | no | Ordinary least squares with no model-owned tuning space. |
 | `pcr` | `composite` | `supervised` | `standard` | none | no | Principal component regression with optional control residualization. |
-| `pls` | `composite` | `supervised` | `standard` | none | no | Partial least squares regression with optional Hounyo-Li-style control residualization. |
+| `pls` | `composite` | `supervised` | `standard` | none | no | Partial least squares regression with optional control residualization. |
 | `quantile_regression_forest` | `tree` | `supervised` | `standard` | none | no | Quantile regression forest. |
 | `random_forest` | `tree` | `supervised` | `standard` | none | no | Random forest regression. |
 | `random_walk_drift` | `timeseries` | `target` | `standard` | none | no | Random-walk-with-drift baseline (forecast::rwf(drift=TRUE)). |
@@ -2422,7 +2422,7 @@ Family: `composite`
 #### Fit Signature
 
 ```python
-macroforecast.models.pls(X: Any, y: Any | None = None, *, n_components: int = 3, scale: bool = True, max_iter: int = 500, tol: float = 1e-06, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, quadratic_factors: bool = False, **kwargs: Any) -> ModelFit
+macroforecast.models.pls(X: Any, y: Any | None = None, *, n_components: int = 3, scale: bool = True, max_iter: int = 500, tol: float = 1e-06, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, quadratic_factors: bool = False, score_projection: "Literal['transform', 'x_weights_raw']" = "transform", **kwargs: Any) -> ModelFit
 ```
 
 | Field | Value |
@@ -2434,7 +2434,7 @@ macroforecast.models.pls(X: Any, y: Any | None = None, *, n_components: int = 3,
 | `requires_scaling` | no |
 | `recommended_preprocessing` | `()` |
 
-Partial least squares regression with optional Hounyo-Li-style control residualization.
+Partial least squares regression with optional control residualization.
 
 #### Model Parameters
 
@@ -2447,7 +2447,8 @@ Partial least squares regression with optional Hounyo-Li-style control residuali
 | `control_columns` | `None` | `Sequence[str] \| None` | False | Optional X columns used as forecasting controls. |
 | `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PLS block. |
-| `quadratic_factors` | `False` | `bool` | False | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
+| `quadratic_factors` | `False` | `bool` | False | Whether to add a separate squared-score forecast head. |
+| `score_projection` | `"transform"` | `Literal['transform', 'x_weights_raw']` | False | How fitted PLS scores are projected for the external forecast head. |
 
 #### Search Spaces
 
