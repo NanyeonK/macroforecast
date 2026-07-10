@@ -1,5 +1,15 @@
 # File Usage Log
 
+## 2026-07-10 - ADD2 ar_bic tester-block fixes
+
+- `tests/models/test_ar_bic.py`: pinned the independently derived
+  lag_square-BIC controlled-series expectation to selected lag `4` and
+  coefficient-power forecast `2.6204213101651392`.
+- `macroforecast/pipeline/spec.py`: added `ar_bic` to
+  `DIRECT_POLICY_GUARD_MODELS` because it is target-only and lacks direct-policy
+  support.
+- `logs/file_usage_log.md`: recorded this builder fix summary.
+
 ## 2026-07-10 - ADD2 ar_bic
 
 - `macroforecast/models/timeseries.py`: added the target-only `ar_bic`

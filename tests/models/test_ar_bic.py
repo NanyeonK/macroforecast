@@ -9,6 +9,11 @@ import pytest
 import macroforecast as mf
 
 
+_ADD2_BIC_LAG_SQUARE_SELECTED_LAG = 4
+_ADD2_BIC_LAG_SQUARE_COEFFICIENT_POWER = 2.6204213101651392
+_ADD2_BIC_ORACLE_LEVEL_SHIFT = 4.9319909761602885
+
+
 def _controlled_target(n: int = 80) -> pd.Series:
     t = np.arange(n, dtype=float)
     y = (
@@ -18,6 +23,24 @@ def _controlled_target(n: int = 80) -> pd.Series:
         + 0.003 * (t % 7)
     )
     return pd.Series(y, index=pd.date_range("2000-01-31", periods=n, freq="ME"), name="y")
+
+
+def _lag_square_bic_oracle_target(n: int = 80) -> pd.Series:
+    rng = np.random.default_rng(1)
+    y = np.zeros(n, dtype=float)
+    y[:4] = rng.normal(scale=0.2, size=4)
+    innovations = rng.normal(scale=0.08, size=n)
+    ar_weights = np.asarray([0.15, 0.05, -0.20, 0.80])
+    for idx in range(4, n):
+        y[idx] = (
+            float(ar_weights @ y[idx - 4 : idx][::-1])
+            + innovations[idx]
+            + 0.01 * np.sin(idx / 3.0)
+        )
+    y = y + np.linspace(-0.2, 0.3, n) + _ADD2_BIC_ORACLE_LEVEL_SHIFT
+    return pd.Series(
+        y, index=pd.date_range("2000-01-31", periods=n, freq="ME"), name="y"
+    )
 
 
 def _reference_lag_bic_lag_square(
@@ -59,7 +82,7 @@ def _reference_matlab_ar_phi(y: np.ndarray, lag: int) -> np.ndarray:
 
 
 def test_ar_bic_lag_square_coefficient_power_matches_reference_path() -> None:
-    y = _controlled_target()
+    y = _lag_square_bic_oracle_target()
     values = y.to_numpy(dtype=float)
     lag, score, nobs, n_params = _reference_lag_bic_lag_square(
         values, min_lag=1, max_lag=6
@@ -68,6 +91,17 @@ def test_ar_bic_lag_square_coefficient_power_matches_reference_path() -> None:
     horizon = 4
     state = values[-lag:][::-1]
     expected = float((phi**horizon) @ state)
+
+    # The expected lag is the independently hand-derived BIC optimum under the
+    # lag_square parameter count for this controlled series; it is not read from
+    # ar_bic output.
+    assert lag == _ADD2_BIC_LAG_SQUARE_SELECTED_LAG
+    np.testing.assert_allclose(
+        np.asarray([expected]),
+        np.asarray([_ADD2_BIC_LAG_SQUARE_COEFFICIENT_POWER]),
+        rtol=0,
+        atol=1e-12,
+    )
 
     fit = mf.models.ar_bic(
         y,
