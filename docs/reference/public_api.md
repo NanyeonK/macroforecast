@@ -268,6 +268,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `pca_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `pca_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `pca_then_lags` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
+| `pcr` | [`macroforecast.models`](models.md) | function |
 | `pct_change_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `pipeline` | [`macroforecast.pipeline`](pipeline.md) | module |
 | `pls` | [`macroforecast.models`](models.md) | function |

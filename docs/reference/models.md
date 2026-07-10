@@ -19,6 +19,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `ModelFit` | class | Fitted model wrapper returned by macroforecast model callables. |
 | `ModelParameter` | class | One model-owned parameter description. |
 | `ModelSpec` | class | Callable model plus model-owned defaults and hyperparameter spaces. |
+| `PCRRegressor` | class | Principal component regression with optional control residualization. |
 | `QuantileRegressionForestRegressor` | class | Random-forest point forecasts plus empirical leaf quantiles. |
 | `RealizedGARCHEstimator` | class | Compact Hansen-Huang-Shek-style realized GARCH joint MLE. |
 | `SavedModel` | class | Paths and status returned by model fit persistence helpers. |
@@ -95,6 +96,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `nu_svr` | function | Fit nu-support-vector regression. |
 | `ols` | function | Fit ordinary least squares. |
 | `pls` | function | Fit partial least squares regression. |
+| `pcr` | function | Fit principal component regression with optional control residualization. |
 | `quantile_regression_forest` | function | Fit a quantile regression forest. |
 | `rank_aggregation` | function | Fit rank-space supervised aggregation weights. |
 | `random_walk_ridge` | function | Fit a random-walk coefficient ridge model and predict with the final coefficient. |
@@ -189,6 +191,7 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `nonneg_ridge` | `linear` | `supervised` | `standard` | none | no | Ridge regression with non-negative coefficients. |
 | `nu_svr` | `support_vector` | `supervised` | `standard` | none | yes | Nu support-vector regression. |
 | `ols` | `linear` | `supervised` | `standard` | none | no | Ordinary least squares with no model-owned tuning space. |
+| `pcr` | `composite` | `supervised` | `standard` | none | no | Principal component regression with optional control residualization. |
 | `pls` | `composite` | `supervised` | `standard` | none | no | Partial least squares regression with optional Hounyo-Li-style control residualization. |
 | `quantile_regression_forest` | `tree` | `supervised` | `standard` | none | no | Quantile regression forest. |
 | `random_forest` | `tree` | `supervised` | `standard` | none | no | Random forest regression. |
@@ -2325,6 +2328,49 @@ macroforecast.models.ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFi
 
 Ordinary least squares with no model-owned tuning space.
 
+### pcr
+
+Family: `composite`
+
+#### Fit Signature
+
+```python
+macroforecast.models.pcr(X: Any, y: Any | None = None, *, n_components: int = 3, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, standardize: bool = True, standardize_ddof: int = 1, nan_policy: "Literal['raise', 'zero_after_standardize', 'fill_zero']" = "raise", quadratic_factors: bool = False, quadratic_mode: "Literal['separate', 'joint']" = "separate") -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `supervised` |
+| `default_preset` | `standard` |
+| `default_search_method` | `grid` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Principal component regression with optional control residualization.
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `n_components` | `3` | `int` | True | Number of principal component scores. |
+| `control_columns` | `None` | `Sequence[str] \| None` | False | Optional X columns used as raw forecasting controls. |
+| `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
+| `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PCA block. |
+| `standardize` | `True` | `bool` | False | Whether to standardize predictor factor columns inside the model. |
+| `standardize_ddof` | `1` | `int` | False | Degrees of freedom for predictor standard deviations. |
+| `nan_policy` | `"raise"` | `raise \| zero_after_standardize \| fill_zero` | False | How non-finite factor-block values are handled. |
+| `quadratic_factors` | `False` | `bool` | False | Whether to add a squared-score forecast head. |
+| `quadratic_mode` | `"separate"` | `separate \| joint` | False | How linear and squared score heads are estimated. |
+
+#### Search Spaces
+
+| Preset | Parameters |
+| --- | --- |
+| `small` | `n_components`: `(1, 2, 3)` |
+| `standard` | `n_components`: `(1, 2, 3, 5, 8)` |
+| `wide` | `n_components`: `(1, 2, 3, 5, 8, 10, 12, 20)` |
+
 ### pls
 
 Family: `composite`
@@ -3333,7 +3379,7 @@ XGBoost regressor.
 Kind: `data`
 
 ```python
-MODEL_SPECS = dict(80 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, catboost, ...)
+MODEL_SPECS = dict(81 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, catboost, ...)
 ```
 
 ## Callable And Class Reference
@@ -3850,6 +3896,53 @@ import macroforecast as mf
 | `to_metadata` | `to_metadata(self) -> dict[str, Any]` | Return compact model metadata for selection and forecasting runners. |
 | `with_params` | `with_params(self, **params: Any) -> "'ModelSpec'"` | Return the same model spec with fixed model parameters. |
 | `with_preset` | `with_preset(self, preset: str) -> "'ModelSpec'"` | Return the same model spec with a different hyperparameter preset. |
+### PCRRegressor
+
+Qualified name: `macroforecast.models.linear.PCRRegressor`
+
+#### Signature
+
+```python
+macroforecast.models.PCRRegressor(*, n_components: int = 3, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, standardize: bool = True, standardize_ddof: int = 1, nan_policy: "Literal['raise', 'zero_after_standardize', 'fill_zero']" = "raise", quadratic_factors: bool = False, quadratic_mode: "Literal['separate', 'joint']" = "separate") -> None
+```
+
+#### Description
+
+Principal component regression with optional control residualization.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `n_components` | keyword only | `int` | `3` |
+| `control_columns` | keyword only | `Sequence[str] \| None` | `None` |
+| `include_constant` | keyword only | `bool` | `True` |
+| `drop_control_columns` | keyword only | `bool` | `True` |
+| `standardize` | keyword only | `bool` | `True` |
+| `standardize_ddof` | keyword only | `int` | `1` |
+| `nan_policy` | keyword only | `Literal['raise', 'zero_after_standardize', 'fill_zero']` | `"raise"` |
+| `quadratic_factors` | keyword only | `bool` | `False` |
+| `quadratic_mode` | keyword only | `Literal['separate', 'joint']` | `"separate"` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.models.PCRRegressor(...)
+```
+
+#### Public Methods
+
+| Method | Signature | Summary |
+| --- | --- | --- |
+| `fit` | `fit(self, X: pd.DataFrame, y: pd.Series) -> "'PCRRegressor'"` | No public docstring is available. |
+| `predict` | `predict(self, X: pd.DataFrame) -> np.ndarray` | No public docstring is available. |
+| `transform` | `transform(self, X: pd.DataFrame) -> pd.DataFrame` | No public docstring is available. |
 ### QuantileRegressionForestRegressor
 
 Qualified name: `macroforecast.models.tree.QuantileRegressionForestRegressor`

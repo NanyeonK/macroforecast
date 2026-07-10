@@ -5,6 +5,11 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/linear.py`, `models/specs.py`, docs/tests (feature, PCR model):
+  added the general `pcr` principal component regression model with optional
+  raw control residualization, predictor-only standardization, and optional
+  squared-score forecast heads. Existing `far` behavior is unchanged and now has
+  a deterministic regression anchor.
 - `models/tree.py`, `models/specs.py`, docs/tests (DEFAULT CHANGED,
   random_forest migration): changed registered `random_forest` defaults to
   `n_estimators=500` and `max_features=1/3` with `random_state=0` unchanged.

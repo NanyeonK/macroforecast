@@ -230,6 +230,7 @@ _LAZY_EXPORTS = {
     "nu_svr": ".models",
     "ols": ".models",
     "pls": ".models",
+    "pcr": ".models",
     "quantile_regression_forest": ".models",
     "rank_aggregation": ".models",
     "random_walk_ridge": ".models",

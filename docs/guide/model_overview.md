@@ -89,7 +89,7 @@ Each family has a detail page with a per-model table of inputs, optional depende
 - [Volatility and GARCH](models/volatility.md) — 5 models
 - [Mixed frequency](models/mixed_frequency.md) — 7 models
 - [Assemblage](models/assemblage.md) — 6 models
-- [Composite](models/composite.md) — 4 models
+- [Composite](models/composite.md) — 5 models
 - [Spline](models/spline.md) — 1 models
 
 ## Notes

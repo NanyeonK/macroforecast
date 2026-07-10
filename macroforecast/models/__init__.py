@@ -16,6 +16,7 @@ from .assemblage import (
 )
 from .bayesian import ucsv
 from .linear import (
+    PCRRegressor,
     ScaledPCARegressor,
     SupervisedPCARegressor,
     SupervisedScaledPCARegressor,
@@ -31,6 +32,7 @@ from .linear import (
     nonneg_ridge,
     ols,
     pls,
+    pcr,
     random_walk_ridge,
     ridge,
     scaled_pca,
@@ -127,6 +129,7 @@ __all__ = [
     "ModelFit",
     "ModelParameter",
     "ModelSpec",
+    "PCRRegressor",
     "QuantileRegressionForestRegressor",
     "RealizedGARCHEstimator",
     "SavedModel",
@@ -203,6 +206,7 @@ __all__ = [
     "nu_svr",
     "ols",
     "pls",
+    "pcr",
     "quantile_regression_forest",
     "rank_aggregation",
     "random_walk_ridge",

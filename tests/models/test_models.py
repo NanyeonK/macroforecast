@@ -153,6 +153,77 @@ def _huang_scaled_pca_reference(
     return factors, prediction
 
 
+def _control_residualized_pcr_reference(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_test: pd.DataFrame,
+    *,
+    n_components: int,
+    control_columns: tuple[str, ...] = (),
+    include_constant: bool = True,
+    drop_control_columns: bool = True,
+    standardize: bool = True,
+    standardize_ddof: int = 1,
+    quadratic_factors: bool = False,
+    quadratic_mode: str = "separate",
+) -> np.ndarray:
+    factor_columns = [
+        column
+        for column in X_train.columns
+        if not (drop_control_columns and str(column) in control_columns)
+    ]
+    factor_train = X_train.loc[:, factor_columns].astype(float)
+    factor_test = X_test.loc[:, factor_columns].astype(float)
+    if standardize:
+        x_mean = factor_train.mean(axis=0)
+        x_scale = factor_train.std(axis=0, ddof=standardize_ddof)
+        x_scale = x_scale.where(np.isfinite(x_scale) & (x_scale > 1e-12), 1.0)
+        z_train = ((factor_train - x_mean) / x_scale).to_numpy(dtype=float)
+        z_test = ((factor_test - x_mean) / x_scale).to_numpy(dtype=float)
+    else:
+        z_train = factor_train.to_numpy(dtype=float)
+        z_test = factor_test.to_numpy(dtype=float)
+
+    control_parts_train = []
+    control_parts_test = []
+    if control_columns:
+        control_parts_train.append(X_train.loc[:, list(control_columns)].to_numpy(dtype=float))
+        control_parts_test.append(X_test.loc[:, list(control_columns)].to_numpy(dtype=float))
+    if include_constant:
+        control_parts_train.append(np.ones((len(X_train), 1), dtype=float))
+        control_parts_test.append(np.ones((len(X_test), 1), dtype=float))
+    if control_parts_train:
+        w_train = np.column_stack(control_parts_train)
+        w_test = np.column_stack(control_parts_test)
+    else:
+        w_train = np.empty((len(X_train), 0), dtype=float)
+        w_test = np.empty((len(X_test), 0), dtype=float)
+
+    y_values = y_train.to_numpy(dtype=float)
+    control_coef = np.linalg.pinv(w_train) @ y_values if w_train.size else np.empty(0)
+    residual = y_values - w_train @ control_coef if w_train.size else y_values.copy()
+    k = min(max(1, int(n_components)), len(X_train), len(factor_columns))
+    _, _, vt = np.linalg.svd(z_train, full_matrices=False)
+    loadings = vt[:k].T
+    factors = z_train @ loadings
+    factor_test = z_test @ loadings
+    factor_coef = np.linalg.pinv(factors) @ residual
+    factor_square_coef = np.zeros(k, dtype=float)
+    if quadratic_factors and quadratic_mode == "separate":
+        factor_square_coef = np.linalg.pinv(factors**2) @ residual
+    elif quadratic_factors:
+        gamma = np.linalg.pinv(np.column_stack([factors, factors**2])) @ residual
+        factor_coef = gamma[:k]
+        factor_square_coef = gamma[k:]
+
+    prediction = factor_test @ factor_coef
+    if quadratic_factors:
+        prediction = prediction + (factor_test**2) @ factor_square_coef
+    if w_test.size:
+        prediction = prediction + w_test @ control_coef
+    return np.asarray(prediction, dtype=float)
+
+
 def test_linear_models_return_model_fit_with_series_predictions() -> None:
     X, y = _xy()
     fit = mf.models.ridge(X, y, alpha=0.5)
@@ -447,6 +518,7 @@ def test_top_level_model_exports_include_new_model_families() -> None:
     assert mf.kernel_ridge is mf.models.kernel_ridge
     assert mf.knn is mf.models.knn
     assert mf.mars is mf.models.mars
+    assert mf.pcr is mf.models.pcr
     assert mf.bvar_minnesota is mf.models.bvar_minnesota
     assert mf.dfm_mixed_mariano_murasawa is mf.models.dfm_mixed_mariano_murasawa
     assert mf.dfm_unrestricted_midas is mf.models.dfm_unrestricted_midas
@@ -1390,11 +1462,14 @@ def test_composite_models_record_factor_diagnostics() -> None:
 
     scaled = mf.models.scaled_pca(X, y, n_components=2)
     supervised = mf.models.supervised_pca(X, y, n_components=1, n_selected=1)
+    pcr_fit = mf.models.pcr(X, y, n_components=2)
 
     assert "factor_loadings" in scaled.diagnostics
     assert scaled.diagnostics["factor_loadings"].shape[1] == 2
     assert "factor_loadings" in supervised.diagnostics
     assert "component_selected_features" in supervised.diagnostics
+    assert "factor_loadings" in pcr_fit.diagnostics
+    assert pcr_fit.diagnostics["factor_loadings"].shape[1] == 2
 
 
 def test_save_fit_roundtrip_for_core_model_families(tmp_path) -> None:
@@ -1866,6 +1941,155 @@ def test_scaled_pca_supports_hounyo_li_pc2_squared_factor_head() -> None:
     )
 
 
+def test_pcr_matches_control_residualized_reference_and_differs_from_far() -> None:
+    idx = pd.RangeIndex(36)
+    grid = np.linspace(-1.5, 1.5, len(idx))
+    X = pd.DataFrame(
+        {
+            "control": grid,
+            "x1": np.sin(1.7 * grid),
+            "x2": np.cos(0.8 * grid) + 0.1 * grid,
+            "x3": grid**2 - 0.4 * grid,
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        1.25
+        + 0.9 * X["control"]
+        + 1.4 * X["x1"]
+        - 0.7 * X["x2"]
+        + 0.35 * X["x3"],
+        index=idx,
+        name="target",
+    )
+    X_train = X.iloc[:28]
+    y_train = y.iloc[:28]
+    X_test = X.iloc[28:34]
+
+    fit = mf.models.pcr(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+    )
+    expected = _control_residualized_pcr_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+    )
+    far_fit = mf.models.far(
+        X_train,
+        y_train,
+        n_factors=2,
+        n_lag=1,
+        random_state=0,
+        direct=True,
+    )
+
+    np.testing.assert_allclose(fit.predict(X_test).to_numpy(), expected, atol=1e-10)
+    assert fit.model == "pcr"
+    assert fit.metadata["n_components"] == 2
+    assert fit.metadata["control_columns"] == ("control",)
+    assert fit.estimator.control_names_ == ("control", "const")
+    assert "control" not in fit.estimator.factor_features_
+    assert "factor_loadings" in fit.diagnostics
+    assert np.max(np.abs(fit.predict(X_test).to_numpy() - far_fit.predict(X_test))) > 1e-3
+
+
+def test_pcr_quadratic_factor_modes_match_references() -> None:
+    idx = pd.RangeIndex(40)
+    grid = np.linspace(-2.0, 2.0, len(idx))
+    X = pd.DataFrame(
+        {
+            "control": np.sin(grid),
+            "x1": grid,
+            "x2": grid**2 - 0.5,
+            "x3": np.cos(1.3 * grid),
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        0.4
+        + 0.6 * X["control"]
+        + 0.8 * X["x1"]
+        - 0.2 * X["x2"]
+        + 0.5 * X["x1"] ** 2,
+        index=idx,
+        name="target",
+    )
+    X_train = X.iloc[:31]
+    y_train = y.iloc[:31]
+    X_test = X.iloc[31:37]
+
+    separate = mf.models.pcr(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        quadratic_factors=True,
+    )
+    joint = mf.models.pcr(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        quadratic_factors=True,
+        quadratic_mode="joint",
+    )
+    expected_separate = _control_residualized_pcr_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        quadratic_factors=True,
+        quadratic_mode="separate",
+    )
+    expected_joint = _control_residualized_pcr_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        quadratic_factors=True,
+        quadratic_mode="joint",
+    )
+
+    np.testing.assert_allclose(
+        separate.predict(X_test).to_numpy(),
+        expected_separate,
+        atol=1e-10,
+    )
+    np.testing.assert_allclose(
+        joint.predict(X_test).to_numpy(),
+        expected_joint,
+        atol=1e-10,
+    )
+    assert separate.metadata["quadratic_mode"] == "separate"
+    assert joint.metadata["quadratic_mode"] == "joint"
+    assert not np.allclose(separate.predict(X_test), joint.predict(X_test))
+
+
+def test_pcr_validation_and_nan_policy() -> None:
+    X, y = _xy(12)
+    X_bad = X.copy()
+    X_bad.loc[X_bad.index[3], "x1"] = np.inf
+
+    with pytest.raises(ValueError, match="standardize_ddof"):
+        mf.models.pcr(X, y, standardize_ddof=-1)
+    with pytest.raises(ValueError, match="nan_policy"):
+        mf.models.pcr(X, y, nan_policy="drop")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="quadratic_mode"):
+        mf.models.pcr(X, y, quadratic_mode="other")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="factor block"):
+        mf.models.pcr(X_bad, y, nan_policy="raise")
+
+    fit = mf.models.pcr(X_bad, y, nan_policy="zero_after_standardize")
+    assert np.isfinite(fit.predict(X_bad.iloc[:3]).to_numpy(dtype=float)).all()
+
+
 def test_supervised_pca_matches_matlab_style_spca_recursion() -> None:
     X, y = _xy(42)
     X_train = X.iloc[:34]
@@ -2073,10 +2297,28 @@ def test_optional_external_models_fail_lazily_when_missing(
         fit_call(X, y)
 
 
-def test_pcr_is_not_public_model_family() -> None:
-    assert not hasattr(mf.models, "pcr")
-    assert "pcr" not in mf.models.__all__
-    assert "pcr" not in mf.models.MODEL_SPECS
+def test_pcr_is_public_model_family() -> None:
+    assert mf.pcr is mf.models.pcr
+    assert "pcr" in mf.models.__all__
+    assert "PCRRegressor" in mf.models.__all__
+    spec = mf.models.get_model("pcr")
+    assert spec.family == "composite"
+    assert spec.default_params == {
+        "n_components": 3,
+        "control_columns": None,
+        "include_constant": True,
+        "drop_control_columns": True,
+        "standardize": True,
+        "standardize_ddof": 1,
+        "nan_policy": "raise",
+        "quadratic_factors": False,
+        "quadratic_mode": "separate",
+    }
+    assert spec.search_spaces == {
+        "small": {"n_components": (1, 2, 3)},
+        "standard": {"n_components": (1, 2, 3, 5, 8)},
+        "wide": {"n_components": (1, 2, 3, 5, 8, 10, 12, 20)},
+    }
 
 
 def test_mars_is_public_package_native_model_family() -> None:

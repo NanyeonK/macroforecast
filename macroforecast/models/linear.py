@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -1511,6 +1512,183 @@ def pls(
     )
 
 
+class PCRRegressor:
+    """Principal component regression with optional control residualization."""
+
+    _NAN_POLICIES = {"raise", "zero_after_standardize", "fill_zero"}
+    _QUADRATIC_MODES = {"separate", "joint"}
+
+    def __init__(
+        self,
+        *,
+        n_components: int = 3,
+        control_columns: Sequence[str] | None = None,
+        include_constant: bool = True,
+        drop_control_columns: bool = True,
+        standardize: bool = True,
+        standardize_ddof: int = 1,
+        nan_policy: Literal["raise", "zero_after_standardize", "fill_zero"] = "raise",
+        quadratic_factors: bool = False,
+        quadratic_mode: Literal["separate", "joint"] = "separate",
+    ) -> None:
+        if int(standardize_ddof) < 0:
+            raise ValueError("standardize_ddof must be non-negative")
+        if nan_policy not in self._NAN_POLICIES:
+            raise ValueError(
+                "nan_policy must be one of: raise, zero_after_standardize, fill_zero"
+            )
+        if quadratic_mode not in self._QUADRATIC_MODES:
+            raise ValueError("quadratic_mode must be one of: separate, joint")
+        self.n_components = max(1, int(n_components))
+        self.control_columns = tuple(str(column) for column in (control_columns or ()))
+        self.include_constant = bool(include_constant)
+        self.drop_control_columns = bool(drop_control_columns)
+        self.standardize = bool(standardize)
+        self.standardize_ddof = int(standardize_ddof)
+        self.nan_policy = nan_policy
+        self.quadratic_factors = bool(quadratic_factors)
+        self.quadratic_mode = quadratic_mode
+        self.feature_names_in_: tuple[str, ...] = ()
+        self.x_mean_: pd.Series | None = None
+        self.x_scale_: pd.Series | None = None
+        self.factor_features_: tuple[str, ...] = ()
+        self.factor_loadings_: np.ndarray | None = None
+        self.factor_scores_: np.ndarray | None = None
+        self.factor_coefs_: np.ndarray = np.empty(0, dtype=float)
+        self.factor_square_coefs_: np.ndarray = np.empty(0, dtype=float)
+        self.control_coef_: np.ndarray = np.empty(0, dtype=float)
+        self.control_names_: tuple[str, ...] = ()
+        self.n_components_: int = 0
+        self.requested_n_components_: int = self.n_components
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "PCRRegressor":
+        frame = X.astype(float).copy()
+        frame.columns = [str(column) for column in frame.columns]
+        target = pd.Series(y, index=frame.index).astype(float)
+        if frame.shape[1] == 0:
+            raise ValueError("pcr requires at least one predictor")
+        self.feature_names_in_ = tuple(str(column) for column in frame.columns)
+
+        control_frame = _control_matrix(
+            frame,
+            self.control_columns,
+            include_constant=self.include_constant,
+        )
+        self.control_names_ = tuple(str(column) for column in control_frame.columns)
+        factor_columns = _factor_columns(
+            frame.columns,
+            self.control_columns,
+            drop_controls=self.drop_control_columns,
+        )
+        factor_frame = frame.loc[:, factor_columns].copy()
+        factor_values = self._prepare_factor_values(factor_frame, fit=True)
+
+        control_values = control_frame.to_numpy(dtype=float)
+        target_values = target.to_numpy(dtype=float)
+        if not np.isfinite(control_values).all():
+            raise ValueError("control columns must contain only finite values")
+        if not np.isfinite(target_values).all():
+            raise ValueError("target must contain only finite values")
+
+        self.control_coef_ = _least_squares_coef(control_values, target_values)
+        residual = (
+            target_values - control_values @ self.control_coef_
+            if control_values.size
+            else target_values.copy()
+        )
+        n_obs, n_factor_columns = factor_values.shape
+        resolved_components = min(self.requested_n_components_, n_obs, n_factor_columns)
+        _, _, vt = np.linalg.svd(factor_values, full_matrices=False)
+        self.factor_loadings_ = np.asarray(vt[:resolved_components].T, dtype=float)
+        factors = factor_values @ self.factor_loadings_
+        self.factor_coefs_ = _least_squares_coef(factors, residual)
+        if not self.quadratic_factors:
+            self.factor_square_coefs_ = np.zeros(resolved_components, dtype=float)
+        elif self.quadratic_mode == "separate":
+            self.factor_square_coefs_ = _least_squares_coef(factors**2, residual)
+        else:
+            gamma = _least_squares_coef(np.column_stack([factors, factors**2]), residual)
+            self.factor_coefs_ = gamma[:resolved_components]
+            self.factor_square_coefs_ = gamma[resolved_components:]
+        self.factor_features_ = tuple(str(column) for column in factor_frame.columns)
+        self.factor_scores_ = factors
+        self.n_components_ = resolved_components
+        return self
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        if self.factor_loadings_ is None:
+            raise ValueError("pcr is not fitted")
+        frame = self._prediction_frame(X)
+        factor_frame = frame.loc[:, list(self.factor_features_)]
+        factor_values = self._prepare_factor_values(factor_frame, fit=False)
+        factors = factor_values @ self.factor_loadings_
+        columns = [f"pc{i}" for i in range(1, self.n_components_ + 1)]
+        return pd.DataFrame(factors, index=frame.index, columns=columns)
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.factor_loadings_ is None:
+            raise ValueError("pcr is not fitted")
+        frame = self._prediction_frame(X)
+        factors = self.transform(frame).to_numpy(dtype=float)
+        control_values = _control_matrix(
+            frame,
+            self.control_columns,
+            include_constant=self.include_constant,
+        ).to_numpy(dtype=float)
+        if not np.isfinite(control_values).all():
+            raise ValueError("control columns must contain only finite values")
+        control_part = (
+            control_values @ self.control_coef_
+            if control_values.size
+            else np.zeros(len(frame), dtype=float)
+        )
+        factor_part = factors @ self.factor_coefs_
+        if self.quadratic_factors:
+            factor_part = factor_part + (factors**2) @ self.factor_square_coefs_
+        return np.asarray(control_part + factor_part, dtype=float)
+
+    def _prediction_frame(self, X: pd.DataFrame) -> pd.DataFrame:
+        if not self.feature_names_in_:
+            raise ValueError("pcr is not fitted")
+        frame = X.astype(float).copy()
+        frame.columns = [str(column) for column in frame.columns]
+        return frame.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
+
+    def _prepare_factor_values(self, frame: pd.DataFrame, *, fit: bool) -> np.ndarray:
+        work = frame.astype(float).copy()
+        if self.nan_policy == "raise" and not np.isfinite(
+            work.to_numpy(dtype=float)
+        ).all():
+            raise ValueError("factor block must contain only finite values")
+        if self.nan_policy == "fill_zero":
+            work = work.where(np.isfinite(work), 0.0)
+        if fit:
+            if self.standardize:
+                with warnings.catch_warnings():
+                    if self.nan_policy == "zero_after_standardize":
+                        warnings.simplefilter("ignore", RuntimeWarning)
+                    self.x_mean_ = work.mean(axis=0)
+                    self.x_scale_ = _safe_series_scale(
+                        work.std(axis=0, ddof=self.standardize_ddof)
+                    )
+            else:
+                self.x_mean_ = pd.Series(0.0, index=work.columns, dtype=float)
+                self.x_scale_ = pd.Series(1.0, index=work.columns, dtype=float)
+        if self.x_mean_ is None or self.x_scale_ is None:
+            raise ValueError("pcr is missing fitted scaling state")
+        aligned = work.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
+        if self.standardize:
+            transformed = (aligned - self.x_mean_) / self.x_scale_
+        else:
+            transformed = aligned
+        values = transformed.to_numpy(dtype=float)
+        if self.nan_policy == "zero_after_standardize":
+            values = np.where(np.isfinite(values), values, 0.0)
+        elif not np.isfinite(values).all():
+            raise ValueError("factor block must contain only finite values")
+        return values
+
+
 class ScaledPCARegressor:
     """Huang et al. scaled PCA factor extraction with a linear forecast head."""
 
@@ -1959,7 +2137,9 @@ def _winsorize(values: np.ndarray, percentiles: tuple[float, float]) -> np.ndarr
     low, high = (float(percentiles[0]), float(percentiles[1]))
     if low < 0 or high > 100 or low > high:
         raise ValueError("winsorize_slopes must contain percentiles between 0 and 100")
-    lower, upper = np.nanpercentile(values, [low, high])
+    bounds = np.asarray(np.nanpercentile(values, [low, high]), dtype=float)
+    lower = float(bounds[0])
+    upper = float(bounds[1])
     return np.clip(values, lower, upper)
 
 
@@ -2152,6 +2332,58 @@ def supervised_pca(
     )
 
 
+def pcr(
+    X: Any,
+    y: Any | None = None,
+    *,
+    n_components: int = 3,
+    control_columns: Sequence[str] | None = None,
+    include_constant: bool = True,
+    drop_control_columns: bool = True,
+    standardize: bool = True,
+    standardize_ddof: int = 1,
+    nan_policy: Literal["raise", "zero_after_standardize", "fill_zero"] = "raise",
+    quadratic_factors: bool = False,
+    quadratic_mode: Literal["separate", "joint"] = "separate",
+) -> ModelFit:
+    """Fit principal component regression with optional control residualization."""
+
+    params: dict[str, Any] = {
+        "n_components": max(1, int(n_components)),
+        "requested_n_components": max(1, int(n_components)),
+        "resolved_n_components": max(1, int(n_components)),
+        "control_columns": tuple(str(column) for column in (control_columns or ())),
+        "include_constant": bool(include_constant),
+        "drop_control_columns": bool(drop_control_columns),
+        "standardize": bool(standardize),
+        "standardize_ddof": int(standardize_ddof),
+        "nan_policy": nan_policy,
+        "quadratic_factors": bool(quadratic_factors),
+        "quadratic_mode": quadratic_mode,
+        "backend": "numpy.linalg.svd + pseudoinverse linear heads",
+    }
+    estimator = PCRRegressor(
+        n_components=int(n_components),
+        control_columns=control_columns,
+        include_constant=bool(include_constant),
+        drop_control_columns=bool(drop_control_columns),
+        standardize=bool(standardize),
+        standardize_ddof=int(standardize_ddof),
+        nan_policy=nan_policy,
+        quadratic_factors=bool(quadratic_factors),
+        quadratic_mode=quadratic_mode,
+    )
+    fit = fit_estimator(estimator, X, y, model="pcr", metadata=params)
+    fit.metadata.update(
+        {
+            "n_components": estimator.n_components_,
+            "requested_n_components": estimator.requested_n_components_,
+            "resolved_n_components": estimator.n_components_,
+        }
+    )
+    return fit
+
+
 def scaled_pca(
     X: Any,
     y: Any | None = None,
@@ -2253,6 +2485,7 @@ def supervised_scaled_pca(
 
 
 __all__ = [
+    "PCRRegressor",
     "ScaledPCARegressor",
     "SupervisedPCARegressor",
     "SupervisedScaledPCARegressor",
@@ -2268,6 +2501,7 @@ __all__ = [
     "nonneg_ridge",
     "ols",
     "pls",
+    "pcr",
     "random_walk_ridge",
     "ridge",
     "scaled_pca",

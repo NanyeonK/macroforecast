@@ -1,5 +1,25 @@
 # File Usage Log
 
+## 2026-07-10 - ADD1 pcr
+
+- `macroforecast/models/linear.py`: added `PCRRegressor` and the public `pcr`
+  callable with predictor-only standardization, optional control
+  residualization, and separate/joint squared-score heads.
+- `macroforecast/models/__init__.py`, `macroforecast/__init__.py`, and
+  `macroforecast/models/specs.py`: exported and registered `pcr` with
+  scaled-PCA-style `n_components` search spaces.
+- `tests/models/test_models.py`: added residualized-PCR reference tests,
+  quadratic-head coverage, validation/nan-policy coverage, and public
+  registry/export checks.
+- `tests/models/test_ar_far_direct_projection.py`: added a deterministic FAR
+  prediction regression anchor.
+- `docs/reference/models.md`, `docs/reference/public_api.md`,
+  `docs/reference/reference_verification.md`, `docs/guide/model_overview.md`,
+  `docs/guide/model_policy_matrix.md`, and `docs/guide/models/composite.md`:
+  regenerated generated model documentation after registering `pcr`.
+- `CHANGELOG.md`: documented the additive `pcr` model and FAR unchanged anchor.
+- `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
 ## 2026-07-09 - FIX5 random_forest defaults
 
 - `macroforecast/models/tree.py`: changed `random_forest` defaults to

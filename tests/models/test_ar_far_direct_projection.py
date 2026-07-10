@@ -128,3 +128,77 @@ def test_direct_far_uses_predictor_factors_when_predictors_are_lag_named():
     )
     # And the forecasts must differ substantially (not merely by solver noise).
     assert np.abs(far - ar).max() > 1.0
+
+
+def test_far_predictions_match_regression_anchor():
+    rng = np.random.default_rng(20260710)
+    n = 48
+    idx = pd.RangeIndex(n)
+    base = rng.normal(size=(n, 5))
+    X = pd.DataFrame(base, columns=[f"x{i}" for i in range(5)], index=idx)
+    target = pd.Series(
+        0.8 * X["x0"]
+        - 0.35 * X["x1"]
+        + 0.2 * np.r_[0.0, X["x2"].to_numpy()[:-1]]
+        + 0.1 * rng.normal(size=n),
+        index=idx,
+        name="target",
+    )
+
+    recursive = _FAR(n_factors=2, n_lag=2, random_state=11, direct=False).fit(X, target)
+    np.testing.assert_allclose(
+        np.asarray(recursive.predict(X.iloc[-6:]), dtype=float),
+        np.asarray(
+            [
+                0.0461667705814010,
+                0.3831322291723367,
+                -0.4661571237265418,
+                0.1761409540412961,
+                0.0271061955576718,
+                0.0058917811944191,
+            ],
+            dtype=float,
+        ),
+        rtol=1e-12,
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(recursive.ssr_, 14.566995627997674, atol=1e-12)
+    assert recursive.nobs_ == 46
+    assert recursive.n_params_ == 5
+
+    history = np.cumsum(rng.normal(size=n))
+    lag_frame = pd.DataFrame(
+        {f"target_lag{k}": pd.Series(history).shift(k) for k in range(3)},
+        index=idx,
+    )
+    direct_X = pd.concat([X.add_prefix("p_"), lag_frame], axis=1)
+    direct_target = pd.Series(
+        1.2 * np.r_[0.0, base[:-1, 0]]
+        - 0.7 * np.r_[0.0, base[:-1, 1]]
+        + 0.05 * rng.normal(size=n),
+        index=idx,
+        name="target",
+    )
+    direct = _FAR(n_factors=2, n_lag=2, random_state=11, direct=True).fit(
+        direct_X,
+        direct_target,
+    )
+    np.testing.assert_allclose(
+        np.asarray(direct.predict(direct_X.iloc[-6:]), dtype=float),
+        np.asarray(
+            [
+                -0.2945239445418160,
+                -0.0866913502773294,
+                -0.2234713967527731,
+                -0.0414753103557364,
+                -0.1024913161471229,
+                -0.1250310480699385,
+            ],
+            dtype=float,
+        ),
+        rtol=1e-12,
+        atol=1e-12,
+    )
+    np.testing.assert_allclose(direct.ssr_, 62.28138785224115, atol=1e-12)
+    assert direct.nobs_ == 48
+    assert direct.n_params_ == 5

@@ -28,6 +28,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `rank_aggregation` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `supervised_aggregation` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `ucsv` | bayesian | `target` | guarded-unsupported | guarded-unsupported | supported | supported | not available |
+| `pcr` | composite | `supervised` | supported | supported | supported | supported | not available |
 | `pls` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `scaled_pca` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `supervised_pca` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
