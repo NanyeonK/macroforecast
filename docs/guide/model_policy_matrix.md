@@ -73,7 +73,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `nu_svr` | support_vector | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `svr` | support_vector | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `ar` | timeseries | `supervised` | supported-via-direct-projection | supported-via-direct-projection | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
-| `ar_bic` | timeseries | `target` | supported | supported | supported | supported | not available |
+| `ar_bic` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | not available |
 | `arima` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `auto_arima` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `bvar_minnesota` | timeseries | `panel` | guarded-unsupported | guarded-unsupported | supported | supported | direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT |

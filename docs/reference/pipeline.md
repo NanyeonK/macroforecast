@@ -54,7 +54,7 @@ TCODE_TARGET_MAP = dict(7 entries: 1, 2, 3, 4, 5, 6, 7)
 Kind: `data`
 
 ```python
-DIRECT_POLICY_GUARD_MODELS = frozenset({'arima', 'auto_arima', 'bvar_minnesota', 'bvar_normal_inverse_wishart', 'dfm_mixed_mariano_murasawa', 'dfm_unrestricted_midas', 'ets', 'favar', 'holt_winters', 'naive', 'random_walk_drift', 'seasonal_naive', 'stlf', 'theta_met...
+DIRECT_POLICY_GUARD_MODELS = frozenset({'ar_bic', 'arima', 'auto_arima', 'bvar_minnesota', 'bvar_normal_inverse_wishart', 'dfm_mixed_mariano_murasawa', 'dfm_unrestricted_midas', 'ets', 'favar', 'holt_winters', 'naive', 'random_walk_drift', 'seasonal_naive', 'stlf', ...
 ```
 
 ## Callable And Class Reference

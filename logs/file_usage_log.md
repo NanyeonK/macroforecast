@@ -1,5 +1,14 @@
 # File Usage Log
 
+## 2026-07-10 - ADD2 ar_bic doc-drift regen
+
+- `docs/reference/pipeline.md`: regenerated with `python3 -m tools.docgen`
+  so the `DIRECT_POLICY_GUARD_MODELS` reference listing includes `ar_bic`.
+- `docs/guide/model_policy_matrix.md`: regenerated with
+  `python3 tools/gen_policy_matrix.py --out docs/guide` so `ar_bic` is marked
+  guarded-unsupported for direct policies.
+- `logs/file_usage_log.md`: recorded this builder doc-regeneration summary.
+
 ## 2026-07-10 - ADD2 ar_bic tester-block fixes
 
 - `tests/models/test_ar_bic.py`: pinned the independently derived
