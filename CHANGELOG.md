@@ -5,6 +5,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/linear.py`, `models/specs.py`, docs/tests (feature, ADD6 supervised
+  PCA preselection stage): added opt-in
+  `preselect_stage="raw_before_standardize"` for `supervised_pca` and
+  `supervised_scaled_pca`. The new stage screens the raw factor block first,
+  then standardizes only the selected factor predictors plus required controls;
+  omitted/default `preselect_stage="after_standardize"` preserves the existing
+  standardized-screening behavior.
 - `preprocessing`, `model_selection`, docs/tests (feature, ADD5 nan handling +
   CV aggregation): added opt-in `nan_policy="zero_after_standardize"` for
   `standardize_panel(...)`, with `standardize_nan_fill=0.0` as an alias, to

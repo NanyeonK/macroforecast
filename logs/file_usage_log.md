@@ -1,5 +1,24 @@
 # File Usage Log
 
+## 2026-07-11 - ADD6 supervised PCA preselection stage
+
+- `macroforecast/models/linear.py`: added strict
+  `preselect_stage={"after_standardize", "raw_before_standardize"}` handling to
+  `SupervisedPCARegressor`, `supervised_pca`, and `supervised_scaled_pca`;
+  default `after_standardize` keeps the existing full-standardize-then-screen
+  path, while raw-before mode screens raw factors and scales only selected
+  factors plus required controls.
+- `macroforecast/models/specs.py`: registered the non-tunable
+  `preselect_stage` parameter on both supervised PCA model specs without adding
+  it to search spaces.
+- `tests/models/test_models.py`: added scale-sensitive raw-before screening,
+  default-vs-explicit-after unchanged, validation, registry, and discarded
+  predictor prediction coverage for both supervised PCA wrappers.
+- `docs/reference/models.md`: regenerated with system `python3 -m tools.docgen`
+  so the public signatures and parameter tables include `preselect_stage`.
+- `CHANGELOG.md` and `logs/file_usage_log.md`: recorded this additive option
+  and file-touch summary.
+
 ## 2026-07-10 - ADD4 leak-free predictor standardization scope
 
 - `macroforecast/preprocessing/specs.py`: added canonical

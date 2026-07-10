@@ -2983,7 +2983,7 @@ Family: `composite`
 #### Fit Signature
 
 ```python
-macroforecast.models.supervised_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
+macroforecast.models.supervised_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
 ```
 
 | Field | Value |
@@ -3009,6 +3009,7 @@ Original-style iterative supervised PCA with residual correlation screening and 
 | `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PCA block. |
 | `preselect` | `"none"` | `str` | False | Optional pre-selection: none, hard_tstat, or elastic_net. |
+| `preselect_stage` | `"after_standardize"` | `str` | False | Stage at which optional pre-selection runs: after_standardize or raw_before_standardize. |
 | `t_threshold` | `1.28` | `float` | False | Hard t-stat pre-selection threshold. |
 | `elastic_net_alpha` | `0.0002` | `float` | False | Elastic-net pre-selection penalty. |
 | `elastic_net_l1_ratio` | `0.5` | `float` | False | Elastic-net pre-selection L1 ratio. |
@@ -3030,7 +3031,7 @@ Family: `composite`
 #### Fit Signature
 
 ```python
-macroforecast.models.supervised_scaled_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
+macroforecast.models.supervised_scaled_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
 ```
 
 | Field | Value |
@@ -3056,6 +3057,7 @@ Hounyo-Li supervised scaled PCA: marginal predictive-slope scaling followed by S
 | `include_constant` | `True` | `bool` | False | Whether to include a constant in the control block. |
 | `drop_control_columns` | `True` | `bool` | False | Whether controls are excluded from the PCA block. |
 | `preselect` | `"none"` | `str` | False | Optional pre-selection: none, hard_tstat, or elastic_net. |
+| `preselect_stage` | `"after_standardize"` | `str` | False | Stage at which optional pre-selection runs: after_standardize or raw_before_standardize. |
 | `t_threshold` | `1.28` | `float` | False | Hard t-stat pre-selection threshold. |
 | `elastic_net_alpha` | `0.0002` | `float` | False | Elastic-net pre-selection penalty. |
 | `elastic_net_l1_ratio` | `0.5` | `float` | False | Elastic-net pre-selection L1 ratio. |
@@ -4227,7 +4229,7 @@ Qualified name: `macroforecast.models.linear.SupervisedPCARegressor`
 #### Signature
 
 ```python
-macroforecast.models.SupervisedPCARegressor(*, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, slope_scale: bool = False, quadratic_factors: bool = False, random_state: int = 0) -> None
+macroforecast.models.SupervisedPCARegressor(*, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, slope_scale: bool = False, quadratic_factors: bool = False, random_state: int = 0) -> None
 ```
 
 #### Description
@@ -4246,6 +4248,7 @@ Original-style SPCA with iterative screening, PCA, and projection.
 | `include_constant` | keyword only | `bool` | `True` |
 | `drop_control_columns` | keyword only | `bool` | `True` |
 | `preselect` | keyword only | `str` | `"none"` |
+| `preselect_stage` | keyword only | `str` | `"after_standardize"` |
 | `t_threshold` | keyword only | `float` | `1.28` |
 | `elastic_net_alpha` | keyword only | `float` | `0.0002` |
 | `elastic_net_l1_ratio` | keyword only | `float` | `0.5` |

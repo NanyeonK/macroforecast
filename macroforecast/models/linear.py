@@ -1881,6 +1881,7 @@ class SupervisedPCARegressor:
         include_constant: bool = True,
         drop_control_columns: bool = True,
         preselect: str = "none",
+        preselect_stage: str = "after_standardize",
         t_threshold: float = 1.28,
         elastic_net_alpha: float = 0.0002,
         elastic_net_l1_ratio: float = 0.5,
@@ -1896,6 +1897,7 @@ class SupervisedPCARegressor:
         self.include_constant = bool(include_constant)
         self.drop_control_columns = bool(drop_control_columns)
         self.preselect = _normalize_preselect(preselect)
+        self.preselect_stage = _normalize_preselect_stage(preselect_stage)
         self.t_threshold = float(max(0.0, t_threshold))
         self.elastic_net_alpha = float(max(0.0, elastic_net_alpha))
         self.elastic_net_l1_ratio = float(min(1.0, max(0.0, elastic_net_l1_ratio)))
@@ -1924,45 +1926,95 @@ class SupervisedPCARegressor:
         if frame.shape[1] == 0:
             raise ValueError("supervised_pca requires at least one predictor")
 
-        x_values = frame.to_numpy(dtype=float)
-        y_values = target.to_numpy(dtype=float)
-        if self.scale:
-            self.x_mean_ = frame.mean(axis=0)
-            self.x_scale_ = _safe_series_scale(frame.std(axis=0, ddof=1))
-            x_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
-            self.y_mean_ = float(np.nanmean(y_values))
-            y_std = float(np.nanstd(y_values, ddof=1))
-            self.y_scale_ = y_std if np.isfinite(y_std) and y_std > 1e-12 else 1.0
-            y_values = (y_values - self.y_mean_) / self.y_scale_
-        else:
-            self.x_mean_ = pd.Series(0.0, index=frame.columns)
-            self.x_scale_ = pd.Series(1.0, index=frame.columns)
-            self.y_mean_ = 0.0
-            self.y_scale_ = 1.0
+        if self.preselect_stage == "after_standardize":
+            x_values = frame.to_numpy(dtype=float)
+            y_values = target.to_numpy(dtype=float)
+            if self.scale:
+                self.x_mean_ = frame.mean(axis=0)
+                self.x_scale_ = _safe_series_scale(frame.std(axis=0, ddof=1))
+                x_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+                self.y_mean_ = float(np.nanmean(y_values))
+                y_std = float(np.nanstd(y_values, ddof=1))
+                self.y_scale_ = y_std if np.isfinite(y_std) and y_std > 1e-12 else 1.0
+                y_values = (y_values - self.y_mean_) / self.y_scale_
+            else:
+                self.x_mean_ = pd.Series(0.0, index=frame.columns)
+                self.x_scale_ = pd.Series(1.0, index=frame.columns)
+                self.y_mean_ = 0.0
+                self.y_scale_ = 1.0
 
-        standardized = pd.DataFrame(x_values, index=frame.index, columns=frame.columns)
-        control_frame = _control_matrix(
-            standardized,
-            self.control_columns,
-            include_constant=self.include_constant,
-        )
-        self.control_names_ = tuple(str(column) for column in control_frame.columns)
-        factor_columns = _factor_columns(
-            standardized.columns,
-            self.control_columns,
-            drop_controls=self.drop_control_columns,
-        )
-        factor_frame = standardized.loc[:, factor_columns]
-        preselected = _preselect_columns(
-            factor_frame,
-            y_values,
-            method=self.preselect,
-            t_threshold=self.t_threshold,
-            elastic_net_alpha=self.elastic_net_alpha,
-            elastic_net_l1_ratio=self.elastic_net_l1_ratio,
-            random_state=self.random_state,
-        )
-        factor_frame = factor_frame.loc[:, preselected]
+            standardized = pd.DataFrame(x_values, index=frame.index, columns=frame.columns)
+            control_frame = _control_matrix(
+                standardized,
+                self.control_columns,
+                include_constant=self.include_constant,
+            )
+            self.control_names_ = tuple(str(column) for column in control_frame.columns)
+            factor_columns = _factor_columns(
+                standardized.columns,
+                self.control_columns,
+                drop_controls=self.drop_control_columns,
+            )
+            factor_frame = standardized.loc[:, factor_columns]
+            preselected = _preselect_columns(
+                factor_frame,
+                y_values,
+                method=self.preselect,
+                t_threshold=self.t_threshold,
+                elastic_net_alpha=self.elastic_net_alpha,
+                elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                random_state=self.random_state,
+            )
+            factor_frame = factor_frame.loc[:, preselected]
+        else:
+            y_raw_values = target.to_numpy(dtype=float)
+            factor_columns = _factor_columns(
+                frame.columns,
+                self.control_columns,
+                drop_controls=self.drop_control_columns,
+            )
+            raw_factor_frame = frame.loc[:, factor_columns]
+            preselected = _preselect_columns(
+                raw_factor_frame,
+                y_raw_values,
+                method=self.preselect,
+                t_threshold=self.t_threshold,
+                elastic_net_alpha=self.elastic_net_alpha,
+                elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                random_state=self.random_state,
+            )
+            model_columns = _model_used_columns(
+                frame.columns,
+                self.control_columns,
+                preselected,
+            )
+            model_frame = frame.loc[:, model_columns]
+            y_values = y_raw_values.copy()
+            if self.scale:
+                self.x_mean_ = model_frame.mean(axis=0)
+                self.x_scale_ = _safe_series_scale(model_frame.std(axis=0, ddof=1))
+                x_values = ((model_frame - self.x_mean_) / self.x_scale_).to_numpy(
+                    dtype=float
+                )
+                self.y_mean_ = float(np.nanmean(y_values))
+                y_std = float(np.nanstd(y_values, ddof=1))
+                self.y_scale_ = y_std if np.isfinite(y_std) and y_std > 1e-12 else 1.0
+                y_values = (y_values - self.y_mean_) / self.y_scale_
+            else:
+                self.x_mean_ = pd.Series(0.0, index=model_frame.columns)
+                self.x_scale_ = pd.Series(1.0, index=model_frame.columns)
+                self.y_mean_ = 0.0
+                self.y_scale_ = 1.0
+                x_values = model_frame.to_numpy(dtype=float)
+
+            standardized = pd.DataFrame(x_values, index=frame.index, columns=model_frame.columns)
+            control_frame = _control_matrix(
+                standardized,
+                self.control_columns,
+                include_constant=self.include_constant,
+            )
+            self.control_names_ = tuple(str(column) for column in control_frame.columns)
+            factor_frame = standardized.loc[:, preselected]
         if factor_frame.empty:
             raise ValueError("supervised_pca selected no predictors")
 
@@ -2137,6 +2189,36 @@ def _normalize_preselect(value: str) -> str:
     if key not in aliases:
         raise ValueError("preselect must be one of: none, hard_tstat, elastic_net")
     return aliases[key]
+
+
+_PRESELECT_STAGES = ("after_standardize", "raw_before_standardize")
+
+
+def _normalize_preselect_stage(value: str) -> str:
+    key = str(value)
+    if key not in _PRESELECT_STAGES:
+        allowed = ", ".join(_PRESELECT_STAGES)
+        raise ValueError(f"preselect_stage must be one of: {allowed}")
+    return key
+
+
+def _model_used_columns(
+    columns: pd.Index,
+    controls: tuple[str, ...],
+    selected_factors: Sequence[str],
+) -> list[str]:
+    control_set = set(controls)
+    factor_set = set(selected_factors)
+    out: list[str] = []
+    seen: set[str] = set()
+    for column in columns:
+        name = str(column)
+        if name in seen:
+            continue
+        if name in control_set or name in factor_set:
+            out.append(name)
+            seen.add(name)
+    return out
 
 
 def _factor_columns(
@@ -2340,6 +2422,7 @@ def supervised_pca(
     include_constant: bool = True,
     drop_control_columns: bool = True,
     preselect: str = "none",
+    preselect_stage: str = "after_standardize",
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
@@ -2357,6 +2440,7 @@ def supervised_pca(
         "include_constant": bool(include_constant),
         "drop_control_columns": bool(drop_control_columns),
         "preselect": _normalize_preselect(preselect),
+        "preselect_stage": _normalize_preselect_stage(preselect_stage),
         "t_threshold": float(t_threshold),
         "elastic_net_alpha": float(elastic_net_alpha),
         "elastic_net_l1_ratio": float(elastic_net_l1_ratio),
@@ -2373,6 +2457,7 @@ def supervised_pca(
             include_constant=bool(include_constant),
             drop_control_columns=bool(drop_control_columns),
             preselect=preselect,
+            preselect_stage=preselect_stage,
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
@@ -2491,6 +2576,7 @@ def supervised_scaled_pca(
     include_constant: bool = True,
     drop_control_columns: bool = True,
     preselect: str = "none",
+    preselect_stage: str = "after_standardize",
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
@@ -2508,6 +2594,7 @@ def supervised_scaled_pca(
         "include_constant": bool(include_constant),
         "drop_control_columns": bool(drop_control_columns),
         "preselect": _normalize_preselect(preselect),
+        "preselect_stage": _normalize_preselect_stage(preselect_stage),
         "t_threshold": float(t_threshold),
         "elastic_net_alpha": float(elastic_net_alpha),
         "elastic_net_l1_ratio": float(elastic_net_l1_ratio),
@@ -2525,6 +2612,7 @@ def supervised_scaled_pca(
             include_constant=bool(include_constant),
             drop_control_columns=bool(drop_control_columns),
             preselect=preselect,
+            preselect_stage=preselect_stage,
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),

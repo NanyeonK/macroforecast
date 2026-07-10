@@ -20,6 +20,24 @@ def _xy(n: int = 60) -> tuple[pd.DataFrame, pd.Series]:
     return X, y
 
 
+def _scale_sensitive_spca_xy() -> tuple[pd.DataFrame, pd.Series]:
+    idx = pd.RangeIndex(80)
+    grid = np.linspace(-1.0, 1.0, len(idx))
+    rng = np.random.default_rng(20260710)
+    small_signal = grid
+    large_weak = 1000.0 * (0.28 * grid + rng.normal(scale=0.4, size=len(idx)))
+    X = pd.DataFrame(
+        {"small_signal": small_signal, "large_weak": large_weak},
+        index=idx,
+    )
+    y = pd.Series(
+        small_signal + 0.02 * rng.normal(size=len(idx)),
+        index=idx,
+        name="y",
+    )
+    return X, y
+
+
 def _rf_xy(n: int = 72, p: int = 8) -> tuple[pd.DataFrame, pd.Series]:
     idx = pd.date_range("2000-01-31", periods=n, freq="ME")
     rng = np.random.default_rng(20260709)
@@ -2135,6 +2153,134 @@ def test_supervised_scaled_pca_fit_records_slope_scaling() -> None:
     assert fit.estimator.n_components_ >= 1
     assert fit.estimator.control_names_ == ("x1", "const")
     assert "x1" not in fit.estimator.factor_features_
+
+
+@pytest.mark.parametrize(
+    "fit_func",
+    [mf.models.supervised_pca, mf.models.supervised_scaled_pca],
+)
+def test_supervised_pca_default_preselect_stage_matches_explicit_after_standardize(
+    fit_func: object,
+) -> None:
+    X, y = _scale_sensitive_spca_xy()
+    params = {
+        "n_components": 1,
+        "n_selected": 1,
+        "preselect": "elastic_net",
+        "elastic_net_alpha": 0.3,
+        "elastic_net_l1_ratio": 1.0,
+        "random_state": 0,
+    }
+
+    default_fit = fit_func(X, y, **params)  # type: ignore[operator]
+    explicit_fit = fit_func(  # type: ignore[operator]
+        X,
+        y,
+        preselect_stage="after_standardize",
+        **params,
+    )
+
+    assert default_fit.metadata == explicit_fit.metadata
+    assert default_fit.estimator.factor_features_ == ("small_signal",)
+    assert (
+        default_fit.estimator.factor_features_
+        == explicit_fit.estimator.factor_features_
+    )
+    assert (
+        default_fit.estimator.selected_features_
+        == explicit_fit.estimator.selected_features_
+    )
+    assert (
+        default_fit.estimator.component_selected_features_
+        == explicit_fit.estimator.component_selected_features_
+    )
+    assert (
+        default_fit.estimator.screening_scores_
+        == explicit_fit.estimator.screening_scores_
+    )
+    np.testing.assert_array_equal(
+        default_fit.predict(X.iloc[-5:]).to_numpy(dtype=float),
+        explicit_fit.predict(X.iloc[-5:]).to_numpy(dtype=float),
+    )
+    np.testing.assert_array_equal(
+        default_fit.estimator.loadings_,
+        explicit_fit.estimator.loadings_,
+    )
+    np.testing.assert_array_equal(
+        default_fit.estimator.factor_coefs_,
+        explicit_fit.estimator.factor_coefs_,
+    )
+    np.testing.assert_array_equal(
+        default_fit.estimator.control_coef_,
+        explicit_fit.estimator.control_coef_,
+    )
+
+
+@pytest.mark.parametrize(
+    "fit_func",
+    [mf.models.supervised_pca, mf.models.supervised_scaled_pca],
+)
+def test_supervised_pca_raw_preselect_stage_screens_before_standardization(
+    fit_func: object,
+) -> None:
+    X, y = _scale_sensitive_spca_xy()
+    params = {
+        "n_components": 1,
+        "n_selected": 1,
+        "preselect": "elastic_net",
+        "elastic_net_alpha": 0.3,
+        "elastic_net_l1_ratio": 1.0,
+        "random_state": 0,
+    }
+
+    after_fit = fit_func(  # type: ignore[operator]
+        X,
+        y,
+        preselect_stage="after_standardize",
+        **params,
+    )
+    raw_fit = fit_func(  # type: ignore[operator]
+        X,
+        y,
+        preselect_stage="raw_before_standardize",
+        **params,
+    )
+
+    assert after_fit.estimator.factor_features_ == ("small_signal",)
+    assert raw_fit.estimator.factor_features_ == ("large_weak",)
+    assert list(after_fit.estimator.x_mean_.index) == ["small_signal", "large_weak"]
+    assert list(raw_fit.estimator.x_mean_.index) == ["large_weak"]
+    assert raw_fit.metadata["preselect_stage"] == "raw_before_standardize"
+
+    X_changed = X.iloc[-5:].copy()
+    X_changed["small_signal"] = X_changed["small_signal"] + 10000.0
+    np.testing.assert_array_equal(
+        raw_fit.predict(X.iloc[-5:]).to_numpy(dtype=float),
+        raw_fit.predict(X_changed).to_numpy(dtype=float),
+    )
+
+
+def test_supervised_pca_preselect_stage_validation_and_registry() -> None:
+    X, y = _xy()
+
+    for model_name in ("supervised_pca", "supervised_scaled_pca"):
+        spec = mf.models.get_model(model_name)
+        parameters = {parameter.name: parameter for parameter in spec.parameters}
+        assert spec.default_params["preselect_stage"] == "after_standardize"
+        assert parameters["preselect_stage"].default == "after_standardize"
+        assert parameters["preselect_stage"].tunable is False
+        assert all(
+            "preselect_stage" not in space for space in spec.search_spaces.values()
+        )
+        with pytest.raises(
+            ValueError,
+            match="preselect_stage.*after_standardize.*raw_before_standardize",
+        ):
+            getattr(mf.models, model_name)(  # type: ignore[misc]
+                X,
+                y,
+                preselect_stage="raw",
+            )
 
 
 def test_scaled_pca_matches_huang_spcaest_factor_extraction() -> None:

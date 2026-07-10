@@ -2465,6 +2465,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "include_constant": True,
             "drop_control_columns": True,
             "preselect": "none",
+            "preselect_stage": "after_standardize",
             "t_threshold": 1.28,
             "elastic_net_alpha": 0.0002,
             "elastic_net_l1_ratio": 0.5,
@@ -2515,6 +2516,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "none",
                 "str",
                 "Optional pre-selection: none, hard_tstat, or elastic_net.",
+                False,
+            ),
+            _p(
+                "preselect_stage",
+                "after_standardize",
+                "str",
+                "Stage at which optional pre-selection runs: after_standardize or raw_before_standardize.",
                 False,
             ),
             _p(
@@ -2585,6 +2593,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "include_constant": True,
             "drop_control_columns": True,
             "preselect": "none",
+            "preselect_stage": "after_standardize",
             "t_threshold": 1.28,
             "elastic_net_alpha": 0.0002,
             "elastic_net_l1_ratio": 0.5,
@@ -2638,6 +2647,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "none",
                 "str",
                 "Optional pre-selection: none, hard_tstat, or elastic_net.",
+                False,
+            ),
+            _p(
+                "preselect_stage",
+                "after_standardize",
+                "str",
+                "Stage at which optional pre-selection runs: after_standardize or raw_before_standardize.",
                 False,
             ),
             _p(
