@@ -759,7 +759,7 @@ def engle_granger(
         design = np.column_stack([np.ones(x_mat.shape[0]), design])
         coef_names = ["(intercept)", *coef_names]
     if trend in {"ct", "ctt"}:
-        time = np.arange(x_mat.shape[0], dtype=float)
+        time: np.ndarray = np.arange(x_mat.shape[0], dtype=float)
         design = np.column_stack([design, time])
         coef_names = [*coef_names, "trend"]
     if trend == "ctt":

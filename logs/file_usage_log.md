@@ -195,3 +195,10 @@
 - `CHANGELOG.md`: documented the bug fix and intended forecast changes for arms
   whose explicit params were previously overridden.
 - `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
+## 2026-07-10 - MYPY housekeeping
+
+- `macroforecast/data_analysis/summary.py`: added an explicit `np.ndarray`
+  annotation to the Engle-Granger trend time vector so mypy can type-check the
+  local variable; no behavior, number, or API change.
+- `logs/file_usage_log.md`: recorded this builder typing-housekeeping summary.
