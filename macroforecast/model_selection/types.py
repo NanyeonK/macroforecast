@@ -12,6 +12,7 @@ import pandas as pd
 from macroforecast.metrics import MetricLike
 
 DistributionKind = Literal["float", "log_float", "int", "categorical"]
+ScoreAggregation = Literal["mean_split", "mean_fold"]
 WithinFoldMode = Literal["fixed", "expanding"]
 
 
@@ -128,6 +129,7 @@ class SearchSpec:
     metadata: dict[str, Any] = field(default_factory=dict)
     criterion: str | None = None
     validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None
+    score_aggregation: ScoreAggregation = "mean_split"
 
     def to_metadata(self) -> dict[str, Any]:
         """Return search-level metadata without trial results."""
@@ -153,6 +155,9 @@ class SearchSpec:
             out["validation_splitter"] = _splitter_json_ready(
                 self.validation_splitter
             )
+        score_aggregation = _normalize_score_aggregation(self.score_aggregation)
+        if score_aggregation != "mean_split":
+            out["score_aggregation"] = score_aggregation
         return _json_ready(out)
 
     def to_dict(self) -> dict[str, Any]:
@@ -333,8 +338,17 @@ def _callable_name(func: Callable[..., Any]) -> str:
     return f"{module}.{qualname}" if module else str(qualname)
 
 
+def _normalize_score_aggregation(value: str) -> ScoreAggregation:
+    if value not in {"mean_split", "mean_fold"}:
+        raise ValueError(
+            "score_aggregation must be one of ['mean_split', 'mean_fold']"
+        )
+    return "mean_fold" if value == "mean_fold" else "mean_split"
+
+
 __all__ = [
     "ParamDistribution",
+    "ScoreAggregation",
     "SearchError",
     "SearchResult",
     "SearchSpec",

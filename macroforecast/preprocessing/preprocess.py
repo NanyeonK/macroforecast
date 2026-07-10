@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
-from typing import Any
+from typing import Any, Literal
 import warnings
 
+import numpy as np
 import pandas as pd
 
 from macroforecast.preprocessing.clean import (
@@ -351,15 +352,22 @@ def standardize_panel(
     predictors: str | Sequence[str] = "all",
     target: str | None = None,
     targets: Sequence[str] | None = None,
+    nan_policy: Literal["propagate", "zero_after_standardize"] = "propagate",
+    standardize_nan_fill: float | None = None,
 ) -> pd.DataFrame:
     """Standardize numeric columns with fitted parameters."""
 
     scope = _normalize_standardize_scope(standardize_scope)
     method_value = _normalize_standardize(method)
+    nan_policy_value = _normalize_standardize_nan_policy(
+        nan_policy,
+        standardize_nan_fill,
+    )
     if method_value == "none":
         return panel.copy()
     if (
-        scope == "fit_window"
+        nan_policy_value == "propagate"
+        and scope == "fit_window"
         and available is None
         and columns == "all"
         and predictors == "all"
@@ -375,7 +383,13 @@ def standardize_panel(
             method=method_value,
             ddof=ddof_value,
         )
-        return apply_standardization_state(panel, state)
+        result = apply_standardization_state(panel, state)
+        if nan_policy_value == "zero_after_standardize":
+            return _fill_nonfinite_standardized_columns(
+                result,
+                _standardization_state_columns(state),
+            )
+        return result
     if available is None:
         raise ValueError(
             "standardize_scope='origin_available_predictors' requires available rows"
@@ -395,7 +409,13 @@ def standardize_panel(
         method=method_value,
         ddof=ddof_value,
     )
-    return apply_standardization_state(panel, state)
+    result = apply_standardization_state(panel, state)
+    if nan_policy_value == "zero_after_standardize":
+        return _fill_nonfinite_standardized_columns(
+            result,
+            _standardization_state_columns(state),
+        )
+    return result
 
 
 def fred_sd_transform_codes(
@@ -972,6 +992,46 @@ def _normalize_standardize_scope(value: str) -> str:
         "origin_predictors": "origin_available_predictors",
     }
     return _lookup(value, aliases, "standardize_scope")
+
+
+def _normalize_standardize_nan_policy(
+    nan_policy: str,
+    standardize_nan_fill: float | None,
+) -> Literal["propagate", "zero_after_standardize"]:
+    policies = {"propagate", "zero_after_standardize"}
+    if nan_policy not in policies:
+        raise ValueError(
+            "nan_policy must be one of ['propagate', 'zero_after_standardize']"
+        )
+    if standardize_nan_fill is None:
+        return "zero_after_standardize" if nan_policy == "zero_after_standardize" else "propagate"
+    if isinstance(standardize_nan_fill, bool) or standardize_nan_fill != 0.0:
+        raise ValueError("standardize_nan_fill must be None or exactly 0.0")
+    return "zero_after_standardize"
+
+
+def _standardization_state_columns(state: Mapping[str, object]) -> Sequence[object]:
+    columns = state.get("columns", ())
+    if not isinstance(columns, Sequence) or isinstance(columns, (str, bytes)):
+        raise ValueError("standardization state columns must be a sequence")
+    return columns
+
+
+def _fill_nonfinite_standardized_columns(
+    panel: pd.DataFrame,
+    columns: Sequence[object],
+) -> pd.DataFrame:
+    result = panel.copy()
+    column_lookup = {str(column): column for column in result.columns}
+    actual_columns = [column_lookup[str(column)] for column in columns]
+    values = result.loc[:, actual_columns]
+    finite = pd.DataFrame(
+        np.isfinite(values.to_numpy(dtype=float)),
+        index=values.index,
+        columns=values.columns,
+    )
+    result.loc[:, actual_columns] = values.where(finite, 0.0)
+    return result
 
 
 def _normalize_standardize_ddof(value: int) -> int:

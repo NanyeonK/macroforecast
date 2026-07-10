@@ -36,12 +36,14 @@ from macroforecast.model_selection.runner import (
     parameter_columns,
     trial_frame,
 )
-from macroforecast.model_selection.splitters import resolve_validation_splitter
+from macroforecast.model_selection.splitters import _resolve_validation_splitter_with_fold_ids
 from macroforecast.model_selection.types import (
+    ScoreAggregation,
     SearchError,
     SearchResult,
     SearchSpec,
     SearchTrial,
+    _normalize_score_aggregation,
 )
 from macroforecast.models.specs import ModelSpec, get_model
 from macroforecast.models.utils import align_xy, as_frame, as_series, resolve_xy
@@ -67,6 +69,7 @@ def select_params(
     generations: int | None = None,
     mutation_rate: float | None = None,
     allow_non_temporal_splits: bool = False,
+    score_aggregation: ScoreAggregation | None = None,
 ) -> SearchResult:
     """Select model parameters by temporal validation.
 
@@ -106,6 +109,12 @@ def select_params(
         else fixed(random_state=random_state)
     )
     spec = _prepare_search_spec(spec)
+    score_aggregation_value = _resolve_score_aggregation(
+        score_aggregation,
+        spec.score_aggregation,
+    )
+    if score_aggregation_value != spec.score_aggregation:
+        spec = replace(spec, score_aggregation=score_aggregation_value)
     if spec.method == "information_criterion":
         return select_by_information_criterion(
             model,
@@ -117,7 +126,7 @@ def select_params(
             preset=preset,
         )
     metric_fn = get_metric(metric)
-    validation_splits, split_name, split_metadata = _resolve_selection_splits(
+    validation_splits, split_name, split_metadata, fold_ids = _resolve_selection_splits(
         frame.index,
         window=window,
         splits=splits,
@@ -139,6 +148,8 @@ def select_params(
             base_params,
             rng,
             maximize=maximize,
+            fold_ids=fold_ids,
+            score_aggregation=score_aggregation_value,
         )
     elif spec.method == "bayesian":
         rows, runtime_metadata = run_bayesian(
@@ -151,6 +162,8 @@ def select_params(
             base_params,
             rng,
             maximize=maximize,
+            fold_ids=fold_ids,
+            score_aggregation=score_aggregation_value,
         )
     elif spec.method == "custom":
         rows, runtime_metadata = _run_custom_search(
@@ -163,6 +176,8 @@ def select_params(
             base_params,
             rng,
             maximize=maximize,
+            fold_ids=fold_ids,
+            score_aggregation=score_aggregation_value,
         )
     else:
         candidates = _candidates(spec, rng)
@@ -176,6 +191,8 @@ def select_params(
                 base_params,
                 params,
                 i,
+                fold_ids=fold_ids,
+                score_aggregation=score_aggregation_value,
             )
             for i, params in enumerate(candidates)
         ]
@@ -206,6 +223,7 @@ def select_params(
             **split_metadata,
             **_model_metadata(model_spec),
             **spec.metadata,
+            **_score_aggregation_metadata(score_aggregation_value),
             **runtime_metadata,
         },
     )
@@ -341,13 +359,13 @@ def _resolve_selection_splits(
     splits: Sequence[tuple[Any, Any]] | None,
     validation_splitter: Any | None = None,
     allow_non_temporal_splits: bool = False,
-) -> tuple[list[Split], str, dict[str, Any]]:
+) -> tuple[list[Split], str, dict[str, Any], list[int]]:
     n_obs = len(index)
     if splits is not None and window is not None:
         raise ValueError("pass either window or splits, not both")
     if splits is None:
         if validation_splitter is not None:
-            resolved, split_name, metadata = resolve_validation_splitter(
+            resolved, split_name, metadata, fold_ids = _resolve_validation_splitter_with_fold_ids(
                 index,
                 validation_splitter,
             )
@@ -362,6 +380,7 @@ def _resolve_selection_splits(
                 resolved,
                 split_name,
                 {**metadata, "split_summary": _split_summary(resolved)},
+                fold_ids,
             )
         window_spec = resolve_window(window)
         resolved = window_spec.split(n_obs)
@@ -378,6 +397,7 @@ def _resolve_selection_splits(
                 "temporal_order": not allow_non_temporal_splits,
                 "split_summary": _split_summary(resolved),
             },
+            list(range(len(resolved))),
         )
     resolved = _normalize_splits(
         splits,
@@ -393,6 +413,7 @@ def _resolve_selection_splits(
             "temporal_order": not allow_non_temporal_splits,
             "split_summary": _split_summary(resolved),
         },
+        list(range(len(resolved))),
     )
 
 
@@ -489,9 +510,29 @@ def _has_search_overrides(**values: Any) -> bool:
     return any(value is not None for value in values.values())
 
 
+def _resolve_score_aggregation(
+    override: ScoreAggregation | None,
+    spec_value: ScoreAggregation,
+) -> ScoreAggregation:
+    return _normalize_score_aggregation(
+        spec_value if override is None else override
+    )
+
+
+def _score_aggregation_metadata(
+    score_aggregation: ScoreAggregation,
+) -> dict[str, str]:
+    if score_aggregation == "mean_split":
+        return {}
+    return {"score_aggregation": score_aggregation}
+
+
 def _prepare_search_spec(spec: SearchSpec) -> SearchSpec:
     prepared = replace(spec)
     prepared.method = _normalize_method(prepared.method)
+    prepared.score_aggregation = _normalize_score_aggregation(
+        prepared.score_aggregation
+    )
     if prepared.criterion is not None:
         prepared.criterion = str(prepared.criterion).lower()
     prepared.param_grid = {
@@ -568,9 +609,51 @@ def _run_custom_search(
     rng: np.random.Generator,
     *,
     maximize: bool,
+    fold_ids: list[int] | tuple[int, ...] | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> tuple[list[SearchTrial], dict[str, Any]]:
     if spec.custom_func is None:
         raise ValueError("custom search requires custom_func")
+    resolved_fold_ids = tuple(fold_ids or range(len(splits)))
+    default_score_aggregation = score_aggregation
+
+    def evaluate_candidate_with_aggregation(
+        candidate_model: Callable[..., Any],
+        candidate_X: pd.DataFrame,
+        candidate_y: pd.Series,
+        candidate_splits: list[Split],
+        candidate_metric: Callable[[Any, Any], float],
+        candidate_fixed_params: dict[str, Any],
+        candidate_params: dict[str, Any],
+        candidate_trial: int,
+        *,
+        fold_ids: list[int] | tuple[int, ...] | None = None,
+        score_aggregation: ScoreAggregation | None = None,
+    ) -> SearchTrial:
+        candidate_fold_ids = fold_ids
+        if (
+            candidate_fold_ids is None
+            and len(candidate_splits) == len(resolved_fold_ids)
+        ):
+            candidate_fold_ids = resolved_fold_ids
+        candidate_score_aggregation = (
+            default_score_aggregation
+            if score_aggregation is None
+            else score_aggregation
+        )
+        return evaluate_candidate(
+            candidate_model,
+            candidate_X,
+            candidate_y,
+            candidate_splits,
+            candidate_metric,
+            candidate_fixed_params,
+            candidate_params,
+            candidate_trial,
+            fold_ids=candidate_fold_ids,
+            score_aggregation=candidate_score_aggregation,
+        )
+
     output = spec.custom_func(
         model=model,
         X=X,
@@ -581,7 +664,7 @@ def _run_custom_search(
         search=spec,
         rng=rng,
         maximize=maximize,
-        evaluate_candidate=evaluate_candidate,
+        evaluate_candidate=evaluate_candidate_with_aggregation,
         **spec.custom_params,
     )
     runtime_metadata: dict[str, Any] = {}

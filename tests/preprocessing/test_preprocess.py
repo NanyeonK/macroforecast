@@ -333,6 +333,84 @@ def test_standardize_panel_origin_available_predictors_scope_is_predictor_only()
     assert result["y"].tolist() == panel["y"].tolist()
 
 
+def test_standardize_panel_zero_after_standardize_fills_nonfinite_predictors_leak_free():
+    idx = pd.date_range("2020-01-01", periods=5, freq="MS")
+    panel = pd.DataFrame(
+        {
+            "y": [1.0, 2.0, 3.0, np.nan, np.inf],
+            "x": [0.0, 2.0, 4.0, np.nan, np.inf],
+        },
+        index=idx,
+    )
+
+    result = mf.preprocessing.standardize_panel(
+        panel,
+        method="zscore",
+        standardize_scope="origin_available_predictors",
+        available=idx[:3],
+        predictors=["x"],
+        target="y",
+        nan_policy="zero_after_standardize",
+    )
+    alias_result = mf.preprocessing.standardize_panel(
+        panel,
+        method="zscore",
+        standardize_scope="origin_available_predictors",
+        available=idx[:3],
+        predictors=["x"],
+        target="y",
+        standardize_nan_fill=0.0,
+    )
+
+    expected_center = pd.Series([0.0, 2.0, 4.0]).mean()
+    expected_scale = pd.Series([0.0, 2.0, 4.0]).std(ddof=0)
+    assert result.loc[idx[2], "x"] == pytest.approx((4.0 - expected_center) / expected_scale)
+    assert result.loc[idx[3], "x"] == 0.0
+    assert result.loc[idx[4], "x"] == 0.0
+    assert np.isnan(result.loc[idx[3], "y"])
+    assert np.isinf(result.loc[idx[4], "y"])
+    pd.testing.assert_frame_equal(result, alias_result)
+
+
+def test_standardize_panel_nan_policy_default_propagates_unchanged():
+    idx = pd.date_range("2020-01-01", periods=5, freq="MS")
+    panel = pd.DataFrame(
+        {
+            "y": [1.0, 2.0, 3.0, np.nan, np.inf],
+            "x": [0.0, 2.0, 4.0, np.nan, np.inf],
+        },
+        index=idx,
+    )
+    kwargs = {
+        "method": "zscore",
+        "standardize_scope": "origin_available_predictors",
+        "available": idx[:3],
+        "predictors": ["x"],
+        "target": "y",
+    }
+
+    default = mf.preprocessing.standardize_panel(panel, **kwargs)
+    explicit_default = mf.preprocessing.standardize_panel(
+        panel,
+        **kwargs,
+        nan_policy="propagate",
+        standardize_nan_fill=None,
+    )
+
+    pd.testing.assert_frame_equal(default, explicit_default)
+    assert np.isnan(default.loc[idx[3], "x"])
+    assert np.isinf(default.loc[idx[4], "x"])
+
+
+def test_standardize_panel_nan_policy_validates_inputs():
+    panel = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
+
+    with pytest.raises(ValueError, match="nan_policy"):
+        mf.preprocessing.standardize_panel(panel, nan_policy="zero_before_standardize")
+    with pytest.raises(ValueError, match="standardize_nan_fill"):
+        mf.preprocessing.standardize_panel(panel, standardize_nan_fill=1.0)
+
+
 def test_preprocess_spec_reuses_train_standardization_state_for_transform():
     metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
     panel = mf.data.as_panel(

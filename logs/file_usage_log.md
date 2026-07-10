@@ -202,3 +202,21 @@
   annotation to the Engle-Granger trend time vector so mypy can type-check the
   local variable; no behavior, number, or API change.
 - `logs/file_usage_log.md`: recorded this builder typing-housekeeping summary.
+
+## 2026-07-10 - ADD5 nan policy and score aggregation
+
+- `macroforecast/preprocessing/preprocess.py`: added opt-in
+  `nan_policy="zero_after_standardize"` and `standardize_nan_fill=0.0` alias for
+  post-standardization non-finite fill in selected standardized columns while
+  preserving default propagation behavior.
+- `macroforecast/model_selection/{types.py,builders.py,splitters.py,runner.py,optimizers.py,search.py}`:
+  added `score_aggregation` plumbing with default `mean_split` and opt-in
+  `mean_fold` logical-fold pooling for validation scoring.
+- `tests/preprocessing/test_preprocess.py` and
+  `tests/model_selection/test_select_params.py`: added option behavior,
+  validation, and defaults-unchanged regression coverage.
+- `docs/reference/{preprocessing.md,model_selection.md,custom/custom_window_selection_forecasting.md}`:
+  regenerated reference docs with system `python3`.
+- `CHANGELOG.md`: documented the additive options and unchanged-default
+  guarantees.
+- `logs/file_usage_log.md`: recorded this builder file-touch summary.

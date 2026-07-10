@@ -48,7 +48,7 @@ Qualified name: `macroforecast.model_selection.builders.custom_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.custom_search(name: str, func: Callable[..., Any], *, param_grid: dict[str, Iterable[Any] | Any] | None = None, param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None, n_iter: int = 20, random_state: int | None = None, metadata: dict[str, Any] | None = None, **params: Any) -> SearchSpec
+macroforecast.model_selection.custom_search(name: str, func: Callable[..., Any], *, param_grid: dict[str, Iterable[Any] | Any] | None = None, param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None, n_iter: int = 20, random_state: int | None = None, metadata: dict[str, Any] | None = None, score_aggregation: ScoreAggregation = "mean_split", **params: Any) -> SearchSpec
 ```
 
 #### Description
@@ -66,6 +66,7 @@ Build a user-supplied parameter-search request.
 | `n_iter` | keyword only | `int` | `20` |
 | `random_state` | keyword only | `int \| None` | `None` |
 | `metadata` | keyword only | `dict[str, Any] \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 | `params` | var keyword | `Any` | `required` |
 
 #### Returns

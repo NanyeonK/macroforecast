@@ -11,6 +11,7 @@ from macroforecast.models.specs import ModelSpec, get_model
 from macroforecast.model_selection.optimizers import sample_params
 from macroforecast.model_selection.types import (
     ParamDistribution,
+    ScoreAggregation,
     SearchSpec,
     ValidationSplitterSpec,
 )
@@ -46,6 +47,7 @@ def fixed(
     params: dict[str, Any] | None = None,
     *,
     random_state: int | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     """Evaluate one fixed parameter set without tuning."""
 
@@ -53,6 +55,7 @@ def fixed(
         method="fixed",
         param_grid={key: (value,) for key, value in (params or {}).items()},
         random_state=random_state,
+        score_aggregation=score_aggregation,
     )
 
 
@@ -66,6 +69,7 @@ def search_spec(
     population_size: int | None = None,
     generations: int | None = None,
     mutation_rate: float | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     """Build a SearchSpec from a registered model's owned search space."""
 
@@ -78,6 +82,7 @@ def search_spec(
         population_size=population_size,
         generations=generations,
         mutation_rate=mutation_rate,
+        score_aggregation=score_aggregation,
     )
 
 
@@ -85,6 +90,7 @@ def grid(
     param_grid: dict[str, Iterable[Any] | Any],
     *,
     validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     """Grid-search over explicit parameter values."""
 
@@ -92,6 +98,7 @@ def grid(
         method="grid",
         param_grid={key: _as_tuple(value) for key, value in param_grid.items()},
         validation_splitter=validation_splitter,
+        score_aggregation=score_aggregation,
     )
 
 
@@ -100,6 +107,7 @@ def random_search(
     *,
     n_iter: int = 20,
     random_state: int | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     """Seeded random search over parameter distributions."""
 
@@ -111,6 +119,7 @@ def random_search(
         },
         n_iter=n_iter,
         random_state=random_state,
+        score_aggregation=score_aggregation,
     )
 
 
@@ -118,13 +127,14 @@ def cv_path(
     *,
     param: str = "alpha",
     values: Iterable[Any] | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     """Evaluate an ordered one-parameter path, commonly lasso/ridge alpha values."""
 
     path_values = (
         tuple(values) if values is not None else (0.001, 0.01, 0.1, 1.0, 10.0, 100.0)
     )
-    spec = grid({param: path_values})
+    spec = grid({param: path_values}, score_aggregation=score_aggregation)
     spec.method = "cv_path"
     spec.metadata["path_param"] = param
     return spec
@@ -135,10 +145,16 @@ def bayesian_search(
     *,
     n_iter: int = 20,
     random_state: int | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     """Sequential Gaussian-process Bayesian search request."""
 
-    spec = random_search(param_distributions, n_iter=n_iter, random_state=random_state)
+    spec = random_search(
+        param_distributions,
+        n_iter=n_iter,
+        random_state=random_state,
+        score_aggregation=score_aggregation,
+    )
     spec.method = "bayesian"
     spec.metadata["optimizer"] = "gaussian_process_expected_improvement"
     return spec
@@ -151,6 +167,7 @@ def genetic_search(
     generations: int = 4,
     mutation_rate: float = 0.2,
     random_state: int | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     """Lightweight genetic-style stochastic search over parameter distributions."""
 
@@ -170,6 +187,7 @@ def genetic_search(
         population_size=population_size,
         generations=generations,
         mutation_rate=mutation_rate,
+        score_aggregation=score_aggregation,
     )
 
 
@@ -182,6 +200,7 @@ def custom_search(
     n_iter: int = 20,
     random_state: int | None = None,
     metadata: dict[str, Any] | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
     **params: Any,
 ) -> SearchSpec:
     """Build a user-supplied parameter-search request."""
@@ -210,6 +229,7 @@ def custom_search(
         custom_func=func,
         custom_params=dict(params),
         metadata=custom_metadata,
+        score_aggregation=score_aggregation,
     )
 
 
@@ -222,6 +242,7 @@ def _search_from_model(
     population_size: int | None,
     generations: int | None,
     mutation_rate: float | None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
     if model_spec is None:
         return fixed(random_state=random_state)
@@ -229,27 +250,33 @@ def _search_from_model(
     search_space: dict[str, Any] = dict(space)
     method_name = _normalize_method(method or model_spec.default_search_method)
     if not search_space:
-        spec = fixed(random_state=random_state)
+        spec = fixed(random_state=random_state, score_aggregation=score_aggregation)
     elif method_name == "cv_path":
         if len(search_space) != 1:
             raise ValueError(
                 "cv_path requires exactly one tunable parameter in the model search space"
             )
         param, values = next(iter(search_space.items()))
-        spec = cv_path(param=param, values=values)
+        spec = cv_path(
+            param=param,
+            values=values,
+            score_aggregation=score_aggregation,
+        )
     elif method_name == "grid":
-        spec = grid(search_space)
+        spec = grid(search_space, score_aggregation=score_aggregation)
     elif method_name == "random":
         spec = random_search(
             search_space,
             n_iter=20 if n_iter is None else n_iter,
             random_state=random_state,
+            score_aggregation=score_aggregation,
         )
     elif method_name == "bayesian":
         spec = bayesian_search(
             search_space,
             n_iter=20 if n_iter is None else n_iter,
             random_state=random_state,
+            score_aggregation=score_aggregation,
         )
     elif method_name == "genetic":
         spec = genetic_search(
@@ -258,6 +285,7 @@ def _search_from_model(
             generations=4 if generations is None else generations,
             mutation_rate=0.2 if mutation_rate is None else mutation_rate,
             random_state=random_state,
+            score_aggregation=score_aggregation,
         )
     else:
         raise ValueError(f"Unknown model search method {method_name!r}")

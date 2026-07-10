@@ -8,7 +8,12 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.model_selection.runner import evaluate_candidate
-from macroforecast.model_selection.types import ParamDistribution, SearchSpec, SearchTrial
+from macroforecast.model_selection.types import (
+    ParamDistribution,
+    ScoreAggregation,
+    SearchSpec,
+    SearchTrial,
+)
 from macroforecast.window import Split
 
 
@@ -32,6 +37,8 @@ def run_genetic(
     rng: np.random.Generator,
     *,
     maximize: bool,
+    fold_ids: list[int] | tuple[int, ...] | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> list[SearchTrial]:
     """Run lightweight genetic search over parameter distributions."""
 
@@ -41,7 +48,18 @@ def run_genetic(
     for _ in range(spec.generations):
         generation_rows = []
         for params in population:
-            row = evaluate_candidate(model, X, y, splits, metric_fn, fixed_params, params, trial)
+            row = evaluate_candidate(
+                model,
+                X,
+                y,
+                splits,
+                metric_fn,
+                fixed_params,
+                params,
+                trial,
+                fold_ids=fold_ids,
+                score_aggregation=score_aggregation,
+            )
             trial += 1
             rows.append(row)
             if row.status == "ok":
@@ -79,6 +97,8 @@ def run_bayesian(
     rng: np.random.Generator,
     *,
     maximize: bool,
+    fold_ids: list[int] | tuple[int, ...] | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> tuple[list[SearchTrial], dict[str, Any]]:
     """Run a sampled-pool Gaussian-process expected-improvement optimizer."""
 
@@ -104,7 +124,20 @@ def run_bayesian(
                 maximize=maximize,
             )
         seen.add(candidate_key(params))
-        rows.append(evaluate_candidate(model, X, y, splits, metric_fn, fixed_params, params, trial))
+        rows.append(
+            evaluate_candidate(
+                model,
+                X,
+                y,
+                splits,
+                metric_fn,
+                fixed_params,
+                params,
+                trial,
+                fold_ids=fold_ids,
+                score_aggregation=score_aggregation,
+            )
+        )
     return rows, metadata
 
 

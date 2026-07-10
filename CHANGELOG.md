@@ -5,6 +5,15 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `preprocessing`, `model_selection`, docs/tests (feature, ADD5 nan handling +
+  CV aggregation): added opt-in `nan_policy="zero_after_standardize"` for
+  `standardize_panel(...)`, with `standardize_nan_fill=0.0` as an alias, to
+  replace non-finite standardized predictor entries after leak-free
+  standardization. Added `score_aggregation="mean_fold"` for CV scoring so
+  emitted validation splits can be pooled within logical folds before averaging
+  fold MSEs; `mean_split` remains the default. Defaults for both options remain
+  unchanged, including default metadata/trial-table shape and non-finite
+  propagation.
 - `preprocessing`, `forecasting/preprocessing_stage.py`, docs/tests (feature,
   ADD4 leak-free standardization scope): added
   `standardize_scope="origin_available_predictors"` for opt-in predictor-only

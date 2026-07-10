@@ -701,7 +701,7 @@ Qualified name: `macroforecast.preprocessing.preprocess.standardize_panel`
 #### Signature
 
 ```python
-macroforecast.preprocessing.standardize_panel(panel: pd.DataFrame, *, method: str = "zscore", ddof: int = 0, standardize_scope: str = "fit_window", available: pd.Index | Sequence[Any] | None = None, columns: str | Sequence[str] = "all", predictors: str | Sequence[str] = "all", target: str | None = None, targets: Sequence[str] | None = None) -> pd.DataFrame
+macroforecast.preprocessing.standardize_panel(panel: pd.DataFrame, *, method: str = "zscore", ddof: int = 0, standardize_scope: str = "fit_window", available: pd.Index | Sequence[Any] | None = None, columns: str | Sequence[str] = "all", predictors: str | Sequence[str] = "all", target: str | None = None, targets: Sequence[str] | None = None, nan_policy: "Literal['propagate', 'zero_after_standardize']" = "propagate", standardize_nan_fill: float | None = None) -> pd.DataFrame
 ```
 
 #### Description
@@ -721,6 +721,8 @@ Standardize numeric columns with fitted parameters.
 | `predictors` | keyword only | `str \| Sequence[str]` | `"all"` |
 | `target` | keyword only | `str \| None` | `None` |
 | `targets` | keyword only | `Sequence[str] \| None` | `None` |
+| `nan_policy` | keyword only | `Literal['propagate', 'zero_after_standardize']` | `"propagate"` |
+| `standardize_nan_fill` | keyword only | `float \| None` | `None` |
 
 #### Returns
 
