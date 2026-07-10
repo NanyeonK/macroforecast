@@ -345,13 +345,57 @@ def standardize_panel(
     *,
     method: str = "zscore",
     ddof: int = 0,
+    standardize_scope: str = "fit_window",
+    available: pd.Index | Sequence[Any] | None = None,
+    columns: str | Sequence[str] = "all",
+    predictors: str | Sequence[str] = "all",
+    target: str | None = None,
+    targets: Sequence[str] | None = None,
 ) -> pd.DataFrame:
-    """Standardize numeric columns with full-panel fitted parameters."""
+    """Standardize numeric columns with fitted parameters."""
 
+    scope = _normalize_standardize_scope(standardize_scope)
     method_value = _normalize_standardize(method)
     if method_value == "none":
         return panel.copy()
-    return standardize_clean(panel, method=method_value, ddof=ddof)
+    if (
+        scope == "fit_window"
+        and available is None
+        and columns == "all"
+        and predictors == "all"
+        and target is None
+        and targets is None
+    ):
+        return standardize_clean(panel, method=method_value, ddof=ddof)
+    ddof_value = _normalize_standardize_ddof(ddof)
+    if scope == "fit_window":
+        fit_columns = _resolve_standardize_panel_columns(panel, columns)
+        state = fit_standardization_state(
+            panel.loc[:, fit_columns],
+            method=method_value,
+            ddof=ddof_value,
+        )
+        return apply_standardization_state(panel, state)
+    if available is None:
+        raise ValueError(
+            "standardize_scope='origin_available_predictors' requires available rows"
+        )
+    fit_rows = panel.index.intersection(pd.Index(available))
+    if len(fit_rows) == 0:
+        raise ValueError("available rows select no rows in panel")
+    target_names = _target_column_names(target=target, targets=targets)
+    predictor_columns = _resolve_predictor_standardize_columns(
+        panel,
+        predictors=predictors,
+        targets=target_names,
+        columns=columns,
+    )
+    state = fit_standardization_state(
+        panel.loc[fit_rows, predictor_columns],
+        method=method_value,
+        ddof=ddof_value,
+    )
+    return apply_standardization_state(panel, state)
 
 
 def fred_sd_transform_codes(
@@ -917,6 +961,19 @@ def _normalize_standardize(value: str) -> str:
     return _lookup(value, aliases, "standardize")
 
 
+def _normalize_standardize_scope(value: str) -> str:
+    aliases = {
+        "fit_window": "fit_window",
+        "fit": "fit_window",
+        "train_window": "fit_window",
+        "estimation_window": "fit_window",
+        "origin_available_predictors": "origin_available_predictors",
+        "available_predictors": "origin_available_predictors",
+        "origin_predictors": "origin_available_predictors",
+    }
+    return _lookup(value, aliases, "standardize_scope")
+
+
 def _normalize_standardize_ddof(value: int) -> int:
     out = int(value)
     if out < 0:
@@ -962,6 +1019,106 @@ def _resolve_standardize_columns(
     missing = [column for column in selected if column not in panel.columns]
     if missing:
         raise ValueError(f"standardize_columns are not in the panel: {missing}")
+    return selected
+
+
+def _resolve_standardize_panel_columns(
+    panel: pd.DataFrame,
+    columns: str | Sequence[str],
+) -> list[str]:
+    if isinstance(columns, str):
+        key = columns.lower()
+        if key == "all":
+            selected = [str(column) for column in panel.columns]
+        elif key in {"predictors", "x", "targets", "target", "y"}:
+            raise ValueError(
+                "standardize_panel() needs explicit predictors/targets metadata "
+                "for semantic standardize columns"
+            )
+        else:
+            raise ValueError(
+                "columns must be 'all' or a sequence of column names for "
+                "standardize_panel()"
+            )
+    else:
+        selected = [str(column) for column in columns]
+    if not selected:
+        raise ValueError("columns selects no columns")
+    missing = [column for column in selected if column not in panel.columns]
+    if missing:
+        raise ValueError(f"columns are not in the panel: {missing}")
+    return selected
+
+
+def _target_column_names(
+    *,
+    target: str | None,
+    targets: Sequence[str] | None,
+) -> set[str]:
+    names: set[str] = set()
+    if target:
+        names.add(str(target))
+    if targets:
+        names.update(str(column) for column in targets)
+    return names
+
+
+def _resolve_predictor_standardize_columns(
+    panel: pd.DataFrame,
+    *,
+    predictors: str | Sequence[str],
+    targets: set[str],
+    columns: str | Sequence[str],
+) -> list[str]:
+    if isinstance(predictors, str):
+        key = predictors.lower()
+        if key != "all":
+            raise ValueError("predictors must be 'all' or a sequence of column names")
+        if not targets:
+            raise ValueError(
+                "origin_available_predictors standardization requires target "
+                "metadata when predictors='all'"
+            )
+        predictor_pool = [str(column) for column in panel.columns if str(column) not in targets]
+    else:
+        predictor_pool = [str(column) for column in predictors]
+    if not predictor_pool:
+        raise ValueError("origin_available_predictors selects no predictor columns")
+    target_predictors = sorted(set(predictor_pool) & targets)
+    if target_predictors:
+        raise ValueError(
+            "origin_available_predictors cannot standardize target columns: "
+            f"{target_predictors}"
+        )
+    if isinstance(columns, str):
+        key = columns.lower()
+        if key in {"all", "predictors", "x"}:
+            selected = predictor_pool
+        elif key in {"targets", "target", "y"}:
+            raise ValueError("origin_available_predictors cannot standardize targets")
+        else:
+            raise ValueError(
+                "columns must be 'all', 'predictors', or a sequence of predictor names"
+            )
+    else:
+        selected = [str(column) for column in columns]
+        target_columns = sorted(set(selected) & targets)
+        if target_columns:
+            raise ValueError(
+                "origin_available_predictors cannot standardize target columns: "
+                f"{target_columns}"
+            )
+        non_predictors = sorted(set(selected) - set(predictor_pool))
+        if non_predictors:
+            raise ValueError(
+                "origin_available_predictors columns must be predictor columns: "
+                f"{non_predictors}"
+            )
+    if not selected:
+        raise ValueError("origin_available_predictors selects no predictor columns")
+    missing = [column for column in selected if column not in panel.columns]
+    if missing:
+        raise ValueError(f"predictor columns are not in the panel: {missing}")
     return selected
 
 

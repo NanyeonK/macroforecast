@@ -9,7 +9,10 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.data import DataBundle, attach_metadata, panel_info
-from macroforecast.preprocessing.clean import apply_standardization_state
+from macroforecast.preprocessing.clean import (
+    apply_standardization_state,
+    fit_standardization_state,
+)
 from macroforecast.preprocessing.preprocess import (
     _coerce_input,
     _callable_name,
@@ -17,7 +20,12 @@ from macroforecast.preprocessing.preprocess import (
     _json_ready,
     _normalize_impute,
     _normalize_outliers,
+    _normalize_standardize,
+    _normalize_standardize_ddof,
+    _normalize_standardize_scope,
+    _resolve_predictor_standardize_columns,
     reprocess,
+    _target_column_names,
 )
 from macroforecast.preprocessing.types import PreprocessedData, PreprocessInput
 
@@ -46,6 +54,8 @@ _REPROCESS_OPTIONS = {
     "standardize",
     "standardize_columns",
     "standardize_ddof",
+    "standardize_scope",
+    "include_current_predictor_rows",
     "frame",
     "custom_steps",
     "warn_metadata",
@@ -59,6 +69,13 @@ class PreprocessSpec:
     """Reusable preprocessing callable for window-local forecasting runners."""
 
     options: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "options",
+            _normalize_preprocess_spec_options(self.options),
+        )
 
     def fit(
         self,
@@ -78,8 +95,12 @@ class PreprocessSpec:
             _warn_fit_window_custom_steps(self)
         fit_options = _reprocess_options(self.options)
         fit_options.setdefault("warn_metadata", False)
+        standardize_scope = _effective_standardize_scope(self.options)
+        if _uses_origin_predictor_standardization(self.options):
+            fit_options["standardize"] = "none"
         processed = reprocess(data, metadata=metadata, **fit_options)
         processed = _apply_custom_preprocess_steps(processed, custom_steps)
+        processed = _record_standardize_scope(processed, self.options)
         state_panel: pd.DataFrame | None = None
         outlier_state: dict[str, Any] | None = None
         impute_state: dict[str, Any] | None = None
@@ -98,6 +119,8 @@ class PreprocessSpec:
             "fit_period": _panel_period(base.panel),
             "processed_fit_period": _panel_period(processed.panel),
         }
+        if _should_record_standardize_scope(self.options):
+            stage["standardize_scope"] = standardize_scope
         processed_panel = processed.panel.copy()
         processed_metadata = attach_metadata(processed.metadata, "preprocess_spec", stage)
         processed_panel.attrs["macroforecast_metadata"] = processed_metadata
@@ -208,16 +231,84 @@ class FittedPreprocessor:
         custom_steps = _normalize_custom_steps(self.spec.options.get("custom_steps"))
         transform_options = _reprocess_options(self.spec.options)
         transform_options.setdefault("warn_metadata", False)
-        if self.standardization_state is not None:
+        origin_predictor_standardization = _uses_origin_predictor_standardization(
+            self.spec.options
+        )
+        if self.standardization_state is not None or origin_predictor_standardization:
             transform_options["standardize"] = "none"
+        if origin_predictor_standardization and available is None:
+            raise ValueError(
+                "standardize_scope='origin_available_predictors' requires "
+                "available rows during transform"
+            )
+
+        def _run_unstandardized(frame: pd.DataFrame) -> PreprocessedData:
+            return reprocess((frame, combined_metadata), **transform_options)
+
+        def _finish_run(
+            data: PreprocessedData,
+            state: dict[str, Any] | None,
+            *,
+            fitted_on: str,
+        ) -> PreprocessedData:
+            out = _apply_fitted_standardization_state(
+                data,
+                state,
+                fitted_on=fitted_on,
+            )
+            out = _record_standardize_scope(out, self.spec.options)
+            return _apply_custom_preprocess_steps(out, custom_steps)
 
         def _run(frame: pd.DataFrame) -> PreprocessedData:
             out = reprocess((frame, combined_metadata), **transform_options)
-            out = _apply_fitted_standardization_state(out, self.standardization_state)
-            return _apply_custom_preprocess_steps(out, custom_steps)
+            return _finish_run(
+                out,
+                self.standardization_state,
+                fitted_on="train_window",
+            )
 
-        processed = _run(combined)
-        merged_panel = processed.panel
+        if origin_predictor_standardization:
+            processed_raw = _run_unstandardized(combined)
+            available_labels_for_steps = pd.Index(source_history.index).union(
+                pd.Index(available)
+            )
+            available_rows = combined.index.intersection(available_labels_for_steps)
+            if len(available_rows) and len(available_rows) < len(combined.index):
+                processed_available_raw = _run_unstandardized(
+                    combined.loc[available_rows]
+                )
+            else:
+                processed_available_raw = processed_raw
+            state_rows = combined.index.intersection(pd.Index(available))
+            standardization_state = _fit_origin_predictor_standardization_state(
+                processed_available_raw.panel,
+                state_rows=state_rows,
+                base=base,
+                fallback=self.processed_train,
+                options=self.spec.options,
+            )
+            processed = _finish_run(
+                processed_raw,
+                standardization_state,
+                fitted_on="origin_available_predictors",
+            )
+            merged_panel = processed.panel
+            if processed_available_raw is not processed_raw:
+                processed_available = _finish_run(
+                    processed_available_raw,
+                    standardization_state,
+                    fitted_on="origin_available_predictors",
+                )
+                overlap = merged_panel.index.intersection(
+                    processed_available.panel.index
+                )
+                merged_panel = merged_panel.copy()
+                merged_panel.loc[overlap, :] = processed_available.panel.loc[
+                    overlap, merged_panel.columns
+                ]
+        else:
+            processed = _run(combined)
+            merged_panel = processed.panel
         # Leak-free origin_available: data-dependent steps (outlier thresholds,
         # EM/iterative imputation) for origin-available rows are recomputed using
         # only origin-available rows (training history + the rows observable at
@@ -226,7 +317,7 @@ class FittedPreprocessor:
         # flagged feature values of any origin-available row. Post-origin rows
         # keep the full-panel reconstruction (they are never used as training
         # features; the runner's target-availability mask excludes them).
-        if available is not None:
+        if available is not None and not origin_predictor_standardization:
             available_labels = pd.Index(source_history.index).union(pd.Index(available))
             available_rows = combined.index.intersection(available_labels)
             if len(available_rows) and len(available_rows) < len(combined.index):
@@ -238,23 +329,32 @@ class FittedPreprocessor:
                 ]
         selected = merged_panel.reindex(base.panel.index)
         selected_metadata = dict(processed.metadata)
+        transform_stage = {
+            "options": _metadata_options(self.spec.options),
+            "preprocessing_scope": "origin_available",
+            "fit_rows": int(self.fit_panel.shape[0]),
+            "transform_rows": int(base.panel.shape[0]),
+            "history_rows": int(source_history.shape[0]),
+            "fit_period": _panel_period(self.fit_panel),
+            "history_period": _panel_period(source_history),
+            "transform_period": _panel_period(base.panel),
+            "output_period": _panel_period(selected),
+            "input_panel": panel_info(DataBundle(base.panel, base.metadata)),
+            "output_panel": panel_info(DataBundle(selected, selected_metadata)),
+            "standardize_refit": bool(origin_predictor_standardization),
+        }
+        if _should_record_standardize_scope(self.spec.options):
+            transform_stage["standardize_scope"] = _effective_standardize_scope(
+                self.spec.options
+            )
+        if origin_predictor_standardization and available is not None:
+            transform_stage["standardize_fit_rows"] = int(
+                len(combined.index.intersection(pd.Index(available)))
+            )
         selected_metadata = attach_metadata(
             selected_metadata,
             "preprocess_transform",
-            {
-                "options": _metadata_options(self.spec.options),
-                "preprocessing_scope": "origin_available",
-                "fit_rows": int(self.fit_panel.shape[0]),
-                "transform_rows": int(base.panel.shape[0]),
-                "history_rows": int(source_history.shape[0]),
-                "fit_period": _panel_period(self.fit_panel),
-                "history_period": _panel_period(source_history),
-                "transform_period": _panel_period(base.panel),
-                "output_period": _panel_period(selected),
-                "input_panel": panel_info(DataBundle(base.panel, base.metadata)),
-                "output_panel": panel_info(DataBundle(selected, selected_metadata)),
-                "standardize_refit": False,
-            },
+            transform_stage,
         )
         selected.attrs["macroforecast_metadata"] = selected_metadata
         return PreprocessedData(
@@ -444,6 +544,109 @@ def _standardization_state(processed: PreprocessedData) -> dict[str, Any] | None
     return None
 
 
+def _normalize_preprocess_spec_options(options: Mapping[str, Any]) -> dict[str, Any]:
+    out = dict(options)
+    include_current = out.pop("include_current_predictor_rows", None)
+    if include_current is not None and not isinstance(include_current, bool):
+        raise TypeError("include_current_predictor_rows must be a bool")
+    if "standardize_scope" in out:
+        scope = _normalize_standardize_scope(out["standardize_scope"])
+        out["standardize_scope"] = scope
+    else:
+        scope = "fit_window"
+    if include_current is None:
+        return out
+    requested = "origin_available_predictors" if include_current else "fit_window"
+    if "standardize_scope" in out and scope != requested:
+        raise ValueError(
+            "include_current_predictor_rows conflicts with standardize_scope"
+        )
+    if include_current:
+        out["standardize_scope"] = "origin_available_predictors"
+    return out
+
+
+def _effective_standardize_scope(options: Mapping[str, Any]) -> str:
+    return _normalize_standardize_scope(options.get("standardize_scope", "fit_window"))
+
+
+def _should_record_standardize_scope(options: Mapping[str, Any]) -> bool:
+    return "standardize_scope" in options
+
+
+def _uses_origin_predictor_standardization(options: Mapping[str, Any]) -> bool:
+    return (
+        _effective_standardize_scope(options) == "origin_available_predictors"
+        and _normalize_standardize(str(options.get("standardize", "none"))) != "none"
+    )
+
+
+def _record_standardize_scope(
+    data: PreprocessedData,
+    options: Mapping[str, Any],
+) -> PreprocessedData:
+    if not _should_record_standardize_scope(options):
+        return data
+    metadata = dict(data.metadata)
+    preprocessing_stage = dict(metadata.get("preprocessing", {}))
+    preprocessing_stage["standardize_scope"] = _effective_standardize_scope(options)
+    metadata = attach_metadata(metadata, "preprocessing", preprocessing_stage)
+    panel = data.panel.copy()
+    panel.attrs["macroforecast_metadata"] = metadata
+    return PreprocessedData(
+        panel=panel,
+        metadata=metadata,
+        target=data.target,
+        targets=data.targets,
+        horizons=data.horizons,
+        start=data.start,
+        end=data.end,
+        predictors=data.predictors,
+        steps=data.steps,
+    )
+
+
+def _fit_origin_predictor_standardization_state(
+    panel: pd.DataFrame,
+    *,
+    state_rows: pd.Index,
+    base: Any,
+    fallback: PreprocessedData,
+    options: Mapping[str, Any],
+) -> dict[str, Any]:
+    fit_rows = panel.index.intersection(state_rows)
+    if len(fit_rows) == 0:
+        raise ValueError(
+            "origin_available_predictors standardization has no available rows "
+            "after preprocessing"
+        )
+    target_names = _origin_target_names(base, fallback)
+    predictors = base.predictors
+    if predictors == "all" and fallback.predictors != "all":
+        predictors = fallback.predictors
+    columns = _resolve_predictor_standardize_columns(
+        panel,
+        predictors=predictors,
+        targets=target_names,
+        columns=options.get("standardize_columns", "all"),
+    )
+    state = fit_standardization_state(
+        panel.loc[fit_rows, columns],
+        method=_normalize_standardize(str(options.get("standardize", "none"))),
+        ddof=_normalize_standardize_ddof(int(options.get("standardize_ddof", 0))),
+    )
+    state["fitted_on"] = "origin_available_predictors"
+    state["fit_rows"] = int(len(fit_rows))
+    state["fit_period"] = _panel_period(panel.loc[fit_rows])
+    return state
+
+
+def _origin_target_names(base: Any, fallback: PreprocessedData) -> set[str]:
+    names = _target_column_names(target=base.target, targets=base.targets)
+    names.update(_target_column_names(target=fallback.target, targets=fallback.targets))
+    return names
+
+
 def _normalize_preprocessing_scope(value: str) -> str:
     aliases = {
         "origin_available": "origin_available",
@@ -484,7 +687,12 @@ def _validate_fit_window_options(options: dict[str, Any]) -> None:
 
 
 def _reprocess_options(options: Mapping[str, Any]) -> dict[str, Any]:
-    return {key: value for key, value in dict(options).items() if key != "custom_steps"}
+    spec_only = {
+        "custom_steps",
+        "standardize_scope",
+        "include_current_predictor_rows",
+    }
+    return {key: value for key, value in dict(options).items() if key not in spec_only}
 
 
 def _metadata_options(options: Mapping[str, Any]) -> dict[str, Any]:
@@ -508,6 +716,8 @@ def _warn_fit_window_custom_steps(spec: PreprocessSpec) -> None:
 def _apply_fitted_standardization_state(
     data: PreprocessedData,
     state: dict[str, Any] | None,
+    *,
+    fitted_on: str = "train_window",
 ) -> PreprocessedData:
     if state is None:
         return data
@@ -520,6 +730,7 @@ def _apply_fitted_standardization_state(
     preprocessing_stage["steps"] = _replace_standardize_step(
         preprocessing_stage.get("steps", data.steps),
         state,
+        fitted_on=fitted_on,
     )
     metadata = attach_metadata(metadata, "preprocessing", preprocessing_stage)
     panel.attrs["macroforecast_metadata"] = metadata
@@ -791,7 +1002,12 @@ def _apply_impute_state(
     raise ValueError(f"unknown imputation method {method!r}")
 
 
-def _replace_standardize_step(steps: Any, state: dict[str, Any]) -> list[dict[str, Any]]:
+def _replace_standardize_step(
+    steps: Any,
+    state: dict[str, Any],
+    *,
+    fitted_on: str = "train_window",
+) -> list[dict[str, Any]]:
     updated: list[dict[str, Any]] = []
     found = False
     for step in (steps if isinstance(steps, (list, tuple)) else ()):
@@ -802,7 +1018,7 @@ def _replace_standardize_step(steps: Any, state: dict[str, Any]) -> list[dict[st
                     "method": state.get("method"),
                     "columns": list(state.get("columns", ())),
                     "ddof": int(state.get("ddof", 0)),
-                    "fitted_on": "train_window",
+                    "fitted_on": fitted_on,
                 }
             )
             found = True
@@ -814,7 +1030,7 @@ def _replace_standardize_step(steps: Any, state: dict[str, Any]) -> list[dict[st
                 "method": state.get("method"),
                 "columns": list(state.get("columns", ())),
                 "ddof": int(state.get("ddof", 0)),
-                "fitted_on": "train_window",
+                "fitted_on": fitted_on,
             }
         )
     return updated
@@ -831,6 +1047,10 @@ def _fit_window_metadata(
     selected_metadata = dict(metadata)
     preprocessing_stage = dict(selected_metadata.get("preprocessing", {}))
     preprocessing_stage["preprocessing_scope"] = "fit_window"
+    if _should_record_standardize_scope(fit.spec.options):
+        preprocessing_stage["standardize_scope"] = _effective_standardize_scope(
+            fit.spec.options
+        )
     preprocessing_stage["outlier_state"] = _metadata_state(fit.outlier_state)
     preprocessing_stage["impute_state"] = _metadata_state(fit.impute_state)
     if fit.standardization_state is not None:
@@ -842,24 +1062,25 @@ def _fit_window_metadata(
             fit.standardization_state,
         )
     selected_metadata = attach_metadata(selected_metadata, "preprocessing", preprocessing_stage)
-    return attach_metadata(
-        selected_metadata,
-        "preprocess_transform",
-        {
-            "options": dict(fit.spec.options),
-            "preprocessing_scope": "fit_window",
-            "fit_rows": int(fit.fit_panel.shape[0]),
-            "transform_rows": int(transform_panel.shape[0]),
-            "history_rows": int(history.shape[0]),
-            "fit_period": _panel_period(fit.fit_panel),
-            "history_period": _panel_period(history),
-            "transform_period": _panel_period(transform_panel),
-            "output_period": _panel_period(output),
-            "input_panel": panel_info(DataBundle(transform_panel, fit.fit_metadata)),
-            "output_panel": panel_info(DataBundle(output, metadata)),
-            "stateful_steps": ["outliers", "impute", "standardize"],
-        },
-    )
+    transform_stage: dict[str, Any] = {
+        "options": dict(fit.spec.options),
+        "preprocessing_scope": "fit_window",
+        "fit_rows": int(fit.fit_panel.shape[0]),
+        "transform_rows": int(transform_panel.shape[0]),
+        "history_rows": int(history.shape[0]),
+        "fit_period": _panel_period(fit.fit_panel),
+        "history_period": _panel_period(history),
+        "transform_period": _panel_period(transform_panel),
+        "output_period": _panel_period(output),
+        "input_panel": panel_info(DataBundle(transform_panel, fit.fit_metadata)),
+        "output_panel": panel_info(DataBundle(output, metadata)),
+        "stateful_steps": ["outliers", "impute", "standardize"],
+    }
+    if _should_record_standardize_scope(fit.spec.options):
+        transform_stage["standardize_scope"] = _effective_standardize_scope(
+            fit.spec.options
+        )
+    return attach_metadata(selected_metadata, "preprocess_transform", transform_stage)
 
 
 def _metadata_state(state: dict[str, Any] | None) -> dict[str, Any] | None:

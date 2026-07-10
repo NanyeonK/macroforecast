@@ -5,6 +5,14 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `preprocessing`, `forecasting/preprocessing_stage.py`, docs/tests (feature,
+  ADD4 leak-free standardization scope): added
+  `standardize_scope="origin_available_predictors"` for opt-in predictor-only
+  standardization fitted on rows observable at the forecast origin, including
+  the current predictor row and excluding post-origin rows plus realized target
+  values. Existing omitted-scope `fit_window`/`origin_available` behavior and
+  metadata remain unchanged; preprocessing cache identities now separate the
+  configured standardization scope.
 - `models/linear.py`, `models/specs.py`, docs/tests (feature, ADD3 PLS score
   projection): added opt-in `score_projection="x_weights_raw"` to the existing
   `pls` model, using fitted PLS x-weights to project factor scores before the

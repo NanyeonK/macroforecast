@@ -75,6 +75,21 @@ def _with_vintage_cache_tag(cache_key: Any, vintage_id: Any | None) -> Any:
     return tuple(cache_key) + ("vintage", vintage_id)
 
 
+def _with_standardize_scope_cache_tag(
+    cache_key: Any | None,
+    preprocessing: PreprocessSpec,
+) -> Any | None:
+    if cache_key is None:
+        return None
+    options = getattr(preprocessing, "options", {})
+    if not isinstance(options, Mapping) or "standardize_scope" not in options:
+        return cache_key
+    return tuple(cache_key) + (
+        "standardize_scope",
+        str(options["standardize_scope"]),
+    )
+
+
 def _origin_pos_for_store_key(cache_key: Any, item: Mapping[str, Any]) -> int | None:
     """Resolve the integer ``origin_pos`` used in the on-disk store key.
 
@@ -124,6 +139,7 @@ def _prepare_origin_panel(
             metadata=None,
             panel_metadata=dict(panel.attrs.get("macroforecast_metadata", {})),
         )
+    scoped_cache_key = _with_standardize_scope_cache_tag(cache_key, preprocessing)
     # Cross-arm reuse of the TRANSFORMED panel. The leak-free origin_available
     # transform re-runs the (expensive) EM imputation on the apply window, and the
     # output panel depends only on (panel, the origin's apply/available labels,
@@ -133,9 +149,9 @@ def _prepare_origin_panel(
     # removes the dominant per-arm EM-transform redundancy (the fit cache alone
     # only saved the cheaper .fit(), not the per-origin transform).
     prepared_key = (
-        ("prepared",) + tuple(cache_key) + (int(bool(include_target_pos)),
+        ("prepared",) + tuple(scoped_cache_key) + (int(bool(include_target_pos)),
             int(_origin_target_pos(panel.index, item)))
-        if (preprocessing_cache is not None and cache_key is not None)
+        if (preprocessing_cache is not None and scoped_cache_key is not None)
         else None
     )
     if (
@@ -153,10 +169,10 @@ def _prepare_origin_panel(
     if (
         fitted_preprocessing is None
         and preprocessing_cache is not None
-        and cache_key is not None
-        and cache_key in preprocessing_cache
+        and scoped_cache_key is not None
+        and scoped_cache_key in preprocessing_cache
     ):
-        candidate = preprocessing_cache[cache_key]
+        candidate = preprocessing_cache[scoped_cache_key]
         if isinstance(candidate, FittedPreprocessor):
             fitted_preprocessing = candidate
     # Second cache tier: the on-disk content-addressed store. Consulted ONLY on an
@@ -195,7 +211,7 @@ def _prepare_origin_panel(
                 if isinstance(loaded, FittedPreprocessor):
                     fitted_preprocessing = loaded
                     if preprocessing_cache is not None:
-                        preprocessing_cache[cache_key] = loaded
+                        preprocessing_cache[scoped_cache_key] = loaded
     if fitted_preprocessing is None:
         fit_panel = stage_panel(panel, item, preprocessing_policy)
         fit_policy = (
@@ -207,8 +223,8 @@ def _prepare_origin_panel(
             _preprocessor_fit_input(fit_panel, features),
             policy=fit_policy,
         )
-        if preprocessing_cache is not None and cache_key is not None:
-            preprocessing_cache[cache_key] = fitted
+        if preprocessing_cache is not None and scoped_cache_key is not None:
+            preprocessing_cache[scoped_cache_key] = fitted
         # Persist the freshly computed fit to the on-disk store so other
         # processes / later run() calls reuse it instead of recomputing.
         # (store_key is only set when preprocessing_store is not None; the explicit
@@ -248,7 +264,11 @@ def _prepare_origin_panel(
         # the origin row exactly as the whole-window transform would. Numerical
         # identity vs the un-split whole-window path is pinned by the serial==parallel
         # golden -- the parallel backend (preprocessing_cache=None) keeps that path.
-        base_key = ("prepared_base",) + tuple(cache_key) if cache_key is not None else None
+        base_key = (
+            ("prepared_base",) + tuple(scoped_cache_key)
+            if scoped_cache_key is not None
+            else None
+        )
         if base_key is None:
             apply_panel = panel.reindex(apply_labels).loc[:, cols]
             transformed = fitted.transform(
@@ -271,7 +291,7 @@ def _prepare_origin_panel(
                         base_store_key = preprocessing_store.frame_key(
                             preprocessing,
                             target=str(target),
-                            cache_key=cache_key,
+                            cache_key=scoped_cache_key,
                             kind="prepared_base",
                         )
                     except UndigestiblePreprocessorSpec as exc:

@@ -25,7 +25,7 @@ Guide context: [../guide/concepts/preprocessing.md](../guide/concepts/preprocess
 | `handle_tcode_lag` | function | Handle missing values introduced by stationarity transforms. |
 | `handle_outliers` | function | Apply one outlier policy to a panel. |
 | `impute_missing` | function | Fill missing panel values with the selected imputation method. |
-| `standardize_panel` | function | Standardize numeric columns with full-panel fitted parameters. |
+| `standardize_panel` | function | Standardize numeric columns with fitted parameters. |
 | `handle_frame_edges` | function | Handle remaining unbalanced panel edges. |
 | `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | data | dict() -> new empty dictionary |
 | `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | data | dict() -> new empty dictionary |
@@ -701,12 +701,12 @@ Qualified name: `macroforecast.preprocessing.preprocess.standardize_panel`
 #### Signature
 
 ```python
-macroforecast.preprocessing.standardize_panel(panel: pd.DataFrame, *, method: str = "zscore", ddof: int = 0) -> pd.DataFrame
+macroforecast.preprocessing.standardize_panel(panel: pd.DataFrame, *, method: str = "zscore", ddof: int = 0, standardize_scope: str = "fit_window", available: pd.Index | Sequence[Any] | None = None, columns: str | Sequence[str] = "all", predictors: str | Sequence[str] = "all", target: str | None = None, targets: Sequence[str] | None = None) -> pd.DataFrame
 ```
 
 #### Description
 
-Standardize numeric columns with full-panel fitted parameters.
+Standardize numeric columns with fitted parameters.
 
 #### Parameters
 
@@ -715,6 +715,12 @@ Standardize numeric columns with full-panel fitted parameters.
 | `panel` | positional or keyword | `pd.DataFrame` | `required` |
 | `method` | keyword only | `str` | `"zscore"` |
 | `ddof` | keyword only | `int` | `0` |
+| `standardize_scope` | keyword only | `str` | `"fit_window"` |
+| `available` | keyword only | `pd.Index \| Sequence[Any] \| None` | `None` |
+| `columns` | keyword only | `str \| Sequence[str]` | `"all"` |
+| `predictors` | keyword only | `str \| Sequence[str]` | `"all"` |
+| `target` | keyword only | `str \| None` | `None` |
+| `targets` | keyword only | `Sequence[str] \| None` | `None` |
 
 #### Returns
 

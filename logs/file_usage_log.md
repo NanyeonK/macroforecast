@@ -1,5 +1,28 @@
 # File Usage Log
 
+## 2026-07-10 - ADD4 leak-free predictor standardization scope
+
+- `macroforecast/preprocessing/specs.py`: added canonical
+  `standardize_scope="origin_available_predictors"` handling plus
+  `include_current_predictor_rows=True` normalization, deferred fit-time
+  scaling for the new scope, and per-origin predictor-only state fitting from
+  available rows.
+- `macroforecast/preprocessing/preprocess.py`: extended `standardize_panel(...)`
+  with an opt-in origin-available predictor scope while preserving the old
+  full-panel call path by default.
+- `macroforecast/preprocessing/cache.py` and
+  `macroforecast/forecasting/preprocessing_stage.py`: recorded and keyed
+  configured standardization scope so fitted/prepared preprocessing caches do
+  not cross scopes.
+- `tests/preprocessing/test_preprocess.py` and
+  `tests/preprocessing/test_fitted_cache.py`: added leak-proof sentinel,
+  off-path unchanged, direct helper, alias, and cache-scope coverage.
+- `docs/reference/preprocessing.md` and
+  `docs/guide/concepts/preprocessing.md`: regenerated/updated preprocessing
+  docs, including the target-standardization leak divergence.
+- `CHANGELOG.md` and `logs/file_usage_log.md`: recorded this builder
+  file-touch summary.
+
 ## 2026-07-10 - ADD3 pls score projection
 
 - `macroforecast/models/linear.py`: added `score_projection` to `pls`, keeping
