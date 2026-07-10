@@ -68,6 +68,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `alignment_keep_missing` | [`macroforecast.window`](window.md) | function |
 | `analysis` | `macroforecast.analysis` | module |
 | `ar` | [`macroforecast.models`](models.md) | function |
+| `ar_bic` | [`macroforecast.models`](models.md) | function |
 | `arima` | [`macroforecast.models`](models.md) | function |
 | `as_panel` | [`macroforecast.data`](data.md) | function |
 | `assemblage_regression` | [`macroforecast.models`](models.md) | function |

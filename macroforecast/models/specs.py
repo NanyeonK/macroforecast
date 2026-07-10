@@ -47,6 +47,7 @@ from macroforecast.models.spline import mars
 from macroforecast.models.svm import linear_svr, nu_svr, svr
 from macroforecast.models.timeseries import (
     ar,
+    ar_bic,
     naive,
     hist_mean,
     seasonal_naive,
@@ -579,6 +580,15 @@ _AR_SPACES: SearchSpaces = {
     "small": {"n_lag": (1, 2, 4)},
     "standard": {"n_lag": (1, 2, 4, 6, 12)},
     "wide": {"n_lag": (1, 2, 3, 4, 6, 9, 12, 18, 24)},
+}
+
+_AR_BIC_SPACES: SearchSpaces = {
+    "small": {"max_lag": (4, 8, 12)},
+    "standard": {"max_lag": (12,)},
+    "wide": {
+        "max_lag": (6, 12, 18, 24),
+        "criterion": ("aic", "aicc", "bic"),
+    },
 }
 
 # favar's own (n_factors, n_lag) grid -- NOT the shared _FACTOR_SPACES/_AR_SPACES
@@ -2690,6 +2700,60 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         spaces=_AR_SPACES,
         input_kind="supervised",
         description="Univariate autoregression.",
+        selection_method="bic",
+    ),
+    "ar_bic": _spec(
+        "ar_bic",
+        "timeseries",
+        ar_bic,
+        default_params={
+            "min_lag": 1,
+            "max_lag": 12,
+            "criterion": "bic",
+            "include_constant": True,
+            "ic_parameter_count": "standard",
+            "estimator": "ols",
+            "forecast_mode": "iterated",
+            "horizon": 1,
+        },
+        parameters=(
+            _p("min_lag", 1, "int", "Minimum AR lag order considered internally.", False),
+            _p("max_lag", 12, "int", "Maximum AR lag order considered internally."),
+            _p("criterion", "bic", "str", "Lag-selection criterion: aic, aicc, or bic."),
+            _p(
+                "include_constant",
+                True,
+                "bool",
+                "Include an intercept in lag-selection and compatible final fits.",
+                False,
+            ),
+            _p(
+                "ic_parameter_count",
+                "standard",
+                "str",
+                "IC parameter count: standard or lag_square.",
+                False,
+            ),
+            _p(
+                "estimator",
+                "ols",
+                "str",
+                "Final selected-lag backend: ols, yule_walker, burg, or matlab_ar.",
+                False,
+            ),
+            _p(
+                "forecast_mode",
+                "iterated",
+                "str",
+                "Forecast mode: iterated, direct_lag_projection, or coefficient_power.",
+                False,
+            ),
+            _p("horizon", 1, "int", "First forecast step returned by predict().", False),
+        ),
+        spaces=_AR_BIC_SPACES,
+        input_kind="target",
+        backend="internal",
+        description="Target-only AR with internal information-criterion lag selection.",
         selection_method="bic",
     ),
     "arima": _spec(

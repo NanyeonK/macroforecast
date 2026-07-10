@@ -169,6 +169,7 @@ _LAZY_EXPORTS = {
     "albacore_components": ".models",
     "albacore_ranks": ".models",
     "ar": ".models",
+    "ar_bic": ".models",
     "naive": ".models",
     "hist_mean": ".models",
     "seasonal_naive": ".models",

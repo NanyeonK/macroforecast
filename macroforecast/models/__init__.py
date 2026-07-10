@@ -59,6 +59,7 @@ from .specs import (
 from .svm import linear_svr, nu_svr, svr
 from .timeseries import (
     ar,
+    ar_bic,
     naive,
     hist_mean,
     seasonal_naive,
@@ -145,6 +146,7 @@ __all__ = [
     "albacore_components",
     "albacore_ranks",
     "ar",
+    "ar_bic",
     "naive",
     "hist_mean",
     "seasonal_naive",

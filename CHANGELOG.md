@@ -5,6 +5,13 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/timeseries.py`, `models/specs.py`, docs/tests (feature, ADD2 AR
+  lane): added the general target-only `ar_bic` model with internal
+  AIC/AICc/BIC lag selection, selectable IC parameter counts, OLS/Yule-Walker/
+  Burg/internal MATLAB-compatible AR backends, and iterated/direct-lag/
+  coefficient-power forecast modes. The model does not perform differencing,
+  moving averages, or target standardization; callers own leak-free target
+  preparation. Existing `ar` defaults and behavior remain unchanged.
 - `models/linear.py`, `models/specs.py`, docs/tests (feature, PCR model):
   added the general `pcr` principal component regression model with optional
   raw control residualization, predictor-only standardization, and optional

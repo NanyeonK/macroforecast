@@ -35,6 +35,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `albacore_components` | function | Fit the inflation-specific component-space Albacore wrapper. |
 | `albacore_ranks` | function | Fit the inflation-specific rank-space Albacore wrapper. |
 | `ar` | function | Fit a fixed-order AR(``n_lag``) by OLS. |
+| `ar_bic` | function | Target-only AR with internal residual-variance IC lag selection. |
 | `naive` | function | Random-walk (naive) forecaster: carry the last observed value forward. |
 | `hist_mean` | function | Historical (prevailing) mean benchmark for the transformed target. |
 | `seasonal_naive` | function | Seasonal-naive forecaster: repeat the last full seasonal cycle. |
@@ -142,6 +143,7 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `albacore_components` | `assemblage` | `supervised` | `standard` | none | no | Inflation-specific component-space Albacore wrapper. |
 | `albacore_ranks` | `assemblage` | `supervised` | `standard` | none | no | Inflation-specific rank-space Albacore wrapper. |
 | `ar` | `timeseries` | `supervised` | `standard` | none | no | Univariate autoregression. |
+| `ar_bic` | `timeseries` | `target` | `standard` | none | no | Target-only AR with internal information-criterion lag selection. |
 | `arima` | `timeseries` | `target` | `standard` | none | no | (Seasonal) ARIMA model. |
 | `assemblage_regression` | `assemblage` | `supervised` | `standard` | none | no | Generic assemblage regression wrapper with component and rank variants. |
 | `auto_arima` | `timeseries` | `target` | `standard` | none | no | Automatic (seasonal) ARIMA order selection (forecast::auto.arima). |
@@ -419,6 +421,48 @@ Univariate autoregression.
 | `small` | `n_lag`: `(1, 2, 4)` |
 | `standard` | `n_lag`: `(1, 2, 4, 6, 12)` |
 | `wide` | `n_lag`: `(1, 2, 3, 4, 6, 9, 12, 18, 24)` |
+
+### ar_bic
+
+Family: `timeseries`
+
+#### Fit Signature
+
+```python
+macroforecast.models.ar_bic(y: Any, *, min_lag: int = 1, max_lag: int = 12, criterion: str = "bic", include_constant: bool = True, ic_parameter_count: str = "standard", estimator: str = "ols", forecast_mode: str = "iterated", horizon: int = 1) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `target` |
+| `default_preset` | `standard` |
+| `default_search_method` | `grid` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Target-only AR with internal information-criterion lag selection.
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `min_lag` | `1` | `int` | False | Minimum AR lag order considered internally. |
+| `max_lag` | `12` | `int` | True | Maximum AR lag order considered internally. |
+| `criterion` | `"bic"` | `str` | True | Lag-selection criterion: aic, aicc, or bic. |
+| `include_constant` | `True` | `bool` | False | Include an intercept in lag-selection and compatible final fits. |
+| `ic_parameter_count` | `"standard"` | `str` | False | IC parameter count: standard or lag_square. |
+| `estimator` | `"ols"` | `str` | False | Final selected-lag backend: ols, yule_walker, burg, or matlab_ar. |
+| `forecast_mode` | `"iterated"` | `str` | False | Forecast mode: iterated, direct_lag_projection, or coefficient_power. |
+| `horizon` | `1` | `int` | False | First forecast step returned by predict(). |
+
+#### Search Spaces
+
+| Preset | Parameters |
+| --- | --- |
+| `small` | `max_lag`: `(4, 8, 12)` |
+| `standard` | `max_lag`: `(12,)` |
+| `wide` | `criterion`: `("aic", "aicc", "bic")`, `max_lag`: `(6, 12, 18, 24)` |
 
 ### arima
 
@@ -3379,7 +3423,7 @@ XGBoost regressor.
 Kind: `data`
 
 ```python
-MODEL_SPECS = dict(81 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, catboost, ...)
+MODEL_SPECS = dict(82 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, ar_bic, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, ...)
 ```
 
 ## Callable And Class Reference

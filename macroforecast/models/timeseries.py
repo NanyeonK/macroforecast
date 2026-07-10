@@ -181,6 +181,427 @@ def ar(X: Any, y: Any | None = None, *, n_lag: int = 1, direct: bool = False) ->
     )
 
 
+_AR_BIC_CRITERIA = frozenset({"aic", "aicc", "bic"})
+_AR_BIC_PARAMETER_COUNTS = frozenset({"standard", "lag_square"})
+_AR_BIC_ESTIMATORS = frozenset({"ols", "yule_walker", "burg", "matlab_ar"})
+_AR_BIC_FORECAST_MODES = frozenset(
+    {"iterated", "direct_lag_projection", "coefficient_power"}
+)
+_AR_BIC_VARIANCE_FLOOR = float(np.finfo(float).tiny)
+
+
+def _positive_int(value: Any, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+        raise ValueError(f"{name} must be a positive integer")
+    out = int(value)
+    if out <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    return out
+
+
+def _bool_param(value: Any, name: str) -> bool:
+    if not isinstance(value, (bool, np.bool_)):
+        raise ValueError(f"{name} must be a boolean")
+    return bool(value)
+
+
+def _ar_lagged_response(values: np.ndarray, p: int) -> tuple[np.ndarray, np.ndarray]:
+    if p <= 0 or len(values) <= p:
+        return np.empty(0, dtype=float), np.empty((0, max(0, p)), dtype=float)
+    response = values[p:]
+    lags = np.column_stack([values[p - j : len(values) - j] for j in range(1, p + 1)])
+    valid = np.isfinite(response) & np.isfinite(lags).all(axis=1)
+    return response[valid], lags[valid]
+
+
+def _ar_design(lags: np.ndarray, *, include_constant: bool) -> np.ndarray:
+    if include_constant:
+        return np.column_stack([np.ones(len(lags)), lags])
+    return lags
+
+
+def _ar_score_parameter_count(
+    p: int, *, include_constant: bool, ic_parameter_count: str
+) -> int:
+    if ic_parameter_count == "lag_square":
+        return int(p * p)
+    return int(p + 1 if include_constant else p)
+
+
+def _residual_variance_ic(
+    ssr: float, nobs: int, n_params: int, criterion: str
+) -> tuple[float, str]:
+    if nobs <= 0 or not np.isfinite(ssr):
+        return float("inf"), "invalid"
+    variance = max(float(ssr) / float(nobs), _AR_BIC_VARIANCE_FLOOR)
+    base = float(nobs) * float(np.log(variance))
+    if criterion == "aic":
+        return base + 2.0 * float(n_params), "ok"
+    if criterion == "aicc":
+        denom = int(nobs) - int(n_params) - 1
+        if denom <= 0:
+            return float("inf"), "aicc_degenerate"
+        penalty = 2.0 * float(n_params) * float(n_params + 1) / float(denom)
+        return base + 2.0 * float(n_params) + penalty, "ok"
+    return base + float(n_params) * float(np.log(float(nobs))), "ok"
+
+
+def _ar_ols_fit(
+    values: np.ndarray, p: int, *, include_constant: bool
+) -> tuple[float, np.ndarray, float, int, int]:
+    response, lags = _ar_lagged_response(values, p)
+    if response.size == 0:
+        raise ValueError("not enough observations for final AR fit")
+    design = _ar_design(lags, include_constant=include_constant)
+    beta = np.linalg.lstsq(design, response, rcond=None)[0]
+    fitted = design @ beta
+    resid = response - fitted
+    if include_constant:
+        intercept = float(beta[0])
+        coef = np.asarray(beta[1:], dtype=float)
+    else:
+        intercept = 0.0
+        coef = np.asarray(beta, dtype=float)
+    return intercept, coef, float(resid @ resid), int(len(response)), int(len(beta))
+
+
+def _ar_common_residuals(
+    values: np.ndarray, p: int, intercept: float, coef: np.ndarray
+) -> tuple[float, int]:
+    response, lags = _ar_lagged_response(values, p)
+    if response.size == 0:
+        raise ValueError("not enough observations for final AR residuals")
+    resid = response - (float(intercept) + lags @ np.asarray(coef, dtype=float))
+    return float(resid @ resid), int(len(response))
+
+
+def _yule_walker_coefficients(u: np.ndarray, p: int) -> tuple[np.ndarray, str]:
+    gamma = np.asarray(
+        [float(u[k:] @ u[: len(u) - k]) / float(len(u)) for k in range(p + 1)],
+        dtype=float,
+    )
+    toeplitz = gamma[np.abs(np.subtract.outer(np.arange(p), np.arange(p)))]
+    rhs = gamma[1 : p + 1]
+    status = "ok"
+    try:
+        condition = float(np.linalg.cond(toeplitz))
+    except np.linalg.LinAlgError:
+        condition = float("inf")
+    if not np.isfinite(condition) or condition > 1.0 / np.sqrt(np.finfo(float).eps):
+        coef = np.linalg.pinv(toeplitz) @ rhs
+        status = "pinv"
+    else:
+        try:
+            coef = np.linalg.solve(toeplitz, rhs)
+        except np.linalg.LinAlgError:
+            coef = np.linalg.pinv(toeplitz) @ rhs
+            status = "pinv"
+    return np.asarray(coef, dtype=float), status
+
+
+def _burg_coefficients(u: np.ndarray, p: int) -> np.ndarray:
+    if len(u) <= p:
+        raise ValueError("not enough observations for Burg AR fit")
+    forward = np.asarray(u[1:], dtype=float).copy()
+    backward = np.asarray(u[:-1], dtype=float).copy()
+    coef: np.ndarray = np.empty(0, dtype=float)
+    for order in range(p):
+        denom = float(forward @ forward + backward @ backward)
+        if denom <= _AR_BIC_VARIANCE_FLOOR or not np.isfinite(denom):
+            raise ValueError("Burg AR recursion encountered a zero denominator")
+        reflection = float(2.0 * (forward @ backward) / denom)
+        if coef.size:
+            coef = np.concatenate([coef - reflection * coef[::-1], [reflection]])
+        else:
+            coef = np.asarray([reflection], dtype=float)
+        if order < p - 1:
+            old_forward = forward
+            old_backward = backward
+            forward = old_forward[1:] - reflection * old_backward[1:]
+            backward = old_backward[:-1] - reflection * old_forward[:-1]
+    if not np.isfinite(coef).all():
+        raise ValueError("Burg AR fit produced non-finite coefficients")
+    return coef
+
+
+def _matlab_ar_coefficients(u: np.ndarray, p: int) -> np.ndarray:
+    if len(u) <= p:
+        raise ValueError("not enough observations for MATLAB-compatible AR fit")
+    forward_response = u[p:]
+    forward_lags = np.column_stack([u[p - j : len(u) - j] for j in range(1, p + 1)])
+    origins = np.arange(0, len(u) - p)
+    backward_response = u[origins]
+    backward_lags = np.column_stack([u[origins + j] for j in range(1, p + 1)])
+    response = np.concatenate([forward_response, backward_response])
+    design = np.vstack([forward_lags, backward_lags])
+    coef = np.linalg.lstsq(design, response, rcond=None)[0]
+    if not np.isfinite(coef).all():
+        raise ValueError("MATLAB-compatible AR fit produced non-finite coefficients")
+    return np.asarray(coef, dtype=float)
+
+
+class _ARBIC:
+    def __init__(
+        self,
+        *,
+        min_lag: int = 1,
+        max_lag: int = 12,
+        criterion: str = "bic",
+        include_constant: bool = True,
+        ic_parameter_count: str = "standard",
+        estimator: str = "ols",
+        forecast_mode: str = "iterated",
+        horizon: int = 1,
+    ) -> None:
+        self.min_lag = _positive_int(min_lag, "min_lag")
+        self.max_lag = _positive_int(max_lag, "max_lag")
+        if self.min_lag > self.max_lag:
+            raise ValueError("min_lag must be less than or equal to max_lag")
+        self.criterion = str(criterion).lower()
+        if self.criterion not in _AR_BIC_CRITERIA:
+            raise ValueError("criterion must be one of: aic, aicc, bic")
+        self.include_constant = _bool_param(include_constant, "include_constant")
+        self.ic_parameter_count = str(ic_parameter_count).lower()
+        if self.ic_parameter_count not in _AR_BIC_PARAMETER_COUNTS:
+            raise ValueError("ic_parameter_count must be one of: standard, lag_square")
+        self.estimator = str(estimator).lower()
+        if self.estimator not in _AR_BIC_ESTIMATORS:
+            raise ValueError("estimator must be one of: ols, yule_walker, burg, matlab_ar")
+        self.forecast_mode = str(forecast_mode).lower()
+        if self.forecast_mode not in _AR_BIC_FORECAST_MODES:
+            raise ValueError(
+                "forecast_mode must be one of: iterated, direct_lag_projection, "
+                "coefficient_power"
+            )
+        if self.forecast_mode == "direct_lag_projection" and self.estimator != "ols":
+            raise ValueError("direct_lag_projection requires estimator='ols'")
+        self.horizon = _positive_int(horizon, "horizon")
+        self.selected_lag_: int | None = None
+        self.coef_: np.ndarray | None = None
+        self.intercept_: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
+        self.ic_trials_: pd.DataFrame | None = None
+        self.selected_ic_: float | None = None
+        self.selected_nobs_: int | None = None
+        self.selected_n_params_: int | None = None
+        self.backend_status_: str = "ok"
+        self._values: np.ndarray | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_ARBIC":
+        del X
+        raw = pd.Series(y).astype(float).to_numpy(dtype=float)
+        values = raw[np.isfinite(raw)]
+        self._values = values
+        rows = self._score_lags(values)
+        self.ic_trials_ = pd.DataFrame(rows)
+        ok = self.ic_trials_[np.isfinite(self.ic_trials_["score"].to_numpy(dtype=float))]
+        if ok.empty:
+            raise ValueError(
+                "No finite AR information-criterion score for lags "
+                f"{self.min_lag}..{self.max_lag} using {self.criterion}."
+            )
+        best = ok.sort_values(["score", "lag"], kind="mergesort").iloc[0]
+        self.selected_lag_ = int(best["lag"])
+        self.selected_ic_ = float(best["score"])
+        self.selected_nobs_ = int(best["nobs"])
+        self.selected_n_params_ = int(best["n_params"])
+        self._fit_final(values, self.selected_lag_)
+        return self
+
+    def _score_lags(self, values: np.ndarray) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for p in range(self.min_lag, self.max_lag + 1):
+            response, lags = _ar_lagged_response(values, p)
+            nobs = int(len(response))
+            n_params = _ar_score_parameter_count(
+                p,
+                include_constant=self.include_constant,
+                ic_parameter_count=self.ic_parameter_count,
+            )
+            row: dict[str, Any] = {
+                "lag": int(p),
+                "score": float("inf"),
+                "nobs": nobs,
+                "n_params": int(n_params),
+                "ssr": float("nan"),
+                "status": "no_rows" if nobs <= 0 else "ok",
+            }
+            if nobs > 0:
+                try:
+                    design = _ar_design(lags, include_constant=self.include_constant)
+                    beta = np.linalg.lstsq(design, response, rcond=None)[0]
+                    resid = response - design @ beta
+                    ssr = float(resid @ resid)
+                    score, status = _residual_variance_ic(
+                        ssr, nobs, n_params, self.criterion
+                    )
+                    row.update({"score": float(score), "ssr": ssr, "status": status})
+                except np.linalg.LinAlgError as exc:
+                    row.update({"status": "error", "error": str(exc)})
+            rows.append(row)
+        return rows
+
+    def _fit_final(self, values: np.ndarray, p: int) -> None:
+        if self.estimator == "ols" or self.forecast_mode == "direct_lag_projection":
+            intercept, coef, ssr, nobs, n_params = _ar_ols_fit(
+                values, p, include_constant=self.include_constant
+            )
+            self.intercept_ = intercept
+            self.coef_ = coef
+            self.ssr_ = ssr
+            self.nobs_ = nobs
+            self.n_params_ = n_params
+            return
+        mean = float(np.mean(values)) if self.include_constant else 0.0
+        u = values - mean if self.include_constant else values
+        if self.estimator == "yule_walker":
+            coef, status = _yule_walker_coefficients(u, p)
+            self.backend_status_ = status
+        elif self.estimator == "burg":
+            coef = _burg_coefficients(u, p)
+        else:
+            coef = _matlab_ar_coefficients(u, p)
+        intercept = mean * (1.0 - float(np.sum(coef))) if self.include_constant else 0.0
+        ssr, nobs = _ar_common_residuals(values, p, intercept, coef)
+        self.intercept_ = float(intercept)
+        self.coef_ = np.asarray(coef, dtype=float)
+        self.ssr_ = float(ssr)
+        self.nobs_ = int(nobs)
+        self.n_params_ = int(p + 1 if self.include_constant else p)
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        steps = len(X)
+        if steps == 0:
+            return np.empty(0, dtype=float)
+        if self._values is None or self.coef_ is None or self.selected_lag_ is None:
+            raise ValueError("ar_bic estimator is not fitted")
+        if self.forecast_mode == "direct_lag_projection":
+            return self._predict_direct(steps)
+        max_step = self.horizon + steps - 1
+        if self.forecast_mode == "coefficient_power":
+            return self._predict_coefficient_power(max_step)[self.horizon - 1 :]
+        return self._predict_iterated(max_step)[self.horizon - 1 :]
+
+    def _latest_state(self) -> np.ndarray:
+        if self._values is None or self.selected_lag_ is None:
+            raise ValueError("ar_bic estimator is not fitted")
+        p = self.selected_lag_
+        return self._values[-p:][::-1].astype(float)
+
+    def _predict_iterated(self, max_step: int) -> np.ndarray:
+        state = self._latest_state()
+        coef = np.asarray(self.coef_, dtype=float)
+        out: np.ndarray = np.empty(max_step, dtype=float)
+        for i in range(max_step):
+            pred = float(self.intercept_ + coef @ state)
+            out[i] = pred
+            state = np.concatenate([[pred], state[:-1]])
+        return out
+
+    def _predict_coefficient_power(self, max_step: int) -> np.ndarray:
+        state = self._latest_state()
+        coef = np.asarray(self.coef_, dtype=float)
+        return np.asarray(
+            [float((coef ** step) @ state) for step in range(1, max_step + 1)],
+            dtype=float,
+        )
+
+    def _predict_direct(self, steps: int) -> np.ndarray:
+        if self._values is None or self.selected_lag_ is None:
+            raise ValueError("ar_bic estimator is not fitted")
+        values = self._values
+        p = self.selected_lag_
+        state = self._latest_state()
+        preds: list[float] = []
+        for offset in range(steps):
+            step = self.horizon + offset
+            origins = np.arange(p - 1, len(values) - step)
+            if origins.size == 0:
+                raise ValueError(
+                    f"not enough observations for direct_lag_projection step {step}"
+                )
+            response = values[origins + step]
+            lags = np.column_stack([values[origins - j] for j in range(p)])
+            design = _ar_design(lags, include_constant=self.include_constant)
+            beta = np.linalg.lstsq(design, response, rcond=None)[0]
+            if self.include_constant:
+                pred = float(beta[0] + beta[1:] @ state)
+            else:
+                pred = float(beta @ state)
+            preds.append(pred)
+        return np.asarray(preds, dtype=float)
+
+
+def ar_bic(
+    y: Any,
+    *,
+    min_lag: int = 1,
+    max_lag: int = 12,
+    criterion: str = "bic",
+    include_constant: bool = True,
+    ic_parameter_count: str = "standard",
+    estimator: str = "ols",
+    forecast_mode: str = "iterated",
+    horizon: int = 1,
+) -> ModelFit:
+    """Target-only AR with internal residual-variance IC lag selection.
+
+    The input target is used as supplied: callers own differencing, moving
+    averages, scaling, and other leak-free target preparation. Candidate lags
+    are scored by AIC/AICc/BIC on target-only OLS lag regressions, then the
+    selected lag is refit with the requested AR backend and forecast contract.
+    """
+
+    target = as_series(y)
+    estimator_obj = _ARBIC(
+        min_lag=min_lag,
+        max_lag=max_lag,
+        criterion=criterion,
+        include_constant=include_constant,
+        ic_parameter_count=ic_parameter_count,
+        estimator=estimator,
+        forecast_mode=forecast_mode,
+        horizon=horizon,
+    )
+    dummy = pd.DataFrame(
+        {"__origin__": np.arange(len(target), dtype=float)}, index=target.index
+    )
+    estimator_obj.fit(dummy, target)
+    assert estimator_obj.selected_lag_ is not None
+    assert estimator_obj.selected_ic_ is not None
+    assert estimator_obj.selected_nobs_ is not None
+    assert estimator_obj.selected_n_params_ is not None
+    metadata = {
+        "n_obs": int(len(estimator_obj._values)) if estimator_obj._values is not None else 0,
+        "min_lag": estimator_obj.min_lag,
+        "max_lag": estimator_obj.max_lag,
+        "criterion": estimator_obj.criterion,
+        "include_constant": estimator_obj.include_constant,
+        "ic_parameter_count": estimator_obj.ic_parameter_count,
+        "estimator": estimator_obj.estimator,
+        "forecast_mode": estimator_obj.forecast_mode,
+        "horizon": estimator_obj.horizon,
+        "selected_lag": estimator_obj.selected_lag_,
+        "selected_ic": estimator_obj.selected_ic_,
+        "selected_nobs": estimator_obj.selected_nobs_,
+        "selected_n_params": estimator_obj.selected_n_params_,
+    }
+    diagnostics = {
+        "ic_trials": estimator_obj.ic_trials_,
+        "backend_status": estimator_obj.backend_status_,
+    }
+    return ModelFit(
+        estimator=estimator_obj,
+        model="ar_bic",
+        feature_names=("__origin__",),
+        target_name=str(target.name) if target.name is not None else None,
+        metadata=metadata,
+        diagnostics=diagnostics,
+    )
+
+
 def _infer_seasonal_period(index: Any) -> int | None:
     """Infer a seasonal period from a DatetimeIndex frequency (12 monthly, 4 quarterly)."""
     try:
@@ -1168,7 +1589,6 @@ class _FAR:
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_FAR":
         if self.direct:
             return self._fit_direct(X, y)
-        from sklearn.decomposition import PCA
         from sklearn.linear_model import LinearRegression
 
         joined = pd.concat([X, y.rename("__target__")], axis=1).dropna()
@@ -1192,7 +1612,8 @@ class _FAR:
         if not rows:
             self._y_history = values[-self.n_lag :]
             return self
-        design = np.asarray(rows); response = np.asarray(target)
+        design = np.asarray(rows)
+        response = np.asarray(target)
         self._regression = LinearRegression().fit(design, response)
         # In-sample one-step residuals for information-criterion order selection.
         resid = response - self._regression.predict(design)
@@ -4189,6 +4610,7 @@ __all__ = [
     "stlf",
     "random_walk_drift",
     "ar",
+    "ar_bic",
     "arima",
     "auto_arima",
     "bvar_minnesota",

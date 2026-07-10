@@ -1,5 +1,26 @@
 # File Usage Log
 
+## 2026-07-10 - ADD2 ar_bic
+
+- `macroforecast/models/timeseries.py`: added the target-only `ar_bic`
+  estimator with internal residual-variance AIC/AICc/BIC lag selection,
+  selectable IC parameter counts, OLS/Yule-Walker/Burg/internal
+  MATLAB-compatible backends, and iterated, direct-lag-projection, and
+  coefficient-power forecast modes. Existing `ar` code paths were left intact.
+- `macroforecast/models/specs.py`, `macroforecast/models/__init__.py`, and
+  `macroforecast/__init__.py`: registered/exported `ar_bic` with conservative
+  model-owned search spaces and top-level lazy access.
+- `tests/models/test_ar_bic.py`: added builder coverage for reference
+  BIC-lag/coefficient-power behavior, registry target-only routing, backend
+  smoke paths, validation errors, and default-`ar` unchanged regression.
+- `docs/reference/models.md`, `docs/reference/public_api.md`,
+  `docs/reference/reference_verification.md`, `docs/guide/model_overview.md`,
+  `docs/guide/model_policy_matrix.md`, and `docs/guide/models/timeseries.md`:
+  regenerated generated model documentation after registering `ar_bic`.
+- `CHANGELOG.md`: documented the additive `ar_bic` model and unchanged default
+  `ar` behavior.
+- `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
 ## 2026-07-10 - ADD1 pcr
 
 - `macroforecast/models/linear.py`: added `PCRRegressor` and the public `pcr`
