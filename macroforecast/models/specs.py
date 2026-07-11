@@ -39,6 +39,8 @@ from macroforecast.models.linear import (
     sparse_group_lasso,
     supervised_pca,
     supervised_scaled_pca,
+    SupervisedPCARegressor,
+    SupervisedScaledPCARegressor,
 )
 from macroforecast.models.model_averaging import csr, jma
 from macroforecast.models.neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
@@ -122,6 +124,21 @@ class ModelParameter:
 
 
 @dataclass(frozen=True)
+class PrefixSearchSpec:
+    """Declares that a model can fit once and read K-prefix predictions with no recompute.
+
+    ``fit_prefix`` contract: ``fit_prefix(X, y, k_values, **params) -> dict[int,
+    <object with .predict(X) -> array-like>]``. Placed in this module (rather than
+    ``model_selection.types``) to avoid a circular import between ``model_selection``
+    and ``models`` -- ``models.specs`` already imports the concrete model callables
+    it registers ``prefix_search`` for.
+    """
+
+    param: str
+    fit_prefix: Callable[..., dict[int, Any]]
+
+
+@dataclass(frozen=True)
 class ModelSpec:
     """Callable model plus model-owned defaults and hyperparameter spaces."""
 
@@ -142,6 +159,7 @@ class ModelSpec:
     recommended_preprocessing: tuple[str, ...] = ()
     description: str = ""
     selection_method: str = "cv"
+    prefix_search: "PrefixSearchSpec | None" = None
 
     def with_preset(self, preset: str) -> "ModelSpec":
         """Return the same model spec with a different hyperparameter preset."""
@@ -479,6 +497,7 @@ def _spec(
     recommended_preprocessing: tuple[str, ...] = (),
     description: str = "",
     selection_method: str = "cv",
+    prefix_search: "PrefixSearchSpec | None" = None,
 ) -> ModelSpec:
     return ModelSpec(
         name=name,
@@ -495,6 +514,7 @@ def _spec(
         requires_scaling=requires_scaling,
         recommended_preprocessing=tuple(recommended_preprocessing),
         description=description,
+        prefix_search=prefix_search,
     )
 
 
@@ -2579,6 +2599,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             },
         },
         description="Original-style iterative supervised PCA with residual correlation screening and projection.",
+        prefix_search=PrefixSearchSpec(param="n_components", fit_prefix=SupervisedPCARegressor.fit_prefix),
     ),
     "supervised_scaled_pca": _spec(
         "supervised_scaled_pca",
@@ -2710,6 +2731,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             },
         },
         description="Hounyo-Li supervised scaled PCA: marginal predictive-slope scaling followed by SPCA.",
+        prefix_search=PrefixSearchSpec(param="n_components", fit_prefix=SupervisedScaledPCARegressor.fit_prefix),
     ),
     "ar": _spec(
         "ar",

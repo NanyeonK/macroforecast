@@ -2073,6 +2073,77 @@ class SupervisedPCARegressor:
         y_scaled = np.asarray(factor_part + control_part, dtype=float)
         return y_scaled * self.y_scale_ + self.y_mean_
 
+    @classmethod
+    def fit_prefix(
+        cls,
+        X: pd.DataFrame,
+        y: pd.Series,
+        k_values: Sequence[int],
+        **params: Any,
+    ) -> dict[int, ModelFit]:
+        """Fit once at ``max(k_values)`` and derive every smaller-K prediction view.
+
+        This is purely additive. It reuses the untouched ``fit()``/``predict()``
+        recursion and only slices the K-dependent fitted arrays. It exists to let
+        the model-selection grouped evaluator avoid one refit per (K, other-params)
+        candidate. ``predict()`` on the returned ``ModelFit`` objects is byte-for-
+        byte identical to a standalone ``cls(n_components=k, **params).fit(...).
+        predict(...)`` call, because no new arithmetic is introduced here.
+        """
+
+        k_values_unique = sorted({int(k) for k in k_values})
+        if not k_values_unique:
+            return {}
+        k_max = k_values_unique[-1]
+
+        frame, target = resolve_xy(X, y)
+        base = cls(n_components=k_max, **params)
+        base.fit(frame, target)
+
+        feature_names = tuple(str(c) for c in frame.columns)
+        target_name = str(target.name) if target.name is not None else None
+        n_features = len(base.factor_features_)
+        n_samples = len(frame)
+
+        assert base.loadings_ is not None
+        assert base.factor_coefs_ is not None
+        assert base.factor_square_coefs_ is not None
+
+        views: dict[int, ModelFit] = {}
+        for k in k_values_unique:
+            effective_k = min(max(1, k), n_features, n_samples)
+            # active(K) = min(active(K_max), K): the greedy component recursion in
+            # `_extract_supervised_components` computes each component independent
+            # of the loop bound, so a prefix of `base`'s fitted arrays is exactly
+            # what a standalone K-fit would produce (including its early `break`
+            # on `denom <= 1e-12` and the resulting active-component count).
+            active_k = min(base.n_components_, effective_k)
+            view = cls(n_components=k, **params)
+            view.x_mean_ = base.x_mean_
+            view.x_scale_ = base.x_scale_
+            view.y_mean_ = base.y_mean_
+            view.y_scale_ = base.y_scale_
+            view.control_coef_ = base.control_coef_
+            view.control_names_ = base.control_names_
+            view.factor_features_ = base.factor_features_
+            view.selected_features_ = base.selected_features_
+            view.scaling_slopes_ = base.scaling_slopes_
+            view.screening_scores_ = base.screening_scores_
+            view.n_components_ = active_k
+            view.loadings_ = base.loadings_[:active_k]
+            view.factor_coefs_ = base.factor_coefs_[:active_k]
+            view.factor_square_coefs_ = base.factor_square_coefs_[:active_k]
+            view.component_selected_features_ = base.component_selected_features_[:active_k]
+            views[k] = ModelFit(
+                estimator=view,
+                model=type(base).__name__.lower(),
+                feature_names=feature_names,
+                target_name=target_name,
+                metadata={},
+                diagnostics={},
+            )
+        return views
+
 
 class SupervisedScaledPCARegressor(SupervisedPCARegressor):
     """Hounyo-Li supervised scaled PCA: predictive-slope scaling plus SPCA."""

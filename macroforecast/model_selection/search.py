@@ -33,6 +33,7 @@ from macroforecast.model_selection.builders import (
 from macroforecast.model_selection.optimizers import run_bayesian, run_genetic
 from macroforecast.model_selection.runner import (
     evaluate_candidate,
+    evaluate_candidate_group,
     parameter_columns,
     trial_frame,
 )
@@ -45,7 +46,7 @@ from macroforecast.model_selection.types import (
     SearchTrial,
     _normalize_score_aggregation,
 )
-from macroforecast.models.specs import ModelSpec, get_model
+from macroforecast.models.specs import ModelSpec, PrefixSearchSpec, get_model
 from macroforecast.models.utils import align_xy, as_frame, as_series, resolve_xy
 from macroforecast.window import Split, WindowSpec, resolve_window
 
@@ -181,21 +182,35 @@ def select_params(
         )
     else:
         candidates = _candidates(spec, rng)
-        rows = [
-            evaluate_candidate(
-                fit_model,
+        prefix_search = getattr(model_spec, "prefix_search", None) if model_spec is not None else None
+        if prefix_search is not None and _all_candidates_have_key(candidates, prefix_search.param):
+            rows = _evaluate_grid_with_prefix_groups(
+                prefix_search,
                 frame,
                 target,
                 validation_splits,
                 metric_fn,
                 base_params,
-                params,
-                i,
+                candidates,
                 fold_ids=fold_ids,
                 score_aggregation=score_aggregation_value,
             )
-            for i, params in enumerate(candidates)
-        ]
+        else:
+            rows = [
+                evaluate_candidate(
+                    fit_model,
+                    frame,
+                    target,
+                    validation_splits,
+                    metric_fn,
+                    base_params,
+                    params,
+                    i,
+                    fold_ids=fold_ids,
+                    score_aggregation=score_aggregation_value,
+                )
+                for i, params in enumerate(candidates)
+            ]
 
     trials = trial_frame(rows)
     ok = trials.loc[trials["status"] == "ok"].copy()
@@ -227,6 +242,74 @@ def select_params(
             **runtime_metadata,
         },
     )
+
+
+def _all_candidates_have_key(candidates: list[dict[str, Any]], key: str) -> bool:
+    """Gate for the K-prefix grouped path: every candidate must search ``key``."""
+
+    return bool(candidates) and all(key in candidate for candidate in candidates)
+
+
+def _evaluate_grid_with_prefix_groups(
+    prefix_search: PrefixSearchSpec,
+    frame: pd.DataFrame,
+    target: pd.Series,
+    validation_splits: list[Split],
+    metric_fn: Callable[[Any, Any], float],
+    base_params: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    fold_ids: list[int] | None,
+    score_aggregation: ScoreAggregation,
+) -> list[SearchTrial]:
+    """Group candidates identical except ``prefix_search.param`` and evaluate each
+    group with a single shared fit per validation split (see ``evaluate_candidate_group``).
+    Preserves the original ``enumerate(candidates)`` trial ids; grouping only changes
+    which function computes each ``SearchTrial``, never the trial-id/candidate pairing.
+    """
+
+    groups: dict[tuple[Any, ...], list[tuple[int, dict[str, Any]]]] = {}
+    group_order: list[tuple[Any, ...]] = []
+    for trial_id, candidate_params in enumerate(candidates):
+        trial_params = {**base_params, **candidate_params}
+        key = _group_key(trial_params, prefix_search.param)
+        if key not in groups:
+            groups[key] = []
+            group_order.append(key)
+        groups[key].append((trial_id, candidate_params))
+    rows: list[SearchTrial] = []
+    for key in group_order:
+        rows.extend(
+            evaluate_candidate_group(
+                prefix_search,
+                frame,
+                target,
+                validation_splits,
+                metric_fn,
+                base_params,
+                groups[key],
+                fold_ids=fold_ids,
+                score_aggregation=score_aggregation,
+            )
+        )
+    return rows
+
+
+def _group_key(trial_params: dict[str, Any], prefix_param: str) -> tuple[Any, ...]:
+    """Canonical, hashable grouping key: every ``trial_params`` entry except the
+    prefix param, sorted by key. Unhashable values fall back to ``repr()``."""
+
+    items = sorted(
+        (key, value) for key, value in trial_params.items() if key != prefix_param
+    )
+    canonical: list[tuple[Any, Any]] = []
+    for key, value in items:
+        try:
+            hash(value)
+            canonical.append((key, value))
+        except TypeError:
+            canonical.append((key, repr(value)))
+    return tuple(canonical)
 
 
 def _resolve_model(

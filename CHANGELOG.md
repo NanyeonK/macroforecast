@@ -5,6 +5,22 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/linear.py`, `models/specs.py`, `model_selection/runner.py`,
+  `model_selection/search.py` (performance, opt-in K-prefix grouped evaluator):
+  added `SupervisedPCARegressor.fit_prefix` (inherited by
+  `SupervisedScaledPCARegressor`), the `PrefixSearchSpec` capability declaration
+  (`ModelSpec.prefix_search`, registered for `supervised_pca` and
+  `supervised_scaled_pca`), and `evaluate_candidate_group` in
+  `model_selection.runner`. When a `select_params(...)` grid/fixed/cv_path/random
+  search candidate set varies only `n_components` for a prefix-capable model,
+  `select_params` now fits the estimator once per validation split at the
+  group's largest `n_components` and derives every smaller-`n_components`
+  candidate's prediction from that single fit, instead of refitting per
+  candidate. No observable output change for existing callers: grouped-path
+  `SearchTrial` rows (score, params, status, error, order) are bitwise
+  identical to the pre-existing per-candidate loop, both `score_aggregation`
+  modes are supported, and models without a registered `prefix_search` continue
+  through the unchanged per-candidate loop.
 - `models/linear.py`, `models/specs.py`, docs/tests (feature, ADD6 supervised
   PCA preselection stage): added opt-in
   `preselect_stage="raw_before_standardize"` for `supervised_pca` and

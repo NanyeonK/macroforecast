@@ -3868,7 +3868,7 @@ Qualified name: `macroforecast.models.specs.ModelSpec`
 #### Signature
 
 ```python
-macroforecast.models.ModelSpec(name: str, family: str, fit_func: Callable[..., Any], default_params: dict[str, Any] = <factory>, parameters: tuple[ModelParameter, ...] = (), search_spaces: SearchSpaces = <factory>, default_search_method: str = "grid", default_preset: str = "standard", input_kind: InputKind = "supervised", preset: str = "standard", params: dict[str, Any] = <factory>, backend: str = "internal", requires_extra: str | None = None, requires_scaling: bool = False, recommended_preprocessing: tuple[str, ...] = (), description: str = "", selection_method: str = "cv") -> None
+macroforecast.models.ModelSpec(name: str, family: str, fit_func: Callable[..., Any], default_params: dict[str, Any] = <factory>, parameters: tuple[ModelParameter, ...] = (), search_spaces: SearchSpaces = <factory>, default_search_method: str = "grid", default_preset: str = "standard", input_kind: InputKind = "supervised", preset: str = "standard", params: dict[str, Any] = <factory>, backend: str = "internal", requires_extra: str | None = None, requires_scaling: bool = False, recommended_preprocessing: tuple[str, ...] = (), description: str = "", selection_method: str = "cv", prefix_search: "'PrefixSearchSpec | None'" = None) -> None
 ```
 
 #### Description
@@ -3896,6 +3896,7 @@ Callable model plus model-owned defaults and hyperparameter spaces.
 | `recommended_preprocessing` | positional or keyword | `tuple[str, ...]` | `()` |
 | `description` | positional or keyword | `str` | `""` |
 | `selection_method` | positional or keyword | `str` | `"cv"` |
+| `prefix_search` | positional or keyword | `'PrefixSearchSpec \| None'` | `None` |
 
 #### Returns
 
@@ -3930,6 +3931,7 @@ import macroforecast as mf
 | `recommended_preprocessing` | `tuple[str, ...]` | `()` |
 | `description` | `str` | `""` |
 | `selection_method` | `str` | `"cv"` |
+| `prefix_search` | `'PrefixSearchSpec \| None'` | `None` |
 
 #### Public Methods
 
@@ -4273,6 +4275,7 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `fit` | `fit(self, X: pd.DataFrame, y: pd.Series) -> "'SupervisedPCARegressor'"` | No public docstring is available. |
+| `fit_prefix` | `fit_prefix(X: pd.DataFrame, y: pd.Series, k_values: Sequence[int], **params: Any) -> dict[int, ModelFit]` | Fit once at ``max(k_values)`` and derive every smaller-K prediction view. |
 | `predict` | `predict(self, X: pd.DataFrame) -> np.ndarray` | No public docstring is available. |
 ### SupervisedScaledPCARegressor
 
@@ -4311,6 +4314,7 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `fit` | `fit(self, X: pd.DataFrame, y: pd.Series) -> "'SupervisedPCARegressor'"` | No public docstring is available. |
+| `fit_prefix` | `fit_prefix(X: pd.DataFrame, y: pd.Series, k_values: Sequence[int], **params: Any) -> dict[int, ModelFit]` | Fit once at ``max(k_values)`` and derive every smaller-K prediction view. |
 | `predict` | `predict(self, X: pd.DataFrame) -> np.ndarray` | No public docstring is available. |
 ### TVPRidgeRegressor
 
