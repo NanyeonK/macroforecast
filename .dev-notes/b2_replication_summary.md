@@ -1,0 +1,13 @@
+# B2 Hounyo-Li replication summary
+
+Final verdict: the B2 checks verify `macroforecast` on the Hounyo-Li Table 2 replication surfaces. The main discrepancy from the published Table 2 is not a package defect. It comes from the author's target-standardization look-ahead leak, plus the honest package data pipeline and COVID-period behavior.
+
+The key finding is that the author's MATLAB standardizes the target block including the realized future target `y_{T+h}` before pseudo-OOS evaluation (`inflation_linear.m:196-197`, `ytplush(:,1+h:T+h)`). On matched inflation h=1 data, the paper reports PCA 0.970. The leak-free package diagnostic gives 1.080953, while the author/leaky surface gives 0.970590. The direct target-y leak accounts for about 19% of that PCA gap, and the remaining 81% comes mainly from K selection tuned on the leaky author surface. When `macroforecast.pcr` receives the author surface and author K, it is bit-identical to the author PCA code, with max prediction difference `3.844e-14`.
+
+Demonstration A is the locked author-oracle Table 2 grid: 3 targets x 4 horizons x 5 methods, 55/60 cells within `|Delta| <= 0.03`, and inflation 20/20 exact. Runtime was 4:19:30 on 48 cores using the verified K-prefix evaluator. The K-prefix proof had `max_forecast_abs_diff = 0.0` and `max_score_abs_diff = 0.0`, so the speedup did not change the statistics.
+
+Demonstration B is the honest `load_fred_md` leak-free Table 2 grid. It intentionally differs from the paper. This difference combines the methodology leak with our data pipeline. The unemployment h=1 cells are also dominated by the COVID point: the ratios are 3.5 to 4.9 versus paper values around 1.4 to 1.7, and SsPCA predicts +20.1085 for May 2020 while the realized unemployment change is -1.5. That one row is about 80.2% of SsPCA h=1 SSE. The unemployment target is correctly built as a change, so this is not a target-construction bug.
+
+The replication delivered the four B2 purposes. P1: package trust through author-methodology reproduction plus honest leak-free disclosure. P2: the work identified the paper leak and package gaps, including model-selection override, `parallel_cell_timeout`, and missing method/config surfaces. P3: K-prefix made the full supervised grid feasible, reducing weeks-scale work to about 4.3 hours. P4: the speedup was bitwise-identical, with no reduced grids, folds, or origins in the locked author-oracle grid.
+
+Provenance caveat: the author IP-growth and unemployment source exists in the ZIP, and using those target-specific panels would close the five locked author-oracle misses. The trust claim is still package-side: `macroforecast` computes the forecasts, while MATLAB serves only as a documented methodology oracle for the leak proof.

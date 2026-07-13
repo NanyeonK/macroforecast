@@ -1,6 +1,41 @@
 # Hounyo and Li 2026 B2 Replication Findings
 
-Scope: B2 setup plus G1 smoke only. No G2/G3 table/full runs and no finance scope.
+Scope: B2 setup, G1 smoke, and the full macro Table 2 PC/no-threshold author-oracle run. No D-tables and no finance scope.
+
+## Latest Full Table 2 Author-Oracle Result
+
+Branch `repro/hounyo-li-2026` was rebased onto `main` commit `ab0536d2`; no `macroforecast/**` files were patched.
+
+The K-prefix grouped evaluator passed the P4 identity gate before the full run:
+
+`python3 scripts/replication/hounyo_li_2026_pipeline/run_table2_author_oracle.py --result-store runs/hl2026_table2_author_oracle --n-jobs auto --parallel-cell-timeout none --only-identity`
+
+Gate result: five inflation h=1 author-SsPCA origins, full `K=1..10` and `qN=18:6:108` grid, grouped `select_params` versus a cloned per-candidate spec with `prefix_search=None`. Selected parameters were identical and forecasts were identical (`max_forecast_abs_diff=0.0`, `max_score_abs_diff=0.0`). Proof files are `runs/hl2026_table2_author_oracle/kprefix_identity_gate.json` and `.csv`.
+
+The full Table 2 author-oracle run then completed:
+
+`python3 scripts/replication/hounyo_li_2026_pipeline/run_table2_author_oracle.py --result-store runs/hl2026_table2_author_oracle --n-jobs auto --parallel-cell-timeout none --skip-identity`
+
+Full result: 55 of 60 cells passed `|Delta| <= 0.03`; five cells missed, so the full macro Table 2 does not completely reproduce under the current local author-oracle runner. Runtime was 15,570.74 seconds (4:19:30) with `n_jobs=48`; summed cell runtime was 373,598.16 seconds, implying 23.99 average core-equivalent utilization across the wall run. The early cheap-method phase used the 48-worker pool; after cheap cells completed, the remaining work was bounded by the 24 SPCA/SsPCA cells.
+
+Misses:
+
+| Target | h | Method | Reproduced | Paper | Delta |
+|---|---:|---|---:|---:|---:|
+| IP growth | 1 | SPCA | 0.967862 | 0.902 | +0.065862 |
+| IP growth | 1 | PLS | 1.164690 | 1.219 | -0.054310 |
+| IP growth | 12 | SsPCA | 0.949870 | 0.984 | -0.034130 |
+| Unemployment | 1 | PCA | 1.677038 | 1.644 | +0.033038 |
+| Unemployment | 1 | PLS | 1.547527 | 1.698 | -0.150473 |
+
+All inflation cells passed tightly. Full outputs are:
+
+- `runs/hl2026_table2_author_oracle/author_oracle_table2_parity.csv`
+- `runs/hl2026_table2_author_oracle/author_oracle_table2_forecasts.csv`
+- `runs/hl2026_table2_author_oracle/author_oracle_table2_report.json`
+- `docs/replication/hounyo_li_2026.md`
+
+Residual provenance gap: only `Inflation_results/` from the author MATLAB replication package is present locally. IP-growth and unemployment reuse the documented Table 2 PC/no-threshold macro row geometry, the converted author macro panel, and the same author-oracle transformations. The five misses should be interpreted against that local-source limitation.
 
 ## Latest Cheap-Only Result
 
