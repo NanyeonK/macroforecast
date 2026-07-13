@@ -2567,6 +2567,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 False,
             ),
             _p(
+                "elastic_net_search",
+                None,
+                "SearchSpec | Mapping[str, Any] | None",
+                "Optional information-criterion search for elastic-net pre-selection alpha/l1_ratio.",
+                False,
+            ),
+            _p(
                 "quadratic_factors",
                 False,
                 "bool",
@@ -2696,6 +2703,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 0.5,
                 "float",
                 "Elastic-net pre-selection L1 ratio.",
+                False,
+            ),
+            _p(
+                "elastic_net_search",
+                None,
+                "SearchSpec | Mapping[str, Any] | None",
+                "Optional information-criterion search for elastic-net pre-selection alpha/l1_ratio.",
                 False,
             ),
             _p(

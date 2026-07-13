@@ -7,6 +7,11 @@ from typing import Any, Literal
 import numpy as np
 import pandas as pd
 
+from macroforecast.feature_engineering._sparse_ic import (
+    select_sparse_ic_params,
+    sparse_ic_metadata,
+)
+
 
 PredictorScreenMethod = Literal["t_stat", "delta_r2", "lasso", "elastic_net"]
 
@@ -67,6 +72,7 @@ def fit_predictor_screen(
     controls: Iterable[str] | None = None,
     alpha: float = 0.001,
     l1_ratio: float = 0.5,
+    lambda_search: Any | None = None,
     max_iter: int = 20000,
     random_state: int | None = 0,
     min_train_size: int | None = None,
@@ -117,6 +123,7 @@ def fit_predictor_screen(
         method=method_value,
         alpha=alpha,
         l1_ratio=l1_ratio,
+        lambda_search=lambda_search,
         max_iter=max_iter,
         random_state=random_state,
     )
@@ -195,6 +202,7 @@ def _screen_scores(
     method: PredictorScreenMethod,
     alpha: float,
     l1_ratio: float,
+    lambda_search: Any | None,
     max_iter: int,
     random_state: int | None,
 ) -> tuple[np.ndarray, str, dict[str, Any]]:
@@ -212,29 +220,57 @@ def _screen_scores(
             "incremental_r_squared",
             {},
         )
+    selected_alpha = float(alpha)
+    selected_l1_ratio = float(l1_ratio)
+    metadata: dict[str, Any] = {}
+    x_resid, y_resid = _partial_residualize(x, y, controls_matrix)
+    x_scaled, _center, _scale = _standardize_matrix(x_resid)
+    if lambda_search is not None:
+        model_name = "lasso" if method == "lasso" else "elastic_net"
+        columns = [f"x{idx}" for idx in range(x_scaled.shape[1])]
+        result = select_sparse_ic_params(
+            model_name,
+            pd.DataFrame(x_scaled, columns=columns),
+            pd.Series(y_resid, name="target"),
+            lambda_search,
+            allowed_params={"alpha"} if method == "lasso" else {"alpha", "l1_ratio"},
+            fixed_params={
+                "max_iter": int(max_iter),
+                "random_state": random_state,
+                **({} if method == "lasso" else {"l1_ratio": selected_l1_ratio}),
+            },
+        )
+        selected = dict(result.best_params)
+        selected_alpha = float(selected["alpha"])
+        if method != "lasso" and "l1_ratio" in selected:
+            selected_l1_ratio = float(selected["l1_ratio"])
+        metadata["lambda_selection"] = sparse_ic_metadata(result)
     if method == "lasso":
         from sklearn.linear_model import Lasso
 
-        model = Lasso(alpha=float(alpha), max_iter=int(max_iter), random_state=random_state)
+        model = Lasso(
+            alpha=selected_alpha,
+            max_iter=int(max_iter),
+            random_state=random_state,
+        )
     else:
         from sklearn.linear_model import ElasticNet
 
         model = ElasticNet(
-            alpha=float(alpha),
-            l1_ratio=float(l1_ratio),
+            alpha=selected_alpha,
+            l1_ratio=selected_l1_ratio,
             max_iter=int(max_iter),
             random_state=random_state,
         )
-    x_resid, y_resid = _partial_residualize(x, y, controls_matrix)
-    x_scaled, _center, _scale = _standardize_matrix(x_resid)
     model.fit(x_scaled, y_resid)
     scores = np.abs(np.asarray(model.coef_, dtype=float))
     scores = np.nan_to_num(scores, nan=0.0, posinf=0.0, neginf=0.0)
     return scores, "absolute_standardized_sparse_coefficient", {
-        "alpha": float(alpha),
-        "l1_ratio": None if method == "lasso" else float(l1_ratio),
+        "alpha": selected_alpha,
+        "l1_ratio": None if method == "lasso" else selected_l1_ratio,
         "max_iter": int(max_iter),
         "random_state": random_state,
+        **metadata,
     }
 
 

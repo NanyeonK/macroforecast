@@ -2372,6 +2372,7 @@ def _fit_feature_step(
         controls = params.pop("controls", None)
         alpha = float(params.pop("alpha", 0.001))
         l1_ratio = float(params.pop("l1_ratio", 0.5))
+        lambda_search = params.pop("lambda_search", None)
         max_iter = int(params.pop("max_iter", 20000))
         min_train_size = params.pop("min_train_size", None)
         drop_missing = bool(params.pop("drop_missing", False))
@@ -2395,6 +2396,7 @@ def _fit_feature_step(
             controls=None if controls is None else tuple(str(value) for value in controls),
             alpha=alpha,
             l1_ratio=l1_ratio,
+            lambda_search=lambda_search,
             max_iter=max_iter,
             random_state=None if random_state is None else int(random_state),
             min_train_size=min_train_size,
@@ -2482,6 +2484,7 @@ def _fit_feature_step(
             **params,
         )
         keep = selection.selected_columns
+        resolved_lasso_alpha = float(selection.metadata.get("alpha", lasso_alpha))
         selection_state = _FeatureSelectionState(
             columns=selected,
             selected_columns=keep,
@@ -2489,7 +2492,7 @@ def _fit_feature_step(
             n_features=n_features,
             resolved_n_features=selection.resolved_n_features,
             method=method,
-            lasso_alpha=lasso_alpha,
+            lasso_alpha=resolved_lasso_alpha,
             scores=selection.scores,
             selection_params=selection.metadata,
             min_train_size=min_train_size,
@@ -2507,7 +2510,7 @@ def _fit_feature_step(
                 "n_features": n_features,
                 "resolved_n_features": selection.resolved_n_features,
                 "method": method,
-                "lasso_alpha": lasso_alpha,
+                "lasso_alpha": resolved_lasso_alpha,
                 "selection_params": selection.metadata,
                 "min_train_size": min_train_size,
                 "drop_missing": drop_missing,
@@ -3229,6 +3232,8 @@ def _normalize_optional_positive_ints(
 def _json_ready_step(value: Any) -> Any:
     if isinstance(value, Mapping):
         return {str(key): _json_ready_step(item) for key, item in value.items()}
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return _json_ready_step(value.to_dict())
     if isinstance(value, tuple):
         return [_json_ready_step(item) for item in value]
     if isinstance(value, list):

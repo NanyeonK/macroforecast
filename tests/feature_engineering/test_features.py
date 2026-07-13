@@ -1506,6 +1506,95 @@ def test_predictor_screen_sparse_methods_rank_standardized_coefficients(method: 
     assert result.scores["large_scale_signal"] > result.scores["small_scale_weaker"]
 
 
+def test_lasso_selection_lambda_search_records_selected_alpha() -> None:
+    processed = _long_processed(periods=72)
+    panel = processed.panel.assign(
+        x3=np.cos(np.arange(len(processed.panel)) / 3.0),
+        x4=np.sin(np.arange(len(processed.panel)) / 4.0),
+    )
+
+    selected = mf.feature_engineering.lasso_selection(
+        panel,
+        target="target",
+        columns=["x1", "x2", "x3", "x4"],
+        n_features=2,
+        lambda_search={"criterion": "aicc", "alpha": (0.001, 0.01, 0.1)},
+        warn_full_sample=False,
+    )
+
+    params = selected.attrs["macroforecast_metadata"][
+        "feature_engineering_lasso_selection"
+    ]["selection_params"]
+    assert "lambda_selection" in params
+    assert params["lambda_selection"]["criterion"] == "aicc"
+    assert params["lambda_selection"]["selected_params"]["alpha"] in {
+        0.001,
+        0.01,
+        0.1,
+    }
+    assert selected.shape[1] == 2
+
+
+def test_predictor_screen_elastic_net_lambda_search_records_selected_params() -> None:
+    from macroforecast.feature_engineering.screening import fit_predictor_screen
+
+    rng = np.random.default_rng(20260713)
+    x1 = rng.normal(size=90)
+    x2 = rng.normal(size=90)
+    X = pd.DataFrame({"x1": x1, "x2": x2, "noise": rng.normal(size=90)})
+    y = pd.Series(1.2 * x1 - 0.4 * x2 + 0.1 * rng.normal(size=90))
+
+    result = fit_predictor_screen(
+        X,
+        y,
+        method="elastic_net",
+        min_k=1,
+        threshold=0.0,
+        lambda_search={
+            "criterion": "bic",
+            "alpha": (0.001, 0.01),
+            "l1_ratio": (0.5, 1.0),
+        },
+    )
+
+    selection = result.metadata["lambda_selection"]
+    assert selection["criterion"] == "bic"
+    assert selection["selected_params"]["alpha"] in {0.001, 0.01}
+    assert selection["selected_params"]["l1_ratio"] in {0.5, 1.0}
+    assert result.selected_columns
+
+
+def test_feature_spec_predictor_screen_accepts_search_spec_lambda_search() -> None:
+    processed = _long_processed(periods=72)
+    spec = mf.feature_engineering.feature_spec(
+        target="target",
+        horizon=1,
+        predictors=["x1", "x2"],
+        steps=[
+            mf.feature_engineering.predictor_screen(
+                method="lasso",
+                min_k=1,
+                threshold=0.0,
+                lambda_search=mf.model_selection.SearchSpec(
+                    method="information_criterion",
+                    criterion="aicc",
+                    param_grid={"alpha": (0.001, 0.01)},
+                ),
+            )
+        ],
+        drop_missing=False,
+    )
+
+    fitted = spec.fit(processed)
+    state = fitted.to_metadata()["feature_steps"][0]["fit_state"]
+
+    assert state["selection_params"]["lambda_selection"]["criterion"] == "aicc"
+    assert state["selection_params"]["lambda_selection"]["selected_params"]["alpha"] in {
+        0.001,
+        0.01,
+    }
+
+
 def test_feature_spec_composes_predictor_screen_then_pca() -> None:
     periods = 40
     dates = pd.date_range("2000-01-01", periods=periods, freq="MS")

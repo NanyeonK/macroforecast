@@ -9,7 +9,11 @@ import pandas as pd
 
 from macroforecast.feature_engineering.screening import marginal_t_stats as _screen_marginal_t_stats
 from macroforecast.models.types import ModelFit
-from macroforecast.models.utils import fit_estimator, resolve_xy
+from macroforecast.models.utils import (
+    attach_sparse_ic_diagnostics,
+    fit_estimator,
+    resolve_xy,
+)
 
 
 def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
@@ -593,13 +597,16 @@ def lasso(
         **estimator_params,
         "standardize": bool(standardize),
     }
-    return fit_estimator(
+    frame, target = resolve_xy(X, y)
+    fit = fit_estimator(
         estimator,
-        X,
-        y,
+        frame,
+        target,
         model="lasso",
         metadata=params,
     )
+    attach_sparse_ic_diagnostics(fit.estimator, frame, target)
+    return fit
 
 
 def elastic_net(
@@ -631,13 +638,16 @@ def elastic_net(
         **estimator_params,
         "standardize": bool(standardize),
     }
-    return fit_estimator(
+    frame, target = resolve_xy(X, y)
+    fit = fit_estimator(
         estimator,
-        X,
-        y,
+        frame,
+        target,
         model="elastic_net",
         metadata=params,
     )
+    attach_sparse_ic_diagnostics(fit.estimator, frame, target)
+    return fit
 
 
 class _AdaptiveLinear:
@@ -1885,6 +1895,7 @@ class SupervisedPCARegressor:
         t_threshold: float = 1.28,
         elastic_net_alpha: float = 0.0002,
         elastic_net_l1_ratio: float = 0.5,
+        elastic_net_search: Any | None = None,
         slope_scale: bool = False,
         quadratic_factors: bool = False,
         random_state: int = 0,
@@ -1901,11 +1912,13 @@ class SupervisedPCARegressor:
         self.t_threshold = float(max(0.0, t_threshold))
         self.elastic_net_alpha = float(max(0.0, elastic_net_alpha))
         self.elastic_net_l1_ratio = float(min(1.0, max(0.0, elastic_net_l1_ratio)))
+        self.elastic_net_search = elastic_net_search
         self.slope_scale = bool(slope_scale)
         self.quadratic_factors = bool(quadratic_factors)
         self.random_state = int(random_state)
         self.selected_features_: tuple[str, ...] = ()
         self.screening_scores_: dict[str, float] = {}
+        self.preselection_params_: dict[str, Any] = {}
         self.component_selected_features_: list[tuple[str, ...]] = []
         self.n_components_: int = 0
         self.x_mean_: pd.Series | None = None
@@ -1956,15 +1969,17 @@ class SupervisedPCARegressor:
                 drop_controls=self.drop_control_columns,
             )
             factor_frame = standardized.loc[:, factor_columns]
-            preselected = _preselect_columns(
+            preselected, preselection_params = _preselect_columns(
                 factor_frame,
                 y_values,
                 method=self.preselect,
                 t_threshold=self.t_threshold,
                 elastic_net_alpha=self.elastic_net_alpha,
                 elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                elastic_net_search=self.elastic_net_search,
                 random_state=self.random_state,
             )
+            self.preselection_params_ = preselection_params
             factor_frame = factor_frame.loc[:, preselected]
         else:
             y_raw_values = target.to_numpy(dtype=float)
@@ -1974,15 +1989,17 @@ class SupervisedPCARegressor:
                 drop_controls=self.drop_control_columns,
             )
             raw_factor_frame = frame.loc[:, factor_columns]
-            preselected = _preselect_columns(
+            preselected, preselection_params = _preselect_columns(
                 raw_factor_frame,
                 y_raw_values,
                 method=self.preselect,
                 t_threshold=self.t_threshold,
                 elastic_net_alpha=self.elastic_net_alpha,
                 elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                elastic_net_search=self.elastic_net_search,
                 random_state=self.random_state,
             )
+            self.preselection_params_ = preselection_params
             model_columns = _model_used_columns(
                 frame.columns,
                 self.control_columns,
@@ -2129,6 +2146,7 @@ class SupervisedPCARegressor:
             view.selected_features_ = base.selected_features_
             view.scaling_slopes_ = base.scaling_slopes_
             view.screening_scores_ = base.screening_scores_
+            view.preselection_params_ = base.preselection_params_
             view.n_components_ = active_k
             view.loadings_ = base.loadings_[:active_k]
             view.factor_coefs_ = base.factor_coefs_[:active_k]
@@ -2374,26 +2392,65 @@ def _preselect_columns(
     t_threshold: float,
     elastic_net_alpha: float,
     elastic_net_l1_ratio: float,
+    elastic_net_search: Any | None,
     random_state: int,
-) -> list[str]:
+) -> tuple[list[str], dict[str, Any]]:
     if method == "none":
-        return [str(column) for column in X.columns]
+        return [str(column) for column in X.columns], {"method": "none"}
     values = X.to_numpy(dtype=float)
     if method == "hard_tstat":
         keep = np.abs(_marginal_t_stats(values, y)) > t_threshold
+        metadata = {"method": "hard_tstat", "t_threshold": float(t_threshold)}
     else:
         from sklearn.linear_model import ElasticNet
 
+        alpha = float(elastic_net_alpha)
+        l1_ratio = float(elastic_net_l1_ratio)
+        metadata = {
+            "method": "elastic_net",
+            "alpha": alpha,
+            "l1_ratio": l1_ratio,
+            "random_state": int(random_state),
+        }
+        if elastic_net_search is not None:
+            from macroforecast.feature_engineering._sparse_ic import (
+                select_sparse_ic_params,
+                sparse_ic_metadata,
+            )
+
+            result = select_sparse_ic_params(
+                "elastic_net",
+                X,
+                pd.Series(y, index=X.index, name="target"),
+                elastic_net_search,
+                allowed_params={"alpha", "l1_ratio"},
+                fixed_params={
+                    "max_iter": 20000,
+                    "random_state": int(random_state),
+                    "l1_ratio": l1_ratio,
+                },
+            )
+            selected = dict(result.best_params)
+            alpha = float(selected["alpha"])
+            if "l1_ratio" in selected:
+                l1_ratio = float(selected["l1_ratio"])
+            metadata.update(
+                {
+                    "alpha": alpha,
+                    "l1_ratio": l1_ratio,
+                    "lambda_selection": sparse_ic_metadata(result),
+                }
+            )
         model = ElasticNet(
-            alpha=elastic_net_alpha,
-            l1_ratio=elastic_net_l1_ratio,
+            alpha=alpha,
+            l1_ratio=l1_ratio,
             max_iter=20000,
             random_state=random_state,
         )
         model.fit(values, y)
         keep = np.abs(np.asarray(model.coef_, dtype=float)) > 1e-12
     columns = [str(column) for column, use in zip(X.columns, keep, strict=True) if bool(use)]
-    return columns or [str(column) for column in X.columns]
+    return columns or [str(column) for column in X.columns], metadata
 
 
 def _marginal_t_stats(X: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -2497,6 +2554,7 @@ def supervised_pca(
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    elastic_net_search: Any | None = None,
     quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
@@ -2518,6 +2576,8 @@ def supervised_pca(
         "quadratic_factors": bool(quadratic_factors),
         "random_state": int(random_state),
     }
+    if elastic_net_search is not None:
+        params["elastic_net_search"] = elastic_net_search
     return fit_estimator(
         SupervisedPCARegressor(
             n_components=int(n_components),
@@ -2532,6 +2592,7 @@ def supervised_pca(
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            elastic_net_search=elastic_net_search,
             quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),
@@ -2651,6 +2712,7 @@ def supervised_scaled_pca(
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    elastic_net_search: Any | None = None,
     quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
@@ -2673,6 +2735,8 @@ def supervised_scaled_pca(
         "random_state": int(random_state),
         "source": "Hounyo and Li IJF 2026 SsPCA MATLAB reproducibility package",
     }
+    if elastic_net_search is not None:
+        params["elastic_net_search"] = elastic_net_search
     return fit_estimator(
         SupervisedScaledPCARegressor(
             n_components=int(n_components),
@@ -2687,6 +2751,7 @@ def supervised_scaled_pca(
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            elastic_net_search=elastic_net_search,
             quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),

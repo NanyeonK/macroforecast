@@ -129,6 +129,8 @@ def _estimator_name(estimator: Any) -> str:
 def _json_ready(value: Any) -> Any:
     if isinstance(value, Mapping):
         return {str(key): _json_ready(item) for key, item in value.items()}
+    if hasattr(value, "to_dict") and callable(value.to_dict):
+        return _json_ready(value.to_dict())
     if isinstance(value, pd.DataFrame):
         return {
             "columns": [str(column) for column in value.columns],

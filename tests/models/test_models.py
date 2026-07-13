@@ -354,6 +354,36 @@ def test_basic_linear_models_fit_and_predict() -> None:
         assert "coefficients" in fit.diagnostics
 
 
+def test_lasso_and_elastic_net_expose_sparse_ic_diagnostics() -> None:
+    X, y = _xy()
+
+    fits = [
+        mf.models.lasso(X, y, alpha=0.01),
+        mf.models.elastic_net(X, y, alpha=0.01, l1_ratio=0.5, standardize=True),
+    ]
+
+    for fit in fits:
+        pred = fit.predict(X).to_numpy(dtype=float)
+        residual = y.to_numpy(dtype=float) - pred
+        final_estimator = (
+            fit.estimator.steps[-1][1]
+            if hasattr(fit.estimator, "steps")
+            else fit.estimator
+        )
+        expected_k = int(
+            np.sum(np.abs(np.asarray(final_estimator.coef_, dtype=float)) > 1e-12)
+        )
+
+        assert fit.ssr_ == pytest.approx(float(residual @ residual))
+        assert fit.nobs_ == len(X)
+        assert fit.n_params_ == expected_k
+        assert fit.n_params_convention_ == (
+            "active_penalized_slope_count_excludes_intercept_and_residual_variance"
+        )
+        assert fit.coef_zero_tol_ == pytest.approx(1e-12)
+        assert "ssr_" not in fit.to_dict()["diagnostics"]
+
+
 def test_ridge_variants_fit_and_record_constraints() -> None:
     X, y = _xy()
 
@@ -2281,6 +2311,36 @@ def test_supervised_pca_preselect_stage_validation_and_registry() -> None:
                 y,
                 preselect_stage="raw",
             )
+
+
+def test_supervised_pca_elastic_net_preselect_accepts_ic_search() -> None:
+    X, y = _scale_sensitive_spca_xy()
+    search = mf.model_selection.SearchSpec(
+        method="information_criterion",
+        criterion="aicc",
+        param_grid={"alpha": (0.0001, 0.001), "l1_ratio": (0.5, 1.0)},
+    )
+
+    default_fit = mf.models.supervised_pca(
+        X,
+        y,
+        preselect="elastic_net",
+        n_components=1,
+    )
+    searched_fit = mf.models.supervised_pca(
+        X,
+        y,
+        preselect="elastic_net",
+        n_components=1,
+        elastic_net_search=search,
+    )
+
+    params = searched_fit.estimator.preselection_params_
+    assert "elastic_net_search" not in default_fit.metadata
+    assert params["lambda_selection"]["criterion"] == "aicc"
+    assert params["lambda_selection"]["selected_params"]["alpha"] in {0.0001, 0.001}
+    assert params["lambda_selection"]["selected_params"]["l1_ratio"] in {0.5, 1.0}
+    assert searched_fit.estimator.factor_features_
 
 
 def test_scaled_pca_matches_huang_spcaest_factor_extraction() -> None:

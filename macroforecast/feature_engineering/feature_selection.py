@@ -8,6 +8,10 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.data import attach_metadata, validate_panel
+from macroforecast.feature_engineering._sparse_ic import (
+    select_sparse_ic_params,
+    sparse_ic_metadata,
+)
 from macroforecast.feature_engineering.shared import (
     _coerce_input,
     _metadata_frame,
@@ -226,6 +230,7 @@ def lasso_selection(
     columns: Iterable[str] | None = None,
     n_features: int | float = 0.5,
     alpha: float = 0.001,
+    lambda_search: Any | None = None,
     min_train_size: int | None = None,
     warn_full_sample: bool = True,
 ) -> pd.DataFrame:
@@ -241,6 +246,7 @@ def lasso_selection(
         min_train_size=min_train_size,
         warn_full_sample=warn_full_sample,
         alpha=alpha,
+        lambda_search=lambda_search,
     )
 
 
@@ -528,12 +534,27 @@ def _lasso_scores(
 
     alpha = float(params.pop("lasso_alpha", params.pop("alpha", 0.001)))
     max_iter = int(params.pop("max_iter", 20000))
+    lambda_search = params.pop("lambda_search", None)
+    metadata: dict[str, Any] = {"score": "absolute_lasso_coefficient"}
+    if lambda_search is not None:
+        result = select_sparse_ic_params(
+            "lasso",
+            X,
+            y,
+            lambda_search,
+            allowed_params={"alpha"},
+            fixed_params={"max_iter": max_iter},
+        )
+        selected = dict(result.best_params)
+        alpha = float(selected["alpha"])
+        metadata["lambda_selection"] = sparse_ic_metadata(result)
     model = Lasso(alpha=alpha, max_iter=max_iter)
     model.fit(X.to_numpy(dtype=float), y.to_numpy(dtype=float))
     scores = pd.Series(np.abs(model.coef_), index=X.columns, dtype=float)
     if float(scores.sum()) <= 1e-12:
         scores = X.corrwith(y).abs().fillna(0.0)
-    return scores, {"score": "absolute_lasso_coefficient", "alpha": alpha}
+    metadata["alpha"] = alpha
+    return scores, metadata
 
 
 def _lasso_path_scores(
