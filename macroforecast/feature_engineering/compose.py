@@ -59,6 +59,7 @@ def predictor_screen(
     drop_missing: bool = False,
     random_state: int | None = 0,
     warn_full_sample: bool = True,
+    hac_lags: int | None = None,
 ) -> dict[str, Any]:
     """Return a target-aware predictor-screen step for ``feature_spec``."""
 
@@ -81,6 +82,7 @@ def predictor_screen(
         drop_missing=drop_missing,
         random_state=random_state,
         warn_full_sample=warn_full_sample,
+        hac_lags=hac_lags,
     )
 
 

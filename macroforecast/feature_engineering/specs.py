@@ -2377,6 +2377,7 @@ def _fit_feature_step(
         min_train_size = params.pop("min_train_size", None)
         drop_missing = bool(params.pop("drop_missing", False))
         random_state = params.pop("random_state", 0)
+        hac_lags = params.pop("hac_lags", None)
         params.pop("fit_policy", None)
         params.pop("warn_full_sample", None)
         _reject_extra_params(params, plan.name)
@@ -2400,6 +2401,7 @@ def _fit_feature_step(
             max_iter=max_iter,
             random_state=None if random_state is None else int(random_state),
             min_train_size=min_train_size,
+            hac_lags=None if hac_lags is None else int(hac_lags),
         )
         screen_columns = tuple(
             column

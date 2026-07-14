@@ -76,6 +76,7 @@ def fit_predictor_screen(
     max_iter: int = 20000,
     random_state: int | None = 0,
     min_train_size: int | None = None,
+    hac_lags: int | None = None,
 ) -> PredictorScreenResult:
     """Fit a supervised predictor screen on one training window."""
 
@@ -126,6 +127,7 @@ def fit_predictor_screen(
         lambda_search=lambda_search,
         max_iter=max_iter,
         random_state=random_state,
+        hac_lags=hac_lags,
     )
     scores = {
         column: float(score)
@@ -168,8 +170,24 @@ def marginal_t_stats(
     y: np.ndarray,
     *,
     controls: np.ndarray | None = None,
+    hac_lags: int | None = None,
 ) -> np.ndarray:
-    """Return marginal t-statistics, optionally partialling out controls."""
+    """Return marginal t-statistics, optionally partialling out controls.
+
+    When ``hac_lags`` is ``None`` (default) the standard error of each candidate
+    coefficient uses the homoskedastic OLS covariance ``sigma2 * (X'X)^-1``.
+    When ``hac_lags`` is a non-negative integer the coefficient covariance is
+    instead the Bartlett-kernel Newey-West (1987) HAC estimator
+    ``(X'X)^-1 (X' Omega X) (X'X)^-1`` (see ``_newey_west_cov``), which is the
+    right choice when the target is an overlapping multi-horizon return whose
+    regression residuals are autocorrelated (OLS SEs are then too small and the
+    t-stats inflated).  The default (``hac_lags is None``) path is bit-identical
+    to the OLS-only estimator.
+    """
+
+    if hac_lags is not None and int(hac_lags) < 0:
+        raise ValueError("hac_lags must be a non-negative integer or None")
+    lags = None if hac_lags is None else int(hac_lags)
 
     x_values = np.asarray(X, dtype=float)
     y_values = np.asarray(y, dtype=float).reshape(-1)
@@ -186,12 +204,49 @@ def marginal_t_stats(
         design = _regression_design(control_values, x_values[:, [idx]])
         coef = np.linalg.pinv(design) @ y_values
         resid = y_values - design @ coef
-        dof = max(n_rows - design.shape[1], 1)
-        sigma2 = float(resid @ resid) / dof
-        cov = sigma2 * np.linalg.pinv(design.T @ design)
+        if lags is None:
+            dof = max(n_rows - design.shape[1], 1)
+            sigma2 = float(resid @ resid) / dof
+            cov = sigma2 * np.linalg.pinv(design.T @ design)
+        else:
+            cov = _newey_west_cov(design, resid, lags)
         se = float(np.sqrt(max(cov[-1, -1], 0.0)))
         out[idx] = 0.0 if se <= 1e-12 else float(coef[-1] / se)
     return np.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
+
+
+def _newey_west_cov(
+    design: np.ndarray,
+    resid: np.ndarray,
+    hac_lags: int,
+) -> np.ndarray:
+    """Bartlett-kernel Newey-West (1987) HAC covariance of the OLS coefficients.
+
+    Given the regression design matrix ``X`` (``design``) and OLS residuals
+    ``e`` (``resid``), form the score matrix ``u_t = e_t * x_t`` (row ``t``) and
+    return::
+
+        cov     = (X'X)^-1 S (X'X)^-1
+        S       = Gamma_0 + sum_{l=1}^{L} w_l (Gamma_l + Gamma_l^T)
+        Gamma_l = sum_t u_t u_{t-l}^T
+        w_l     = 1 - l / (L + 1)          # Bartlett weights, L = hac_lags
+
+    ``S`` equals ``X' Omega X`` for the Newey-West long-run variance ``Omega``.
+    No small-sample factor is applied, so this matches statsmodels
+    ``OLS(y, X).fit(cov_type='HAC', cov_kwds={'maxlags': L,
+    'use_correction': False})``.
+    """
+
+    scores = design * resid[:, None]  # u_t = resid_t * x_t, shape (n_rows, k)
+    n_rows = scores.shape[0]
+    s_matrix = scores.T @ scores  # Gamma_0
+    max_lag = min(int(hac_lags), max(n_rows - 1, 0))
+    for lag in range(1, max_lag + 1):
+        weight = 1.0 - lag / (hac_lags + 1.0)
+        gamma = scores[lag:].T @ scores[:-lag]  # Gamma_lag
+        s_matrix = s_matrix + weight * (gamma + gamma.T)
+    xtx_inv = np.linalg.pinv(design.T @ design)
+    return xtx_inv @ s_matrix @ xtx_inv
 
 
 def _screen_scores(
@@ -205,14 +260,18 @@ def _screen_scores(
     lambda_search: Any | None,
     max_iter: int,
     random_state: int | None,
+    hac_lags: int | None = None,
 ) -> tuple[np.ndarray, str, dict[str, Any]]:
     if x.shape[1] == 0:
         return np.empty(0, dtype=float), "none", {}
     if method == "t_stat":
+        t_stat_metadata: dict[str, Any] = (
+            {} if hac_lags is None else {"hac_lags": int(hac_lags)}
+        )
         return (
-            np.abs(marginal_t_stats(x, y, controls=controls_matrix)),
+            np.abs(marginal_t_stats(x, y, controls=controls_matrix, hac_lags=hac_lags)),
             "absolute_partial_t_stat",
-            {},
+            t_stat_metadata,
         )
     if method == "delta_r2":
         return (
