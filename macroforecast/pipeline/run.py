@@ -957,12 +957,41 @@ def _result_store_note_computed(
         metadata["n_computed"] += 1
     if store is None or identity is None or identity.digest is None or identity.cell_echo is None:
         return
-    store.write(
-        identity.digest,
-        _drop_arm_tag_columns(frame, arm),
-        data_fingerprint=identity.data_fingerprint,
-        cell_echo=identity.cell_echo,
-    )
+    try:
+        store.write(
+            identity.digest,
+            _drop_arm_tag_columns(frame, arm),
+            data_fingerprint=identity.data_fingerprint,
+            cell_echo=identity.cell_echo,
+        )
+    except Exception as exc:
+        # A result-store WRITE is a best-effort cache side-effect: it persists the
+        # already-computed cell so a LATER run can reuse it. A failure to persist
+        # (disk full / ENOSPC, a read-only or quota-limited store, a permissions
+        # error, a parquet-engine error, ...) must NEVER drop the correctly-computed
+        # forecast from THIS run's report. Record the failure so it is surfaced, but
+        # return normally so the caller keeps the frame. Reads are already fail-safe
+        # in the same spirit -- ``ResultStore.load`` returns ``None`` on any error and
+        # the cell is simply recomputed. Conflating a cache-write failure with a
+        # cell-COMPUTE failure previously discarded every digestible cell (including
+        # the benchmark) whenever the store was unwritable, leaving only the
+        # undigestible arms with ``benchmark_present=False`` and NaN metrics.
+        if metadata is not None:
+            echo = identity.cell_echo if isinstance(identity.cell_echo, Mapping) else {}
+            target_echo = echo.get("target", {}) if isinstance(echo, Mapping) else {}
+            metadata.setdefault("write_failures", []).append(
+                {
+                    "digest": identity.digest,
+                    "arm": arm.name,
+                    "target": (
+                        target_echo.get("name")
+                        if isinstance(target_echo, Mapping)
+                        else None
+                    ),
+                    "horizon": echo.get("horizon") if isinstance(echo, Mapping) else None,
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
 
 
 def _warn_result_store_version_mismatches(metadata: Mapping[str, Any] | None) -> None:
@@ -979,6 +1008,31 @@ def _warn_result_store_version_mismatches(metadata: Mapping[str, Any] | None) ->
     _warnings.warn(
         "result_store reused cell(s) written by a different macroforecast version: "
         f"{cells}",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
+def _warn_result_store_write_failures(metadata: Mapping[str, Any] | None) -> None:
+    """Warn once about cells the store could not persist.
+
+    These cells ARE present in this run's report (a write failure is a cache-miss
+    on the persistence side, not a compute failure); they were simply not cached
+    for reuse by a later run.
+    """
+    failures = list((metadata or {}).get("write_failures", []))
+    if not failures:
+        return
+    import warnings as _warnings
+
+    cells = ", ".join(
+        f"{f.get('target')}/{f.get('arm')}/h{f.get('horizon')} ({f.get('error')})"
+        for f in failures
+    )
+    _warnings.warn(
+        f"result_store could not persist {len(failures)} computed cell(s); they "
+        "remain in this run's report but were NOT cached for reuse "
+        f"(check the store path is writable and has free space): {cells}",
         UserWarning,
         stacklevel=3,
     )
@@ -1230,6 +1284,7 @@ def _run_cells(
             )
 
         _warn_result_store_version_mismatches(result_store_metadata)
+        _warn_result_store_write_failures(result_store_metadata)
         master.attrs["macroforecast_failed_cells"] = list(failed)
         master.attrs["macroforecast_empty_cells"] = list(empty_cells)
         return master, failed, empty_cells, result_store_metadata
