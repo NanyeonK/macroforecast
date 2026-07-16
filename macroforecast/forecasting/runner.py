@@ -604,6 +604,9 @@ def run(
             index=feature_labels,
             metadata=prepared_metadata,
         )
+        all_features, _dropped_nan_cols = _drop_all_nan_fit_columns(
+            all_features, fit_labels
+        )
         train_features = _slice_feature_set(
             all_features,
             fit_labels,
@@ -1411,6 +1414,9 @@ def _run_vintage_aware(
             index=test_labels,
             metadata=actual_metadata,
         )
+        all_features, _dropped_nan_cols = _drop_all_nan_fit_columns(
+            all_features, fit_labels
+        )
         train_features = _slice_feature_set(
             all_features,
             fit_labels,
@@ -2186,6 +2192,37 @@ def _combined_feature_labels(*indexes: Iterable[Any]) -> pd.Index:
     for index in indexes:
         labels = labels.append(pd.Index(index))
     return labels.unique()
+
+
+def _drop_all_nan_fit_columns(
+    feature_set: FeatureSet, fit_labels: Any
+) -> tuple[FeatureSet, list[str]]:
+    """Drop predictor columns that are ENTIRELY NaN over the fit window.
+
+    A predictor that is fully absent over the fit window -- e.g. a late-starting
+    FRED-MD indicator such as ACOGNO (begins 1992), which is all-NaN over an early
+    expanding-window fit sample, or any series the ``em_factor`` imputation cannot
+    fill because it has zero observations in the window -- yields an all-NaN feature
+    column. Without this prune the row-wise ``dropna`` in ``_slice_feature_set`` (used
+    to build the training sample) drops EVERY row, because every row is NaN in that one
+    column, emptying the whole fit sample and SILENTLY yielding zero forecasts even
+    though every other predictor is dense. The all-NaN column carries no information,
+    so dropping it -- judged ONLY on the fit window, hence leak-free -- lets the model
+    fit on the remaining informative predictors. It is a no-op when no column is
+    all-NaN over the fit window, so existing behaviour is unchanged.
+    """
+    X = getattr(feature_set, "X", None)
+    if X is None or getattr(X, "shape", (0, 0))[1] == 0:
+        return feature_set, []
+    fit_X = X.reindex(pd.Index(fit_labels))
+    if len(fit_X) == 0:
+        return feature_set, []
+    all_nan = fit_X.isna().all(axis=0)
+    if not bool(all_nan.any()):
+        return feature_set, []
+    dropped = [c for c in X.columns[all_nan.to_numpy()]]
+    kept = [c for c in X.columns if c not in set(dropped)]
+    return replace(feature_set, X=X.loc[:, kept]), dropped
 
 
 def _slice_feature_set(
