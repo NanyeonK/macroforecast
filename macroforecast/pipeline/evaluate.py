@@ -801,6 +801,20 @@ def _accuracy_against(
     return pd.DataFrame(out, columns=columns)
 
 
+def _finite_float(value: Any) -> float:
+    """Coerce a test statistic / p-value to float, returning NaN when it is ``None``
+    or otherwise not a real number. A Diebold-Mariano / Clark-West statistic is ``None``
+    for a DEGENERATE pair -- most commonly two IDENTICAL forecasts (zero loss
+    differential, so the test is undefined) -- and must be recorded as NaN
+    (not-significant) so the significance table is still produced with every other pair
+    intact, rather than crashing on ``float(None)``.
+    """
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(np.nan)
+
+
 def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame:
     """Forecast-comparison tests of each contender vs the benchmark.
 
@@ -908,7 +922,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         loss_b,
                         **{**dm_options, "horizon": int(horizon), "input_type": "loss"},
                     )
-                    row["dm_stat"] = float(cast(float, dm.statistic)); row["dm_p"] = float(cast(float, dm.p_value))
+                    row["dm_stat"] = _finite_float(dm.statistic); row["dm_p"] = _finite_float(dm.p_value)
                 except _DEGRADATION_EXCEPTIONS as exc:
                     row["dm_stat"] = np.nan; row["dm_p"] = np.nan
                     degraded_reasons.append(f"dm failed: {type(exc).__name__}: {exc}")
@@ -922,7 +936,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         fc_vals,
                         **{**cw_options, "horizon": int(horizon)},
                     )
-                    row["cw_stat"] = float(cast(float, cw.statistic)); row["cw_p"] = float(cast(float, cw.p_value))
+                    row["cw_stat"] = _finite_float(cw.statistic); row["cw_p"] = _finite_float(cw.p_value)
                 except _DEGRADATION_EXCEPTIONS as exc:
                     row["cw_stat"] = np.nan; row["cw_p"] = np.nan
                     degraded_reasons.append(f"cw failed: {type(exc).__name__}: {exc}")
