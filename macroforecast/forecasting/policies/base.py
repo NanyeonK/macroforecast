@@ -153,7 +153,18 @@ def _fit_one_model_at_origin(
     model_owned_ic = str(
         getattr(model_spec, "selection_method", "cv")
     ).lower() in ("bic", "aic", "aicc")
-    uses_ic = explicit_ic or (ic_selection_enabled and model_owned_ic)
+    # An explicit non-IC SearchSpec (grid/cv/random/etc. with a validation
+    # splitter) must suppress a model's built-in IC selection; otherwise
+    # IC-owning models (ar/far, selection_method="bic") silently route to
+    # select_by_information_criterion and never run the requested CV.
+    explicit_non_ic = (
+        selected is not None
+        and selected_method not in ("", "information_criterion", "ic")
+        and getattr(selected, "validation_splitter", None) is not None
+    )
+    uses_ic = explicit_ic or (
+        ic_selection_enabled and model_owned_ic and not explicit_non_ic
+    )
     if should_select and uses_ic:
         # Information-criterion models (AR, FM) select their order by BIC/AIC on
         # the full training sample, so they need no validation split. This is
