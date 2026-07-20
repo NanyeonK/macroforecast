@@ -208,7 +208,10 @@ def _fit_one_model_at_origin(
                 }
             best_params = dict(cfg.param_cache.get(cache_key, {}))
     elif should_select:
-        if not selection_splits:
+        splitter_override = (
+            selected is not None and selected.validation_splitter is not None
+        )
+        if not selection_splits and not splitter_override:
             best_params, selection_metadata = _resolve_degraded_selection(
                 cache_key=cache_key,
                 alias=degraded_alias if degraded_alias is not None else model_run.alias,
@@ -221,9 +224,6 @@ def _fit_one_model_at_origin(
             if reused_metadata_extras and isinstance(selection_metadata, dict):
                 selection_metadata = {**selection_metadata, **reused_metadata_extras}
         elif retune or cache_key not in cfg.param_cache:
-            splitter_override = (
-                selected is not None and selected.validation_splitter is not None
-            )
             result = select_params(
                 selection_model_spec,
                 X_sel,
