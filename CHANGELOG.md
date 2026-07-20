@@ -5,6 +5,21 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/policies/base.py` (bug fix, CV selection fell through to the
+  degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
+  own `validation_splitter` (POOS / K-fold CV over `n_lag` for `ar`/`far`) was
+  intercepted by the `if not selection_splits:` degraded-selection guard
+  whenever the estimation window carried no validation block -- the exact
+  configuration of IC-owning models (`ar`/`far`, `selection_method="bic"`). The
+  arm silently returned unselected (`params=None`) forecasts numerically
+  indistinguishable from BIC instead of running the requested cross-validation.
+  The degraded guard now also requires `not splitter_override`, so a SearchSpec
+  that supplies its own splitter reaches `select_params` and derives its
+  validation splits from the training sample. Non-splitter selection is
+  unchanged; the runner golden snapshot is byte-identical; the
+  `information_criterion` fallback for a splitter-less grid on an IC-owning
+  model is unchanged.
+
 - `models/linear.py`, `models/specs.py`, `model_selection/runner.py`,
   `model_selection/search.py` (performance, opt-in K-prefix grouped evaluator):
   added `SupervisedPCARegressor.fit_prefix` (inherited by
