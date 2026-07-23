@@ -643,9 +643,13 @@ class MacroRandomForest:
 
                 if stop_flag:
                     tree_info.loc[j, "TERMINAL"] = "LEAF"
-
-                tree_info = pd.concat(
-                    [tree_info, children]).reset_index(drop=True)
+                else:
+                    # BUGFIX: children is only defined when a split is made
+                    # (not stop_flag). A node with no valid split (all SSE inf)
+                    # is a LEAF and adds no children; the unconditional concat
+                    # here raised UnboundLocalError on `children`.
+                    tree_info = pd.concat(
+                        [tree_info, children]).reset_index(drop=True)
 
                 do_splits = not (
                     all(np.array(tree_info['TERMINAL']) != "SPLIT"))
@@ -888,8 +892,15 @@ class MacroRandomForest:
 
         for i in range(0, len(leafs)):
 
-            ind_all = list(self.data_ori[eval(
-                leafs_mat[i, 2].replace("[", "self.data_ori["))].index)
+            _filt = leafs_mat[i, 2]
+            if _filt is None:
+                # BUGFIX: a no-split (root) leaf carries FILTER=None; all rows
+                # belong to it. The unconditional .replace() raised
+                # AttributeError('NoneType') on degenerate single-leaf trees.
+                ind_all = list(self.data_ori.index)
+            else:
+                ind_all = list(self.data_ori[eval(
+                    _filt.replace("[", "self.data_ori["))].index)
 
             ind = np.array([j for j in ind_all if j <
                             self.oos_pos[0] if not np.isnan(j)])
