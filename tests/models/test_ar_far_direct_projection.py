@@ -202,3 +202,56 @@ def test_far_predictions_match_regression_anchor():
     np.testing.assert_allclose(direct.ssr_, 62.28138785224115, atol=1e-12)
     assert direct.nobs_ == 48
     assert direct.n_params_ == 5
+
+
+def test_direct_ar_ignores_predictor_lags_when_target_lag0_absent():
+    """Regression (kitchen-sink benchmark bug): a direct AR whose feature matrix
+    carries predictor ``*_lag0`` columns AND target lags that start at lag 1 (no
+    ``*_lag0`` for the target) must NOT silently regress the target on the
+    predictors' contemporaneous values when ``n_lag`` restricts the range to lag 0.
+    It must select none of the target's own lags and fall back to the unconditional
+    mean -- otherwise an "AR benchmark" becomes a p=N kitchen-sink OLS and every
+    relative RMSE normalized against it is corrupted.
+    """
+    from macroforecast.models.timeseries import _select_lag_columns
+
+    rng = np.random.default_rng(3)
+    n = 160
+    series = np.cumsum(rng.normal(size=n))
+    target = pd.Series(series, name="UNRATE")
+    s = pd.Series(series, name="UNRATE")
+    cols = {f"UNRATE_lag{k}": s.shift(k) for k in (1, 2, 3, 4)}  # target lags: NO lag0
+    for j in range(6):                                           # predictor lag0/lag1 block
+        p = pd.Series(np.cumsum(rng.normal(size=n)))
+        cols[f"P{j}_lag0"] = p.shift(0)
+        cols[f"P{j}_lag1"] = p.shift(1)
+    X = pd.DataFrame(cols)
+
+    # n_lag=1 wants the target's lag0, which is absent -> select NOTHING (never the
+    # predictors' *_lag0 columns).
+    assert _select_lag_columns(X, 1, "UNRATE") == []
+
+    fit = _AR(n_lag=1, direct=True).fit(X, target)
+    preds = np.asarray(fit.predict(X.iloc[-10:]), dtype=float)
+    # Mean fallback: a single constant near the training mean, NOT a wild fit.
+    assert np.std(preds) < 1e-9
+    assert abs(float(preds[0]) - fit._fallback) < 1e-9
+    # IC plumbing exposed for the mean-only model so BIC/AIC order selection works.
+    assert fit.ssr_ is not None and fit.nobs_ is not None and fit.n_params_ == 1
+
+
+def test_select_lag_columns_matches_target_base_across_all_indices():
+    """The target base is matched against EVERY lag column (any index), so a target
+    whose lags start at 1 still resolves to its OWN base and returns [] when the
+    requested range excludes them -- rather than falling through to other bases."""
+    from macroforecast.models.timeseries import _select_lag_columns
+
+    cols = [f"UNRATE_lag{k}" for k in (1, 2, 3, 4)] + ["GDP_lag0", "CPI_lag0"]
+    X = pd.DataFrame({c: [0.0, 1.0, 2.0] for c in cols})
+    assert _select_lag_columns(X, 1, "UNRATE") == []                 # no target lag0 -> []
+    assert _select_lag_columns(X, 5, "UNRATE") == [
+        "UNRATE_lag1", "UNRATE_lag2", "UNRATE_lag3", "UNRATE_lag4",  # target's own lags only
+    ]
+    # single-base name mismatch is benign: those ARE the target's lags (predictors=[])
+    Y = pd.DataFrame({f"Y_lag{k}": [0.0, 1.0, 2.0] for k in range(0, 4)})
+    assert _select_lag_columns(Y, 2, "target") == ["Y_lag0", "Y_lag1"]
