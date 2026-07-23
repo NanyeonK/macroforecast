@@ -57,7 +57,7 @@ Guide context: [../guide/concepts/preprocessing.md](../guide/concepts/preprocess
 Kind: `data`
 
 ```python
-PreprocessInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.core.frame.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.core.frame.DataFrame
+PreprocessInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.DataFrame
 ```
 ### `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES`
 
