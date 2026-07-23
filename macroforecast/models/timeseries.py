@@ -31,14 +31,18 @@ def _select_lag_columns(X: Any, n_lag: int, target_name: Any = None) -> list[str
     Without a ``target_name`` (or no base matches) every ``*_lag`` column in range is
     used, which is correct when the spec carries only target lags (``predictors=[]``).
     """
-    triples: list[tuple[int, str, str]] = []
+    # Collect EVERY lag column (any index) so the target base can be matched even
+    # when its own lags fall outside [0, n_lag-1]; range restriction happens AFTER
+    # base selection so a target whose lags start at 1 is never silently replaced
+    # by predictors' *_lag0 columns.
+    all_lags: list[tuple[int, str, str]] = []
     for col in pd.DataFrame(X).columns:
         match = _LAG_COL_RE.search(str(col))
-        if match is not None and 0 <= int(match.group(1)) <= int(n_lag) - 1:
+        if match is not None:
             base = str(col)[: match.start()]
-            triples.append((int(match.group(1)), base, str(col)))
+            all_lags.append((int(match.group(1)), base, str(col)))
     if target_name is not None:
-        bases = {base for _, base, _ in triples}
+        bases = {base for _, base, _ in all_lags}
         chosen: str | None = None
         if str(target_name) in bases:
             chosen = str(target_name)
@@ -46,10 +50,20 @@ def _select_lag_columns(X: Any, n_lag: int, target_name: Any = None) -> list[str
             prefixes = [b for b in bases if b and str(target_name).startswith(b)]
             if prefixes:
                 chosen = max(prefixes, key=len)
-        if chosen is not None:
-            triples = [t for t in triples if t[1] == chosen]
-    triples.sort()
-    return [col for _, _, col in triples]
+            elif len(bases) == 1:
+                # A single lag base that does not name-match the target is still the
+                # target's OWN lags (the spec carries only target lags, predictors=[]);
+                # a benign name mismatch, not a predictor block.
+                chosen = next(iter(bases))
+        if chosen is None:
+            # Multiple lag bases and none name the target: the target's own lags are
+            # absent. Return empty so the caller falls back to the mean rather than
+            # regressing the target on predictors' contemporaneous values.
+            return []
+        all_lags = [t for t in all_lags if t[1] == chosen]
+    in_range = [t for t in all_lags if 0 <= t[0] <= int(n_lag) - 1]
+    in_range.sort()
+    return [col for _, _, col in in_range]
 
 
 def _ols_with_intercept(design: np.ndarray, response: np.ndarray) -> np.ndarray:
@@ -79,6 +93,43 @@ class _AR:
         self.n_params_: int | None = None
         self._direct_cols: list[str] | None = None
         self._direct_coef: np.ndarray | None = None
+
+    def _set_mean_ic(self, target: pd.Series) -> None:
+        # IC stats for the degenerate mean-only direct model (no usable target lags),
+        # so information-criterion order selection can compute BIC/AIC for it.
+        resid = pd.Series(target).astype(float).dropna().to_numpy(dtype=float) - self._fallback
+        self.ssr_ = float(resid @ resid)
+        self.nobs_ = int(resid.shape[0])
+        self.n_params_ = 1
+
+    def _warn_if_predictor_lags_present(self, Xdf: pd.DataFrame, target: pd.Series) -> None:
+        # A direct AR that finds no usable target lag but DOES carry non-target
+        # ``*_lag`` columns is almost always a mis-specified benchmark: the feature
+        # spec omitted the target's lag 0 (``feature_spec`` ``target_lags`` is
+        # 1-indexed) while including predictors, so the "AR" would have regressed the
+        # target on predictors' contemporaneous values. We now fall back to the mean;
+        # surface the mistake loudly rather than silently shipping a degenerate
+        # benchmark that corrupts every relative metric normalized against it.
+        tgt = str(getattr(target, "name", "") or "")
+        foreign = [
+            c
+            for c in map(str, Xdf.columns)
+            if (m := _LAG_COL_RE.search(c)) is not None
+            and (base := c[: m.start()]) != tgt
+            and not (tgt and base and tgt.startswith(base))
+        ]
+        if foreign:
+            warnings.warn(
+                f"direct AR for target {tgt!r} found no usable target lag columns "
+                f"(n_lag={self.n_lag}) yet the feature matrix carries "
+                f"{len(foreign)} predictor lag column(s) (e.g. {foreign[0]!r}); "
+                f"falling back to the unconditional mean. The feature spec likely "
+                f"omitted the target's lag 0 -- feature_spec target_lags is 1-indexed, "
+                f"so pass target_lags=range(0, K) (and predictors=[] for a pure "
+                f"autoregression) to include the origin value.",
+                UserWarning,
+                stacklevel=2,
+            )
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_AR":
         if self.direct:
@@ -111,13 +162,19 @@ class _AR:
         self._fallback = float(target.dropna().mean()) if not target.dropna().empty else 0.0
         self._direct_cols = _select_lag_columns(Xdf, self.n_lag, target_name=getattr(target, "name", None))
         if not self._direct_cols:
-            # No usable lag features (e.g. a feature spec without target_lags); fall
-            # back to the unconditional mean rather than a stale-persistence forecast.
+            # No usable target lags (e.g. n_lag restricts to lag0 but the spec's target
+            # lags start at 1): fall back to the unconditional mean rather than a
+            # stale-persistence forecast. Expose IC stats for the mean-only model so
+            # information-criterion order selection can score and skip this order, and
+            # warn if predictor lag columns are present (a mis-specified AR benchmark).
+            self._warn_if_predictor_lags_present(Xdf, target)
+            self._set_mean_ic(target)
             return self
         design_df = Xdf[self._direct_cols].astype(float)
         joined = pd.concat([design_df, target.rename("__target__")], axis=1).dropna()
         if joined.empty:
             self._direct_cols = None
+            self._set_mean_ic(target)
             return self
         design = joined[self._direct_cols].to_numpy(dtype=float)
         response = joined["__target__"].to_numpy(dtype=float)
