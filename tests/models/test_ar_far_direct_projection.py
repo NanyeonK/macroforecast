@@ -255,3 +255,40 @@ def test_select_lag_columns_matches_target_base_across_all_indices():
     # single-base name mismatch is benign: those ARE the target's lags (predictors=[])
     Y = pd.DataFrame({f"Y_lag{k}": [0.0, 1.0, 2.0] for k in range(0, 4)})
     assert _select_lag_columns(Y, 2, "target") == ["Y_lag0", "Y_lag1"]
+
+
+def test_direct_ar_warns_when_predictor_lags_present_but_target_lag0_absent():
+    """The mis-specified-benchmark case must be LOUD. Falling back to the mean while
+    predictor lag columns sit in the design is the signature of an AR benchmark whose
+    feature spec omitted the target's lag 0 -- previously that silently produced a
+    kitchen-sink OLS on predictors and corrupted every relative metric normalized
+    against the benchmark."""
+    import pytest
+
+    rng = np.random.default_rng(4)
+    n = 80
+    s = pd.Series(np.cumsum(rng.normal(size=n)), name="UNRATE")
+    cols = {f"UNRATE_lag{k}": s.shift(k) for k in (1, 2, 3, 4)}   # target lags: no lag0
+    for j in range(3):
+        p = pd.Series(np.cumsum(rng.normal(size=n)))
+        cols[f"P{j}_lag0"] = p
+        cols[f"P{j}_lag1"] = p.shift(1)
+    X = pd.DataFrame(cols)
+
+    with pytest.warns(UserWarning, match="no usable target lag columns"):
+        _AR(n_lag=1, direct=True).fit(X, s)
+
+
+def test_direct_ar_stays_silent_for_target_lags_only_spec():
+    """A pure autoregression whose lags merely start at 1 is NOT a mis-specification --
+    IC order selection just picks a higher order -- so it must not warn."""
+    import warnings as _w
+
+    rng = np.random.default_rng(5)
+    n = 80
+    s = pd.Series(np.cumsum(rng.normal(size=n)), name="UNRATE")
+    X = pd.DataFrame({f"UNRATE_lag{k}": s.shift(k) for k in (1, 2, 3, 4)})
+
+    with _w.catch_warnings():
+        _w.simplefilter("error")          # any warning fails this test
+        _AR(n_lag=1, direct=True).fit(X, s)

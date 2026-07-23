@@ -102,6 +102,35 @@ class _AR:
         self.nobs_ = int(resid.shape[0])
         self.n_params_ = 1
 
+    def _warn_if_predictor_lags_present(self, Xdf: pd.DataFrame, target: pd.Series) -> None:
+        # A direct AR that finds no usable target lag but DOES carry non-target
+        # ``*_lag`` columns is almost always a mis-specified benchmark: the feature
+        # spec omitted the target's lag 0 (``feature_spec`` ``target_lags`` is
+        # 1-indexed) while including predictors, so the "AR" would have regressed the
+        # target on predictors' contemporaneous values. We now fall back to the mean;
+        # surface the mistake loudly rather than silently shipping a degenerate
+        # benchmark that corrupts every relative metric normalized against it.
+        tgt = str(getattr(target, "name", "") or "")
+        foreign = [
+            c
+            for c in map(str, Xdf.columns)
+            if (m := _LAG_COL_RE.search(c)) is not None
+            and (base := c[: m.start()]) != tgt
+            and not (tgt and base and tgt.startswith(base))
+        ]
+        if foreign:
+            warnings.warn(
+                f"direct AR for target {tgt!r} found no usable target lag columns "
+                f"(n_lag={self.n_lag}) yet the feature matrix carries "
+                f"{len(foreign)} predictor lag column(s) (e.g. {foreign[0]!r}); "
+                f"falling back to the unconditional mean. The feature spec likely "
+                f"omitted the target's lag 0 -- feature_spec target_lags is 1-indexed, "
+                f"so pass target_lags=range(0, K) (and predictors=[] for a pure "
+                f"autoregression) to include the origin value.",
+                UserWarning,
+                stacklevel=2,
+            )
+
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_AR":
         if self.direct:
             return self._fit_direct(X, y)
@@ -136,7 +165,9 @@ class _AR:
             # No usable target lags (e.g. n_lag restricts to lag0 but the spec's target
             # lags start at 1): fall back to the unconditional mean rather than a
             # stale-persistence forecast. Expose IC stats for the mean-only model so
-            # information-criterion order selection can score and skip this order.
+            # information-criterion order selection can score and skip this order, and
+            # warn if predictor lag columns are present (a mis-specified AR benchmark).
+            self._warn_if_predictor_lags_present(Xdf, target)
             self._set_mean_ic(target)
             return self
         design_df = Xdf[self._direct_cols].astype(float)
