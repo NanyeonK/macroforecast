@@ -36,6 +36,8 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `albacore_ranks` | function | Fit the inflation-specific rank-space Albacore wrapper. |
 | `ar` | function | Fit a fixed-order AR(``n_lag``) by OLS. |
 | `ar_bic` | function | Target-only AR with internal residual-variance IC lag selection. |
+| `setar` | function | Self-exciting threshold autoregression (two regimes, min-SSR threshold). |
+| `star` | function | Smooth-transition autoregression (logistic transition on the most recent lag). |
 | `naive` | function | Random-walk (naive) forecaster: carry the last observed value forward. |
 | `hist_mean` | function | Historical (prevailing) mean benchmark for the transformed target. |
 | `seasonal_naive` | function | Seasonal-naive forecaster: repeat the last full seasonal cycle. |
@@ -205,8 +207,10 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `ridge` | `linear` | `supervised` | `standard` | none | no | Ridge regression. |
 | `scaled_pca` | `composite` | `supervised` | `standard` | none | no | Huang et al. scaled PCA: marginal predictive-slope scaling followed by PCA. |
 | `seasonal_naive` | `timeseries` | `target` | `standard` | none | no | Seasonal-naive baseline: repeat the last seasonal cycle (forecast::snaive). |
+| `setar` | `timeseries` | `supervised` | `standard` | none | no | Self-exciting threshold autoregression (two regimes). |
 | `shrink_to_target_ridge` | `linear` | `supervised` | `standard` | none | no | Ridge regression shrinking coefficients toward a target vector. |
 | `sparse_group_lasso` | `linear` | `supervised` | `standard` | none | no | Package-native sparse group lasso with group and feature-level sparsity. |
+| `star` | `timeseries` | `supervised` | `standard` | none | no | Smooth-transition autoregression (logistic transition). |
 | `stlf` | `timeseries` | `target` | `standard` | none | no | STL decomposition + forecast of the seasonally-adjusted series (forecast::stlf). |
 | `supervised_aggregation` | `assemblage` | `supervised` | `standard` | none | no | Generic constrained supervised aggregation derived from Albacore/assemblage primitives. |
 | `supervised_pca` | `composite` | `supervised` | `standard` | none | no | Original-style iterative supervised PCA with residual correlation screening and projection. |
@@ -2820,6 +2824,34 @@ Seasonal-naive baseline: repeat the last seasonal cycle (forecast::snaive).
 | --- | --- | --- | --- | --- |
 | `period` | `None` | `int \| None` | False | Seasonal period m; repeats the last m values. |
 
+### setar
+
+Family: `timeseries`
+
+#### Fit Signature
+
+```python
+macroforecast.models.setar(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `supervised` |
+| `default_preset` | `standard` |
+| `default_search_method` | `grid` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Self-exciting threshold autoregression (two regimes).
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `n_lag` | `2` | `int` | True | Number of autoregressive lags per regime. |
+| `direct` | `False` | `bool` | False | Direct multi-step (set by the forecast policy). |
+
 ### shrink_to_target_ridge
 
 Family: `linear`
@@ -2901,6 +2933,34 @@ Package-native sparse group lasso with group and feature-level sparsity.
 | `small` | `alpha`: `(0.01, 0.1, 1.0)`, `l1_ratio`: `(0.25, 0.5, 0.75)` |
 | `standard` | `alpha`: `(0.001, 0.01, 0.1, 1.0, 10.0)`, `l1_ratio`: `(0.1, 0.25, 0.5, 0.75, 0.9)` |
 | `wide` | `alpha`: `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0)`, `l1_ratio`: `(0.05, 0.1, 0.25, 0.5, 0.75, 0.9)` |
+
+### star
+
+Family: `timeseries`
+
+#### Fit Signature
+
+```python
+macroforecast.models.star(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `supervised` |
+| `default_preset` | `standard` |
+| `default_search_method` | `grid` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Smooth-transition autoregression (logistic transition).
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `n_lag` | `2` | `int` | True | Number of autoregressive lags per regime. |
+| `direct` | `False` | `bool` | False | Direct multi-step (set by the forecast policy). |
 
 ### stlf
 
@@ -3428,7 +3488,7 @@ XGBoost regressor.
 Kind: `data`
 
 ```python
-MODEL_SPECS = dict(82 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, ar_bic, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, ...)
+MODEL_SPECS = dict(84 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, ar_bic, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, ...)
 ```
 
 ## Callable And Class Reference

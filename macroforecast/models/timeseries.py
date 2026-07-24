@@ -238,6 +238,139 @@ def ar(X: Any, y: Any | None = None, *, n_lag: int = 1, direct: bool = False) ->
     )
 
 
+class _SETAR:
+    """Self-Exciting Threshold AR: two OLS regimes on the target's own lags, split
+    by a threshold on the most recent lag (the self-exciting state variable), chosen
+    to minimize total in-sample SSR. Direct h-step when X carries the h-ahead target."""
+
+    def __init__(self, *, n_lag: int = 2, min_regime: int = 15, n_thresholds: int = 15) -> None:
+        self.n_lag = max(1, int(n_lag))
+        self.min_regime = max(2, int(min_regime))
+        self.n_thresholds = max(3, int(n_thresholds))
+        self._cols: list[str] | None = None
+        self._tau: float | None = None
+        self._b_lo: np.ndarray | None = None
+        self._b_hi: np.ndarray | None = None
+        self._fallback: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_SETAR":
+        Xdf = pd.DataFrame(X)
+        target = pd.Series(y).astype(float)
+        self._fallback = float(target.dropna().mean()) if target.notna().any() else 0.0
+        cols = _select_lag_columns(Xdf, 999, target_name=getattr(target, "name", None))[: self.n_lag]
+        if not cols:
+            return self
+        joined = pd.concat([Xdf[cols], target.rename("__target__")], axis=1).dropna()
+        if len(joined) < 2 * self.min_regime:
+            return self
+        L = joined[cols].to_numpy(dtype=float)
+        yv = joined["__target__"].to_numpy(dtype=float)
+        state = L[:, 0]  # lowest lag index = y_{t-1}
+        grid = np.quantile(state, np.linspace(0.15, 0.85, self.n_thresholds))
+        best_ssr, best = float("inf"), None
+        for tau in np.unique(grid):
+            lo = state <= tau
+            if int(lo.sum()) < self.min_regime or int((~lo).sum()) < self.min_regime:
+                continue
+            b_lo = _ols_with_intercept(L[lo], yv[lo])
+            b_hi = _ols_with_intercept(L[~lo], yv[~lo])
+            r_lo = yv[lo] - np.column_stack([np.ones(int(lo.sum())), L[lo]]) @ b_lo
+            r_hi = yv[~lo] - np.column_stack([np.ones(int((~lo).sum())), L[~lo]]) @ b_hi
+            ssr = float(r_lo @ r_lo + r_hi @ r_hi)
+            if ssr < best_ssr:
+                best_ssr, best = ssr, (float(tau), b_lo, b_hi)
+        if best is None:
+            return self
+        self._cols, (self._tau, self._b_lo, self._b_hi) = cols, best
+        self.ssr_ = best_ssr
+        self.nobs_ = int(len(yv))
+        self.n_params_ = int(2 * (len(cols) + 1) + 1)  # two regimes + threshold
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        Xdf = pd.DataFrame(X)
+        if self._cols is None or self._b_lo is None:
+            return np.full(len(Xdf), self._fallback, dtype=float)
+        L = Xdf.reindex(columns=self._cols).astype(float).fillna(0.0).to_numpy()
+        A = np.column_stack([np.ones(len(L)), L])
+        lo = L[:, 0] <= self._tau
+        return np.where(lo, A @ self._b_lo, A @ self._b_hi)
+
+
+class _STAR:
+    """Smooth Transition AR: convex combination of two AR regimes weighted by a
+    logistic transition G(gamma,(state-c)/sd) on the most recent lag. (gamma,c) are
+    concentrated out on a small grid; the regime coefficients are OLS given G."""
+
+    def __init__(self, *, n_lag: int = 2, gammas: tuple = (1.0, 3.0, 8.0, 20.0), n_c: int = 5) -> None:
+        self.n_lag = max(1, int(n_lag))
+        self.gammas = tuple(float(g) for g in gammas)
+        self.n_c = max(3, int(n_c))
+        self._cols = None; self._gamma = None; self._c = None; self._sd = 1.0
+        self._beta = None; self._fallback = 0.0
+        self.ssr_ = None; self.nobs_ = None; self.n_params_ = None
+
+    def _stack(self, L, G):
+        one = np.ones((len(L), 1)); Xa = np.column_stack([one, L])
+        return np.column_stack([(1.0 - G)[:, None] * Xa, G[:, None] * Xa])
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_STAR":
+        Xdf = pd.DataFrame(X); target = pd.Series(y).astype(float)
+        self._fallback = float(target.dropna().mean()) if target.notna().any() else 0.0
+        cols = _select_lag_columns(Xdf, 999, target_name=getattr(target, "name", None))[: self.n_lag]
+        if not cols:
+            return self
+        joined = pd.concat([Xdf[cols], target.rename("__target__")], axis=1).dropna()
+        if len(joined) < max(20, 2 * (len(cols) + 1)):
+            return self
+        L = joined[cols].to_numpy(dtype=float); yv = joined["__target__"].to_numpy(dtype=float)
+        s = L[:, 0]; sd = float(np.std(s)) or 1.0
+        best_ssr, best = float("inf"), None
+        for gamma in self.gammas:
+            for c in np.unique(np.quantile(s, np.linspace(0.25, 0.75, self.n_c))):
+                G = 1.0 / (1.0 + np.exp(-gamma * (s - c) / sd))
+                D = self._stack(L, G)
+                beta, *_ = np.linalg.lstsq(D, yv, rcond=None)
+                r = yv - D @ beta
+                ssr = float(r @ r)
+                if ssr < best_ssr:
+                    best_ssr, best = ssr, (float(gamma), float(c), beta)
+        if best is None:
+            return self
+        self._cols, self._sd = cols, sd
+        self._gamma, self._c, self._beta = best
+        self.ssr_ = best_ssr; self.nobs_ = int(len(yv)); self.n_params_ = int(D.shape[1] + 2)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        Xdf = pd.DataFrame(X)
+        if self._cols is None or self._beta is None:
+            return np.full(len(Xdf), self._fallback, dtype=float)
+        L = Xdf.reindex(columns=self._cols).astype(float).fillna(0.0).to_numpy()
+        G = 1.0 / (1.0 + np.exp(-self._gamma * (L[:, 0] - self._c) / self._sd))
+        return self._stack(L, G) @ self._beta
+
+
+def setar(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit:
+    """Self-exciting threshold autoregression (two regimes, min-SSR threshold)."""
+    target = as_series(y if y is not None else X)
+    features = as_frame(X)
+    return fit_estimator(_SETAR(n_lag=int(n_lag)), features, target,
+                         model="setar", metadata={"n_lag": int(n_lag), "direct": bool(direct)})
+
+
+def star(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit:
+    """Smooth-transition autoregression (logistic transition on the most recent lag)."""
+    target = as_series(y if y is not None else X)
+    features = as_frame(X)
+    return fit_estimator(_STAR(n_lag=int(n_lag)), features, target,
+                         model="star", metadata={"n_lag": int(n_lag), "direct": bool(direct)})
+
+
+
 _AR_BIC_CRITERIA = frozenset({"aic", "aicc", "bic"})
 _AR_BIC_PARAMETER_COUNTS = frozenset({"standard", "lag_square"})
 _AR_BIC_ESTIMATORS = frozenset({"ols", "yule_walker", "burg", "matlab_ar"})
