@@ -42,7 +42,7 @@ class MacroRandomForest:
                  rw_regul=0.75, keep_forest=False, block_size=12,
                  fast_rw=True, ridge_lambda=0.1, HRW=0,
                  B=50, resampling_opt=2, print_b=True,
-                 parallelise=True, n_cores=-1):
+                 parallelise=True, n_cores=-1, random_state=None):
 
         ######## INITIALISE VARIABLES ###########
 
@@ -87,6 +87,11 @@ class MacroRandomForest:
 
         # Speed Variables
         self.block_size, self.fast_rw, self.parallelise, self.n_cores = block_size, fast_rw, parallelise, n_cores
+        # Deterministic per-tree seeding: with random_state set, tree b draws from
+        # a fixed seed derived from (random_state, b), so serial and parallel forests
+        # are bit-identical and the whole fit is reproducible run-to-run.
+        self.random_state = None if random_state is None else int(random_state)
+        self._tree_seeds = None
 
         if isinstance(self.S_pos, str):
             self.S_pos = np.arange(1, len(self.data.columns))
@@ -264,6 +269,8 @@ class MacroRandomForest:
         '''
 
         Bs = np.arange(0, self.B)
+        if self.random_state is not None:
+            self._tree_seeds = np.random.SeedSequence(int(self.random_state)).generate_state(int(self.B))
 
         # The original basis for this code is taken from publicly available code for a simple tree by André Bleier.
         # Standardize data (remeber, we are doing ridge in the end)
@@ -453,6 +460,8 @@ class MacroRandomForest:
         '''
         Function to create a single MRF tree.
         '''
+        if getattr(self, 'random_state', None) is not None:
+            np.random.seed(int(self._tree_seeds[b]))
 
         if self.print_b:
             print(f"Tree {b+1} out of {self.B}")
