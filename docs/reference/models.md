@@ -1993,7 +1993,7 @@ Family: `tree`
 #### Fit Signature
 
 ```python
-macroforecast.models.macro_random_forest(X: Any, y: Any | None = None, *, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, **kwargs: Any) -> ModelFit
+macroforecast.models.macro_random_forest(X: Any, y: Any | None = None, *, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, random_state: int | None = None, **kwargs: Any) -> ModelFit
 ```
 
 | Field | Value |
@@ -3625,7 +3625,7 @@ Qualified name: `macroforecast.models.tree.MacroRandomForestRegressor`
 #### Signature
 
 ```python
-macroforecast.models.MacroRandomForestRegressor(*, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, **kwargs: Any) -> None
+macroforecast.models.MacroRandomForestRegressor(*, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, random_state: int | None = None, **kwargs: Any) -> None
 ```
 
 #### Description
@@ -3667,6 +3667,7 @@ Adapter for the vendored MacroRandomForest reference implementation.
 | `print_b` | keyword only | `bool` | `False` |
 | `parallelise` | keyword only | `bool` | `False` |
 | `n_cores` | keyword only | `int` | `1` |
+| `random_state` | keyword only | `int \| None` | `None` |
 | `kwargs` | var keyword | `Any` | `required` |
 
 #### Returns
