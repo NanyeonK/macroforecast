@@ -1476,6 +1476,7 @@ class MacroRandomForestRegressor:
         print_b: bool = False,
         parallelise: bool = False,
         n_cores: int = 1,
+        random_state: int | None = None,
         **kwargs: Any,
     ) -> None:
         if int(y_pos) != 0:
@@ -1524,6 +1525,7 @@ class MacroRandomForestRegressor:
             "print_b": bool(print_b),
             "parallelise": bool(parallelise),
             "n_cores": int(n_cores),
+            "random_state": None if random_state is None else int(random_state),
             **kwargs,
         }
         self._train_X: pd.DataFrame | None = None
@@ -1718,6 +1720,7 @@ def macro_random_forest(
     print_b: bool = False,
     parallelise: bool = False,
     n_cores: int = 1,
+    random_state: int | None = None,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit Macroeconomic Random Forest with the vendored reference backend.
@@ -1758,6 +1761,7 @@ def macro_random_forest(
         "print_b": bool(print_b),
         "parallelise": bool(parallelise),
         "n_cores": int(n_cores),
+        "random_state": None if random_state is None else int(random_state),
         **kwargs,
     }
     estimator = MacroRandomForestRegressor(**params)
