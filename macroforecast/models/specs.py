@@ -50,6 +50,8 @@ from macroforecast.models.svm import linear_svr, nu_svr, svr
 from macroforecast.models.timeseries import (
     ar,
     ar_bic,
+    setar,
+    star,
     naive,
     hist_mean,
     seasonal_naive,
@@ -2746,6 +2748,30 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         },
         description="Hounyo-Li supervised scaled PCA: marginal predictive-slope scaling followed by SPCA.",
         prefix_search=PrefixSearchSpec(param="n_components", fit_prefix=SupervisedScaledPCARegressor.fit_prefix),
+    ),
+    "setar": _spec(
+        "setar",
+        "timeseries",
+        setar,
+        default_params={"n_lag": 2, "direct": False},
+        parameters=(
+            _p("n_lag", 2, "int", "Number of autoregressive lags per regime."),
+            _p("direct", False, "bool", "Direct multi-step (set by the forecast policy).", False),
+        ),
+        input_kind="supervised",
+        description="Self-exciting threshold autoregression (two regimes).",
+    ),
+    "star": _spec(
+        "star",
+        "timeseries",
+        star,
+        default_params={"n_lag": 2, "direct": False},
+        parameters=(
+            _p("n_lag", 2, "int", "Number of autoregressive lags per regime."),
+            _p("direct", False, "bool", "Direct multi-step (set by the forecast policy).", False),
+        ),
+        input_kind="supervised",
+        description="Smooth-transition autoregression (logistic transition).",
     ),
     "ar": _spec(
         "ar",
