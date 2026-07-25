@@ -1,8 +1,7 @@
 # Replicating Goulet Coulombe (2024), *The Macroeconomy as a Random Forest*
 
 **Target exhibit.** Table 4 ("Main Quarterly Results") — the pseudo-out-of-sample
-relative RMSEs `RMSE_{v,h,m} / RMSE_{v,h,AR(4)}`, for the **unemployment-rate (UR)**
-row. Source: Goulet Coulombe, *Journal of Applied Econometrics* 39 (2024); arXiv
+relative RMSEs `RMSE_{v,h,m} / RMSE_{v,h,AR(4)}`, across all six **Table-4 targets** (GDP, UR, INF, IR, SPREAD, HOUST). Source: Goulet Coulombe, *Journal of Applied Econometrics* 39 (2024); arXiv
 2006.12724.
 
 This document reports what macroforecast reproduces, exactly how, where it deviates
@@ -15,11 +14,28 @@ reproducible with `random_state=42`.
 
 | | |
 |---|---|
-| Targets replicated | **1 of 5** (UR). Full Table 4 is 14 models × 5 targets × 5 horizons. |
-| Models replicated (UR row) | **11 of 14** (see §4). Not yet run: RF, AR+RF, TV-AR — all feasible. |
+| Targets replicated | **6 of 6** (GDP, UR, INF, IR, SPREAD, HOUST). Full Table 4 = 14 models × 6 targets × 5 horizons. |
+| Models replicated | **14 of 14** per target (incl. SETAR/STAR added in PR #470; plain-RF via `random_forest`; AR+RF 2-stage). |
 | Reproducibility | seed-fixed; MRF is bit-identical serial vs 16-core parallel (see §6). |
 | Qualitative verdict | **reproduced** — FA-ARRF is the strongest model, ARRF beats AR(4), and the model ranking matches the paper. |
-| Quantitative verdict | **partial-to-strong on UR** — the core MRF family lands within mean\|Δ\| 0.03–0.08 of the paper; a few linear/plain-RF cells are off by 0.1–0.27 for reasons attributed in §5. |
+| Quantitative verdict | **full-table mean\|Δ\| ≈ 0.11** (standardized penalized models). The core MRF family lands within 0.02–0.10 of the paper on every target; residual gaps are attributed in §5. |
+
+### Per-target summary (overall mean|Δ| across the 14 models)
+
+| target | overall mean\|Δ\| | best cells |
+|---|---|---|
+| GDP | 0.058 | AR+RF 0.027, ARRF 0.031, SETAR 0.036 |
+| HOUST | 0.068 | ARRF 0.021, RF-MAF 0.039, VARRF 0.042 |
+| INF | 0.083 | RF-MAF 0.023, Tiny RF 0.045, SETAR 0.049 |
+| UR | 0.105 | ARRF 0.032, RF-MAF 0.047, STAR 0.048 |
+| SPREAD | 0.210 | VARRF 0.045, AR+RF 0.064, ARRF 0.065 |
+| IR | 0.135 | ARRF 0.009, AR+RF 0.047, TV-AR 0.055 |
+
+Overall mean\|Δ\| uses the STANDARDIZED lasso/ridge (see §7 item 5). The MRF family
+(ARRF, RF-MAF, VARRF, AR+RF, FA-ARRF) reproduces the paper on every target; the paper's
+qualitative stories reproduce per target (ARRF beats AR for UR; MRF gains "miles ahead"
+for INF; ARRF near-exact for IR). Full 84-cell tables and per-cell Δ are in the
+`scripts/replication` result artifacts.
 
 ---
 
@@ -125,7 +141,7 @@ defects** — see §7 for the independent verification of each estimator.
 
 ## 7. Package defects surfaced (objective 2)
 
-The replication drove three fixes and one open limitation:
+The replication drove four fixes and one open limitation:
 
 1. **AR benchmark kitchen-sink (PR #468, merged).** `_select_lag_columns` failed open:
    an "AR" whose feature spec lacked the target's `lag0` but carried predictor lags
@@ -136,6 +152,7 @@ The replication drove three fixes and one open limitation:
    → reproducible and parallel-identical.
 3. **SETAR / STAR missing (PR #470).** Implemented both as first-class models so the
    two nonlinear-TS columns of Table 4 are covered.
+5. **Penalized regression un-standardization guard (PR #472).** `lasso`/`ridge`/`elastic_net` on the unstandardized 914-column `S_t` (a raw trend + factors + Δlog lags) silently gave relative RMSEs of 2.0–2.5 (IR/SPREAD). Added a guard that errors when penalized regression runs on features whose scales span >1000× without `standardize=True`, plus a `standardize` param on `ridge`. Re-running with standardization drops Ridge IR 1.10→0.20, SPREAD 0.98→0.34, and improves lasso everywhere except two already-close targets.
 4. **`[open]` MRF cannot represent plain RF.** The MRF requires ≥1 X column, so the
    paper's documented "RF = MRF with `X_t = ι`" cannot be expressed; plain-RF columns
    fall back to scikit-learn `random_forest`.
