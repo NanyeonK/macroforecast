@@ -182,7 +182,12 @@ class MacroRandomForest:
             print('Are you sure you want to mix a customized prior with random X?')
 
         if len(self.z_pos) < 1:
-            raise Exception('You need to specificy at least one X.')
+            # Intercept-only linear part (X_t = iota). The paper's plain-RF
+            # benchmark is exactly MRF with X_t = iota; K = len(z_pos)+1 always
+            # carries the auto-intercept, so an empty z_pos yields a pure
+            # time-varying intercept = a random forest of y on the state S_t.
+            # The original raise was over-strict versus the MRF definition.
+            self.z_pos = np.asarray([], dtype=int)
 
         if len(self.prior_var) != 0 or self.have_prior_mean:
             if self.prior_var == None and self.prior_mean != None:
@@ -204,8 +209,8 @@ class MacroRandomForest:
 
         if self.min_leaf_fracz*(len(self.z_pos)+1) < 2:
             self.min_leaf_fracz = 2/(len(self.z_pos)+1)
-            print(f'Min.leaf.frac.of.x was too low. Thus, it was forced to ', 2 /
-                  ({len(self.z_pos)}+1), ' -- a bare minimum. You should consider a higher one.', sep='')
+            print('Min.leaf.frac.of.x was too low. Thus, it was forced to ', 2 /
+                  (len(self.z_pos)+1), ' -- a bare minimum. You should consider a higher one.', sep='')
 
         if len(self.oos_pos) == 0:
             self.oos_flag = True

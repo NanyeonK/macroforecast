@@ -1485,6 +1485,14 @@ class MacroRandomForestRegressor:
                 "must be 0. Use x_columns/S_columns or x_pos/S_pos to select "
                 "feature roles."
             )
+        if bool(VI):
+            raise NotImplementedError(
+                "variable importance (VI=True) is not available: the vendored "
+                "MacroRandomForest backend stubs the permutation-shuffled betas to "
+                "zeros and never computes impZ/VI_poos, so any importance it "
+                "returned would be identically zero. The time-varying coefficients "
+                "(GTVP) are fully computed and reachable via .gtvp() after predict()."
+            )
         if x_columns is not None and x_pos is not None:
             raise ValueError("Use either x_columns or x_pos, not both.")
         if S_columns is not None and S_pos is not None:
@@ -1535,6 +1543,7 @@ class MacroRandomForestRegressor:
         self.model_: Any = None
         self._prediction_cache_key: tuple[Any, ...] | None = None
         self._prediction_cache_values: np.ndarray | None = None
+        self._gtvp_index: list[Any] | None = None
 
     @staticmethod
     def _import_external():
@@ -1604,6 +1613,7 @@ class MacroRandomForestRegressor:
                 "MacroRandomForest backend failed while running _ensemble_loop(). "
                 "Check x_columns/S_columns and sample size."
             ) from exc
+        self._gtvp_index = list(train_X.index) + list(test_X.index)
         values = self._prediction_values(self.output_, len(test_X))
         self._prediction_cache_key = cache_key
         self._prediction_cache_values = values.copy()
@@ -1682,6 +1692,51 @@ class MacroRandomForestRegressor:
             tuple(str(column) for column in X.columns),
             X.shape,
             value_hash,
+        )
+
+    def gtvp(self) -> pd.DataFrame:
+        """Generalized time-varying parameters -- the paper's headline output.
+
+        Returns the out-of-bag-averaged time-varying linear coefficients
+        ``beta_t``, one row per time index (training rows followed by the most
+        recent prediction rows). Columns are the auto-intercept followed by the
+        linear part (``x_columns``); for an intercept-only fit (``X_t = iota``)
+        the single column is the intercept -- the plain-RF conditional-mean path.
+
+        Requires ``predict`` to have run: the betas are produced by the MRF
+        ensemble fit inside ``predict``.
+        """
+        if self.output_ is None or self.output_.get("betas") is None:
+            raise RuntimeError(
+                "Call predict(...) before gtvp(): the time-varying betas are "
+                "produced by the MRF ensemble fit."
+            )
+        betas = np.asarray(self.output_["betas"], dtype=float)
+        if betas.ndim != 2:
+            betas = betas.reshape(len(betas), -1)
+        if self.x_columns is not None:
+            names = list(self.x_columns)
+        elif self.x_pos is not None:
+            names = [self._feature_names[int(pos) - 1] for pos in self.x_pos]
+        else:
+            names = list(self._feature_names)
+        labels = (["intercept"] + names)[: betas.shape[1]]
+        if len(labels) < betas.shape[1]:
+            labels += [f"beta{i}" for i in range(len(labels), betas.shape[1])]
+        index = self._gtvp_index
+        if index is not None and len(index) == betas.shape[0]:
+            return pd.DataFrame(betas, index=pd.Index(index), columns=labels)
+        return pd.DataFrame(betas, columns=labels)
+
+    def variable_importance(self) -> "pd.Series":
+        """Not available: the vendored backend does not compute variable
+        importance (the shuffled-beta machinery is stubbed to zeros). Use
+        :meth:`gtvp` for the time-varying coefficients instead.
+        """
+        raise NotImplementedError(
+            "variable importance is not implemented in the vendored "
+            "MacroRandomForest backend (permutation-shuffled betas are stubbed to "
+            "zeros). GTVP is available via .gtvp()."
         )
 
 
