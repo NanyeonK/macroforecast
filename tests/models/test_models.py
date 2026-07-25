@@ -2849,6 +2849,78 @@ def test_macro_random_forest_vendored_backend_smoke() -> None:
     assert "pred" in fit.estimator.output_
 
 
+def test_macro_random_forest_intercept_only_is_plain_rf() -> None:
+    """X_t = iota (intercept-only linear part) is the paper's plain-RF benchmark.
+
+    The vendored backend previously raised "You need to specify at least one X."
+    for an empty linear part, so ``RF = MRF with X_t = iota`` could not be
+    expressed and plain-RF cells had to fall back to a different estimator. An
+    empty linear part must now run: K = len(z_pos) + 1 always carries the
+    auto-intercept, so it yields a pure time-varying intercept = a random forest
+    of y on the state S_t.
+    """
+    pytest.importorskip("joblib")
+    pytest.importorskip("matplotlib")
+    X, y = _xy(64)
+
+    fit = mf.models.macro_random_forest(
+        X.iloc[:48],
+        y.iloc[:48],
+        x_columns=(),  # empty linear part => X_t = iota (plain RF)
+        S_columns=["x1", "x2"],
+        B=2,
+        minsize=10,
+        mtry_frac=1.0,
+        parallelise=False,
+        print_b=False,
+        random_state=0,
+    )
+    pred = fit.predict(X.iloc[48:52])
+
+    assert len(pred) == 4
+    assert np.isfinite(pred).all()
+    # the empty linear part was accepted and reduced to an intercept-only design
+    assert list(fit.estimator.model_.z_pos) == []
+
+
+def test_macro_random_forest_gtvp_and_vi_accessors() -> None:
+    """GTVP (time-varying betas) is the paper's headline output and must be
+    reachable via a labeled accessor; variable importance is stubbed to zeros in
+    the vendored backend and must fail loudly instead of returning a fake zero
+    ranking.
+    """
+    pytest.importorskip("joblib")
+    pytest.importorskip("matplotlib")
+    X, y = _xy(72)
+
+    fit = mf.models.macro_random_forest(
+        X.iloc[:56],
+        y.iloc[:56],
+        x_columns=["x1"],
+        S_columns=["x2"],
+        B=3,
+        mtry_frac=1.0,
+        parallelise=False,
+        print_b=False,
+        random_state=0,
+    )
+    fit.predict(X.iloc[56:60])
+
+    gtvp = fit.estimator.gtvp()
+    assert list(gtvp.columns) == ["intercept", "x1"]
+    assert len(gtvp) == 60  # 56 training rows + 4 predicted rows
+    assert np.isfinite(gtvp.to_numpy()).any()
+
+    # VI is not implemented upstream (shuffled betas are zeros); it must raise
+    # loudly rather than silently return a zero importance vector.
+    with pytest.raises(NotImplementedError):
+        mf.models.macro_random_forest(
+            X.iloc[:56], y.iloc[:56], x_columns=["x1"], S_columns=["x2"], VI=True
+        )
+    with pytest.raises(NotImplementedError):
+        fit.estimator.variable_importance()
+
+
 def test_lgb_plus_competition_records_reference_channels() -> None:
     pytest.importorskip("lightgbm")
     X, y = _xy(64)

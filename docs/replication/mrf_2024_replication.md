@@ -15,7 +15,7 @@ reproducible with `random_state=42`.
 | | |
 |---|---|
 | Targets replicated | **6 of 6** (GDP, UR, INF, IR, SPREAD, HOUST). Full Table 4 = 14 models × 6 targets × 5 horizons. |
-| Models replicated | **14 of 14** per target (incl. SETAR/STAR added in PR #470; plain-RF via `random_forest`; AR+RF 2-stage). |
+| Models replicated | **14 of 14** per target (incl. SETAR/STAR added in PR #470; plain-RF via MRF `X_t=ι` (PR #477); AR+RF 2-stage). |
 | Reproducibility | seed-fixed; MRF is bit-identical serial vs 16-core parallel (see §6). |
 | Qualitative verdict | **reproduced** — FA-ARRF is the strongest model, ARRF beats AR(4), and the model ranking matches the paper. |
 | Quantitative verdict | **full-table mean\|Δ\| ≈ 0.11** (standardized penalized models). The core MRF family lands within 0.02–0.10 of the paper on every target; residual gaps are attributed in §5. |
@@ -223,7 +223,7 @@ the penalized rows above are the standardized (correct) runs.
 
 ## 7. Package defects surfaced (objective 2)
 
-The replication drove four fixes and one open limitation:
+The replication drove **six** MRF-backend fixes (objective 2):
 
 1. **AR benchmark kitchen-sink (PR #468, merged).** `_select_lag_columns` failed open:
    an "AR" whose feature spec lacked the target's `lag0` but carried predictor lags
@@ -234,10 +234,56 @@ The replication drove four fixes and one open limitation:
    → reproducible and parallel-identical.
 3. **SETAR / STAR missing (PR #470).** Implemented both as first-class models so the
    two nonlinear-TS columns of Table 4 are covered.
-5. **Penalized regression un-standardization guard (PR #472).** `lasso`/`ridge`/`elastic_net` on the unstandardized 914-column `S_t` (a raw trend + factors + Δlog lags) silently gave relative RMSEs of 2.0–2.5 (IR/SPREAD). Added a guard that errors when penalized regression runs on features whose scales span >1000× without `standardize=True`, plus a `standardize` param on `ridge`. Re-running with standardization drops Ridge IR 1.10→0.20, SPREAD 0.98→0.34, and improves lasso everywhere except two already-close targets.
-4. **`[open]` MRF cannot represent plain RF.** The MRF requires ≥1 X column, so the
-   paper's documented "RF = MRF with `X_t = ι`" cannot be expressed; plain-RF columns
-   fall back to scikit-learn `random_forest`.
+4. **Penalized regression un-standardization guard (PR #472).** `lasso`/`ridge`/`elastic_net` on the unstandardized 914-column `S_t` (a raw trend + factors + Δlog lags) silently gave relative RMSEs of 2.0–2.5 (IR/SPREAD). Added a guard that errors when penalized regression runs on features whose scales span >1000× without `standardize=True`, plus a `standardize` param on `ridge`. Re-running with standardization drops Ridge IR 1.10→0.20, SPREAD 0.98→0.34, and improves lasso everywhere except two already-close targets.
+5. **MRF could not express plain RF (PR #477).** The backend raised "You need to
+   specify at least one X" for an empty linear part, so the paper's `RF = MRF with
+   X_t = ι` could not be built and plain-RF cells fell back to scikit-learn
+   `random_forest`. Because `K = len(X)+1` always carries the auto-intercept, an empty
+   linear part is a pure time-varying intercept — a random forest of `y` on the state
+   `S_t`; the guard was relaxed to permit it. Fixing this also surfaced and fixed a
+   latent crash next to it: a stray set-literal in a warning print (`{len(z_pos)}+1`, a
+   `set + int` TypeError) that fires for any small linear part. On synthetic data the
+   intercept-only MRF correlates 0.96 with scikit-learn RF; §7.1 shows the UR re-run.
+6. **Variable importance silently stubbed; GTVP not exposed (PR #477).** `VI=True`
+   referenced a nonexistent attribute (`self.b`) and crashed; underneath, the
+   shuffled-beta machinery is hard-coded to zeros, so even without the crash it would
+   have returned an identically-zero importance ranking. `VI=True` now raises a clear
+   `NotImplementedError` instead of shipping a fake ranking. The paper's **GTVP**
+   (time-varying coefficients) — the headline interpretability output — *is* fully
+   computed but was buried in an internal dict; it is now exposed via
+   `fit.estimator.gtvp()` as a labeled, time-indexed frame (see §7.2).
+
+### 7.1 Plain RF now expressible — UR re-run as MRF(X_t = ι)
+
+With the fix, the paper's plain-RF benchmarks run as a real MRF (intercept-only
+linear part) rather than the scikit-learn fallback. UR row, same Table-4 protocol
+(expanding train from 1961Q3, POOS 2003Q1–2014Q4, re-estimate every two years,
+direct h-step, benchmark AR(4)), B=50, seed 42:
+
+| model | h=1 | h=2 | h=4 | h=6 | h=8 | mean\|Δ\| |
+|---|---|---|---|---|---|---|
+| RF = MRF(X_t=ι, full S_t) | 1.017/1.00 | 0.908/0.98 | 0.835/0.96 | 0.898/1.01 | 0.974/1.01 | **0.072** |
+| Tiny RF = MRF(X_t=ι, lag-only S) | —/1.24 | 1.052/1.15 | 1.028/1.37 | 1.022/1.60 | —/1.57 | — |
+
+The **RF** row (mean\|Δ\| 0.072) confirms the intercept-only MRF reproduces the
+paper's plain RF on real data — a clear improvement over the scikit-learn fallback
+and a direct check that the fix is correct end-to-end. **Tiny RF** runs too, but on
+its degenerate 9-column collinear lag-only-plus-trend state the intercept-only path
+emits an isolated `nan` forecast at 2 of 48 origins (h=1 and h=8); the full-`S_t` RF
+path never does. `[open]` This is a robustness edge of the intercept-only mode —
+every tree returns `nan` for one out-of-sample row whose monotone `trend` value sits
+beyond the training range — attributed to trend extrapolation in a tiny state, not
+to the fix; a normal ARRF on the same state and origin has no `nan`. The intended
+plain-RF use (the full rich `S_t`, as in the RF row) is unaffected.
+
+### 7.2 GTVP reproduced
+
+`fit.estimator.gtvp()` now returns the time-varying coefficients directly (a labeled,
+time-indexed frame). For an ARRF on UR with `X_t = [y_{t-1}, y_{t-2}]`, the AR(1)
+coefficient drifts from ≈0 to 0.69 (mean 0.26, std 0.14) across 1963–2019,
+reproducing the paper's headline that unemployment persistence is time-varying:
+
+![GTVP — ARRF on UR (macroforecast, B=50, seed 42)](figures/mrf_2024_gtvp_ur.png)
 
 Independently cross-checked and **clean**: `ols` = numpy OLS (1e-16); `ridge`/`lasso` =
 scikit-learn raw (0.0); `random_forest` reproducible with `random_state`; `far`/MRF
@@ -254,4 +300,4 @@ b = mf.data.load_fred_qd("2020-01")          # FRED-QD panel + tcodes
 ```
 
 `[GAP]`/`[ASSUMPTION]` register: FRED-QD vintage; 215/247 complete-series subset;
-direct vs iterated SETAR/STAR; plain-RF via scikit-learn; penalty-tuning scheme.
+direct vs iterated SETAR/STAR; penalty-tuning scheme; TV-AR drift-model spec.
