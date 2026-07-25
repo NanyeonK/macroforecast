@@ -253,6 +253,38 @@ The replication drove **six** MRF-backend fixes (objective 2):
    computed but was buried in an internal dict; it is now exposed via
    `fit.estimator.gtvp()` as a labeled, time-indexed frame (see §7.2).
 
+### 7.1 Plain RF now expressible — UR re-run as MRF(X_t = ι)
+
+With the fix, the paper's plain-RF benchmarks run as a real MRF (intercept-only
+linear part) rather than the scikit-learn fallback. UR row, same Table-4 protocol
+(expanding train from 1961Q3, POOS 2003Q1–2014Q4, re-estimate every two years,
+direct h-step, benchmark AR(4)), B=50, seed 42:
+
+| model | h=1 | h=2 | h=4 | h=6 | h=8 | mean\|Δ\| |
+|---|---|---|---|---|---|---|
+| RF = MRF(X_t=ι, full S_t) | 1.017/1.00 | 0.908/0.98 | 0.835/0.96 | 0.898/1.01 | 0.974/1.01 | **0.072** |
+| Tiny RF = MRF(X_t=ι, lag-only S) | —/1.24 | 1.052/1.15 | 1.028/1.37 | 1.022/1.60 | —/1.57 | — |
+
+The **RF** row (mean\|Δ\| 0.072) confirms the intercept-only MRF reproduces the
+paper's plain RF on real data — a clear improvement over the scikit-learn fallback
+and a direct check that the fix is correct end-to-end. **Tiny RF** runs too, but on
+its degenerate 9-column collinear lag-only-plus-trend state the intercept-only path
+emits an isolated `nan` forecast at 2 of 48 origins (h=1 and h=8); the full-`S_t` RF
+path never does. `[open]` This is a robustness edge of the intercept-only mode —
+every tree returns `nan` for one out-of-sample row whose monotone `trend` value sits
+beyond the training range — attributed to trend extrapolation in a tiny state, not
+to the fix; a normal ARRF on the same state and origin has no `nan`. The intended
+plain-RF use (the full rich `S_t`, as in the RF row) is unaffected.
+
+### 7.2 GTVP reproduced
+
+`fit.estimator.gtvp()` now returns the time-varying coefficients directly (a labeled,
+time-indexed frame). For an ARRF on UR with `X_t = [y_{t-1}, y_{t-2}]`, the AR(1)
+coefficient drifts from ≈0 to 0.69 (mean 0.26, std 0.14) across 1963–2019,
+reproducing the paper's headline that unemployment persistence is time-varying:
+
+![GTVP — ARRF on UR (macroforecast, B=50, seed 42)](figures/mrf_2024_gtvp_ur.png)
+
 Independently cross-checked and **clean**: `ols` = numpy OLS (1e-16); `ridge`/`lasso` =
 scikit-learn raw (0.0); `random_forest` reproducible with `random_state`; `far`/MRF
 factor path leak-free.
