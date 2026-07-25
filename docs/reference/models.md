@@ -2728,7 +2728,7 @@ Family: `linear`
 #### Fit Signature
 
 ```python
-macroforecast.models.ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, **kwargs: Any) -> ModelFit
+macroforecast.models.ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, standardize: bool = False, **kwargs: Any) -> ModelFit
 ```
 
 | Field | Value |
@@ -2747,6 +2747,7 @@ Ridge regression.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `alpha` | `1.0` | `float` | True | L2 penalty strength. |
+| `standardize` | `False` | `bool` | False | Standardize features before fitting; required when feature scales are heterogeneous. |
 
 #### Search Spaces
 

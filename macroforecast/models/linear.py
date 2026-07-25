@@ -24,13 +24,48 @@ def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
     return fit_estimator(LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs))
 
 
-def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, **kwargs: Any) -> ModelFit:
+_PENALIZED_SCALE_RATIO_MAX = 1.0e3
+
+
+def _check_penalized_scaling(frame: Any, standardize: bool, model: str) -> None:
+    """Guard: penalized (L1/L2) regression applies the penalty per COEFFICIENT, so on
+    unstandardized features whose scales differ wildly the penalty is applied
+    non-uniformly and the fit is scale-dependent and usually meaningless. Raise unless
+    the caller standardizes or the feature scales are comparable."""
+    if standardize:
+        return
+    Xf = pd.DataFrame(frame).apply(pd.to_numeric, errors="coerce")
+    if Xf.shape[1] < 2:
+        return
+    stds = Xf.std(axis=0, ddof=0).to_numpy(dtype=float)
+    stds = stds[np.isfinite(stds) & (stds > 0.0)]
+    if stds.size < 2:
+        return
+    ratio = float(stds.max() / stds.min())
+    if ratio > _PENALIZED_SCALE_RATIO_MAX:
+        raise ValueError(
+            f"{model}: feature scales span {ratio:.0f}x (column std "
+            f"{stds.min():.3g}..{stds.max():.3g}); penalized regression on "
+            f"unstandardized heterogeneous-scale features applies the L1/L2 penalty "
+            f"non-uniformly and is typically meaningless. Pass standardize=True (or "
+            f"pre-scale the features)."
+        )
+
+
+def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, standardize: bool = False, **kwargs: Any) -> ModelFit:
     """Fit ridge regression."""
 
     from sklearn.linear_model import Ridge
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
 
-    params = {"alpha": float(alpha), **kwargs}
-    return fit_estimator(Ridge(**params), X, y, model="ridge", metadata=params)
+    frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "ridge")
+    estimator: Any = Ridge(alpha=float(alpha), **kwargs)
+    if standardize:
+        estimator = make_pipeline(StandardScaler(), estimator)
+    params = {"alpha": float(alpha), "standardize": bool(standardize), **kwargs}
+    return fit_estimator(estimator, frame, target, model="ridge", metadata=params)
 
 
 class _NonNegativeRidge:
@@ -598,6 +633,7 @@ def lasso(
         "standardize": bool(standardize),
     }
     frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "lasso")
     fit = fit_estimator(
         estimator,
         frame,
@@ -639,6 +675,7 @@ def elastic_net(
         "standardize": bool(standardize),
     }
     frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "elastic_net")
     fit = fit_estimator(
         estimator,
         frame,
