@@ -62,10 +62,10 @@ try:
         k=max(12,int(0.2*len(tr))); trn,val=tr[:-k],tr[-k:]; yv=tgt.loc[val].to_numpy(float); best=(np.inf,grid[len(grid)//2])
         for a in grid:
             try:
-                pv=np.asarray(model(F.loc[trn,S_full],tgt.loc[trn],alpha=float(a)).predict(F.loc[val,S_full]),dtype=float).ravel()
+                pv=np.asarray(model(F.loc[trn,S_full],tgt.loc[trn],alpha=float(a),standardize=True).predict(F.loc[val,S_full]),dtype=float).ravel()
                 e=math.sqrt(np.mean((pv-yv)**2)); best=(e,a) if e<best[0] else best
             except Exception: pass
-        return np.asarray(model(F.loc[tr,S_full],tgt.loc[tr],alpha=float(best[1])).predict(F.loc[blk,S_full]),dtype=float).ravel()
+        return np.asarray(model(F.loc[tr,S_full],tgt.loc[tr],alpha=float(best[1]),standardize=True).predict(F.loc[blk,S_full]),dtype=float).ravel()
     MODELS=["FA-AR","LASSO-MAF","Ridge-MAF","RF","RF-MAF","AR+RF","Tiny RF","FA-ARRF","ARRF","Tiny ARRF","VARRF","SETAR","STAR","TV-AR"]
     LG=np.logspace(-5,-1,9); RG=np.logspace(-2,3,9)
     def predict_model(nm,tr,blk,tgt):
@@ -118,7 +118,7 @@ try:
             r=res.get((nm,h)); p=P4[nm][j]
             if r is None: cells.append("--"); continue
             cells.append("%.3f/%.2f"%(r,p)); diffs.append(abs(r-p))
-        md=float(np.mean(diffs)) if diffs else float("nan"); allmd.append(md)
+        md=float(np.nanmean(diffs)) if diffs else float("nan"); allmd.append(md)
         print("| %s | %s | %.3f |"%(nm," | ".join(cells),md))
     print("TARGET %s overall mean|Δ| = %.3f"%(TGT, float(np.nanmean(allmd))))
     json.dump({f"{k[0]}|h{k[1]}":v for k,v in res.items()}, open(f"/tmp/g2_{TGT}.json","w"), indent=1)
