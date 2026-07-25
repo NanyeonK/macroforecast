@@ -15,7 +15,7 @@ reproducible with `random_state=42`.
 | | |
 |---|---|
 | Targets replicated | **6 of 6** (GDP, UR, INF, IR, SPREAD, HOUST). Full Table 4 = 14 models × 6 targets × 5 horizons. |
-| Models replicated | **14 of 14** per target (incl. SETAR/STAR added in PR #470; plain-RF via MRF `X_t=ι` (PR #__NEW__); AR+RF 2-stage). |
+| Models replicated | **14 of 14** per target (incl. SETAR/STAR added in PR #470; plain-RF via MRF `X_t=ι` (PR #477); AR+RF 2-stage). |
 | Reproducibility | seed-fixed; MRF is bit-identical serial vs 16-core parallel (see §6). |
 | Qualitative verdict | **reproduced** — FA-ARRF is the strongest model, ARRF beats AR(4), and the model ranking matches the paper. |
 | Quantitative verdict | **full-table mean\|Δ\| ≈ 0.11** (standardized penalized models). The core MRF family lands within 0.02–0.10 of the paper on every target; residual gaps are attributed in §5. |
@@ -235,7 +235,7 @@ The replication drove **six** MRF-backend fixes (objective 2):
 3. **SETAR / STAR missing (PR #470).** Implemented both as first-class models so the
    two nonlinear-TS columns of Table 4 are covered.
 4. **Penalized regression un-standardization guard (PR #472).** `lasso`/`ridge`/`elastic_net` on the unstandardized 914-column `S_t` (a raw trend + factors + Δlog lags) silently gave relative RMSEs of 2.0–2.5 (IR/SPREAD). Added a guard that errors when penalized regression runs on features whose scales span >1000× without `standardize=True`, plus a `standardize` param on `ridge`. Re-running with standardization drops Ridge IR 1.10→0.20, SPREAD 0.98→0.34, and improves lasso everywhere except two already-close targets.
-5. **MRF could not express plain RF (PR #__NEW__).** The backend raised "You need to
+5. **MRF could not express plain RF (PR #477).** The backend raised "You need to
    specify at least one X" for an empty linear part, so the paper's `RF = MRF with
    X_t = ι` could not be built and plain-RF cells fell back to scikit-learn
    `random_forest`. Because `K = len(X)+1` always carries the auto-intercept, an empty
@@ -244,7 +244,7 @@ The replication drove **six** MRF-backend fixes (objective 2):
    latent crash next to it: a stray set-literal in a warning print (`{len(z_pos)}+1`, a
    `set + int` TypeError) that fires for any small linear part. On synthetic data the
    intercept-only MRF correlates 0.96 with scikit-learn RF; §7.1 shows the UR re-run.
-6. **Variable importance silently stubbed; GTVP not exposed (PR #__NEW__).** `VI=True`
+6. **Variable importance silently stubbed; GTVP not exposed (PR #477).** `VI=True`
    referenced a nonexistent attribute (`self.b`) and crashed; underneath, the
    shuffled-beta machinery is hard-coded to zeros, so even without the crash it would
    have returned an identically-zero importance ranking. `VI=True` now raises a clear
