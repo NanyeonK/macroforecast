@@ -25,6 +25,12 @@ def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
 
 
 _PENALIZED_SCALE_RATIO_MAX = 1.0e3
+# A column whose standard deviation is this small relative to the widest column is
+# numerically constant -- float64 rounding noise, not a scale. Such a column carries
+# no information, so it cannot make the L1/L2 penalty non-uniform in any meaningful
+# sense, and including it in the ratio produces enormous false positives (a constant
+# column at std 2e-17 against a real one at 0.2 reads as a 1e16x "spread").
+_PENALIZED_NEAR_CONSTANT_REL_TOL = 1.0e-12
 
 
 def _check_penalized_scaling(frame: Any, standardize: bool, model: str) -> None:
@@ -39,6 +45,10 @@ def _check_penalized_scaling(frame: Any, standardize: bool, model: str) -> None:
         return
     stds = Xf.std(axis=0, ddof=0).to_numpy(dtype=float)
     stds = stds[np.isfinite(stds) & (stds > 0.0)]
+    if stds.size < 2:
+        return
+    # Ignore numerically constant columns; see _PENALIZED_NEAR_CONSTANT_REL_TOL.
+    stds = stds[stds > stds.max() * _PENALIZED_NEAR_CONSTANT_REL_TOL]
     if stds.size < 2:
         return
     ratio = float(stds.max() / stds.min())
