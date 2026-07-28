@@ -2921,6 +2921,54 @@ def test_macro_random_forest_gtvp_and_vi_accessors() -> None:
         fit.estimator.variable_importance()
 
 
+def test_macro_random_forest_ensemble_skips_degenerate_trees() -> None:
+    """A single NaN tree must not destroy the ensemble forecast.
+
+    `pred_ensemble` is the raw per-tree committee, so reducing it IS the ensemble
+    average and it has to skip trees that returned NaN for a row -- the backend's
+    own ensemble output is `pd.DataFrame(committee).mean(axis=0)`, which is
+    nan-skipping. A nan-propagating mean let one degenerate tree out of B wipe out
+    the forecast for that row, and with it any RMSE computed from it.
+    """
+    reduce = mf.models.MacroRandomForestRegressor._prediction_values
+    count = mf.models.MacroRandomForestRegressor._degenerate_tree_count
+
+    committee = np.arange(20.0).reshape(4, 5)
+    clean = reduce({"pred_ensemble": committee}, 5, 4)
+    np.testing.assert_allclose(clean, committee.mean(axis=0))
+    assert count({"pred_ensemble": committee}, 5) == 0
+
+    spoiled = committee.copy()
+    spoiled[2, 3] = np.nan
+    values = reduce({"pred_ensemble": spoiled}, 5, 4)
+    assert np.isfinite(values).all()
+    np.testing.assert_allclose(values, np.nanmean(spoiled, axis=0))
+    assert count({"pred_ensemble": spoiled}, 5) == 1
+
+    # a row no tree could predict is genuinely undefined and must stay NaN
+    hopeless = committee.copy()
+    hopeless[:, 1] = np.nan
+    values = reduce({"pred_ensemble": hopeless}, 5, 4)
+    assert np.isnan(values[1])
+    assert np.isfinite(values[[0, 2, 3, 4]]).all()
+
+
+def test_macro_random_forest_committee_axis_uses_tree_count() -> None:
+    """Resolving the committee axis from shape alone breaks when B == n_oos.
+
+    The committee is always (B, n_oos); when those are equal the shape test
+    matched the wrong branch and averaged across forecast dates instead of across
+    trees. B=25 is the package default, so the collision is reachable.
+    """
+    reduce = mf.models.MacroRandomForestRegressor._prediction_values
+    rng = np.random.default_rng(0)
+    committee = rng.normal(size=(25, 25))
+
+    values = reduce({"pred_ensemble": committee}, 25, 25)
+    np.testing.assert_allclose(values, committee.mean(axis=0))
+    assert not np.allclose(values, committee.mean(axis=1))
+
+
 def test_lgb_plus_competition_records_reference_channels() -> None:
     pytest.importorskip("lightgbm")
     X, y = _xy(64)

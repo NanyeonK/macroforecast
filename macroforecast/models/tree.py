@@ -1544,6 +1544,7 @@ class MacroRandomForestRegressor:
         self._prediction_cache_key: tuple[Any, ...] | None = None
         self._prediction_cache_values: np.ndarray | None = None
         self._gtvp_index: list[Any] | None = None
+        self.degenerate_tree_predictions_: int = 0
 
     @staticmethod
     def _import_external():
@@ -1614,7 +1615,22 @@ class MacroRandomForestRegressor:
                 "Check x_columns/S_columns and sample size."
             ) from exc
         self._gtvp_index = list(train_X.index) + list(test_X.index)
-        values = self._prediction_values(self.output_, len(test_X))
+        values = self._prediction_values(
+            self.output_, len(test_X), int(self.params["B"])
+        )
+        self.degenerate_tree_predictions_ = self._degenerate_tree_count(
+            self.output_, len(test_X)
+        )
+        if self.degenerate_tree_predictions_:
+            warnings.warn(
+                f"macro_random_forest: {self.degenerate_tree_predictions_} of "
+                f"{self.params['B'] * len(test_X)} per-tree forecasts were NaN and "
+                "were skipped when averaging the ensemble. This happens on small, "
+                "collinear, trend-dominated state sets; the remaining trees still "
+                "produce a valid forecast, but treat those rows with care.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         self._prediction_cache_key = cache_key
         self._prediction_cache_values = values.copy()
         return values
@@ -1649,7 +1665,9 @@ class MacroRandomForestRegressor:
         return [int(feature_index.get_loc(column)) + 1 for column in columns]
 
     @staticmethod
-    def _prediction_values(output: dict[str, Any], n: int) -> np.ndarray:
+    def _prediction_values(
+        output: dict[str, Any], n: int, n_trees: int | None = None
+    ) -> np.ndarray:
         # Python backend output uses `pred_ensemble`/`S_names`; the R prototype
         # reports analogous fields as `pred.ensemble`/`S.names`. Since this
         # adapter calls the Python backend, only Python keys are accepted here.
@@ -1667,12 +1685,31 @@ class MacroRandomForestRegressor:
         else:
             arr = np.asarray(values, dtype=float)
         if arr.ndim == 2:
-            if arr.shape[0] == n:
-                arr = arr.reshape(-1) if arr.shape[1] == 1 else arr.mean(axis=1)
-            elif arr.shape[1] == n:
-                arr = arr.mean(axis=0)
-            else:
-                arr = arr.reshape(-1)
+            # `pred_ensemble` is the raw per-tree committee, so this reduction IS
+            # the ensemble average. It must skip trees that returned NaN for a
+            # row: the backend's own ensemble output (`pred`) is
+            # `pd.DataFrame(committee).mean(axis=0)`, which is nan-skipping, and
+            # the R prototype averages the same way. Using a nan-propagating mean
+            # here let a single degenerate tree out of B destroy the forecast for
+            # that row -- and therefore any RMSE computed from it. With no NaNs
+            # present this is identical to the previous plain mean.
+            with warnings.catch_warnings():
+                # an all-NaN row is genuinely undefined and stays NaN; it is
+                # counted and reported by _degenerate_tree_count instead.
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                if n_trees is not None and arr.shape == (n_trees, n):
+                    # The committee is always (B, n_oos). Resolving the axis from
+                    # shape alone silently picks the wrong one when B == n_oos --
+                    # averaging across forecast dates instead of across trees --
+                    # and B=25 is the package default, so that collision is
+                    # reachable. Prefer the known tree count.
+                    arr = np.nanmean(arr, axis=0)
+                elif arr.shape[0] == n:
+                    arr = arr.reshape(-1) if arr.shape[1] == 1 else np.nanmean(arr, axis=1)
+                elif arr.shape[1] == n:
+                    arr = np.nanmean(arr, axis=0)
+                else:
+                    arr = arr.reshape(-1)
         out = np.asarray(arr, dtype=float).reshape(-1)
         if len(out) < n:
             raise RuntimeError(
@@ -1693,6 +1730,27 @@ class MacroRandomForestRegressor:
             X.shape,
             value_hash,
         )
+
+    @staticmethod
+    def _degenerate_tree_count(output: dict[str, Any], n: int) -> int:
+        """How many individual tree forecasts came back NaN.
+
+        The vendored backend can return NaN from a single tree on a degenerate
+        state (small, collinear, trend-dominated `S_t`) without raising. Those
+        trees are skipped when averaging; this reports how many there were so the
+        condition is visible rather than silent.
+        """
+        values = output.get("pred_ensemble")
+        if values is None:
+            return 0
+        arr = (
+            values.to_numpy(dtype=float)
+            if isinstance(values, (pd.Series, pd.DataFrame))
+            else np.asarray(values, dtype=float)
+        )
+        if arr.ndim != 2 or n == 0:
+            return 0
+        return int(np.isnan(arr).sum())
 
     def gtvp(self) -> pd.DataFrame:
         """Generalized time-varying parameters -- the paper's headline output.
