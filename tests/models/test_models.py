@@ -3066,3 +3066,33 @@ def test_var_rejects_invalid_type_label() -> None:
 
     with pytest.raises(ValueError, match="type must be one of"):
         mf.models.var(panel, target="y", type="ctt")
+
+
+def test_penalized_scaling_guard_ignores_constant_columns() -> None:
+    """The scale guard must not fire on a numerically constant column.
+
+    A constant column has std ~ float64 rounding noise (2e-17 against a real
+    column at 0.2 reads as a 1e16x "spread"), carries no information, and so
+    cannot make the L1/L2 penalty non-uniform. Counting it produced false
+    positives that blocked legitimate default-path fits.
+    """
+    rng = np.random.default_rng(0)
+    n = 200
+    y = pd.Series(rng.normal(size=n))
+
+    # exact constant + a normal column: must fit
+    exact = pd.DataFrame({"const": np.full(n, 3.0), "b": rng.normal(0, 1.0, n)})
+    mf.models.ridge(exact, y)
+
+    # constant carrying float noise: must also fit
+    noisy = pd.DataFrame(
+        {"const": np.full(n, 1.0) + rng.normal(0, 2e-17, n), "b": rng.normal(0, 0.2, n)}
+    )
+    mf.models.ridge(noisy, y)
+
+    # a genuine scale spread must still be rejected
+    heterogeneous = pd.DataFrame(
+        {"tiny": rng.normal(0, 1e-4, n), "huge": rng.normal(0, 100.0, n)}
+    )
+    with pytest.raises(ValueError, match="feature scales span"):
+        mf.models.ridge(heterogeneous, y)
