@@ -20,7 +20,7 @@ with `random_state=42`; the run is 25 cells (5 targets x 5 horizons), completed 
 | Horizons | **5 of 5** (h = 1, 3, 9, 12, 24 months) |
 | Overall accuracy | **mean\|Δ\| = 0.098** vs AR(12); **0.107** vs AR(4) |
 | Qualitative verdict | **both A.6 stories reproduce** — MAF-carrying models beat non-MAF ones on every target, and all four MRFs beat the AR benchmark on inflation (§4) |
-| Package defect surfaced | **MRF emits sporadic `nan` forecasts** — 13/100 MRF model-cells lost (§5) |
+| Package defect surfaced | **one degenerate tree destroyed the whole forecast** — 13/100 MRF model-cells lost; root-caused to the adapter and **fixed in PR #478** (§5) |
 
 **Per-target overall mean\|Δ\|:**
 
@@ -229,7 +229,7 @@ the paper's strongest monthly claim reproduces almost exactly (`ARRF` mean\|Δ\|
 
 ---
 
-## 5. Package defect surfaced (objective 2): MRF emits sporadic `nan` forecasts
+## 5. Package defect surfaced and FIXED (objective 2): one degenerate tree destroyed the forecast
 
 **13 of the 100 MRF model-cells** (25 cells x 4 MRF models) could not be
 scored, because the MRF returned a `nan` for at least one out-of-sample month and a
@@ -252,10 +252,48 @@ while models on the full 541-column `S_t` lose the occasional cell. A small, col
 trend-dominated state is the trigger; every affected fit completed normally (203–333 s)
 and reported no error.
 
-`[open]` Not fixed here. The failure is inside the vendored MRF's own tree/ridge path
-and a fix has to preserve the estimator exactly, so it is filed as a follow-on rather
-than patched under a replication run. Two things are now known that were not before: it
-affects standard MRFs, and it is state-driven.
+### Root cause — the adapter, not the vendored MRF (PR #478, merged)
+
+The trees were never the whole story. `output["pred_ensemble"]` is the **raw per-tree
+committee** `(B, n_oos)`, so reducing it *is* the ensemble average — and the adapter
+reduced it with a **nan-propagating** `arr.mean(axis=0)`. The vendored backend does not
+do that: its own ensemble output `output["pred"]` is
+`pd.DataFrame(committee).mean(axis=0)`, which is **nan-skipping**, as is the R
+prototype. The adapter ignored the backend's answer and recomputed the average under
+different semantics, so **one degenerate tree out of B wiped out the forecast for that
+row** — and with it the RMSE, and with that the whole cell.
+
+The reproducer makes it unambiguous: at an origin where the per-tree NaN count was
+**1 of 10**, the ensemble forecast still came back NaN. The adapter additionally
+suppresses the backend's `invalid value encountered in divide` RuntimeWarning, which is
+the signal that would have exposed this.
+
+**Fixed in PR #478**, three parts:
+
+1. the committee is reduced with nan-skipping means, matching the backend and R — a row
+   that *no* tree could predict stays NaN, because that case is genuinely undefined;
+2. `degenerate_tree_predictions_` is exposed and a warning is raised when trees are
+   skipped, so the condition is visible instead of silent;
+3. the committee axis is resolved from the known tree count. Deducing it from shape
+   alone silently averaged **across forecast dates instead of across trees** whenever
+   `B == n_oos` — and `B=25` is the package default, so that collision is reachable.
+
+**Statistically identical where nothing degenerates** (objective 4, measured): across
+395 random NaN-free committees the new reduction is **bit-identical** to the old one
+(max\|Δ\| = 0.000e+00), including through the previous call signature.
+
+**Verified on the failing case.** Re-running `UR h=1` against merged `main`, the cell
+that this table records as lost now produces a number, and a good one:
+
+| model | before (this table) | after PR #478 | paper |
+|---|---|---|---|
+| Tiny ARRF (UR, h=1) | `--` (lost) | **1.023** (mean\|Δ\| 0.043) | 0.98 |
+
+All eleven models returned a value on that re-run; no cell was lost.
+
+`[note]` The tables in §4 are the **original** run and still show the `--` holes, so the
+numbers here remain exactly those the committed result JSONs contain. Re-running the
+eleven affected `(target, horizon)` cells to close the holes is a separate ~15 h job.
 
 ---
 
@@ -293,7 +331,7 @@ affects standard MRFs, and it is state-driven.
 | `[ASSUMPTION]` | 127 series load from this vintage vs the paper's 134; 117 complete-case predictors used. |
 | `[ASSUMPTION]` | INF = Δlog CPIAUCSL, HOUST = Δlog HOUST, SPREAD = GS10 − FEDFUNDS (inherited from Table 4). |
 | `[ASSUMPTION]` | `Tiny ARRF` state = 12 target lags + trend; `VARRF` linear part = y lags + INDPRO/GS1/CPIAUCSL. |
-| `[open]` | MRF sporadic `nan` forecasts (§5) — 13/100 MRF cells; not fixed. |
+| **fixed** | MRF sporadic `nan` forecasts (§5) — 13/100 MRF cells. Root cause was the adapter's nan-propagating committee reduction; **fixed in PR #478** (bit-identical where nothing degenerates). §4 still shows the original run's holes. |
 
 ## 8. Reproduce
 
