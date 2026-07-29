@@ -2550,11 +2550,38 @@ def _merge_checkpoint_records(
     return merged
 
 
+def _drop_empty_mappings(value: Any) -> Any:
+    """Replace empty mappings with ``None``, recursively.
+
+    The forecast table carries metadata columns (``params``, ``model_selection``,
+    ``window``, ...) as nested dicts. A model with no parameters produces an empty
+    dict, and Arrow types an empty dict as a struct with no child fields, which
+    Parquet cannot represent -- so ``report.forecasts.to_parquet(...)`` failed for
+    any run containing such a model (``ols`` is one). An empty mapping and ``None``
+    carry the same information here, and once the empty ones are gone Arrow unions
+    the differing key sets across models without complaint.
+    """
+    if isinstance(value, Mapping):
+        if not value:
+            return None
+        return {key: _drop_empty_mappings(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_drop_empty_mappings(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_drop_empty_mappings(item) for item in value)
+    return value
+
+
 def _forecast_table(records: list[dict[str, Any]]) -> pd.DataFrame:
     frame = pd.DataFrame.from_records(records)
     for column in _FORECAST_TABLE_COLUMNS:
         if column not in frame.columns:
             frame[column] = pd.Series(dtype=object)
+    for column in frame.columns:
+        if frame[column].dtype == object and frame[column].map(
+            lambda item: isinstance(item, (Mapping, list, tuple))
+        ).any():
+            frame[column] = frame[column].map(_drop_empty_mappings)
     extra_columns = [
         str(column) for column in frame.columns if column not in _FORECAST_TABLE_COLUMNS
     ]
