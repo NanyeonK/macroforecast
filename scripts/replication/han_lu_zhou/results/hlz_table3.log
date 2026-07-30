@@ -1,0 +1,14 @@
+
+########## design=dense6  signals=84  n_jobs=4 ##########
+R2_OS mine = 0.694%   authors = 0.699%   Δ = -0.005pp   (73.2 min)
+  tests:   contender   dm_stat     dm_p  cw_stat  cw_p
+COMB_dense6 -2.087525 0.037205      NaN   NaN
+  PATH PARITY vs authors' archived path: n=695 max|Δ|=6.661e-16 corr=1.00000000
+
+########## design=dense12  signals=168  n_jobs=4 ##########
+R2_OS mine = 0.754%   authors = 0.805%   Δ = -0.051pp   (323.6 min)
+  tests:    contender   dm_stat     dm_p  cw_stat  cw_p
+COMB_dense12 -2.274235 0.023256      NaN   NaN
+  PATH PARITY vs authors' archived path: n=695 max|Δ|=7.772e-16 corr=1.00000000
+
+########## design=dense24  signals=336  n_jobs=4 ##########
