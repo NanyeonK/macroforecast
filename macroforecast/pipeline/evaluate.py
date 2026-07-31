@@ -578,6 +578,11 @@ _ESTIMATED = {
     "granger_ramanathan", "constrained_ls", "eigenvector", "regularized",
 }
 
+# Pooling rules that are well defined for a single member: the pool of one series IS
+# that series. Estimated-weight methods above genuinely need two or more, because the
+# weights are fitted across contenders.
+_SINGLE_MEMBER_OK = {"mean", "median", "trimmed_mean", "winsorized_mean", "linear_pool"}
+
 
 def _combine(method: str, frame: pd.DataFrame, y_true: pd.Series, *, horizon: int, **params: Any) -> pd.Series:
     """Dispatch a combination method name to the forecasting combine_* primitives."""
@@ -622,11 +627,32 @@ def apply_combinations(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             date = group.groupby("origin")["date"].first().reindex(wide.index)
             if isinstance(combo.over, (list, tuple)):
                 keep = [c for c in combo.over if c in wide.columns]
-                if len(keep) < 2:
+                if not keep:
+                    warnings.warn(
+                        f"combination {combo.name!r}: none of its members are present in "
+                        f"target={target!r} horizon={horizon!r}; the contender is skipped.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
                     continue
                 wide = wide[keep]
             if wide.shape[1] < 2:
-                continue
+                # A one-member pool used to be dropped here without a word, so the
+                # contender simply never appeared and every metric derived from it read
+                # NaN with nothing to explain it. A simple pool of one series is that
+                # series, so produce it; the estimated-weight rules do need two or more,
+                # and those now say so instead of vanishing.
+                if str(combo.method).lower() not in _SINGLE_MEMBER_OK:
+                    warnings.warn(
+                        f"combination {combo.name!r} uses method {combo.method!r}, which "
+                        f"estimates weights across contenders and needs at least two "
+                        f"members; it has {wide.shape[1]}. The contender is skipped.",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
+                    continue
+                if wide.shape[1] == 0:
+                    continue
             params = dict(combo.params or {})
             if combo.shrink_to_equal is not None and str(combo.method).lower() in _ESTIMATED:
                 params.setdefault("shrink_to_equal", combo.shrink_to_equal)
