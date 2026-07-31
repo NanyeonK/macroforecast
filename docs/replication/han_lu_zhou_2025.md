@@ -180,6 +180,65 @@ packaged `pls`, and scaled PCA's slope-scaling step likewise differs in detail. 
 summary statistic alone these would all have read as "matches"; only the path check
 distinguishes them.
 
+### 5.1 Table 4 — shrinkage columns (LASSO, ENet), and why they are reported as a sensitivity
+
+Structure again from the appendix, and it is the mirror image of the factor columns: the
+`14 × L` predictors are split into **`L` groups by MA lag** — group `l` holds the same-lag
+moving average of all 14 variables — LASSO or elastic net selects within each group, and the
+`L` forecasts are pooled by a simple average (IA Eq. IA4/IA5). The penalty is set
+"recursively through threefold cross-validations", which the package expresses directly:
+
+```python
+model_selection=mf.model_selection.grid(
+    {"alpha": ALPHAS}, validation_splitter=mf.recursive_threefold()
+)
+```
+
+**Running that rule as written does not reproduce the paper, and the reason is diagnosable.**
+The cross-validation selected the **largest** alpha in the grid at **696 of 696 origins**.
+Measured `alpha_max` — the smallest penalty that zeroes every coefficient — is 1.098 at the
+first origin, so that selection is the null model: the forecast collapses to the training
+mean, which *is* the benchmark, and `R²_OS` lands at ≈0 against the published 0.86–1.18.
+
+`[ASSUMPTION]` The appendix does not say whether predictors are standardized before the
+penalty. They must be here: within a group the 14 Welch-Goyal variables span orders of
+magnitude (SVAR ~1e-4 against TBL ~3), and the package's own guard refuses an unstandardized
+penalized fit at those scales. `standardize=True` throughout.
+
+Because the penalty is underdetermined, it was **not tuned toward the printed values**.
+The sensitivity is reported instead:
+
+| design | α = 0.001 | α = 0.01 | α = 0.05 | α ≈ 1 (the CV choice) | **printed** |
+|---|---|---|---|---|---|
+| `Xt` — LASSO | −8.450 | −7.327 | −3.832 | ≈ 0 | **−0.31** |
+| `Xt` — ENet | −8.409 | −7.138 | −4.210 | ≈ 0 | **−0.35** |
+| `+{MA2..MA6}` — LASSO | −6.928 | −5.964 | −3.011 | ≈ 0 | **0.86** |
+| `+{MA2..MA6}` — ENet | −6.887 | −5.858 | −3.192 | ≈ 0 | **0.59** |
+| `+{MA2..MA12}` — LASSO | −4.272 | −3.538 | −1.640 | ≈ 0 | **1.11** |
+| `+{MA2..MA12}` — ENet | −4.243 | −3.516 | −1.803 | ≈ 0 | **1.18** |
+
+**What the shape of that table settles.** `R²_OS` rises monotonically with the penalty and
+converges to 0 — the null model — from below. So **no penalty in this implementation reaches
+the published figures for the ladder designs**, which are *positive*: the paper's LASSO beats
+the historical mean, while this one at best ties it. The gap is therefore **structural, not a
+matter of tuning**, and no amount of alpha search would close it.
+
+`[GAP]` **The likely structural difference is post-selection refitting.** Equation IA4 reads
+"we apply LASSO **to select** the `J_{l,t}` optimal predictors … and forecast the market
+expected return as `r̂ = α̂_{l,t} + Σ β̂^{(j)}_{l,t} MA^j`" — LASSO is described as the
+*selector*, and the reported coefficients carry their own hats, which reads as an OLS refit
+on the selected subset (post-LASSO) rather than the shrunken LASSO coefficients this
+replication uses. That is a materially different estimator: post-selection OLS undoes the
+downward bias that drives these forecasts toward the mean. Testing it is a separate run and
+is not attempted here; it is recorded as the leading explanation rather than guessed at.
+
+**Two package defects came out of this exhibit**, both now fixed (§7): a one-member
+combination vanished silently — the `L=1` design has exactly one group, so its whole row came
+back `NaN` with nothing to explain it (PR #483) — and model selection returned a grid-edge
+value without saying so, which is what let 696 identical null-model selections pass for a
+result (PR #484). The second is the more consequential: without it, the ≈0 row above would
+have read as a finding rather than as a symptom.
+
 ## 6. What is not covered
 
 - `[GAP]` **Table 4's LASSO and ENet columns.** The design is specified (14×L split into `L`
