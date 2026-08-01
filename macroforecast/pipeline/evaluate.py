@@ -890,6 +890,23 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     for a in spec.arms:
         if getattr(a, "nested_in_benchmark", False):
             nested |= set(contender_names(a))
+    # A combination is a contender too, and in the forecast-combination
+    # literature CW on the combination is the headline test. It must declare
+    # nesting itself -- see CombinationContender.nested_in_benchmark.
+    combinations = tuple(getattr(spec, "combinations", ()) or ())
+    declared_combinations = {
+        str(c.name) for c in combinations if getattr(c, "nested_in_benchmark", False)
+    }
+    nested |= declared_combinations
+    if want_cw and nested and combinations and not declared_combinations:
+        warnings.warn(
+            "Clark-West is requested and some arms declare nested_in_benchmark, "
+            f"but none of the {len(combinations)} forecast combination(s) do, so "
+            "their cw_stat/cw_p will be NaN. Set "
+            "CombinationContender(nested_in_benchmark=True) on a combination whose "
+            "members nest the benchmark (a simple pool of nested arms does).",
+            UserWarning, stacklevel=2,
+        )
 
     loss_fn = _eval_loss(spec)
     custom_loss_blocked = {

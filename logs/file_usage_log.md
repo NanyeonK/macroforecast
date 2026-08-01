@@ -239,3 +239,19 @@
 - `CHANGELOG.md`: documented the additive options and unchanged-default
   guarantees.
 - `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
+## Clark-West for forecast combinations (fix/cw-for-combinations)
+
+- `macroforecast/pipeline/spec.py`: added `CombinationContender.nested_in_benchmark`
+  and documented when it is licensed.
+- `macroforecast/pipeline/evaluate.py`: declared combinations join the CW-eligible
+  set; the previously silent NaN case warns.
+- `tests/pipeline/test_cw_for_combinations.py`: new -- field/default, unchanged
+  default behavior, CW emitted when declared, statistic matched against a
+  hand-computed `clark_west_test`, and the warning.
+- `docs/guide/concepts/evaluation.md`: stated the arm/combination CW rule.
+- `docs/reference/{pipeline.md,models.md}`: regenerated with system `python3`
+  (`models.md` was already stale from the merged `gtvp`/`variable_importance`
+  and `nn` early-stopping changes).
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+

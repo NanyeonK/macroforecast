@@ -5,6 +5,22 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pipeline/spec.py`, `pipeline/evaluate.py` (bug fix, Clark-West was
+  inexpressible for a forecast combination): `significance_table` built its set
+  of CW-eligible contenders by walking `spec.arms` and reading
+  `Arm.nested_in_benchmark`, and `CombinationContender` had no such field, so a
+  combination could never be eligible -- its `cw_stat`/`cw_p` came back NaN with
+  no warning saying why. That is the wrong default for the forecast-combination
+  literature, where CW *on the combination* is the headline test (Welch and
+  Goyal 2008; Rapach, Strauss and Zhou 2010), and it is a licensed test: a
+  simple pool of arms that each nest the benchmark nests the benchmark, since
+  zeroing every slope returns the benchmark forecast. `CombinationContender`
+  gains `nested_in_benchmark: bool = False`; declared combinations join the
+  nested set; and the previously silent case (CW requested, some arms nested, no
+  combination declared) now emits a `UserWarning` naming the fix. Nestedness is
+  not inferred from the members -- an estimated-weight combination need not nest
+  what its members nest. Default behavior is unchanged for every existing spec.
+
 - `forecasting/policies/base.py` (bug fix, CV selection fell through to the
   degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
   own `validation_splitter` (POOS / K-fold CV over `n_lag` for `ar`/`far`) was

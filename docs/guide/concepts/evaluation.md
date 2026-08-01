@@ -216,6 +216,15 @@ cache, then record the raw-file hash in report provenance.
 Mask dates must exactly cover the forecast target dates being evaluated. A
 month-end mask will not be silently shifted onto month-start forecasts, and
 missing mask dates or `NaN` states raise with the first missing target dates.
+Clark-West is emitted only for contenders that **declare** they nest the
+benchmark. Arms do so with `Arm(nested_in_benchmark=True)`; a forecast
+combination does so with `CombinationContender(nested_in_benchmark=True)`, which
+is what the combination literature's headline test needs. A simple pool
+(mean/median/trimmed) of arms that each nest the benchmark nests it too, since
+zeroing every slope returns the benchmark forecast; an estimated-weight
+combination need not, so the package does not infer the flag from the members.
+Without it the combination's `cw_stat`/`cw_p` are NaN, and a `UserWarning` says so.
+
 When subsamples are configured, evaluation tables include a `subsample` column,
 and paper tables can select a window with
 `mf.reporting.paper_accuracy_table(report, subsample="ex_covid")`.
