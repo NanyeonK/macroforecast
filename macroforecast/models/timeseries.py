@@ -309,9 +309,15 @@ class _STAR:
         self.n_lag = max(1, int(n_lag))
         self.gammas = tuple(float(g) for g in gammas)
         self.n_c = max(3, int(n_c))
-        self._cols = None; self._gamma = None; self._c = None; self._sd = 1.0
-        self._beta = None; self._fallback = 0.0
-        self.ssr_ = None; self.nobs_ = None; self.n_params_ = None
+        self._cols: list[str] | None = None
+        self._gamma: float | None = None
+        self._c: float | None = None
+        self._sd: float = 1.0
+        self._beta: np.ndarray | None = None
+        self._fallback: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
 
     def _stack(self, L, G):
         one = np.ones((len(L), 1)); Xa = np.column_stack([one, L])
@@ -347,7 +353,14 @@ class _STAR:
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         Xdf = pd.DataFrame(X)
-        if self._cols is None or self._beta is None:
+        # fit() assigns _cols/_gamma/_c/_beta together, so any one being None
+        # means the fit fell through; check all four rather than a proxy.
+        if (
+            self._cols is None
+            or self._beta is None
+            or self._gamma is None
+            or self._c is None
+        ):
             return np.full(len(Xdf), self._fallback, dtype=float)
         L = Xdf.reindex(columns=self._cols).astype(float).fillna(0.0).to_numpy()
         G = 1.0 / (1.0 + np.exp(-self._gamma * (L[:, 0] - self._c) / self._sd))

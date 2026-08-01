@@ -1794,14 +1794,17 @@ def test_pls_default_transform_predictions_unchanged() -> None:
 
     assert default_fit.metadata["score_projection"] == "transform"
     assert explicit_fit.metadata["score_projection"] == "transform"
-    assert np.array_equal(
-        default_fit.predict(X.iloc[-6:]).to_numpy(dtype=float),
-        expected,
-    )
-    assert np.array_equal(
-        explicit_fit.predict(X.iloc[-6:]).to_numpy(dtype=float),
-        expected,
-    )
+    got_default = default_fit.predict(X.iloc[-6:]).to_numpy(dtype=float)
+    got_explicit = explicit_fit.predict(X.iloc[-6:]).to_numpy(dtype=float)
+    # The default and the explicit setting must be the SAME code path, so this one
+    # is exact -- it compares two fits from the same process.
+    assert np.array_equal(got_default, got_explicit)
+    # The pinned literals were captured on one BLAS build. A PLS fit goes through
+    # LAPACK, so its last bits are not portable across builds and an exact
+    # comparison fails on a different runner for no behavioral reason. rtol=1e-9 is
+    # six orders of magnitude tighter than any real change to the projection and
+    # six looser than last-bit noise.
+    np.testing.assert_allclose(got_default, expected, rtol=1e-9)
 
 
 def test_pls_supports_control_residualization() -> None:
@@ -2716,7 +2719,9 @@ def test_macro_random_forest_position_validation() -> None:
         ("catboost", "catboost", lambda X, y: mf.models.catboost(X, y)),
         ("arch", "arch", lambda X, y: mf.models.garch11(y)),
         (
-            "matplotlib",
+            # joblib, not matplotlib: the vendored MRF imports matplotlib only inside
+            # its two plotting methods, so fitting no longer requires it.
+            "joblib",
             "macro_random_forest",
             lambda X, y: mf.models.macro_random_forest(X, y),
         ),
@@ -2828,7 +2833,6 @@ def test_macro_random_forest_adapter_wires_reference_backend(
 
 def test_macro_random_forest_vendored_backend_smoke() -> None:
     pytest.importorskip("joblib")
-    pytest.importorskip("matplotlib")
     X, y = _xy(48)
 
     fit = mf.models.macro_random_forest(
@@ -2860,7 +2864,6 @@ def test_macro_random_forest_intercept_only_is_plain_rf() -> None:
     of y on the state S_t.
     """
     pytest.importorskip("joblib")
-    pytest.importorskip("matplotlib")
     X, y = _xy(64)
 
     fit = mf.models.macro_random_forest(
@@ -2890,7 +2893,6 @@ def test_macro_random_forest_gtvp_and_vi_accessors() -> None:
     ranking.
     """
     pytest.importorskip("joblib")
-    pytest.importorskip("matplotlib")
     X, y = _xy(72)
 
     fit = mf.models.macro_random_forest(

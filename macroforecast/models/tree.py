@@ -1549,7 +1549,6 @@ class MacroRandomForestRegressor:
     @staticmethod
     def _import_external():
         optional_import("joblib", extra="macro_random_forest")
-        optional_import("matplotlib", extra="macro_random_forest")
         from macroforecast.models._mrf_reference import MacroRandomForest
 
         return MacroRandomForest
