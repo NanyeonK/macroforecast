@@ -5,6 +5,45 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/_mrf_reference.py`, `models/tree.py`, `models/timeseries.py`,
+  `tools/docgen/renderer.py`, `tests/models/*` (CI health, four independent
+  causes, no behavior change): `main`'s CI was failing in four jobs, which made
+  every PR unmergeable and made a red run uninformative.
+  (1) The vendored Macro Random Forest imported `matplotlib.pyplot` at module
+  level although it uses it in exactly two plotting methods, so fitting required
+  a plotting library and four determinism tests died on `ImportError` in a core
+  install. The import is now inside those two methods and the `optional_import`
+  gate for it is gone; MRF fits and predicts without matplotlib, and those tests
+  now RUN in core CI rather than skipping.
+  (2) `test_pls_default_transform_predictions_unchanged` and
+  `test_default_ar_signature_metadata_and_forecast_unchanged` pinned predictions
+  at bit-exact equality against hex-float literals. Both pass locally and fail on
+  the CI runner: an LAPACK-backed fit is not bit-portable across BLAS builds (CI
+  showed max abs diff 5.33e-15 against `atol=5e-15`, max rel diff 6.7e-16, with
+  both arrays printing identically). The literal comparisons move to
+  `rtol=1e-9` -- still orders of magnitude tighter than any real change -- while
+  the default-vs-explicit comparison, which runs in one process, stays exact.
+  (3) `tools.docgen` rendered `pandas.core.frame.DataFrame` or
+  `pandas.DataFrame` depending on the pandas build, so the committed reference
+  tree could never match. Public pandas class paths are now canonicalized to
+  their top-level form. `docs/reference/models.md` is also regenerated: it had
+  been stale since the `gtvp`/`variable_importance` and `nn` early-stopping
+  merges.
+  (4) `_STAR` initialized seven attributes as bare `None`, so mypy typed them
+  `None` and every later assignment was an error. They are annotated, and
+  `predict`'s guard now narrows `_gamma`/`_c` alongside `_cols`/`_beta` (all four
+  are assigned together in `fit`, so the added branch is unreachable in
+  practice). `mypy` is clean across all 119 source files.
+  (5) `tests/mc/test_dm_size.py::[n50-h1-none]` is marked as a known distortion,
+  matching how this file already treats its n=50, h=4 cases. The uncorrected DM
+  statistic at n=50, h=1 is correctly sized at alpha=.05 (0.0550, CI99
+  [0.0448,0.0666]) and mildly oversized at alpha=.10 (0.1147, CI99
+  [0.1001,0.1304] -- a lower bound one ten-thousandth above nominal). This is the
+  small-sample variance-estimator bias the file documents for h=4, one order
+  milder, and it is the UNCORRECTED variant: `correction="hln"` -- the package
+  default, introduced for exactly this problem -- is correctly sized at both
+  alphas for the same n and h. `strict=True` keeps it a tripwire.
+
 - `forecasting/policies/base.py` (bug fix, CV selection fell through to the
   degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
   own `validation_splitter` (POOS / K-fold CV over `n_lag` for `ar`/`far`) was
