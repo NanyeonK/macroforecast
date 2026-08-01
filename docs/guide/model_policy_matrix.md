@@ -84,6 +84,8 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `naive` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `random_walk_drift` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `seasonal_naive` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
+| `setar` | timeseries | `supervised` | supported-via-direct-projection | supported-via-direct-projection | supported | supported | not available |
+| `star` | timeseries | `supervised` | supported-via-direct-projection | supported-via-direct-projection | supported | supported | not available |
 | `stlf` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `theta_method` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `var` | timeseries | `panel` | supported-via-direct-projection | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: EMPTY |
