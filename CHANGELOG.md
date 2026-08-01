@@ -50,6 +50,11 @@ full per-version honesty-pass history embedded in repo documentation.
   was not referenced from `docs/index.md` and did not list the notes itself, so
   `sphinx-build -W` failed on six `toc.not_included` warnings and the notes
   appeared nowhere in the built site. Wired in with a globbed toctree.
+  (8) The Phase-0 seed-hardcoding guard scanned `scripts/` as well as the
+  package. Every hit is a replication runner pinning `random_state=42`
+  deliberately -- a faithful replication has to be reproducible, the same
+  objective-4 property the MRF determinism tests lock -- while `macroforecast/`
+  itself has zero hits. Scoped to the package.
 
 - `forecasting/policies/base.py` (bug fix, CV selection fell through to the
   degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
