@@ -539,6 +539,46 @@ and that deserves its own change with its own suite run.
 `[GAP]` Panel B's degenerate cell (`GDP growth` control on the GDP target) matches to 0.01pp,
 so the failure needs the rank decision to flip and does not fire on every collinear design.
 
+## 5.6 Table 8 — the placebo, verified but not re-run, with the cost stated
+
+Table 8 scrambles the past `{X_1,…,X_{t-1}}` at every origin, rebuilds pseudo-MA trends from
+the scrambled history, and repeats to 2022:12 — **1,000 times**, reporting the average
+`R²_OS`. That is 1,000 complete 696-origin runs per design.
+
+It is not re-run here, and the cost is the reason rather than a judgement about the exhibit.
+`Xt + {MA2..MA6}` alone takes 30.2 min for one pass at `n_jobs=12` (§8), and the two longest
+ladders have never been run even once (§4). What *is* done is to verify the exhibit against
+the authors' archive, which ships the full simulation output (`r2_sims`, 5 × 1,000):
+
+| design | archive mean of 1,000 sims | printed | Δ | sd across sims |
+|---|---|---|---|---|
+| `Xt` | 0.5987 | 0.60 | −0.0013 | **2.2e-16** |
+| `Xt + {MA2..MA6}` | 0.3953 | 0.40 | −0.0047 | 0.1800 |
+| `Xt + {MA2..MA12}` | 0.3217 | 0.32 | +0.0017 | 0.1795 |
+| `Xt + {MA2..MA24}` | 0.2719 | 0.27 | +0.0019 | 0.1646 |
+| `Xt + {MA2..MA36}` | 0.2595 | 0.26 | −0.0005 | 0.1593 |
+
+and the incremental panel likewise (−0.2034 / −0.2771 / −0.3268 / −0.3392 against printed
+−0.20 / −0.28 / −0.33 / −0.34). **All nine printed values reproduce, max |Δ| = 0.0047pp.**
+
+The `Xt` row is a consistency check rather than a result: scrambling the *past* cannot touch a
+design that uses only the current value, so its 1,000 draws must be identical — and their
+standard deviation is 2.2e-16. The archive is internally consistent on its own terms.
+
+**What an independent replication would cost.** The cross-simulation standard deviation is
+about 0.18pp, so reaching the printed precision needs
+
+| tolerance | simulations | wall clock for the *cheapest* trend row alone |
+|---|---|---|
+| ±0.10pp | 13 | ~6.5 h |
+| ±0.05pp | 50 | ~25 h |
+| ±0.01pp | ~1,250 | ~26 days |
+
+per design, and the two longest ladders cost 24 h and 50 h *per pass* (§8). A ±0.10pp
+version of one row is the only affordable point on that curve, and it would not settle a
+table whose reported effects are 0.20–0.34pp apart. Recorded as a quantified exclusion, not
+an oversight.
+
 ## 6. What is not covered
 
 - `[GAP]` **Table 4's LASSO and ENet columns.** The design is specified (14×L split into `L`
