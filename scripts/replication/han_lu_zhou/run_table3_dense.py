@@ -1,4 +1,4 @@
-"""B5 / Table 2 — all five forecast-combination designs through macroforecast.
+"""B5 / Table 3 — all five dense forecast-combination designs through macroforecast.
 
 Serial baseline already measured on the `current` design: 20.7 min, R2_OS 0.611%.
 This run uses n_jobs to cut wall-clock (objective 3) and re-checks that the
@@ -35,7 +35,7 @@ SIGNALS = {
     "dense24": lambda: {k: v for L in range(1, 25) for k, v in ma_block(L).items()},
     "dense36": lambda: {k: v for L in range(1, 37) for k, v in ma_block(L).items()},
 }
-# authors' Table 2 values, derived from their archived 696-month forecast paths
+# authors' Table 3 values, derived from their archived 696-month forecast paths
 TARGET = {"current": 0.599, "dense6": 0.699, "dense12": 0.805, "dense24": 0.796, "dense36": 0.730}
 LABEL = {"current": "Current value (14)", "dense6": "MA 1..6 (84)",
          "dense12": "MA 1..12 (168)", "dense24": "MA 1..24 (336)", "dense36": "MA 1..36 (504)"}
@@ -55,7 +55,12 @@ for design in DESIGNS:
     cols = list(sig)
     frame = pd.concat([y.rename("y"), pd.DataFrame(sig, index=idx)], axis=1)
     bundle = mf.data.custom_dataset(frame, transform_codes={c: 1 for c in frame.columns})
-    test_start = idx[457]
+    # idx[456] is the first ORIGIN, so the first target is 1965-01 and the
+    # out-of-sample block is the paper's 696 months. This read idx[457],
+    # which silently dropped 1965-01 and scored 695 -- the whole level gap
+    # against the printed table, since the matched-date increments agree to
+    # 0.004pp. Every other runner in this directory already used idx[456].
+    test_start = idx[456]
     w = mf.window.from_cutoffs(test_start=test_start, horizon=1, embargo=0,
                                val_method="expanding", val_min_train_size=24)
     arms = [Arm("HA", model="hist_mean",
@@ -105,7 +110,7 @@ for design in DESIGNS:
     parquet_safe(rep.forecasts).to_parquet(f"/tmp/hlz_fc_{design}.parquet")
     acc.to_parquet(f"/tmp/hlz_acc_{design}.parquet")
 
-print("\n########## TABLE 2 — mine vs authors ##########")
+print("\n########## TABLE 3 — mine vs authors ##########")
 print("| design | signals | mine R2_OS % | authors % | Δ pp | min |")
 print("|---|---|---|---|---|---|")
 for d in DESIGNS:

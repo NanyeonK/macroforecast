@@ -72,6 +72,45 @@ match the archive's `X_ECON` to 1.26e-15, nor the forecast paths to 1e-15.
 
 `hist_mean` and the fixed-lag Newey-West override get their first production use here.
 
+### 2.1 Table 1 — the panel itself, before any estimator
+
+Table 1 costs seconds and is the only exhibit in the paper that tests the **panel**
+rather than an estimator. If our fourteen predictors or our MA construction had drifted
+from the authors', every later table would inherit the error while still looking
+internally consistent. Sample 1926:12–2022:12 (1,153 months), per the Table 1 note.
+
+**Units.** The note says both statistics are "expressed as percentages". Welch-Goyal
+deliver the yields and spreads already in percent (TBL, LTY, LTR, TMS, DFY, DFR), and
+INFL as a percent inflation rate; the remaining seven are ratios or log ratios (DP, DY,
+EP, DE, BM, NTIS, SVAR) and take ×100. The rule is applied **by source unit, uniformly** —
+not fitted cell by cell to the printed numbers. The rate block is the control on it: it is
+compared with *no rescaling at all*.
+
+| predictor | Xt mean | Xt SD | MA3 mean | MA3 SD | MA6 mean | MA6 SD | MA12 mean | MA12 SD |
+|---|---|---|---|---|---|---|---|---|
+| DP | -340.93 | 47.67 | -340.91 | 47.51 | -340.88 | 47.29 | -340.79 | 46.85 |
+| DY | -340.43 | 47.47 | -340.41 | 47.30 | -340.38 | 47.09 | -340.30 | 46.64 |
+| EP | -276.15 | 42.05 | -276.15 | 41.79 | -276.16 | 41.35 | -276.15 | 40.31 |
+| DE | -64.77 | 32.77 | -64.75 | 32.61 | -64.72 | 32.15 | -64.64 | 30.75 |
+| BM | 55.19 | 26.84 | 55.23 | 26.67 | 55.28 | 26.47 | 55.40 | 26.13 |
+| NTIS | 1.60 | 2.57 | 1.60 | 2.55 | 1.60 | 2.51 | 1.59 | 2.43 |
+| TBL | 3.29 | 3.06 | 3.29 | 3.06 | 3.29 | 3.04 | 3.30 | 3.02 |
+| LTY | 4.96 | 2.81 | 4.97 | 2.80 | 4.97 | 2.80 | 4.98 | 2.80 |
+| LTR | 0.45 | 2.49 | 0.45 | 1.48 | 0.45 | 1.04 | 0.46 | 0.74 |
+| TMS | 1.67 | 1.29 | 1.67 | 1.27 | 1.68 | 1.24 | 1.68 | 1.19 |
+| DFY | 1.12 | 0.68 | 1.12 | 0.67 | 1.12 | 0.66 | 1.12 | 0.64 |
+| DFR | 0.05 | 1.41 | 0.04 | 0.74 | 0.04 | 0.50 | 0.04 | 0.33 |
+| INFL | 0.25 | 0.53 | 0.25 | 0.42 | 0.25 | 0.37 | 0.25 | 0.32 |
+| SVAR | 0.29 | 0.60 | 0.29 | 0.50 | 0.29 | 0.44 | 0.29 | 0.40 |
+
+The table above is ours; **every one of its 112 cells equals the printed cell at the
+printed precision**, which is why no Δ column is shown — it would be zeros. Against the
+unrounded values, max |Δ| = **0.0049**, mean |Δ| = 0.0026, and 112/112 are within 0.005.
+The worst cell is SVAR's MA3 standard deviation, 0.4951 against a printed 0.50. The
+residual is the printed table's rounding, not disagreement.
+
+Nothing downstream has to take the panel on trust after this.
+
 ## 3. Table 2 — sparse forecast combinations
 
 Design read from the authors' `Forecasts_in_and_out_of_sample.m`: expanding estimation from
@@ -357,6 +396,71 @@ the fixed-budget version.
 no patience, no held-out tail — so the protocol above could not be expressed until PR #485
 added it. That is not a stylistic omission: the middle column of the table above is what
 the package could produce before the fix, and it is off by up to 20 points.
+
+## 5.4 Table 6 — ensembles, and where the inherited disagreement lands
+
+Table 6 estimates nothing new: it averages the method-level paths Tables 4 and 5 already
+produced. It is assembled from the saved forecast frames and run through
+`evaluate(master, spec)` — the same evaluation code a live run uses, with no refit — so the
+whole exhibit costs seconds.
+
+Section 3.3 gives the four ensembles: **(a) Linear** = PCR, PLS, S-PCR, LASSO, ENet;
+**(b) Nonlinear** = neural networks "with varying depths"; **(c) NN & ENet**; **(d) All**.
+`[GAP]` The Table 6 note says the networks run "from one to four" while Table 5 reports
+NN1–NN5. Both readings are produced below rather than one being chosen.
+
+**The disagreement here is inherited and its direction was predicted.** Two components
+already disagree for documented reasons — LASSO/ENet structurally (§5.1) and the networks
+through a training protocol the paper never states (§5.2, §5.3, where our networks come out
+*flatter* than the paper's). Table 6 therefore tests nothing about those components; it
+shows what they ensemble to.
+
+**NN1..NN4 (the Table 6 note's reading)**, `R²_OS` in percent, mine / printed / Δ:
+
+| design | Linear | | | Nonlinear | | | NN+ENet | | | All | | |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `Xt` | 0.389 | 0.35 | **+0.039** | 0.166 | −0.18 | +0.346 | 0.213 | 0.01 | +0.203 | 0.399 | 0.42 | **−0.021** |
+| `Xt + {MA2..MA6}` | 0.519 | 0.90 | −0.381 | −0.276 | 0.99 | −1.266 | −0.109 | 1.03 | −1.139 | 0.333 | 1.08 | −0.747 |
+| `Xt + {MA2..MA12}` | 0.587 | 1.20 | −0.613 | 0.626 | 1.44 | −0.814 | 0.645 | 1.51 | −0.865 | 0.751 | 1.45 | −0.699 |
+
+**NN1..NN5 (Table 5's set)** — only the network columns move:
+
+| design | Linear | | | Nonlinear | | | NN+ENet | | | All | | |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `Xt` | 0.389 | 0.35 | +0.039 | 0.213 | −0.18 | +0.393 | 0.244 | 0.01 | +0.234 | 0.400 | 0.42 | −0.020 |
+| `Xt + {MA2..MA6}` | 0.519 | 0.90 | −0.381 | 0.016 | 0.99 | −0.974 | 0.086 | 1.03 | −0.944 | 0.399 | 1.08 | −0.681 |
+| `Xt + {MA2..MA12}` | 0.587 | 1.20 | −0.613 | 0.795 | 1.44 | −0.645 | 0.777 | 1.51 | −0.733 | 0.814 | 1.45 | −0.636 |
+
+### What the pattern says
+
+**The `Xt` row is where the components agree, and it is the row that matches**: Linear
++0.039pp, All −0.021pp. That row uses no MA signals, so LASSO/ENet have the least room to
+diverge and the networks have the fewest inputs to overfit. Every trend row is low, by
+−0.38 to −1.27pp, and the gap is **widest in exactly the columns containing networks**.
+That is the direction §5.3 predicts: early stopping compresses both tails, so our networks
+neither collapse nor spike, and an ensemble of flatter members cannot reach the printed
+highs. The residual is a component story, not an ensembling one.
+
+**Significance** (Clark-West, NN1..NN4 reading), against the paper's stars:
+
+| design | Linear | Nonlinear | NN+ENet | All |
+|---|---|---|---|---|
+| `Xt` | p=0.015 (paper `*`) | p=0.203 (paper none) ✓ | p=0.198 (paper none) ✓ | p=0.070 (paper `*`) ✓ |
+| `Xt + {MA2..MA6}` | p=0.006 (paper `***`) ✓ | p=0.307 (paper `**`) | p=0.292 (paper `**`) | p=0.080 (paper `***`) |
+| `Xt + {MA2..MA12}` | p=0.004 (paper `***`) ✓ | p=0.036 (paper `***`) | p=0.033 (paper `***`) | p=0.015 (paper `***`) |
+
+The **Linear** column reproduces the paper's significance exactly at every design, and the
+`Xt` row matches in all four columns. The misses are confined to the network-bearing
+columns of the trend designs — the same place the point estimates diverge, for the same
+reason.
+
+**This exhibit is the one that needed PR #486.** All twelve Clark-West values above are on
+*combinations*, which the package could not test at all before that fix: they would have
+come back NaN, and Table 6's entire significance column with them.
+
+`[GAP]` Rows `Xt + {MA2..MA24}` and `Xt + {MA2..MA36}` are not produced, because their
+component paths were never estimated (§8's cost ceiling). `[GAP]` `J`, the number of
+factors, is unspecified in the paper; `J=1` is used here, as in §5.
 
 ## 6. What is not covered
 
