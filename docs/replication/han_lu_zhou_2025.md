@@ -32,8 +32,11 @@ is exact" — §4.
 combination path bit-identical to theirs and the realized returns bit-identical, a difference
 in `R²_OS` can only come from the denominator — and the package's `hist_mean` truncates its
 own estimation sample by the leading NaNs of *other arms' columns in the same bundle*. Scored
-against a prevailing mean built from our own panel, Tables 3 and 9 reproduce exactly. That is
-issue #488, and §4 isolates it.
+against a prevailing mean built from our own panel, **all three completed designs reproduce
+the printed values exactly** (Table 3: 0.599 / 0.699 / 0.805 against 0.599 / 0.699 / 0.805;
+Table 9: every column within 4e-4). The error under the package benchmark scales with the
+ladder — 0.000, 0.017, 0.062pp for longest-MA 1, 6, 12 — exactly as a bundle-truncated
+denominator predicts. That is issue #488, and §4 isolates it.
 
 ---
 
@@ -173,12 +176,9 @@ paragraph makes exact:
 |---|---|---|---|---|---|
 | `Xt` | 14 | **8.88e-16** | 0.599 | **0.599** | 0.599 |
 | `Xt + {MA2..MA6}` | 84 | **6.66e-16** | 0.682 | **0.699** | 0.699 |
-| `Xt + {MA2..MA12}` | 168 | **7.77e-16** | 0.754 | 0.818 | 0.805 |
+| `Xt + {MA2..MA12}` | 168 | **7.77e-16** | 0.743 | **0.805** | 0.805 |
 | `Xt + {MA2..MA24}` | 336 | not run (§8) | — | — | 0.796 |
 | `Xt + {MA2..MA36}` | 504 | not run (§8) | — | — | 0.730 |
-
-`[note]` The `Xt + {MA2..MA12}` row is still scored on the superseded 695-month window; its
-re-run on the corrected 696 months is in flight. The other two rows are final.
 
 **The forecasts are exact; the residual is entirely the denominator.** Against the authors'
 archived paths our combination forecasts agree to `max|Δ| ≈ 7e-16` across all 696 months, and
@@ -188,9 +188,11 @@ and substituting the authors' `FC_HA` while keeping *our* forecast path returns 
 value exactly.
 
 The prevailing-mean column is not borrowed from them: it is `mean(y[0 : t])` computed from
-**our** panel, and it matches their archived `FC_HA` to `5.55e-16`. Scored against it, our
-paths reproduce the printed table — and so does Table 9, whose three columns come back within
-`3e-4` for both completed designs (§4.1).
+**our** panel, and it matches their archived `FC_HA` to `5.55e-16`. Scored against it, **all
+three designs reproduce the printed value exactly** — 0.599, 0.699 and 0.805 against 0.599,
+0.699 and 0.805 — and so does Table 9, whose three columns come back within `4e-4` for every
+design (§4.1). Against the package benchmark the same paths read 0.599, 0.682 and 0.743, and
+the error grows with the ladder length, which is what the next paragraph predicts.
 
 **What the package benchmark does instead (issue #488).** `hist_mean` uses no predictors, yet
 its estimation sample is truncated by the leading NaNs of *other arms' columns in the same
@@ -260,13 +262,14 @@ benchmarks (§4 explains why two):
 | | **prevailing mean** | **0.599** | **0.411** | **0.782** | **0.0004** |
 | `Xt + {MA2..MA6}` | package `hist_mean` | 0.682 | 0.364 | 0.994 | 0.0221 |
 | | **prevailing mean** | **0.699** | **0.375** | **1.016** | **0.0003** |
-| `Xt + {MA2..MA12}` | package `hist_mean` | 0.754 | 0.326 | 1.173 | 0.0823 |
-| | prevailing mean | 0.818 | 0.370 | 1.255 | 0.0254 |
+| `Xt + {MA2..MA12}` | package `hist_mean` | 0.743 | 0.304 | 1.173 | 0.0823 |
+| | **prevailing mean** | **0.805** | **0.345** | **1.255** | **0.0004** |
 
-**Scored against a prevailing mean, both completed designs reproduce all three columns to
-within 3e-4.** The `hist_mean` column sits beside it because the gap between them is issue
-#488 and nothing else. `[note]` The `{MA2..MA12}` row is still on the superseded 695-month
-window; its re-run is in flight.
+**Scored against a prevailing mean, every design reproduces all three columns to within
+4e-4.** The `hist_mean` column sits beside it because the gap between them is issue #488 and
+nothing else — and note how that gap scales with the ladder: 0.0004, 0.0221, 0.0823 as the
+longest MA goes 1, 6, 12. The benchmark's estimation sample shrinks with the longest column in
+the bundle, so the longer the ladder, the more the denominator moves.
 
 **Significance.** The paper stars panels A and B with Clark-West:
 
