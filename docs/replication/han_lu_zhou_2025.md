@@ -820,20 +820,36 @@ and the difference is the point of this section.
 
 ## 8. P3 / P4 — efficiency, and identity under it
 
-| setting | wall clock | `R²_OS` |
-|---|---|---|
-| `n_jobs=1` | 20.7 min | 0.611% |
-| `n_jobs=2` | 12.1 min | 0.611% |
-| `n_jobs=4` | **6.0 min (3.45×)** | **0.611%** |
+Re-measured on the corrected 696-month window, `Xt` design, all three settings run
+back-to-back on the same box:
 
-**The identity gate.** The `n_jobs=4` run returns the same `R²_OS` to three decimals *and* a
-forecast path bit-identical to the archived one (`max|Δ| = 0.0`). Parallelism changes only
-wall clock.
+| setting | wall clock | `R²_OS` | path parity vs the authors' archive |
+|---|---|---|---|
+| `n_jobs=1` | 24.9 min | **0.599%** | 8.882e-16 |
+| `n_jobs=2` | 13.1 min | **0.599%** | 8.882e-16 |
+| `n_jobs=4` | **6.7 min (3.72×)** | **0.599%** | 8.882e-16 |
 
-**A cost finding.** Wall clock grows **superlinearly** in the number of arms: 84 signals took
-73.2 min and 168 signals took 323.6 min — 2× the arms for **4.4×** the time at fixed
-`n_jobs=4`. Extrapolated, the 336- and 504-signal ladders are ~24 h and ~50 h; that is why
-§4's table stops at `L=12`, and it is a cost ceiling rather than a correctness problem.
+**The identity gate.** All three return the same `R²_OS` — equal to the printed 0.599 — and
+the *same* path-parity figure, `8.882e-16`, not merely a similar one. Parallelism changes wall
+clock and nothing else. On the wider ladder the same holds: `Xt + {MA2..MA6}` at `n_jobs=12`
+returns a path `6.661e-16` from the authors', the identical figure the `n_jobs=4` run
+produced.
+
+`[note]` These timings were taken while another replication run held 12 workers on the same
+machine, so the absolute minutes are inflated relative to an idle box (an earlier idle run of
+the same design at `n_jobs=1` took 20.7 min). The **ratios** and the identity results are
+unaffected — every setting competed against the same background load.
+
+**Speedup beyond 4 workers.** `Xt + {MA2..MA6}` took 73.2 min at `n_jobs=4` and 30.2 min at
+`n_jobs=12` — **2.42×** for 3× the workers, so roughly 81% marginal efficiency. Combined with
+the 3.72× from 1→4, the end-to-end 1→12 gain is about 9×.
+
+**A cost finding.** Wall clock grows **superlinearly** in the number of arms: at fixed
+`n_jobs=4`, 84 signals took 73.2 min and 168 signals took 323.6 min — 2× the arms for
+**4.4×** the time. Extrapolated, the 336- and 504-signal ladders are ~24 h and ~50 h; that is
+why §4's table stops at `L = 12`, why Table 6 has three rows rather than five, and why
+Table 8's 1,000-simulation placebo is verified rather than re-run (§5.6). It is a cost
+ceiling, not a correctness problem.
 
 ## 9. Reproduce
 

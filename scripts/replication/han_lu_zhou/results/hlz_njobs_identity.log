@@ -1,0 +1,10 @@
+########## n_jobs=1 ##########
+R2_OS mine = 0.599%   authors = 0.599%   Δ = -0.000pp   (24.9 min)
+  PATH PARITY vs authors' archived path: n=696 max|Δ|=8.882e-16 corr=1.00000000
+########## n_jobs=2 ##########
+R2_OS mine = 0.599%   authors = 0.599%   Δ = -0.000pp   (13.1 min)
+  PATH PARITY vs authors' archived path: n=696 max|Δ|=8.882e-16 corr=1.00000000
+########## n_jobs=4 ##########
+R2_OS mine = 0.599%   authors = 0.599%   Δ = -0.000pp   (6.7 min)
+  PATH PARITY vs authors' archived path: n=696 max|Δ|=8.882e-16 corr=1.00000000
+NJOBS_STUDY_DONE

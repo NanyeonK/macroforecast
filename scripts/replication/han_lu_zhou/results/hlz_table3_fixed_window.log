@@ -1,0 +1,8 @@
+
+########## design=dense6  signals=84  n_jobs=12 ##########
+R2_OS mine = 0.682%   authors = 0.699%   Δ = -0.017pp   (30.2 min)
+  tests:   contender  dm_stat     dm_p  cw_stat  cw_p
+COMB_dense6 -2.05162 0.040581      NaN   NaN
+  PATH PARITY vs authors' archived path: n=696 max|Δ|=6.661e-16 corr=1.00000000
+
+########## design=dense12  signals=168  n_jobs=12 ##########
