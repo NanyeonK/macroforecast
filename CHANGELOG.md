@@ -43,6 +43,9 @@ full per-version honesty-pass history embedded in repo documentation.
   milder, and it is the UNCORRECTED variant: `correction="hln"` -- the package
   default, introduced for exactly this problem -- is correctly sized at both
   alphas for the same n and h. `strict=True` keeps it a tripwire.
+  (6) `docs/guide/model_overview.md` and `docs/guide/models/timeseries.md`
+  regenerated: the `setar`/`star` entries were never added after those models
+  landed, so `tools/gen_model_overview.py --check` failed on `main` too.
 
 - `forecasting/policies/base.py` (bug fix, CV selection fell through to the
   degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
