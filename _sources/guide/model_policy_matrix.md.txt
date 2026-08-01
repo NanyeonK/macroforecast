@@ -28,6 +28,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `rank_aggregation` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `supervised_aggregation` | assemblage | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `ucsv` | bayesian | `target` | guarded-unsupported | guarded-unsupported | supported | supported | not available |
+| `pcr` | composite | `supervised` | supported | supported | supported | supported | not available |
 | `pls` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `scaled_pca` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `supervised_pca` | composite | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
@@ -72,6 +73,7 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `nu_svr` | support_vector | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `svr` | support_vector | `supervised` | supported | supported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `ar` | timeseries | `supervised` | supported-via-direct-projection | supported-via-direct-projection | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
+| `ar_bic` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | not available |
 | `arima` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `auto_arima` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `bvar_minnesota` | timeseries | `panel` | guarded-unsupported | guarded-unsupported | supported | supported | direct: TIMEOUT, direct_average: TIMEOUT, path_average: TIMEOUT, recursive: TIMEOUT |
@@ -82,6 +84,8 @@ combination ran, not that its forecast object has the right statistical meaning.
 | `naive` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `random_walk_drift` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `seasonal_naive` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
+| `setar` | timeseries | `supervised` | supported-via-direct-projection | supported-via-direct-projection | supported | supported | not available |
+| `star` | timeseries | `supervised` | supported-via-direct-projection | supported-via-direct-projection | supported | supported | not available |
 | `stlf` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `theta_method` | timeseries | `target` | guarded-unsupported | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: OK |
 | `var` | timeseries | `panel` | supported-via-direct-projection | guarded-unsupported | supported | supported | direct: OK, direct_average: OK, path_average: OK, recursive: EMPTY |

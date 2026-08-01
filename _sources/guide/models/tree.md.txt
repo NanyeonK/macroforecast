@@ -17,7 +17,7 @@ Pass any model string below as `Arm(model=...)`. Extra names an optional depende
 | `lightgbm` | LightGBM regressor. | supervised | `lightgbm` | no | default | 4 |
 | `macro_random_forest` | Adapter for the external MacroRandomForest package. | supervised | `macro_random_forest` | no | default | 8 |
 | `quantile_regression_forest` | Quantile regression forest. | supervised | none | no | default | 3 |
-| `random_forest` | Random forest regression. | supervised | none | no | default | 3 |
+| `random_forest` | Random forest regression. | supervised | none | no | default | 4 |
 | `xgboost` | XGBoost regressor. | supervised | `xgboost` | no | default | 4 |
 
 ## Reference

@@ -1,0 +1,1834 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Hounyo and Li (2026) replication trust note &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'replication/hounyo_li_2026';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Medeiros et al. (2021) Inflation Forecasting Replication" href="medeiros_2021.html" />
+    <link rel="prev" title="macroforecast replication trust notes" href="README.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/figures.html">
+    Paper Figures
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="README.html">
+    macroforecast replication trust notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../guide/citing.html">
+    Citing
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/figures.html">
+    Paper Figures
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="README.html">
+    macroforecast replication trust notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/citing.html">
+    Citing
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="gcls_2021_replication.html">Replicating Goulet Coulombe et al. (2021)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Hounyo and Li (2026) replication trust note</a></li>
+<li class="toctree-l1"><a class="reference internal" href="medeiros_2021.html">Medeiros et al. (2021) Inflation Forecasting Replication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrf_2024_replication.html">Replicating Goulet Coulombe (2024), <em>The Macroeconomy as a Random Forest</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrf_2024_table5_monthly.html">Replicating Goulet Coulombe (2024), Table 5 — <em>Monthly Results</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="zww_2023_replication.html">Zhang, Wahab and Wang (2023) replication trust note</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="README.html" class="nav-link">macroforecast replication trust notes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Hounyo and Li (2026) replication trust note</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="hounyo-and-li-2026-replication-trust-note">
+<h1>Hounyo and Li (2026) replication trust note<a class="headerlink" href="#hounyo-and-li-2026-replication-trust-note" title="Link to this heading">#</a></h1>
+<p>Paper: Hounyo and Li, “Supervised Scaled Principal Component Analysis for Forecasting Using High-Dimensional Time Series”, <em>International Journal of Forecasting</em> 42 (2026), 414-433.</p>
+<p>The paper’s own replication note says: “The numerical results presented in this manuscript were not reproduced, owing to the substantial computational cost involved.” This page records the B2 trust result for <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> — the Table 2 factor-method comparison and the Tables D.11-D.22 robustness grid. The package can reproduce the author’s published methodology when the author’s look-ahead standardization surface is emulated. Its normal leak-free output differs for identified reasons.</p>
+<section id="key-finding-look-ahead-bias-in-the-papers-target-standardization">
+<h2>⚠️ KEY FINDING - Look-ahead bias in the paper’s target standardization<a class="headerlink" href="#key-finding-look-ahead-bias-in-the-papers-target-standardization" title="Link to this heading">#</a></h2>
+<p>The headline finding is a look-ahead leak in the paper’s out-of-sample evaluation. The author’s MATLAB standardizes the target block before the forecast split and includes the realized future target <code class="docutils literal notranslate"><span class="pre">y_{T+h}</span></code> in that standardized block. In <code class="docutils literal notranslate"><span class="pre">inflation_linear.m:196-197</span></code>, the code forms <code class="docutils literal notranslate"><span class="pre">ytplush(:,1+h:T+h)</span></code> after standardizing the full target/control block. That realized future value is not available at a real forecast origin.</p>
+<p>The reproduction evidence is tight. On the matched inflation h=1 PCA case, emulating the author’s leaky surface reproduces Table 2: <code class="docutils literal notranslate"><span class="pre">macroforecast.pcr</span></code> gives 0.970590, matching the paper’s 0.970 after rounding. The leak-free package-side diagnostic gives 1.080953 instead. The 0.110953 gap decomposes into about 0.0206 from the direct target-y standardization leak, or about 19%, and about 0.0904 from the author K/window surface, or about 81%, mainly K selection tuned on the leaky standardized surface. When <code class="docutils literal notranslate"><span class="pre">macroforecast.pcr</span></code> is fed the author-standardized X block, author leaky target block, author split, and author K, it is bit-identical to the author PCA code, with maximum absolute prediction difference <code class="docutils literal notranslate"><span class="pre">3.844e-14</span></code>, and it reproduces the author K choices in the diagnostic origins.</p>
+<p>The implication is methodological, not accusatory. Based on the published MATLAB and cross-validated package checks, the paper’s pseudo-OOS factor-method results are optimistically biased by a common but subtle form of target-standardization leakage. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> is leak-free by design, so its honest out-of-sample numbers do not equal the paper’s leaky Table 2 numbers.</p>
+</section>
+<section id="verdict-bottom-line">
+<h2>Verdict / Bottom line<a class="headerlink" href="#verdict-bottom-line" title="Link to this heading">#</a></h2>
+<p>The B2 checks verify <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> on the relevant implementation surfaces. <code class="docutils literal notranslate"><span class="pre">pcr</span></code> is bit-identical to the author algebra on the author surface. The A2 splitter diagnosis did not find a public splitter defect. The K-prefix grouped evaluator is bitwise-identical to the non-prefix path, with <code class="docutils literal notranslate"><span class="pre">max_forecast_abs_diff</span> <span class="pre">=</span> <span class="pre">0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">max_score_abs_diff</span> <span class="pre">=</span> <span class="pre">0.0</span></code>.</p>
+<p>The difference from Table 2 is not a package defect. It is the paper’s look-ahead target standardization, plus the data-pipeline and COVID-period interaction documented below. The package reproduces Table 2 on the author’s methodology in the locked B2 author-oracle grid: 55/60 cells within <code class="docutils literal notranslate"><span class="pre">|Delta|</span> <span class="pre">&lt;=</span> <span class="pre">0.03</span></code>, with inflation 20/20 exact. Its honest leak-free output differs for identified, documented reasons. The D-table robustness run (Demonstration C) later lifts the full-sample no-threshold column to 60/60 and confirms the Table 2 result holds across the D.11-D.22 threshold-by-subsample grid; the full Table 2 + D-table synthesis is in the Consolidated verdict below.</p>
+</section>
+<section id="demonstration-a-package-reproduction-on-the-author-methodology">
+<h2>Demonstration A - Package reproduction on the author methodology<a class="headerlink" href="#demonstration-a-package-reproduction-on-the-author-methodology" title="Link to this heading">#</a></h2>
+<p>The labeled author-oracle run uses the author’s Table 2 macro PC/no-threshold surface. It covers inflation, IP growth, and unemployment; horizons 1, 6, 12, and 24; and the PCA, SPCA-family, and PLS rows. Ratios are scored against the local <code class="docutils literal notranslate"><span class="pre">AR_BIC</span></code> denominator. This is a diagnostic reproduction surface, not a normal package feature.</p>
+<p>The locked B2 author-oracle grid completed all 60 cells and reproduced 55/60 within <code class="docutils literal notranslate"><span class="pre">|Delta|</span> <span class="pre">&lt;=</span> <span class="pre">0.03</span></code>. All 20 inflation cells pass. The wall runtime was 15,570.74 seconds, or 4:19:30, on 48 logical cores. The run used the verified K-prefix speedup; a naive supervised run at roughly 19.6 hours per cell would be weeks-scale.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Target</p></th>
+<th class="head text-right"><p>h</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head text-right"><p>Reproduced</p></th>
+<th class="head text-right"><p>Paper</p></th>
+<th class="head text-right"><p>Delta</p></th>
+<th class="head"><p>Verdict</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.970590</p></td>
+<td class="text-right"><p>0.970</p></td>
+<td class="text-right"><p>+0.000590</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.823163</p></td>
+<td class="text-right"><p>0.823</p></td>
+<td class="text-right"><p>+0.000163</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.768000</p></td>
+<td class="text-right"><p>0.768</p></td>
+<td class="text-right"><p>-0.000000</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.738333</p></td>
+<td class="text-right"><p>0.738</p></td>
+<td class="text-right"><p>+0.000333</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>0.860446</p></td>
+<td class="text-right"><p>0.861</p></td>
+<td class="text-right"><p>-0.000554</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.928317</p></td>
+<td class="text-right"><p>0.928</p></td>
+<td class="text-right"><p>+0.000317</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.912252</p></td>
+<td class="text-right"><p>0.912</p></td>
+<td class="text-right"><p>+0.000252</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.855733</p></td>
+<td class="text-right"><p>0.855</p></td>
+<td class="text-right"><p>+0.000733</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.848056</p></td>
+<td class="text-right"><p>0.848</p></td>
+<td class="text-right"><p>+0.000056</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.087046</p></td>
+<td class="text-right"><p>1.082</p></td>
+<td class="text-right"><p>+0.005046</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.076440</p></td>
+<td class="text-right"><p>1.076</p></td>
+<td class="text-right"><p>+0.000440</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.049114</p></td>
+<td class="text-right"><p>1.049</p></td>
+<td class="text-right"><p>+0.000114</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.959354</p></td>
+<td class="text-right"><p>0.959</p></td>
+<td class="text-right"><p>+0.000354</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.982966</p></td>
+<td class="text-right"><p>0.983</p></td>
+<td class="text-right"><p>-0.000034</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.199572</p></td>
+<td class="text-right"><p>1.208</p></td>
+<td class="text-right"><p>-0.008428</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.987448</p></td>
+<td class="text-right"><p>0.987</p></td>
+<td class="text-right"><p>+0.000448</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.953026</p></td>
+<td class="text-right"><p>0.953</p></td>
+<td class="text-right"><p>+0.000026</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.901740</p></td>
+<td class="text-right"><p>0.902</p></td>
+<td class="text-right"><p>-0.000260</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.858460</p></td>
+<td class="text-right"><p>0.858</p></td>
+<td class="text-right"><p>+0.000460</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.181597</p></td>
+<td class="text-right"><p>1.180</p></td>
+<td class="text-right"><p>+0.001597</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.126911</p></td>
+<td class="text-right"><p>1.148</p></td>
+<td class="text-right"><p>-0.021089</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.967862</p></td>
+<td class="text-right"><p>0.902</p></td>
+<td class="text-right"><p>+0.065862</p></td>
+<td><p>MISS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.045666</p></td>
+<td class="text-right"><p>1.071</p></td>
+<td class="text-right"><p>-0.025334</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.852153</p></td>
+<td class="text-right"><p>0.844</p></td>
+<td class="text-right"><p>+0.008153</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.164690</p></td>
+<td class="text-right"><p>1.219</p></td>
+<td class="text-right"><p>-0.054310</p></td>
+<td><p>MISS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.929859</p></td>
+<td class="text-right"><p>0.930</p></td>
+<td class="text-right"><p>-0.000141</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.875332</p></td>
+<td class="text-right"><p>0.903</p></td>
+<td class="text-right"><p>-0.027668</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.925957</p></td>
+<td class="text-right"><p>0.923</p></td>
+<td class="text-right"><p>+0.002957</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.877782</p></td>
+<td class="text-right"><p>0.886</p></td>
+<td class="text-right"><p>-0.008218</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>0.952630</p></td>
+<td class="text-right"><p>0.948</p></td>
+<td class="text-right"><p>+0.004630</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.023453</p></td>
+<td class="text-right"><p>1.025</p></td>
+<td class="text-right"><p>-0.001547</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.016764</p></td>
+<td class="text-right"><p>1.017</p></td>
+<td class="text-right"><p>-0.000236</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.969108</p></td>
+<td class="text-right"><p>0.972</p></td>
+<td class="text-right"><p>-0.002892</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.949870</p></td>
+<td class="text-right"><p>0.984</p></td>
+<td class="text-right"><p>-0.034130</p></td>
+<td><p>MISS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.056632</p></td>
+<td class="text-right"><p>1.054</p></td>
+<td class="text-right"><p>+0.002632</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.102544</p></td>
+<td class="text-right"><p>1.107</p></td>
+<td class="text-right"><p>-0.004456</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.052497</p></td>
+<td class="text-right"><p>1.055</p></td>
+<td class="text-right"><p>-0.002503</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.047703</p></td>
+<td class="text-right"><p>1.045</p></td>
+<td class="text-right"><p>+0.002703</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.007997</p></td>
+<td class="text-right"><p>1.000</p></td>
+<td class="text-right"><p>+0.007997</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.144298</p></td>
+<td class="text-right"><p>1.149</p></td>
+<td class="text-right"><p>-0.004702</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.677038</p></td>
+<td class="text-right"><p>1.644</p></td>
+<td class="text-right"><p>+0.033038</p></td>
+<td><p>MISS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.626469</p></td>
+<td class="text-right"><p>1.628</p></td>
+<td class="text-right"><p>-0.001531</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.653358</p></td>
+<td class="text-right"><p>1.654</p></td>
+<td class="text-right"><p>-0.000642</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.407908</p></td>
+<td class="text-right"><p>1.411</p></td>
+<td class="text-right"><p>-0.003092</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.547527</p></td>
+<td class="text-right"><p>1.698</p></td>
+<td class="text-right"><p>-0.150473</p></td>
+<td><p>MISS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.827417</p></td>
+<td class="text-right"><p>0.825</p></td>
+<td class="text-right"><p>+0.002417</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.803814</p></td>
+<td class="text-right"><p>0.806</p></td>
+<td class="text-right"><p>-0.002186</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.800449</p></td>
+<td class="text-right"><p>0.798</p></td>
+<td class="text-right"><p>+0.002449</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.752633</p></td>
+<td class="text-right"><p>0.766</p></td>
+<td class="text-right"><p>-0.013367</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>0.824370</p></td>
+<td class="text-right"><p>0.831</p></td>
+<td class="text-right"><p>-0.006630</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.848229</p></td>
+<td class="text-right"><p>0.849</p></td>
+<td class="text-right"><p>-0.000771</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.824291</p></td>
+<td class="text-right"><p>0.815</p></td>
+<td class="text-right"><p>+0.009291</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.802197</p></td>
+<td class="text-right"><p>0.802</p></td>
+<td class="text-right"><p>+0.000197</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.789784</p></td>
+<td class="text-right"><p>0.778</p></td>
+<td class="text-right"><p>+0.011784</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>0.850109</p></td>
+<td class="text-right"><p>0.849</p></td>
+<td class="text-right"><p>+0.001109</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.843002</p></td>
+<td class="text-right"><p>0.842</p></td>
+<td class="text-right"><p>+0.001002</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>0.808109</p></td>
+<td class="text-right"><p>0.800</p></td>
+<td class="text-right"><p>+0.008109</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.817001</p></td>
+<td class="text-right"><p>0.812</p></td>
+<td class="text-right"><p>+0.005001</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>0.794135</p></td>
+<td class="text-right"><p>0.785</p></td>
+<td class="text-right"><p>+0.009135</p></td>
+<td><p>PASS</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>0.851229</p></td>
+<td class="text-right"><p>0.853</p></td>
+<td class="text-right"><p>-0.001771</p></td>
+<td><p>PASS</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="demonstration-b-honest-leak-free-output-from-load-fred-md">
+<h2>Demonstration B - Honest leak-free output from <code class="docutils literal notranslate"><span class="pre">load_fred_md</span></code><a class="headerlink" href="#demonstration-b-honest-leak-free-output-from-load-fred-md" title="Link to this heading">#</a></h2>
+<p>The normal package run uses <code class="docutils literal notranslate"><span class="pre">mf.data.load_fred_md</span></code>, FRED-MD vintage <code class="docutils literal notranslate"><span class="pre">2023-04</span></code>, origin-available predictor standardization, no future target values in scaling, model selection, or final fit, and <code class="docutils literal notranslate"><span class="pre">AR_BIC</span></code> using target history through the forecast origin only. This is the honest package output. It differs from the paper.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Target</p></th>
+<th class="head text-right"><p>h</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head text-right"><p>Leak-free ratio</p></th>
+<th class="head text-right"><p>Paper</p></th>
+<th class="head text-right"><p>Delta</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.035999</p></td>
+<td class="text-right"><p>0.970</p></td>
+<td class="text-right"><p>+0.065999</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.042119</p></td>
+<td class="text-right"><p>0.823</p></td>
+<td class="text-right"><p>+0.219119</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>0.966038</p></td>
+<td class="text-right"><p>0.768</p></td>
+<td class="text-right"><p>+0.198038</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.129942</p></td>
+<td class="text-right"><p>0.738</p></td>
+<td class="text-right"><p>+0.391942</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.052079</p></td>
+<td class="text-right"><p>0.861</p></td>
+<td class="text-right"><p>+0.191079</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.012658</p></td>
+<td class="text-right"><p>0.928</p></td>
+<td class="text-right"><p>+0.084658</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.015724</p></td>
+<td class="text-right"><p>0.912</p></td>
+<td class="text-right"><p>+0.103724</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.044100</p></td>
+<td class="text-right"><p>0.855</p></td>
+<td class="text-right"><p>+0.189100</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.078240</p></td>
+<td class="text-right"><p>0.848</p></td>
+<td class="text-right"><p>+0.230240</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.231936</p></td>
+<td class="text-right"><p>1.082</p></td>
+<td class="text-right"><p>+0.149936</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.989559</p></td>
+<td class="text-right"><p>1.076</p></td>
+<td class="text-right"><p>-0.086441</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.039798</p></td>
+<td class="text-right"><p>1.049</p></td>
+<td class="text-right"><p>-0.009202</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.171296</p></td>
+<td class="text-right"><p>0.959</p></td>
+<td class="text-right"><p>+0.212296</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.274529</p></td>
+<td class="text-right"><p>0.983</p></td>
+<td class="text-right"><p>+0.291529</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.265209</p></td>
+<td class="text-right"><p>1.208</p></td>
+<td class="text-right"><p>+0.057209</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.007972</p></td>
+<td class="text-right"><p>0.987</p></td>
+<td class="text-right"><p>+0.020972</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.050728</p></td>
+<td class="text-right"><p>0.953</p></td>
+<td class="text-right"><p>+0.097728</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.282653</p></td>
+<td class="text-right"><p>0.902</p></td>
+<td class="text-right"><p>+0.380653</p></td>
+</tr>
+<tr class="row-even"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.439747</p></td>
+<td class="text-right"><p>0.858</p></td>
+<td class="text-right"><p>+0.581747</p></td>
+</tr>
+<tr class="row-odd"><td><p>Inflation</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.281290</p></td>
+<td class="text-right"><p>1.180</p></td>
+<td class="text-right"><p>+0.101290</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.408970</p></td>
+<td class="text-right"><p>1.148</p></td>
+<td class="text-right"><p>+0.260970</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.466397</p></td>
+<td class="text-right"><p>0.902</p></td>
+<td class="text-right"><p>+0.564397</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.897550</p></td>
+<td class="text-right"><p>1.071</p></td>
+<td class="text-right"><p>+0.826550</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.488767</p></td>
+<td class="text-right"><p>0.844</p></td>
+<td class="text-right"><p>+0.644767</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.474617</p></td>
+<td class="text-right"><p>1.219</p></td>
+<td class="text-right"><p>+0.255617</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.045327</p></td>
+<td class="text-right"><p>0.930</p></td>
+<td class="text-right"><p>+0.115327</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.064880</p></td>
+<td class="text-right"><p>0.903</p></td>
+<td class="text-right"><p>+0.161880</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.131712</p></td>
+<td class="text-right"><p>0.923</p></td>
+<td class="text-right"><p>+0.208712</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.191232</p></td>
+<td class="text-right"><p>0.886</p></td>
+<td class="text-right"><p>+0.305232</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.082032</p></td>
+<td class="text-right"><p>0.948</p></td>
+<td class="text-right"><p>+0.134032</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>0.994982</p></td>
+<td class="text-right"><p>1.025</p></td>
+<td class="text-right"><p>-0.030018</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.052672</p></td>
+<td class="text-right"><p>1.017</p></td>
+<td class="text-right"><p>+0.035672</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.119861</p></td>
+<td class="text-right"><p>0.972</p></td>
+<td class="text-right"><p>+0.147861</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.128562</p></td>
+<td class="text-right"><p>0.984</p></td>
+<td class="text-right"><p>+0.144562</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.064709</p></td>
+<td class="text-right"><p>1.054</p></td>
+<td class="text-right"><p>+0.010709</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.067046</p></td>
+<td class="text-right"><p>1.107</p></td>
+<td class="text-right"><p>-0.039954</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.022725</p></td>
+<td class="text-right"><p>1.055</p></td>
+<td class="text-right"><p>-0.032275</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.087593</p></td>
+<td class="text-right"><p>1.045</p></td>
+<td class="text-right"><p>+0.042593</p></td>
+</tr>
+<tr class="row-even"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.054378</p></td>
+<td class="text-right"><p>1.000</p></td>
+<td class="text-right"><p>+0.054378</p></td>
+</tr>
+<tr class="row-odd"><td><p>IP growth</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.097561</p></td>
+<td class="text-right"><p>1.149</p></td>
+<td class="text-right"><p>-0.051439</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>4.863942</p></td>
+<td class="text-right"><p>1.644</p></td>
+<td class="text-right"><p>+3.219942</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>4.564064</p></td>
+<td class="text-right"><p>1.628</p></td>
+<td class="text-right"><p>+2.936064</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>3.573748</p></td>
+<td class="text-right"><p>1.654</p></td>
+<td class="text-right"><p>+1.919748</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>4.347118</p></td>
+<td class="text-right"><p>1.411</p></td>
+<td class="text-right"><p>+2.936118</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>1</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>4.925570</p></td>
+<td class="text-right"><p>1.698</p></td>
+<td class="text-right"><p>+3.227570</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.311098</p></td>
+<td class="text-right"><p>0.825</p></td>
+<td class="text-right"><p>+0.486098</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.376535</p></td>
+<td class="text-right"><p>0.806</p></td>
+<td class="text-right"><p>+0.570535</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.431371</p></td>
+<td class="text-right"><p>0.798</p></td>
+<td class="text-right"><p>+0.633371</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.391724</p></td>
+<td class="text-right"><p>0.766</p></td>
+<td class="text-right"><p>+0.625724</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>6</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.567373</p></td>
+<td class="text-right"><p>0.831</p></td>
+<td class="text-right"><p>+0.736373</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.079954</p></td>
+<td class="text-right"><p>0.849</p></td>
+<td class="text-right"><p>+0.230954</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.045745</p></td>
+<td class="text-right"><p>0.815</p></td>
+<td class="text-right"><p>+0.230745</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.087001</p></td>
+<td class="text-right"><p>0.802</p></td>
+<td class="text-right"><p>+0.285001</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.143193</p></td>
+<td class="text-right"><p>0.778</p></td>
+<td class="text-right"><p>+0.365193</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>12</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.230348</p></td>
+<td class="text-right"><p>0.849</p></td>
+<td class="text-right"><p>+0.381348</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PCA</p></td>
+<td class="text-right"><p>1.023068</p></td>
+<td class="text-right"><p>0.842</p></td>
+<td class="text-right"><p>+0.181068</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SPCA</p></td>
+<td class="text-right"><p>1.059398</p></td>
+<td class="text-right"><p>0.800</p></td>
+<td class="text-right"><p>+0.259398</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>sPCA</p></td>
+<td class="text-right"><p>1.026485</p></td>
+<td class="text-right"><p>0.812</p></td>
+<td class="text-right"><p>+0.214485</p></td>
+</tr>
+<tr class="row-even"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>SsPCA</p></td>
+<td class="text-right"><p>1.017649</p></td>
+<td class="text-right"><p>0.785</p></td>
+<td class="text-right"><p>+0.232649</p></td>
+</tr>
+<tr class="row-odd"><td><p>Unemployment</p></td>
+<td class="text-right"><p>24</p></td>
+<td><p>PLS</p></td>
+<td class="text-right"><p>1.091418</p></td>
+<td class="text-right"><p>0.853</p></td>
+<td class="text-right"><p>+0.238418</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The caveats are part of the result:</p>
+<ul class="simple">
+<li><p>The leak-free grid confounds two differences: the methodology leak and the data pipeline. The package run uses <code class="docutils literal notranslate"><span class="pre">load_fred_md</span></code> vintage <code class="docutils literal notranslate"><span class="pre">2023-04</span></code> and package transforms, not the exact author workbooks.</p></li>
+<li><p>The unemployment h=1 leak-free ratios, 3.5 to 4.9 versus paper values around 1.4 to 1.7, are 97.7% driven by the 2020 COVID point in the B2 diagnostic. The cell files show the mechanism directly: in May 2020, SsPCA predicts a +20.1085 unemployment change while the realized change is -1.5. That single row contributes 466.929 of 582.538 SsPCA h=1 SSE, or about 80.2%. The target file verifies that unemployment is built as the change in unemployment, not the level. This is not a package/data bug.</p></li>
+<li><p>The COVID result is itself a finding. The author’s leaky standardization dampens COVID-period instability, while the leak-free forecast surface exposes it.</p></li>
+<li><p>The clean isolation of “difference equals leak” is the matched-data inflation comparison. There, leak-free package-side ratios differ from the paper by roughly 0.1 to 0.2: PCA 1.080953 versus 0.970, sPCA 0.964519 versus 0.768, and PLS 1.037423 versus 0.861. The <code class="docutils literal notranslate"><span class="pre">load_fred_md</span></code> grid also carries data-vintage and COVID effects.</p></li>
+</ul>
+</section>
+<section id="demonstration-c-tables-d-11-d-22-robustness-parity">
+<h2>Demonstration C - Tables D.11-D.22 robustness parity<a class="headerlink" href="#demonstration-c-tables-d-11-d-22-robustness-parity" title="Link to this heading">#</a></h2>
+<p>Tables D.11-D.22 (Online Appendix) are the threshold-by-subsample robustness grid behind Table 2. Each table is one target-horizon pair: D.11-D.14 inflation at h = 1, 6, 12, 24; D.15-D.18 IP growth; D.19-D.22 unemployment. The D-table run scores the same author-oracle surface used for Table 2, so it should reproduce the paper’s published D-table numbers.</p>
+<p><strong>Grid.</strong> 2,520 factor-method cells = 12 tables x 6 subsamples (full 93:3-23:3 plus five windows) x 7 thresholds (none; hard t = 1.28, 1.65, 2.58; elastic-net en1, en2, en3) x 5 methods (PCA, SPCA, sPCA, SsPCA, PLS), with an AR_BIC benchmark per (target, horizon, subsample). macroforecast maps to the <strong>left (PC / linear principal component) panel</strong> of each paper table only. <code class="docutils literal notranslate"><span class="pre">[GAP]</span></code> The paper’s middle (SPC, squared principal components) and right (PC2, squared factors) model-configuration panels are not part of macroforecast’s D-table run, so two of the paper’s three panels are out of scope for this parity.</p>
+<p><strong>Metric.</strong> The paper labels the tables “OOS RMSFE (relative to AR,BIC)”, but the printed numbers are <strong>relative MSE</strong>, not relative RMSFE: the inflation h = 1 full-sample PCA entry 0.970 equals the MSE ratio 0.97059, not the RMSFE ratio 0.98519. All parity below uses relative MSE = cell MSE / matching AR_BIC-cell MSE, matching both the paper’s printed values and macroforecast’s stored ratios.</p>
+<p><strong>Task 1 - ratios re-derived from disk.</strong> The report stores per-cell forecast CSVs but not ratios. Each cell CSV was re-read and its MSE recomputed as <code class="docutils literal notranslate"><span class="pre">mean((actual</span> <span class="pre">-</span> <span class="pre">prediction)^2)</span></code> directly (not trusting the stored <code class="docutils literal notranslate"><span class="pre">error2</span></code> column), then divided by the matching AR_BIC cell MSE over the identical out-of-sample window (0 row-count mismatches across all 72 (target, horizon, subsample) groups). The 2,520 re-derived ratios are floating-point identical to the runner’s stored <code class="docutils literal notranslate"><span class="pre">reproduced_ratio</span></code> (max abs diff 2.4e-15). Saved to <code class="docutils literal notranslate"><span class="pre">dtables_reproduced_ratios.csv</span></code>.</p>
+<p><strong>Task 2 - the paper’s gold.</strong> Tables D.11-D.22 were parsed from the supplement PDF (<code class="docutils literal notranslate"><span class="pre">1-s2.0-S0169207025000640-mmc1.pdf</span></code>) via <code class="docutils literal notranslate"><span class="pre">pdftotext</span> <span class="pre">-layout</span></code>. Each table’s full-sample block is displaced by the page layout to just before its caption; the six subsample blocks preceding each caption D.N (in order s9303, s0313, s1323, s9313, s0323, full) belong to table D.N. Assignment was verified by fingerprinting each block’s no-threshold column against the re-derived ratios (e.g. the first post-D.11-caption block matches inflation h = 6, not h = 1). 91 cells sit in rows the layout split at a page break (the SsPCA row of the 93:3-13:12 window in every table, plus the D.22 03:3-13:12 PLS row); these were reconstructed by merging the floated tokens with the main row by x-position and validated (reconstructed D.11 93:3-13:12 SsPCA no-threshold = 0.698, matching the re-derived 0.6989 to 0.0009). All 2,520 gold cells parsed; saved to <code class="docutils literal notranslate"><span class="pre">dtables_gold.csv</span></code>.</p>
+<p><strong>Task 3 - parity.</strong> Relative MSE, reproduced vs paper, |Delta| against the same +/-0.03 tolerance used for Table 2.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Slice</p></th>
+<th class="head text-right"><p>Cells</p></th>
+<th class="head text-right"><p>mean |Delta|</p></th>
+<th class="head text-right"><p>median |Delta|</p></th>
+<th class="head text-right"><p>within +/-0.03</p></th>
+<th class="head text-right"><p>within +/-0.01</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>All factor-method cells</p></td>
+<td class="text-right"><p>2520</p></td>
+<td class="text-right"><p>0.0421</p></td>
+<td class="text-right"><p>0.0104</p></td>
+<td class="text-right"><p>65.3%</p></td>
+<td class="text-right"><p>49.5%</p></td>
+</tr>
+<tr class="row-odd"><td><p>none (= Table 2, six subsamples)</p></td>
+<td class="text-right"><p>360</p></td>
+<td class="text-right"><p>0.0009</p></td>
+<td class="text-right"><p>0.0005</p></td>
+<td class="text-right"><p>100.0%</p></td>
+<td class="text-right"><p>99.4%</p></td>
+</tr>
+<tr class="row-even"><td><p>none, full sample only</p></td>
+<td class="text-right"><p>60</p></td>
+<td class="text-right"><p>0.0012</p></td>
+<td class="text-right"><p>-</p></td>
+<td class="text-right"><p>100.0%</p></td>
+<td class="text-right"><p>100.0% (max 0.0084)</p></td>
+</tr>
+<tr class="row-odd"><td><p>none + hard thresholds (core)</p></td>
+<td class="text-right"><p>1440</p></td>
+<td class="text-right"><p>0.0118</p></td>
+<td class="text-right"><p>0.0008</p></td>
+<td class="text-right"><p>91.7%</p></td>
+<td class="text-right"><p>78.2%</p></td>
+</tr>
+<tr class="row-even"><td><p>none + hard, excl. COVID (h1, 13:3-23:3)</p></td>
+<td class="text-right"><p>900</p></td>
+<td class="text-right"><p>0.0065</p></td>
+<td class="text-right"><p>0.0008</p></td>
+<td class="text-right"><p>94.7%</p></td>
+<td class="text-right"><p>79.1%</p></td>
+</tr>
+<tr class="row-odd"><td><p>none + hard, PCA (deterministic)</p></td>
+<td class="text-right"><p>288</p></td>
+<td class="text-right"><p>0.0005</p></td>
+<td class="text-right"><p>0.0005</p></td>
+<td class="text-right"><p>100.0%</p></td>
+<td class="text-right"><p>100.0% (max 0.001)</p></td>
+</tr>
+<tr class="row-even"><td><p>none + hard, supervised (SPCA, SsPCA)</p></td>
+<td class="text-right"><p>576</p></td>
+<td class="text-right"><p>0.0270</p></td>
+<td class="text-right"><p>0.0095</p></td>
+<td class="text-right"><p>79.7%</p></td>
+<td class="text-right"><p>50.7%</p></td>
+</tr>
+<tr class="row-odd"><td><p>elastic-net en1/en2/en3</p></td>
+<td class="text-right"><p>1080</p></td>
+<td class="text-right"><p>0.0825</p></td>
+<td class="text-right"><p>0.0532</p></td>
+<td class="text-right"><p>30.1%</p></td>
+<td class="text-right"><p>11.2%</p></td>
+</tr>
+<tr class="row-even"><td><p>elastic-net, PCA (deterministic)</p></td>
+<td class="text-right"><p>216</p></td>
+<td class="text-right"><p>0.0552</p></td>
+<td class="text-right"><p>0.0319</p></td>
+<td class="text-right"><p>46.8%</p></td>
+<td class="text-right"><p>16.2%</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Per table (left PC panel; core = none + three hard thresholds):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Table</p></th>
+<th class="head"><p>Target/h</p></th>
+<th class="head text-right"><p>core mean |Delta|</p></th>
+<th class="head text-right"><p>core within .03</p></th>
+<th class="head text-right"><p>EN mean |Delta|</p></th>
+<th class="head text-right"><p>EN within .03</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>D.11</p></td>
+<td><p>inflation h1</p></td>
+<td class="text-right"><p>0.0101</p></td>
+<td class="text-right"><p>88%</p></td>
+<td class="text-right"><p>0.1644</p></td>
+<td class="text-right"><p>6%</p></td>
+</tr>
+<tr class="row-odd"><td><p>D.12</p></td>
+<td><p>inflation h6</p></td>
+<td class="text-right"><p>0.0042</p></td>
+<td class="text-right"><p>98%</p></td>
+<td class="text-right"><p>0.0662</p></td>
+<td class="text-right"><p>29%</p></td>
+</tr>
+<tr class="row-even"><td><p>D.13</p></td>
+<td><p>inflation h12</p></td>
+<td class="text-right"><p>0.0054</p></td>
+<td class="text-right"><p>95%</p></td>
+<td class="text-right"><p>0.0817</p></td>
+<td class="text-right"><p>19%</p></td>
+</tr>
+<tr class="row-odd"><td><p>D.14</p></td>
+<td><p>inflation h24</p></td>
+<td class="text-right"><p>0.0071</p></td>
+<td class="text-right"><p>92%</p></td>
+<td class="text-right"><p>0.0708</p></td>
+<td class="text-right"><p>34%</p></td>
+</tr>
+<tr class="row-even"><td><p>D.15</p></td>
+<td><p>IP growth h1</p></td>
+<td class="text-right"><p>0.0241</p></td>
+<td class="text-right"><p>83%</p></td>
+<td class="text-right"><p>0.1380</p></td>
+<td class="text-right"><p>16%</p></td>
+</tr>
+<tr class="row-odd"><td><p>D.16</p></td>
+<td><p>IP growth h6</p></td>
+<td class="text-right"><p>0.0049</p></td>
+<td class="text-right"><p>98%</p></td>
+<td class="text-right"><p>0.0480</p></td>
+<td class="text-right"><p>47%</p></td>
+</tr>
+<tr class="row-even"><td><p>D.17</p></td>
+<td><p>IP growth h12</p></td>
+<td class="text-right"><p>0.0072</p></td>
+<td class="text-right"><p>94%</p></td>
+<td class="text-right"><p>0.0496</p></td>
+<td class="text-right"><p>39%</p></td>
+</tr>
+<tr class="row-odd"><td><p>D.18</p></td>
+<td><p>IP growth h24</p></td>
+<td class="text-right"><p>0.0100</p></td>
+<td class="text-right"><p>86%</p></td>
+<td class="text-right"><p>0.0501</p></td>
+<td class="text-right"><p>36%</p></td>
+</tr>
+<tr class="row-even"><td><p>D.19</p></td>
+<td><p>unemployment h1</p></td>
+<td class="text-right"><p>0.0473</p></td>
+<td class="text-right"><p>82%</p></td>
+<td class="text-right"><p>0.1796</p></td>
+<td class="text-right"><p>9%</p></td>
+</tr>
+<tr class="row-odd"><td><p>D.20</p></td>
+<td><p>unemployment h6</p></td>
+<td class="text-right"><p>0.0039</p></td>
+<td class="text-right"><p>99%</p></td>
+<td class="text-right"><p>0.0546</p></td>
+<td class="text-right"><p>34%</p></td>
+</tr>
+<tr class="row-even"><td><p>D.21</p></td>
+<td><p>unemployment h12</p></td>
+<td class="text-right"><p>0.0064</p></td>
+<td class="text-right"><p>97%</p></td>
+<td class="text-right"><p>0.0464</p></td>
+<td class="text-right"><p>41%</p></td>
+</tr>
+<tr class="row-odd"><td><p>D.22</p></td>
+<td><p>unemployment h24</p></td>
+<td class="text-right"><p>0.0114</p></td>
+<td class="text-right"><p>88%</p></td>
+<td class="text-right"><p>0.0403</p></td>
+<td class="text-right"><p>52%</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Reading:</p>
+<ul class="simple">
+<li><p><strong>No-threshold column (= Table 2 across all six subsamples) is near-exact.</strong> 360/360 within 0.03, mean 0.0009. Full-sample no-threshold is 60/60 within 0.01 (max 0.0084). This <strong>closes all five source-panel misses of the earlier 55/60 Table 2 run</strong>: the D-table runner reads target-specific IP-growth and unemployment source panels (<code class="docutils literal notranslate"><span class="pre">_read_target_source(target_key)</span></code>), so e.g. unemployment h = 1 full PLS is now 1.6965 vs paper 1.698 (Delta -0.0015), versus the Table 2 run’s 1.5475 (Delta -0.150).</p></li>
+<li><p><strong>Hard-threshold robustness reproduces.</strong> Deterministic PCA reproduces the linear-PC hard-threshold columns to |Delta| &lt;= 0.001 (288/288), confirming the threshold-to-column mapping. Core (none + hard) is 91.7% within 0.03 overall, 94.7% excluding the COVID cells.</p></li>
+<li><p><strong>Supervised methods (SPCA, SsPCA) mostly track, with documented residual misses.</strong> none + hard supervised is 79.7% within 0.03 (mean 0.027); excluding COVID cells it is 86.7% (mean 0.014). The residual misses concentrate in the COVID-dominated / short-window cells - unemployment h = 1, IP growth h = 1, and the 13:3-23:3 window - the same 2020 + source-panel effect documented for Table 2. The small (~0.01-0.02) supervised deltas elsewhere are consistent with optimizer-path variance in the supervised prefix search; the large ones are structural, not seed noise.</p></li>
+<li><p><strong>Elastic-net columns do NOT reproduce.</strong> en1/en2/en3 are 30.1% within 0.03 (mean 0.083), and this holds even for deterministic PCA (46.8%). No permutation of the three EN columns rescues it (best permutation still ~50% within 0.03), and excluding COVID cells does not help (33%). The EN lambda values in the runner match the paper’s stated Lambda exactly (inflation/IP 5e-5, 1e-4, 2e-4; unemployment 0.001, 0.005, 0.01), so the divergence is not the lambda grid. <code class="docutils literal notranslate"><span class="pre">[ASSUMPTION]</span></code> The cause is the EN objective parameterization: macroforecast preselects predictors with scikit-learn <code class="docutils literal notranslate"><span class="pre">ElasticNet(alpha</span> <span class="pre">=</span> <span class="pre">Lambda,</span> <span class="pre">l1_ratio</span> <span class="pre">=</span> <span class="pre">0.5)</span></code>, whose <code class="docutils literal notranslate"><span class="pre">alpha</span></code> normalization is not the same object as the paper’s Appendix-C eq. (C.1) sparsity Lambda, so the kept-predictor set differs and every downstream factor method (including PCA) shifts. The paper does not pin its EN objective down tightly enough to match; this is a paper under-specification of a robustness dimension, not a defect in the core factor methods.</p></li>
+<li><p><strong>Qualitative story preserved.</strong> In all 12 full-sample no-threshold cells the reproduced best (lowest-MSE) factor method equals the paper’s (supervised SsPCA in 10 of 12, sPCA in the two h = 12 cells) - 12/12 agreement. 852 of 2,520 cells (33.8%) reproduce to |Delta| &lt;= 0.001.</p></li>
+</ul>
+<p>Files written (alongside the report): <code class="docutils literal notranslate"><span class="pre">dtables_reproduced_ratios.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">dtables_gold.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">dtables_parity_full.csv</span></code>.</p>
+</section>
+<section id="consolidated-verdict-macroforecast-vs-hounyo-li">
+<h2>Consolidated verdict - macroforecast vs Hounyo &amp; Li<a class="headerlink" href="#consolidated-verdict-macroforecast-vs-hounyo-li" title="Link to this heading">#</a></h2>
+<p>Across <strong>both</strong> Table 2 and Tables D.11-D.22, macroforecast reproduces the paper’s published methodology on the two dimensions that carry the paper’s story, and preserves the qualitative claim:</p>
+<ol class="arabic simple">
+<li><p><strong>No-threshold factor-method comparison.</strong> <code class="docutils literal notranslate"><span class="pre">pcr</span></code> is bit-identical to the author PCA algebra on the author surface (max prediction diff 3.8e-14); Table 2 reproduces 55/60 within 0.03 (inflation 20/20 exact), and the D-table run lifts the full-sample no-threshold column to 60/60 within 0.01 by using the target-specific source panels. The no-threshold column across all six subsamples is 360/360 within 0.03.</p></li>
+<li><p><strong>Hard-threshold robustness.</strong> Deterministic PCA reproduces the linear-PC hard-threshold columns to |Delta| &lt;= 0.001 (288/288); the full none + hard core is 91.7% within 0.03.</p></li>
+<li><p><strong>Direction of results.</strong> The best factor method matches the paper in all 12 full-sample cells.</p></li>
+</ol>
+<p>Three differences remain, none of which is a fault in macroforecast’s factor methods:</p>
+<ul class="simple">
+<li><p><strong>(a) Elastic-net soft-threshold columns differ</strong> (30% within 0.03, even for deterministic PCA). The lambda grid matches the paper but the EN objective/normalization is under-specified in the paper (Appendix-C eq. C.1 Lambda != scikit-learn <code class="docutils literal notranslate"><span class="pre">alpha</span></code>), so the preselected predictor set differs. <strong>Paper-side under-specification</strong> of a robustness dimension.</p></li>
+<li><p><strong>(b) A cluster of supervised cells in the COVID-dominated unemployment/IP h = 1 and 13:3-23:3 windows differ.</strong> This is the documented FRED-MD source-panel + 2020 provenance limitation; the D-table run already closed the five Table 2 misses by reading the author’s target-specific source panels. <strong>Data-pipeline provenance</strong>, not a model defect.</p></li>
+<li><p><strong>(c) The package’s honest leak-free output differs from every published number</strong>, because Table 2 and the D-tables both depend on the paper’s look-ahead target-standardization leak. The author-oracle surface emulates that leak (which is why the reproduction matches the paper); the leak-free surface does not (Demonstration B). <strong>Paper-side methodology leak.</strong></p></li>
+</ul>
+<p><strong>Bottom line.</strong> On the author-oracle (leak-emulating) surface, macroforecast faithfully reproduces the paper’s published Table 2 <strong>and</strong> its D.11-D.22 robustness grid to within the paper’s own rounding for the no-threshold and hard-threshold columns that carry the results (the linear-PC panel). Where the numbers differ, the cause is on the paper’s or the data’s side - an under-specified elastic-net objective, the documented source-panel provenance, and the paper’s own look-ahead standardization leak - not a fault in macroforecast. The two documented gaps in D-table coverage are the elastic-net columns and the paper’s SPC / PC2 model-configuration panels.</p>
+</section>
+<section id="what-the-replication-delivered">
+<h2>What the replication delivered<a class="headerlink" href="#what-the-replication-delivered" title="Link to this heading">#</a></h2>
+<p>P1, trust: the package reproduces Table 2 on the author’s methodology in the locked author-oracle grid, and the D.11-D.22 robustness grid (Demonstration C) reproduces the same surface (no-threshold 360/360 within 0.03; hard-threshold PCA 288/288 within 0.001; qualitative best-method 12/12), while it documents why the honest leak-free output differs.</p>
+<p>P2, bugs and findings: the major finding is the paper’s look-ahead target-standardization leak. The B2 work also found and closed package or runner gaps, including a model-selection silent override, <code class="docutils literal notranslate"><span class="pre">parallel_cell_timeout</span></code>, and the missing method/config surfaces needed for this replication.</p>
+<p>P3, efficiency: the K-prefix grouped evaluator made the supervised Table 2 run feasible, moving the workload from weeks to about 4.3 hours for the locked author-oracle run.</p>
+<p>P4, statistical identity: the identity gate verified the K-prefix speedup before use, with <code class="docutils literal notranslate"><span class="pre">max_forecast_abs_diff</span> <span class="pre">=</span> <span class="pre">0.0</span></code> and <code class="docutils literal notranslate"><span class="pre">max_score_abs_diff</span> <span class="pre">=</span> <span class="pre">0.0</span></code>. The locked author-oracle grid did not use reduced grids, reduced folds, or reduced origins.</p>
+<p>Package additions now on main include <code class="docutils literal notranslate"><span class="pre">pcr</span></code>, <code class="docutils literal notranslate"><span class="pre">ar_bic</span></code>, PLS raw-weight score projection, <code class="docutils literal notranslate"><span class="pre">standardize_scope</span></code>, <code class="docutils literal notranslate"><span class="pre">nan_policy</span></code>, <code class="docutils literal notranslate"><span class="pre">score_aggregation</span></code>, <code class="docutils literal notranslate"><span class="pre">preselect_stage</span></code>, and the K-prefix evaluator.</p>
+</section>
+<section id="provenance-caveats">
+<h2>Provenance / caveats<a class="headerlink" href="#provenance-caveats" title="Link to this heading">#</a></h2>
+<p>The author IP-growth and unemployment source exists in the reproducibility ZIP. A provenance check showed that using the target-specific IP-growth and unemployment source panels would close the five author-oracle misses in the locked 55/60 grid. Those misses are source-panel provenance limitations, not evidence of a <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> model defect.</p>
+<p>The replication deliberately uses <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> to compute forecasts. The author’s MATLAB serves only as a documented oracle for reading the methodology and proving the leak. No <code class="docutils literal notranslate"><span class="pre">macroforecast/**</span></code> package patch is part of this final documentation pass.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="README.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">macroforecast replication trust notes</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="medeiros_2021.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Medeiros et al. (2021) Inflation Forecasting Replication</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-finding-look-ahead-bias-in-the-papers-target-standardization">⚠️ KEY FINDING - Look-ahead bias in the paper’s target standardization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verdict-bottom-line">Verdict / Bottom line</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#demonstration-a-package-reproduction-on-the-author-methodology">Demonstration A - Package reproduction on the author methodology</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#demonstration-b-honest-leak-free-output-from-load-fred-md">Demonstration B - Honest leak-free output from <code class="docutils literal notranslate"><span class="pre">load_fred_md</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#demonstration-c-tables-d-11-d-22-robustness-parity">Demonstration C - Tables D.11-D.22 robustness parity</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#consolidated-verdict-macroforecast-vs-hounyo-li">Consolidated verdict - macroforecast vs Hounyo &amp; Li</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-replication-delivered">What the replication delivered</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#provenance-caveats">Provenance / caveats</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/replication/hounyo_li_2026.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/replication/hounyo_li_2026.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

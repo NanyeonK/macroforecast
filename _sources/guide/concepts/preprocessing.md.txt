@@ -50,6 +50,16 @@ missing cells with zero before standardization. The same option is available in
 fit on the training window and then applied before the fitted standardization
 state.
 
+For predictor-only standardization through the current forecast origin, use
+`preprocess_spec(..., standardize="zscore",
+standardize_scope="origin_available_predictors")`. In origin-aware runner
+transforms this fits predictor scaling on rows observable at the origin,
+including the current prediction row, and applies that state to returned rows.
+Rows after the origin never contribute to the fitted scaling state. Target
+columns are excluded even when the realized future target row is present; the
+known full-block target-y standardization convention is a look-ahead leak and is
+not implemented as a package option.
+
 ## Executed walkthrough
 
 Running the full-sample path on the loaded `data_spec` applies the t-code

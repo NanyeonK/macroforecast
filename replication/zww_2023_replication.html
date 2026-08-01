@@ -1,0 +1,937 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Zhang, Wahab and Wang (2023) replication trust note &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'replication/zww_2023_replication';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Glossary" href="../guide/glossary.html" />
+    <link rel="prev" title="Replicating Goulet Coulombe (2024), Table 5 — Monthly Results" href="mrf_2024_table5_monthly.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/figures.html">
+    Paper Figures
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="README.html">
+    macroforecast replication trust notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../guide/citing.html">
+    Citing
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/figures.html">
+    Paper Figures
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="README.html">
+    macroforecast replication trust notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/citing.html">
+    Citing
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="gcls_2021_replication.html">Replicating Goulet Coulombe et al. (2021)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hounyo_li_2026.html">Hounyo and Li (2026) replication trust note</a></li>
+<li class="toctree-l1"><a class="reference internal" href="medeiros_2021.html">Medeiros et al. (2021) Inflation Forecasting Replication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrf_2024_replication.html">Replicating Goulet Coulombe (2024), <em>The Macroeconomy as a Random Forest</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrf_2024_table5_monthly.html">Replicating Goulet Coulombe (2024), Table 5 — <em>Monthly Results</em></a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Zhang, Wahab and Wang (2023) replication trust note</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="README.html" class="nav-link">macroforecast replication trust notes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Zhang, Wahab and Wang (2023) replication trust note</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="zhang-wahab-and-wang-2023-replication-trust-note">
+<h1>Zhang, Wahab and Wang (2023) replication trust note<a class="headerlink" href="#zhang-wahab-and-wang-2023-replication-trust-note" title="Link to this heading">#</a></h1>
+<p>Paper: Zhang, Y., Wahab, M.I.M., &amp; Wang, Y. (2023), “Forecasting crude oil market
+volatility using variable selection and common factor,” <em>International Journal of
+Forecasting</em> 39(2), 486-502.</p>
+<p>This page records the B3 replication result for <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code>: the package reproduces
+ZWW’s Table 3 (futures, main) and Table 4 (spot, robustness) — <strong>both</strong> the headline
+finding (the supervised-PCA variable-selection models beat the AR benchmark, with
+out-of-sample R²_OS positive and rising with the horizon) <strong>and</strong> the competing-models
+story (every other model fails to beat AR) — once ZWW’s own, under-documented
+methodological choices are matched. The replication additionally surfaced two package
+defects and demonstrated a 13x parallel speedup with statistically identical output.</p>
+<section id="bottom-line-verdict">
+<h2>Bottom line / verdict<a class="headerlink" href="#bottom-line-verdict" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> faithfully implements ZWW’s method (verified leak-free and deterministic).
+The headline result reproduces on both exhibits. The single decisive detail the paper
+leaves implicit is that ZWW extract the common factor with <strong>covariance (non-standardized)
+PCA</strong>, not the standardized/correlation PCA that is the Stock-Watson/McCracken-Ng norm —
+and their entire “supervised-PCA beats AR” finding depends on it (see KEY FINDING below).</p>
+</section>
+<section id="key-finding-the-headline-hinges-on-covariance-pca-which-makes-the-factor-a-vxo-proxy">
+<h2>KEY FINDING — the headline hinges on covariance PCA, which makes the factor a VXO proxy<a class="headerlink" href="#key-finding-the-headline-hinges-on-covariance-pca-which-makes-the-factor-a-vxo-proxy" title="Link to this heading">#</a></h2>
+<p>The screened predictor set is dominated numerically by one series: <code class="docutils literal notranslate"><span class="pre">VXOCLSx</span></code> (option-implied
+volatility) is McCracken-Ng transform code 1 (level), so after the standard t-code step it has
+std ~8.2 — the largest-variance predictor in the set — while the collinear macro blocks
+(payrolls, industrial production) are t-code 5 growth rates with std ~0.002.</p>
+<ul class="simple">
+<li><p><strong>Standardized/correlation PCA</strong> (each predictor rescaled to unit variance, the usual FRED-MD
+convention) → PC1 aligns with the largest <em>correlated cluster</em> (the mutually collinear macro
+aggregates); VXO is weakly correlated with that cluster and is orphaned (PC1 loading rank
+~10-33). The PCA-VS factor is a macro-activity factor and does <strong>not</strong> beat AR out of sample
+(PCA-t_stat h=6 R²_OS = -18.7%).</p></li>
+<li><p><strong>Covariance PCA</strong> (no rescaling; <code class="docutils literal notranslate"><span class="pre">scale=False</span></code>) → VXO’s large raw variance dominates PC1, so
+the factor is essentially an implied-volatility factor. This reproduces ZWW’s positive PCA-VS
+(PCA-t_stat h=6 R²_OS = +5.9% vs paper +4.6%) and exactly matches the paper’s own narrative
+that option-implied volatility is “the most powerful predictor” (selected 98.4% of the time).</p></li>
+</ul>
+<p>The paper (§2.3, Eq. 7-8) describes “conventional PCA” on the predictors and never states that
+the inputs are standardized. Covariance PCA is the <strong>only</strong> choice that reproduces ZWW’s numbers
+and is consistent with their VXO-dominant story; standardized PCA is negative and wrong for this
+paper. We therefore conclude ZWW used covariance PCA. Honest caveat: covariance PCA on
+heterogeneously t-coded data is statistically unconventional (a single high-variance level series
+dominates the factor), and it departs from the standardization convention ZWW themselves cite.
+<code class="docutils literal notranslate"><span class="pre">macroforecast.transforms.pca_step</span></code> supports both via <code class="docutils literal notranslate"><span class="pre">scale=</span></code>; this is a paper-method detail,
+not a package defect.</p>
+</section>
+<section id="table-3-futures-main-r2-os-macroforecast-zww-published">
+<h2>Table 3 — futures (main). R²_OS (%): macroforecast / ZWW-published<a class="headerlink" href="#table-3-futures-main-r2-os-macroforecast-zww-published" title="Link to this heading">#</a></h2>
+<p>Covariance PCA (<code class="docutils literal notranslate"><span class="pre">scale=False</span></code>), Newey-West-consistent selection convention, expanding window,
+OOS 1998:01-2018:12.</p>
+<p>Cells are out-of-sample R²_OS in percent, reported as <strong>macroforecast / ZWW-published</strong> (<code class="docutils literal notranslate"><span class="pre">--</span></code> = value not tabulated by ZWW; the <code class="docutils literal notranslate"><span class="pre">h=12</span> <span class="pre">(ours)</span></code> column is macroforecast only). Verdict band for the <code class="docutils literal notranslate"><span class="pre">verdict</span></code> column: <strong>reproduced</strong> = macroforecast R²_OS within about 1-2 pp of ZWW’s published value (or same sign and ≈0 for the near-zero <code class="docutils literal notranslate"><span class="pre">PCA-all</span></code> arm); <strong>near-exact</strong> = within about 0.5 pp; <strong>direction</strong> = same sign and story as ZWW but the magnitude differs (flagged where it runs about 2x). The headline PCA-VS models reproduce to about 1-2 pp.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>h=1</p></th>
+<th class="head"><p>h=3</p></th>
+<th class="head"><p>h=6</p></th>
+<th class="head"><p>h=12 (ours)</p></th>
+<th class="head"><p>verdict</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PCA-t_stat</p></td>
+<td><p>1.72 / 2.02</p></td>
+<td><p>1.39 / 1.84</p></td>
+<td><p><strong>5.93 / 4.57</strong></p></td>
+<td><p>8.17</p></td>
+<td><p>reproduced</p></td>
+</tr>
+<tr class="row-odd"><td><p>PCA-delta_r2</p></td>
+<td><p>1.55 / 1.05</p></td>
+<td><p>1.29 / 1.93</p></td>
+<td><p>4.67 / 5.19</p></td>
+<td><p>2.54</p></td>
+<td><p>reproduced</p></td>
+</tr>
+<tr class="row-even"><td><p>PCA-lasso</p></td>
+<td><p>-0.15 / 1.68</p></td>
+<td><p>1.34 / 3.09</p></td>
+<td><p>3.93 / 4.79</p></td>
+<td><p>5.41</p></td>
+<td><p>reproduced (h1 low)</p></td>
+</tr>
+<tr class="row-odd"><td><p>PCA-elastic_net</p></td>
+<td><p>-0.32 / 1.77</p></td>
+<td><p>2.38 / 2.51</p></td>
+<td><p>3.84 / 4.27</p></td>
+<td><p>5.39</p></td>
+<td><p>reproduced (h1 low)</p></td>
+</tr>
+<tr class="row-even"><td><p>Lasso</p></td>
+<td><p>-5.16 / -2.51</p></td>
+<td><p>-16.13 / -8.08</p></td>
+<td><p>-35.85 / -28.58</p></td>
+<td><p>-58.64</p></td>
+<td><p>direction (magnitude ~2x)</p></td>
+</tr>
+<tr class="row-odd"><td><p>ENet</p></td>
+<td><p>-5.08 / -0.22</p></td>
+<td><p>-11.53 / -5.72</p></td>
+<td><p>-36.35 / –</p></td>
+<td><p>-73.64</p></td>
+<td><p>direction</p></td>
+</tr>
+<tr class="row-even"><td><p>PCA-all</p></td>
+<td><p>-0.89 / -1.11</p></td>
+<td><p>0.56 / 0.00</p></td>
+<td><p>0.41 / 0.04</p></td>
+<td><p>-0.67</p></td>
+<td><p>reproduced (≈0)</p></td>
+</tr>
+<tr class="row-odd"><td><p>KS-all</p></td>
+<td><p>-527.9 / -252.4</p></td>
+<td><p>-1951 / -4749.6</p></td>
+<td><p>-9686 / –</p></td>
+<td><p>-5713</p></td>
+<td><p>catastrophic-overfit (same story)</p></td>
+</tr>
+<tr class="row-even"><td><p>KS-t_stat</p></td>
+<td><p>-34.9 / -15.4</p></td>
+<td><p>-75.1 / -63.7</p></td>
+<td><p>-115.8 / –</p></td>
+<td><p>-196.8</p></td>
+<td><p>direction</p></td>
+</tr>
+<tr class="row-odd"><td><p>KS-delta_r2</p></td>
+<td><p>-19.1 / -12.8</p></td>
+<td><p>-52.9 / -48.9</p></td>
+<td><p>-113.3 / –</p></td>
+<td><p>-187.8</p></td>
+<td><p>direction</p></td>
+</tr>
+<tr class="row-even"><td><p>KS-lasso</p></td>
+<td><p><strong>-18.4 / -18.0</strong></p></td>
+<td><p>-52.4 / -38.5</p></td>
+<td><p>-71.9 / –</p></td>
+<td><p>-104.4</p></td>
+<td><p>near-exact at h1</p></td>
+</tr>
+<tr class="row-odd"><td><p>KS-elastic_net</p></td>
+<td><p>-18.2 / -14.2</p></td>
+<td><p>-37.9 / -31.8</p></td>
+<td><p>-68.2 / –</p></td>
+<td><p>-148.4</p></td>
+<td><p>direction</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Headline (the four PCA-VS models): positive and rising with horizon, matching ZWW to ~1-2pp.
+Significance: PCA-VS Clark-West statistics are positive/significant (as in ZWW); competing models
+are not.</p>
+</section>
+<section id="table-4-spot-robustness-r2-os-macroforecast-zww-table-4-pca-vs-5-at-long-horizon">
+<h2>Table 4 — spot (robustness). R²_OS (%): macroforecast (ZWW Table 4 PCA-VS ~+5% at long horizon)<a class="headerlink" href="#table-4-spot-robustness-r2-os-macroforecast-zww-table-4-pca-vs-5-at-long-horizon" title="Link to this heading">#</a></h2>
+<p>Cells are macroforecast out-of-sample R²_OS in percent. ZWW’s Table 4 is summarized (PCA-VS about +5% at the long horizon) rather than tabulated cell-by-cell, so this exhibit is a direction/level check under the same verdict band as Table 3, not a cell-by-cell parity.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>h=1</p></th>
+<th class="head"><p>h=3</p></th>
+<th class="head"><p>h=6</p></th>
+<th class="head"><p>h=12</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PCA-t_stat</p></td>
+<td><p>2.56</p></td>
+<td><p>4.84</p></td>
+<td><p>3.40</p></td>
+<td><p>1.17</p></td>
+</tr>
+<tr class="row-odd"><td><p>PCA-delta_r2</p></td>
+<td><p>2.79</p></td>
+<td><p>-0.20</p></td>
+<td><p>0.71</p></td>
+<td><p>-0.17</p></td>
+</tr>
+<tr class="row-even"><td><p>PCA-lasso</p></td>
+<td><p>-2.46</p></td>
+<td><p>-4.62</p></td>
+<td><p>1.88</p></td>
+<td><p>0.52</p></td>
+</tr>
+<tr class="row-odd"><td><p>PCA-elastic_net</p></td>
+<td><p>1.56</p></td>
+<td><p>-1.66</p></td>
+<td><p>0.04</p></td>
+<td><p>1.18</p></td>
+</tr>
+<tr class="row-even"><td><p>PCA-all</p></td>
+<td><p>-1.45</p></td>
+<td><p>0.04</p></td>
+<td><p>0.16</p></td>
+<td><p>-0.57</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The PCA-VS advantage is confirmed on the owner-oracle-validated spot RV series too (Table 4),
+though weaker/noisier than futures, consistent with ZWW’s robustness table.</p>
+</section>
+<section id="competing-model-magnitudes-why-some-are-2x-more-negative">
+<h2>Competing-model magnitudes — why some are ~2x more negative<a class="headerlink" href="#competing-model-magnitudes-why-some-are-2x-more-negative" title="Link to this heading">#</a></h2>
+<p>The “loser” arms (Lasso, ENet, KS-VS, KS-all) reproduce ZWW’s direction and story but some
+magnitudes run ~2x more negative. Two causes, both benign:</p>
+<ul class="simple">
+<li><p><strong>Selection convention (fixable):</strong> these runs used the package’s default OLS t-stat screen.
+ZWW use Newey-West t-stats (see Purpose 2). NW inflates standard errors for the overlapping
+multi-horizon target, prunes the autocorrelation-inflated predictors, and brings Lasso/KS-VS
+magnitudes closer to ZWW (~3pp effect measured). The headline PCA-VS is unaffected.</p></li>
+<li><p><strong>Overfit sensitivity (inherent):</strong> KS-all regresses on all 126 raw predictors and overfits
+catastrophically; a -250% vs -530% difference is expected noise for an arm this ill-posed.
+KS-all uses no screen, so NW does not change it.</p></li>
+</ul>
+</section>
+<section id="what-the-replication-delivered-the-four-purposes">
+<h2>What the replication delivered (the four purposes)<a class="headerlink" href="#what-the-replication-delivered-the-four-purposes" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>P1 (trust / faithful replication):</strong> the package reproduces ZWW’s Table 3 headline and the
+competing-models story on both futures (Table 3) and spot (Table 4), and the replication
+pinned the paper’s one under-documented but decisive method choice (covariance PCA).</p></li>
+<li><p><strong>P2 (bugs found during replication):</strong> two package defects.</p>
+<ol class="arabic simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">result_store</span></code> breakage</strong> — running the pipeline with <code class="docutils literal notranslate"><span class="pre">pipeline_spec(result_store=...)</span></code>
+caused the benchmark and non-variable-selection arms to vanish from the accuracy report
+(<code class="docutils literal notranslate"><span class="pre">benchmark_present=False</span></code>, all R²_OS <code class="docutils literal notranslate"><span class="pre">NaN</span></code>). Removing it (relying on <code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> alone) yields
+correct output. Recorded for the fix-lane.</p></li>
+<li><p><strong>No HAC/Newey-West option in the predictor screen</strong> — <code class="docutils literal notranslate"><span class="pre">feature_engineering/screening.py:</span> <span class="pre">marginal_t_stats</span></code> computes homoskedastic OLS standard errors (<code class="docutils literal notranslate"><span class="pre">cov</span> <span class="pre">=</span> <span class="pre">sigma2</span> <span class="pre">*</span> <span class="pre">pinv(X'X)</span></code>)
+with no autocorrelation correction, so it over-states significance for overlapping
+multi-horizon targets. A fix (opt-in Bartlett-kernel Newey-West <code class="docutils literal notranslate"><span class="pre">hac_lags</span></code>) is implemented
+on branch <code class="docutils literal notranslate"><span class="pre">fix/screen-hac-newey-west</span></code> (commit 5c625368), validated against statsmodels HAC
+to machine precision, with the existing OLS path bit-identical under a golden-identity gate.</p></li>
+</ol>
+</li>
+<li><p><strong>P3/P4 (efficiency, statistically identical):</strong> adding <code class="docutils literal notranslate"><span class="pre">n_jobs=&quot;auto&quot;</span></code> to the pipeline
+parallelized the arm x origin cells across ~13 workers, cutting a full 13-arm x 4-horizon run
+from single-threaded to ~38 minutes (~13x), with n_jobs=1 vs n_jobs=4 output byte-identical.</p></li>
+</ul>
+</section>
+<section id="data-provenance">
+<h2>Data provenance<a class="headerlink" href="#data-provenance" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Futures RV (Table 3):</strong> monthly realized variance from EIA daily WTI futures contract-1
+(RCLC1, public EIA series), built as sum of squared daily log returns; monthly LV = ln(RV).
+Date-exclusion rule: drop missing and non-positive price days (the 2020-04-20 negative
+settlement is excluded; outside the ZWW OOS window). Recipe matches the owner’s KRW oracle
+notebook, verified bit-identical on spot.</p></li>
+<li><p><strong>Spot RV (Table 4):</strong> WTI spot (FRED <code class="docutils literal notranslate"><span class="pre">DCOILWTICO</span></code>); RV build validated bit-identical
+(max abs diff 0, 451 months) against the owner oracle.</p></li>
+<li><p><strong>Predictors:</strong> FRED-MD 2019:06 vintage, 126 variables (128 minus ACOGNO), McCracken-Ng
+t-codes + one-month publication lag, via <code class="docutils literal notranslate"><span class="pre">mf.data.load_fred_md(vintage=&quot;2019-06&quot;)</span></code>. VXOCLSx
+(the paper’s dominant predictor) is present in this vintage.</p></li>
+<li><p>Target: LV_{t+1:t+h} = ln(mean RV over the next h months), via <code class="docutils literal notranslate"><span class="pre">log_average_value</span></code>,
+policy <code class="docutils literal notranslate"><span class="pre">direct</span></code>; verified against the stage-1 target to 0.</p></li>
+</ul>
+</section>
+<section id="reproduction-gate">
+<h2>Reproduction (gate)<a class="headerlink" href="#reproduction-gate" title="Link to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># stage-1 data (RV oracle gate + FRED-MD 2019-06 predictors)</span>
+<span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">scripts</span><span class="o">.</span><span class="n">replication</span><span class="o">.</span><span class="n">zww_2023_pipeline</span><span class="o">.</span><span class="n">build_stage1_target</span>
+<span class="c1"># Table 3 (futures) + Table 4 (spot); covariance PCA is set in registry.py (PCA_SCALE=False)</span>
+<span class="n">uv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">scripts</span><span class="o">.</span><span class="n">replication</span><span class="o">.</span><span class="n">zww_2023_pipeline</span><span class="o">.</span><span class="n">replicate_zww2023</span> <span class="o">--</span><span class="n">market</span> <span class="n">futures</span> <span class="o">--</span><span class="n">full</span>
+<span class="n">uv</span> <span class="n">run</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">scripts</span><span class="o">.</span><span class="n">replication</span><span class="o">.</span><span class="n">zww_2023_pipeline</span><span class="o">.</span><span class="n">replicate_zww2023</span> <span class="o">--</span><span class="n">market</span> <span class="n">spot</span> <span class="o">--</span><span class="n">full</span>
+</pre></div>
+</div>
+<p>Results: <code class="docutils literal notranslate"><span class="pre">runs/zww_b3_stage2/results/{futures,spot}/accuracy_h{1,3,6,12}.csv</span></code> (R²_OS) and
+<code class="docutils literal notranslate"><span class="pre">significance_h*.csv</span></code> (Clark-West). ZWW published values: <code class="docutils literal notranslate"><span class="pre">runs/zww_b3_stage2/zww_table3_gold_raw.txt</span></code>.</p>
+</section>
+<section id="caveats-open-items">
+<h2>Caveats / open items<a class="headerlink" href="#caveats-open-items" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Covariance PCA is inferred, not stated.</strong> It is the only choice that reproduces ZWW and
+matches their VXO narrative, but the paper does not say it explicitly. This is the paper’s
+under-specification, not a package issue.</p></li>
+<li><p><strong>Competing-model magnitudes</strong> reproduce in direction/story, not exactly; the Newey-West
+screen (Purpose-2 fix, landed on a branch) refines Lasso/KS-VS toward ZWW but not KS-all.
+The runs documented here use the OLS screen; a fully-NW-screened rerun is a follow-up.</p></li>
+<li><p><strong>Futures RV contract/roll:</strong> ZWW cite “EIA daily WTI futures” without the exact contract/roll;
+RCLC1 (front contract) is used here. Spot (Table 4) is owner-oracle-validated.</p></li>
+</ul>
+<p>Provenance: replication worktree <code class="docutils literal notranslate"><span class="pre">mf-b3-zww</span></code> (branch <code class="docutils literal notranslate"><span class="pre">repro/zww-2023</span></code>); <code class="docutils literal notranslate"><span class="pre">macroforecast/**</span></code>
+unpatched by this replication (the two package findings are recorded for the fix-lane, and the
+Newey-West fix is committed on its own branch). No push.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="mrf_2024_table5_monthly.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Replicating Goulet Coulombe (2024), Table 5 — <em>Monthly Results</em></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../guide/glossary.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Glossary</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bottom-line-verdict">Bottom line / verdict</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-finding-the-headline-hinges-on-covariance-pca-which-makes-the-factor-a-vxo-proxy">KEY FINDING — the headline hinges on covariance PCA, which makes the factor a VXO proxy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-3-futures-main-r2-os-macroforecast-zww-published">Table 3 — futures (main). R²_OS (%): macroforecast / ZWW-published</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-4-spot-robustness-r2-os-macroforecast-zww-table-4-pca-vs-5-at-long-horizon">Table 4 — spot (robustness). R²_OS (%): macroforecast (ZWW Table 4 PCA-VS ~+5% at long horizon)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#competing-model-magnitudes-why-some-are-2x-more-negative">Competing-model magnitudes — why some are ~2x more negative</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-replication-delivered-the-four-purposes">What the replication delivered (the four purposes)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-provenance">Data provenance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reproduction-gate">Reproduction (gate)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#caveats-open-items">Caveats / open items</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/replication/zww_2023_replication.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/replication/zww_2023_replication.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

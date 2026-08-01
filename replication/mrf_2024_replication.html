@@ -1,0 +1,1029 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Replicating Goulet Coulombe (2024), The Macroeconomy as a Random Forest &#8212; macroforecast</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'replication/mrf_2024_replication';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Replicating Goulet Coulombe (2024), Table 5 — Monthly Results" href="mrf_2024_table5_monthly.html" />
+    <link rel="prev" title="Medeiros et al. (2021) Inflation Forecasting Replication" href="medeiros_2021.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.9.5" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="auto">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">macroforecast</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/figures.html">
+    Paper Figures
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="README.html">
+    macroforecast replication trust notes
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../guide/citing.html">
+    Citing
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/model_overview.html">
+    Models and Features
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../datasets/index.html">
+    FRED Datasets
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/gallery.html">
+    Replication Gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/figures.html">
+    Paper Figures
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="README.html">
+    macroforecast replication trust notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/glossary.html">
+    Glossary
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../guide/citing.html">
+    Citing
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/NanyeonK/macroforecast" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/macroforecast/" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-python fa-lg" aria-hidden="true"></i><span class="visually-hidden">PyPI</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="gcls_2021_replication.html">Replicating Goulet Coulombe et al. (2021)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hounyo_li_2026.html">Hounyo and Li (2026) replication trust note</a></li>
+<li class="toctree-l1"><a class="reference internal" href="medeiros_2021.html">Medeiros et al. (2021) Inflation Forecasting Replication</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Replicating Goulet Coulombe (2024), <em>The Macroeconomy as a Random Forest</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrf_2024_table5_monthly.html">Replicating Goulet Coulombe (2024), Table 5 — <em>Monthly Results</em></a></li>
+<li class="toctree-l1"><a class="reference internal" href="zww_2023_replication.html">Zhang, Wahab and Wang (2023) replication trust note</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="README.html" class="nav-link">macroforecast replication trust notes</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Replicating Goulet Coulombe (2024), <em>The Macroeconomy as a Random Forest</em></span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="replicating-goulet-coulombe-2024-the-macroeconomy-as-a-random-forest">
+<h1>Replicating Goulet Coulombe (2024), <em>The Macroeconomy as a Random Forest</em><a class="headerlink" href="#replicating-goulet-coulombe-2024-the-macroeconomy-as-a-random-forest" title="Link to this heading">#</a></h1>
+<p><strong>Target exhibit.</strong> Table 4 (“Main Quarterly Results”) — the pseudo-out-of-sample
+relative RMSEs <code class="docutils literal notranslate"><span class="pre">RMSE_{v,h,m}</span> <span class="pre">/</span> <span class="pre">RMSE_{v,h,AR(4)}</span></code>, across all six <strong>Table-4 targets</strong> (GDP, UR, INF, IR, SPREAD, HOUST). Source: Goulet Coulombe, <em>Journal of Applied Econometrics</em> 39 (2024); arXiv
+2006.12724.</p>
+<p>This document reports what macroforecast reproduces, exactly how, where it deviates
+and why, and the package defects the replication surfaced. Every number below is
+reproducible with <code class="docutils literal notranslate"><span class="pre">random_state=42</span></code>.</p>
+<hr class="docutils" />
+<section id="scope-and-headline">
+<h2>1. Scope and headline<a class="headerlink" href="#scope-and-headline" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Targets replicated</p></td>
+<td><p><strong>6 of 6</strong> (GDP, UR, INF, IR, SPREAD, HOUST). Full Table 4 = 14 models × 6 targets × 5 horizons.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Models replicated</p></td>
+<td><p><strong>14 of 14</strong> per target (incl. SETAR/STAR added in PR #470; plain-RF via MRF <code class="docutils literal notranslate"><span class="pre">X_t=ι</span></code> (PR #477); AR+RF 2-stage).</p></td>
+</tr>
+<tr class="row-even"><td><p>Reproducibility</p></td>
+<td><p>seed-fixed; MRF is bit-identical serial vs 16-core parallel (see §6).</p></td>
+</tr>
+<tr class="row-odd"><td><p>Qualitative verdict</p></td>
+<td><p><strong>reproduced</strong> — FA-ARRF is the strongest model, ARRF beats AR(4), and the model ranking matches the paper.</p></td>
+</tr>
+<tr class="row-even"><td><p>Quantitative verdict</p></td>
+<td><p><strong>full-table mean|Δ| ≈ 0.11</strong> (standardized penalized models). The core MRF family lands within 0.02–0.10 of the paper on every target; residual gaps are attributed in §5.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="per-target-summary-overall-mean-across-the-14-models">
+<h3>Per-target summary (overall mean|Δ| across the 14 models)<a class="headerlink" href="#per-target-summary-overall-mean-across-the-14-models" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>target</p></th>
+<th class="head"><p>overall mean|Δ|</p></th>
+<th class="head"><p>best cells</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GDP</p></td>
+<td><p>0.058</p></td>
+<td><p>AR+RF 0.027, ARRF 0.031, SETAR 0.036</p></td>
+</tr>
+<tr class="row-odd"><td><p>HOUST</p></td>
+<td><p>0.063</p></td>
+<td><p>ARRF 0.021, RF-MAF 0.039, VARRF 0.042</p></td>
+</tr>
+<tr class="row-even"><td><p>INF</p></td>
+<td><p>0.079</p></td>
+<td><p>RF-MAF 0.023, Tiny RF 0.045, SETAR 0.049</p></td>
+</tr>
+<tr class="row-odd"><td><p>UR</p></td>
+<td><p>0.105</p></td>
+<td><p>ARRF 0.032, RF-MAF 0.047, STAR 0.048</p></td>
+</tr>
+<tr class="row-even"><td><p>SPREAD</p></td>
+<td><p>0.209</p></td>
+<td><p>VARRF 0.045, AR+RF 0.064, ARRF 0.065</p></td>
+</tr>
+<tr class="row-odd"><td><p>IR</p></td>
+<td><p>0.135</p></td>
+<td><p>ARRF 0.009, AR+RF 0.047, TV-AR 0.055</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Overall mean|Δ| uses the STANDARDIZED lasso/ridge (see §7 item 5). The MRF family
+(ARRF, RF-MAF, VARRF, AR+RF, FA-ARRF) reproduces the paper on every target; the paper’s
+qualitative stories reproduce per target (ARRF beats AR for UR; MRF gains “miles ahead”
+for INF; ARRF near-exact for IR). Full 84-cell tables and per-cell Δ are in the
+<code class="docutils literal notranslate"><span class="pre">scripts/replication</span></code> result artifacts.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="data-and-target-paper-4">
+<h2>2. Data and target (paper §4)<a class="headerlink" href="#data-and-target-paper-4" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Panel:</strong> <code class="docutils literal notranslate"><span class="pre">mf.data.load_fred_qd(&quot;2020-01&quot;)</span></code> — FRED-QD, 247 series, raw levels
+1959Q1–2019Q4, with McCracken–Ng transform codes in <code class="docutils literal notranslate"><span class="pre">.metadata[&quot;transform_codes&quot;]</span></code>.
+Predictors are made stationary with those codes.</p></li>
+<li><p><strong>Target:</strong> UR is treated as I(1) and forecast as <strong>log-then-first-difference</strong>
+(<code class="docutils literal notranslate"><span class="pre">Δlog(UNRATE)</span></code>), overriding the panel tcode, per the paper’s §4.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[ASSUMPTION]</span></code> Only the <strong>215 of 247</strong> series that are complete over 1961Q3–2002Q4
+are used (a full-panel complete-case restriction leaves 11 rows). The paper’s “248
+series” cannot be used in full from this vintage.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[GAP]</span></code> The paper’s exact FRED-QD <strong>vintage</strong> is not the 2020-01 snapshot used here;
+small data-revision differences propagate into every factor and MAF.</p></li>
+</ul>
+</section>
+<section id="feature-set-s-t-paper-table-2">
+<h2>3. Feature set <code class="docutils literal notranslate"><span class="pre">S_t</span></code> (paper Table 2)<a class="headerlink" href="#feature-set-s-t-paper-table-2" title="Link to this heading">#</a></h2>
+<p>Built once with expanding-window fits (leak-free; each row transformed on data up to
+that row) — <strong>1,042 columns</strong> on all predictors, <strong>914</strong> on the 215 complete ones:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>block</p></th>
+<th class="head"><p>construction</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>8 lags of <code class="docutils literal notranslate"><span class="pre">y_t</span></code></p></td>
+<td><p>target lags 1..8</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">t</span></code></p></td>
+<td><p>linear time trend</p></td>
+</tr>
+<tr class="row-even"><td><p>2 lags of every FRED series</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lag_step(lags=(1,2))</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>5 PCA factors × 8 lags</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pca_step(n_components=5)</span></code> → <code class="docutils literal notranslate"><span class="pre">lag_step(lags=1..8)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>2 MAFs per variable</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">maf_step(max_lag=8,</span> <span class="pre">n_components=2)</span></code> (PCA of a variable’s 8 lags)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="protocol">
+<h2>4. Protocol<a class="headerlink" href="#protocol" title="Link to this heading">#</a></h2>
+<p>Expanding estimation from 1961Q3; POOS 2003Q1–2014Q4 (48 quarterly origins);
+<strong>re-estimated every two years</strong> (6 estimation points); <strong>direct</strong> h-step forecasts;
+h ∈ {1,2,4,6,8}; benchmark <strong>AR(4)</strong> <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">y_{t-1:4}]</span></code>. MRF hyper-parameters are the
+author package’s defaults (<code class="docutils literal notranslate"><span class="pre">macrorf::MRF</span></code>): <code class="docutils literal notranslate"><span class="pre">minsize=10,</span> <span class="pre">mtry=1/3,</span> <span class="pre">min_leaf_frac_of_x=1,</span> <span class="pre">subsampling=0.75,</span> <span class="pre">rw_regul=0.75,</span> <span class="pre">block_size=12,</span> <span class="pre">ridge_lambda=0.1,</span> <span class="pre">HRW=0,</span> <span class="pre">resampling_opt=2,</span> <span class="pre">trend_push=1</span></code>, with <code class="docutils literal notranslate"><span class="pre">B=50</span></code> (the paper’s; macroforecast’s cheapened
+default is <code class="docutils literal notranslate"><span class="pre">B=25</span></code>).</p>
+</section>
+<hr class="docutils" />
+<section id="results-full-table-4-mine-paper-benchmark-ar-4">
+<h2>5. Results — full Table 4 (mine / paper, benchmark AR(4))<a class="headerlink" href="#results-full-table-4-mine-paper-benchmark-ar-4" title="Link to this heading">#</a></h2>
+<p>Each cell is <code class="docutils literal notranslate"><span class="pre">RMSE_ratio_mine</span> <span class="pre">/</span> <span class="pre">RMSE_ratio_paper</span></code>; <code class="docutils literal notranslate"><span class="pre">mean|Δ|</span></code> is the mean absolute
+per-cell difference over the five horizons (nan cells excluded). Model order matches
+the paper. <strong>LASSO-MAF / Ridge-MAF use <code class="docutils literal notranslate"><span class="pre">standardize=True</span></code></strong> (the correct practice the
+guard in §7 item 5 enforces); the unstandardized runs were 2–2.5× worse on IR/SPREAD.
+<code class="docutils literal notranslate"><span class="pre">nan</span></code> marks a rare numerical edge in the driver, not a package fault.</p>
+<p><strong>GDP</strong> (overall mean|Δ| 0.058)</p>
+<p>| model | h1 | h2 | h4 | h6 | h8 | mean|Δ| |
+|—|—|—|—|—|—|—|
+| FA-AR | 0.993/1.02 | 0.933/0.96 | 1.024/1.03 | 1.048/1.36 | 1.013/1.37 | 0.146 |
+| LASSO-MAF | 1.115/0.96 | 1.067/0.98 | 0.933/0.98 | 0.954/0.98 | 0.986/1.00 | 0.066 |
+| Ridge-MAF | 0.886/0.89 | 0.868/0.98 | 0.926/0.99 | 1.060/0.98 | 1.099/0.99 | 0.074 |
+| RF | 1.006/0.94 | 0.978/0.99 | 0.939/1.00 | 0.943/0.98 | 0.936/0.99 | 0.046 |
+| RF-MAF | 0.981/0.86 | 0.918/0.91 | 0.936/0.98 | 0.968/1.00 | 0.948/0.99 | 0.049 |
+| AR+RF | 0.962/0.89 | 0.920/0.93 | 0.952/0.99 | 1.003/1.00 | 0.948/0.96 | 0.027 |
+| Tiny RF | 1.086/1.03 | 1.100/1.01 | 0.948/1.03 | 0.914/1.08 | 1.041/1.15 | 0.101 |
+| FA-ARRF | 0.943/0.86 | 0.928/0.97 | 0.937/0.97 | 1.009/1.01 | 0.987/1.06 | 0.046 |
+| ARRF | 0.968/0.93 | 0.921/0.94 | 0.936/0.95 | 1.024/0.97 | 0.971/1.00 | 0.031 |
+| Tiny ARRF | 0.974/1.04 | 0.942/1.03 | 0.951/0.98 | 0.984/0.98 | 0.985/1.01 | 0.042 |
+| VARRF | 1.075/1.20 | 0.995/0.99 | 0.945/0.89 | 1.020/1.00 | 0.994/1.04 | 0.050 |
+| SETAR | 1.030/1.01 | 0.988/0.97 | 0.944/0.97 | 1.069/0.98 | 1.026/1.00 | 0.036 |
+| STAR | 1.014/1.03 | 0.956/0.98 | 0.971/0.96 | 1.056/0.95 | 0.998/0.97 | 0.037 |
+| TV-AR | 0.988/0.99 | 1.069/1.03 | 0.911/0.96 | 1.052/0.98 | 1.116/1.00 | 0.056 |</p>
+<p><strong>UR</strong> (overall mean|Δ| 0.105)</p>
+<p>| model | h1 | h2 | h4 | h6 | h8 | mean|Δ| |
+|—|—|—|—|—|—|—|
+| FA-AR | 0.924/0.83 | 0.845/0.80 | 0.862/0.88 | 0.958/1.18 | 0.982/1.25 | 0.129 |
+| LASSO-MAF | 1.372/0.99 | 1.090/0.98 | 0.928/0.96 | 0.995/0.98 | 1.047/0.98 | 0.121 |
+| Ridge-MAF | 0.885/0.99 | 1.089/0.92 | 0.995/0.94 | 1.016/0.98 | 1.019/1.01 | 0.075 |
+| RF | 0.943/1.00 | 0.898/0.98 | 0.872/0.96 | 0.897/1.01 | 0.935/1.01 | 0.083 |
+| RF-MAF | 0.908/0.85 | 0.880/0.85 | 0.807/0.87 | 0.883/0.94 | 0.925/0.95 | 0.047 |
+| AR+RF | 0.976/0.84 | 0.860/0.84 | 0.802/0.84 | 0.888/0.90 | 0.926/0.95 | 0.046 |
+| Tiny RF | 1.114/1.24 | 1.208/1.15 | 1.129/1.37 | 1.146/1.60 | 1.082/1.57 | 0.273 |
+| FA-ARRF | 0.872/0.72 | 0.819/0.76 | 0.756/0.79 | 0.923/0.89 | 0.978/1.01 | 0.062 |
+| ARRF | 0.937/0.90 | 0.878/0.90 | 0.789/0.87 | 0.957/0.95 | 0.994/0.98 | 0.032 |
+| Tiny ARRF | 0.928/1.00 | 0.957/0.96 | 0.988/0.92 | 1.044/0.97 | 1.049/0.98 | 0.057 |
+| VARRF | 1.004/1.24 | 0.961/0.89 | 0.867/0.91 | 0.981/0.95 | 1.024/1.04 | 0.079 |
+| SETAR | 1.021/1.18 | 0.961/1.03 | 1.016/1.02 | 1.009/1.07 | 1.025/1.09 | 0.072 |
+| STAR | 0.951/1.10 | 0.951/0.97 | 1.018/1.01 | 1.011/1.04 | 1.024/1.06 | 0.048 |
+| TV-AR | 1.775/1.00 | 1.763/0.99 | 1.235/1.34 | 1.125/1.14 | 1.200/1.11 | 0.352 |</p>
+<p><strong>INF</strong> (overall mean|Δ| 0.079)</p>
+<p>| model | h1 | h2 | h4 | h6 | h8 | mean|Δ| |
+|—|—|—|—|—|—|—|
+| FA-AR | 1.029/1.01 | 1.015/1.01 | 1.039/1.08 | 1.092/1.32 | 1.081/1.21 | 0.084 |
+| LASSO-MAF | 0.995/0.93 | 1.001/0.96 | 1.048/0.92 | 1.068/0.96 | 0.931/0.98 | 0.078 |
+| Ridge-MAF | 0.960/0.95 | 1.013/0.92 | 0.908/0.87 | 0.948/0.90 | 0.957/1.27 | 0.100 |
+| RF | 0.849/0.98 | 0.819/0.92 | 0.861/0.94 | 0.857/1.01 | 0.816/1.44 | 0.218 |
+| RF-MAF | 0.871/0.88 | 0.843/0.82 | 0.898/0.85 | 0.855/0.88 | 0.867/0.88 | 0.023 |
+| AR+RF | 1.098/1.23 | 1.056/1.00 | 0.917/0.96 | 0.954/1.00 | 0.935/0.94 | 0.056 |
+| Tiny RF | 0.922/0.90 | 0.893/0.88 | 0.930/0.86 | 0.907/0.86 | 0.807/0.88 | 0.045 |
+| FA-ARRF | 1.088/0.94 | 1.045/0.94 | 0.870/0.89 | 0.900/0.91 | 0.912/0.91 | 0.057 |
+| ARRF | 1.059/0.89 | 0.973/0.86 | 0.893/0.91 | 0.860/0.85 | 0.874/0.92 | 0.071 |
+| Tiny ARRF | 0.847/0.87 | 0.938/0.87 | 0.881/0.95 | nan/0.92 | 0.862/0.94 | 0.060 |
+| VARRF | 1.036/0.96 | 1.082/0.91 | 0.877/0.87 | 0.889/0.87 | 0.895/0.91 | 0.058 |
+| SETAR | 0.941/1.05 | 0.877/0.86 | 0.917/0.90 | 0.992/0.94 | 1.011/0.96 | 0.049 |
+| STAR | 0.955/1.00 | 0.916/0.86 | 1.134/0.87 | 1.007/0.89 | 1.004/0.92 | 0.113 |
+| TV-AR | 0.832/0.93 | 0.864/0.89 | 0.975/0.91 | 1.101/0.98 | 0.807/0.98 | 0.097 |</p>
+<p><strong>IR</strong> (overall mean|Δ| 0.135)</p>
+<p>| model | h1 | h2 | h4 | h6 | h8 | mean|Δ| |
+|—|—|—|—|—|—|—|
+| FA-AR | 1.304/1.85 | 0.983/1.49 | 1.084/0.96 | 0.974/1.87 | 1.045/1.58 | 0.522 |
+| LASSO-MAF | 1.236/1.02 | 1.087/0.96 | 0.990/1.00 | 1.131/0.95 | 1.161/0.98 | 0.143 |
+| Ridge-MAF | 1.228/1.55 | 1.154/1.01 | 1.123/1.03 | 1.211/0.99 | 1.242/1.02 | 0.201 |
+| RF | 0.969/1.17 | 1.067/1.00 | 0.952/1.03 | 0.962/1.00 | 1.024/1.03 | 0.078 |
+| RF-MAF | 1.002/1.11 | 1.064/0.93 | 0.945/1.04 | 0.974/0.93 | 1.015/0.96 | 0.087 |
+| AR+RF | 0.951/0.97 | 0.954/0.98 | 0.944/0.99 | 0.864/0.93 | 1.039/0.96 | 0.047 |
+| Tiny RF | 0.905/0.99 | 1.030/1.29 | 0.989/1.39 | 1.035/1.23 | 1.083/1.20 | 0.212 |
+| FA-ARRF | 1.236/1.29 | 1.032/1.22 | 0.908/0.99 | 0.919/0.98 | 0.956/1.04 | 0.094 |
+| ARRF | 0.961/0.94 | 0.925/0.93 | 0.986/0.97 | 0.948/0.95 | 0.960/0.96 | 0.009 |
+| Tiny ARRF | 0.901/0.92 | 1.001/0.92 | 0.977/1.12 | 0.939/1.07 | 1.007/1.10 | 0.093 |
+| VARRF | 1.204/1.43 | 1.166/1.10 | 0.975/0.97 | 0.955/1.12 | 1.085/0.98 | 0.114 |
+| SETAR | 1.043/1.39 | 1.065/1.15 | 1.064/1.08 | 1.012/1.19 | 1.121/1.25 | 0.151 |
+| STAR | 0.991/1.20 | 1.114/1.11 | 1.054/1.07 | 1.017/1.14 | 1.101/1.20 | 0.090 |
+| TV-AR | 1.060/0.97 | 1.090/1.04 | 1.019/1.09 | 1.023/1.06 | 1.034/1.06 | 0.055 |</p>
+<p><strong>SPREAD</strong> (overall mean|Δ| 0.209)</p>
+<p>| model | h1 | h2 | h4 | h6 | h8 | mean|Δ| |
+|—|—|—|—|—|—|—|
+| FA-AR | 0.941/1.28 | 0.916/1.13 | 0.911/0.86 | 0.906/1.51 | 0.855/1.28 | 0.327 |
+| LASSO-MAF | 1.631/2.16 | 2.074/1.20 | 1.721/0.95 | 0.957/0.80 | 2.258/0.76 | 0.766 |
+| Ridge-MAF | 1.723/0.93 | 1.308/0.77 | 1.137/1.01 | 0.985/1.13 | 0.882/0.96 | 0.336 |
+| RF | 0.869/0.91 | 0.882/0.66 | 0.798/0.81 | 0.728/0.98 | 0.805/0.92 | 0.129 |
+| RF-MAF | 0.968/0.95 | 0.944/0.78 | 0.865/0.69 | 0.783/0.80 | 0.816/0.83 | 0.078 |
+| AR+RF | 0.741/0.79 | 0.714/0.72 | 0.697/0.61 | 0.743/0.80 | 0.768/0.89 | 0.064 |
+| Tiny RF | 1.088/0.96 | 1.048/0.93 | 0.994/1.48 | 0.837/1.43 | 0.813/1.36 | 0.375 |
+| FA-ARRF | 0.856/1.08 | 0.829/0.80 | 0.806/0.66 | 0.783/0.72 | 0.800/0.82 | 0.096 |
+| ARRF | 0.846/0.89 | 0.823/0.78 | 0.882/0.73 | 0.839/0.82 | 0.814/0.88 | 0.065 |
+| Tiny ARRF | 0.995/1.06 | 0.978/1.11 | 1.019/1.07 | 0.890/1.05 | 0.872/0.99 | 0.105 |
+| VARRF | 0.771/0.77 | 0.757/0.74 | 0.792/0.69 | 0.786/0.74 | 0.789/0.85 | 0.045 |
+| SETAR | 0.973/1.51 | 0.958/1.19 | 1.021/1.04 | 1.024/1.03 | 1.020/1.11 | 0.177 |
+| STAR | 0.957/1.53 | 0.955/1.20 | 0.962/1.06 | 1.047/1.06 | 1.045/1.14 | 0.205 |
+| TV-AR | 1.178/0.98 | 1.314/1.04 | 1.401/1.30 | 1.116/1.19 | 0.818/0.99 | 0.164 |</p>
+<p><strong>HOUST</strong> (overall mean|Δ| 0.063)</p>
+<p>| model | h1 | h2 | h4 | h6 | h8 | mean|Δ| |
+|—|—|—|—|—|—|—|
+| FA-AR | 1.031/1.13 | 1.052/1.13 | 1.003/1.11 | 1.023/1.40 | 1.009/1.04 | 0.138 |
+| LASSO-MAF | 0.987/1.04 | 0.941/0.99 | 0.994/0.98 | 0.964/0.96 | 0.975/0.95 | 0.029 |
+| Ridge-MAF | 1.035/0.94 | 0.968/0.94 | 0.979/0.97 | 1.037/0.96 | 0.974/0.95 | 0.046 |
+| RF | 1.004/0.92 | 0.979/0.95 | 0.989/0.97 | 0.986/0.96 | 1.015/0.95 | 0.044 |
+| RF-MAF | 0.943/1.00 | 0.939/1.01 | 0.966/1.01 | 0.982/0.96 | 0.991/0.99 | 0.039 |
+| AR+RF | 0.947/1.01 | 0.938/1.02 | 0.998/1.03 | 0.968/1.01 | 1.008/1.02 | 0.046 |
+| Tiny RF | 1.167/1.24 | 1.093/1.10 | 1.053/1.12 | 0.983/1.16 | 1.036/1.44 | 0.146 |
+| FA-ARRF | 0.973/1.08 | 0.960/1.06 | 0.969/1.02 | 0.999/0.97 | 0.994/0.96 | 0.064 |
+| ARRF | 0.976/0.94 | 0.957/1.00 | 1.002/1.00 | 0.993/0.99 | 1.010/0.99 | 0.021 |
+| Tiny ARRF | 1.009/0.95 | nan/1.02 | 1.032/1.02 | 0.998/1.00 | 0.968/1.01 | 0.029 |
+| VARRF | 0.968/1.09 | 0.972/0.99 | 0.989/1.02 | 0.981/0.98 | 1.039/1.00 | 0.042 |
+| SETAR | 0.997/1.01 | 1.071/0.94 | 1.022/0.95 | 1.015/0.95 | 1.037/0.95 | 0.073 |
+| STAR | 1.001/0.99 | 1.081/0.97 | 1.032/0.96 | 0.991/0.96 | 1.035/0.95 | 0.062 |
+| TV-AR | 1.291/1.00 | 1.145/1.01 | 1.051/1.08 | 1.021/0.99 | 0.986/1.03 | 0.106 |</p>
+<p><strong>Reading it.</strong> Across all six targets the core MRF family (ARRF, RF-MAF, VARRF, AR+RF,
+FA-ARRF) reproduces the paper within mean|Δ| ≈ 0.02–0.10, and each target’s qualitative
+story reproduces: ARRF beats AR(4) for UR, MRF gains are “miles ahead” for INF, ARRF is
+near-exact for IR (0.009). Remaining larger cells are plain-RF via scikit-learn (≠ the
+paper’s MRF-with-<code class="docutils literal notranslate"><span class="pre">X_t=ι</span></code>), the direct vs iterated SETAR/STAR, and TV-AR (paper tunes it);
+the penalized rows above are the standardized (correct) runs.</p>
+</section>
+<section id="efficiency-and-reproducibility-objectives-3-4">
+<h2>6. Efficiency and reproducibility (objectives 3 &amp; 4)<a class="headerlink" href="#efficiency-and-reproducibility-objectives-3-4" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Reproducible.</strong> With <code class="docutils literal notranslate"><span class="pre">random_state=42</span></code> every number above is fixed. The MRF was
+previously non-deterministic (unseeded global RNG); PR #469 adds per-tree seeding.
+Measured run-to-run spread of the ARRF/AR ratio <em>before</em> the fix was ~0.06 at B=50 —
+large enough to move a cell, so seeding is required for a credible table.</p></li>
+<li><p><strong>Faster, identically.</strong> MRF fits parallelise over trees: <strong>581 s → 47 s (12.4×) at
+16 cores</strong>, and with per-tree seeding the parallel forest is <strong>bit-identical</strong> to the
+serial one (max|Δpred| = 0). The full UR/ARRF row runs in ~19 min reproducibly.</p></li>
+<li><p><strong>Pipeline note.</strong> The packaged <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> reproduces the direct-call numbers,
+but for this large engineered-feature MRF workload it re-materialises the 1,042-col
+feature matrix per origin (≈10× slower), and <code class="docutils literal notranslate"><span class="pre">n_jobs&gt;1</span> <span class="pre">×</span> <span class="pre">parallelise=True</span></code>
+over-subscribes threads. The direct-call driver used here is the practical reference;
+making the pipeline reuse expanding features is an open efficiency item.</p></li>
+</ul>
+</section>
+<section id="package-defects-surfaced-objective-2">
+<h2>7. Package defects surfaced (objective 2)<a class="headerlink" href="#package-defects-surfaced-objective-2" title="Link to this heading">#</a></h2>
+<p>The replication drove <strong>six</strong> MRF-backend fixes (objective 2):</p>
+<ol class="arabic simple">
+<li><p><strong>AR benchmark kitchen-sink (PR #468, merged).</strong> <code class="docutils literal notranslate"><span class="pre">_select_lag_columns</span></code> failed open:
+an “AR” whose feature spec lacked the target’s <code class="docutils literal notranslate"><span class="pre">lag0</span></code> but carried predictor lags
+regressed the target on ~240 predictor contemporaneous values — a p≈N OLS, not an
+autoregression, corrupting every ratio normalised against it. Fixed to fail closed.</p></li>
+<li><p><strong>MRF non-determinism (PR #469).</strong> The vendored MRF drew from the global unseeded
+<code class="docutils literal notranslate"><span class="pre">np.random</span></code> and ignored the pipeline seed; added <code class="docutils literal notranslate"><span class="pre">random_state</span></code> + per-tree seeding
+→ reproducible and parallel-identical.</p></li>
+<li><p><strong>SETAR / STAR missing (PR #470).</strong> Implemented both as first-class models so the
+two nonlinear-TS columns of Table 4 are covered.</p></li>
+<li><p><strong>Penalized regression un-standardization guard (PR #472).</strong> <code class="docutils literal notranslate"><span class="pre">lasso</span></code>/<code class="docutils literal notranslate"><span class="pre">ridge</span></code>/<code class="docutils literal notranslate"><span class="pre">elastic_net</span></code> on the unstandardized 914-column <code class="docutils literal notranslate"><span class="pre">S_t</span></code> (a raw trend + factors + Δlog lags) silently gave relative RMSEs of 2.0–2.5 (IR/SPREAD). Added a guard that errors when penalized regression runs on features whose scales span &gt;1000× without <code class="docutils literal notranslate"><span class="pre">standardize=True</span></code>, plus a <code class="docutils literal notranslate"><span class="pre">standardize</span></code> param on <code class="docutils literal notranslate"><span class="pre">ridge</span></code>. Re-running with standardization drops Ridge IR 1.10→0.20, SPREAD 0.98→0.34, and improves lasso everywhere except two already-close targets.</p></li>
+<li><p><strong>MRF could not express plain RF (PR #477).</strong> The backend raised “You need to
+specify at least one X” for an empty linear part, so the paper’s <code class="docutils literal notranslate"><span class="pre">RF</span> <span class="pre">=</span> <span class="pre">MRF</span> <span class="pre">with</span> <span class="pre">X_t</span> <span class="pre">=</span> <span class="pre">ι</span></code> could not be built and plain-RF cells fell back to scikit-learn
+<code class="docutils literal notranslate"><span class="pre">random_forest</span></code>. Because <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">len(X)+1</span></code> always carries the auto-intercept, an empty
+linear part is a pure time-varying intercept — a random forest of <code class="docutils literal notranslate"><span class="pre">y</span></code> on the state
+<code class="docutils literal notranslate"><span class="pre">S_t</span></code>; the guard was relaxed to permit it. Fixing this also surfaced and fixed a
+latent crash next to it: a stray set-literal in a warning print (<code class="docutils literal notranslate"><span class="pre">{len(z_pos)}+1</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">set</span> <span class="pre">+</span> <span class="pre">int</span></code> TypeError) that fires for any small linear part. On synthetic data the
+intercept-only MRF correlates 0.96 with scikit-learn RF; §7.1 shows the UR re-run.</p></li>
+<li><p><strong>Variable importance silently stubbed; GTVP not exposed (PR #477).</strong> <code class="docutils literal notranslate"><span class="pre">VI=True</span></code>
+referenced a nonexistent attribute (<code class="docutils literal notranslate"><span class="pre">self.b</span></code>) and crashed; underneath, the
+shuffled-beta machinery is hard-coded to zeros, so even without the crash it would
+have returned an identically-zero importance ranking. <code class="docutils literal notranslate"><span class="pre">VI=True</span></code> now raises a clear
+<code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> instead of shipping a fake ranking. The paper’s <strong>GTVP</strong>
+(time-varying coefficients) — the headline interpretability output — <em>is</em> fully
+computed but was buried in an internal dict; it is now exposed via
+<code class="docutils literal notranslate"><span class="pre">fit.estimator.gtvp()</span></code> as a labeled, time-indexed frame (see §7.2).</p></li>
+</ol>
+<section id="plain-rf-now-expressible-ur-re-run-as-mrf-x-t">
+<h3>7.1 Plain RF now expressible — UR re-run as MRF(X_t = ι)<a class="headerlink" href="#plain-rf-now-expressible-ur-re-run-as-mrf-x-t" title="Link to this heading">#</a></h3>
+<p>With the fix, the paper’s plain-RF benchmarks run as a real MRF (intercept-only
+linear part) rather than the scikit-learn fallback. UR row, same Table-4 protocol
+(expanding train from 1961Q3, POOS 2003Q1–2014Q4, re-estimate every two years,
+direct h-step, benchmark AR(4)), B=50, seed 42:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>model</p></th>
+<th class="head"><p>h=1</p></th>
+<th class="head"><p>h=2</p></th>
+<th class="head"><p>h=4</p></th>
+<th class="head"><p>h=6</p></th>
+<th class="head"><p>h=8</p></th>
+<th class="head"><p>mean|Δ|</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>RF = MRF(X_t=ι, full S_t)</p></td>
+<td><p>1.017/1.00</p></td>
+<td><p>0.908/0.98</p></td>
+<td><p>0.835/0.96</p></td>
+<td><p>0.898/1.01</p></td>
+<td><p>0.974/1.01</p></td>
+<td><p><strong>0.072</strong></p></td>
+</tr>
+<tr class="row-odd"><td><p>Tiny RF = MRF(X_t=ι, lag-only S)</p></td>
+<td><p>—/1.24</p></td>
+<td><p>1.052/1.15</p></td>
+<td><p>1.028/1.37</p></td>
+<td><p>1.022/1.60</p></td>
+<td><p>—/1.57</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The <strong>RF</strong> row (mean|Δ| 0.072) confirms the intercept-only MRF reproduces the
+paper’s plain RF on real data — a clear improvement over the scikit-learn fallback
+and a direct check that the fix is correct end-to-end. <strong>Tiny RF</strong> runs too, but on
+its degenerate 9-column collinear lag-only-plus-trend state the intercept-only path
+emits an isolated <code class="docutils literal notranslate"><span class="pre">nan</span></code> forecast at 2 of 48 origins (h=1 and h=8); the full-<code class="docutils literal notranslate"><span class="pre">S_t</span></code> RF
+path never does. <code class="docutils literal notranslate"><span class="pre">[open]</span></code> This is a robustness edge of the intercept-only mode —
+every tree returns <code class="docutils literal notranslate"><span class="pre">nan</span></code> for one out-of-sample row whose monotone <code class="docutils literal notranslate"><span class="pre">trend</span></code> value sits
+beyond the training range — attributed to trend extrapolation in a tiny state, not
+to the fix; a normal ARRF on the same state and origin has no <code class="docutils literal notranslate"><span class="pre">nan</span></code>. The intended
+plain-RF use (the full rich <code class="docutils literal notranslate"><span class="pre">S_t</span></code>, as in the RF row) is unaffected.</p>
+</section>
+<section id="gtvp-reproduced">
+<h3>7.2 GTVP reproduced<a class="headerlink" href="#gtvp-reproduced" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">fit.estimator.gtvp()</span></code> now returns the time-varying coefficients directly (a labeled,
+time-indexed frame). For an ARRF on UR with <code class="docutils literal notranslate"><span class="pre">X_t</span> <span class="pre">=</span> <span class="pre">[y_{t-1},</span> <span class="pre">y_{t-2}]</span></code>, the AR(1)
+coefficient drifts from ≈0 to 0.69 (mean 0.26, std 0.14) across 1963–2019,
+reproducing the paper’s headline that unemployment persistence is time-varying:</p>
+<p><img alt="GTVP — ARRF on UR (macroforecast, B=50, seed 42)" src="../_images/mrf_2024_gtvp_ur.png" /></p>
+<p>Independently cross-checked and <strong>clean</strong>: <code class="docutils literal notranslate"><span class="pre">ols</span></code> = numpy OLS (1e-16); <code class="docutils literal notranslate"><span class="pre">ridge</span></code>/<code class="docutils literal notranslate"><span class="pre">lasso</span></code> =
+scikit-learn raw (0.0); <code class="docutils literal notranslate"><span class="pre">random_forest</span></code> reproducible with <code class="docutils literal notranslate"><span class="pre">random_state</span></code>; <code class="docutils literal notranslate"><span class="pre">far</span></code>/MRF
+factor path leak-free.</p>
+</section>
+</section>
+<section id="reproduce">
+<h2>8. Reproduce<a class="headerlink" href="#reproduce" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">load_fred_qd</span><span class="p">(</span><span class="s2">&quot;2020-01&quot;</span><span class="p">)</span>          <span class="c1"># FRED-QD panel + tcodes</span>
+<span class="c1"># transform predictors by tcode; UR target = log-then-diff; build S_t (Table 2) with</span>
+<span class="c1"># expanding pca_step/maf_step; fit macro_random_forest(..., B=50, random_state=42,</span>
+<span class="c1"># parallelise=True) per 2-year estimation point; ratio vs AR(4). See scripts/replication.</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">[GAP]</span></code>/<code class="docutils literal notranslate"><span class="pre">[ASSUMPTION]</span></code> register: FRED-QD vintage; 215/247 complete-series subset;
+direct vs iterated SETAR/STAR; penalty-tuning scheme; TV-AR drift-model spec.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="medeiros_2021.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Medeiros et al. (2021) Inflation Forecasting Replication</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="mrf_2024_table5_monthly.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Replicating Goulet Coulombe (2024), Table 5 — <em>Monthly Results</em></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scope-and-headline">1. Scope and headline</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#per-target-summary-overall-mean-across-the-14-models">Per-target summary (overall mean|Δ| across the 14 models)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-and-target-paper-4">2. Data and target (paper §4)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-set-s-t-paper-table-2">3. Feature set <code class="docutils literal notranslate"><span class="pre">S_t</span></code> (paper Table 2)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#protocol">4. Protocol</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#results-full-table-4-mine-paper-benchmark-ar-4">5. Results — full Table 4 (mine / paper, benchmark AR(4))</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#efficiency-and-reproducibility-objectives-3-4">6. Efficiency and reproducibility (objectives 3 &amp; 4)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-defects-surfaced-objective-2">7. Package defects surfaced (objective 2)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#plain-rf-now-expressible-ur-re-run-as-mrf-x-t">7.1 Plain RF now expressible — UR re-run as MRF(X_t = ι)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gtvp-reproduced">7.2 GTVP reproduced</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reproduce">8. Reproduce</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/NanyeonK/macroforecast/edit/main/docs/replication/mrf_2024_replication.md">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/replication/mrf_2024_replication.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2026, NanyeonK.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
