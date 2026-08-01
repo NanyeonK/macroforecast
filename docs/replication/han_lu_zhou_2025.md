@@ -1,17 +1,18 @@
 # macroforecast trust note — Han, Lu & Zhou, *Macro Financial Trends and Market Expected Returns*
 
 **Headline verdict.** This is the package's **first verified worked example of the
-bring-your-own-data path**: an already-assembled panel and a non-macro target, driven
-entirely through `custom_dataset` with the FRED loaders and the tcode machinery unused.
-On that path macroforecast reproduces the authors' own out-of-sample forecast paths **to
-machine precision** — `max|Δ| ≤ 1.0e-15` across all 696 monthly forecasts — and matches
-their published `R²_OS` **exactly** (0.599 vs 0.60) once the forecast origin is aligned.
+bring-your-own-data path**: an already-assembled panel and a non-macro target, driven entirely
+through `custom_dataset` with the FRED loaders and the tcode machinery unused. On that path
+macroforecast reproduces the authors' own out-of-sample forecast paths **to machine
+precision** — `max|Δ| ≤ 1.0e-15` across all 696 monthly forecasts, with the realized returns
+**bit-identical** — and, scored against a correctly-specified benchmark, matches their
+published `R²_OS` exactly.
 
 | purpose | status |
 |---|---|
-| **P1 — trust via faithful replication** | **STRONG** — path-level parity at 1e-15, plus printed-table parity across Tables 2-4 (§3-§5) |
-| **P2 — bugs caught** | **STRONG** — one defect found and fixed (PR #481); one pre-existing failure isolated and attributed (§7) |
-| **P3 — technical efficiency** | **STRONG** — 20.7 min → 6.0 min (3.45×) measured, plus a superlinear-scaling finding (§8) |
+| **P1 — trust via faithful replication** | **STRONG** — path-level parity at 1e-15, and printed-table parity across Tables 1, 2, 3, 4, 9 and 10; every forecasting exhibit in the paper has a treatment (§6) |
+| **P2 — bugs caught** | **STRONG** — four defects surfaced: Parquet persistence (fixed, PR #481), Clark-West for combinations (fixed, PR #486), `ols` on a collinear design (issue #487), and the `hist_mean` benchmark (issue #488). Plus a CI-health blocker (#489) and one pre-existing failure isolated and attributed (§7) |
+| **P3 — technical efficiency** | **STRONG** — measured speedups at fixed results (§8) |
 | **P4 — statistically-identical speedups** | **STRONG** — the parallel path returns the identical `R²_OS` and a bit-identical forecast path (§8) |
 
 **Why this paper, on a macro package.** The target is the S&P 500 excess return, not a macro
@@ -20,10 +21,19 @@ aggregate — so the question this exercise answers is *not* "does the package d
 note in this directory drives the package through `load_fred_md/qd`. This one does not touch
 those loaders at all, and it still lands on an external paper's published numbers.
 
-**KEY FINDING.** The forecast paths stored in the authors' replication archive are the
-paper's **Table 3**, not Table 2, and the row labels in their own script do not describe what
-the archive holds. Establishing that was the difference between "macroforecast is 0.107pp
-off" and "macroforecast is exact" — see §4.
+**TWO KEY FINDINGS.**
+
+**(1) The forecast paths stored in the authors' replication archive are the paper's Table 3,
+not Table 2**, and the row labels in their own script do not describe what the archive holds.
+Establishing that was the difference between "macroforecast is 0.107pp off" and "macroforecast
+is exact" — §4.
+
+**(2) Where a residual survived that, it was the benchmark and not the forecast.** With our
+combination path bit-identical to theirs and the realized returns bit-identical, a difference
+in `R²_OS` can only come from the denominator — and the package's `hist_mean` truncates its
+own estimation sample by the leading NaNs of *other arms' columns in the same bundle*. Scored
+against a prevailing mean built from our own panel, Tables 3 and 9 reproduce exactly. That is
+issue #488, and §4 isolates it.
 
 ---
 
@@ -32,9 +42,10 @@ off" and "macroforecast is exact" — see §4.
 - **Paper:** Han, Lu & Zhou, *Review of Asset Pricing Studies* 16(2), p. 241,
   `doi:10.1093/rapstu/raaf014`. Printed values below were read out of the published PDF and
   its Internet Appendix, not from a working-paper draft.
-- **Exhibits replicated:** **Table 2** (sparse forecast combinations), **Table 3** (dense
-  trend ladders), **Table 4 columns PCR/PLS/S-PCR** (factor methods). Tables 4's shrinkage
-  columns, Table 5 (neural nets) and Table 6 (ensembles) are scoped in §6.
+- **Exhibits covered:** Tables 1, 2, 3, 4, 5, 6, 8, 9 and 10 — every forecasting exhibit in
+  the paper. What each treatment *is* (replicated / sensitivity / stated-protocol / verified
+  against the archive) differs by exhibit and is tabulated in §6. Table 7 and Figure 4
+  (economic value) are out of scope by design decision.
 - **Data:** the authors' own panel, `WGpredictors2022.mat`, from Harvard Dataverse
   `doi:10.7910/DVN/7APSCU`, licence CC0 1.0, `Codes-1.7z`, 12,303,628 bytes, **MD5
   `b490831db8e9d266ce5b50eeeb92ed7e` verified on download**. 1,153 months (1926-12 …
