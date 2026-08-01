@@ -24,6 +24,8 @@ def nn(
     dropout: float = 0.0,
     learning_rate: float = 0.001,
     max_epochs: int = 100,
+    validation_fraction: float = 0.0,
+    early_stopping_patience: int | None = None,
     batch_size: int = 32,
     weight_decay: float = 0.0,
     optimizer: TorchOptimizer = "adam",
@@ -39,6 +41,10 @@ def nn(
         "dropout": float(dropout),
         "learning_rate": float(learning_rate),
         "max_epochs": int(max_epochs),
+        "validation_fraction": float(validation_fraction),
+        "early_stopping_patience": (
+            None if early_stopping_patience is None else int(early_stopping_patience)
+        ),
         "batch_size": int(batch_size),
         "weight_decay": float(weight_decay),
         "optimizer": optimizer,
@@ -53,6 +59,10 @@ def nn(
             dropout=float(dropout),
             learning_rate=float(learning_rate),
             max_epochs=int(max_epochs),
+            validation_fraction=float(validation_fraction),
+            early_stopping_patience=(
+                None if early_stopping_patience is None else int(early_stopping_patience)
+            ),
             batch_size=int(batch_size),
             weight_decay=float(weight_decay),
             optimizer=optimizer,
@@ -78,6 +88,8 @@ class _TorchNNRegressor:
         dropout: float = 0.0,
         learning_rate: float = 0.001,
         max_epochs: int = 100,
+        validation_fraction: float = 0.0,
+        early_stopping_patience: int | None = None,
         batch_size: int = 32,
         weight_decay: float = 0.0,
         optimizer: TorchOptimizer = "adam",
@@ -102,6 +114,19 @@ class _TorchNNRegressor:
         self.dropout = float(np.clip(dropout, 0.0, 0.95))
         self.learning_rate = float(learning_rate)
         self.max_epochs = max(1, int(max_epochs))
+        self.validation_fraction = float(validation_fraction)
+        if not 0.0 <= self.validation_fraction < 1.0:
+            raise ValueError("validation_fraction must be in [0, 1)")
+        self.early_stopping_patience = (
+            None if early_stopping_patience is None else max(1, int(early_stopping_patience))
+        )
+        if self.early_stopping_patience is not None and self.validation_fraction <= 0.0:
+            raise ValueError(
+                "early_stopping_patience requires validation_fraction > 0: without a "
+                "held-out tail there is nothing to stop on"
+            )
+        self.best_epoch_: int | None = None
+        self.stopped_early_: bool = False
         self.batch_size = max(1, int(batch_size))
         self.weight_decay = max(0.0, float(weight_decay))
         self.optimizer = optimizer
@@ -154,24 +179,64 @@ class _TorchNNRegressor:
             y_scaled.reshape(-1, 1), dtype=torch.float32, device=device
         )
         n_obs = tensor_x.shape[0]
-        indices = np.arange(n_obs)
+        # Hold out a TAIL of the fit window. The split is by time, not at random:
+        # these are ordered observations, and a shuffled split would let the network
+        # validate against its own future.
+        n_val = int(round(n_obs * self.validation_fraction)) if self.validation_fraction else 0
+        n_val = min(max(n_val, 0), max(n_obs - 1, 0))
+        if self.early_stopping_patience is not None and n_val < 1:
+            raise ValueError(
+                "early stopping needs at least one validation row; raise "
+                "validation_fraction or supply a longer fit window"
+            )
+        n_fit = n_obs - n_val
+        fit_x, fit_y = tensor_x[:n_fit], tensor_y[:n_fit]
+        val_x, val_y = tensor_x[n_fit:], tensor_y[n_fit:]
+        indices = np.arange(n_fit)
         rng = np.random.default_rng(self.random_state)
-        model.train()
-        for _ in range(self.max_epochs):
+        best_val = float("inf")
+        best_state = None
+        since_improved = 0
+        for epoch in range(self.max_epochs):
+            model.train()
             rng.shuffle(indices)
             epoch_loss = 0.0
             epoch_n = 0
-            for start in range(0, n_obs, self.batch_size):
+            for start in range(0, n_fit, self.batch_size):
                 batch_idx = indices[start : start + self.batch_size]
                 optimizer.zero_grad()
-                pred = model(tensor_x[batch_idx])
-                loss = loss_fn(pred, tensor_y[batch_idx])
+                pred = model(fit_x[batch_idx])
+                loss = loss_fn(pred, fit_y[batch_idx])
                 loss.backward()
                 optimizer.step()
                 batch_n = int(len(batch_idx))
                 epoch_loss += float(loss.detach().cpu().item()) * batch_n
                 epoch_n += batch_n
             self.training_history_["loss"].append(epoch_loss / max(1, epoch_n))
+            if n_val >= 1:
+                model.eval()
+                with torch.no_grad():
+                    val_loss = float(loss_fn(model(val_x), val_y).detach().cpu().item())
+                self.training_history_.setdefault("val_loss", []).append(val_loss)
+                if val_loss < best_val - 1e-12:
+                    best_val = val_loss
+                    best_state = {
+                        key: value.detach().clone()
+                        for key, value in model.state_dict().items()
+                    }
+                    self.best_epoch_ = epoch + 1
+                    since_improved = 0
+                else:
+                    since_improved += 1
+                    if (
+                        self.early_stopping_patience is not None
+                        and since_improved >= self.early_stopping_patience
+                    ):
+                        self.stopped_early_ = True
+                        break
+        if best_state is not None and self.early_stopping_patience is not None:
+            # restore the parameters that were best on the held-out tail
+            model.load_state_dict(best_state)
         self.model_ = model
         self.device_ = str(device)
         return self
