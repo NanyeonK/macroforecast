@@ -462,6 +462,83 @@ come back NaN, and Table 6's entire significance column with them.
 component paths were never estimated (§8's cost ceiling). `[GAP]` `J`, the number of
 factors, is unspecified in the paper; `J=1` is used here, as in §5.
 
+## 5.5 Table 10 — quarterly macro targets, and a rank-detection failure
+
+Table 10 is the paper's only genuinely **macro** exhibit and the sharpest test of the BYOD
+path in §2: a 304-quarter panel out of the authors' archive, so every series is a custom
+target and a custom predictor and nothing comes from a FRED loader. Both fits take about a
+minute.
+
+**The row labels do not mean what they say.** Read off the authors' code
+(`Forecasts_in_and_out_of_sample.m:795-925`) rather than the printed headers: `L_max = [1,
+2, 4, 8, 12]`, so the ladder **doubles** — `y + {MA2,…,MA8}` is *not* the consecutive ladder
+MA2..MA8. Each row is the equal-weighted mean of single-MA forecasts up to that level, each
+member a bivariate regression `y_{s+1} ~ 1 + MA_k(y_s) + z_s`, and `R²_OS` is against
+**row 1 — the current-value model carrying the same control** — not against a historical
+average. `[GAP]` A reader working from the printed table alone would build the wrong design.
+
+| panel | design | RF | D/P | UNRATE | Inflation | GDP growth | Comb |
+|---|---|---|---|---|---|---|---|
+| A: Inflation | `y + {MA2}` | 0.71 / 0.71 | 1.68 / 1.68 | 2.23 / 2.23 | **1.21 / 1.04** | 1.64 / 1.64 | 1.47 / 1.45 |
+| | `y + {MA2,MA4}` | 5.61 / 5.61 | 8.85 / 8.85 | 10.10 / 10.10 | **8.12 / 7.94** | 9.15 / 9.15 | 8.14 / 8.11 |
+| | `y + {MA2..MA8}` | 4.51 / 4.51 | 8.12 / 8.12 | 10.34 / 10.34 | **7.56 / 7.34** | 9.34 / 9.34 | 8.36 / 8.32 |
+| | `y + {MA2..MA12}` | 3.99 / 3.99 | 8.62 / 8.62 | 12.14 / 12.14 | **8.61 / 8.39** | 10.18 / 10.18 | 9.16 / 9.12 |
+| B: GDP growth | `y + {MA2}` | 6.39 / 6.39 | 6.63 / 6.63 | 7.46 / 7.46 | 6.12 / 6.12 | 3.13 / 3.14 | 6.30 / 6.30 |
+| | `y + {MA2,MA4}` | 10.37 / 10.37 | 10.93 / 10.93 | 12.40 / 12.40 | 10.37 / 10.37 | 1.92 / 1.92 | 10.10 / 10.10 |
+| | `y + {MA2..MA8}` | 11.47 / 11.47 | 12.49 / 12.49 | 15.02 / 15.02 | 12.33 / 12.33 | 1.49 / 1.49 | 11.68 / 11.68 |
+| | `y + {MA2..MA12}` | 12.08 / 12.08 | 13.43 / 13.43 | 16.46 / 16.46 | 13.73 / 13.73 | 1.59 / 1.59 | 12.82 / 12.82 |
+
+*(mine / printed, `R²_OS` in percent)*. **44 of 48 cells agree to within 0.05pp and 40 are
+exact at the printed precision**; mean |Δ| = 0.021pp. All four misses sit in one cell block,
+marked in bold, and they are a package defect rather than a specification question.
+
+### Defect #15 — `ols` silently returns garbage on an exactly collinear design
+
+Panel A's `Inflation` column is degenerate by construction: the target *is* inflation and the
+control *is* inflation, so at `k = 1` the design carries the same column twice. That is not
+an artificial case — it falls straight out of the paper's own specification, and the archive
+runs it too.
+
+The deviation was localised before being attributed. Only the degenerate arm moves:
+
+| arm | max\|Δ\| vs a faithful re-implementation |
+|---|---|
+| `k1_INF` (degenerate) | **5.58e-01** |
+| `k2_INF`, `k4_INF`, `k8_INF`, `k12_INF` | 2.2e-15 – 3.6e-15 |
+| `k1_UNE` (same `k`, not degenerate) | 1.2e-14 |
+
+and the faithful re-implementation lands on the **printed** values (1.042 / 7.938 / 7.345 /
+8.387 against 1.04 / 7.94 / 7.34 / 8.39) under both a minimum-norm solve and MATLAB's
+basic-solution rule, so the printed column is not the odd one out — we are.
+
+**Mechanism, traced to the LAPACK call.** At 11 of 232 origins the fitted coefficients come
+back as an exploded cancelling pair:
+
+| | the same X, refit directly | inside the pipeline |
+|---|---|---|
+| array handed to sklearn | C-contiguous `ndarray` | non-contiguous `DataFrame` |
+| smallest centered singular value | 2.14e-15 | 5.59e-15 |
+| LAPACK `rank_` | 1 (truncated) | **2 (not truncated)** |
+| coefficients | `[0.2897, 0.2897]` | **`[+2.33e14, −2.33e14]`** |
+| forecast | 2.298749 | **2.857185** |
+
+The columns are **bit-identical** (`max|col0 − col1| = 0.0`) and the centered design has
+`s_min/s_max = 1.16e-16`, so the matrix is exactly rank-one. Whether `gelsd` truncates the
+null direction depends on the memory layout it receives, and when it does not, the two
+coefficients grow to ±2.3e14 and cancel. The prediction then carries a floating-point residue
+of order `‖coef‖ · eps · x ≈ 2.3e14 × 2.2e-16 × 3.2 ≈ 0.2` — which is exactly the size of the
+observed per-origin errors (0.05 to 0.56).
+
+**Why it matters beyond this table.** The result is deterministic, reproduces on demand, and
+is delivered with **no warning**: `ols` returns a number that looks ordinary and is wrong by
+half a unit. `rank_` cannot be used as the detector, because in the failing case LAPACK
+reports full rank — that mis-report *is* the failure. Filed rather than patched here: the
+honest fix is a post-fit conditioning check that warns without changing any existing number,
+and that deserves its own change with its own suite run.
+
+`[GAP]` Panel B's degenerate cell (`GDP growth` control on the GDP target) matches to 0.01pp,
+so the failure needs the rank decision to flip and does not fire on every collinear design.
+
 ## 6. What is not covered
 
 - `[GAP]` **Table 4's LASSO and ENet columns.** The design is specified (14×L split into `L`
