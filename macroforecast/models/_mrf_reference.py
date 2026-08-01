@@ -15,7 +15,6 @@ for macroforecast pandas inputs/outputs and current numpy scalar assignment.
 import numpy as np
 import pandas as pd
 import math
-import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 
 
@@ -1130,6 +1129,8 @@ class MacroRandomForest:
         return beta_bank_shu, fitted_shu
 
     def band_plots(self):
+        import matplotlib.pyplot as plt
+
 
         if self.cheap_look_at_GTVPs:
             if self.B*(1-self.BS4_frac) < 30:
@@ -1253,6 +1254,8 @@ class MacroRandomForest:
         return daily_profit, cumulative_profit, annualised_return, sharpe_ratio, max_drawdown
 
     def monkey_trader_plot(self, close_prices):
+        import matplotlib.pyplot as plt
+
 
         np.random.seed(1)
         fig, ax = plt.subplots()

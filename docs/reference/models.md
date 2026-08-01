@@ -2237,7 +2237,7 @@ Family: `neural`
 #### Fit Signature
 
 ```python
-macroforecast.models.nn(X: Any, y: Any | None = None, *, hidden_layer_sizes: tuple[int, ...] = (100,), activation: str = "relu", dropout: float = 0.0, learning_rate: float = 0.001, max_epochs: int = 100, batch_size: int = 32, weight_decay: float = 0.0, optimizer: TorchOptimizer = "adam", loss: TorchLoss = "mse", random_state: int = 0, device: TorchDevice = "auto") -> ModelFit
+macroforecast.models.nn(X: Any, y: Any | None = None, *, hidden_layer_sizes: tuple[int, ...] = (100,), activation: str = "relu", dropout: float = 0.0, learning_rate: float = 0.001, max_epochs: int = 100, validation_fraction: float = 0.0, early_stopping_patience: int | None = None, batch_size: int = 32, weight_decay: float = 0.0, optimizer: TorchOptimizer = "adam", loss: TorchLoss = "mse", random_state: int = 0, device: TorchDevice = "auto") -> ModelFit
 ```
 
 | Field | Value |
@@ -3748,7 +3748,9 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `fit` | `fit(self, X: pd.DataFrame, y: pd.Series) -> "'MacroRandomForestRegressor'"` | No public docstring is available. |
+| `gtvp` | `gtvp(self) -> pd.DataFrame` | Generalized time-varying parameters -- the paper's headline output. |
 | `predict` | `predict(self, X: pd.DataFrame) -> np.ndarray` | No public docstring is available. |
+| `variable_importance` | `variable_importance(self) -> "'pd.Series'"` | Not available: the vendored backend does not compute variable |
 ### MARSRegressor
 
 Qualified name: `macroforecast.models.spline.MARSRegressor`
