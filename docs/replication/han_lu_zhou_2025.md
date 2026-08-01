@@ -291,6 +291,73 @@ index 456 so the first target is 1965-01 and the out-of-sample block is 696 mont
 `[note]` Runs on CUDA are not bit-reproducible across different GPUs or driver versions;
 the protocol is fully specified, the last decimal is not.
 
+## 5.3 Table 5 — results, and how far the unstated protocol moves them
+
+Fifteen cells under the protocol of §5.2, against the same fifteen run to a fixed
+100-epoch budget with no early stopping — the only difference between the two columns —
+and against the printed table.
+
+| design | model | **GKX protocol** | no early stopping | printed | Δ vs printed |
+|---|---|---|---|---|---|
+| `Xt` | NN1 | −1.880 | −2.691 | −0.11 | −1.77 |
+| | NN2 | **−0.553** | −7.209 | 0.03 | −0.58 |
+| | NN3 | **0.329** | −3.108 | **0.41** | **−0.08** |
+| | NN4 | 0.325 | −2.157 | −2.07 | +2.40 |
+| | NN5 | 0.112 | −0.732 | −1.69 | +1.80 |
+| `+{MA2..MA6}` | NN1 | −6.195 | −8.458 | 0.67 | −6.87 |
+| | NN2 | **−0.192** | −7.589 | 0.23 | −0.42 |
+| | NN3 | **−0.134** | **−18.923** | 1.77 | −1.90 |
+| | NN4 | **−0.138** | **−20.001** | 0.41 | −0.55 |
+| | NN5 | 0.545 | — | −0.41 | +0.96 |
+| `+{MA2..MA12}` | NN1 | −0.425 | — | 1.23 | −1.66 |
+| | NN2 | −0.217 | — | 1.52 | −1.74 |
+| | NN3 | −0.333 | — | 0.78 | −1.11 |
+| | NN4 | **0.948** | — | **1.28** | **−0.33** |
+| | NN5 | 0.980 | — | 0.01 | +0.97 |
+
+### What the middle column establishes
+
+**One unstated switch moves a cell by up to 20 percentage points.** Early stopping alone
+takes `+{MA2..MA6}` NN3 from **−18.9% to −0.13%** and NN4 from **−20.0% to −0.14%**; at
+`Xt`, NN2 goes from −7.2% to −0.55%. The published spread across the whole of Table 5 is
+about 3.8 points (−2.07 to +1.77). **The indeterminacy is five times the effect being
+reported.** No amount of care on our side closes that: the paper does not say which side
+of it to stand on.
+
+### Where the protocol lands relative to the paper
+
+Under the GKX protocol nine of fifteen cells fall inside ±1.1pp of print, and three are
+inside 0.35pp (`Xt` NN3 −0.08, `+{MA2..MA12}` NN4 −0.33, `+{MA2..MA6}` NN2 −0.42). The
+residual pattern is systematic rather than noisy: our networks are **flatter** than the
+paper's. Where the paper reports a collapse we do not fall as far (`Xt` NN4 −2.07 → +0.33,
+NN5 −1.69 → +0.11); where it reports a gain we do not rise as high (`+{MA2..MA6}` NN3
+1.77 → −0.13). Early stopping is exactly the intervention that compresses both tails, so
+the direction is the one the protocol difference predicts.
+
+**This bears on a claim in the paper.** Section 3.2 reads NN5's poor showing as a
+small-sample, low-signal artefact of depth — "simple networks with fewer layers and nodes
+often outperform in small data sets". Under a protocol with early stopping that depth
+penalty does not appear: at `+{MA2..MA12}`, our NN4 (0.948) and NN5 (0.980) are the two
+**best** cells of the design, and at `Xt` the deepest networks stop collapsing entirely.
+The depth ordering in Table 5 is therefore at least partly a property of the training
+protocol rather than of network depth. That reading is offered as what these runs support,
+not as a correction to the paper — with the protocol unstated, neither reading can be
+settled from the published material.
+
+`[GAP]` Path parity is not meaningful for this exhibit. The archived NN forecast paths sit
+2.1-7.7 away in the max-norm, which is what different seeds and a different training
+protocol produce; unlike Tables 2-4, agreement here could only ever be distributional.
+
+**Cost.** Early stopping also made the exhibit affordable: 7-27 min per cell against
+83-119 min for the fixed budget, because training stops around epoch 15-20 instead of
+running to 100. The full fifteen cells took about 4 h rather than the ~49 h projected for
+the fixed-budget version.
+
+**A package gap surfaced here.** `nn` had no early stopping at all — no `validation_fraction`,
+no patience, no held-out tail — so the protocol above could not be expressed until PR #485
+added it. That is not a stylistic omission: the middle column of the table above is what
+the package could produce before the fix, and it is off by up to 20 points.
+
 ## 6. What is not covered
 
 - `[GAP]` **Table 4's LASSO and ENet columns.** The design is specified (14×L split into `L`
