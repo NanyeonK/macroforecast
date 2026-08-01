@@ -46,6 +46,10 @@ full per-version honesty-pass history embedded in repo documentation.
   (6) `docs/guide/model_overview.md` and `docs/guide/models/timeseries.md`
   regenerated: the `setar`/`star` entries were never added after those models
   landed, so `tools/gen_model_overview.py --check` failed on `main` too.
+  (7) The replication trust notes were orphaned -- `docs/replication/README.md`
+  was not referenced from `docs/index.md` and did not list the notes itself, so
+  `sphinx-build -W` failed on six `toc.not_included` warnings and the notes
+  appeared nowhere in the built site. Wired in with a globbed toctree.
 
 - `forecasting/policies/base.py` (bug fix, CV selection fell through to the
   degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
