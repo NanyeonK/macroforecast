@@ -571,11 +571,34 @@ so the failure needs the rank decision to flip and does not fire on every collin
    from the pinned snapshot by up to `4.2e-4` — four orders of magnitude beyond the ~1 ULP a
    threaded reduction explains. It fails **identically on clean `origin/main`**, so it is
    unrelated to this work; recorded rather than silently absorbed.
-3. **Three hypotheses raised and refuted**, recorded so they are not re-litigated: *listwise
-   contamination* — an arm's training sample is **not** truncated by NaNs in another arm's
-   columns (`DP_L0` and `DP_MA1`, the same signal in different bundles, are bit-identical);
-   *arm dropout* — all 42 arms contribute at every one of the 696 origins; and *the package is
-   wrong about the MA designs* — it was the comparison target that was wrong (§4).
+3. **Clark-West was inexpressible for a forecast combination (fixed, PR #486).**
+   `significance_table` built its CW-eligible set by walking `spec.arms` and reading
+   `Arm.nested_in_benchmark`; `CombinationContender` had no such field, so a combination's
+   `cw_stat`/`cw_p` came back NaN with no warning. That is the wrong default for this
+   literature — CW *on the combination* is the headline test — and it is licensed, because a
+   simple pool of arms that each nest the benchmark nests the benchmark. The flag now exists
+   and the silent case warns. Table 6's twelve CW values and Table 9's stars could not be
+   produced before it.
+4. **`ols` returns a silently wrong forecast on an exactly collinear design (filed, issue
+   #487).** At 11 of 232 origins LAPACK reports full rank on a rank-one matrix, the
+   coefficients explode to a cancelling `±2.3e14` pair, and the prediction keeps the
+   floating-point residue — up to **0.56** in level. Diagnosed in full at §5.5. Not patched
+   here: `rank_` cannot be the detector, since the mis-report *is* the failure, and the honest
+   fix warns without changing any existing number.
+5. **The `hist_mean` benchmark is truncated by other arms' columns (filed, issue #488).**
+   Its estimation sample starts at `2 + (leading NaNs of the longest column in the bundle)`
+   even though it uses no predictors, so the *same* benchmark scores differently depending on
+   which contenders share the run. This is the whole of §4's residual. Identified exactly —
+   the reconstructed path matches to `0.00e+00`.
+6. **Two hypotheses raised and refuted**, recorded so they are not re-litigated: *arm dropout*
+   — all 42 arms contribute at every one of the 696 origins; and *the package is wrong about
+   the MA designs* — it was the comparison target that was wrong (§4).
+7. **A correction to an earlier entry in this list.** *Listwise contamination* was recorded
+   here as refuted, on the evidence that `DP_L0` and `DP_MA1` — the same signal in different
+   bundles — are bit-identical. That test covered **predictor arms only**. `hist_mean` has no
+   predictor column, and it *is* truncated by the bundle (item 5). The original refutation
+   stands for what it tested and does not generalise; it was stated more broadly than the
+   evidence supported.
 
 ## 8. P3 / P4 — efficiency, and identity under it
 
