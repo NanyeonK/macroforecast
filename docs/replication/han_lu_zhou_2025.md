@@ -454,6 +454,15 @@ The **Linear** column reproduces the paper's significance exactly at every desig
 columns of the trend designs — the same place the point estimates diverge, for the same
 reason.
 
+**Issue #488 touches this table too, and by how much is measured.** The benchmark rows come
+from the Table 4 runs, whose bundles carry MA columns, so the `hist_mean` denominator is
+truncated there as it is in §4. Re-scoring the Linear ensemble against a prevailing mean
+computed from our own panel moves it by **+0.000pp at `Xt`, +0.017pp at `{MA2..MA6}` and
++0.062pp at `{MA2..MA12}`** — the same direction as §4 and the same order of magnitude. It
+does not touch the reading above, whose gaps are 0.38 to 1.27pp. §5.5's Table 10 is immune
+by construction: its benchmark is an ordinary `ols` arm, not `hist_mean`, and contender arms
+are not truncated by the bundle.
+
 **This exhibit is the one that needed PR #486.** All twelve Clark-West values above are on
 *combinations*, which the package could not test at all before that fix: they would have
 come back NaN, and Table 6's entire significance column with them.
