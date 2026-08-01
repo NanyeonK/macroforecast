@@ -4,7 +4,7 @@ sync_direction: mac_to_remote_repo
 project_key: macroforecast
 repo_server: server1
 repo_path: /home/nanyeon99/project/macroforecast
-policy_bundle_sha256: 303177a894a9568e6e2d0673160b0d42ced60397dea0d4fa2af1d33460eccb0e
+policy_bundle_sha256: 39afe18733b3362806b7de9221fc3e6df31519893e6b2c1870c2fb3b527c2167
 orca_repo_id: 56dfe637-e4f0-4b3e-b56f-35b5ae0484aa
 ---
 
@@ -71,5 +71,5 @@ Required bridge artifacts before writing:
 - `/Users/nanyeon/Library/CloudStorage/SynologyDrive-second_brain/20_systems/research_paper_system/00_START_HERE.md`: `9e81a5180e533d147c193e7a09e5565ec5cfcd1dc2bddf0087f552b18b90116b`
 - `/Users/nanyeon/Library/CloudStorage/SynologyDrive-second_brain/20_systems/research_paper_system/SOURCE_OF_TRUTH.md`: `d8d7bf0574a4328d34a91ec5e0e5643171a999ba712363d635affa2bff2287dd`
 - `/Users/nanyeon/Library/CloudStorage/SynologyDrive-second_brain/20_systems/research_paper_system/RELEASE_STATE.md`: `c5bcdfd54d611831e5da2510644472cfa313cce15e3ea1bdba86be7adbe5fa2c`
-- `/Users/nanyeon/Library/CloudStorage/SynologyDrive-second_brain/20_systems/research_paper_system/MANIFEST.md`: `cb4babeea7acfbe540787dabaeef7a650fc182c8511c8c50a301bc70011eb2db`
+- `/Users/nanyeon/Library/CloudStorage/SynologyDrive-second_brain/20_systems/research_paper_system/MANIFEST.md`: `a595f572b44613501ec43c5ae15a4c637f6c4d38643fdd68d3ddd2b85f18b6be`
 - `/Users/nanyeon/Library/CloudStorage/SynologyDrive-second_brain/20_systems/research_paper_system/02_workflows/session_model.md`: `97437465a0574b4ea8c34fac04aaa6faa90b3fa77a0c76459ce4f660f3e221ea`

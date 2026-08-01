@@ -719,20 +719,47 @@ version of one row is the only affordable point on that curve, and it would not 
 table whose reported effects are 0.20–0.34pp apart. Recorded as a quantified exclusion, not
 an oversight.
 
-## 6. What is not covered
+## 6. Coverage, and what is not covered
 
-- `[GAP]` **Table 4's LASSO and ENet columns.** The design is specified (14×L split into `L`
-  groups **by MA lag**, LASSO within each group, `L` forecasts pooled, penalty by recursive
-  threefold CV — IA Eq. IA4/IA5), but the per-origin CV wrapper is not built here.
-- `[GAP]` **Table 5 (NN1-NN5).** All five architectures run on this data (verified: `(2)`,
-  `(4,2)`, `(8,4,2)`, `(16,8,4,2)`, `(32,16,8,4,2)` with ReLU + Adam, 0.4-2.0 s per fit), but
-  the paper averages the **five best of many seeds by validation `R²_OS`** (IA §IA1.3), which
-  needs a seed-ensemble wrapper.
-- **Table 6** is arithmetic on the Table 4/5 forecasts (`FC_linear = 1/5*[PCA+PLS+SPCA+LASSO+
-  ENET]`, `FC_all = 1/10*[…]`), so it becomes free once those exist.
-- `[GAP]` **The archive contains no estimation code for Tables 4-6** — only the saved
-  forecasts. Those tables are therefore *verifiable* against stored paths but not
-  *re-derivable* from the authors' posted code.
+Every forecasting exhibit in the paper now has a treatment. What that treatment *is* differs,
+and the difference is the point of this section.
+
+| exhibit | where | status |
+|---|---|---|
+| Table 1 — summary statistics | §2.1 | replicated, 112/112 cells within 0.005 |
+| Table 2 — sparse combinations | §3 | replicated |
+| Table 3 — dense ladders | §4 | replicated for `L` = 1, 6, 12; `L` = 24, 36 not run (cost) |
+| Table 9 — growth-regime split | §4.1 | replicated, all three columns within 3e-4 |
+| Table 4 — factor columns | §5 | replicated |
+| Table 4 — shrinkage columns | §5.1 | reported as a **sensitivity**, not a match — see below |
+| Table 5 — neural networks | §5.2–5.3 | produced under a fully stated protocol; the paper's is unstated |
+| Table 6 — ensembles | §5.4 | 3 of 5 rows; the other two have no components (below) |
+| Table 10 — quarterly macro | §5.5 | replicated, 44/48 cells within 0.05pp |
+| Table 8 — placebo | §5.6 | verified against the archive; independent re-run costed, not done |
+| Table 7, Figure 4 — economic value | — | out of scope by design decision |
+
+### What is genuinely not covered, and why
+
+- **`Xt + {MA2..MA24}` and `Xt + {MA2..MA36}`** (Tables 3, 4, 6, 9). Not a specification
+  question — a cost ceiling. At `n_jobs=4` the 336- and 504-signal ladders extrapolate to ~24 h
+  and ~50 h *per pass* (§8). Table 6's two missing rows are missing for the same reason: their
+  components were never estimated.
+- **Table 8's 1,000 simulations.** Costed in §5.6: the cross-simulation sd is 0.18pp, so
+  ±0.10pp needs 13 passes (~6.5 h for the cheapest trend row alone) and the printed precision
+  needs ~1,250. The archive's own output is verified instead, and reproduces all nine printed
+  values to 0.0047pp.
+- `[GAP]` **Table 4's LASSO/ENet columns are a sensitivity, not a match.** The shrinkage curve
+  rises monotonically to zero penalty, so **no** penalty reaches the paper's positive values —
+  a structural difference, not a tuning one. IA Eq. IA4 reads LASSO as a *selector* with
+  separately-hatted coefficients, which points at a post-LASSO refit; that hypothesis is
+  recorded and **untested**.
+- `[GAP]` **Table 5's training protocol is unstated in the paper**, and §5.3 measures how much
+  that matters: one unstated switch moves a cell by up to 20 points against a published spread
+  of 3.8. Our protocol is stated in full (§5.2) so that *this* table is reproducible even
+  though the one it is compared against is not.
+- `[GAP]` **`J`, the number of factors**, is unspecified. `J = 1` is used throughout.
+- `[GAP]` **The archive contains no estimation code for Tables 4–6** — only saved forecasts.
+  Those tables are *verifiable* against stored paths but not *re-derivable* from posted code.
 - **Out of scope by design decision:** Table 7's economic value and Figure 4's wealth paths
   (mean-variance weights, CER, performance fees) are finance tooling, outside this package.
 
