@@ -722,7 +722,15 @@ cache, then record the raw-file hash in report provenance.</p>
 <p>Mask dates must exactly cover the forecast target dates being evaluated. A
 month-end mask will not be silently shifted onto month-start forecasts, and
 missing mask dates or <code class="docutils literal notranslate"><span class="pre">NaN</span></code> states raise with the first missing target dates.
-When subsamples are configured, evaluation tables include a <code class="docutils literal notranslate"><span class="pre">subsample</span></code> column,
+Clark-West is emitted only for contenders that <strong>declare</strong> they nest the
+benchmark. Arms do so with <code class="docutils literal notranslate"><span class="pre">Arm(nested_in_benchmark=True)</span></code>; a forecast
+combination does so with <code class="docutils literal notranslate"><span class="pre">CombinationContender(nested_in_benchmark=True)</span></code>, which
+is what the combination literature’s headline test needs. A simple pool
+(mean/median/trimmed) of arms that each nest the benchmark nests it too, since
+zeroing every slope returns the benchmark forecast; an estimated-weight
+combination need not, so the package does not infer the flag from the members.
+Without it the combination’s <code class="docutils literal notranslate"><span class="pre">cw_stat</span></code>/<code class="docutils literal notranslate"><span class="pre">cw_p</span></code> are NaN, and a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> says so.</p>
+<p>When subsamples are configured, evaluation tables include a <code class="docutils literal notranslate"><span class="pre">subsample</span></code> column,
 and paper tables can select a window with
 <code class="docutils literal notranslate"><span class="pre">mf.reporting.paper_accuracy_table(report,</span> <span class="pre">subsample=&quot;ex_covid&quot;)</span></code>.
 See the runnable <a class="reference internal" href="../getting_started.html"><span class="std std-doc">Getting Started</span></a> snippets and the
