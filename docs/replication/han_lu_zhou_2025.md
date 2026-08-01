@@ -239,6 +239,58 @@ value without saying so, which is what let 696 identical null-model selections p
 result (PR #484). The second is the more consequential: without it, the ≈0 row above would
 have read as a finding rather than as a symptom.
 
+## 5.2 Table 5 — the neural networks, and a table that its own paper cannot pin down
+
+**The published Table 5 is not identified by the published specification.** The article and
+its Internet Appendix give the architectures, ReLU, Adam, and the rule "average the five
+best seeds in validation" — and nothing else. Searching both documents end to end for
+epochs, batch size, learning rate, weight decay, dropout, early stopping, patience, seed
+count or validation length returns nothing; the appendix's twelve tables contain no
+hyper-parameter table, and the article's own appendix is variable definitions. The paper's
+one methodological citation, Gu, Kelly & Xiu (2020), is scoped narrowly: it is invoked *to
+fix architectures ex ante*, not for a training protocol.
+
+That matters because the result is protocol-dependent to a degree that swamps the
+published differences — this replication measured it (§5.3).
+
+### The protocol used here, stated in full
+
+Because the paper's is incomplete, ours is given completely, so that **this** table is
+reproducible even though the one it is compared against is not. Provenance is marked per
+row: **[paper]** taken from Han-Lu-Zhou, **[GKX]** read verbatim from Gu, Kelly & Xiu
+(2020) (NBER w25398, hyper-parameter table, NN1-NN5 column), **[ASSUMPTION]** our choice
+where neither states a value.
+
+| setting | value | provenance |
+|---|---|---|
+| architectures | NN1 `(2)`, NN2 `(4,2)`, NN3 `(8,4,2)`, NN4 `(16,8,4,2)`, NN5 `(32,16,8,4,2)`, fully connected | **[paper]** IA §IA2 |
+| activation | ReLU | **[paper]** Eq. IA13 |
+| optimizer | Adam, default parameters | **[paper]** (Adam) + **[GKX]** (defaults) |
+| epochs (max) | 100 | **[GKX]** |
+| early-stopping patience | 5 | **[GKX]** |
+| learning rate | 0.001 | **[GKX]** — the lower of `{0.001, 0.01}` |
+| seeds fit per origin | 10 | **[GKX]** `Ensemble = 10` |
+| seeds averaged | best 5 by validation | **[paper]** |
+| batch size | 128 | **[ASSUMPTION]** GKX use 10000 for a panel of millions of stock-months; this sample has 500-1100 training rows, where that value is the full sample |
+| early-stopping split | last 20% of the fit window, **time-ordered** | **[ASSUMPTION]** neither states it; a shuffled split would let the network validate against its own future |
+| seed-ranking window | last 120 months of the fit window | **[ASSUMPTION]** the paper says "a fixed validation period" without a length |
+| dropout / weight decay | 0.0 / 0.0 | package defaults, stated because they are part of the protocol |
+| loss | MSE | package default |
+| input scaling | standardized on the fit window at each origin | **[ASSUMPTION]** required; raw trend levels span orders of magnitude |
+| predictor block | the whole `14 × L` set, ungrouped | **[paper]** — unlike Tables 2-4, the networks are meant to take all signals at once |
+
+**Two validation windows, deliberately.** They serve different purposes and are not the
+same split: the **seed-ranking** window (120 months) chooses *which* five networks to
+average, per the paper's rule; the **early-stopping** split (20% tail) chooses *when to
+stop* each individual fit, per GKX. Both sit inside the fit window and neither touches the
+forecast target.
+
+**Reproduction coordinates.** macroforecast at `f61935a5`; torch 2.7.0+cu126 on CUDA
+(NVIDIA RTX 4060); seeds `0..9` per origin; expanding estimation with the first origin at
+index 456 so the first target is 1965-01 and the out-of-sample block is 696 months.
+`[note]` Runs on CUDA are not bit-reproducible across different GPUs or driver versions;
+the protocol is fully specified, the last decimal is not.
+
 ## 6. What is not covered
 
 - `[GAP]` **Table 4's LASSO and ENet columns.** The design is specified (14×L split into `L`
