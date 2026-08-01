@@ -155,22 +155,153 @@ printed values 0.60 / 0.70 / 0.81 / 0.80 / 0.73 confirm the mapping independentl
 archive. `[GAP]` **Anyone reusing `Data_trend.mat` by its row labels will silently compare
 the wrong design.**
 
-Replication against those paths:
+Replication against those paths. Two benchmark columns are shown, for a reason the next
+paragraph makes exact:
 
-| design | signals | mine `R²_OS` % | printed % | **path max\|Δ\|** | corr |
+| design | signals | **path max\|Δ\|** | `R²_OS` (package `hist_mean`) | `R²_OS` (prevailing mean) | printed |
 |---|---|---|---|---|---|
-| `Xt` | 14 | **0.599** | 0.60 | **0.0** | 1.00000000 |
-| `Xt + {MA2..MA6}` | 84 | 0.694 | 0.70 | **6.66e-16** | 1.00000000 |
-| `Xt + {MA2..MA12}` | 168 | 0.754 | 0.81 | **7.77e-16** | 1.00000000 |
-| `Xt + {MA2..MA24}` | 336 | — | 0.80 | not run (§8) | — |
-| `Xt + {MA2..MA36}` | 504 | — | 0.73 | not run (§8) | — |
+| `Xt` | 14 | **8.88e-16** | 0.599 | **0.599** | 0.599 |
+| `Xt + {MA2..MA6}` | 84 | **6.66e-16** | 0.682 | **0.699** | 0.699 |
+| `Xt + {MA2..MA12}` | 168 | **7.77e-16** | 0.754 | 0.818 | 0.805 |
+| `Xt + {MA2..MA24}` | 336 | not run (§8) | — | — | 0.796 |
+| `Xt + {MA2..MA36}` | 504 | not run (§8) | — | — | 0.730 |
 
-**Reading the `R²_OS` residuals.** They are an *alignment* artefact, not a numerical one.
-`mf.window.from_cutoffs(test_start=...)` takes the first **origin**, so passing the month of
-the first target produced 695 forecasts beginning 1965-02 rather than 696 beginning 1965-01.
-Moving the origin back one month reproduces the printed value **exactly** (0.599 vs 0.60).
-Since the ladder paths are already identical to 1e-16 on the overlapping months, adding the
-missing month makes the samples identical too; they were not re-run for a confirmatory digit.
+`[note]` The `Xt + {MA2..MA12}` row is still scored on the superseded 695-month window; its
+re-run on the corrected 696 months is in flight. The other two rows are final.
+
+**The forecasts are exact; the residual is entirely the denominator.** Against the authors'
+archived paths our combination forecasts agree to `max|Δ| ≈ 7e-16` across all 696 months, and
+the realized excess returns agree **bit-identically** (`max|Δ| = 0.0`). With the numerator and
+the target both machine-identical, a difference in `R²_OS` can only come from the benchmark —
+and substituting the authors' `FC_HA` while keeping *our* forecast path returns their printed
+value exactly.
+
+The prevailing-mean column is not borrowed from them: it is `mean(y[0 : t])` computed from
+**our** panel, and it matches their archived `FC_HA` to `5.55e-16`. Scored against it, our
+paths reproduce the printed table — and so does Table 9, whose three columns come back within
+`3e-4` for both completed designs (§4.1).
+
+**What the package benchmark does instead (issue #488).** `hist_mean` uses no predictors, yet
+its estimation sample is truncated by the leading NaNs of *other arms' columns in the same
+bundle*. The rule was identified exactly — the reconstructed path matches to `0.00e+00`:
+
+| bundle | longest column | HA sample starts at index | rows at the first origin | Δ vs the prevailing mean |
+|---|---|---|---|---|
+| 14 lag-0 predictors (`Xt`) | — | 2 | 455 | 7.63e-04 |
+| 84 columns, MA1..MA6 | MA6 (5 leading NaN) | 7 | 450 | **1.17e-02** |
+
+so `start = 2 + (leading NaNs of the longest column)`. Contender arms are unaffected — each
+respects its own columns' availability — so within one run the numerator honours per-arm
+availability and the denominator does not, and the *same* benchmark scores differently
+depending on which contenders share the bundle. `target_lags` on the HA arm is irrelevant:
+`(1,)`, `(0,)` and `None` all produce the same path. That also explains why `Xt` matches
+either way: with no MA columns in its bundle there is almost nothing to truncate.
+
+**A correction to what this note previously said.** An earlier revision attributed the
+residual to an off-by-one in the evaluation window — `run_table3_dense.py` did pass
+`test_start=idx[457]` where every other runner passes `idx[456]`, scoring 695 months instead
+of the paper's 696 — and predicted that fixing it would reproduce the printed value. **That
+prediction was wrong.** The window bug was real and is fixed, but correcting it moved
+`Xt + {MA2..MA6}` from 0.694 to 0.682, *away* from 0.699. The claim had been reasoned rather
+than re-run, and re-running it is what exposed the benchmark.
+
+### 4.1 Table 9 — the same paths, split by growth regime
+
+Table 9 re-scores the §4 combinations on two subsamples. It estimates nothing new, so it is
+the natural test of whether the package can express *same forecasts, different evaluation
+window* without paying for the forecasts twice. It can: the saved forecast frame goes back
+through `evaluate(master, spec)` with `EvalSpec(subsamples=...)`, and the whole exhibit costs
+**seconds** against the hours the paths themselves took. This is the first production use of
+`SubsampleWindow(mask=)`.
+
+**The regime is not defined in the paper.** `[GAP]` Both documents say only that the regimes
+are "based on real net cash flow growth", split at the median. Neither defines net cash flow,
+names a source, or shows a construction — the phrase appears twice in the article and nowhere
+in the appendix. Rather than invent one, we take the authors' own variable:
+`WGpredictors2022.mat` ships `ncf_full`, already coded 1 = low / 2 = high, and
+`Additional_results.m:194` splits on exactly that coding. Over the 696-month out-of-sample
+block it divides 354 low / 342 high, consistent with the described median split.
+
+**The mask is validated before our forecasts are judged by it.** Scoring the authors' own
+archived paths (`FC_Trend_Linear`, five designs × 696 months) with our regime coding and our
+`R²_OS` reproduces **all fifteen printed cells to within 0.005pp** — max |Δ| 0.0050, mean
+0.0027:
+
+| design | overall | high growth | low growth |
+|---|---|---|---|
+| `Xt` | 0.599 / 0.60 | 0.411 / 0.41 | 0.782 / 0.78 |
+| `Xt + {MA2..MA6}` | 0.699 / 0.70 | 0.375 / 0.38 | 1.016 / 1.02 |
+| `Xt + {MA2..MA12}` | 0.805 / 0.81 | 0.345 / 0.35 | 1.255 / 1.26 |
+| `Xt + {MA2..MA24}` | 0.796 / 0.80 | 0.298 / 0.30 | 1.284 / 1.28 |
+| `Xt + {MA2..MA36}` | 0.730 / 0.73 | 0.281 / 0.28 | 1.170 / 1.17 |
+
+*(archive-scored / printed)*. That separates two questions the residuals would otherwise
+confound: the split and the scoring are now known-good, so anything left in our own numbers
+belongs to our forecast paths. It also supplies **unrounded** targets, which is what the
+comparison below is against.
+
+**Our forecasts, scored the same way** — on the corrected 696-month window, under both
+benchmarks (§4 explains why two):
+
+| design | benchmark | overall | high growth | low growth | max \|Δ\| vs target |
+|---|---|---|---|---|---|
+| `Xt` | package `hist_mean` | 0.599 | 0.411 | 0.782 | 0.0004 |
+| | **prevailing mean** | **0.599** | **0.411** | **0.782** | **0.0004** |
+| `Xt + {MA2..MA6}` | package `hist_mean` | 0.682 | 0.364 | 0.994 | 0.0221 |
+| | **prevailing mean** | **0.699** | **0.375** | **1.016** | **0.0003** |
+| `Xt + {MA2..MA12}` | package `hist_mean` | 0.754 | 0.326 | 1.173 | 0.0823 |
+| | prevailing mean | 0.818 | 0.370 | 1.255 | 0.0254 |
+
+**Scored against a prevailing mean, both completed designs reproduce all three columns to
+within 3e-4.** The `hist_mean` column sits beside it because the gap between them is issue
+#488 and nothing else. `[note]` The `{MA2..MA12}` row is still on the superseded 695-month
+window; its re-run is in flight.
+
+**Significance.** The paper stars panels A and B with Clark-West:
+
+| design | overall | high growth | low growth |
+|---|---|---|---|
+| `Xt` | p=0.008 → `***` (paper `***`) | p=0.086 → `*` (paper `*`) | p=0.023 → `**` (paper `**`) |
+| `Xt + {MA2..MA6}` | p=0.003 → `***` (paper `***`) | p=0.096 → `*` (paper none) | p=0.007 → `***` (paper `***`) |
+| `Xt + {MA2..MA12}` | p=0.002 → `***` (paper `***`) | p=0.127 → none (paper none) | p=0.003 → `***` (paper `***`) |
+
+**Eight of the nine star levels match exactly.** The single miss is high-growth
+`{MA2..MA6}` at p = 0.096 against a 0.10 cut. The paper's claim is that predictability
+concentrates in low-growth periods, and that ordering holds in every design: low beats high
+by 0.37, 0.64 and 0.89 points.
+
+**Panel C — the incremental `R²_OS` of a trend design over `Xt`** — is tested against the
+*current-value* forecast rather than against HA, with Newey-West at four lags, so it calls
+`mf.tests.dm_test` on the two aligned paths directly instead of re-running an evaluation with
+a swapped benchmark:
+
+| design | subsample | ΔR²_OS mine | printed | Δ | DM p |
+|---|---|---|---|---|---|
+| `Xt + {MA2..MA6}` | overall | +0.100 | +0.10 | **+0.000** | 0.134 |
+| | high growth | −0.036 | −0.04 | +0.004 | 0.732 |
+| | low growth | +0.234 | +0.23 | +0.004 | 0.042 |
+| `Xt + {MA2..MA12}` | overall | +0.207 | +0.21 | −0.003 | 0.061 |
+| | high growth | −0.066 | −0.07 | +0.004 | 0.702 |
+| | low growth | +0.473 | +0.47 | +0.003 | 0.016 |
+
+**Six of six within 0.004pp.** Panel C is a *difference* between two of our own paths, so the
+benchmark cancels out of it — which is why it was exact even before §4's benchmark question
+was settled, and is independent evidence that the forecasts themselves were never the problem.
+
+**A package defect surfaced here (fixed, PR #486).** `significance_table` built its CW-eligible
+set by walking `spec.arms` and reading `Arm.nested_in_benchmark`; `CombinationContender` had no
+such field, so **a forecast combination could never be CW-eligible** — `cw_stat`/`cw_p` came
+back NaN with nothing said about why. In this literature CW *on the combination* is the
+headline test, and it is licensed: a simple pool of arms that each nest the benchmark nests
+the benchmark, since zeroing every slope returns the benchmark forecast. `CombinationContender`
+now takes `nested_in_benchmark`, and the silent case warns. **The table above could not be
+produced before that fix.**
+
+**A usage trap worth stating, which is not a defect.** Setting `EvalSpec.subsamples` *replaces*
+the full-sample tables rather than supplementing them — the overall row simply disappears. The
+documented idiom is to ask for it explicitly, as
+`subsamples={"overall": SubsampleWindow(), ...}`; we got this wrong on the first pass and read
+a missing row as a bug before checking the guide.
 
 ## 5. Table 4 — factor columns (PCR, PLS, S-PCR)
 
