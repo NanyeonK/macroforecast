@@ -3249,7 +3249,7 @@ def _forest_bootstrap_samples(estimator: Any, n_train: int) -> list[np.ndarray] 
     if getattr(estimator, "bootstrap", True) is False:
         return None
     try:
-        from sklearn.ensemble._forest import (  # type: ignore
+        from sklearn.ensemble._forest import (
             _generate_sample_indices,
             _get_n_samples_bootstrap,
         )

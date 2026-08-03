@@ -381,9 +381,12 @@ def spec(
         if overlap:
             raise ValueError(f"predictors must not include target columns: {overlap}")
 
+    # Both branches above bind a tuple, so the old ``!= "all"`` guard here could
+    # never be false -- a leftover from when ``predictor_values`` could still hold
+    # the literal. Removing it changes nothing and stops the code implying there
+    # is a path where the requested columns go unchecked.
     required_columns = set(target_values)
-    if predictor_values != "all":
-        required_columns.update(predictor_values)
+    required_columns.update(predictor_values)
     missing = [column for column in sorted(required_columns) if column not in panel.columns]
     if missing:
         raise ValueError(f"requested columns are not in the panel: {missing}")
