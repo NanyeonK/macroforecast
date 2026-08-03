@@ -308,3 +308,16 @@
   `macroforecast/interpretation/core.py`: dropped stale `type: ignore` comments.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
+## Feature-fit store tier (perf/feature-store-tier)
+
+- `macroforecast/forecasting/feature_stage.py`: added `_fit_panel_fingerprint`
+  and `_feature_store_key`; `_fitted_feature_builder_for_origin` takes
+  `feature_store` and consults/populates it on an in-memory miss.
+- `macroforecast/forecasting/runner.py`: both call sites forward
+  `preprocessing_store`.
+- `tests/forecasting/test_feature_store_tier.py`: new -- forecasts unchanged
+  with the store, a warm store serves every fit, a same-shaped different dataset
+  is not served a stored fit, fingerprint separates content at equal shape, key
+  depends on both parts.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
