@@ -5,6 +5,31 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/linear.py` (diagnostic, **no number changes**): `ols` now warns when its
+  design matrix is numerically rank-deficient. Such a fit is not an error --
+  least squares still returns *a* solution -- but it is not *the* solution:
+  infinitely many coefficient vectors attain the same minimum, and which one comes
+  back is decided by whether LAPACK truncates the null direction rather than by
+  the data. When it does not truncate, the coefficients arrive as an enormous
+  cancelling pair and the prediction keeps the floating-point residue of that
+  cancellation. On the case that surfaced it (issue #487) that residue reached
+  **0.56 in level**, delivered silently, at 11 of 232 origins.
+
+  `rank_` cannot be the detector: in that failure LAPACK reported full rank on a
+  rank-one matrix, and the mis-report **is** the failure. `singular_` -- which the
+  estimator has already computed -- does expose it, so the check costs nothing.
+  The threshold is LAPACK's own rank criterion, `max(n, p) * eps`, so it fires
+  precisely when the solve is degenerate rather than merely ill-conditioned: a
+  near-collinear design still has a unique answer and is left alone.
+
+  **Nothing about the fit changes** -- verified on the original case, where the
+  prediction is bit-identical to plain `LinearRegression` and only the warning is
+  new. The shapes this catches are ordinary accidents: the same series entering as
+  both a predictor and a control (which is what the replicated paper's own
+  specification produces), a lag that repeats a level, or a complete dummy set
+  alongside the intercept. `positive=True` uses a different solver and exposes no
+  singular values; that path is skipped rather than guessed at.
+
 - `forecasting/runner.py`, `forecasting/selection_stage.py`,
   `forecasting/policies/direct.py` (bug fix, **THIS CHANGES NUMBERS** — see below):
   a model whose `ModelSpec.input_kind` is `"target"` had its fit sample cut by

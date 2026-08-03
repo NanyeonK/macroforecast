@@ -283,3 +283,13 @@
   NaN targets still dropped.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
+## ols rank-deficiency warning (fix/ols-collinear-warn)
+
+- `macroforecast/models/linear.py`: added `_warn_if_rank_deficient`; `ols` calls it
+  after fitting.
+- `tests/models/test_ols_rank_deficiency.py`: new -- duplicated column, dummies
+  summing to the intercept, no false positive on a healthy or merely
+  ill-conditioned design, predictions untouched, message content, and the
+  `positive=True` path that has no singular values.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
