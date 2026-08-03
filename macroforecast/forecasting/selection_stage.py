@@ -38,8 +38,9 @@ def _filter_xy_to_target_availability(
     item: dict[str, Any],
     *,
     target_step: int,
+    target_only: bool = False,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    X_aligned, y_aligned = _align_feature_xy(X, y)
+    X_aligned, y_aligned = _align_feature_xy(X, y, target_only=target_only)
     mask = _target_availability_mask(
         X_aligned.index,
         item,
@@ -268,9 +269,42 @@ def _availability_safe_explicit_splits(
     return out
 
 
-def _align_feature_xy(X: Any, y: Any) -> tuple[pd.DataFrame, pd.Series]:
+def _is_target_only(model_runs: Sequence[Any]) -> bool:
+    """True when every model in the cell reads ONLY the target.
+
+    Mirrors ``runner._all_panel_model_runs``. Every model whose
+    ``ModelSpec.input_kind`` is ``"target"`` -- ``hist_mean``, ``naive``,
+    ``arima``, ``ets``, ``ucsv``, ... -- takes the target as its single
+    positional argument; there is no parameter through which X could reach it.
+    Such a model's fit sample is therefore cut on the target's availability
+    alone. ``run`` is atomic (one model per call), so this is a one-element check
+    in practice, but it is written over the list for the same reason its sibling
+    is.
+    """
+
+    return bool(model_runs) and all(
+        getattr(getattr(model_run, "spec", None), "input_kind", None) == "target"
+        for model_run in model_runs
+    )
+
+
+def _align_feature_xy(
+    X: Any, y: Any, *, target_only: bool = False
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Drop rows the fit cannot use.
+
+    ``target_only`` marks a model whose ``ModelSpec.input_kind`` is ``"target"``:
+    it takes the target as its only positional argument and never sees X, so its
+    sample is cut on the target's availability alone. See
+    ``runner._slice_feature_set`` for the same carve-out one stage earlier -- both
+    are needed, because this alignment runs again inside the policy.
+    """
+
     frame = pd.DataFrame(X).copy()
     target = _single_target(y)
+    if target_only:
+        keep = target.notna()
+        return frame.loc[keep], target.loc[keep]
     temp_name = "__macroforecast_selection_target__"
     while temp_name in frame.columns:
         temp_name = f"_{temp_name}"
