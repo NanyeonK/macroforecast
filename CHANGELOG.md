@@ -5,6 +5,35 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/feature_stage.py`, `forecasting/runner.py` (performance, **no
+  number changes**): the fitted feature builder (the PCA/MARX/SIR numerical
+  state) was shared across arms through an in-memory dict only. Under
+  `n_jobs > 1` each cell runs in its own **process**, so that dict is always
+  empty for a worker and every (arm x horizon) cell refits the same transform
+  (issue #448).
+
+  `preprocessing_stage.py` already solved exactly this with a second, on-disk
+  tier over the shared `PreprocessorStore`; this is that tier for features, and
+  it needed no new persistence layer -- the store is already generic and the
+  parallel workers already share it whenever `preprocessing_cache_dir` is set.
+  The hard part, a self-verifying cache key (content digest + the integer
+  fit-sample bounds), was already in place.
+
+  **The disk key is content-addressed on the fit panel, which the preprocessing
+  tier's key deliberately is not.** An in-memory dict lives inside one run,
+  where the data cannot change underneath it; a directory outlives the run, and
+  row-position bounds do not distinguish two datasets that occupy the same
+  positions. Hashing the frame about to be handed to `.fit()` closes that
+  directly and is cheap next to the fit it guards, so this tier does not inherit
+  the "never share a directory across runs" caveat the preprocessing tier
+  documents.
+
+  Measured on 3 arms x 2 horizons sharing one feature spec over 20 origins:
+  **38 feature fits without the store, 38 cold, 0 warm** -- with predictions
+  identical to `0.000e+00` in both cases. Behaviour without
+  `preprocessing_cache_dir` is byte-for-byte unchanged: no store, no new code
+  path.
+
 - `pyproject.toml`, `data/panel.py`, `data_analysis/summary.py`,
   `feature_engineering/{specs,feature_selection}.py`, `models/tvp.py`,
   `interpretation/core.py` (type checking, **no behavior change**): the mypy

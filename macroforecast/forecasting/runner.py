@@ -587,6 +587,10 @@ def run(
                     feature_stage_policy=feature_stage_policy,
                     item=item,
                     preprocessing_cache=preprocessing_cache,
+                    # Parallel workers are separate processes, so the in-memory
+                    # cache above is always empty for them; the store is how a
+                    # feature fit is shared across cells at all under n_jobs>1.
+                    feature_store=preprocessing_store,
                 )
                 feature_updated = True
                 _mark_stage_updated(feature_state, item)
@@ -1396,6 +1400,10 @@ def _run_vintage_aware(
                     item=item,
                     preprocessing_cache=preprocessing_cache,
                     vintage_id=vintage_id,
+                    # Parallel workers are separate processes, so the in-memory
+                    # cache above is always empty for them; the store is how a
+                    # feature fit is shared across cells at all under n_jobs>1.
+                    feature_store=preprocessing_store,
                 )
                 feature_updated = True
                 _mark_stage_updated(feature_state, item)
