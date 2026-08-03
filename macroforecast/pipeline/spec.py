@@ -197,7 +197,16 @@ class Arm:
 
 @dataclass(frozen=True)
 class CombinationContender:
-    """A forecast combination that becomes an additional contender."""
+    """A forecast combination that becomes an additional contender.
+
+    ``nested_in_benchmark`` licenses Clark-West for the combination, exactly as
+    :attr:`Arm.nested_in_benchmark` does for a single arm. Set it when the
+    benchmark is recoverable from the combination under a parameter restriction
+    -- a simple pool (mean/median/trimmed) of arms that each nest the benchmark
+    does nest it, since zeroing every slope returns the benchmark forecast. It
+    is not inferred from the members: an estimated-weight combination need not
+    nest what its members nest, so the declaration stays with the caller.
+    """
 
     name: str
     method: str
@@ -206,6 +215,7 @@ class CombinationContender:
     params: Mapping[str, Any] | None = None
     weight_window: int | None = None
     shrink_to_equal: float | None = None
+    nested_in_benchmark: bool = False
 
 
 #: Test names ``EvalSpec.tests`` currently wires into the evaluation. The pairwise

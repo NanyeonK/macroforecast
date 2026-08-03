@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 
 from collections.abc import Callable, Sequence
 from dataclasses import replace
@@ -122,6 +123,9 @@ def select_params(
     )
     if score_aggregation_value != spec.score_aggregation:
         spec = replace(spec, score_aggregation=score_aggregation_value)
+    # Bound on every path: only the grid branch fills this, and the edge check
+    # below reads it for all of them.
+    candidates: list[dict[str, Any]] = []
     if spec.method == "information_criterion":
         return select_by_information_criterion(
             model,
@@ -230,6 +234,18 @@ def select_params(
     successful_rows = {int(row.trial): row for row in rows if row.status == "ok"}
     best_trial = int(best_row["trial"])
     best_params = dict(successful_rows[best_trial].params)
+    edge_hits = _grid_edge_hits(candidates, best_params)
+    for _param, _edge in edge_hits.items():
+        # Deliberately origin-free wording: a recursive search runs this once per origin,
+        # so an origin-specific message would repeat thousands of times. Identical text
+        # lets the warnings filter collapse it to one report per parameter and edge.
+        warnings.warn(
+            f"model selection chose {_param!r} at the {_edge} edge of its search grid; "
+            "the optimum may lie outside the grid. Widen it, or check that the grid is "
+            "on the right scale for these data.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     return SearchResult(
         best_params=best_params,
         best_score=float(best_row["score"]),
@@ -238,6 +254,7 @@ def select_params(
         method=spec.method,
         window=split_name,
         metadata={
+            "grid_edge_hits": edge_hits,
             "n_obs": len(frame),
             "n_splits": len(validation_splits),
             "maximize": maximize,
@@ -248,6 +265,38 @@ def select_params(
             **runtime_metadata,
         },
     )
+
+
+def _grid_edge_hits(
+    candidates: list[dict[str, Any]], best_params: dict[str, Any]
+) -> dict[str, str]:
+    """Which searched parameters were selected at an edge of their own grid.
+
+    A search that keeps landing on the smallest or largest value it was offered is
+    reporting that the optimum may lie outside the grid -- the usual cause is a grid
+    written on the wrong scale. Silently returning that edge value looks exactly like a
+    genuine interior optimum, so it is recorded here (and warned about once) instead.
+
+    Only parameters with at least two distinct comparable values are considered; a
+    single-valued (fixed) parameter has no edge to speak of.
+    """
+    hits: dict[str, str] = {}
+    if not candidates or not best_params:
+        return hits
+    for key, chosen in best_params.items():
+        values = [c[key] for c in candidates if key in c]
+        try:
+            uniq = sorted({float(v) for v in values})
+            chosen_f = float(chosen)
+        except (TypeError, ValueError):
+            continue
+        if len(uniq) < 2:
+            continue
+        if chosen_f <= uniq[0]:
+            hits[str(key)] = "lower"
+        elif chosen_f >= uniq[-1]:
+            hits[str(key)] = "upper"
+    return hits
 
 
 def _all_candidates_have_key(candidates: list[dict[str, Any]], key: str) -> bool:

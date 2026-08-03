@@ -239,3 +239,57 @@
 - `CHANGELOG.md`: documented the additive options and unchanged-default
   guarantees.
 - `logs/file_usage_log.md`: recorded this builder file-touch summary.
+
+## Clark-West for forecast combinations (fix/cw-for-combinations)
+
+- `macroforecast/pipeline/spec.py`: added `CombinationContender.nested_in_benchmark`
+  and documented when it is licensed.
+- `macroforecast/pipeline/evaluate.py`: declared combinations join the CW-eligible
+  set; the previously silent NaN case warns.
+- `tests/pipeline/test_cw_for_combinations.py`: new -- field/default, unchanged
+  default behavior, CW emitted when declared, statistic matched against a
+  hand-computed `clark_west_test`, and the warning.
+- `docs/guide/concepts/evaluation.md`: stated the arm/combination CW rule.
+- `docs/reference/{pipeline.md,models.md}`: regenerated with system `python3`
+  (`models.md` was already stale from the merged `gtvp`/`variable_importance`
+  and `nn` early-stopping changes).
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
+## Restore a green CI (fix/star-attr-annotations)
+
+- `macroforecast/models/_mrf_reference.py`: matplotlib import moved into the two
+  plotting methods that use it.
+- `macroforecast/models/tree.py`: dropped the matplotlib `optional_import` gate.
+- `macroforecast/models/timeseries.py`: annotated `_STAR`'s seven attributes;
+  widened the `predict` guard.
+- `tools/docgen/renderer.py`: canonicalize public pandas class paths.
+- `docs/reference/models.md`: regenerated (stale since the gtvp/nn merges).
+- `tests/models/test_models.py`: lazy-failure case matplotlib -> joblib; removed
+  three matplotlib `importorskip` gates; relaxed the PLS literal pin.
+- `tests/models/test_ar_bic.py`: relaxed the forecast pin to rtol=1e-9.
+- `tests/mc/test_dm_size.py`: marked the n50-h1-none case as a known
+  distortion (strict xfail), matching the file's existing h=4 treatment.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
+## Target-only fit samples (fix/hist-mean-target-scope)
+
+- `macroforecast/forecasting/selection_stage.py`: added `_is_target_only`;
+  `_align_feature_xy`/`_filter_xy_to_target_availability` take `target_only`.
+- `macroforecast/forecasting/runner.py`: `_slice_feature_set` takes `target_only`;
+  both fit-sample call sites pass it.
+- `macroforecast/forecasting/policies/direct.py`: threads the flag.
+- `tests/forecasting/test_target_only_fit_sample.py`: new — benchmark invariance
+  to a predictor gap, the prevailing-mean value, the supervised complement, and
+  NaN targets still dropped.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
+## ols rank-deficiency warning (fix/ols-collinear-warn)
+
+- `macroforecast/models/linear.py`: added `_warn_if_rank_deficient`; `ols` calls it
+  after fitting.
+- `tests/models/test_ols_rank_deficiency.py`: new -- duplicated column, dummies
+  summing to the intercept, no false positive on a healthy or merely
+  ill-conditioned design, predictions untouched, message content, and the
+  `positive=True` path that has no singular values.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+

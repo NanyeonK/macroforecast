@@ -5,6 +5,162 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/linear.py` (diagnostic, **no number changes**): `ols` now warns when its
+  design matrix is numerically rank-deficient. Such a fit is not an error --
+  least squares still returns *a* solution -- but it is not *the* solution:
+  infinitely many coefficient vectors attain the same minimum, and which one comes
+  back is decided by whether LAPACK truncates the null direction rather than by
+  the data. When it does not truncate, the coefficients arrive as an enormous
+  cancelling pair and the prediction keeps the floating-point residue of that
+  cancellation. On the case that surfaced it (issue #487) that residue reached
+  **0.56 in level**, delivered silently, at 11 of 232 origins.
+
+  `rank_` cannot be the detector: in that failure LAPACK reported full rank on a
+  rank-one matrix, and the mis-report **is** the failure. `singular_` -- which the
+  estimator has already computed -- does expose it, so the check costs nothing.
+  The threshold is LAPACK's own rank criterion, `max(n, p) * eps`, so it fires
+  precisely when the solve is degenerate rather than merely ill-conditioned: a
+  near-collinear design still has a unique answer and is left alone.
+
+  **Nothing about the fit changes** -- verified on the original case, where the
+  prediction is bit-identical to plain `LinearRegression` and only the warning is
+  new. The shapes this catches are ordinary accidents: the same series entering as
+  both a predictor and a control (which is what the replicated paper's own
+  specification produces), a lag that repeats a level, or a complete dummy set
+  alongside the intercept. `positive=True` uses a different solver and exposes no
+  singular values; that path is skipped rather than guessed at.
+
+- `forecasting/runner.py`, `forecasting/selection_stage.py`,
+  `forecasting/policies/direct.py` (bug fix, **THIS CHANGES NUMBERS** — see below):
+  a model whose `ModelSpec.input_kind` is `"target"` had its fit sample cut by
+  the missingness of predictors it cannot receive. All twelve such models
+  (`hist_mean`, `naive`, `random_walk_drift`, `seasonal_naive`, `arima`,
+  `auto_arima`, `ar_bic`, `ets`, `holt_winters`, `stlf`, `theta_method`, `ucsv`)
+  take the target as their **only** positional argument — passing X raises
+  `TypeError` — yet both fit-sample alignments (`_slice_feature_set`, and
+  `_align_feature_xy` again inside the direct policy) did
+  `concat([X, y]).dropna()`. A predictor with leading NaNs therefore deleted
+  target rows from the fit window.
+
+  The damage was worst for the benchmark. `hist_mean` is the prevailing-mean
+  benchmark and its value IS the mean of the target over the fit window, so the
+  denominator of every `R²_OS` in a run moved by an amount set by whichever
+  contender happened to carry the longest lag — the same benchmark scoring
+  differently depending on which arms shared the bundle, which is the one thing a
+  benchmark must not do. Both alignments now cut a target-only model's sample on
+  the target's availability alone. Rows with a missing **target** are still
+  dropped. Supervised arms are untouched: X is part of their fit, so a NaN
+  predictor genuinely makes a row unusable for them.
+
+  **Numbers that change.** Any run in which a target-only model's feature spec
+  resolved to predictors carrying leading NaNs — including `features=None`, which
+  resolves to the whole panel. Measured on the replication that surfaced this,
+  the error stops scaling with the ladder and becomes a constant benchmark
+  offset: `R²_OS` 0.599 / 0.682 / 0.743 before, **0.594 / 0.694 / 0.800** after,
+  against printed 0.599 / 0.699 / 0.805 — Δ was 0.000 / −0.017 / −0.062 and is
+  now −0.005 / −0.005 / −0.005. A reference prevailing mean that the benchmark
+  missed by 7.6e-04 in a 2-column bundle and 1.2e-02 in an 84-column one is now
+  matched to **0.000e+00 in both**. No look-ahead is introduced: window
+  boundaries are unchanged and every recovered row sits strictly before its
+  origin (verified across 39 origins).
+
+  **Which target-only models actually move**, measured by restoring ten leading
+  rows: `hist_mean` (3.8e-02), `ar_bic` (2.0e-02), `holt_winters` (7.6e-03),
+  `random_walk_drift` (6.5e-03), `theta_method` (6.5e-03), `arima` (3.7e-03),
+  `stlf` (3.7e-03), `ets` (2.6e-03), `auto_arima` (1.8e-03), `ucsv` (5.6e-04).
+  **`naive` and `seasonal_naive` do not move at all**: they carry a value forward,
+  and restoring EARLIER rows cannot change the last one. That matters for the
+  committed replication notes — `docs/replication/medeiros_2021.md` scores against
+  `Arm("rw", model="naive", ...)`, so its denominator is unchanged and its tables
+  stand. No committed replication runner uses a sensitive target-only model as an
+  arm (all use `ar`, `far`, `random_forest` and friends, which are supervised).
+
+  **The runner golden snapshot is regenerated**, and its diff is the audit trail:
+  **18 of 522 predictions moved and every one is `arima`** — the only target-only
+  model in the matrix — with max absolute drift 2.13e-03. The fixture's dataset
+  has no missing values at all; the single row `arima` regains per origin is the
+  one the lag-1 feature's leading NaN was deleting. Every other model in the
+  matrix is byte-identical. The snapshot on `origin/main` was passing 522/522
+  before this change, so the drift is attributable to it alone rather than
+  mixed with pre-existing noise.
+
+  The snapshot's tolerance is now per family. Closed-form fits (`ols`, `ar`,
+  `far`, `ridge`, `elastic_net`, ...) keep the 1e-10 byte-identical gate the
+  fixture exists to enforce. The likelihood-optimized statsmodels models
+  (`arima`, `auto_arima`, `ets`, `holt_winters`, `stlf`, `theta_method`) move to
+  1e-6: their last bits belong to the LAPACK/BLAS build rather than to the
+  runner, which this change exposed -- the regenerated fixture reproduces to
+  1.1e-16 across local Python 3.11 and 3.12 yet lands 2.8e-08 away on one cell in
+  CI's 3.10/3.11 images. 1e-6 is four orders below any behavior change this
+  fixture has caught (the fix above moved arima by 2.1e-03) and two above the
+  observed cross-build spread.
+
+- `pipeline/spec.py`, `pipeline/evaluate.py` (bug fix, Clark-West was
+  inexpressible for a forecast combination): `significance_table` built its set
+  of CW-eligible contenders by walking `spec.arms` and reading
+  `Arm.nested_in_benchmark`, and `CombinationContender` had no such field, so a
+  combination could never be eligible -- its `cw_stat`/`cw_p` came back NaN with
+  no warning saying why. That is the wrong default for the forecast-combination
+  literature, where CW *on the combination* is the headline test (Welch and
+  Goyal 2008; Rapach, Strauss and Zhou 2010), and it is a licensed test: a
+  simple pool of arms that each nest the benchmark nests the benchmark, since
+  zeroing every slope returns the benchmark forecast. `CombinationContender`
+  gains `nested_in_benchmark: bool = False`; declared combinations join the
+  nested set; and the previously silent case (CW requested, some arms nested, no
+  combination declared) now emits a `UserWarning` naming the fix. Nestedness is
+  not inferred from the members -- an estimated-weight combination need not nest
+  what its members nest. Default behavior is unchanged for every existing spec.
+- `models/_mrf_reference.py`, `models/tree.py`, `models/timeseries.py`,
+  `tools/docgen/renderer.py`, `tests/models/*` (CI health, four independent
+  causes, no behavior change): `main`'s CI was failing in four jobs, which made
+  every PR unmergeable and made a red run uninformative.
+  (1) The vendored Macro Random Forest imported `matplotlib.pyplot` at module
+  level although it uses it in exactly two plotting methods, so fitting required
+  a plotting library and four determinism tests died on `ImportError` in a core
+  install. The import is now inside those two methods and the `optional_import`
+  gate for it is gone; MRF fits and predicts without matplotlib, and those tests
+  now RUN in core CI rather than skipping.
+  (2) `test_pls_default_transform_predictions_unchanged` and
+  `test_default_ar_signature_metadata_and_forecast_unchanged` pinned predictions
+  at bit-exact equality against hex-float literals. Both pass locally and fail on
+  the CI runner: an LAPACK-backed fit is not bit-portable across BLAS builds (CI
+  showed max abs diff 5.33e-15 against `atol=5e-15`, max rel diff 6.7e-16, with
+  both arrays printing identically). The literal comparisons move to
+  `rtol=1e-9` -- still orders of magnitude tighter than any real change -- while
+  the default-vs-explicit comparison, which runs in one process, stays exact.
+  (3) `tools.docgen` rendered `pandas.core.frame.DataFrame` or
+  `pandas.DataFrame` depending on the pandas build, so the committed reference
+  tree could never match. Public pandas class paths are now canonicalized to
+  their top-level form. `docs/reference/models.md` is also regenerated: it had
+  been stale since the `gtvp`/`variable_importance` and `nn` early-stopping
+  merges.
+  (4) `_STAR` initialized seven attributes as bare `None`, so mypy typed them
+  `None` and every later assignment was an error. They are annotated, and
+  `predict`'s guard now narrows `_gamma`/`_c` alongside `_cols`/`_beta` (all four
+  are assigned together in `fit`, so the added branch is unreachable in
+  practice). `mypy` is clean across all 119 source files.
+  (5) `tests/mc/test_dm_size.py::[n50-h1-none]` is marked as a known distortion,
+  matching how this file already treats its n=50, h=4 cases. The uncorrected DM
+  statistic at n=50, h=1 is correctly sized at alpha=.05 (0.0550, CI99
+  [0.0448,0.0666]) and mildly oversized at alpha=.10 (0.1147, CI99
+  [0.1001,0.1304] -- a lower bound one ten-thousandth above nominal). This is the
+  small-sample variance-estimator bias the file documents for h=4, one order
+  milder, and it is the UNCORRECTED variant: `correction="hln"` -- the package
+  default, introduced for exactly this problem -- is correctly sized at both
+  alphas for the same n and h. `strict=True` keeps it a tripwire.
+  (6) `docs/guide/model_overview.md` and `docs/guide/models/timeseries.md`
+  regenerated: the `setar`/`star` entries were never added after those models
+  landed, so `tools/gen_model_overview.py --check` failed on `main` too.
+  (7) The replication trust notes were orphaned -- `docs/replication/README.md`
+  was not referenced from `docs/index.md` and did not list the notes itself, so
+  `sphinx-build -W` failed on six `toc.not_included` warnings and the notes
+  appeared nowhere in the built site. Wired in with a globbed toctree.
+  (8) The Phase-0 seed-hardcoding guard scanned `scripts/` as well as the
+  package. Every hit is a replication runner pinning `random_state=42`
+  deliberately -- a faithful replication has to be reproducible, the same
+  objective-4 property the MRF determinism tests lock -- while `macroforecast/`
+  itself has zero hits. Scoped to the package.
+
 - `forecasting/policies/base.py` (bug fix, CV selection fell through to the
   degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
   own `validation_splitter` (POOS / K-fold CV over `n_lag` for `ar`/`far`) was

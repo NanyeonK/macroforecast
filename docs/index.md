@@ -93,6 +93,7 @@ datasets/index
 guide/gallery
 guide/figures
 reference/index
+replication/README
 guide/glossary
 guide/citing
 ```

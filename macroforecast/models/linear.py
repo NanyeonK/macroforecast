@@ -16,12 +16,65 @@ from macroforecast.models.utils import (
 )
 
 
+def _warn_if_rank_deficient(fit: ModelFit, *, model: str) -> None:
+    """Say so when the design was numerically rank-deficient.
+
+    A rank-deficient least-squares problem is not an error -- it still returns *a*
+    solution -- but it is not *the* solution: infinitely many coefficient vectors
+    attain the same minimum, and which one comes back is decided by whether LAPACK
+    truncates the null direction. When it does not, the coefficients arrive as an
+    enormous cancelling pair and the prediction carries the floating-point residue
+    of that cancellation -- measured at up to 0.56 in level on real data (issue
+    #487), with nothing said about it.
+
+    ``rank_`` is not the detector: in that failure LAPACK reported full rank on a
+    rank-one matrix, and the mis-report IS the failure. ``singular_``, which the
+    estimator has already computed, does expose it -- so this check costs nothing
+    and, deliberately, changes nothing: the fit is returned exactly as it was.
+
+    The threshold is LAPACK's own rank criterion, ``max(n, p) * eps``, so this
+    fires precisely when the solve is degenerate rather than merely
+    ill-conditioned. A near-collinear design still has a unique answer and is left
+    to the caller.
+    """
+
+    singular = getattr(fit.estimator, "singular_", None)
+    if singular is None:
+        return  # e.g. positive=True, which uses a different solver
+    singular = np.asarray(singular, dtype=float)
+    if singular.size == 0 or not np.isfinite(singular).all() or singular.max() <= 0.0:
+        return
+    n_obs = int(fit.metadata.get("n_obs", 0)) or singular.size
+    n_features = len(fit.feature_names)
+    tol = max(n_obs, n_features) * float(np.finfo(float).eps)
+    if singular.min() > singular.max() * tol:
+        return
+    warnings.warn(
+        f"{model}: the design matrix is numerically rank-deficient "
+        f"(smallest/largest singular value "
+        f"{singular.min() / singular.max():.2e}, below the {tol:.1e} rank "
+        f"tolerance for {n_obs} rows x {n_features} columns), so the "
+        f"least-squares coefficients are not unique and the ones returned depend "
+        f"on the solver rather than on the data. Predictions can carry the "
+        f"floating-point residue of cancelling coefficients. Drop the dependent "
+        f"column(s) -- a duplicated series, a lag that repeats a level, or a "
+        f"complete dummy set alongside the intercept -- or use a regularized "
+        f"model such as `ridge`, which has a unique solution here.",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
 def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
     """Fit ordinary least squares."""
 
     from sklearn.linear_model import LinearRegression
 
-    return fit_estimator(LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs))
+    fit = fit_estimator(
+        LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs)
+    )
+    _warn_if_rank_deficient(fit, model="ols")
+    return fit
 
 
 _PENALIZED_SCALE_RATIO_MAX = 1.0e3

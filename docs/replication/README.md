@@ -42,3 +42,10 @@ and provenance/caveats. Where a purpose does not apply to a given replication it
 - **PARTIAL** — delivered, but narrower than the exemplar (e.g. an exact equivalence check that is not a labeled speedup-identity gate).
 - **ABSENT** — the purpose is expected but not present (no page is currently ABSENT on any purpose).
 - **N/A (with reason)** — the purpose does not apply to this replication; the reason is stated so the absence is a scope decision, not a silent gap.
+
+```{toctree}
+:hidden:
+:glob:
+
+*
+```
