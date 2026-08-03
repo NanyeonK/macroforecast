@@ -96,6 +96,7 @@ from macroforecast.forecasting.selection_stage import (
     _SELECTION_DEGRADED_KEY,  # noqa: F401  (re-export)
     _SELECTION_TUNED_KEY,  # noqa: F401  (re-export)
     _align_feature_xy,
+    _is_target_only,
     _allow_non_temporal_selection_splits,  # noqa: F401  (re-export)
     _assert_selection_was_possible,
     _availability_safe_explicit_splits,  # noqa: F401  (re-export)
@@ -611,6 +612,7 @@ def run(
             all_features,
             fit_labels,
             drop_missing=bool(getattr(fitted_features.spec, "drop_missing", True)),
+            target_only=_is_target_only(model_runs),
         )
         test_features = _slice_feature_set(
             all_features,
@@ -1421,6 +1423,7 @@ def _run_vintage_aware(
             all_features,
             fit_labels,
             drop_missing=bool(getattr(fitted_features.spec, "drop_missing", True)),
+            target_only=_is_target_only(model_runs),
         )
         test_features = _slice_feature_set(
             all_features,
@@ -2230,14 +2233,34 @@ def _slice_feature_set(
     index: Iterable[Any],
     *,
     drop_missing: bool,
+    target_only: bool = False,
 ) -> FeatureSet:
+    """Cut the fit sample for one window.
+
+    ``target_only`` marks a model whose ``ModelSpec.input_kind`` is ``"target"``.
+    Every such model -- ``hist_mean``, ``naive``, ``arima``, ``ets``, ... -- takes
+    exactly one positional argument, the target; there is no parameter through
+    which X could reach it. Its sample is therefore cut on the TARGET's
+    availability alone. Intersecting with X's, as the supervised path does, let a
+    predictor the model never reads delete target rows from the fit window -- and
+    for the prevailing-mean benchmark that silently moves every ``R2_OS`` in the
+    run, by an amount set by whichever contender happened to carry the longest
+    lag. Rows with a missing TARGET are still dropped: those are unusable for any
+    model.
+    """
+
     labels = pd.Index(index)
     X = features.X.reindex(labels)
     y = features.y.reindex(labels)
     if drop_missing:
-        aligned = pd.concat([X, y], axis=1).dropna()
-        X = aligned.loc[:, X.columns]
-        y = aligned.loc[:, y.columns]
+        if target_only:
+            keep = y.notna().all(axis=1)
+            X = X.loc[keep]
+            y = y.loc[keep]
+        else:
+            aligned = pd.concat([X, y], axis=1).dropna()
+            X = aligned.loc[:, X.columns]
+            y = aligned.loc[:, y.columns]
     X = X.copy()
     y = y.copy()
     X.attrs.update(features.X.attrs)

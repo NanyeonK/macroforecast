@@ -5,6 +5,60 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/runner.py`, `forecasting/selection_stage.py`,
+  `forecasting/policies/direct.py` (bug fix, **THIS CHANGES NUMBERS** — see below):
+  a model whose `ModelSpec.input_kind` is `"target"` had its fit sample cut by
+  the missingness of predictors it cannot receive. All twelve such models
+  (`hist_mean`, `naive`, `random_walk_drift`, `seasonal_naive`, `arima`,
+  `auto_arima`, `ar_bic`, `ets`, `holt_winters`, `stlf`, `theta_method`, `ucsv`)
+  take the target as their **only** positional argument — passing X raises
+  `TypeError` — yet both fit-sample alignments (`_slice_feature_set`, and
+  `_align_feature_xy` again inside the direct policy) did
+  `concat([X, y]).dropna()`. A predictor with leading NaNs therefore deleted
+  target rows from the fit window.
+
+  The damage was worst for the benchmark. `hist_mean` is the prevailing-mean
+  benchmark and its value IS the mean of the target over the fit window, so the
+  denominator of every `R²_OS` in a run moved by an amount set by whichever
+  contender happened to carry the longest lag — the same benchmark scoring
+  differently depending on which arms shared the bundle, which is the one thing a
+  benchmark must not do. Both alignments now cut a target-only model's sample on
+  the target's availability alone. Rows with a missing **target** are still
+  dropped. Supervised arms are untouched: X is part of their fit, so a NaN
+  predictor genuinely makes a row unusable for them.
+
+  **Numbers that change.** Any run in which a target-only model's feature spec
+  resolved to predictors carrying leading NaNs — including `features=None`, which
+  resolves to the whole panel. Measured on the replication that surfaced this,
+  the error stops scaling with the ladder and becomes a constant benchmark
+  offset: `R²_OS` 0.599 / 0.682 / 0.743 before, **0.594 / 0.694 / 0.800** after,
+  against printed 0.599 / 0.699 / 0.805 — Δ was 0.000 / −0.017 / −0.062 and is
+  now −0.005 / −0.005 / −0.005. A reference prevailing mean that the benchmark
+  missed by 7.6e-04 in a 2-column bundle and 1.2e-02 in an 84-column one is now
+  matched to **0.000e+00 in both**. No look-ahead is introduced: window
+  boundaries are unchanged and every recovered row sits strictly before its
+  origin (verified across 39 origins).
+
+  **Which target-only models actually move**, measured by restoring ten leading
+  rows: `hist_mean` (3.8e-02), `ar_bic` (2.0e-02), `holt_winters` (7.6e-03),
+  `random_walk_drift` (6.5e-03), `theta_method` (6.5e-03), `arima` (3.7e-03),
+  `stlf` (3.7e-03), `ets` (2.6e-03), `auto_arima` (1.8e-03), `ucsv` (5.6e-04).
+  **`naive` and `seasonal_naive` do not move at all**: they carry a value forward,
+  and restoring EARLIER rows cannot change the last one. That matters for the
+  committed replication notes — `docs/replication/medeiros_2021.md` scores against
+  `Arm("rw", model="naive", ...)`, so its denominator is unchanged and its tables
+  stand. No committed replication runner uses a sensitive target-only model as an
+  arm (all use `ar`, `far`, `random_forest` and friends, which are supervised).
+
+  **The runner golden snapshot is regenerated**, and its diff is the audit trail:
+  **18 of 522 predictions moved and every one is `arima`** — the only target-only
+  model in the matrix — with max absolute drift 2.13e-03. The fixture's dataset
+  has no missing values at all; the single row `arima` regains per origin is the
+  one the lag-1 feature's leading NaN was deleting. Every other model in the
+  matrix is byte-identical. The snapshot on `origin/main` was passing 522/522
+  before this change, so the drift is attributable to it alone rather than
+  mixed with pre-existing noise.
+
 - `pipeline/spec.py`, `pipeline/evaluate.py` (bug fix, Clark-West was
   inexpressible for a forecast combination): `significance_table` built its set
   of CW-eligible contenders by walking `spec.arms` and reading

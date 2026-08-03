@@ -17,6 +17,7 @@ from macroforecast.forecasting.policies.base import (
     _variance_series,
 )
 from macroforecast.forecasting.selection_stage import (
+    _is_target_only,
     _allow_non_temporal_selection_splits,
     _availability_safe_selection_splits,
     _filter_xy_to_target_availability,
@@ -53,17 +54,20 @@ def forecast_direct_origin(
     )
     target_step = int(row["horizon"])
     row.update(_target_availability_window_fields(item, target_step=target_step))
+    target_only = _is_target_only(model_runs)
     X_fit, y_fit = _filter_xy_to_target_availability(
         X_fit,
         y_fit,
         item,
         target_step=target_step,
+        target_only=target_only,
     )
     X_selection, y_selection = _filter_xy_to_target_availability(
         X_selection,
         y_selection,
         item,
         target_step=target_step,
+        target_only=target_only,
     )
     selection_splits = _availability_safe_selection_splits(
         item,

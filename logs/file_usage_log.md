@@ -270,3 +270,16 @@
 - `tests/mc/test_dm_size.py`: marked the n50-h1-none case as a known
   distortion (strict xfail), matching the file's existing h=4 treatment.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
+## Target-only fit samples (fix/hist-mean-target-scope)
+
+- `macroforecast/forecasting/selection_stage.py`: added `_is_target_only`;
+  `_align_feature_xy`/`_filter_xy_to_target_availability` take `target_only`.
+- `macroforecast/forecasting/runner.py`: `_slice_feature_set` takes `target_only`;
+  both fit-sample call sites pass it.
+- `macroforecast/forecasting/policies/direct.py`: threads the flag.
+- `tests/forecasting/test_target_only_fit_sample.py`: new — benchmark invariance
+  to a predictor gap, the prevailing-mean value, the supervised complement, and
+  NaN targets still dropped.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
