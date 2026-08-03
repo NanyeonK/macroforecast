@@ -2296,8 +2296,10 @@ def _fit_feature_step(
             if scaling_policy == "marginal_R2":
                 beta = np.sign(beta) * np.abs(beta)
             x_scaled = x_scaled * beta
-        order = np.argsort(train_y.to_numpy(dtype=float))
-        z_sorted = x_scaled.to_numpy(dtype=float)[order]
+        # Named apart from the polynomial `order` this long function binds in
+        # another branch: same name, one an int, one a sort index.
+        sort_order = np.argsort(train_y.to_numpy(dtype=float))
+        z_sorted = x_scaled.to_numpy(dtype=float)[sort_order]
         n_total = z_sorted.shape[0]
         resolved_slices = min(n_slices, n_total)
         slice_size = max(1, n_total // resolved_slices)

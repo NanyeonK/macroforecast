@@ -293,3 +293,18 @@
   `positive=True` path that has no singular values.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
+## mypy follow_imports (fix/mypy-follow-imports)
+
+- `pyproject.toml`: `follow_imports` skip -> normal; enabled
+  `no_implicit_optional`, `strict_equality`, `warn_unused_ignores`; recorded the
+  measured cost of the two flags left off.
+- `macroforecast/models/tvp.py`: `vol="GARCH"`; dropped a stale `type: ignore`.
+- `macroforecast/feature_engineering/specs.py`: `order` -> `sort_order` for the
+  argsort index.
+- `macroforecast/data_analysis/summary.py`: three `cast` calls after existing
+  runtime validation; dropped a stale `type: ignore`.
+- `macroforecast/data/panel.py`: removed an always-true guard.
+- `macroforecast/feature_engineering/feature_selection.py`,
+  `macroforecast/interpretation/core.py`: dropped stale `type: ignore` comments.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+

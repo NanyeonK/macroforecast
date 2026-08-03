@@ -84,10 +84,25 @@ markers = [
 python_version = "3.10"
 files = ["macroforecast"]
 ignore_missing_imports = true
-follow_imports = "skip"
+# ``follow_imports`` was "skip", which made this configuration close to vacuous:
+# a module was checked in isolation, so a call into another module was never
+# verified against that module's signatures. "normal" cost seven fixes, all of
+# them recorded in the CHANGELOG.
+follow_imports = "normal"
 show_error_codes = true
 pretty = true
 warn_unused_configs = true
+# The cheap strictness tier, each measured before being enabled:
+#   no_implicit_optional  0 errors
+#   strict_equality       1 error  (an always-true guard in data/panel.py)
+#   warn_unused_ignores   4 errors (stale suppressions, now removed)
+# Not yet on, with their measured cost as of this commit:
+#   disallow_untyped_defs 22 errors in 12 files
+#   warn_return_any      137 errors in 38 files
+# Those two are the next rungs of the ratchet; see issue #451.
+no_implicit_optional = true
+strict_equality = true
+warn_unused_ignores = true
 
 [dependency-groups]
 dev = [

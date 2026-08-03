@@ -5,6 +5,42 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `pyproject.toml`, `data/panel.py`, `data_analysis/summary.py`,
+  `feature_engineering/{specs,feature_selection}.py`, `models/tvp.py`,
+  `interpretation/core.py` (type checking, **no behavior change**): the mypy
+  configuration set `follow_imports = "skip"`, which made a green run close to
+  meaningless -- each module was checked in isolation, so a call into another
+  module was never verified against that module's signatures (issue #451).
+
+  Switched to `"normal"`. The cost was **seven errors in three files**, far below
+  the "real fix fallout" the issue anticipated, and each is fixed rather than
+  suppressed:
+  - `models/tvp.py` passed `vol="Garch"` where `arch` declares uppercase
+    literals. Verified at runtime that `arch_model` accepts `Garch`/`GARCH`/
+    `garch` identically (same `GARCH` volatility object), so this is a
+    declaration mismatch, not a live bug; the call now uses `"GARCH"`.
+  - `feature_engineering/specs.py` bound `order` to an `int` in one branch of
+    `_fit_feature_step` and to an `argsort` index array in another. The branches
+    are mutually exclusive, so nothing was wrong at runtime; the index array is
+    now `sort_order`, matching the `selected_order` already used nearby.
+  - `data_analysis/summary.py` passed `str` parameters into `arch`'s
+    `Literal`-typed `trend`/`test_type`/`method`. Each call site already
+    validates its argument at runtime, so the three sites now `cast` after that
+    guard -- stating what the guard established rather than asserting anything
+    new.
+
+  Then the cheap strictness tier, each measured before being enabled:
+  `no_implicit_optional` (0 errors), `strict_equality` (1), `warn_unused_ignores`
+  (4, all stale suppressions, removed). `strict_equality` found a real piece of
+  dead logic: `data/panel.py` guarded `required_columns.update(...)` behind
+  `if predictor_values != "all"`, but both branches above it bind a tuple, so
+  the guard could never be false. Removing it changes nothing and stops the code
+  implying there is a path where requested columns go unchecked.
+
+  Left off, with their cost measured and recorded in the config so the next step
+  is a decision rather than an investigation: `disallow_untyped_defs` (22 errors
+  in 12 files) and `warn_return_any` (137 in 38).
+
 - `models/linear.py` (diagnostic, **no number changes**): `ols` now warns when its
   design matrix is numerically rank-deficient. Such a fit is not an error --
   least squares still returns *a* solution -- but it is not *the* solution:

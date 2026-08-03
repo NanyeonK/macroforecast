@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -829,7 +829,14 @@ def phillips_ouliaris(
     mask = np.isfinite(y_vec) & np.all(np.isfinite(x_mat), axis=1)
     y_vec, x_mat = y_vec[mask], x_mat[mask]
 
-    res = _po(y_vec, x_mat, trend=trend, test_type=str(test_type))
+    # `trend`/`test_type` are validated above, so the cast states what the
+    # guard has already established rather than asserting anything new.
+    res = _po(
+        y_vec,
+        x_mat,
+        trend=cast("Any", trend),
+        test_type=cast("Any", str(test_type)),
+    )
     crit = {f"{int(level)}%": float(value) for level, value in dict(res.critical_values).items()}
     coint_vec = [float(v) for v in np.asarray(res.cointegrating_vector, dtype=float).ravel()]
     return {
@@ -875,7 +882,11 @@ def variance_ratio(
         raise ValueError("lags (aggregation horizon q) must be at least 2")
     values = pd.Series(series).dropna().astype(float).to_numpy()
     test = VarianceRatio(
-        values, lags=int(lags), trend=trend, robust=bool(robust), overlap=bool(overlap)
+        values,
+        lags=int(lags),
+        trend=cast("Any", trend),  # validated above
+        robust=bool(robust),
+        overlap=bool(overlap),
     )
     return {
         "test": "variance_ratio",
@@ -1131,7 +1142,11 @@ def dfgls_test(
     if trend not in {"c", "ct"}:
         raise ValueError("trend must be 'c' (demean) or 'ct' (detrend)")
     values = pd.Series(series).dropna().astype(float).to_numpy()
-    test = DFGLS(values, trend=trend, method=str(method).lower())
+    test = DFGLS(
+        values,
+        trend=cast("Any", trend),  # validated above
+        method=cast("Any", str(method).lower()),
+    )
     crit = {str(level): float(value) for level, value in test.critical_values.items()}
     return {
         "test": "dfgls",
@@ -1488,7 +1503,7 @@ def _run_stationarity(
         }
     if name == "pp":
         try:
-            from arch.unitroot import PhillipsPerron  # type: ignore
+            from arch.unitroot import PhillipsPerron
 
             pp = PhillipsPerron(series.values, trend="c")
             return {
