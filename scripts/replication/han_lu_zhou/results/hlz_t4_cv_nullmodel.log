@@ -1,0 +1,23 @@
+
+########## design=L1 (L=1)  arms=3  n_jobs=4 ##########
+  LASSO   mine=    nan%  paper= -0.31%  Δ=   +nanpp   path max|Δ|=nan  (7.1 min)
+  ENet    mine=    nan%  paper= -0.35%  Δ=   +nanpp   path max|Δ|=nan  (7.1 min)
+
+########## design=L6 (L=6)  arms=13  n_jobs=4 ##########
+  LASSO   mine=  0.039%  paper=  0.86%  Δ= -0.821pp   path max|Δ|=1.634e+00  (28.7 min)
+  ENet    mine= -0.092%  paper=  0.59%  Δ= -0.682pp   path max|Δ|=2.103e+00  (28.7 min)
+
+########## design=L12 (L=12)  arms=25  n_jobs=4 ##########
+  LASSO   mine=  0.006%  paper=  1.11%  Δ= -1.104pp   path max|Δ|=2.066e+00  (84.6 min)
+  ENet    mine=  0.051%  paper=  1.18%  Δ= -1.129pp   path max|Δ|=2.340e+00  (84.6 min)
+
+########## TABLE 4 stage 2 — shrinkage columns ##########
+| design | model | mine % | paper % | Δ pp | path max|Δ| |
+|---|---|---|---|---|---|
+| L1 | LASSO | nan | -0.31 | +nan | nan |
+| L1 | ENet | nan | -0.35 | +nan | nan |
+| L6 | LASSO | 0.039 | 0.86 | -0.821 | 1.63e+00 |
+| L6 | ENet | -0.092 | 0.59 | -0.682 | 2.10e+00 |
+| L12 | LASSO | 0.006 | 1.11 | -1.104 | 2.07e+00 |
+| L12 | ENet | 0.051 | 1.18 | -1.129 | 2.34e+00 |
+T4_STAGE2_DONE
