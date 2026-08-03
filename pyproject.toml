@@ -95,14 +95,17 @@ warn_unused_configs = true
 # The cheap strictness tier, each measured before being enabled:
 #   no_implicit_optional  0 errors
 #   strict_equality       1 error  (an always-true guard in data/panel.py)
-#   warn_unused_ignores   4 errors (stale suppressions, now removed)
+# ``warn_unused_ignores`` was tried and rejected: whether a ``type: ignore`` is
+# "unused" depends on the installed stub versions, so the flag asserts something
+# about the environment rather than about the code -- it passed locally and
+# failed CI on a DIFFERENT comment than the four this change removed. The four
+# removals stand (both environments agree they were dead); the flag does not.
 # Not yet on, with their measured cost as of this commit:
 #   disallow_untyped_defs 22 errors in 12 files
 #   warn_return_any      137 errors in 38 files
 # Those two are the next rungs of the ratchet; see issue #451.
 no_implicit_optional = true
 strict_equality = true
-warn_unused_ignores = true
 
 [dependency-groups]
 dev = [

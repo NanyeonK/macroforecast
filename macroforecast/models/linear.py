@@ -1021,10 +1021,19 @@ class _GroupLinear:
             group: np.flatnonzero(np.asarray(groups, dtype=object) == group)
             for group in dict.fromkeys(groups)
         }
-        self.resolved_group_weights_ = {
-            group: float(self.group_weights.get(group, np.sqrt(len(index))))
-            for group, index in self.group_index_.items()
-        }
+        # Resolve the fallback explicitly rather than through ``get``'s default:
+        # depending on the installed stubs the lookup widens to ``float | None``,
+        # and ``float(None)`` would be a TypeError at runtime rather than a type
+        # complaint. Behaviour is unchanged for every present key.
+        resolved: dict[str, float] = {}
+        for group, index in self.group_index_.items():
+            configured = self.group_weights.get(group)
+            resolved[group] = (
+                float(configured)
+                if configured is not None
+                else float(np.sqrt(len(index)))
+            )
+        self.resolved_group_weights_ = resolved
         coef_scaled = self._solve(x_work, y_centered)
         self.coef_ = coef_scaled / self.x_scale_
         self.intercept_ = self.y_mean_ - float(self.x_mean_ @ self.coef_)
@@ -1077,8 +1086,13 @@ class _GroupLinear:
                 for group, index in self.group_index_.items():
                     block = coef[index]
                     norm = float(np.linalg.norm(block, ord=2))
-                    weight = self.resolved_group_weights_.get(group, np.sqrt(len(index)))
-                    threshold = step * group_penalty * float(weight)
+                    configured = self.resolved_group_weights_.get(group)
+                    weight = (
+                        float(configured)
+                        if configured is not None
+                        else float(np.sqrt(len(index)))
+                    )
+                    threshold = step * group_penalty * weight
                     if norm <= threshold:
                         coef[index] = 0.0
                     else:

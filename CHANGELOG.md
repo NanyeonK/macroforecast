@@ -41,6 +41,15 @@ full per-version honesty-pass history embedded in repo documentation.
   is a decision rather than an investigation: `disallow_untyped_defs` (22 errors
   in 12 files) and `warn_return_any` (137 in 38).
 
+  `warn_unused_ignores` was tried and **rejected**: whether a `type: ignore` is
+  unused depends on the installed stub versions, so the flag asserts something
+  about the environment rather than about the code -- it passed locally and
+  failed CI on a *different* comment than the four this change removes. The four
+  removals stand; the flag does not. CI also surfaced two `float | None`
+  group-weight lookups in `models/linear.py` that this machine's stubs did not --
+  a latent `float(None)` TypeError, now resolved explicitly rather than through
+  `.get`'s default argument.
+
 - `models/linear.py` (diagnostic, **no number changes**): `ols` now warns when its
   design matrix is numerically rank-deficient. Such a fit is not an error --
   least squares still returns *a* solution -- but it is not *the* solution:
