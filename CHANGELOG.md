@@ -59,6 +59,17 @@ full per-version honesty-pass history embedded in repo documentation.
   before this change, so the drift is attributable to it alone rather than
   mixed with pre-existing noise.
 
+  The snapshot's tolerance is now per family. Closed-form fits (`ols`, `ar`,
+  `far`, `ridge`, `elastic_net`, ...) keep the 1e-10 byte-identical gate the
+  fixture exists to enforce. The likelihood-optimized statsmodels models
+  (`arima`, `auto_arima`, `ets`, `holt_winters`, `stlf`, `theta_method`) move to
+  1e-6: their last bits belong to the LAPACK/BLAS build rather than to the
+  runner, which this change exposed -- the regenerated fixture reproduces to
+  1.1e-16 across local Python 3.11 and 3.12 yet lands 2.8e-08 away on one cell in
+  CI's 3.10/3.11 images. 1e-6 is four orders below any behavior change this
+  fixture has caught (the fix above moved arima by 2.1e-03) and two above the
+  observed cross-build spread.
+
 - `pipeline/spec.py`, `pipeline/evaluate.py` (bug fix, Clark-West was
   inexpressible for a forecast combination): `significance_table` built its set
   of CW-eligible contenders by walking `spec.arms` and reading

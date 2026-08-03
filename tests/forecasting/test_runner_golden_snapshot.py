@@ -3,7 +3,9 @@
 Phase 0 of the runner.py policy-strategy decomposition. This pins the EXACT forecasts
 the runner produces today, across a representative matrix of (forecast_policy x model x
 horizon), into a committed fixture. Every behavior-preserving refactor step must keep
-this byte-identical (atol 1e-10). It complements the targeted oracles (h1 direct==path,
+this byte-identical (atol 1e-10) for the closed-form models; the
+likelihood-optimized ones (``_ITERATIVE_ML_MODELS``) are held to 1e-6,
+because their last bits belong to the BLAS build, not to the runner. It complements the targeted oracles (h1 direct==path,
 serial==parallel, path/far/AL ground-truth) with one integration-level guard that would
 catch any drift they miss.
 
@@ -21,6 +23,11 @@ import macroforecast as mf
 from macroforecast.pipeline import Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline
 
 _FIXTURE = Path(__file__).parent / "_golden" / "runner_snapshot.parquet"
+
+#: Models fitted by numerical likelihood optimization (statsmodels), whose last bits
+#: are a property of the LAPACK/BLAS build rather than of the runner. Held to a
+#: cross-build tolerance rather than the byte-identical one -- see the assertion below.
+_ITERATIVE_ML_MODELS = frozenset({"arima", "auto_arima", "ets", "holt_winters", "stlf", "theta_method"})
 
 # (policy, model, params, horizons). Chosen to exercise every feature-matrix policy
 # path and the shared select->fit->predict->record skeleton across single-shot,
@@ -173,13 +180,37 @@ def test_runner_matrix_matches_golden_snapshot():
         golden.drop(columns=["prediction", "actual"]),
         check_dtype=False,
     )
+    # Two tolerances, because two kinds of model live in this matrix.
+    #
+    # Closed-form fits (ols/ar/far/ridge/elastic_net/...) are deterministic linear
+    # algebra and stay byte-identical across builds; they keep the 1e-10 gate this
+    # fixture exists to enforce.
+    #
+    # _ITERATIVE_ML_MODELS are fitted by numerical likelihood optimization inside
+    # statsmodels. Their last bits depend on the LAPACK/BLAS build, so an exact pin
+    # is a promise about the runner's environment rather than about the runner: the
+    # same fixture reproduces to 1.1e-16 across local 3.11/3.12 but lands 2.8e-08
+    # away on one cell in CI's image. 1e-6 is four orders below any behavior change
+    # this fixture has ever caught (the target-only fit-sample fix moved arima by
+    # 2.1e-03) and two orders above the observed cross-build spread.
+    is_iterative = current["model"].isin(_ITERATIVE_ML_MODELS).to_numpy()
     for col in ("prediction", "actual"):
+        cur_col = current[col].to_numpy(dtype=float)
+        gold_col = golden[col].to_numpy(dtype=float)
         np.testing.assert_allclose(
-            current[col].to_numpy(dtype=float),
-            golden[col].to_numpy(dtype=float),
+            cur_col[~is_iterative], gold_col[~is_iterative],
             rtol=0.0, atol=1e-10, equal_nan=True,
-            err_msg=f"{col} drifted from the golden snapshot",
+            err_msg=f"{col} drifted from the golden snapshot (closed-form models)",
         )
+        if is_iterative.any():
+            np.testing.assert_allclose(
+                cur_col[is_iterative], gold_col[is_iterative],
+                rtol=0.0, atol=1e-6, equal_nan=True,
+                err_msg=(
+                    f"{col} drifted from the golden snapshot "
+                    f"(likelihood-optimized models, cross-build tolerance)"
+                ),
+            )
 
 
 def test_panel_routing_intact():
