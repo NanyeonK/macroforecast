@@ -5,13 +5,14 @@ bring-your-own-data path**: an already-assembled panel and a non-macro target, d
 through `custom_dataset` with the FRED loaders and the tcode machinery unused. On that path
 macroforecast reproduces the authors' own out-of-sample forecast paths **to machine
 precision** — `max|Δ| ≤ 1.0e-15` across all 696 monthly forecasts, with the realized returns
-**bit-identical** — and, scored against a correctly-specified benchmark, matches their
-published `R²_OS` exactly.
+**bit-identical** — and lands within **0.005pp** of their published `R²_OS` in every design,
+that residual being a one-observation difference in how the prevailing-mean benchmark is
+defined rather than anything the estimator does.
 
 | purpose | status |
 |---|---|
 | **P1 — trust via faithful replication** | **STRONG** — path-level parity at 1e-15, and printed-table parity across Tables 1, 2, 3, 4, 9 and 10; every forecasting exhibit in the paper has a treatment (§6) |
-| **P2 — bugs caught** | **STRONG** — four defects surfaced: Parquet persistence (fixed, PR #481), Clark-West for combinations (fixed, PR #486), `ols` on a collinear design (issue #487), and the `hist_mean` benchmark (issue #488). Plus a CI-health blocker (#489) and one pre-existing failure isolated and attributed (§7) |
+| **P2 — bugs caught** | **STRONG** — four defects surfaced, three now fixed and merged: Parquet persistence (PR #481), Clark-West for forecast combinations (PR #486), and the benchmark's fit sample (PR #491, issue #488). The fourth, `ols` on an exactly collinear design, is filed with a reproduction (issue #487). Plus a CI-health blocker fixed across eight causes (PR #490, issue #489) |
 | **P3 — technical efficiency** | **STRONG** — measured speedups at fixed results (§8) |
 | **P4 — statistically-identical speedups** | **STRONG** — the parallel path returns the identical `R²_OS` and a bit-identical forecast path (§8) |
 
@@ -28,15 +29,17 @@ not Table 2**, and the row labels in their own script do not describe what the a
 Establishing that was the difference between "macroforecast is 0.107pp off" and "macroforecast
 is exact" — §4.
 
-**(2) Where a residual survived that, it was the benchmark and not the forecast.** With our
-combination path bit-identical to theirs and the realized returns bit-identical, a difference
-in `R²_OS` can only come from the denominator — and the package's `hist_mean` truncates its
-own estimation sample by the leading NaNs of *other arms' columns in the same bundle*. Scored
-against a prevailing mean built from our own panel, **all three completed designs reproduce
-the printed values exactly** (Table 3: 0.599 / 0.699 / 0.805 against 0.599 / 0.699 / 0.805;
-Table 9: every column within 4e-4). The error under the package benchmark scales with the
-ladder — 0.000, 0.017, 0.062pp for longest-MA 1, 6, 12 — exactly as a bundle-truncated
-denominator predicts. That is issue #488, and §4 isolates it.
+**(2) Where a residual survived that, it was the benchmark and not the forecast — and it was
+a package defect, now fixed.** With our combination path bit-identical to theirs and the
+realized returns bit-identical too, a difference in `R²_OS` could only come from the
+denominator. `hist_mean` takes the target as its only argument, yet predictors it cannot
+receive were deleting rows from its fit window, so the *same* benchmark scored differently
+depending on which contenders shared the bundle — the error growing with the longest lag
+(0.000 / −0.017 / −0.062pp for longest-MA 1 / 6 / 12). **PR #491** cuts a target-only model's
+sample on the target alone. The benchmark is now bundle-invariant (`0.000e+00` against a
+reference prevailing mean in both a 2-column and an 84-column bundle) and the residual is a
+**constant −0.005pp** in every design and every regime — one observation of benchmark
+convention, quantified in §4.
 
 ---
 
@@ -169,54 +172,69 @@ printed values 0.60 / 0.70 / 0.81 / 0.80 / 0.73 confirm the mapping independentl
 archive. `[GAP]` **Anyone reusing `Data_trend.mat` by its row labels will silently compare
 the wrong design.**
 
-Replication against those paths. Two benchmark columns are shown, for a reason the next
-paragraph makes exact:
+Replication against those paths:
 
-| design | signals | **path max\|Δ\|** | `R²_OS` (package `hist_mean`) | `R²_OS` (prevailing mean) | printed |
+| design | signals | **path max\|Δ\|** | `R²_OS` | printed | Δ |
 |---|---|---|---|---|---|
-| `Xt` | 14 | **8.88e-16** | 0.599 | **0.599** | 0.599 |
-| `Xt + {MA2..MA6}` | 84 | **6.66e-16** | 0.682 | **0.699** | 0.699 |
-| `Xt + {MA2..MA12}` | 168 | **7.77e-16** | 0.743 | **0.805** | 0.805 |
-| `Xt + {MA2..MA24}` | 336 | not run (§8) | — | — | 0.796 |
-| `Xt + {MA2..MA36}` | 504 | not run (§8) | — | — | 0.730 |
+| `Xt` | 14 | **8.88e-16** | 0.594 | 0.599 | **−0.005** |
+| `Xt + {MA2..MA6}` | 84 | **6.66e-16** | 0.694 | 0.699 | **−0.005** |
+| `Xt + {MA2..MA12}` | 168 | **7.77e-16** | 0.800 | 0.805 | **−0.005** |
+| `Xt + {MA2..MA24}` | 336 | not run (§8) | — | 0.796 | — |
+| `Xt + {MA2..MA36}` | 504 | not run (§8) | — | 0.730 | — |
 
-**The forecasts are exact; the residual is entirely the denominator.** Against the authors'
+**The forecasts are exact, and the residual is a single constant.** Against the authors'
 archived paths our combination forecasts agree to `max|Δ| ≈ 7e-16` across all 696 months, and
-the realized excess returns agree **bit-identically** (`max|Δ| = 0.0`). With the numerator and
-the target both machine-identical, a difference in `R²_OS` can only come from the benchmark —
-and substituting the authors' `FC_HA` while keeping *our* forecast path returns their printed
-value exactly.
+the realized excess returns agree **bit-identically** (`max|Δ| = 0.0`). What is left is
+**−0.005pp in every design** — the signature of a constant benchmark offset, not of anything
+that grows with the ladder. §4's earlier revisions of this note reported 0.599 / 0.682 / 0.743
+here; that spread was a package defect, and the next paragraph is its history.
 
-The prevailing-mean column is not borrowed from them: it is `mean(y[0 : t])` computed from
-**our** panel, and it matches their archived `FC_HA` to `5.55e-16`. Scored against it, **all
-three designs reproduce the printed value exactly** — 0.599, 0.699 and 0.805 against 0.599,
-0.699 and 0.805 — and so does Table 9, whose three columns come back within `4e-4` for every
-design (§4.1). Against the package benchmark the same paths read 0.599, 0.682 and 0.743, and
-the error grows with the ladder length, which is what the next paragraph predicts.
+### The benchmark defect this exhibit found, and its fix
 
-**What the package benchmark does instead (issue #488).** `hist_mean` uses no predictors, yet
-its estimation sample is truncated by the leading NaNs of *other arms' columns in the same
-bundle*. The rule was identified exactly — the reconstructed path matches to `0.00e+00`:
+An earlier revision of this note could not reproduce the printed values at all beyond `Xt`,
+and reported the gap as growing with the ladder — 0.000 / −0.017 / −0.062pp for longest-MA
+1 / 6 / 12. With the forecast path bit-identical to the authors' and the realized returns
+bit-identical too, a difference in `R²_OS` could only come from the **denominator**, and that
+is where it was.
 
-| bundle | longest column | HA sample starts at index | rows at the first origin | Δ vs the prevailing mean |
-|---|---|---|---|---|
-| 14 lag-0 predictors (`Xt`) | — | 2 | 455 | 7.63e-04 |
-| 84 columns, MA1..MA6 | MA6 (5 leading NaN) | 7 | 450 | **1.17e-02** |
+`hist_mean` — the prevailing-mean benchmark — takes the target as its **only** positional
+argument; passing it predictors raises `TypeError`. Yet the fit sample was built by
+`concat([X, y]).dropna()` at two separate alignments, so predictors the model cannot receive
+were deleting target rows from its own fit window. The arm's `X` was not small either: a
+`feature_spec` with `predictors` unset resolves to the **whole panel**, so the benchmark arm
+silently requested 169 columns in the 84-column MA bundle, and their leading NaNs cut its
+sample.
 
-so `start = 2 + (leading NaNs of the longest column)`. Contender arms are unaffected — each
-respects its own columns' availability — so within one run the numerator honours per-arm
-availability and the denominator does not, and the *same* benchmark scores differently
-depending on which contenders share the bundle. `target_lags` on the HA arm is irrelevant:
-`(1,)`, `(0,)` and `None` all produce the same path. That also explains why `Xt` matches
-either way: with no MA columns in its bundle there is almost nothing to truncate.
+The consequence is the one a benchmark must never have: **the same benchmark scored
+differently depending on which contenders shared the bundle**, with the size of the shift set
+by whichever arm happened to carry the longest lag.
 
-**A correction to what this note previously said.** An earlier revision attributed the
-residual to an off-by-one in the evaluation window — `run_table3_dense.py` did pass
+Fixed in **PR #491** (issue #488): a model whose `ModelSpec.input_kind` is `"target"` now has
+its fit sample cut on the target's availability alone. Measured against a reference prevailing
+mean, the benchmark was off by 7.63e-04 in a 2-column bundle and 1.17e-02 in an 84-column one;
+it is now **0.000e+00 in both**. Rows with a missing target are still dropped, supervised arms
+are untouched, and no look-ahead is introduced — every recovered row sits strictly before its
+origin (checked across 39 origins, zero violations).
+
+### What the remaining −0.005pp is
+
+`[GAP]` A definitional difference about one observation, not a defect. At an origin
+forecasting position `t`, the package averages the **target column**, which for a direct
+h = 1 run is `y` shifted one step and therefore spans `y[1 : t]` — position 0 is never
+anyone's target, because no origin precedes it. The authors average `y[0 : t]`. The package
+now matches its own documented definition **exactly** (`max|Δ| = 0.000e+00` against
+`mean(y[1:t])`, in all three bundles) and differs from theirs by a constant **3.070e-03** on
+the benchmark path, which is the −0.005pp above. Whether a prevailing-mean benchmark should
+include the series' first observation is a separate question; it is recorded here rather than
+quietly changed to close a gap.
+
+**A correction to what this note previously said.** An earlier revision attributed the residual
+to an off-by-one in the evaluation window — `run_table3_dense.py` did pass
 `test_start=idx[457]` where every other runner passes `idx[456]`, scoring 695 months instead
 of the paper's 696 — and predicted that fixing it would reproduce the printed value. **That
 prediction was wrong.** The window bug was real and is fixed, but correcting it moved
 `Xt + {MA2..MA6}` from 0.694 to 0.682, *away* from 0.699. The claim had been reasoned rather
-than re-run, and re-running it is what exposed the benchmark.
+than re-run, and re-running it is what exposed the benchmark underneath.
 
 ### 4.1 Table 9 — the same paths, split by growth regime
 
@@ -253,23 +271,19 @@ confound: the split and the scoring are now known-good, so anything left in our 
 belongs to our forecast paths. It also supplies **unrounded** targets, which is what the
 comparison below is against.
 
-**Our forecasts, scored the same way** — on the corrected 696-month window, under both
-benchmarks (§4 explains why two):
+**Our forecasts, scored the same way** — on the corrected 696-month window, against the
+unrounded archive targets above:
 
-| design | benchmark | overall | high growth | low growth | max \|Δ\| vs target |
-|---|---|---|---|---|---|
-| `Xt` | package `hist_mean` | 0.599 | 0.411 | 0.782 | 0.0004 |
-| | **prevailing mean** | **0.599** | **0.411** | **0.782** | **0.0004** |
-| `Xt + {MA2..MA6}` | package `hist_mean` | 0.682 | 0.364 | 0.994 | 0.0221 |
-| | **prevailing mean** | **0.699** | **0.375** | **1.016** | **0.0003** |
-| `Xt + {MA2..MA12}` | package `hist_mean` | 0.743 | 0.304 | 1.173 | 0.0823 |
-| | **prevailing mean** | **0.805** | **0.345** | **1.255** | **0.0004** |
+| design | overall | high growth | low growth | printed (overall) |
+|---|---|---|---|---|
+| `Xt` | 0.594 | 0.408 | 0.776 | 0.60 |
+| `Xt + {MA2..MA6}` | 0.694 | 0.372 | 1.010 | 0.70 |
+| `Xt + {MA2..MA12}` | 0.800 | 0.342 | 1.249 | 0.81 |
 
-**Scored against a prevailing mean, every design reproduces all three columns to within
-4e-4.** The `hist_mean` column sits beside it because the gap between them is issue #488 and
-nothing else — and note how that gap scales with the ladder: 0.0004, 0.0221, 0.0823 as the
-longest MA goes 1, 6, 12. The benchmark's estimation sample shrinks with the longest column in
-the bundle, so the longer the ladder, the more the denominator moves.
+Every column of every design sits **−0.005pp** from its archive target — the same constant
+as §4, from the same one-observation benchmark convention, and now uniform across regimes as
+well as across designs. Before the PR #491 fix these rows read 0.599 / 0.682 / 0.743 overall,
+with the error growing along the ladder.
 
 **Significance.** The paper stars panels A and B with Clark-West:
 
@@ -599,14 +613,14 @@ The **Linear** column reproduces the paper's significance exactly at every desig
 columns of the trend designs — the same place the point estimates diverge, for the same
 reason.
 
-**Issue #488 touches this table too, and by how much is measured.** The benchmark rows come
-from the Table 4 runs, whose bundles carry MA columns, so the `hist_mean` denominator is
-truncated there as it is in §4. Re-scoring the Linear ensemble against a prevailing mean
-computed from our own panel moves it by **+0.000pp at `Xt`, +0.017pp at `{MA2..MA6}` and
-+0.062pp at `{MA2..MA12}`** — the same direction as §4 and the same order of magnitude. It
-does not touch the reading above, whose gaps are 0.38 to 1.27pp. §5.5's Table 10 is immune
-by construction: its benchmark is an ordinary `ols` arm, not `hist_mean`, and contender arms
-are not truncated by the bundle.
+`[note]` **These values predate the PR #491 benchmark fix**, and the size of the shift was
+measured before it landed: the Table 4 bundles carry MA columns, so the `hist_mean`
+denominator was truncated here exactly as in §4, and re-scoring the Linear ensemble against
+an untruncated prevailing mean moves it by **+0.000pp at `Xt`, +0.017pp at `{MA2..MA6}` and
++0.062pp at `{MA2..MA12}`**. Applying that shift leaves every conclusion in this section
+intact — the gaps being read are 0.38 to 1.27pp, one to two orders larger — so the component
+paths (~4 h of NN fits) were not re-run to move a table by 0.06pp. §5.5's Table 10 was never
+affected: its benchmark is an ordinary `ols` arm, not `hist_mean`.
 
 **This exhibit is the one that needed PR #486.** All twelve Clark-West values above are on
 *combinations*, which the package could not test at all before that fix: they would have
@@ -806,11 +820,18 @@ and the difference is the point of this section.
    floating-point residue — up to **0.56** in level. Diagnosed in full at §5.5. Not patched
    here: `rank_` cannot be the detector, since the mis-report *is* the failure, and the honest
    fix warns without changing any existing number.
-5. **The `hist_mean` benchmark is truncated by other arms' columns (filed, issue #488).**
-   Its estimation sample starts at `2 + (leading NaNs of the longest column in the bundle)`
-   even though it uses no predictors, so the *same* benchmark scores differently depending on
-   which contenders share the run. This is the whole of §4's residual. Identified exactly —
-   the reconstructed path matches to `0.00e+00`.
+5. **A target-only model's fit sample was cut by predictors it cannot receive (fixed,
+   PR #491, issue #488).** All twelve models whose `ModelSpec.input_kind` is `"target"` —
+   `hist_mean` among them — take the target as their only positional argument; passing X
+   raises `TypeError`. Yet both fit-sample alignments did `concat([X, y]).dropna()`, so the
+   *same* benchmark scored differently depending on which contenders shared the bundle. This
+   was the whole of §4's ladder-scaling residual. Fixed by cutting a target-only model's
+   sample on the target's availability alone; the benchmark is now bundle-invariant at
+   `0.000e+00`, and the golden snapshot's 18 moved cells are all `arima`, the only
+   target-only model in that matrix.
+   `[note]` The fix **changes numbers** for ten of the twelve; `naive` and `seasonal_naive`
+   are insensitive by construction, which is why the other replication notes in this
+   directory are unaffected.
 6. **Two hypotheses raised and refuted**, recorded so they are not re-litigated: *arm dropout*
    — all 42 arms contribute at every one of the 696 origins; and *the package is wrong about
    the MA designs* — it was the comparison target that was wrong (§4).
