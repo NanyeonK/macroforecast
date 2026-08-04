@@ -367,9 +367,13 @@ def _validate_unimplemented_eval_fields(evaluation: "EvalSpec") -> None:
             "evaluation.primary_axis is not implemented; use test_options / file an issue"
         )
     if evaluation.multiple_testing is not None:
-        raise ValueError(
-            "evaluation.multiple_testing is not implemented; use test_options / file an issue"
-        )
+        from macroforecast.tests import MULTIPLE_TESTING_METHODS
+
+        if str(evaluation.multiple_testing).strip().lower() not in MULTIPLE_TESTING_METHODS:
+            raise ValueError(
+                "evaluation.multiple_testing must be one of "
+                f"{', '.join(MULTIPLE_TESTING_METHODS)}; got {evaluation.multiple_testing!r}"
+            )
 
 
 def _parse_subsample_date(value: Any, *, label: str) -> pd.Timestamp | None:

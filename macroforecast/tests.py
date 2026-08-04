@@ -4570,7 +4570,152 @@ def _json_ready(value: Any) -> Any:
     return value
 
 
+MULTIPLE_TESTING_METHODS: tuple[str, ...] = ("bonferroni", "holm", "bh", "romano_wolf")
+
+
+def adjust_pvalues(
+    pvalues: Any,
+    *,
+    method: str = "bh",
+) -> np.ndarray:
+    """Family-wise / false-discovery adjustment of a family of p-values.
+
+    Comparing N contenders against one benchmark is N tests, so an unadjusted
+    5% rule expects one false winner in twenty even when no contender has any
+    skill. These are the closed-form corrections; ``romano_wolf_pvalues`` is the
+    resampling one, which is strictly less conservative because it uses the
+    cross-contender dependence these cannot see.
+
+    ``method``:
+
+    - ``"bonferroni"`` -- ``p * N``, controls the family-wise error rate (FWER).
+      Valid under any dependence, and the most conservative.
+    - ``"holm"`` -- Holm's step-down. Controls FWER under any dependence too and
+      is uniformly at least as powerful as Bonferroni, so prefer it whenever
+      Bonferroni is what you meant.
+    - ``"bh"`` -- Benjamini-Hochberg step-up. Controls the false discovery rate
+      rather than FWER: a different, weaker guarantee that answers "what share
+      of my rejections are wrong" instead of "did I make any error at all".
+
+    NaN entries are carried through as NaN and excluded from N -- a test that did
+    not run is not part of the family. The result is clipped to 1.0 and forced
+    monotone in the original ordering, as each method requires.
+    """
+
+    key = str(method).strip().lower()
+    if key not in {"bonferroni", "holm", "bh"}:
+        raise ValueError(
+            f"method must be one of 'bonferroni', 'holm', 'bh'; got {method!r}. "
+            "For 'romano_wolf' use romano_wolf_pvalues, which needs the loss "
+            "differentials rather than only the p-values."
+        )
+    raw = np.asarray(pvalues, dtype=float).ravel()
+    out = np.full(raw.shape, np.nan, dtype=float)
+    finite = np.flatnonzero(np.isfinite(raw))
+    if finite.size == 0:
+        return out
+    p = raw[finite]
+    n = p.size
+    order = np.argsort(p, kind="stable")
+    ranked = p[order]
+
+    if key == "bonferroni":
+        adjusted_sorted = ranked * n
+    elif key == "holm":
+        # step-DOWN: (n - i) * p_(i), then a running maximum so the sequence
+        # cannot decrease as p grows.
+        adjusted_sorted = np.maximum.accumulate((n - np.arange(n)) * ranked)
+    else:  # bh
+        # step-UP: n/i * p_(i), then a reverse running minimum.
+        adjusted_sorted = np.minimum.accumulate(
+            (n / np.arange(n, 0, -1)) * ranked[::-1]
+        )[::-1]
+
+    adjusted = np.empty(n, dtype=float)
+    adjusted[order] = np.clip(adjusted_sorted, 0.0, 1.0)
+    out[finite] = adjusted
+    return out
+
+
+def romano_wolf_pvalues(
+    loss_differentials: Any,
+    *,
+    n_boot: int = 999,
+    block_length: int = 3,
+    random_state: int = 0,
+) -> np.ndarray:
+    """Romano-Wolf (2005) step-down adjusted p-values across contenders.
+
+    ``loss_differentials`` is an ``(n_obs, n_contenders)`` panel of per-origin
+    loss differences (benchmark loss minus contender loss, so a POSITIVE mean
+    means the contender is better -- the same orientation ``dm_test`` uses).
+
+    Unlike Bonferroni/Holm/BH this resamples the contenders JOINTLY with a
+    moving-block bootstrap, so it inherits their cross-sectional correlation
+    instead of assuming the worst case. Where contenders are highly correlated --
+    the usual case in a forecast horse-race, since they are fit on the same data
+    -- that makes it markedly less conservative while still controlling the
+    family-wise error rate.
+
+    Studentization and the block bootstrap follow the same convention as
+    ``multi_horizon_spa_test``: quadratic-spectral long-run variance for the
+    observed statistics, natural block standard errors for the resampled ones.
+
+    Columns whose differential is all-NaN or degenerate are returned as NaN and
+    take no part in the max statistic.
+    """
+
+    panel = pd.DataFrame(loss_differentials).astype(float)
+    n_contenders = panel.shape[1]
+    out = np.full(n_contenders, np.nan, dtype=float)
+    usable = [i for i in range(n_contenders) if panel.iloc[:, i].notna().sum() > 1]
+    if not usable:
+        return out
+    diff = panel.iloc[:, usable].dropna(axis=0, how="any").to_numpy(dtype=float)
+    n_obs, k = diff.shape
+    if n_obs < 2 or k == 0:
+        return out
+    block = min(max(1, int(block_length)), n_obs)
+
+    means = diff.mean(axis=0)
+    sqrt_n = math.sqrt(n_obs)
+    denoms = np.array([
+        math.sqrt(max(_quadratic_spectral_lrv(diff[:, j], "auto"), 1e-12))
+        for j in range(k)
+    ])
+    observed = sqrt_n * means / denoms
+
+    rng = np.random.default_rng(int(random_state))
+    boot = np.empty((int(n_boot), k), dtype=float)
+    for b in range(int(n_boot)):
+        idx = _moving_block_bootstrap_indices(n_obs, block, rng)
+        sample = diff[idx]
+        boot_denoms = _natural_block_std(sample, block)
+        # Center on the observed means: the bootstrap distribution must be built
+        # under the null that no contender beats the benchmark.
+        boot[b] = sqrt_n * (sample.mean(axis=0) - means) / boot_denoms
+
+    # Step-down: settle the most significant contender against the max over the
+    # whole family, then drop it and re-take the max over what remains, so later
+    # contenders are not charged for competitors already resolved.
+    adjusted = np.full(k, np.nan, dtype=float)
+    remaining = list(np.argsort(-observed, kind="stable"))
+    running = 0.0
+    while remaining:
+        j = remaining[0]
+        max_boot = boot[:, remaining].max(axis=1)
+        p = float((max_boot >= observed[j]).mean())
+        running = max(running, p)  # monotone in the step-down order
+        adjusted[j] = min(1.0, running)
+        remaining.pop(0)
+    out[np.asarray(usable, dtype=int)] = adjusted
+    return out
+
+
 __all__ = [
+    "MULTIPLE_TESTING_METHODS",
+    "adjust_pvalues",
+    "romano_wolf_pvalues",
     "TestResult",
     "anatolyev_gerko_test",
     "clark_west_test",

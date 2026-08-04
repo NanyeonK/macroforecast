@@ -10,6 +10,9 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 
 | Symbol | Kind | Summary |
 | --- | --- | --- |
+| `MULTIPLE_TESTING_METHODS` | data | Built-in immutable sequence. |
+| `adjust_pvalues` | function | Family-wise / false-discovery adjustment of a family of p-values. |
+| `romano_wolf_pvalues` | function | Romano-Wolf (2005) step-down adjusted p-values across contenders. |
 | `TestResult` | class | Forecast comparison test result. |
 | `anatolyev_gerko_test` | function | Anatolyev-Gerko excess profitability directional accuracy test. |
 | `clark_west_test` | function | Clark-West nested forecast comparison test. |
@@ -51,8 +54,123 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 | `stepm_test` | function | Stepwise multiple-comparison test against a benchmark via ``arch.bootstrap``. |
 | `superior_predictive_ability_test` | function | White-Hansen superior predictive ability test via ``arch.bootstrap``. |
 
+## Data And Module Values
+
+### `MULTIPLE_TESTING_METHODS`
+
+Kind: `data`
+
+```python
+MULTIPLE_TESTING_METHODS = ("bonferroni", "holm", "bh", "romano_wolf")
+```
+
 ## Callable And Class Reference
 
+### adjust_pvalues
+
+Qualified name: `macroforecast.tests.adjust_pvalues`
+
+#### Signature
+
+```python
+macroforecast.tests.adjust_pvalues(pvalues: Any, *, method: str = "bh") -> np.ndarray
+```
+
+#### Description
+
+Family-wise / false-discovery adjustment of a family of p-values.
+
+Comparing N contenders against one benchmark is N tests, so an unadjusted
+5% rule expects one false winner in twenty even when no contender has any
+skill. These are the closed-form corrections; ``romano_wolf_pvalues`` is the
+resampling one, which is strictly less conservative because it uses the
+cross-contender dependence these cannot see.
+
+``method``:
+
+- ``"bonferroni"`` -- ``p * N``, controls the family-wise error rate (FWER).
+  Valid under any dependence, and the most conservative.
+- ``"holm"`` -- Holm's step-down. Controls FWER under any dependence too and
+  is uniformly at least as powerful as Bonferroni, so prefer it whenever
+  Bonferroni is what you meant.
+- ``"bh"`` -- Benjamini-Hochberg step-up. Controls the false discovery rate
+  rather than FWER: a different, weaker guarantee that answers "what share
+  of my rejections are wrong" instead of "did I make any error at all".
+
+NaN entries are carried through as NaN and excluded from N -- a test that did
+not run is not part of the family. The result is clipped to 1.0 and forced
+monotone in the original ordering, as each method requires.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `pvalues` | positional or keyword | `Any` | `required` |
+| `method` | keyword only | `str` | `"bh"` |
+
+#### Returns
+
+`np.ndarray`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.adjust_pvalues(...)
+```
+### romano_wolf_pvalues
+
+Qualified name: `macroforecast.tests.romano_wolf_pvalues`
+
+#### Signature
+
+```python
+macroforecast.tests.romano_wolf_pvalues(loss_differentials: Any, *, n_boot: int = 999, block_length: int = 3, random_state: int = 0) -> np.ndarray
+```
+
+#### Description
+
+Romano-Wolf (2005) step-down adjusted p-values across contenders.
+
+``loss_differentials`` is an ``(n_obs, n_contenders)`` panel of per-origin
+loss differences (benchmark loss minus contender loss, so a POSITIVE mean
+means the contender is better -- the same orientation ``dm_test`` uses).
+
+Unlike Bonferroni/Holm/BH this resamples the contenders JOINTLY with a
+moving-block bootstrap, so it inherits their cross-sectional correlation
+instead of assuming the worst case. Where contenders are highly correlated --
+the usual case in a forecast horse-race, since they are fit on the same data
+-- that makes it markedly less conservative while still controlling the
+family-wise error rate.
+
+Studentization and the block bootstrap follow the same convention as
+``multi_horizon_spa_test``: quadratic-spectral long-run variance for the
+observed statistics, natural block standard errors for the resampled ones.
+
+Columns whose differential is all-NaN or degenerate are returned as NaN and
+take no part in the max statistic.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `loss_differentials` | positional or keyword | `Any` | `required` |
+| `n_boot` | keyword only | `int` | `999` |
+| `block_length` | keyword only | `int` | `3` |
+| `random_state` | keyword only | `int` | `0` |
+
+#### Returns
+
+`np.ndarray`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.tests.romano_wolf_pvalues(...)
+```
 ### TestResult
 
 Qualified name: `macroforecast.tests.TestResult`
