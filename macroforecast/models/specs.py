@@ -3633,13 +3633,22 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "far",
         "factor",
         far,
-        default_params={"n_factors": 3, "n_lag": 1, "random_state": 0, "direct": False},
+        default_params={"n_factors": 3, "n_lag": 1, "random_state": 0, "direct": False,
+                        "scale": False},
         parameters=(
             _p("n_factors", 3, "int", "Number of PCA factors."),
             _p("n_lag", 1, "int", "Autoregressive lag order."),
             _p("random_state", 0, "int", "PCA random seed.", False),
             _p("direct", False, "bool",
                "Direct multi-step projection onto fresh lags (set by the forecast policy).", False),
+            # Deliberately NOT tunable: the factor-extraction convention is a
+            # modelling decision (which method a study specifies), not a
+            # hyperparameter. Searching over it would amount to picking whichever
+            # convention fits best, which is exactly what a replication must not do.
+            _p("scale", False, "bool",
+               "Standardize the predictor block before the PCA (correlation PCA). False, the "
+               "default, centers only (covariance PCA), so the largest-variance series dominate "
+               "the factors. Note pca_step defaults the other way.", False),
         ),
         spaces={
             key: {**space, **_AR_SPACES[key]} for key, space in _FACTOR_SPACES.items()

@@ -1126,7 +1126,7 @@ Family: `factor`
 #### Fit Signature
 
 ```python
-macroforecast.models.far(X: Any, y: Any | None = None, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0, direct: bool = False) -> ModelFit
+macroforecast.models.far(X: Any, y: Any | None = None, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0, direct: bool = False, scale: bool = False) -> ModelFit
 ```
 
 | Field | Value |
@@ -1148,6 +1148,7 @@ Factor-augmented autoregression.
 | `n_lag` | `1` | `int` | True | Autoregressive lag order. |
 | `random_state` | `0` | `int` | False | PCA random seed. |
 | `direct` | `False` | `bool` | False | Direct multi-step projection onto fresh lags (set by the forecast policy). |
+| `scale` | `False` | `bool` | False | Standardize the predictor block before the PCA (correlation PCA). False, the default, centers only (covariance PCA), so the largest-variance series dominate the factors. Note pca_step defaults the other way. |
 
 #### Search Spaces
 

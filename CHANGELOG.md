@@ -5,6 +5,27 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/timeseries.py`, `models/specs.py` (**no default behaviour change**):
+  `far` now takes `scale`, so a caller can choose the factor-extraction
+  convention. Previously it centered the predictor block and ran PCA on that --
+  covariance PCA -- with no way to ask for anything else, while
+  `pca_step` standardizes by default. The same package therefore extracted
+  factors two different ways depending on the route, silently, and one of them
+  could not be changed (issue #495).
+
+  This is a modelling choice, not a numerical detail. Under covariance PCA the
+  largest-variance series dominate the factors, and in a FRED-MD-style panel a
+  level-coded series can outweigh dozens of growth rates.
+  `docs/replication/zww_2023_replication.md` documents a published paper whose
+  entire headline result turned on exactly this choice.
+
+  `scale=False` remains the default, so every existing `far` result is
+  unchanged; the tests pin the default against a hand-computed covariance PCA
+  and `scale=True` against a hand-computed correlation PCA. Both of `far`'s fit
+  paths (direct projection and roll-forward) honour it, a zero-variance column
+  is given a divisor of 1.0 rather than dividing to NaN, and the docstrings on
+  both routes now say that their defaults differ.
+
 - `forecasting/feature_stage.py`, `forecasting/runner.py` (performance, **no
   number changes**): the fitted feature builder (the PCA/MARX/SIR numerical
   state) was shared across arms through an in-memory dict only. Under
