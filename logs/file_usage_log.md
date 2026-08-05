@@ -321,6 +321,18 @@
   depends on both parts.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
+## far PCA convention (fix/far-pca-scale)
+
+- `macroforecast/models/timeseries.py`: `_FAR` takes `scale`; added
+  `_standardizer` / `_prepare_pca_input` and routed all three PCA sites (direct
+  fit, iterated fit, transform) through them; `far()` exposes and documents it.
+- `macroforecast/models/specs.py`: `far` declares `scale` in `default_params`
+  and `parameters`.
+- `tests/models/test_far_pca_scale.py`: new -- default reproduces covariance
+  PCA, `scale=True` reproduces correlation PCA, the two disagree, covariance PC1
+  is dominated by the large series, zero-variance column is safe, both fit paths
+  honour the flag.
+- `docs/reference/models.md`, `docs/guide/models/factor.md`: regenerated.
 ## Multiple-testing adjustment (feat/multiple-testing)
 
 - `macroforecast/tests.py`: added `MULTIPLE_TESTING_METHODS`, `adjust_pvalues`

@@ -1703,7 +1703,7 @@ def bvar_normal_inverse_wishart(
 
 class _FAR:
     def __init__(self, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0,
-                 direct: bool = False) -> None:
+                 direct: bool = False, scale: bool = False) -> None:
         self.n_factors = max(1, int(n_factors))
         self.ssr_: float | None = None
         self.nobs_: int | None = None
@@ -1715,9 +1715,18 @@ class _FAR:
         # observed, not look-ahead), regressed on the h-ahead target and predicted per
         # row. direct=False is the legacy roll-forward (recursive/path).
         self.direct = bool(direct)
+        # scale=False (the default and the historical behaviour) extracts factors
+        # from the CENTERED predictor block -- covariance PCA. scale=True divides
+        # by each column's standard deviation first -- correlation PCA, which is
+        # what ``pca_step`` does by default. The two give different factors
+        # whenever the predictors differ in scale, and in macro panels they
+        # differ by orders of magnitude (a level series against growth rates), so
+        # this is a modelling choice, not a numerical detail. See issue #495.
+        self.scale = bool(scale)
         self._pca: Any = None
         self._regression: Any = None
         self._x_mean: pd.Series | None = None
+        self._x_scale: pd.Series | None = None
         self._y_history: np.ndarray | None = None
         self._fallback: float = 0.0
         self._direct_pred_cols: list[str] | None = None
@@ -1728,12 +1737,33 @@ class _FAR:
         parts: list[np.ndarray] = []
         if self._direct_pred_cols and self._pca is not None and self._x_mean is not None:
             block = Xdf.reindex(columns=self._direct_pred_cols).astype(float)
-            parts.append(self._pca.transform((block - self._x_mean).fillna(0.0)))
+            parts.append(self._pca.transform(self._prepare_pca_input(block)))
         if self._direct_lag_cols:
             parts.append(Xdf.reindex(columns=self._direct_lag_cols).astype(float).fillna(0.0).to_numpy())
         if not parts:
             return np.empty((len(Xdf), 0), dtype=float)
         return np.column_stack(parts)
+
+    def _standardizer(self, block: pd.DataFrame) -> pd.Series | None:
+        """Per-column divisor for the PCA input, or None under covariance PCA.
+
+        A zero-variance column would divide to NaN, so its divisor is pinned to
+        1.0 -- it contributes nothing to either convention and must not poison
+        the whole block.
+        """
+
+        if not self.scale:
+            return None
+        sd = block.std(axis=0, ddof=0)
+        return sd.where(sd > 0.0, 1.0)
+
+    def _prepare_pca_input(self, block: pd.DataFrame) -> pd.DataFrame:
+        """Center (and under ``scale=True`` standardize) the predictor block."""
+
+        out = block - self._x_mean if self._x_mean is not None else block
+        if self._x_scale is not None:
+            out = out / self._x_scale
+        return out.fillna(0.0)
 
     def _fit_direct(self, X: pd.DataFrame, y: pd.Series) -> "_FAR":
         from sklearn.linear_model import LinearRegression
@@ -1762,8 +1792,9 @@ class _FAR:
         if self._direct_pred_cols:
             block = Xdf.loc[mask, self._direct_pred_cols].astype(float)
             self._x_mean = block.mean(axis=0)
+            self._x_scale = self._standardizer(block)
             n_factors = min(self.n_factors, block.shape[1], max(1, block.shape[0] - 1))
-            centered = (block - self._x_mean).fillna(0.0)
+            centered = self._prepare_pca_input(block)
             self._pca = _deterministic_pca(n_factors, *centered.shape, random_state=self.random_state)
             self._pca.fit(centered)
         design_df = pd.DataFrame(self._direct_design(Xdf), index=Xdf.index)
@@ -1801,9 +1832,10 @@ class _FAR:
         y_clean = joined["__target__"]
         self._fallback = float(y_clean.mean())
         self._x_mean = X_clean.mean(axis=0)
+        self._x_scale = self._standardizer(X_clean)
         n_factors = min(self.n_factors, X_clean.shape[1], max(1, X_clean.shape[0] - 1))
         from macroforecast.feature_engineering.shared import _deterministic_pca
-        fit_block = (X_clean - self._x_mean).fillna(0.0)
+        fit_block = self._prepare_pca_input(X_clean)
         self._pca = _deterministic_pca(n_factors, *fit_block.shape, random_state=self.random_state)
         factors = self._pca.fit_transform(fit_block)
         values = y_clean.to_numpy(dtype=float)
@@ -1851,6 +1883,7 @@ def far(
     n_lag: int = 1,
     random_state: int = 0,
     direct: bool = False,
+    scale: bool = False,
 ) -> ModelFit:
     """Fit factor-augmented autoregression.
 
@@ -1859,15 +1892,35 @@ def far(
     (``*_lag0`` = the origin value, observed, not look-ahead) are regressed on the
     (h-ahead) target and predicted per row (no roll-forward). The runner sets
     ``direct=True`` only for the direct/direct_average policies.
+
+    ``scale`` selects the factor-extraction convention, and the two answer
+    different questions:
+
+    - ``scale=False`` (default) extracts factors from the CENTERED predictor
+      block -- **covariance PCA**. The largest-variance series dominate the
+      factors. In a FRED-MD-style panel that means a level-coded series can
+      outweigh dozens of growth-rate series.
+    - ``scale=True`` divides each column by its standard deviation first --
+      **correlation PCA**, which weights every predictor equally and is the
+      Stock-Watson / McCracken-Ng norm. This is what
+      :func:`~macroforecast.feature_engineering.pca_step` does by default.
+
+    The default is ``False`` for backward compatibility, so it differs from
+    ``pca_step``'s default; pass ``scale`` explicitly when the convention
+    matters. It is not a numerical detail: a published replication in
+    ``docs/replication/zww_2023_replication.md`` documents a paper whose entire
+    headline result turned on this choice.
     """
 
     return fit_estimator(
-        _FAR(n_factors=n_factors, n_lag=n_lag, random_state=random_state, direct=bool(direct)),
+        _FAR(n_factors=n_factors, n_lag=n_lag, random_state=random_state,
+             direct=bool(direct), scale=bool(scale)),
         X,
         y,
         model="far",
         metadata={"n_factors": int(n_factors), "n_lag": int(n_lag),
-                  "random_state": int(random_state), "direct": bool(direct)},
+                  "random_state": int(random_state), "direct": bool(direct),
+                  "scale": bool(scale)},
     )
 
 
