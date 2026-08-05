@@ -727,12 +727,23 @@ def test_dm_kwargs_merge_into_test_options_with_test_options_precedence():
 
 
 def test_dead_evalspec_fields_raise_at_spec_build_time():
+    """`by` and `primary_axis` are still declared but not implemented.
+
+    `multiple_testing` used to be listed here too. It is now wired (#454), so it
+    validates its VALUE rather than refusing every one -- see the two cases
+    below, which keep that from silently regressing to accept-anything.
+    """
     with pytest.raises(ValueError, match="evaluation.by is not implemented"):
         _spec(evaluation=EvalSpec(benchmark="AR", by=("target",)))
     with pytest.raises(ValueError, match="evaluation.primary_axis is not implemented"):
         _spec(evaluation=EvalSpec(benchmark="AR", primary_axis="model"))
-    with pytest.raises(ValueError, match="evaluation.multiple_testing is not implemented"):
-        _spec(evaluation=EvalSpec(benchmark="AR", multiple_testing="holm"))
+
+
+def test_multiple_testing_accepts_a_known_method_and_refuses_an_unknown_one():
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", multiple_testing="holm"))
+    assert spec.evaluation.multiple_testing == "holm"
+    with pytest.raises(ValueError, match="multiple_testing"):
+        _spec(evaluation=EvalSpec(benchmark="AR", multiple_testing="sidak"))
 
 
 def test_mcs_method_is_not_echoed_as_applied_provenance():

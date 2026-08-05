@@ -937,6 +937,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     out: list[dict[str, Any]] = []
     dm_options = _eval_test_options(spec, "dm")
     cw_options = _eval_test_options(spec, "cw")
+    loss_diffs: dict[tuple[Any, Any], dict[str, pd.Series]] = {}
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
         pivot_f = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
         actual = group.groupby("origin")["actual"].first().reindex(pivot_f.index)
@@ -955,6 +956,14 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             fc_vals = fc[common].to_numpy(float)
             loss_b = _loss_values(y, fb_vals, loss_fn)
             loss_c = _loss_values(y, fc_vals, loss_fn)
+            # Kept for the multiple-testing pass below, which needs the family's
+            # differentials JOINTLY (Romano-Wolf resamples them together) and
+            # cannot recover them from the p-values alone. Oriented benchmark
+            # minus contender, so a positive mean means the contender is better.
+            loss_diffs.setdefault((target, horizon), {})[str(contender)] = pd.Series(
+                np.asarray(loss_b, dtype=float) - np.asarray(loss_c, dtype=float),
+                index=pd.Index(actual[common].index, name="origin"),
+            )
             row: dict[str, Any] = {"target": target, "horizon": horizon, "contender": contender}
             has_result = False
             degraded_reasons: list[str] = []
@@ -1203,7 +1212,72 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         "n_horizons": res.metadata.get("n_horizons"),
                         "horizons": res.metadata.get("horizons"),
                     })
-    return pd.DataFrame(out) if out else pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
+    frame = pd.DataFrame(out) if out else pd.DataFrame(columns=_SIGNIFICANCE_COLUMNS)
+    return _apply_multiple_testing(frame, spec, loss_diffs)
+
+
+def _apply_multiple_testing(
+    frame: pd.DataFrame,
+    spec: PipelineSpec,
+    loss_diffs: Mapping[tuple[Any, Any], Mapping[str, pd.Series]],
+) -> pd.DataFrame:
+    """Append ``<test>_p_adj`` columns for ``EvalSpec.multiple_testing``.
+
+    The family is the set of CONTENDERS within one ``(target, horizon)`` cell:
+    that is what a reader compares at once when they scan a column of a results
+    table looking for the winner, so that is the family an adjustment has to
+    control. Cells are adjusted independently of one another.
+
+    Returns ``frame`` unchanged when no method is configured, so the default
+    report stays byte-identical.
+    """
+
+    method = getattr(spec.evaluation, "multiple_testing", None)
+    if method is None or frame.empty:
+        return frame
+    from macroforecast.tests import adjust_pvalues, romano_wolf_pvalues
+
+    key = str(method).strip().lower()
+    wide_tests = [c[: -len("_p")] for c in frame.columns if c.endswith("_p") and c != "p_value"]
+    if not wide_tests:
+        return frame
+
+    for test in wide_tests:
+        frame[f"{test}_p_adj"] = np.nan
+
+    grouped = frame.groupby(["target", "horizon"], dropna=False)
+    for (target, horizon), block in grouped:
+        idx = block.index
+        for test in wide_tests:
+            raw = block[f"{test}_p"].to_numpy(dtype=float)
+            if key == "romano_wolf":
+                cell = loss_diffs.get((target, horizon), {})
+                names = block["contender"].astype(str).to_numpy()
+                # The family is exactly the contenders this test actually
+                # produced a p-value for. Romano-Wolf could compute one from the
+                # differentials alone, but a `<test>_p_adj` beside an empty
+                # `<test>_p` reads as an adjustment of something that was never
+                # tested -- and those columns would also inflate the max
+                # statistic that everyone else is charged against. All four
+                # methods therefore adjust the same set.
+                members = [
+                    name for name, p_raw in zip(names, raw, strict=True)
+                    if np.isfinite(p_raw) and name in cell
+                ]
+                if not members:
+                    continue
+                panel = pd.DataFrame({name: cell[name] for name in members})
+                rw = romano_wolf_pvalues(panel, **_eval_test_options(spec, "romano_wolf"))
+                by_name = dict(zip(panel.columns, rw, strict=True))
+                adjusted = np.array(
+                    [by_name.get(name, np.nan) for name in names], dtype=float
+                )
+                adjusted[~np.isfinite(raw)] = np.nan
+            else:
+                adjusted = adjust_pvalues(raw, method=key)
+            frame.loc[idx, f"{test}_p_adj"] = adjusted
+    return frame
+
 
 
 def mcs_table(master: pd.DataFrame, spec: PipelineSpec, *, n_boot: int = 499) -> pd.DataFrame:

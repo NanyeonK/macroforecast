@@ -25,6 +25,44 @@ full per-version honesty-pass history embedded in repo documentation.
   paths (direct projection and roll-forward) honour it, a zero-variance column
   is given a divisor of 1.0 rather than dividing to NaN, and the docstrings on
   both routes now say that their defaults differ.
+- `tests.py`, `pipeline/evaluate.py`, `pipeline/spec.py`: `EvalSpec.multiple_testing`
+  works. It was declared but refused -- setting it raised "not implemented" --
+  so a horse-race reported N unadjusted tests against one benchmark, where a 5%
+  rule expects one false winner in twenty even if nothing has any skill
+  (issue #454).
+
+  Two new public functions, usable on their own:
+
+  - `adjust_pvalues(p, method=...)` -- `"bonferroni"`, `"holm"` (step-down,
+    uniformly at least as powerful, so prefer it wherever Bonferroni was meant),
+    and `"bh"` (Benjamini-Hochberg step-up, FDR rather than FWER).
+  - `romano_wolf_pvalues(loss_differentials, ...)` -- Romano-Wolf (2005)
+    step-down over a moving-block bootstrap. Unlike the closed-form three it
+    resamples the contenders JOINTLY, so it inherits their cross-sectional
+    correlation instead of assuming the worst case, and in a forecast horse-race
+    -- where contenders are fit on the same data and are highly correlated -- it
+    is markedly less conservative. Studentization and the block bootstrap follow
+    `multi_horizon_spa_test`'s existing convention.
+
+  `significance_table` gains a `<test>_p_adj` column per wide test when a method
+  is configured. **The family is the set of contenders within one
+  `(target, horizon)` cell** -- what a reader scans at once when looking down a
+  results column for the winner.
+
+  All four methods adjust the *same* family: a contender whose test did not
+  produce a p-value gets `NaN`, not an adjustment. Romano-Wolf can compute one
+  from the differentials alone, and the first implementation did -- putting a
+  `dm_p_adj` beside an empty `dm_p`, and letting those columns inflate the max
+  statistic every other contender is charged against. It was caught by running
+  the pipeline rather than by reading the code, and is pinned by a test.
+
+  With no method configured the report is unchanged, and `spec.py` now validates
+  the name instead of refusing every value.
+
+  `tests/pipeline/test_evalspec_threading.py` listed `multiple_testing` among
+  the dead fields that refuse every value; it now checks that a known method is
+  accepted and an unknown one refused, so the validation cannot regress to
+  accept-anything. `by` and `primary_axis` stay fail-closed.
 
 - `forecasting/feature_stage.py`, `forecasting/runner.py` (performance, **no
   number changes**): the fitted feature builder (the PCA/MARX/SIR numerical

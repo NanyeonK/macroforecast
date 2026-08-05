@@ -333,5 +333,20 @@
   is dominated by the large series, zero-variance column is safe, both fit paths
   honour the flag.
 - `docs/reference/models.md`, `docs/guide/models/factor.md`: regenerated.
+## Multiple-testing adjustment (feat/multiple-testing)
+
+- `macroforecast/tests.py`: added `MULTIPLE_TESTING_METHODS`, `adjust_pvalues`
+  (bonferroni/holm/bh) and `romano_wolf_pvalues` (block-bootstrap step-down);
+  exported all three.
+- `macroforecast/pipeline/evaluate.py`: `significance_table` collects the
+  per-contender loss differentials and calls `_apply_multiple_testing`, which
+  appends `<test>_p_adj` per `(target, horizon)` family.
+- `macroforecast/pipeline/spec.py`: `multiple_testing` is validated against
+  `MULTIPLE_TESTING_METHODS` instead of raising for every value.
+- `tests/pipeline/test_multiple_testing.py`: new -- closed-form adjustments
+  against their definitions, NaN excluded from the family, conservatism
+  ordering, unknown method refused, Romano-Wolf keeps the genuine winner /
+  is no stricter than Holm / is deterministic, the pipeline emits the column,
+  no method leaves the report untouched, and all four adjust the same family.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
