@@ -53,8 +53,11 @@ tellingly, **removes the horizon-growing pattern that motivated the
 Still not a package defect — `lags=(0, 1)` is a reasonable general default and
 the replication simply never stated the paper's design. But it was *our* spec
 error, not the paper's silence, and the distinction is the whole point of a trust
-note. The parity tables below were produced under the stacked panel and are being
-re-run; every number in them is superseded.
+note.
+
+INDPRO has now been re-run end to end under `X_t` — see **1a′** below for the full
+46-arm table, and for what that re-run does and does not establish. The four other
+targets are still stacked-panel and are labelled as such wherever they appear.
 ```
 
 | Source exhibit | Reproduced? | Note |
@@ -110,7 +113,82 @@ rel-RMSPE (full sample).
 *values* are near-ties with the paper (e.g. INDPRO h1 0.932 vs 0.933); the winning
 *arm* often differs among near-tied nonlinear/factor models (exact-arm match 1/25).
 
-**1b — Accuracy by model family** (median |Δ rel-RMSPE| vs paper, full sample):
+**1a′ — corrected re-run, INDPRO, all 46 arms × 5 horizons (225 contender cells).**
+
+The tables in 1a/1b/1c below were produced with the stacked `[X_t, X_{t-1}]` panel.
+INDPRO has since been re-run end to end under the paper's `X_t` (456 origins, 46
+arms, h∈{1,3,9,12,24}); these are those numbers. **The other four targets have not
+been re-run and their rows in 1a/1c remain stacked-panel.**
+
+| | median \|Δ rel-RMSPE\| | mean | n cells |
+|---|---|---|---|
+| **INDPRO, corrected `X_t`** | **0.0405** | 0.0587 | 225 |
+
+By horizon:
+
+| h | 1 | 3 | 9 | 12 | 24 |
+|---|---|---|---|---|---|
+| median \|Δ\| | 0.0307 | 0.0362 | 0.0703 | 0.0354 | 0.0436 |
+
+By family:
+
+| Model family | median \|Δ\| | n cells |
+|---|---|---|
+| RF (random forest) | **0.0194** | 20 |
+| Linear (AR / ARDI, IC- and CV-selected) | 0.0247 | 35 |
+| RR (reduced rank) | 0.0323 | 20 |
+| Shrinkage (B1–B3) | 0.0478 | 90 |
+| KRR (kernel ridge) | 0.0599 | 20 |
+| SVR | 0.0883 | 40 |
+
+Best arm per horizon, mine vs paper:
+
+| h | Mine best | Paper best |
+|---|---|---|
+| 1 | RFARDI,POOS (0.932) | B2,ridge,POOS (0.933) |
+| 3 | B3,ridge,KF (0.904) | B3,lasso,KF (0.913) |
+| 9 | B3,EN,POOS (0.969) | KRRARDI,POOS (0.921) |
+| 12 | RFARDI,POOS (0.949) | KRRAR,KF (0.910) |
+| 24 | KRRARDI,POOS (0.907) | RFARDI,KF (0.890) |
+
+The winning *value* stays a near-tie with the paper at h=1 (0.932 vs 0.933) and the
+family ordering is reproduced — RF tightest, SVR loosest — but the winning *arm*
+matches in 0/5 horizons, because the top handful of nonlinear/factor models are
+separated by less than the residual gap.
+
+One number is worth stating plainly because it is the least flattering: **106 of 225
+cells beat the AR,BIC benchmark here, against 128 of 225 in the paper.** The headline
+direction (ML/factor methods beat AR) reproduces; the *breadth* of that win does not
+fully reproduce, and the shortfall sits in the SVR and shrinkage families.
+
+```{admonition} What the re-run does NOT establish
+:class: warning
+
+It is tempting to read the movement from the stacked-panel table (INDPRO median
+0.0421) to this one (0.0405) as the size of the `lags` fix. **That comparison is not
+controlled and is not reported as one here.** The stacked-panel run predates version
+control of `scripts/replication/gcls_2022_pipeline/` (committed 2026-08-07, `59da53b7`
+— "None of this was under version control"), so the two runs may differ in more than
+`lags`. A cell-by-cell diff shows the ambiguity directly: 68 of 225 cells moved closer
+to the paper, 69 moved farther, and 88 did not move at all — including `AR,KF`, an arm
+built with `predictors=[]` that the `lags` setting cannot reach at all.
+
+The controlled evidence for the fix is the same-code A/B in the correction note above,
+plus the direct instrumentation of `MODEL_SPECS["far"].fit_func`, which showed the PCA
+input columns literally as `['RPI_lag0', 'RPI_lag1', ...]`. That evidence is about the
+factor block, and the corrected table reflects it where it applies: the ARDI family's
+median \|Δ\| is 0.0450 across its 20 cells, against 0.0882 under the stacked panel.
+
+The fix is justified because `X_t = Λ F_t + u_t` (eq. swardi2) is what the paper
+writes — not because parity improved. Where parity did not improve, that is recorded
+above rather than absorbed.
+```
+
+---
+
+**1b — Accuracy by model family** (median |Δ rel-RMSPE| vs paper, full sample).
+**Stacked-panel run; superseded for INDPRO by 1a′ above, not yet re-run for the
+other four targets:**
 
 | Model family | median \|Δ\| | n cells | reading |
 |---|---|---|---|
@@ -122,8 +200,9 @@ rel-RMSPE (full sample).
 | SVR | 0.0772 | 200 | weakest (solver + kernel) |
 | **all 45 contenders** | **0.0473** | 1125 | |
 
-**1c — Accuracy by target** (median |Δ|): HOUST 0.032, UNRATE 0.037, INDPRO 0.042,
-T10YFFM 0.065, CPIAUCSL 0.077.
+**1c — Accuracy by target** (median |Δ|, stacked-panel run): HOUST 0.032,
+UNRATE 0.037, INDPRO 0.042, T10YFFM 0.065, CPIAUCSL 0.077. **INDPRO's corrected
+value is 0.0405 (1a′); the other four are not yet re-run.**
 
 ---
 
