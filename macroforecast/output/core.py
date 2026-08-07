@@ -575,6 +575,7 @@ def write_artifacts(
     manifest_format: ManifestFormat = "json",
     include_provenance: bool = True,
     provenance_fields: tuple[str, ...] | None = None,
+    run_provenance: Mapping[str, Any] | None = None,
     compression: CompressionFormat = "none",
     layout: ArtifactLayout = "flat",
 ) -> ArtifactManifest:
@@ -729,6 +730,8 @@ def write_artifacts(
     provenance = (
         collect_provenance(fields=provenance_fields) if include_provenance else {}
     )
+    if include_provenance and run_provenance:
+        provenance = _with_run_provenance(provenance, run_provenance)
     manifest = ArtifactManifest(
         output_dir=str(out),
         artifacts=paths,
@@ -737,6 +740,41 @@ def write_artifacts(
     )
     _write_manifest(out, manifest, manifest_format)
     return manifest
+
+
+def _with_run_provenance(
+    provenance: dict[str, Any],
+    run_provenance: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Carry a run's INPUT provenance into the manifest, when one is available.
+
+    ``collect_provenance()`` answers "which machine and which build produced
+    this". A replication package also has to answer "from what" -- and the
+    package already computes that: ``run_pipeline`` records the data identity
+    (dataset, source family, vintage, frequency, shape, date range and a
+    full-content SHA-256 of the panel) and a spec echo on
+    ``PipelineReport.provenance``. Until now neither reached the manifest, so a
+    package could hash its outputs perfectly and still leave a reader unable to
+    tell which panel went in.
+
+    Nothing is recomputed here. Pass ``run_provenance=report.provenance`` and its
+    ``data`` and ``spec_echo`` blocks are copied across; pass nothing and the
+    manifest is unchanged, because there is no input to describe and inventing
+    one would be worse than omitting it.
+
+    Taken as an argument rather than read off the ``artifacts`` object on
+    purpose: ``write_artifacts`` accepts a mapping, a ``ForecastResult``, a
+    DataFrame or an ``OutputBundle`` -- not a ``PipelineReport`` -- so that
+    ``output`` need not know what a pipeline is. Sniffing for a ``.provenance``
+    attribute would couple the two layers by duck-typing.
+    """
+
+    enriched = dict(provenance)
+    for key in ("data", "spec_echo", "seed", "effective_seeds"):
+        value = run_provenance.get(key)
+        if value is not None and key not in enriched:
+            enriched[key] = _json_ready(value)
+    return enriched
 
 
 def collect_provenance(
