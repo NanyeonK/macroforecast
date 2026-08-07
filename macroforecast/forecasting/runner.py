@@ -457,6 +457,10 @@ def run(
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, Any] = {}
+    # Fitted models within this run. _OriginRunConfig is rebuilt per origin, so a
+    # cache created there would be empty every time; this is the run-scoped dict
+    # the config carries a reference to, exactly as param_cache is.
+    model_fit_cache: dict[Any, Any] = {}
     stage_records: list[dict[str, Any]] = []
     preprocessing_state = _StageUpdateState()
     feature_state = _StageUpdateState()
@@ -698,6 +702,7 @@ def run(
                 maximize_selection=maximize_selection,
                 param_cache=model_param_cache,
                 selection_cache=selection_cache,
+                fit_cache=model_fit_cache,
                 selection_random_state=config["random_seed"],
                 model_random_seed=model_random_seed,
                 model_random_alias=model_random_alias,
@@ -908,6 +913,10 @@ def _run_feature_set(
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, Any] = {}
+    # Fitted models within this run. _OriginRunConfig is rebuilt per origin, so a
+    # cache created there would be empty every time; this is the run-scoped dict
+    # the config carries a reference to, exactly as param_cache is.
+    model_fit_cache: dict[Any, Any] = {}
     for item in window_spec.iter_slices(X_all, y_all):
         selection_labels = stage_index(X_all.index, item, selection_policy)
         X_selection, y_selection = _align_feature_xy(
@@ -942,6 +951,7 @@ def _run_feature_set(
                     maximize_selection=maximize_selection,
                     param_cache=model_param_cache,
                     selection_cache=selection_cache,
+                    fit_cache=model_fit_cache,
                     selection_random_state=config["random_seed"],
                     model_random_seed=_get_pipeline_random_seed(),
                     model_random_alias=_get_pipeline_arm_alias(),
@@ -1221,6 +1231,10 @@ def _run_vintage_aware(
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, Any] = {}
+    # Fitted models within this run. _OriginRunConfig is rebuilt per origin, so a
+    # cache created there would be empty every time; this is the run-scoped dict
+    # the config carries a reference to, exactly as param_cache is.
+    model_fit_cache: dict[Any, Any] = {}
     stage_records: list[dict[str, Any]] = []
     preprocessing_state = _StageUpdateState()
     feature_state = _StageUpdateState()
@@ -1517,6 +1531,7 @@ def _run_vintage_aware(
                 maximize_selection=maximize_selection,
                 param_cache=model_param_cache,
                 selection_cache=selection_cache,
+                fit_cache=model_fit_cache,
                 selection_random_state=config["random_seed"],
                 model_random_seed=_get_pipeline_random_seed(),
                 model_random_alias=_get_pipeline_arm_alias(),
