@@ -883,7 +883,7 @@
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">load_fit</span></code></p></td>
 <td><p>function</p></td>
-<td><p>Load a fitted model object saved by <code class="docutils literal notranslate"><span class="pre">save_fit()</span></code>.</p></td>
+<td><p>Load a fitted model object saved by :func:<code class="docutils literal notranslate"><span class="pre">save_fit</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lstm</span></code></p></td>
 <td><p>function</p></td>
@@ -13857,7 +13857,19 @@ on <code class="docutils literal notranslate"><span class="pre">fit_func.__mf_di
 </section>
 <section id="id356">
 <h4>Description<a class="headerlink" href="#id356" title="Link to this heading">#</a></h4>
-<p>Load a fitted model object saved by <code class="docutils literal notranslate"><span class="pre">save_fit()</span></code>.</p>
+<p>Load a fitted model object saved by :func:<code class="docutils literal notranslate"><span class="pre">save_fit</span></code>.</p>
+<p>.. warning::</p>
+<p><strong>Unpickling executes code.</strong> A pickle file is a program, not a data
+format: loading one can run arbitrary code before it returns anything.
+Load only files you produced yourself or received from a source you
+trust as much as you trust your own machine – never one downloaded
+from an untrusted location, and never one arriving with a replication
+package you have not reviewed.</p>
+<p>There is no way to make this safe by inspecting the file first. If you
+need to distribute fitted state across a trust boundary, ship the code
+and the specification that reproduce the fit instead of the pickle.</p>
+<p>The sidecar JSON that :func:<code class="docutils literal notranslate"><span class="pre">save_fit</span></code> writes alongside the model is plain
+data and carries no such risk; read it when you only need the metadata.</p>
 </section>
 <section id="id357">
 <h4>Parameters<a class="headerlink" href="#id357" title="Link to this heading">#</a></h4>
