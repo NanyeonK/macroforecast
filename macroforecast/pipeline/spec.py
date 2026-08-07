@@ -632,7 +632,15 @@ class EvalSpec:
     benchmark: str
     metrics: tuple[str | Callable[..., float], ...] = ("rmse", "relative_mse", "r2_oos")
     tests: tuple[str, ...] = ("dm", "cw", "mcs")
+    #: Reserved. Only the default is supported; any other value raises
+    #: ValueError at pipeline_spec time. Evaluation currently always
+    #: groups by ("target", "horizon"). The field is named because that
+    #: grouping is what a multiple-testing family is defined over -- but
+    #: nothing reads a non-default value today.
     by: tuple[str, ...] = ("target", "horizon")
+    #: Reserved. Only the default is supported; any other value raises
+    #: ValueError at pipeline_spec time. Contenders are always the
+    #: axis compared within a cell.
     primary_axis: str = "contender"
     cw_for_nested: bool = True
     mcs_alpha: float = 0.10
