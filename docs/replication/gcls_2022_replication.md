@@ -187,8 +187,8 @@ than a reproducible value** — comparable only against other numbers from the s
 run. The `,POOS` and IC-selected (`AIC`/`BIC`) cells are unaffected, which is why the
 `ARDI,BIC` controlled A/B above and the factor-convention comparison still stand.
 
-Re-running the 23 `,KF` arms under the fix would make them reproducible, and the
-values would move. That re-run is not folded into this document yet, and until it is,
+Re-running the 21 `,KF` arms — 105 of the 225 contender cells — under the fix would
+make them reproducible, and the values would move. That re-run is not folded into this document yet, and until it is,
 the `,KF` half of the parity tables should be read as indicative rather than as a
 measurement. It also retro-justifies the caution in *"What the re-run does NOT
 establish"* below: part of the cell-level churn between the stacked-panel and
@@ -269,8 +269,8 @@ across its 20 cells, against 0.0882 under the stacked panel.
 So the two claims are separated by the evidence available for each. **The factor-block
 fix is controlled and holds.** The whole-table movement is not controlled and is not
 claimed — and issue #513 now supplies a second reason it could not be, beyond the
-untracked scripts: half those cells are CV-selected arms carrying run-to-run noise
-larger than the effect.
+untracked scripts: 105 of those 225 cells are CV-selected arms carrying run-to-run
+noise larger than the effect.
 
 The fix is justified because `X_t = Λ F_t + u_t` (eq. swardi2) is what the paper
 writes — not because parity improved. Where parity did not improve, that is recorded
