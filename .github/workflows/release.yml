@@ -1,6 +1,6 @@
 name: release
 
-# PyPI publish via API token (PYPI_API_TOKEN secret in repo settings).
+# PyPI publish via Trusted Publishing (OIDC) -- no long-lived token.
 # Triggered manually via GitHub Actions "Run workflow" UI.
 # User must type the version string with a leading "v" (e.g. v0.9.5)
 # before triggering; the workflow validates it against pyproject.toml.
@@ -12,9 +12,20 @@ name: release
 # under this namespace; v0.5.x tags pre-date the rename and were never
 # published to PyPI.
 #
-# Required: the ``PYPI_API_TOKEN`` secret must be registered in repo
-# Settings → Secrets and variables → Actions, scoped to the
-# ``macroforecast`` PyPI project.
+# Required, and required IN THIS ORDER -- merging this before the PyPI side
+# exists turns the next release into a failed job:
+#   1. PyPI → macroforecast → Publishing → add a trusted publisher:
+#      owner NanyeonK, repo macroforecast, workflow release.yml,
+#      environment pypi
+#   2. GitHub → Settings → Environments → create "pypi"; a required
+#      reviewer here makes publishing need an explicit human approval,
+#      which the token flow never had
+#   3. publish one release and confirm it lands
+#   4. THEN revoke PYPI_API_TOKEN on PyPI and delete the repo secret
+#
+# Step 4 is the point of the exercise and the easiest to skip: an
+# un-revoked token leaves the old blast radius intact while looking as if
+# it were closed. Rationale and rollback: .dev-notes/trusted_publishing.md.
 
 on:
   workflow_dispatch:
@@ -101,6 +112,19 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
+    # Trusted Publishing (OIDC). GitHub mints a short-lived token for THIS
+    # repository, THIS workflow and THIS environment at publish time; PyPI
+    # verifies the claim. Nothing long-lived exists to leak, and the release
+    # carries a verifiable statement of which workflow built it.
+    #
+    # The environment is a gate as well as a claim: a required reviewer on
+    # "pypi" makes publishing need an explicit human approval, which the token
+    # flow never had.
+    environment: pypi
+    permissions:
+      # Scoped to this job only. The top-level permissions block stays
+      # contents: read, so no other job gains anything from this.
+      id-token: write
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v8.0.1
@@ -110,5 +134,3 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
