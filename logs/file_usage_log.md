@@ -362,3 +362,19 @@
 - `docs/reference/models.md`: regenerated for the new docstring.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
+## Interpretation audit (audit/446-interpretation)
+
+- `macroforecast/interpretation/core.py`: `_coerce_custom_table` distinguishes a
+  columnar mapping from a scalar one; `custom_interpretation` docstring records
+  the full contract and its non-guarantees.
+- `tests/interpretation/test_attribution_oracles.py`: new -- native attribution
+  oracles and the custom-model dispatch check.
+- `tests/interpretation/test_shapley_oracles.py`: new -- efficiency, dummy,
+  linearity, permutation stability, aggregated-vs-per-row agreement, constant
+  model.
+- `tests/interpretation/test_custom_interpretation_contract.py`: new -- call
+  signature, accepted return shapes (including the fixed columnar mapping),
+  attached schema, and the explicit non-guarantee.
+- `docs/reference/interpretation.md`: regenerated for the new docstring.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
