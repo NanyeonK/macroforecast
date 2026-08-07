@@ -154,16 +154,43 @@ not. `AR` is target-only (`predictors=[]`), so no predictor setting can reach it
 and `AR,BIC` is bit-stable across all three, so the deterministic selection path
 is fine. The instability is specific to the CV path.
 
-Ruled out: the fold assignment is seeded (`random_kfold_split(..., random_state=0)`
-and the spec passes only `n_splits`), the sample is identical (`n_common=432`), and
-the model is stable under IC selection. The remaining candidates are tie-breaking
-in `select_params` or fold-loss accumulation order under `n_jobs>1`; a serial
-`n_jobs=1` pair decides between them and is running.
+**Root cause found, and it is one default.** `random_kfold_split` seeds itself with
+`random_state=0`, but `make_splitter` declared `random_state: int | None = None` and
+forwarded that value *explicitly*, so the callee's seeded default was never reached.
+Every `validation_splitter("random_kfold", ...)` goes through `make_splitter`, so
+every k-fold shuffle in the package drew from OS entropy:
 
-**What this bounds in this document.** Every `,KF` cell in the tables above carries
-run-to-run noise of this order, so a `,KF` number is comparable only against other
-numbers from the *same* run. The `,POOS` and IC-selected (`AIC`/`BIC`) cells are
-unaffected. It also retro-justifies the caution in *"What the re-run does NOT
+```
+random_kfold_split(200, n_splits=5) twice       -> IDENTICAL
+make_splitter("random_kfold", 200, n_splits=5)  -> DIFFERS
+make_splitter(..., random_state=0) twice        -> IDENTICAL
+```
+
+Two hypotheses died on measurement first, and both are worth recording because each
+looked right. It is **not** a parallel artifact: `n_jobs=1` is non-deterministic too
+(7.4e-04), merely 5x smaller than `n_jobs=8` (3.9e-03). It is **not** floating-point
+non-associativity in BLAS: `AR,BIC` is bit-identical to ten decimals across all four
+runs, serial and parallel, and BIC selection issues the same `lstsq` calls — moved
+numerics would have moved it too. Instrumenting `_resolve_selection_splits` then
+showed the splits themselves differing between calls sharing one splitter spec.
+
+The effect is not last-bit noise. Five `select_params` calls on identical inputs gave
+`best_score` 1.00970 / 0.98571 / 1.00746 / 0.97873 / 1.00451, and AR order selection
+over `{1,2,3,4,6,12}` picked **3, 4, 6, 3, 1** — a different model each time.
+
+Fixed in PR #515 (four sites defaulted `None` and forwarded it; all now default to
+`0`, matching `mf.window.random_kfold()`, which already promised a seed).
+
+**What this bounds in this document.** Every `,KF` cell in the tables above was
+produced with an unseeded shuffle, so each is **one draw from a distribution rather
+than a reproducible value** — comparable only against other numbers from the same
+run. The `,POOS` and IC-selected (`AIC`/`BIC`) cells are unaffected, which is why the
+`ARDI,BIC` controlled A/B above and the factor-convention comparison still stand.
+
+Re-running the 23 `,KF` arms under the fix would make them reproducible, and the
+values would move. That re-run is not folded into this document yet, and until it is,
+the `,KF` half of the parity tables should be read as indicative rather than as a
+measurement. It also retro-justifies the caution in *"What the re-run does NOT
 establish"* below: part of the cell-level churn between the stacked-panel and
 corrected runs was never attributable to `lags` at all.
 
