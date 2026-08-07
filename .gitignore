@@ -17,17 +17,9 @@ venv/
 *.swp
 *.swo
 
-# macrocast cache
-.macrocast/
-
 # Data (downloaded, not committed)
 data_cache/
 *.csv.gz
-
-# R
-macrocastR/.Rproj.user
-macrocastR/src/*.o
-macrocastR/src/*.so
 
 # OS
 .DS_Store
@@ -78,9 +70,6 @@ docs/_build/
 
 # CatBoost training artifacts
 catboost_info/
-
-# macrocast runtime output
-macrocast_output/
 
 # Local transport artifacts (git format-patch / git bundle output)
 *.patch

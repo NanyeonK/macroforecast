@@ -350,3 +350,15 @@
   no method leaves the report untouched, and all four adjust the same family.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
+## Security and hygiene (chore/security-and-hygiene)
+
+- `macroforecast/models/persistence.py`: `load_fit` docstring warns that
+  unpickling executes code.
+- `macroforecast/preprocessing/cache.py`: the S301 suppression states its trust
+  assumption.
+- `SECURITY.md`: new — reporting route, trust assumptions, scope.
+- `macroforecast/pipeline/spec.py`: `by` / `primary_axis` documented as reserved.
+- `.gitignore`: removed `macrocast` rename residue.
+- `docs/reference/models.md`: regenerated for the new docstring.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
