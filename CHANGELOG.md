@@ -27,6 +27,40 @@ full per-version honesty-pass history embedded in repo documentation.
     today — deliberately not "coming soon", which would be a promise.
   - `.gitignore` drops three blocks left over from the `macrocast` rename
     (`.macrocast/`, `macrocastR/*`, `macrocast_output/`).
+- `window/policy.py`, `docs/architecture.md`, `tests/architecture/` (**one
+  behaviour change, deliberate**): the package's layering is now written down
+  and enforced, and one field that looked like a setting is now refused.
+
+  **`StagePolicy.apply_to` was a silent no-op.** It is a public field, is
+  normalized in `__post_init__`, and appears in `to_dict()` and in two builder
+  signatures -- so a policy written with `apply_to=("fit",)` looked configured.
+  Nothing in the package reads it: a search finds the field only inside
+  `window/policy.py` itself. That stage would have been applied to the test rows
+  anyway. It now raises `ValueError` for any value other than `("fit", "test")`,
+  which is a behaviour change for code that passed something else -- code whose
+  intent was already not being honoured.
+
+  This is worse than `EvalSpec.by`, which at least refuses. A no-op that looks
+  like a setting is the harder failure, because the run *looks* configured.
+
+  **`tests/architecture/test_import_boundaries.py`** reads import statements and
+  fails on any new upward one, so `forecasting.run()` stays usable without a
+  pipeline and `models/` stays readable without the orchestrator -- the two
+  properties every replication under `docs/replication` relies on. Layers were
+  derived from what each package actually imports, not assigned by taste.
+
+  Two upward imports exist today and are listed explicitly rather than
+  tolerated: `data/vintage.py` reaching into `pipeline.run._panel_fingerprint`
+  (a layer-0 module using a layer-3 private function) and `pipeline/run.py`
+  importing `output.collect_provenance`. A second test fails if either is fixed
+  without being removed from the list, so it cannot rot into fiction.
+
+  **`docs/architecture.md`** records the layering, why it is load-bearing rather
+  than tidy, and two `[GAP]`s found while writing it: a forecast task's identity
+  is re-derived in four places rather than resolved once, and
+  `pipeline/evaluate.py` calls `load_fred_series()` to resolve named subsample
+  masks, which makes evaluating one fixed forecast table depend on network and
+  cache state.
 - `preprocessing/specs.py`, `docs/guide/concepts/preprocessing.md`
   (**breaking under `policy="fit_window"`**): custom preprocessing steps now
   declare whether they aggregate, and are held to it (issue #449).
