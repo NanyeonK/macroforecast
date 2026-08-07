@@ -549,6 +549,43 @@ through unchanged.</p></li>
 <p><code class="docutils literal notranslate"><span class="pre">mf.feature_engineering.feature_spec</span></code> stores feature construction choices for
 runner-fitted execution. The returned <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> is passed to <code class="docutils literal notranslate"><span class="pre">forecasting.run</span></code>
 or to an <code class="docutils literal notranslate"><span class="pre">Arm</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">lags</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code>, so every predictor enters at both <code class="docutils literal notranslate"><span class="pre">t</span></code> and <code class="docutils literal notranslate"><span class="pre">t-1</span></code>.</strong>
+It is worth setting explicitly, because it changes the <em>width</em> of the predictor
+block and therefore what any downstream dimension reduction is reducing:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">lags</span></code></p></th>
+<th class="head"><p>columns from a 132-series panel</p></th>
+<th class="head"><p>what a PCA over them means</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>132</p></td>
+<td><p>components of the cross-section <code class="docutils literal notranslate"><span class="pre">X_t</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">1)</span></code> (default)</p></td>
+<td><p><strong>264</strong></p></td>
+<td><p>components of the stacked <code class="docutils literal notranslate"><span class="pre">[X_t,</span> <span class="pre">X_{t-1}]</span></code> panel</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For a plain regression the extra lags are just more regressors. For anything that
+reduces the block — <code class="docutils literal notranslate"><span class="pre">pca_step</span></code>, <code class="docutils literal notranslate"><span class="pre">maf_step</span></code>, or a model like <code class="docutils literal notranslate"><span class="pre">far</span></code> that runs PCA
+<em>internally</em> on whatever design it is handed — the factors themselves become a
+different object, silently and with no error.</p>
+<p>The Stock-Watson diffusion-index model that most macro papers specify is
+<code class="docutils literal notranslate"><span class="pre">X_t</span> <span class="pre">=</span> <span class="pre">Lambda</span> <span class="pre">F_t</span> <span class="pre">+</span> <span class="pre">u_t</span></code>: factors of the cross-section at <strong>one</strong> time index. To
+reproduce it, pass <code class="docutils literal notranslate"><span class="pre">lags=0</span></code> and add factor lags deliberately with <code class="docutils literal notranslate"><span class="pre">lag_step</span></code> if
+the paper’s specification calls for them.</p>
+<p>A related asymmetry worth knowing: <code class="docutils literal notranslate"><span class="pre">pca_step</span></code> standardizes before the PCA
+(<code class="docutils literal notranslate"><span class="pre">scale=True</span></code>), while <code class="docutils literal notranslate"><span class="pre">far</span></code> centers only (<code class="docutils literal notranslate"><span class="pre">scale=False</span></code>, covariance PCA). Both
+conventions are defensible and papers differ, so state which one you want rather
+than inheriting a default.</p>
+</div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 
 <span class="c1"># MARX lags: the default macro predictor design. The marx_step builds the</span>
@@ -642,6 +679,94 @@ removes rows with any gap in the raw slice. Feature engineering works best on a
 ladder is built. Inside a runner, <code class="docutils literal notranslate"><span class="pre">feature_spec</span></code> fits these same steps on each
 train window so that stateful operations such as PCA never see test rows.</p>
 </section>
+<section id="available-steps">
+<h2>Available steps<a class="headerlink" href="#available-steps" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">feature_steps</span></code> accepts any of these; each links to its signature in the
+reference page. Target-aware steps (marked †) are fitted against the resolved
+direct target inside the training window, never the test rows.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>step</p></th>
+<th class="head"><p>what it builds</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lag_step</span></code></p></td>
+<td><p>lags of a named block</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seasonal_lag_step</span></code></p></td>
+<td><p>seasonal lags</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">moving_average_step</span></code></p></td>
+<td><p>a moving-average ladder</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rolling_step</span></code></p></td>
+<td><p>a rolling mean</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">marx_step</span></code></p></td>
+<td><p>the MARX mixed lag/moving-average ladder</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pca_step</span></code></p></td>
+<td><p>principal components</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">group_pca_step</span></code></p></td>
+<td><p>principal components within groups</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sparse_pca_chen_rohe_step</span></code></p></td>
+<td><p>Chen-Rohe sparse components</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maf_step</span></code></p></td>
+<td><p>maximum-autocorrelation factors</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">varimax_step</span></code></p></td>
+<td><p>an orthogonal varimax rotation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">partial_least_squares_step</span></code> †</p></td>
+<td><p>PLS components</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sliced_inverse_regression_step</span></code> †</p></td>
+<td><p>SIR directions</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">predictor_screen</span></code> †</p></td>
+<td><p>a screened predictor subset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">scale_step</span></code></p></td>
+<td><p>standardized / rescaled columns</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">transform_step</span></code></p></td>
+<td><p>a deterministic column transform</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">polynomial_step</span></code></p></td>
+<td><p>polynomial expansions</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">interaction_step</span></code></p></td>
+<td><p>pairwise interactions</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">nystroem_step</span></code></p></td>
+<td><p>a Nystroem kernel approximation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_projection_step</span></code></p></td>
+<td><p>a Gaussian random projection</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">hamilton_step</span></code></p></td>
+<td><p>the Hamilton filter</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fourier_step</span></code></p></td>
+<td><p>Fourier seasonal terms</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">season_dummy_step</span></code></p></td>
+<td><p>seasonal dummies</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_step</span></code></p></td>
+<td><p>deterministic trend / month / quarter / year</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">custom_step</span></code></p></td>
+<td><p>your own callable</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="reference">
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -699,6 +824,7 @@ train window so that stateful operations such as PCA never see test rows.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callables">Key Callables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#executed-walkthrough">Executed walkthrough</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-steps">Available steps</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
 </ul>
   </nav></div>
