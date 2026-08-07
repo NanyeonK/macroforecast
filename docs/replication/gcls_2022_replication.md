@@ -113,6 +113,48 @@ rel-RMSPE (full sample).
 *values* are near-ties with the paper (e.g. INDPRO h1 0.932 vs 0.933); the winning
 *arm* often differs among near-tied nonlinear/factor models (exact-arm match 1/25).
 
+```{admonition} Package bug found here: the CV-selected arms are not reproducible
+:class: danger
+
+Half the 46 arms select hyperparameters by 5-fold CV (`,KF`), and **those arms do
+not reproduce run to run**. Found while trying to A/B the predictor-lag setting:
+two runs with identical code, identical settings and identical `n_common` gave
+different answers.
+
+| run | `AR,BIC` rmse | `AR,KF` rmse |
+|---|---|---|
+| a (lags=0) | 0.002776 | 0.002791 |
+| b (lags=0, repeat) | 0.002776 | **0.002781** |
+| c (lags=0,1) | 0.002776 | 0.002791 |
+
+```
+a vs b (identical settings)  max |Δ rel-RMSPE| = 0.00387
+a vs c (the setting tested)  max |Δ rel-RMSPE| = 0.00025
+```
+
+**The run-to-run spread is 16× the effect being measured.** `a` and `c`, which
+differ in the setting under test, agree; `a` and `b`, which differ in nothing, do
+not. `AR` is target-only (`predictors=[]`), so no predictor setting can reach it —
+and `AR,BIC` is bit-stable across all three, so the deterministic selection path
+is fine. The instability is specific to the CV path.
+
+Ruled out: the fold assignment is seeded (`random_kfold_split(..., random_state=0)`
+and the spec passes only `n_splits`), the sample is identical (`n_common=432`), and
+the model is stable under IC selection. The remaining candidates are tie-breaking
+in `select_params` or fold-loss accumulation order under `n_jobs>1`; a serial
+`n_jobs=1` pair decides between them and is running.
+
+**What this bounds in this document.** Every `,KF` cell in the tables above carries
+run-to-run noise of this order, so a `,KF` number is comparable only against other
+numbers from the *same* run. The `,POOS` and IC-selected (`AIC`/`BIC`) cells are
+unaffected. It also retro-justifies the caution in *"What the re-run does NOT
+establish"* below: part of the cell-level churn between the stacked-panel and
+corrected runs was never attributable to `lags` at all.
+
+Filed as macroforecast issue #513 (ledger `MF-001`) — Purpose 2, a package defect
+surfaced by replication rather than by its own test suite.
+```
+
 **1a′ — corrected re-run, INDPRO, all 46 arms × 5 horizons (225 contender cells).**
 
 The tables in 1a/1b/1c below were produced with the stacked `[X_t, X_{t-1}]` panel.
