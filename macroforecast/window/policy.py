@@ -46,6 +46,10 @@ _UPDATE_ALIASES = {
 }
 
 
+#: The only ``apply_to`` any stage implements.
+_SUPPORTED_APPLY_TO: tuple[str, ...] = ("fit", "test")
+
+
 @dataclass(frozen=True)
 class StagePolicy:
     """Fit/apply timing rule for one forecasting-run stage.
@@ -59,6 +63,13 @@ class StagePolicy:
     update: StageUpdate = "every_origin"
     reference_start: Any | None = None
     reference_end: Any | None = None
+    #: Reserved. Only ``("fit", "test")`` is supported; anything else raises.
+    #:
+    #: The field is normalized and serialized, which makes it look like a knob,
+    #: but **no stage reads it** -- a policy built with ``apply_to=("fit",)``
+    #: would have applied the stage to the test rows anyway, silently. A
+    #: no-op that looks like a setting is worse than a missing one, because a
+    #: run configured with it looks configured.
     apply_to: tuple[str, ...] = ("fit", "test")
     metadata: dict[str, Any] = field(default_factory=dict)
     selector: Callable[..., Any] | None = None
@@ -67,6 +78,13 @@ class StagePolicy:
         object.__setattr__(self, "scope", _normalize_scope(self.scope))
         object.__setattr__(self, "update", _normalize_update(self.update))
         object.__setattr__(self, "apply_to", tuple(str(value) for value in self.apply_to))
+        if self.apply_to != _SUPPORTED_APPLY_TO:
+            raise ValueError(
+                "StagePolicy.apply_to is reserved: only "
+                f"{_SUPPORTED_APPLY_TO!r} is supported, got {self.apply_to!r}. "
+                "No stage reads this field, so any other value would have been "
+                "silently ignored rather than applied."
+            )
         if self.scope == "fixed_reference" and self.reference_start is None and self.reference_end is None:
             raise ValueError("fixed_reference stage policy requires reference_start or reference_end")
         if self.scope == "custom" and self.selector is None:

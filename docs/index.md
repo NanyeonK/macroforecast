@@ -94,6 +94,7 @@ guide/gallery
 guide/figures
 reference/index
 replication/README
+architecture
 guide/glossary
 guide/citing
 ```
