@@ -1,0 +1,122 @@
+name: ci-minimum-deps
+
+# `pyproject.toml` declares lower bounds. Nothing checks them.
+#
+# ci-core installs whatever the resolver picks, which is the newest compatible
+# release of everything -- so `pandas>=2.2` is tested at 2.3-or-later and never
+# at 2.2. A user who pins to the declared minimum is running a combination that
+# has never been executed, and the failure lands on them.
+#
+# Two things can be wrong, and they are different:
+#   1. The floor set does not INSTALL -- the pins are mutually incompatible even
+#      though each is individually plausible.
+#   2. The floor set installs and the package does not WORK on it -- an API used
+#      here arrived after the declared minimum.
+#
+# The job reports which of the two happened, because the fixes are unrelated.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  minimum-deps:
+    strategy:
+      fail-fast: false
+      matrix:
+        # EVERY supported interpreter, not just the oldest. Pinning one version
+        # here would have missed the first thing this job found: scipy 1.11.0
+        # ships a 3.10 wheel and no 3.12 one, so the declared floor is
+        # uninstallable on an interpreter the package claims to support. A floor
+        # that resolves on 3.10 and not on 3.12 is still a broken promise.
+        python-version: ['3.10', '3.11', '3.12']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Read the declared lower bounds
+        id: floors
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import re, tomllib
+          with open("pyproject.toml", "rb") as fh:
+              spec = tomllib.load(fh)
+          pins = []
+          for dep in spec["project"]["dependencies"]:
+              match = re.match(r"^([A-Za-z0-9_.\-]+)\s*>=\s*([0-9][0-9A-Za-z.\-]*)$", dep.strip())
+              if match:
+                  pins.append(f"{match.group(1)}=={match.group(2)}")
+              else:
+                  print(f"::warning::no simple lower bound in {dep!r}; not pinned")
+          print("pins=" + " ".join(pins))
+          PY
+
+      - name: Can the floor set even be installed together
+        run: |
+          python -m pip install --upgrade pip
+          echo "pinning: ${{ steps.floors.outputs.pins }}"
+          if ! pip install ${{ steps.floors.outputs.pins }}; then
+            echo "::error::the declared lower bounds do not resolve together."
+            echo "Each may be individually reasonable; the combination is not installable."
+            exit 1
+          fi
+
+      - name: Install the package without moving them
+        run: |
+          # --no-deps so pip cannot quietly upgrade a pin to satisfy the package
+          # and turn this into the same test ci-core already runs.
+          pip install --no-deps .
+          pip install --no-deps pytest pytest-timeout
+          pip check || true
+
+      - name: Report what is actually installed
+        run: pip list | grep -Ei "pandas|numpy|scikit-learn|statsmodels|scipy|openpyxl"
+
+      - name: Does the package work on its own floor
+        run: |
+          cd /tmp
+          python - <<'PY'
+          import numpy as np, pandas as pd
+          import macroforecast as mf
+          from macroforecast.pipeline import (
+              Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline,
+          )
+
+          n = 60
+          idx = pd.date_range("1990-01-31", periods=n, freq="ME", name="date")
+          rng = np.random.default_rng(0)
+          panel = pd.DataFrame({"x": rng.normal(size=n)}, index=idx)
+          panel["y"] = 0.5 * panel["x"] + rng.normal(size=n) * 0.3
+          bundle = mf.data.custom_dataset(
+              panel, transform_codes={c: 1 for c in panel.columns}
+          )
+          spec = pipeline_spec(
+              data=bundle,
+              targets=[TargetSpec("y", transform="level")],
+              horizons=[1],
+              window=mf.window.from_cutoffs(
+                  test_start=idx[45], horizon=1, embargo=0,
+                  val_method="expanding", val_min_train_size=10,
+              ),
+              arms=[
+                  Arm("AR", model="ar", is_benchmark=True),
+                  Arm("OLS", model="ols",
+                      features=mf.feature_engineering.feature_spec(
+                          target="y", predictors=["x"], lags=0, target_lags=1)),
+              ],
+              evaluation=EvalSpec(benchmark="AR", metrics=("rmse", "r2_oos"),
+                                  tests=("dm",)),
+              save_models=False,
+          )
+          report = run_pipeline(spec)
+          assert not report.forecasts.empty, "no forecasts on the dependency floor"
+          assert not report.accuracy.empty, "no accuracy table on the dependency floor"
+          print("floor set works — forecast rows:", len(report.forecasts))
+          PY
