@@ -57,7 +57,7 @@ docs = [
 typecheck = ["mypy>=1.13"]
 markdown = ["tabulate>=0.9"]
 all = ["macroforecast[parquet,markdown,xgboost,lightgbm,catboost,arch,plots,macro_random_forest,interpretation]"]
-ci = ["pytest>=8.0", "macroforecast[parquet,markdown]"]
+ci = ["pytest>=8.0", "macroforecast[parquet,markdown,interpretation]"]
 dev = ["pytest>=8.0", "macroforecast[all]"]
 
 [project.scripts]
