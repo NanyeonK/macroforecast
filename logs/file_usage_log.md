@@ -360,5 +360,16 @@
 - `macroforecast/pipeline/spec.py`: `by` / `primary_axis` documented as reserved.
 - `.gitignore`: removed `macrocast` rename residue.
 - `docs/reference/models.md`: regenerated for the new docstring.
+## Architecture guard (chore/architecture-guard)
+
+- `macroforecast/window/policy.py`: `apply_to` refuses any non-default value;
+  the field docstring records that nothing reads it.
+- `tests/architecture/test_import_boundaries.py`: new -- layer map derived from
+  actual imports, ratchet against new upward imports, known-exception list that
+  fails if it goes stale, and a check that no package is unclassified.
+- `docs/architecture.md`: new -- layers, why they matter, known exceptions, and
+  two recorded [GAP]s (task resolution spread across four files; evaluation
+  loading data).
+- `docs/index.md`: architecture added to the toctree.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
