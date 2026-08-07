@@ -5,6 +5,42 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `preprocessing/specs.py`, `docs/guide/concepts/preprocessing.md`
+  (**breaking under `policy="fit_window"`**): custom preprocessing steps now
+  declare whether they aggregate, and are held to it (issue #449).
+
+  A custom step used to be one callable. Under `fit_window` that callable is
+  re-executed on each apply window -- and the apply window contains the rows
+  after the forecast origin -- so a step computing any statistic there read the
+  future. The package warned and ran anyway.
+
+  Two shapes are now available:
+
+  - `custom_preprocess_step(name, func, row_local=True)` -- a claim that each
+    output row depends only on the matching input row, which makes re-execution
+    on a longer frame harmless.
+  - `custom_preprocess_step(name, fit_func=..., transform_func=...)` --
+    `fit_func` runs **once**, on the estimation window; `transform_func` applies
+    what it returned without recomputing.
+
+  A bare `func` declaring neither is **refused** under `fit_window`, with an
+  error naming all three ways out (declare row-local, split it, or use
+  `origin_available`). `origin_available` still accepts it, since the sample
+  handed to a step there is already restricted to observable rows.
+
+  Verified by the property rather than the mechanism: with the split step,
+  replacing every post-origin predictor with `1e6` leaves the first forecast
+  identical. A separate test counts `fit_func` calls to show the state is
+  derived once and never refitted at transform time.
+
+  **A note that made this harder to see than it looks.** OLS with an intercept
+  is invariant to any affine transform of `X`, so a leaky centering or rescaling
+  step changes the fitted coefficients and leaves the prediction untouched. The
+  first attempt at a demonstration used demeaning and *passed*. Only a
+  non-affine step -- clipping at a sample quantile -- moves the forecast. The
+  leak is equally real either way; whether it surfaces depends on the model it
+  feeds, which is why this is enforced rather than left to inspection.
+
 - `models/timeseries.py`, `models/specs.py` (**no default behaviour change**):
   `far` now takes `scale`, so a caller can choose the factor-extraction
   convention. Previously it centered the predictor block and ran PCA on that --

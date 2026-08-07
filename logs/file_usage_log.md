@@ -350,3 +350,18 @@
   no method leaves the report untouched, and all four adjust the same family.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 
+## Stateful custom preprocessing (fix/449-stateful-custom-preprocess)
+
+- `macroforecast/preprocessing/specs.py`: `custom_preprocess_step` takes
+  `fit_func`/`transform_func`/`row_local`; `_fit_custom_preprocess_states` runs
+  fit callables on the estimation window; `FittedPreprocessor.custom_step_states`
+  carries the result to transform; `_reject_unrestricted_fit_window_steps`
+  replaces the old warning.
+- `tests/preprocessing/test_custom_step_contract.py`: new -- refusal message
+  names every way out, stateful step is future-proof, row-local still works,
+  `origin_available` unchanged, state fitted exactly once, builder refuses
+  incoherent combinations.
+- `docs/guide/concepts/preprocessing.md`: the "keep them row-local" warning
+  replaced with the contract and worked examples.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
