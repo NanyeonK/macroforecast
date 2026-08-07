@@ -5,6 +5,28 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `models/persistence.py`, `preprocessing/cache.py`, `SECURITY.md`,
+  `pipeline/spec.py`, `.gitignore` (**documentation and hygiene only, no
+  behaviour change**):
+
+  - `load_fit()` now says that unpickling executes code. It reads a pickle, and
+    a pickle is a program: loading one can run arbitrary code before it returns.
+    The docstring had been a single line naming `save_fit`, which told a reader
+    nothing about that. The preprocessing cache's existing `# noqa: S301 —
+    trusted local filesystem` now states what "trusted" has to mean rather than
+    asserting it.
+  - New `SECURITY.md`: private reporting route, the two trust assumptions the
+    package makes about files it reads (pickles, user-supplied callables), and
+    an explicit scope — those two are documented properties rather than defects,
+    but turning one into a surprise for someone following the documentation is
+    in scope.
+  - `EvalSpec.by` and `EvalSpec.primary_axis` are documented as **reserved**.
+    Both are public dataclass fields that raise `ValueError` for any
+    non-default value, which reads as a feature you can use. The docstrings now
+    say only the default is supported and that nothing reads another value
+    today — deliberately not "coming soon", which would be a promise.
+  - `.gitignore` drops three blocks left over from the `macrocast` rename
+    (`.macrocast/`, `macrocastR/*`, `macrocast_output/`).
 - `preprocessing/specs.py`, `docs/guide/concepts/preprocessing.md`
   (**breaking under `policy="fit_window"`**): custom preprocessing steps now
   declare whether they aggregate, and are held to it (issue #449).

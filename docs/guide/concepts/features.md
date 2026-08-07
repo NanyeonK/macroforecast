@@ -30,6 +30,32 @@ papers:
 runner-fitted execution. The returned `FeatureSpec` is passed to `forecasting.run`
 or to an `Arm`.
 
+```{warning}
+**`lags` defaults to `(0, 1)`, so every predictor enters at both `t` and `t-1`.**
+It is worth setting explicitly, because it changes the *width* of the predictor
+block and therefore what any downstream dimension reduction is reducing:
+
+| `lags` | columns from a 132-series panel | what a PCA over them means |
+|---|---|---|
+| `0` | 132 | components of the cross-section `X_t` |
+| `(0, 1)` (default) | **264** | components of the stacked `[X_t, X_{t-1}]` panel |
+
+For a plain regression the extra lags are just more regressors. For anything that
+reduces the block — `pca_step`, `maf_step`, or a model like `far` that runs PCA
+*internally* on whatever design it is handed — the factors themselves become a
+different object, silently and with no error.
+
+The Stock-Watson diffusion-index model that most macro papers specify is
+`X_t = Lambda F_t + u_t`: factors of the cross-section at **one** time index. To
+reproduce it, pass `lags=0` and add factor lags deliberately with `lag_step` if
+the paper's specification calls for them.
+
+A related asymmetry worth knowing: `pca_step` standardizes before the PCA
+(`scale=True`), while `far` centers only (`scale=False`, covariance PCA). Both
+conventions are defensible and papers differ, so state which one you want rather
+than inheriting a default.
+```
+
 ```python
 import macroforecast as mf
 
@@ -129,6 +155,39 @@ removes rows with any gap in the raw slice. Feature engineering works best on a
 `PreprocessedData` panel from `reprocess`, which fills those gaps before the
 ladder is built. Inside a runner, `feature_spec` fits these same steps on each
 train window so that stateful operations such as PCA never see test rows.
+
+## Available steps
+
+`feature_steps` accepts any of these; each links to its signature in the
+reference page. Target-aware steps (marked †) are fitted against the resolved
+direct target inside the training window, never the test rows.
+
+| step | what it builds |
+|---|---|
+| `lag_step` | lags of a named block |
+| `seasonal_lag_step` | seasonal lags |
+| `moving_average_step` | a moving-average ladder |
+| `rolling_step` | a rolling mean |
+| `marx_step` | the MARX mixed lag/moving-average ladder |
+| `pca_step` | principal components |
+| `group_pca_step` | principal components within groups |
+| `sparse_pca_chen_rohe_step` | Chen-Rohe sparse components |
+| `maf_step` | maximum-autocorrelation factors |
+| `varimax_step` | an orthogonal varimax rotation |
+| `partial_least_squares_step` † | PLS components |
+| `sliced_inverse_regression_step` † | SIR directions |
+| `predictor_screen` † | a screened predictor subset |
+| `scale_step` | standardized / rescaled columns |
+| `transform_step` | a deterministic column transform |
+| `polynomial_step` | polynomial expansions |
+| `interaction_step` | pairwise interactions |
+| `nystroem_step` | a Nystroem kernel approximation |
+| `random_projection_step` | a Gaussian random projection |
+| `hamilton_step` | the Hamilton filter |
+| `fourier_step` | Fourier seasonal terms |
+| `season_dummy_step` | seasonal dummies |
+| `time_step` | deterministic trend / month / quarter / year |
+| `custom_step` | your own callable |
 
 ## Reference
 

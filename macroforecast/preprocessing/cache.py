@@ -203,7 +203,12 @@ class PreprocessorStore:
             return None
         try:
             data = path.read_bytes()
-            return pickle.loads(data)  # noqa: S301 — trusted local filesystem
+            # noqa: S301 -- this store is written by the package into a
+            # directory the caller chose. Unpickling executes code, so a
+            # cache directory must be treated as trusted as the machine
+            # itself: never point one at a location another party can
+            # write to, and never ship one across a trust boundary.
+            return pickle.loads(data)  # noqa: S301
         except Exception:  # noqa: BLE001 — any unpickling / IO error → miss
             return None
 
