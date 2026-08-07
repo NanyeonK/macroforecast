@@ -44,11 +44,27 @@ Correcting it (`lags=0`) closes most of the gap on `ARDI,BIC`/INDPRO and, more
 tellingly, **removes the horizon-growing pattern that motivated the
 "under-specified" reading in the first place**:
 
-| | stacked `[X_t, X_{t-1}]` | paper `X_t` |
+| `ARDI,BIC` vs paper | stacked `[X_t, X_{t-1}]` | paper `X_t` |
 |---|---|---|
 | median abs deviation | 0.0856 | **0.0441** |
 | h >= 9 | 0.1051 | **0.0459** |
 | h = 24 | 0.1221 | **0.0182** |
+
+**This table is a controlled A/B**, re-verified 2026-08-08: both columns were
+produced on the same day from the same commit, with `MF_GCLS_XLAGS` the only
+difference between the two runs. The re-run reproduced all six figures exactly.
+
+Its negative control is `AR,BIC`, which is built with `predictors=[]` and therefore
+cannot be reached by any predictor-lag setting:
+
+```
+AR,BIC across the two settings: max |delta| = 0.000e+00
+```
+
+Bit-identical, as it must be. That control also matters for reading the rest of this
+document: `AR,BIC` is stable run to run, while the CV-selected arms are not (see the
+reproducibility box below), so a controlled A/B is only meaningful on the IC-selected
+and `,POOS` arms in the first place.
 
 Still not a package defect — `lags=(0, 1)` is a reasonable general default and
 the replication simply never stated the paper's design. But it was *our* spec
@@ -215,11 +231,19 @@ control of `scripts/replication/gcls_2022_pipeline/` (committed 2026-08-07, `59d
 to the paper, 69 moved farther, and 88 did not move at all — including `AR,KF`, an arm
 built with `predictors=[]` that the `lags` setting cannot reach at all.
 
-The controlled evidence for the fix is the same-code A/B in the correction note above,
-plus the direct instrumentation of `MODEL_SPECS["far"].fit_func`, which showed the PCA
-input columns literally as `['RPI_lag0', 'RPI_lag1', ...]`. That evidence is about the
-factor block, and the corrected table reflects it where it applies: the ARDI family's
-median \|Δ\| is 0.0450 across its 20 cells, against 0.0882 under the stacked panel.
+The controlled evidence for the fix is the same-code A/B in the correction note above
+— re-run on 2026-08-08 with `MF_GCLS_XLAGS` as the only difference, reproducing all six
+figures and giving `max |delta| = 0` on the `predictors=[]` control arm — plus the direct
+instrumentation of `MODEL_SPECS["far"].fit_func`, which showed the PCA input columns
+literally as `['RPI_lag0', 'RPI_lag1', ...]`. That evidence is about the factor block, and
+the corrected table reflects it where it applies: the ARDI family's median \|Δ\| is 0.0450
+across its 20 cells, against 0.0882 under the stacked panel.
+
+So the two claims are separated by the evidence available for each. **The factor-block
+fix is controlled and holds.** The whole-table movement is not controlled and is not
+claimed — and issue #513 now supplies a second reason it could not be, beyond the
+untracked scripts: half those cells are CV-selected arms carrying run-to-run noise
+larger than the effect.
 
 The fix is justified because `X_t = Λ F_t + u_t` (eq. swardi2) is what the paper
 writes — not because parity improved. Where parity did not improve, that is recorded
