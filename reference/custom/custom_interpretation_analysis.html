@@ -614,7 +614,53 @@
 </section>
 <section id="description">
 <h4>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h4>
-<p>Run a user-supplied interpretation callable and attach metadata.</p>
+<p>Run a user-supplied interpretation callable and attach schema metadata.</p>
+<p>This is the escape hatch for an attribution method the package does not
+ship. What it does is small and worth stating exactly, because everything
+else about the result depends on it.</p>
+<p><strong>How your callable is invoked.</strong> Always with this signature::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>func(model, X, y=y, metadata={...}, **params)
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code> is passed through unchanged – a <code class="docutils literal notranslate"><span class="pre">ModelFit</span></code> if that is what you
+gave, not an unwrapped estimator. Use <code class="docutils literal notranslate"><span class="pre">fit.estimator</span></code> if you need the
+underlying object, and <code class="docutils literal notranslate"><span class="pre">fit.feature_names</span></code> for the column order it was
+trained on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">X</span></code> is coerced to a DataFrame first, so you can rely on <code class="docutils literal notranslate"><span class="pre">.columns</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> and <code class="docutils literal notranslate"><span class="pre">metadata</span></code> are always passed as keywords, even when <code class="docutils literal notranslate"><span class="pre">None</span></code>
+and <code class="docutils literal notranslate"><span class="pre">{}</span></code>. Accept them explicitly or absorb them with <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code>; a
+callable taking only <code class="docutils literal notranslate"><span class="pre">(model,</span> <span class="pre">X)</span></code> will raise <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>.</p></li>
+</ul>
+<p><strong>What you must return.</strong> A table: a DataFrame, or something that coerces to
+one (a mapping of column to values, or a sequence of row mappings). A scalar
+or a bare array is not accepted, because the result has to be joinable with
+every other interpretation output.</p>
+<p><strong>What this function does NOT do</strong>, and each absence is deliberate:</p>
+<ul class="simple">
+<li><p>It does not validate that your numbers mean anything. No axiom is checked
+– not efficiency, not that attributions sum to a prediction, not that an
+unused feature gets zero. If your method is wrong, the output is wrong and
+carries the same schema as a correct one.</p></li>
+<li><p>It does not restrict what your callable sees. You get the full <code class="docutils literal notranslate"><span class="pre">X</span></code> you
+passed in. Inside a runner that is the stage’s own frame, but calling this
+directly on a full-sample panel explains a full-sample fit, which is not
+the same thing as explaining a forecast.</p></li>
+<li><p>It does not make your method reproducible. If it samples, seed it yourself.</p></li>
+</ul>
+<p>What it <em>does</em> add is the schema every other interpretation output carries:
+<code class="docutils literal notranslate"><span class="pre">kind=&quot;custom_interpretation&quot;</span></code>, the resolved <code class="docutils literal notranslate"><span class="pre">name</span></code>, the callable’s
+qualified name, the parameters, <code class="docutils literal notranslate"><span class="pre">n_obs</span></code>, <code class="docutils literal notranslate"><span class="pre">n_features</span></code>, whether a target
+was supplied, and your own <code class="docutils literal notranslate"><span class="pre">metadata</span></code> under <code class="docutils literal notranslate"><span class="pre">user_metadata</span></code> – so a
+custom result is as traceable in a report as a built-in one.</p>
+<p>Example::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>def range_importance(model, X, *, y=None, metadata=None, **params):
+    spread = X.max() - X.min()
+    return {&quot;feature&quot;: list(X.columns), &quot;importance&quot;: spread.to_numpy()}
+
+table = mf.interpretation.custom_interpretation(fit, X, range_importance)
+</pre></div>
+</div>
 </section>
 <section id="parameters">
 <h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h4>
