@@ -108,11 +108,62 @@ custom callables without a digest still run, but disk get/put is skipped and the
 runner recomputes instead of risking stale reuse. Anonymous lambda custom steps
 without `__mf_digest__` are rejected because they collide by qualified name.
 
+### Saying whether a step aggregates
+
 Under `policy="fit_window"`, built-in outlier/imputation/standardization state is
-fitted on the training window and applied to later rows, but custom steps are
-re-executed on the apply window. Keep those custom steps row-local/stateless; a
-custom step that computes statistics from all rows it receives can read
-post-origin rows and leak future information.
+fitted on the training window and applied to later rows. A custom step is
+different: it is re-executed on each apply window, and that window contains the
+rows after the forecast origin. A step that computes any statistic there is
+reading the future.
+
+The package cannot tell by looking at a callable whether it aggregates, so you
+say which it is.
+
+**A step that never aggregates** — each output row depends only on the matching
+input row — declares itself:
+
+```python
+mf.preprocessing.custom_preprocess_step("log1p", log1p_step, row_local=True)
+```
+
+Re-running such a step on a longer frame cannot change a row that was already
+there, so it is safe under any policy.
+
+**A step that derives something from the sample** splits in two:
+
+```python
+def fit_bounds(panel, **params):
+    cols = panel.select_dtypes("number").columns
+    return {"lo": panel[cols].quantile(0.05), "hi": panel[cols].quantile(0.95)}
+
+def apply_bounds(panel, *, state=None, **params):
+    out = panel.copy()
+    cols = [c for c in state["lo"].index if c in out.columns]
+    out[cols] = out[cols].clip(lower=state["lo"][cols], upper=state["hi"][cols], axis=1)
+    return out
+
+mf.preprocessing.custom_preprocess_step(
+    "winsorize", fit_func=fit_bounds, transform_func=apply_bounds
+)
+```
+
+`fit_func` runs **once**, on the estimation window, and its return value is
+carried forward; `transform_func` applies it without recomputing. Anything
+derived from data — a quantile, a mean, a fitted scaler, a selected column
+subset — belongs in `fit_func`.
+
+A bare `func` that declares neither is refused under `fit_window`, with an error
+naming these options. It is still accepted under `policy="origin_available"`,
+where the sample handed to the step is already restricted to observable rows.
+
+```{note}
+Whether a leak *reaches* a forecast depends on the model. **OLS with an intercept
+is invariant to any affine transform of X**, so a leaky centering or rescaling
+step changes the fitted coefficients and leaves the prediction untouched. A
+non-affine one — clipping at a sample quantile, ranking, a threshold — does move
+it. The leak is equally real in both cases; only its visibility differs, which
+is why the contract is enforced rather than left to inspection.
+```
 
 ## Reference
 

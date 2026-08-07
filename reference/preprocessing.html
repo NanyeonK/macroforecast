@@ -1375,7 +1375,7 @@ returned metadata records the canonical direct-call names.</p>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.specs.FittedPreprocessor</span></code></p>
 <section id="id23">
 <h4>Signature<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">FittedPreprocessor</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PreprocessSpec</span><span class="p">,</span> <span class="n">fit_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fit_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">processed_train</span><span class="p">:</span> <span class="n">PreprocessedData</span><span class="p">,</span> <span class="n">preprocessing_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;origin_available&quot;</span><span class="p">,</span> <span class="n">standardization_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">state_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outlier_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">impute_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">train_after_outlier</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">FittedPreprocessor</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PreprocessSpec</span><span class="p">,</span> <span class="n">fit_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fit_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">processed_train</span><span class="p">:</span> <span class="n">PreprocessedData</span><span class="p">,</span> <span class="n">preprocessing_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;origin_available&quot;</span><span class="p">,</span> <span class="n">standardization_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">state_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outlier_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">impute_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">train_after_outlier</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">custom_step_states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
@@ -1444,6 +1444,11 @@ returned metadata records the canonical direct-call names.</p>
 <td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_step_states</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;factory&gt;</span></code></p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1509,6 +1514,10 @@ returned metadata records the canonical direct-call names.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">train_after_outlier</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">custom_step_states</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">default_factory</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1688,17 +1697,51 @@ prep = mf.preprocessing.preprocess_spec(
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.specs.custom_preprocess_step</span></code></p>
 <section id="id40">
 <h4>Signature<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">custom_preprocess_step</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">custom_preprocess_step</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fit_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">row_local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id41">
 <h4>Description<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
 <p>Return a custom preprocessing step for <code class="docutils literal notranslate"><span class="pre">preprocess_spec(custom_steps=...)</span></code>.</p>
-<p>For disk-backed preprocessing caches, set <code class="docutils literal notranslate"><span class="pre">func.__mf_digest__</span></code> to a stable
-string and update it when the callable’s behavior changes. Without that
-opt-in digest, the runner skips disk get/put for specs containing the
-callable and recomputes instead of risking stale reuse.</p>
+<p>There are two ways to write a step, and which one you need depends on
+whether it aggregates.</p>
+<p><strong>Row-local</strong> – each output row depends only on the same input row::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>custom_preprocess_step(&quot;log1p&quot;, log1p_step, row_local=True)
+</pre></div>
+</div>
+<p>A log, a ratio between two columns, a sign: nothing that looks along the
+index. These are safe under any policy, because re-running them on a longer
+frame cannot change a row that was already there. Declare <code class="docutils literal notranslate"><span class="pre">row_local=True</span></code>
+to say so.</p>
+<p><strong>Stateful</strong> – the step derives something from the sample first::</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>custom_preprocess_step(
+    &quot;winsorize&quot;,
+    fit_func=fit_bounds,        # (panel, metadata, **params) -&gt; state
+    transform_func=apply_bounds,  # (panel, state=..., metadata=..., **params) -&gt; panel
+)
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">fit_func</span></code> sees only the estimation window and returns whatever state it
+needs; <code class="docutils literal notranslate"><span class="pre">transform_func</span></code> receives that state and applies it. A quantile, a
+mean, a fitted scaler, a selected column subset – anything computed <em>from</em>
+the data belongs in <code class="docutils literal notranslate"><span class="pre">fit_func</span></code>, not recomputed inside <code class="docutils literal notranslate"><span class="pre">transform_func</span></code>.</p>
+<p>Why the split matters: under <code class="docutils literal notranslate"><span class="pre">policy=&quot;fit_window&quot;</span></code> a step is applied to
+each apply window, and that window contains the rows after the forecast
+origin. A step that recomputes its own statistic there reads the future.
+That is not hypothetical – it changes forecasts, though whether it <em>reaches</em>
+the forecast depends on the model. An affine leak (centering, rescaling) is
+absorbed by an OLS intercept and leaves predictions untouched; a non-affine
+one (clipping at a sample quantile) does not.</p>
+<p>A bare <code class="docutils literal notranslate"><span class="pre">func</span></code> that declares neither is still accepted under
+<code class="docutils literal notranslate"><span class="pre">policy=&quot;origin_available&quot;</span></code>, where the sample is already restricted to
+observable rows. Under <code class="docutils literal notranslate"><span class="pre">fit_window</span></code> it is refused: say <code class="docutils literal notranslate"><span class="pre">row_local=True</span></code>
+if it never aggregates, or split it into <code class="docutils literal notranslate"><span class="pre">fit_func</span></code>/<code class="docutils literal notranslate"><span class="pre">transform_func</span></code> if
+it does.</p>
+<p>For disk-backed preprocessing caches, set <code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code> on each callable
+to a stable string and update it when behaviour changes. Without that opt-in
+digest, the runner skips disk get/put for specs containing the callable and
+recomputes instead of risking stale reuse.</p>
 </section>
 <section id="id42">
 <h4>Parameters<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
@@ -1718,10 +1761,25 @@ callable and recomputes instead of risking stale reuse.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">func</span></code></p></td>
 <td><p>positional or keyword</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Callable[...,</span> <span class="pre">Any]</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Callable[...,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">params</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fit_func</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Callable[...,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">transform_func</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Callable[...,</span> <span class="pre">Any]</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">row_local</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">params</span></code></p></td>
 <td><p>var keyword</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Any</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>

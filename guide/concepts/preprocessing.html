@@ -631,11 +631,55 @@ test rows.</p>
 custom callables without a digest still run, but disk get/put is skipped and the
 runner recomputes instead of risking stale reuse. Anonymous lambda custom steps
 without <code class="docutils literal notranslate"><span class="pre">__mf_digest__</span></code> are rejected because they collide by qualified name.</p>
+<section id="saying-whether-a-step-aggregates">
+<h3>Saying whether a step aggregates<a class="headerlink" href="#saying-whether-a-step-aggregates" title="Link to this heading">#</a></h3>
 <p>Under <code class="docutils literal notranslate"><span class="pre">policy=&quot;fit_window&quot;</span></code>, built-in outlier/imputation/standardization state is
-fitted on the training window and applied to later rows, but custom steps are
-re-executed on the apply window. Keep those custom steps row-local/stateless; a
-custom step that computes statistics from all rows it receives can read
-post-origin rows and leak future information.</p>
+fitted on the training window and applied to later rows. A custom step is
+different: it is re-executed on each apply window, and that window contains the
+rows after the forecast origin. A step that computes any statistic there is
+reading the future.</p>
+<p>The package cannot tell by looking at a callable whether it aggregates, so you
+say which it is.</p>
+<p><strong>A step that never aggregates</strong> — each output row depends only on the matching
+input row — declares itself:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">custom_preprocess_step</span><span class="p">(</span><span class="s2">&quot;log1p&quot;</span><span class="p">,</span> <span class="n">log1p_step</span><span class="p">,</span> <span class="n">row_local</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Re-running such a step on a longer frame cannot change a row that was already
+there, so it is safe under any policy.</p>
+<p><strong>A step that derives something from the sample</strong> splits in two:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">fit_bounds</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="s2">&quot;number&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;lo&quot;</span><span class="p">:</span> <span class="n">panel</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.05</span><span class="p">),</span> <span class="s2">&quot;hi&quot;</span><span class="p">:</span> <span class="n">panel</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.95</span><span class="p">)}</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_bounds</span><span class="p">(</span><span class="n">panel</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;lo&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;lo&quot;</span><span class="p">][</span><span class="n">cols</span><span class="p">],</span> <span class="n">upper</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;hi&quot;</span><span class="p">][</span><span class="n">cols</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+<span class="n">mf</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">custom_preprocess_step</span><span class="p">(</span>
+    <span class="s2">&quot;winsorize&quot;</span><span class="p">,</span> <span class="n">fit_func</span><span class="o">=</span><span class="n">fit_bounds</span><span class="p">,</span> <span class="n">transform_func</span><span class="o">=</span><span class="n">apply_bounds</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">fit_func</span></code> runs <strong>once</strong>, on the estimation window, and its return value is
+carried forward; <code class="docutils literal notranslate"><span class="pre">transform_func</span></code> applies it without recomputing. Anything
+derived from data — a quantile, a mean, a fitted scaler, a selected column
+subset — belongs in <code class="docutils literal notranslate"><span class="pre">fit_func</span></code>.</p>
+<p>A bare <code class="docutils literal notranslate"><span class="pre">func</span></code> that declares neither is refused under <code class="docutils literal notranslate"><span class="pre">fit_window</span></code>, with an error
+naming these options. It is still accepted under <code class="docutils literal notranslate"><span class="pre">policy=&quot;origin_available&quot;</span></code>,
+where the sample handed to the step is already restricted to observable rows.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Whether a leak <em>reaches</em> a forecast depends on the model. <strong>OLS with an intercept
+is invariant to any affine transform of X</strong>, so a leaky centering or rescaling
+step changes the fitted coefficients and leaves the prediction untouched. A
+non-affine one — clipping at a sample quantile, ranking, a threshold — does move
+it. The leak is equally real in both cases; only its visibility differs, which
+is why the contract is enforced rather than left to inspection.</p>
+</div>
+</section>
 </section>
 <section id="reference">
 <h2>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h2>
@@ -694,7 +738,10 @@ post-origin rows and leak future information.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-callables">Key Callables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#executed-walkthrough">Executed walkthrough</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-steps-and-caches">Custom Steps And Caches</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-steps-and-caches">Custom Steps And Caches</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#saying-whether-a-step-aggregates">Saying whether a step aggregates</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reference">Reference</a></li>
 </ul>
   </nav></div>
