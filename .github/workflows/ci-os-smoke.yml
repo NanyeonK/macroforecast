@@ -1,0 +1,179 @@
+name: ci-os-smoke
+
+# Every other job runs on ubuntu-latest.
+#
+# The things that differ across operating systems are not the statistics -- they
+# are the plumbing the statistics sit on: path separators and case sensitivity,
+# the multiprocessing start method (fork on Linux, spawn on Windows and macOS),
+# file locking, and whether a pickle written by one process can be read by
+# another. All of those are load-bearing here, because the package writes
+# caches, forks workers, and stores fitted models.
+#
+# Deliberately a smoke test, not the full matrix. Ubuntu keeps the suite; this
+# answers "does it work at all" on the other two, which is the question nobody
+# can currently answer.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[ci]"
+
+      - name: Import and version
+        run: python -c "import macroforecast as mf; print(mf.__version__)"
+
+      - name: A pipeline, serial and parallel, must agree
+        # n_jobs>1 uses spawn here and fork on Linux. Under spawn the worker
+        # re-imports the module and re-pickles whatever it was handed, so a
+        # payload that survives fork can still fail -- and the failure would be
+        # a wrong number or a crash on someone's laptop, not on CI.
+        run: |
+          python - <<'PY'
+          import numpy as np, pandas as pd
+          import macroforecast as mf
+          from macroforecast.pipeline import (
+              Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline,
+          )
+
+          n = 70
+          idx = pd.date_range("1990-01-31", periods=n, freq="ME", name="date")
+          rng = np.random.default_rng(0)
+          panel = pd.DataFrame({f"x{i}": rng.normal(size=n) for i in range(3)}, index=idx)
+          panel["y"] = 0.5 * panel["x0"] + rng.normal(size=n) * 0.3
+          bundle = mf.data.custom_dataset(
+              panel, transform_codes={c: 1 for c in panel.columns}
+          )
+          features = mf.feature_engineering.feature_spec(
+              target="y", predictors=[f"x{i}" for i in range(3)], lags=0, target_lags=1
+          )
+
+          def run(n_jobs):
+              spec = pipeline_spec(
+                  data=bundle,
+                  targets=[TargetSpec("y", transform="level")],
+                  horizons=[1],
+                  window=mf.window.from_cutoffs(
+                      test_start=idx[50], horizon=1, embargo=0,
+                      val_method="expanding", val_min_train_size=10,
+                  ),
+                  arms=[
+                      Arm("AR", model="ar", is_benchmark=True),
+                      Arm("OLS", model="ols", features=features),
+                  ],
+                  evaluation=EvalSpec(benchmark="AR", metrics=("rmse",), tests=()),
+                  save_models=False,
+                  n_jobs=n_jobs,
+                  seed=42,
+              )
+              out = run_pipeline(spec).forecasts
+              return out.sort_values(["contender", "date"]).reset_index(drop=True)
+
+          serial, parallel = run(1), run(2)
+          assert not serial.empty, "no forecasts"
+          np.testing.assert_allclose(
+              serial["prediction"].to_numpy(float),
+              parallel["prediction"].to_numpy(float),
+              rtol=0, atol=1e-12,
+              err_msg="serial and parallel disagree on this OS",
+          )
+          print("serial == parallel on", len(serial), "forecasts")
+          PY
+
+      - name: Paths and caches survive this filesystem
+        # Windows is case-insensitive and uses backslashes; a cache directory or
+        # a saved model written with one convention and read with another fails
+        # here and nowhere else.
+        shell: bash
+        run: |
+          python - <<'PY'
+          import tempfile
+          from pathlib import Path
+
+          import numpy as np, pandas as pd
+          import macroforecast as mf
+          from macroforecast.pipeline import (
+              Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline,
+          )
+
+          cache = Path(tempfile.mkdtemp()) / "preprocessing cache"  # a space, on purpose
+          n = 70
+          idx = pd.date_range("1990-01-31", periods=n, freq="ME", name="date")
+          rng = np.random.default_rng(0)
+          panel = pd.DataFrame({"x": rng.normal(size=n)}, index=idx)
+          panel["y"] = 0.5 * panel["x"] + rng.normal(size=n) * 0.3
+          bundle = mf.data.custom_dataset(
+              panel, transform_codes={c: 1 for c in panel.columns}
+          )
+
+          def run():
+              spec = pipeline_spec(
+                  data=bundle,
+                  targets=[TargetSpec("y", transform="level")],
+                  horizons=[1],
+                  window=mf.window.from_cutoffs(
+                      test_start=idx[50], horizon=1, embargo=0,
+                      val_method="expanding", val_min_train_size=10,
+                  ),
+                  arms=[Arm("AR", model="ar", is_benchmark=True)],
+                  evaluation=EvalSpec(benchmark="AR", metrics=("rmse",), tests=()),
+                  preprocessing_cache_dir=str(cache),
+                  save_models=False,
+              )
+              return run_pipeline(spec).forecasts.sort_values("date").reset_index(drop=True)
+
+          cold, warm = run(), run()
+          np.testing.assert_allclose(
+              cold["prediction"].to_numpy(float),
+              warm["prediction"].to_numpy(float),
+              rtol=0, atol=1e-12,
+              err_msg="a warm on-disk cache changed the answer on this filesystem",
+          )
+          print("cold == warm through", cache)
+          PY
+
+      - name: Save and reload a fitted model
+        run: |
+          python - <<'PY'
+          import tempfile
+          from pathlib import Path
+
+          import numpy as np, pandas as pd
+          import macroforecast as mf
+
+          X = pd.DataFrame({"a": np.arange(40.0), "b": np.arange(40.0) ** 0.5})
+          y = pd.Series(2.0 * X["a"] + X["b"], name="y")
+          fit = mf.models.ols(X, y)
+
+          root = Path(tempfile.mkdtemp()) / "model store"
+          root.mkdir(parents=True, exist_ok=True)
+          saved = mf.models.save_fit(fit, root / "ols.pkl")
+          assert saved.model_path, f"nothing written: {saved}"
+          reloaded = mf.models.load_fit(saved.model_path)
+          np.testing.assert_allclose(
+              np.asarray(fit.predict(X), dtype=float),
+              np.asarray(reloaded.predict(X), dtype=float),
+              rtol=0, atol=1e-12,
+              err_msg="a reloaded model predicts differently on this OS",
+          )
+          print("save/load round-trip through", root)
+          PY
