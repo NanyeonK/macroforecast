@@ -181,18 +181,44 @@ over `{1,2,3,4,6,12}` picked **3, 4, 6, 3, 1** — a different model each time.
 Fixed in PR #515 (four sites defaulted `None` and forwarded it; all now default to
 `0`, matching `mf.window.random_kfold()`, which already promised a seed).
 
-**What this bounds in this document.** Every `,KF` cell in the tables above was
-produced with an unseeded shuffle, so each is **one draw from a distribution rather
-than a reproducible value** — comparable only against other numbers from the same
-run. The `,POOS` and IC-selected (`AIC`/`BIC`) cells are unaffected, which is why the
-`ARDI,BIC` controlled A/B above and the factor-convention comparison still stand.
+**Resolved: the table has been re-run under the fix.** The 46-arm × 5-horizon grid was
+recomputed on a lane carrying the seed commit *alone* (cherry-picked rather than merged,
+so nothing else moved with it). Every `,KF` number in this document is now a reproducible
+value rather than one draw from a distribution.
 
-Re-running the 21 `,KF` arms — 105 of the 225 contender cells — under the fix would
-make them reproducible, and the values would move. That re-run is not folded into this document yet, and until it is,
-the `,KF` half of the parity tables should be read as indicative rather than as a
-measurement. It also retro-justifies the caution in *"What the re-run does NOT
-establish"* below: part of the cell-level churn between the stacked-panel and
-corrected runs was never attributable to `lags` at all.
+**Fixing the seed did not improve parity, and there was no reason to expect it to.**
+
+| INDPRO, 225 contender cells | median \|Δ rel-RMSPE\| | beats AR,BIC |
+|---|---|---|
+| unseeded | 0.0405 | 106 |
+| **seeded (#513 fixed)** | **0.0389** | 104 |
+
+Restricted to the 105 `,KF` cells the fix actually touches: 67 moved, median move 0.0017,
+largest 0.0526 — and against the paper, 31 landed closer while 36 landed farther. That is
+a wash, which is the correct outcome. An unseeded draw is not *biased*, only
+*unrepeatable*; re-drawing with a fixed seed has no reason to move systematically toward
+the paper. **Reproducibility and accuracy are different properties, and only the first was
+broken.**
+
+It also retro-justifies the caution in *"What the re-run does NOT establish"* below: part
+of the cell-level churn between the stacked-panel and corrected runs was never
+attributable to `lags` at all.
+
+```{admonition} The control, and the one cell that failed it
+:class: tip
+
+The two runs differ by exactly one commit, so the 120 deterministic cells (`,POOS` +
+`AIC`/`BIC`) had to come back identical. 119 do, five of them differing by a single ULP
+(1.1e-16 — floating-point representation, not arithmetic).
+
+One does not: `B3,lasso,POOS` at h=9 moved by **2.199e-05**. Recorded rather than rounded
+away. It is not reachable by the seed — `lasso(X, y, *, alpha, max_iter, standardize)`
+takes no `random_state` — and is consistent with a coordinate-descent solver stopping on
+its tolerance at a marginally different iterate once a ULP-level difference appears
+upstream. For scale, it is ~1,800× smaller than this table's median gap to the paper and
+~180× smaller than the run-to-run noise it replaced.
+```
+
 
 Filed as macroforecast issue #513 (ledger `MF-001`) — Purpose 2, a package defect
 surfaced by replication rather than by its own test suite.
