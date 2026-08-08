@@ -246,6 +246,67 @@ cells beat the AR,BIC benchmark here, against 128 of 225 in the paper.** The hea
 direction (ML/factor methods beat AR) reproduces; the *breadth* of that win does not
 fully reproduce, and the shortfall sits in the SVR and shrinkage families.
 
+### 1a″ — factor-extraction convention: covariance or correlation?
+
+The corrected run leaves one internal inconsistency. `far` hard-codes **covariance**
+PCA (centred only), while the B1–B3 shrinkage arms reach their factors through
+`pca_step`, whose default is **correlation** (`scale=True`). Two conventions in one
+table invites the question of whether the mixture is an accident worth removing.
+
+It was measured rather than argued: the full 46-arm × 5-horizon grid was re-run with
+the convention made uniformly covariance (`covpca_full`, 230 cells).
+
+**The mixture is closer to the paper. Making it uniform is worse.**
+
+| INDPRO, 120 deterministic cells | median \|Δ rel-RMSPE\| | beats AR,BIC |
+|---|---|---|
+| mixed (`far` covariance, `pca_step` correlation) | **0.0425** | 53 / 120 |
+| uniform covariance | 0.0499 | 47 / 120 |
+| paper | — | 67 / 120 |
+
+8 cells moved closer, 17 moved farther. The damage concentrates exactly where it
+should if correlation PCA is the right reading of the paper — on the arms that
+consume `pca_step` factors:
+
+| family | mixed | uniform | Δ |
+|---|---|---|---|
+| RFARDI | 0.0277 | 0.0490 | **−0.0213** |
+| RRARDI | 0.0473 | 0.0646 | −0.0173 |
+| Shrinkage (B1–B3) | 0.0478 | 0.0567 | −0.0089 |
+| ARDI (`far`) | 0.0450 | 0.0450 | 0.0000 |
+
+`ARDI` does not move, which is the arithmetic check: `far` was already covariance, so
+the uniform run changes nothing for it.
+
+**Reading.** GCLS standardize their predictor panel, so a correlation-PCA factor block
+is the faithful reading for the arms that build factors from that panel. The mixture
+is not an accident to be tidied away; it is two conventions each applied where the
+paper's design calls for it. No change is made.
+
+```{admonition} The control that makes this readable
+:class: tip
+
+The comparison has a built-in noise floor. 85 of the 225 cells belong to arms with
+**no factor block at all** (`AR`, `RFAR`, `KRRAR`, `RRAR`, `SVR-AR`), which the PCA
+convention cannot reach by construction. Splitting them:
+
+```
+deterministic (,POOS + AIC/BIC) : 0 of 60 moved,  max |delta| = 0.000e+00
+,KF                             : 27 of 25 arms' cells moved, up to 4.8e-02
+```
+
+The deterministic half is **bit-identical across the two runs** — the strongest
+available evidence that the pipeline changed only what the convention switch was
+supposed to change. The `,KF` half moved anyway, on arms with no factors, which is
+issue #513 measured a second time and from a different direction.
+
+That is why the table above is restricted to the 120 deterministic cells. On all 225
+the mixed convention still wins (0.0405 vs 0.0493), but 76 of the moves in that
+figure are shuffle noise rather than convention.
+```
+
+---
+
 ```{admonition} What the re-run does NOT establish
 :class: warning
 
