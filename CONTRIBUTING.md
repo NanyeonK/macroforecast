@@ -4,9 +4,14 @@
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
-pip install -e ".[dev]"          # everything, including optional backends
+pip install -e ".[dev]"          # pytest + every optional backend EXCEPT deep
+pip install -e ".[dev,deep]"     # add torch/captum
 pip install -e ".[ci]"           # what CI installs: parquet, markdown, interpretation
+pip install pytest-timeout       # see below -- not in the pip extras
 ```
+
+`dev` resolves to `macroforecast[all]`, and `all` deliberately omits `deep`, so
+`.[dev]` alone gives you no `torch`.
 
 `uv.lock` records the repository development environment for reproducible local setup
 and dependency audits. CI installs from `pyproject.toml` extras and does **not** enforce
@@ -23,7 +28,8 @@ is an instruction rather than a guess.
 pytest tests/ -q -m 'not slow and not rparity and not mc'      # what ci-core runs
 ```
 
-Four marker-gated groups are excluded by default and opt in individually:
+Three marker-gated groups are excluded by default and opt in individually. A
+fourth marker, `reference`, exists but runs by default:
 
 | marker | what it is | opt in |
 |---|---|---|
@@ -46,8 +52,12 @@ tests/models/test_standard_estimators.py::test_ucsv_default_draws_runtime_guard_
 Unattended runs need a timeout — `-x` does not catch a hang:
 
 ```bash
+pip install pytest-timeout      # NOT in the pip `dev` extra
 pytest tests/ -q --timeout=90 --timeout-method=thread
 ```
+
+`pytest-timeout` is declared in `[dependency-groups].dev`, which `pip install -e
+".[dev]"` does not read. `uv sync` picks it up; pip users install it explicitly.
 
 ## What CI checks
 
@@ -58,7 +68,7 @@ pytest tests/ -q --timeout=90 --timeout-method=thread
 | `ci-readme` | push, PR | the README's minimal recipe actually executes |
 | `ci-typecheck` | push, PR | `mypy` across modules |
 | `ci-os-smoke` | push, PR | serial == parallel, cache round-trip, and model save/reload on Windows and macOS |
-| `ci-deep` | nightly, manual | the gated groups |
+| `ci-deep` | nightly, manual | installs `.[ci,deep]` and runs `tests/models` + `tests/forecasting` |
 | `ci-extras` | weekly, manual | optional backends |
 
 **`docs/reference/` is generated but source-committed.** Changing a public signature or
@@ -72,8 +82,10 @@ python -m tools.docgen docs/reference
 ## Branches and merges
 
 - Branch from `main`; never commit to `main` directly.
-- Merges are **squash** merges, and the subject carries the PR number: `fix(window):
-  seed the k-fold shuffle (#515)`.
+- **Project convention is the squash merge**, with the PR number in the subject:
+  `fix(window): seed the k-fold shuffle (#515)`. Repository settings currently permit
+  merge commits and rebases too, so this is a convention the reviewer upholds rather
+  than something the platform enforces.
 - Long-running or parallel work belongs in a `git worktree`, one per branch — two agents
   or sessions must not share a branch or a file scope.
 - **Do not touch `CHANGELOG.md` or `logs/file_usage_log.md` in a feature branch.** Every
