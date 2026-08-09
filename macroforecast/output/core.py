@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+# Re-exported so ``output.collect_provenance`` keeps working unchanged; the
+# implementation moved to ``meta`` in A1 because it probes the environment.
+from macroforecast.meta.provenance import collect_provenance  # noqa: F401
+
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
@@ -777,31 +781,6 @@ def _with_run_provenance(
     return enriched
 
 
-def collect_provenance(
-    *,
-    cwd: str | Path | None = None,
-    fields: tuple[str, ...] | None = None,
-) -> dict[str, Any]:
-    """Collect lightweight package, Python, platform, and git provenance."""
-
-    root = Path(cwd or Path.cwd())
-    provenance = {
-        "macroforecast_version": __version__,
-        "python": sys.version,
-        "python_executable": sys.executable,
-        "platform": platform.platform(),
-        "cwd": str(root),
-        "git": _git_provenance(root),
-        "packages": {
-            package: _package_version(package)
-            for package in ("numpy", "pandas", "scipy", "scikit-learn", "statsmodels")
-        },
-    }
-    if fields is None:
-        return provenance
-    return {field: provenance[field] for field in fields if field in provenance}
-
-
 def _attach_output_schema(
     table: pd.DataFrame,
     *,
@@ -1164,32 +1143,6 @@ def _file_metadata(path: str | Path) -> dict[str, Any]:
 def _safe_name(name: str) -> str:
     safe = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in str(name))
     return safe.strip("_") or "artifact"
-
-
-def _git_provenance(cwd: Path) -> dict[str, Any]:
-    def run_git(*args: str) -> str | None:
-        try:
-            return subprocess.check_output(
-                ["git", *args],
-                cwd=str(cwd),
-                stderr=subprocess.DEVNULL,
-                text=True,
-            ).strip()
-        except Exception:
-            return None
-
-    return {
-        "commit": run_git("rev-parse", "HEAD"),
-        "branch": run_git("branch", "--show-current"),
-        "dirty": bool(run_git("status", "--porcelain")),
-    }
-
-
-def _package_version(package: str) -> str | None:
-    try:
-        return version(package)
-    except PackageNotFoundError:
-        return None
 
 
 def _forecast_result_metadata(value: ForecastResult) -> dict[str, Any]:

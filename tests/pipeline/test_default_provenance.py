@@ -178,7 +178,13 @@ def test_fingerprint_matches_across_independent_pipeline_runs():
 def test_fingerprint_subsample_path_is_deterministic_and_labeled(monkeypatch):
     """Above the cell cap the fingerprint falls back to a deterministic strided
     subsample (never the full content) and says so via ``method``."""
-    monkeypatch.setattr(run_mod, "_FINGERPRINT_FULL_CELL_CAP", 50)
+    # The cap lives with the function it governs, and both moved to
+    # ``data.identity`` in A1. Patching the re-exported name on ``run_mod`` does
+    # not reach it: the function reads its OWN module global, so the patch has to
+    # land where the function is.
+    from macroforecast.data import identity as identity_mod
+
+    monkeypatch.setattr(identity_mod, "_FINGERPRINT_FULL_CELL_CAP", 50)
     frame = _bundle(n=96).panel  # 96 x 2 = 192 cells > the patched cap
     fp1 = run_mod._panel_fingerprint(frame)
     fp2 = run_mod._panel_fingerprint(frame)

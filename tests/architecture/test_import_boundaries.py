@@ -74,10 +74,20 @@ LAYERS: dict[str, int] = {
 }
 
 #: (module, imported package) pairs that predate this test. See the docstring.
-KNOWN_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset({
-    ("data/vintage.py", "pipeline"),
-    ("pipeline/run.py", "output"),
-})
+#: Empty since A1 (2026-08-09). Both entries were lower layers reaching up for a
+#: function that had no business living where it lived:
+#:
+#:   data/vintage.py   -> pipeline.run._panel_fingerprint
+#:   pipeline/run.py   -> output.collect_provenance
+#:
+#: A fingerprint is a property of the data and now lives in data/identity.py; a
+#: git/environment probe is not artifact writing and now lives in
+#: meta/provenance.py. Neither move changed behaviour -- the digest is byte-identical
+#: and output.collect_provenance re-exports the same object.
+#:
+#: Keep this empty. An entry added here is a layering violation the project decided to
+#: live with, so it needs a reason in the architecture document, not just a tuple.
+KNOWN_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset()
 
 
 def _layer_of(module_path: Path) -> tuple[str, int] | None:
