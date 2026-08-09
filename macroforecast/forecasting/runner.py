@@ -2192,7 +2192,7 @@ def _vintage_boundary_audit(
 
 
 def _fit_predict_origin(
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     cfg: _OriginRunConfig,
 ) -> list[dict[str, Any]]:
     """Route one per-origin feature-matrix item to its policy strategy.
@@ -2380,7 +2380,7 @@ def _validate_runner_window(
 
 
 def _select_existing_features(
-    item: dict[str, Any], prefix: str, policy: StagePolicy
+    item: Mapping[str, Any], prefix: str, policy: StagePolicy
 ) -> Any:
     if policy.scope == "origin_available":
         return item[f"{prefix}_estimation"]
@@ -2644,7 +2644,7 @@ def _validate_panel_target(panel: pd.DataFrame, target: str) -> None:
 
 def _stage_update_due(
     policy: StagePolicy | None,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     *,
     origin_count: int,
     state: _StageUpdateState,
@@ -2671,12 +2671,12 @@ def _stage_update_due(
     raise TypeError(f"unsupported stage policy update {update!r}")
 
 
-def _mark_stage_updated(state: _StageUpdateState, item: dict[str, Any]) -> None:
+def _mark_stage_updated(state: _StageUpdateState, item: Mapping[str, Any]) -> None:
     state.updated_once = True
     state.last_origin = item["row"].get("origin")
 
 
-def _origin_timestamp(item: dict[str, Any]) -> pd.Timestamp:
+def _origin_timestamp(item: Mapping[str, Any]) -> pd.Timestamp:
     origin = item["row"].get("origin")
     try:
         timestamp = pd.Timestamp(origin)
@@ -2703,7 +2703,7 @@ def _coerce_last_update_timestamp(origin: Any) -> pd.Timestamp:
 
 def _origin_stage_record(
     stage: str,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     metadata: dict[str, Any],
     *,
     updated: bool,

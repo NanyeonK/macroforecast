@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from macroforecast.window.context import OriginContext
+
 import dataclasses as _dc
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -803,8 +805,16 @@ class WindowSpec:
         index: int | Sequence[Any] | pd.Index,
         *,
         exclude_origin: bool = False,
-    ) -> Iterator[dict[str, Any]]:
-        """Yield origin metadata and absolute-position slices for model runners."""
+    ) -> Iterator[OriginContext]:
+        """Yield origin metadata and absolute-position slices for model runners.
+
+        Returns :class:, which IS a
+        Mapping over the same keys this yielded as a plain dict before A3 --
+        origin["fit_idx"] and dict(origin) are unchanged -- while also
+        exposing typed attributes such as origin.fit_idx and
+        origin.origin_pos. The annotation says OriginContext rather than
+        Mapping so a reader is told the attributes exist.
+        """
 
         labels = _coerce_index(index)
         for _, row in self.plan(labels, exclude_origin=exclude_origin).iterrows():
@@ -823,19 +833,19 @@ class WindowSpec:
                 int(row["test_end_pos"]) + 1,
                 dtype=int,
             )
-            yield {
-                "row": row.to_dict(),
-                "estimation_idx": estimation_idx,
-                "fit_idx": fit_idx,
-                "test_idx": test_idx,
-                "val_splits": self.val_splits_for_origin(
+            yield OriginContext(
+                row=row.to_dict(),
+                estimation_idx=estimation_idx,
+                fit_idx=fit_idx,
+                test_idx=test_idx,
+                val_splits=self.val_splits_for_origin(
                     labels,
                     int(row["origin_pos"]),
                     exclude_origin=exclude_origin,
                 )
                 if bool(row["retune"])
                 else [],
-            }
+            )
 
     def iter_slices(
         self,
