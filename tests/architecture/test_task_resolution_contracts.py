@@ -199,33 +199,56 @@ def test_the_result_store_digest_does_not_move_when_the_caller_dict_moves(panel)
 # 3. Window conflict
 # --------------------------------------------------------------------------- #
 
-def test_a_window_cannot_carry_two_disagreeing_validation_sizes():
+@pytest.mark.xfail(
+    strict=True,
+    reason="FINDING (2026-08-09): WindowSpec keeps BOTH the nested and the flat value "
+    "and reconciles neither. Measured: val.size=24 with validation_size=36 constructs "
+    "fine and both survive; likewise val.n_splits=3 with n_splits=7, and "
+    "test.horizon=2 with horizon=5. Whichever field a consumer happens to read decides "
+    "the answer, and split()/to_table()/val_splits_for_origin() do not all read the "
+    "same one. A3 makes the flat fields builder-only aliases that compile into the "
+    "nested value; strict=True so this flips the moment that lands.",
+)
+@pytest.mark.parametrize(
+    "kwargs, nested_of, flat_name",
+    [
+        (
+            dict(val=lambda VW: VW(method="last_block", size=24), validation_size=36),
+            lambda spec: spec.val.size,
+            "validation_size",
+        ),
+        (
+            dict(val=lambda VW: VW(method="expanding", n_splits=3), n_splits=7),
+            lambda spec: spec.val.n_splits,
+            "n_splits",
+        ),
+    ],
+)
+def test_a_window_cannot_carry_two_disagreeing_values(kwargs, nested_of, flat_name):
     """`WindowSpec` holds both nested and legacy flat fields for the same quantity.
 
     `val=ValWindow(size=24)` and `validation_size=36` describe one thing twice. Silently
-    preferring one is the failure mode worth preventing: the caller believes the value
-    they passed is in force. Either construction refuses, or the flat field is a
-    documented alias that compiles into the nested one — but it must not be a coin flip.
+    keeping both is the failure mode worth preventing: the caller believes the value
+    they passed is in force, and different consumers read different fields.
+
+    An earlier version of this test PASSED, and passed for the wrong reason: its fixture
+    called `TestWindow(start=..., end=...)`, which are not parameters of `TestWindow`,
+    so the `TypeError` from the bad fixture was caught by the same `except` that was
+    meant to catch a refusal from `WindowSpec`. A safety-net test that passes because
+    its own fixture is broken is worse than no test, so the construction below uses only
+    real parameters and no longer treats an exception as success.
     """
     from macroforecast.window.core import TestWindow, ValWindow, WindowSpec
 
-    try:
-        spec = WindowSpec(
-            estimation=None,
-            val=ValWindow(method="last_block", size=24),
-            test=TestWindow(start=0, end=10, horizon=1),
-            validation_size=36,
-        )
-    except (ValueError, TypeError) as exc:
-        assert str(exc), "the refusal must say what conflicts"
-        return
+    built = {k: (v(ValWindow) if callable(v) else v) for k, v in kwargs.items()}
+    spec = WindowSpec(estimation=None, test=TestWindow(horizon=1), **built)
 
-    effective = getattr(spec.val, "size", None)
-    flat = getattr(spec, "validation_size", None)
-    assert effective == flat, (
-        f"WindowSpec accepted two disagreeing validation sizes and silently kept "
-        f"val.size={effective} while validation_size={flat}. A caller reading either "
-        f"field gets a different answer about the same window."
+    nested = nested_of(spec)
+    flat = getattr(spec, flat_name)
+    assert nested == flat, (
+        f"the window reports {nested!r} under its nested field and {flat!r} as "
+        f"{flat_name}; a consumer reading either gets a different answer about the "
+        f"same window"
     )
 
 
