@@ -1,0 +1,60 @@
+schema: macroforecast-replication-v1
+
+paper:
+  key: medeiros-2021
+  citation: >-
+    Medeiros, Vasconcelos, Veiga and Zilberman (2021), "Forecasting Inflation in
+    a Data-Rich Environment: The Benefits of Machine Learning Methods",
+    Journal of Business & Economic Statistics 39(1).
+  exhibit: "Table 5"
+
+code:
+  branch: repro/medeiros-2021
+  replication_commit: "[FILL: git rev-parse HEAD on this branch after merge]"
+  package_commit: "[FILL: the macroforecast commit this was last run against]"
+  python: "3.12"
+
+data:
+  - name: fred-md-historical-vintages
+    source: >-
+      https://www.stlouisfed.org/research/economists/mccracken/fred-databases/
+      -- historical vintages 2015-01 to 2024-12
+    member: "2016-01.csv"
+    sha256: "[FILL: printed by prepare_data.py on every run]"
+    redistribution: not bundled
+    note: >-
+      [GAP] The authors used current.csv, which is not archived. The 2016-01
+      vintage is a proxy; the 112-vs-122 series delta is a vintage-timing gap,
+      recorded rather than tuned away.
+
+commands:
+  prepare: >-
+    python scripts/replication/medeiros_2021_pipeline/prepare_data.py
+    --archive /path/to/historical-vintages.zip
+    --vintage 2016-01.csv
+    --output runs/medeiros_2021/panel.parquet
+  smoke: "[FILL: the shortest run_block.py invocation that produces one cell]"
+  full: "python3 scripts/replication/medeiros_2021_pipeline/run_block.py"
+
+expected:
+  panel_shape: "[FILL: months x series printed by prepare_data.py]"
+  full_runtime: "[FILL: measured, with the machine]"
+  artifacts:
+    - path: "[FILL]"
+      sha256: "[FILL]"
+
+status:
+  headline_replication: STRONG
+  protocol_fidelity: STRONG
+  table_cell_parity: PARTIAL
+  unresolved:
+    - >-
+      UCSV RMSE ratios sit outside the acceptance tolerance at h=3, 6 and 12.
+      The paper withholds the inverse-gamma hyperparameters, the MCMC draw and
+      burn counts, and the seed, so the gap is a paper under-specification
+      rather than a package defect -- but it is a gap, and "STRONG" on its own
+      would hide it.
+
+# Fields marked [FILL] are deliberately not guessed. A manifest whose hashes and
+# runtimes were invented would be worse than no manifest, because it would look
+# checkable while being unverifiable. They are filled by running the commands.
