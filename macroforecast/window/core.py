@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import dataclasses as _dc
+
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypeAlias, cast
@@ -485,6 +487,84 @@ class AlignmentWindow:
         }
 
 
+#: The flat fields' own defaults, so "the caller set this" can be told from "this is
+#: what the dataclass fills in". Without it, supplying only the NESTED value looks like
+#: a conflict with the flat default and gets refused -- which is what the first draft
+#: of this function did.
+_FLAT_DEFAULTS: dict[str, Any] = {
+    "validation_size": None,
+    "validation_ratio": 0.2,
+    "min_train_size": None,
+    "n_splits": 5,
+    "embargo": 0,
+    "horizon": 1,
+    "step": 1,
+}
+
+#: ``WindowSpec`` carries each of these twice: once inside its nested window object and
+#: once as a legacy flat field. Each entry is (flat name, nested attribute, nested field
+#: name), and :func:`_reconcile_flat_aliases` makes the pair agree or refuses.
+_FLAT_ALIASES: tuple[tuple[str, str, str], ...] = (
+    ("validation_size", "val", "size"),
+    ("validation_ratio", "val", "ratio"),
+    ("min_train_size", "val", "min_train_size"),
+    ("n_splits", "val", "n_splits"),
+    ("embargo", "val", "embargo"),
+    ("horizon", "test", "horizon"),
+    ("step", "test", "step"),
+)
+
+
+def _reconcile_flat_aliases(spec: "WindowSpec") -> None:
+    """Compile a flat value into its nested field, or refuse if both were set.
+
+    Silently keeping both is the failure this removes: the caller believes the value
+    they passed is in force, and different consumers read different fields --
+    ``split()``, ``to_table()`` and ``val_splits_for_origin()`` do not all read the same
+    one.
+
+    Only a *disagreement between two explicit values* is an error. A flat value with the
+    nested field still at its own default is the documented alias case and compiles
+    through, which is what keeps every existing builder working.
+    """
+    for flat_name, nested_name, nested_field in _FLAT_ALIASES:
+        nested_obj = getattr(spec, nested_name, None)
+        if nested_obj is None:
+            continue
+        flat_value = getattr(spec, flat_name, None)
+        nested_value = getattr(nested_obj, nested_field, None)
+        if flat_value == nested_value:
+            continue
+        flat_default = _FLAT_DEFAULTS[flat_name]
+        if flat_value == flat_default:
+            # Only the nested value was set. It wins, and the flat field is left
+            # showing its default -- reading it would be reading a field the caller
+            # never touched. (Removing the flat field is the follow-up; this slice
+            # only removes the ambiguity about which value is in force.)
+            if isinstance(nested_value, int) and not isinstance(nested_value, bool):
+                # Mirror it back so a caller reading either field sees the same window.
+                # Only for plain ints: the flat fields are validated as ints further
+                # down, while the nested ones legitimately carry None (embargo) and
+                # pandas calendar offsets (step, e.g. MonthEnd). Mirroring those would
+                # fail validation for a reason that has nothing to do with the caller.
+                object.__setattr__(spec, flat_name, nested_value)
+            continue
+        nested_default = getattr(type(nested_obj)(), nested_field, None)
+        if nested_value == nested_default:
+            # Alias case: the caller set only the flat one. Compile it in.
+            object.__setattr__(
+                spec, nested_name, _dc.replace(nested_obj, **{nested_field: flat_value})
+            )
+            continue
+        raise ValueError(
+            f"WindowSpec received two different values for the same quantity: "
+            f"{flat_name}={flat_value!r} and {nested_name}.{nested_field}={nested_value!r}. "
+            f"The flat field is a builder-level alias for the nested one; pass either, "
+            f"not both. Keeping both would leave the answer depending on which field a "
+            f"consumer happens to read."
+        )
+
+
 @dataclass(frozen=True)
 class WindowSpec:
     """Macro forecasting time frame passed across selection/model/evaluation."""
@@ -520,6 +600,7 @@ class WindowSpec:
                     embargo=self.embargo,
                 ),
             )
+        _reconcile_flat_aliases(self)
         object.__setattr__(self, "method", self.val.method)
         if self.validation_size is not None:
             object.__setattr__(

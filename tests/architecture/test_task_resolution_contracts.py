@@ -199,16 +199,6 @@ def test_the_result_store_digest_does_not_move_when_the_caller_dict_moves(panel)
 # 3. Window conflict
 # --------------------------------------------------------------------------- #
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="FINDING (2026-08-09): WindowSpec keeps BOTH the nested and the flat value "
-    "and reconciles neither. Measured: val.size=24 with validation_size=36 constructs "
-    "fine and both survive; likewise val.n_splits=3 with n_splits=7, and "
-    "test.horizon=2 with horizon=5. Whichever field a consumer happens to read decides "
-    "the answer, and split()/to_table()/val_splits_for_origin() do not all read the "
-    "same one. A3 makes the flat fields builder-only aliases that compile into the "
-    "nested value; strict=True so this flips the moment that lands.",
-)
 @pytest.mark.parametrize(
     "kwargs, nested_of, flat_name",
     [
@@ -224,32 +214,57 @@ def test_the_result_store_digest_does_not_move_when_the_caller_dict_moves(panel)
         ),
     ],
 )
-def test_a_window_cannot_carry_two_disagreeing_values(kwargs, nested_of, flat_name):
-    """`WindowSpec` holds both nested and legacy flat fields for the same quantity.
+def test_a_window_refuses_two_disagreeing_values(kwargs, nested_of, flat_name):
+    """`WindowSpec` carries each of these quantities twice; it must not keep both.
 
-    `val=ValWindow(size=24)` and `validation_size=36` describe one thing twice. Silently
-    keeping both is the failure mode worth preventing: the caller believes the value
-    they passed is in force, and different consumers read different fields.
+    Until A3 it kept both and reconciled neither -- `val.size=24` with
+    `validation_size=36` constructed fine and both survived, so whichever field a
+    consumer happened to read decided the answer, and `split()`, `to_table()` and
+    `val_splits_for_origin()` do not all read the same one.
 
-    An earlier version of this test PASSED, and passed for the wrong reason: its fixture
-    called `TestWindow(start=..., end=...)`, which are not parameters of `TestWindow`,
-    so the `TypeError` from the bad fixture was caught by the same `except` that was
-    meant to catch a refusal from `WindowSpec`. A safety-net test that passes because
-    its own fixture is broken is worse than no test, so the construction below uses only
-    real parameters and no longer treats an exception as success.
+    A3 resolved it by refusing. The alternative the earlier docstring allowed -- silently
+    compiling one into the other when they disagree -- would have had to pick a winner,
+    and a caller who passed the losing value would never learn.
+
+    An earlier version of this test PASSED for the wrong reason: its fixture called
+    `TestWindow(start=..., end=...)`, which are not parameters of `TestWindow`, so the
+    `TypeError` from the bad fixture was caught by the same `except` meant to catch a
+    refusal from `WindowSpec`. Hence real parameters here, and an explicit `raises`.
+    """
+    from macroforecast.window.core import TestWindow, ValWindow, WindowSpec
+
+    built = {k: (v(ValWindow) if callable(v) else v) for k, v in kwargs.items()}
+    with pytest.raises(ValueError) as exc:
+        WindowSpec(estimation=None, test=TestWindow(horizon=1), **built)
+
+    message = str(exc.value)
+    assert flat_name in message, "the refusal must name the flat field the caller passed"
+    assert "not both" in message, "and say what to do instead"
+
+
+@pytest.mark.parametrize(
+    "kwargs, read_nested, read_flat",
+    [
+        (dict(validation_size=36), lambda s: s.val.size, lambda s: s.validation_size),
+        (
+            dict(val=lambda VW: VW(method="last_block", size=24)),
+            lambda s: s.val.size,
+            lambda s: s.validation_size,
+        ),
+    ],
+)
+def test_one_value_supplied_leaves_both_fields_agreeing(kwargs, read_nested, read_flat):
+    """The alias case: supply either field and both report the same window.
+
+    This is the half that keeps every existing builder working -- `from_cutoffs` and
+    friends pass the flat names -- and it is why A3 could refuse the conflict without
+    breaking callers who only ever set one.
     """
     from macroforecast.window.core import TestWindow, ValWindow, WindowSpec
 
     built = {k: (v(ValWindow) if callable(v) else v) for k, v in kwargs.items()}
     spec = WindowSpec(estimation=None, test=TestWindow(horizon=1), **built)
-
-    nested = nested_of(spec)
-    flat = getattr(spec, flat_name)
-    assert nested == flat, (
-        f"the window reports {nested!r} under its nested field and {flat!r} as "
-        f"{flat_name}; a consumer reading either gets a different answer about the "
-        f"same window"
-    )
+    assert read_nested(spec) == read_flat(spec) == 36 or read_nested(spec) == read_flat(spec) == 24
 
 
 def test_horizon_is_not_stored_in_two_places_that_can_disagree(panel):
