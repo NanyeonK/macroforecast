@@ -560,6 +560,138 @@ one exists; the parity/evidence body (every parity table names its metric and to
 and provenance/caveats. Where a purpose does not apply to a given replication it is marked
 <strong>N/A with a stated reason</strong>, so an absence is always a scope decision, not a silent gap.
 <code class="docutils literal notranslate"><span class="pre">hounyo_li_2026.md</span></code> is the exemplar page.</p>
+<section id="where-the-code-is">
+<h2>Where the code is<a class="headerlink" href="#where-the-code-is" title="Link to this heading">#</a></h2>
+<p><strong>The trust notes live on <code class="docutils literal notranslate"><span class="pre">main</span></code>; most of the runners do not.</strong> A note here may print a
+command like <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">scripts/replication/medeiros_2021_pipeline/run_block.py</span></code> while that
+script exists only on its replication branch — so reading the note on <code class="docutils literal notranslate"><span class="pre">main</span></code> does not tell
+you where to run it. This table closes that gap.</p>
+<p>Branches move. <strong>Pin the commit</strong>, not the branch name, when you cite a result.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Paper</p></th>
+<th class="head"><p>Code</p></th>
+<th class="head"><p>Pinned commit</p></th>
+<th class="head"><p>Manifest</p></th>
+<th class="head"><p>Runnable from a fresh clone?</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Medeiros et al. (2021)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">repro/medeiros-2021</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">31e5b451</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scripts/replication/medeiros_2021_pipeline/replication.yaml</span></code></p></td>
+<td><p><strong>yes</strong> — <code class="docutils literal notranslate"><span class="pre">prepare_data.py</span> <span class="pre">--archive</span> <span class="pre">…</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Zhang, Wahab &amp; Wang (2023)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">repro/zww-2023</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">d2fc450e</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scripts/replication/zww_2023_pipeline/replication.yaml</span></code></p></td>
+<td><p><strong>no</strong> — raw-source acquisition not scripted</p></td>
+</tr>
+<tr class="row-even"><td><p>Hounyo &amp; Li (2026)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">repro/hounyo-li-2026</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">c5b46ec3</span></code></p></td>
+<td><p><em>(not yet written)</em></p></td>
+<td><p><strong>no</strong> — assumes the author package is pre-extracted</p></td>
+</tr>
+<tr class="row-odd"><td><p>Goulet Coulombe et al. (2022)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">repro/gcls-2022</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0de239ac</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">scripts/replication/gcls_2022_pipeline/replication.yaml</span></code></p></td>
+<td><p><strong>yes</strong> — <code class="docutils literal notranslate"><span class="pre">MF_GCLS_ARCHIVE=…</span> </code></p></td>
+</tr>
+<tr class="row-even"><td><p>Goulet Coulombe (2024), MRF</p></td>
+<td><p>on <code class="docutils literal notranslate"><span class="pre">main</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e6a0a33</span></code></p></td>
+<td><p><em>(not yet written)</em></p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Each manifest follows <code class="docutils literal notranslate"><span class="pre">macroforecast-replication-v1</span></code>: paper and exhibit, the branch and
+both commits, every data source with its hash and whether it is redistributable, the
+prepare/smoke/full commands, expected artifacts, and a decomposed status. Fields that would
+have to be invented are marked <code class="docutils literal notranslate"><span class="pre">[FILL]</span></code> rather than guessed — a manifest with made-up
+hashes looks checkable while being unverifiable.</p>
+<div class="warning admonition">
+<p class="admonition-title">What these replications validate</p>
+<p>Each replication branch pins its own package commit and imports the <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> in
+that checkout — <strong>not</strong> current <code class="docutils literal notranslate"><span class="pre">main</span></code>. A result on <code class="docutils literal notranslate"><span class="pre">repro/medeiros-2021</span></code> is a statement
+about the package at that commit. Later <code class="docutils literal notranslate"><span class="pre">main</span></code> fixes (target-only fit samples, the custom
+preprocessing state contract, input provenance, the k-fold seed, the interpretation
+audit) are not automatically covered by it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">repro/gcls-2022</span></code> is the deliberate exception and says so in its manifest: it is its base
+commit plus exactly one cherry-pick, so its <code class="docutils literal notranslate"><span class="pre">,KF</span></code> re-run differs from the earlier run in
+the seed and nothing else.</p>
+</div>
+</section>
+<section id="status-decomposed">
+<h2>Status, decomposed<a class="headerlink" href="#status-decomposed" title="Link to this heading">#</a></h2>
+<p>A single label hides disagreements. Medeiros was carried as <code class="docutils literal notranslate"><span class="pre">STRONG</span></code> while its own note
+records UCSV outside tolerance at h = 3, 6 and 12 — both true, of different things. Each
+manifest therefore reports four axes:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Axis</p></th>
+<th class="head"><p>Question</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">headline_replication</span></code></p></td>
+<td><p>does the paper’s main qualitative result reproduce?</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">protocol_fidelity</span></code></p></td>
+<td><p>is the published specification implemented as written?</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">table_cell_parity</span></code></p></td>
+<td><p>what fraction of cells fall inside the stated tolerance?</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">unresolved</span></code></p></td>
+<td><p>what numerical gap remains, and why?</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Paper</p></th>
+<th class="head"><p>headline</p></th>
+<th class="head"><p>protocol</p></th>
+<th class="head"><p>cell parity</p></th>
+<th class="head"><p>note</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Medeiros</p></td>
+<td><p>STRONG</p></td>
+<td><p>STRONG</p></td>
+<td><p><strong>PARTIAL</strong></p></td>
+<td><p>UCSV outside tolerance at h = 3, 6, 12 — unpublished sampler calibration</p></td>
+</tr>
+<tr class="row-odd"><td><p>ZWW</p></td>
+<td><p>STRONG</p></td>
+<td><p>STRONG</p></td>
+<td><p><strong>PARTIAL</strong></p></td>
+<td><p>PCA-VS to 1–2 pp; some competing magnitudes direction-only (~2×)</p></td>
+</tr>
+<tr class="row-even"><td><p>Hounyo–Li</p></td>
+<td><p>STRONG (author-oracle)</p></td>
+<td><p>STRONG</p></td>
+<td><p>55/60 within |Δ| ≤ 0.03</p></td>
+<td><p>leak-free output differs for identified reasons</p></td>
+</tr>
+<tr class="row-odd"><td><p>GCLS 2022</p></td>
+<td><p>STRONG</p></td>
+<td><p>STRONG</p></td>
+<td><p><strong>PARTIAL</strong></p></td>
+<td><p><strong>IN PROGRESS</strong> — 1 of 5 targets re-run; 104/225 beat AR,BIC vs the paper’s 128/225</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="index">
 <h2>Index<a class="headerlink" href="#index" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
@@ -704,6 +836,8 @@ and provenance/caveats. Where a purpose does not apply to a given replication it
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-the-code-is">Where the code is</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#status-decomposed">Status, decomposed</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#index">Index</a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#status-vocabulary">Status vocabulary</a></li>
 </ul>
