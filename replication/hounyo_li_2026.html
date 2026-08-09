@@ -549,7 +549,46 @@
 <h2>⚠️ KEY FINDING - Look-ahead bias in the paper’s target standardization<a class="headerlink" href="#key-finding-look-ahead-bias-in-the-papers-target-standardization" title="Link to this heading">#</a></h2>
 <p>The headline finding is a look-ahead leak in the paper’s out-of-sample evaluation. The author’s MATLAB standardizes the target block before the forecast split and includes the realized future target <code class="docutils literal notranslate"><span class="pre">y_{T+h}</span></code> in that standardized block. In <code class="docutils literal notranslate"><span class="pre">inflation_linear.m:196-197</span></code>, the code forms <code class="docutils literal notranslate"><span class="pre">ytplush(:,1+h:T+h)</span></code> after standardizing the full target/control block. That realized future value is not available at a real forecast origin.</p>
 <p>The reproduction evidence is tight. On the matched inflation h=1 PCA case, emulating the author’s leaky surface reproduces Table 2: <code class="docutils literal notranslate"><span class="pre">macroforecast.pcr</span></code> gives 0.970590, matching the paper’s 0.970 after rounding. The leak-free package-side diagnostic gives 1.080953 instead. The 0.110953 gap decomposes into about 0.0206 from the direct target-y standardization leak, or about 19%, and about 0.0904 from the author K/window surface, or about 81%, mainly K selection tuned on the leaky standardized surface. When <code class="docutils literal notranslate"><span class="pre">macroforecast.pcr</span></code> is fed the author-standardized X block, author leaky target block, author split, and author K, it is bit-identical to the author PCA code, with maximum absolute prediction difference <code class="docutils literal notranslate"><span class="pre">3.844e-14</span></code>, and it reproduces the author K choices in the diagnostic origins.</p>
-<p>The implication is methodological, not accusatory. Based on the published MATLAB and cross-validated package checks, the paper’s pseudo-OOS factor-method results are optimistically biased by a common but subtle form of target-standardization leakage. <code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> is leak-free by design, so its honest out-of-sample numbers do not equal the paper’s leaky Table 2 numbers.</p>
+<div class="important admonition">
+<p class="admonition-title">What this page claims, and what it does not</p>
+<p>This is a claim about <strong>another group’s published finding</strong>, so it carries a higher
+evidence bar than package documentation and the wording is scoped deliberately.</p>
+<p><strong>Claimed, and evidenced below.</strong> The published replication code standardizes the
+target block using observations that extend beyond each forecast origin
+(<code class="docutils literal notranslate"><span class="pre">inflation_linear.m:196-197</span></code>). Emulating that code path reproduces the reported
+table closely — <code class="docutils literal notranslate"><span class="pre">macroforecast.pcr</span></code> gives 0.970590 against a published 0.970, and is
+bit-identical to the author PCA code at <code class="docutils literal notranslate"><span class="pre">3.844e-14</span></code> when fed the author’s inputs.
+An origin-local standardization does not: the same cell gives 1.080953.</p>
+<p><strong>Therefore, and stated as a dependency rather than a verdict.</strong> The published
+numbers depend on a look-ahead standardization surface. Roughly 19% of the 0.110953
+gap traces to the direct target-<code class="docutils literal notranslate"><span class="pre">y</span></code> standardization and roughly 81% to the author’s
+K/window surface, mainly K selection tuned on that standardized surface.</p>
+<p><strong>Not claimed here.</strong> What the authors <em>intended</em> to implement, and how much the
+published conclusions would move under an origin-local standardization. Determining
+the first needs the authors; the second needs a full re-run of their design, which
+this page has not done. An earlier revision of this section said the results “are
+optimistically biased”, which asserted both — it has been narrowed.</p>
+<p><strong>Also relevant to reading the leak-free column.</strong> It confounds two differences: the
+standardization surface and the data pipeline (this run uses <code class="docutils literal notranslate"><span class="pre">load_fred_md</span></code> vintage
+<code class="docutils literal notranslate"><span class="pre">2023-04</span></code> and package transforms, not the author workbooks). The unemployment h=1
+divergence is 97.7% attributable to a single May-2020 observation. Neither is a
+package defect, and neither is evidence about the paper.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">macroforecast</span></code> is leak-free by design, so its honest out-of-sample numbers do not
+equal the paper’s Table 2 numbers.</p>
+<div class="warning admonition">
+<p class="admonition-title">Evidence a reader needs and this page does not yet carry</p>
+<p>For a claim at this level the following should be recorded, and currently are not:</p>
+<ul class="simple">
+<li><p>SHA-256 of the author replication archive, and the URL it came from</p></li>
+<li><p>SHA-256 of <code class="docutils literal notranslate"><span class="pre">inflation_linear.m</span></code> as analysed</p></li>
+<li><p>a minimal standalone reproducer — smallest input, two runs, one operation changed</p></li>
+<li><p>a counterfactual isolating <strong>only</strong> the suspected standardization, holding the data
+pipeline, K and split fixed</p></li>
+</ul>
+<p>Until those are here, treat this section as a documented observation with a strong
+numerical trail, not as a settled result about the paper.</p>
+</div>
 </section>
 <section id="verdict-bottom-line">
 <h2>Verdict / Bottom line<a class="headerlink" href="#verdict-bottom-line" title="Link to this heading">#</a></h2>
