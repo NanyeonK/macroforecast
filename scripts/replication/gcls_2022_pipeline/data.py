@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+import os
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -31,13 +32,27 @@ from macroforecast.pipeline import TargetSpec
 # Archive paths
 # --------------------------------------------------------------------------- #
 # Data-only official archive (integrity-stamped MANIFEST.md, SHA256 verified).
+#
+# Overridable, because a hard-coded personal path cannot run on anyone else's
+# machine (external review, 2026-08-09). Resolution order:
+#   1. MF_GCLS_ARCHIVE / MF_GCLS_DATA_DIR environment variables
+#   2. the repository-local default below
+# The archive is NOT redistributed here; it is the JAE 2910 GLSS replication
+# package, obtained from the Journal of Applied Econometrics data archive.
+GCLS_ARCHIVE_SOURCE = (
+    "JAE 2910 GLSS replication package, Journal of Applied Econometrics data archive "
+    "(http://qed.econ.queensu.ca/jae/datasets/) -- file glss-files.zip"
+)
 ARCHIVE_ROOT = Path(
-    "~/second_brain/00_wiki/raw/paper_code/jae_2910_glss_replication_20260602"
+    os.environ.get("MF_GCLS_ARCHIVE", "data/jae_2910_glss_replication")
 ).expanduser()
 ARCHIVE_ZIP = ARCHIVE_ROOT / "glss-files.zip"
 
 # Extracted working copies (produced by the STAGE-1 extract step).
-DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "runs" / "gcls_b4_stage1" / "data"
+DATA_DIR = Path(
+    os.environ.get("MF_GCLS_DATA_DIR")
+    or Path(__file__).resolve().parents[3] / "runs" / "gcls_b4_stage1" / "data"
+).expanduser()
 MAIN_CSV = DATA_DIR / "2018-01.csv"
 
 # The 4 interaction series (Table 3), aligned monthly. Staged now; not required for G1.

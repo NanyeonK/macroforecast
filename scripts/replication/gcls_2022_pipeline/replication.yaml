@@ -1,0 +1,74 @@
+schema: macroforecast-replication-v1
+
+paper:
+  key: gcls-2022
+  citation: >-
+    Goulet Coulombe, Leroux, Stevanovic and Surprenant (2022), "How is Machine
+    Learning Useful for Macroeconomic Forecasting?", Journal of Applied
+    Econometrics 37(5), DOI 10.1002/jae.2924.
+  exhibit: "Table A1 (RelMSPE), Table 2 (CV selection), treatment-effect figures"
+
+code:
+  branch: repro/gcls-2022
+  replication_commit: "[FILL: git rev-parse HEAD after the remaining targets land]"
+  package_commit: "fadc1c20 + cherry-pick of 1e6a0a33 (the #513 k-fold seed fix)"
+  python: "3.12"
+  note: >-
+    The lane is deliberately NOT rebased onto current main. It is
+    fadc1c20 plus exactly one cherry-picked commit, so a ,KF re-run differs from
+    the earlier run in the seed and nothing else. Rebasing would confound the
+    comparison with 25 unrelated merges -- the same mistake this document already
+    records about the pre-version-control July baseline.
+
+data:
+  - name: jae-2910-glss-replication-package
+    source: >-
+      Journal of Applied Econometrics data archive
+      (http://qed.econ.queensu.ca/jae/datasets/) -- glss-files.zip
+    sha256: "[FILL: from the archive MANIFEST.md]"
+    redistribution: not bundled
+    env_override: MF_GCLS_ARCHIVE
+  - name: fred-md-2018-01-vintage
+    source: "https://www.stlouisfed.org/research/economists/mccracken/fred-databases/"
+    member: "2018-01.csv"
+    sha256: "[FILL]"
+    redistribution: not bundled
+    env_override: MF_GCLS_DATA_DIR
+
+commands:
+  smoke: >-
+    MF_GCLS_XLAGS=0 python scripts/replication/gcls_2022_pipeline/replicate_gcls2022.py
+    --full --arms "AR,BIC;ARDI,BIC" --targets INDPRO --horizons 24 --n-jobs 4
+    --result-store runs/gcls_b4_stage1/_store_smoke --out-prefix smoke
+  full: >-
+    MF_GCLS_XLAGS=0 python scripts/replication/gcls_2022_pipeline/replicate_gcls2022.py
+    --full --targets INDPRO,CPIAUCSL,HOUST,UNRATE,T10YFFM --horizons 1,3,9,12,24
+    --n-jobs 12 --result-store runs/gcls_b4_stage1/_store_full --out-prefix full
+
+  # MF_GCLS_XLAGS=0 is NOT optional. The package default is lags=(0, 1), which
+  # hands `far` a stacked [X_t, X_{t-1}] panel instead of the paper's cross-section
+  # X_t = Lambda F_t + u_t. Leaving it unset reproduces the original spec error.
+
+expected:
+  origins: 456
+  cells_per_target: 230
+  indpro_median_abs_delta: 0.0389
+  full_runtime: "~10 h per target on 48 logical cores at n_jobs=12 (measured)"
+  artifacts:
+    - path: "runs/gcls_b4_stage1/<prefix>_accuracy.csv"
+      sha256: "[FILL]"
+
+status:
+  overall: IN_PROGRESS
+  headline_replication: STRONG          # ML/factor beats AR reproduces
+  protocol_fidelity: STRONG             # corrected X_t spec, seeded splitter
+  table_cell_parity: PARTIAL            # 104/225 beat AR,BIC vs the paper's 128/225
+  targets_complete: 1                   # INDPRO only
+  targets_total: 5
+  unresolved:
+    - "CPIAUCSL / HOUST / UNRATE / T10YFFM not yet re-run at lags=0 (in flight)"
+    - "Pre-fix tables still present; to be retired or moved to a labelled archive section"
+
+# Two package defects were found by this replication and fixed upstream:
+# the k-fold seed (#513 -> #515) and the kitchen-sink AR benchmark (#468).
+# The `lags` error was OURS, not the paper's, and is recorded as such.
