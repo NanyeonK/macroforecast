@@ -601,10 +601,52 @@ block and therefore what any downstream dimension reduction is reducing:</p>
 </tbody>
 </table>
 </div>
-<p>For a plain regression the extra lags are just more regressors. For anything that
-reduces the block — <code class="docutils literal notranslate"><span class="pre">pca_step</span></code>, <code class="docutils literal notranslate"><span class="pre">maf_step</span></code>, or a model like <code class="docutils literal notranslate"><span class="pre">far</span></code> that runs PCA
-<em>internally</em> on whatever design it is handed — the factors themselves become a
-different object, silently and with no error.</p>
+<p>For a plain regression the extra lags are just more regressors. The setting bites on
+a model like <code class="docutils literal notranslate"><span class="pre">far</span></code>, which runs PCA <strong>internally on whatever design matrix it is
+handed</strong> — so widening the design silently changes what its factors are, with no
+error.</p>
+<p>```{admonition} <code class="docutils literal notranslate"><span class="pre">lags</span></code> does NOT reach an explicit feature-step pipeline
+:class: important</p>
+<p>An earlier version of this warning listed <code class="docutils literal notranslate"><span class="pre">pca_step</span></code> and <code class="docutils literal notranslate"><span class="pre">maf_step</span></code> alongside <code class="docutils literal notranslate"><span class="pre">far</span></code>.
+That was wrong. The shortcut <code class="docutils literal notranslate"><span class="pre">lags</span></code> builds the <em>shortcut</em> design matrix; a step
+supplied through <code class="docutils literal notranslate"><span class="pre">feature_steps</span></code> reduces the block named by its own <code class="docutils literal notranslate"><span class="pre">input=</span></code>
+argument (default <code class="docutils literal notranslate"><span class="pre">&quot;panel&quot;</span></code>), and does not inherit the shortcut. Measured on a
+6-predictor panel:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>configuration</p></th>
+<th class="head"><p>columns out</p></th>
+<th class="head"><p>PCs</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>shortcut only, <code class="docutils literal notranslate"><span class="pre">lags=(0,</span> <span class="pre">1)</span></code></p></td>
+<td><p>13</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-odd"><td><p>shortcut only, <code class="docutils literal notranslate"><span class="pre">lags=0</span></code></p></td>
+<td><p>7</p></td>
+<td><p>—</p></td>
+</tr>
+<tr class="row-even"><td><p>explicit <code class="docutils literal notranslate"><span class="pre">pca_step(input=&quot;panel&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">lags</span></code> default</p></td>
+<td><p><strong>3</strong></p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="row-odd"><td><p>explicit <code class="docutils literal notranslate"><span class="pre">pca_step(input=&quot;panel&quot;)</span></code>, <code class="docutils literal notranslate"><span class="pre">lags=0</span></code></p></td>
+<td><p><strong>3</strong></p></td>
+<td><p>2</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The last two are identical: once an explicit pipeline is supplied, the shortcut
+<code class="docutils literal notranslate"><span class="pre">lags</span></code> no longer changes anything downstream of it.</p>
+<p>So the rule is about <em>which door the block comes through</em>. <code class="docutils literal notranslate"><span class="pre">far</span></code> receives the
+shortcut design, so <code class="docutils literal notranslate"><span class="pre">lags</span></code> decides its PCA input. <code class="docutils literal notranslate"><span class="pre">pca_step</span></code> names its own input, so
+<code class="docutils literal notranslate"><span class="pre">lags</span></code> does not. This is the distinction the GCLS-2022 replication got wrong in the
+other direction — see <code class="docutils literal notranslate"><span class="pre">docs/replication/gcls_2022_replication.md</span></code>, where <code class="docutils literal notranslate"><span class="pre">far</span></code> was
+handed a stacked <code class="docutils literal notranslate"><span class="pre">[X_t,</span> <span class="pre">X_{t-1}]</span></code> panel because <code class="docutils literal notranslate"><span class="pre">lags</span></code> was left at its default.</p>
+</div>
 <p>The Stock-Watson diffusion-index model that most macro papers specify is
 <code class="docutils literal notranslate"><span class="pre">X_t</span> <span class="pre">=</span> <span class="pre">Lambda</span> <span class="pre">F_t</span> <span class="pre">+</span> <span class="pre">u_t</span></code>: factors of the cross-section at <strong>one</strong> time index. To
 reproduce it, pass <code class="docutils literal notranslate"><span class="pre">lags=0</span></code> and add factor lags deliberately with <code class="docutils literal notranslate"><span class="pre">lag_step</span></code> if
@@ -613,47 +655,48 @@ the paper’s specification calls for them.</p>
 (<code class="docutils literal notranslate"><span class="pre">scale=True</span></code>), while <code class="docutils literal notranslate"><span class="pre">far</span></code> centers only (<code class="docutils literal notranslate"><span class="pre">scale=False</span></code>, covariance PCA). Both
 conventions are defensible and papers differ, so state which one you want rather
 than inheriting a default.</p>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+```python
+import macroforecast as mf
 
-<span class="c1"># MARX lags: the default macro predictor design. The marx_step builds the</span>
-<span class="c1"># increasing-average lag ladder over every predictor column.</span>
-<span class="n">marx_features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
-    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
-    <span class="n">lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">feature_steps</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">marx_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;MARX_X&quot;</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="mi">12</span><span class="p">),</span>
-    <span class="p">],</span>
-<span class="p">)</span>
+# MARX lags: the default macro predictor design. The marx_step builds the
+# increasing-average lag ladder over every predictor column.
+marx_features = mf.feature_engineering.feature_spec(
+    target=&quot;INDPRO&quot;,
+    predictors=&quot;all&quot;,
+    lags=None,
+    feature_steps=[
+        mf.feature_engineering.marx_step(name=&quot;MARX_X&quot;, max_lag=12),
+    ],
+)
 
-<span class="c1"># Pure lag features (no moving averages): lag every predictor 1..12.</span>
-<span class="n">lag_features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
-    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
-    <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span>
-<span class="p">)</span>
+# Pure lag features (no moving averages): lag every predictor 1..12.
+lag_features = mf.feature_engineering.feature_spec(
+    target=&quot;INDPRO&quot;,
+    predictors=&quot;all&quot;,
+    lags=range(1, 13),
+)
 
-<span class="c1"># Factor features: extract the first k principal components, then lag them.</span>
-<span class="n">factor_features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
-    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
-    <span class="n">lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">feature_steps</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">pca_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-        <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">lag_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;F_lag&quot;</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="n">lags</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
-    <span class="p">],</span>
-<span class="p">)</span>
+# Factor features: extract the first k principal components, then lag them.
+factor_features = mf.feature_engineering.feature_spec(
+    target=&quot;INDPRO&quot;,
+    predictors=&quot;all&quot;,
+    lags=None,
+    feature_steps=[
+        mf.feature_engineering.pca_step(name=&quot;F&quot;, n_components=8, include=False),
+        mf.feature_engineering.lag_step(name=&quot;F_lag&quot;, input=&quot;F&quot;, lags=range(0, 3)),
+    ],
+)
 
-<span class="c1"># MAF features: maximum autocorrelation factors.</span>
-<span class="n">maf_features</span> <span class="o">=</span> <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">feature_spec</span><span class="p">(</span>
-    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;INDPRO&quot;</span><span class="p">,</span>
-    <span class="n">predictors</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
-    <span class="n">lags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">feature_steps</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">mf</span><span class="o">.</span><span class="n">feature_engineering</span><span class="o">.</span><span class="n">maf_step</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;MAF&quot;</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">max_lag</span><span class="o">=</span><span class="mi">12</span><span class="p">),</span>
-    <span class="p">],</span>
-<span class="p">)</span>
+# MAF features: maximum autocorrelation factors.
+maf_features = mf.feature_engineering.feature_spec(
+    target=&quot;INDPRO&quot;,
+    predictors=&quot;all&quot;,
+    lags=None,
+    feature_steps=[
+        mf.feature_engineering.maf_step(name=&quot;MAF&quot;, n_components=8, max_lag=12),
+    ],
+)
 </pre></div>
 </div>
 <p>Target-aware feature steps can also screen predictors inside each runner fit

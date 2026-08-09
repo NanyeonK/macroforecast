@@ -40,10 +40,36 @@ block and therefore what any downstream dimension reduction is reducing:
 | `0` | 132 | components of the cross-section `X_t` |
 | `(0, 1)` (default) | **264** | components of the stacked `[X_t, X_{t-1}]` panel |
 
-For a plain regression the extra lags are just more regressors. For anything that
-reduces the block — `pca_step`, `maf_step`, or a model like `far` that runs PCA
-*internally* on whatever design it is handed — the factors themselves become a
-different object, silently and with no error.
+For a plain regression the extra lags are just more regressors. The setting bites on
+a model like `far`, which runs PCA **internally on whatever design matrix it is
+handed** — so widening the design silently changes what its factors are, with no
+error.
+
+```{admonition} `lags` does NOT reach an explicit feature-step pipeline
+:class: important
+
+An earlier version of this warning listed `pca_step` and `maf_step` alongside `far`.
+That was wrong. The shortcut `lags` builds the *shortcut* design matrix; a step
+supplied through `feature_steps` reduces the block named by its own `input=`
+argument (default `"panel"`), and does not inherit the shortcut. Measured on a
+6-predictor panel:
+
+| configuration | columns out | PCs |
+|---|---|---|
+| shortcut only, `lags=(0, 1)` | 13 | — |
+| shortcut only, `lags=0` | 7 | — |
+| explicit `pca_step(input="panel")`, `lags` default | **3** | 2 |
+| explicit `pca_step(input="panel")`, `lags=0` | **3** | 2 |
+
+The last two are identical: once an explicit pipeline is supplied, the shortcut
+`lags` no longer changes anything downstream of it.
+
+So the rule is about *which door the block comes through*. `far` receives the
+shortcut design, so `lags` decides its PCA input. `pca_step` names its own input, so
+`lags` does not. This is the distinction the GCLS-2022 replication got wrong in the
+other direction — see `docs/replication/gcls_2022_replication.md`, where `far` was
+handed a stacked `[X_t, X_{t-1}]` panel because `lags` was left at its default.
+```
 
 The Stock-Watson diffusion-index model that most macro papers specify is
 `X_t = Lambda F_t + u_t`: factors of the cross-section at **one** time index. To
