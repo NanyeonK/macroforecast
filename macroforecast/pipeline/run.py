@@ -79,10 +79,9 @@ def _effective_target_for_arm(
     arm: Arm,
     target: ResolvedTarget,
 ) -> ResolvedTarget:
-    policy = spec.policy_overrides.get((arm.name, target.name))
-    if policy is None or policy == target.policy:
-        return target
-    return _dc.replace(target, policy=policy)
+    from macroforecast.forecasting.task import effective_target
+
+    return effective_target(spec, arm, target)
 
 
 def _arm_tag_columns(arm: Arm) -> dict[str, Any]:
@@ -137,23 +136,12 @@ def _run_one_arm_target(
 
     # A multi-target pipeline runs each arm for every target, but an arm's feature
     # spec carries a single target; align it (and its transform) to this target.
-    features = arm.features
-    if features is not None:
-        needs_retarget = (
-            getattr(features, "target", None) != target.name
-            or bool(getattr(features, "targets", ()))
-        )
-        if needs_retarget:
-            kwargs: dict[str, Any] = {"target": target.name}
-            if getattr(features, "targets", None):
-                kwargs["targets"] = ()
-            try:
-                features = _dc.replace(features, **kwargs)
-            except Exception as exc:  # surface a real misconfiguration
-                raise ValueError(
-                    f"could not re-target feature spec of arm {arm.name!r} "
-                    f"to {target.name!r}: {exc}"
-                ) from exc
+    # Shared with the cache-identity path (A2), so the two cannot drift: before this
+    # the same retarget was written twice, and the copies disagreed about what a
+    # failure means -- this one raised, result_store swallowed it.
+    from macroforecast.forecasting.task import retarget_features
+
+    features = retarget_features(arm.features, target.name, arm_name=arm.name)
 
     result = run(
         spec.data,
