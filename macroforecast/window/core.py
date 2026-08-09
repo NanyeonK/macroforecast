@@ -805,8 +805,16 @@ class WindowSpec:
         index: int | Sequence[Any] | pd.Index,
         *,
         exclude_origin: bool = False,
-    ) -> Iterator[dict[str, Any]]:
-        """Yield origin metadata and absolute-position slices for model runners."""
+    ) -> Iterator[OriginContext]:
+        """Yield origin metadata and absolute-position slices for model runners.
+
+        Returns :class:, which IS a
+        Mapping over the same keys this yielded as a plain dict before A3 --
+        origin["fit_idx"] and dict(origin) are unchanged -- while also
+        exposing typed attributes such as origin.fit_idx and
+        origin.origin_pos. The annotation says OriginContext rather than
+        Mapping so a reader is told the attributes exist.
+        """
 
         labels = _coerce_index(index)
         for _, row in self.plan(labels, exclude_origin=exclude_origin).iterrows():
