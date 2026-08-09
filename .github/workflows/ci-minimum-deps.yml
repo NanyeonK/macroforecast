@@ -41,11 +41,20 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
+      - name: Provide a TOML reader on 3.10
+        # tomllib landed in 3.11; the floor-parsing step below needs one on 3.10.
+        if: matrix.python-version == 3.10
+        run: pip install tomli
+
       - name: Read the declared lower bounds
         id: floors
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
-          import re, tomllib
+          import re
+          try:
+              import tomllib          # 3.11+
+          except ModuleNotFoundError:
+              import tomli as tomllib  # 3.10, installed below
           with open("pyproject.toml", "rb") as fh:
               spec = tomllib.load(fh)
           pins = []
@@ -73,8 +82,9 @@ jobs:
           # --no-deps so pip cannot quietly upgrade a pin to satisfy the package
           # and turn this into the same test ci-core already runs.
           pip install --no-deps .
-          pip install --no-deps pytest pytest-timeout
-          pip check || true
+          # Hard failure on purpose. This job exists to prove the declared floors are
+          # mutually installable; swallowing the result would test nothing.
+          pip check
 
       - name: Report what is actually installed
         run: pip list | grep -Ei "pandas|numpy|scikit-learn|statsmodels|scipy|openpyxl"
