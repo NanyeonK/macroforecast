@@ -371,5 +371,34 @@
   two recorded [GAP]s (task resolution spread across four files; evaluation
   loading data).
 - `docs/index.md`: architecture added to the toctree.
+## Stateful custom preprocessing (fix/449-stateful-custom-preprocess)
+
+- `macroforecast/preprocessing/specs.py`: `custom_preprocess_step` takes
+  `fit_func`/`transform_func`/`row_local`; `_fit_custom_preprocess_states` runs
+  fit callables on the estimation window; `FittedPreprocessor.custom_step_states`
+  carries the result to transform; `_reject_unrestricted_fit_window_steps`
+  replaces the old warning.
+- `tests/preprocessing/test_custom_step_contract.py`: new -- refusal message
+  names every way out, stateful step is future-proof, row-local still works,
+  `origin_available` unchanged, state fitted exactly once, builder refuses
+  incoherent combinations.
+- `docs/guide/concepts/preprocessing.md`: the "keep them row-local" warning
+  replaced with the contract and worked examples.
+- `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
+
+## Interpretation audit (audit/446-interpretation)
+
+- `macroforecast/interpretation/core.py`: `_coerce_custom_table` distinguishes a
+  columnar mapping from a scalar one; `custom_interpretation` docstring records
+  the full contract and its non-guarantees.
+- `tests/interpretation/test_attribution_oracles.py`: new -- native attribution
+  oracles and the custom-model dispatch check.
+- `tests/interpretation/test_shapley_oracles.py`: new -- efficiency, dummy,
+  linearity, permutation stability, aggregated-vs-per-row agreement, constant
+  model.
+- `tests/interpretation/test_custom_interpretation_contract.py`: new -- call
+  signature, accepted return shapes (including the fixed columnar mapping),
+  attached schema, and the explicit non-guarantee.
+- `docs/reference/interpretation.md`: regenerated for the new docstring.
 - `CHANGELOG.md`, `logs/file_usage_log.md`: recorded.
 

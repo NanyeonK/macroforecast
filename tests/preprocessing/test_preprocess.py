@@ -726,7 +726,14 @@ def test_origin_available_transform_without_custom_steps_matches_old_order():
     assert transformed.metadata["preprocess_transform"]["standardize_refit"] is False
 
 
-def test_fit_window_custom_steps_warn_stateless_contract():
+def test_fit_window_custom_steps_refuse_an_undeclared_contract():
+    """Was a warning; #449 makes it a refusal.
+
+    The package cannot tell by looking whether a callable aggregates, so under
+    ``fit_window`` -- where a step is re-executed on a window containing
+    post-origin rows -- an undeclared one is refused rather than run with a
+    caveat.
+    """
     metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
     panel = mf.data.as_panel(
         pd.DataFrame(
@@ -749,8 +756,24 @@ def test_fit_window_custom_steps_warn_stateless_contract():
         ],
     )
 
-    with pytest.warns(UserWarning, match="row-local/stateless"):
+    with pytest.raises(ValueError, match="row_local=True"):
         pre.fit((panel, metadata), policy="fit_window")
+
+    # declaring it row-local is accepted, and is the whole point of the escape
+    declared = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="none",
+        frame="keep",
+        custom_steps=[
+            mf.preprocessing.custom_preprocess_step(
+                "copy_x", _copy_x_custom_step, row_local=True
+            )
+        ],
+    )
+    fitted = declared.fit((panel, metadata), policy="fit_window")
+    assert fitted.preprocessing_scope == "fit_window"
 
 
 def test_preprocess_spec_rejects_non_preprocessing_options_early():

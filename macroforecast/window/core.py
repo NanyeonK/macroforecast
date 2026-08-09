@@ -385,7 +385,11 @@ class ValWindow:
     horizon: int = 1
     step: int = 1
     embargo: int | None = None
-    random_state: int | None = None
+    # Seeded by default. ``random_kfold_split`` seeds itself with 0, but a ``None``
+    # default here is forwarded EXPLICITLY and so overrides it -- which made every
+    # k-fold CV selection irreproducible (#513). Pass ``None`` to opt into an
+    # unseeded shuffle deliberately.
+    random_state: int | None = 0
     retune_every: TemporalCadence = 1
     retune_on_retrain: bool = True
     reuse_params: bool = True
@@ -1219,7 +1223,7 @@ def from_cutoffs(
     val_horizon: int | None = None,
     val_step: int = 1,
     val_embargo: int | None = None,
-    val_random_state: int | None = None,
+    val_random_state: int | None = 0,
     retune_every: TemporalCadence = 1,
     retune_on_retrain: bool = True,
     reuse_params: bool = True,
@@ -1910,7 +1914,9 @@ def make_splitter(
     n_splits: int = 5,
     step: int = 1,
     horizon: int = 1,
-    random_state: int | None = None,
+    # Seeded by default, and deliberately matching ``random_kfold_split``'s own
+    # default -- forwarding a ``None`` from here silently overrode it (#513).
+    random_state: int | None = 0,
     embargo: int = 0,
 ) -> list[Split]:
     """Build validation splits from a validation method name."""
@@ -1979,7 +1985,9 @@ def split_table(
     n_splits: int = 5,
     step: int = 1,
     horizon: int = 1,
-    random_state: int | None = None,
+    # Seeded by default, and deliberately matching ``random_kfold_split``'s own
+    # default -- forwarding a ``None`` from here silently overrode it (#513).
+    random_state: int | None = 0,
     embargo: int = 0,
 ) -> pd.DataFrame:
     """Return validation splits as an inspectable table."""

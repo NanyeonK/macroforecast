@@ -5,6 +5,50 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `interpretation/core.py`, `tests/interpretation/` (**one fix, plus the audit
+  #446 asked for**): the interpretation subsystem had no correctness oracles,
+  and the `custom_interpretation` contract was a one-line docstring.
+
+  **Fixed: a mapping of columns to values became one row of list-valued cells.**
+  `_coerce_custom_table` wrapped every mapping with `pd.DataFrame([mapping])`,
+  which is right for named metrics (`{"r2": 0.81, "mse": 1.2}` is one row) and
+  wrong for the columnar shape (`{"feature": [...], "importance": [...]}`), the
+  more natural way to return a per-feature table. There was no error -- the
+  result looked wrong only if you printed it. The two shapes are now
+  distinguished.
+
+  **Oracles for the decompositions.** Cases where the right answer is known in
+  advance, rather than tests that the functions run: linear SHAP is affine in
+  the feature with slope `beta_j`; per-row attributions sum to the prediction
+  minus the base value (efficiency); a feature the model does not use gets
+  essentially nothing (dummy); permuting one column leaves the others'
+  attribution untouched; the aggregated `shap_linear` view agrees with the
+  per-row `shap_values`; a constant model attributes nothing to anything. Plus
+  native-attribution oracles: `linear_coefficients` recovers the generating
+  coefficients, `tree_importance` puts the mass on the used feature, permutation
+  importance is reproducible under a seed.
+
+  Note on how one of these is written. The obvious oracle -- compare against
+  `beta_j * (x_ij - mean_j)` -- fails, because this implementation does not
+  centre on the sample mean; the difference is a per-feature constant. Testing
+  the exact closed form would pin an incidental convention rather than the
+  axiom, so the test instead requires `attribution - beta_j * x_ij` to be the
+  same in every row, which is the actual claim and survives a defensible change
+  of baseline.
+
+  **Risk (1) in the issue does not hold as stated.** Interpretation dispatches on
+  what an estimator *exposes* (`coef_`, `feature_importances_`), not on its
+  class, so an injected custom model that delegates to `ols` is explained
+  identically to `ols` -- now pinned by a test.
+
+  **`custom_interpretation` is documented**: the exact call signature (`model`
+  passed through unchanged, `X` coerced to a DataFrame, `y` and `metadata`
+  always sent as keywords even when empty), what may be returned, the schema
+  attached -- and, explicitly, what it does **not** do. It validates no axiom.
+  A method returning nonsense is accepted and schema-stamped exactly like a
+  correct one, which a caller putting custom output in a paper needs to know.
+  That non-guarantee is pinned by a test so it cannot be assumed away.
+
 - `models/persistence.py`, `preprocessing/cache.py`, `SECURITY.md`,
   `pipeline/spec.py`, `.gitignore` (**documentation and hygiene only, no
   behaviour change**):
@@ -61,6 +105,41 @@ full per-version honesty-pass history embedded in repo documentation.
   `pipeline/evaluate.py` calls `load_fred_series()` to resolve named subsample
   masks, which makes evaluating one fixed forecast table depend on network and
   cache state.
+- `preprocessing/specs.py`, `docs/guide/concepts/preprocessing.md`
+  (**breaking under `policy="fit_window"`**): custom preprocessing steps now
+  declare whether they aggregate, and are held to it (issue #449).
+
+  A custom step used to be one callable. Under `fit_window` that callable is
+  re-executed on each apply window -- and the apply window contains the rows
+  after the forecast origin -- so a step computing any statistic there read the
+  future. The package warned and ran anyway.
+
+  Two shapes are now available:
+
+  - `custom_preprocess_step(name, func, row_local=True)` -- a claim that each
+    output row depends only on the matching input row, which makes re-execution
+    on a longer frame harmless.
+  - `custom_preprocess_step(name, fit_func=..., transform_func=...)` --
+    `fit_func` runs **once**, on the estimation window; `transform_func` applies
+    what it returned without recomputing.
+
+  A bare `func` declaring neither is **refused** under `fit_window`, with an
+  error naming all three ways out (declare row-local, split it, or use
+  `origin_available`). `origin_available` still accepts it, since the sample
+  handed to a step there is already restricted to observable rows.
+
+  Verified by the property rather than the mechanism: with the split step,
+  replacing every post-origin predictor with `1e6` leaves the first forecast
+  identical. A separate test counts `fit_func` calls to show the state is
+  derived once and never refitted at transform time.
+
+  **A note that made this harder to see than it looks.** OLS with an intercept
+  is invariant to any affine transform of `X`, so a leaky centering or rescaling
+  step changes the fitted coefficients and leaves the prediction untouched. The
+  first attempt at a demonstration used demeaning and *passed*. Only a
+  non-affine step -- clipping at a sample quantile -- moves the forecast. The
+  leak is equally real either way; whether it surfaces depends on the model it
+  feeds, which is why this is enforced rather than left to inspection.
 
 - `models/timeseries.py`, `models/specs.py` (**no default behaviour change**):
   `far` now takes `scale`, so a caller can choose the factor-extraction

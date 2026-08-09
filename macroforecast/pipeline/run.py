@@ -1200,10 +1200,40 @@ def _run_cells(
             # (origin_pos alone), so a window-overriding arm must not share the
             # preprocessing tier either. Gating both tiers on the same eligibility
             # check keeps one dict, one invariant.
-            target_caches: dict[str, dict[Any, Any]] = {t.name: {} for t in spec.targets}
+            #
+            # Only ONE target's cache is live at a time (#452). Building a dict per
+            # target up front kept every finished target's prepared panels -- a
+            # transformed panel per (origin x horizon), plus the FittedPreprocessor
+            # holding its own fit panel -- reachable until the run ended, so peak
+            # memory scaled with the number of targets rather than with the largest
+            # one. ``_enumerate_cells`` visits target -> arm -> horizon, so a
+            # target's entries are provably dead once a cell for a different target
+            # appears: no later key can reach them.
+            #
+            # The previous target's dict is CLEARED, not just unreferenced. Anything
+            # still holding the object (a caller's instrumentation, a traceback
+            # frame) would otherwise keep the panels alive and the release would be
+            # a release only on paper.
+            #
+            # This is NOT capacity-bounded eviction, and deliberately so. Within one
+            # target the working set IS the whole cache: the first arm fills every
+            # (origin x horizon) entry and every later arm reads all of them, so the
+            # reuse distance is a full pass over the origins and any LRU smaller than
+            # that pass would evict each entry exactly before its reuse -- trading a
+            # memory problem for a larger compute one, since the cross-arm sharing
+            # described above is the dominant saving in a multi-arm run. Dropping at
+            # the target boundary loses no hit, because no hit crosses it.
+            target_caches: dict[str, dict[Any, Any]] = {}
+            live_target_name: str | None = None
             for cell in pending_cells:
                 arm = spec.arms[cell.arm_idx]
                 target = spec.targets[cell.target_idx]
+                if target.name != live_target_name:
+                    for finished in target_caches.values():
+                        finished.clear()
+                    target_caches.clear()
+                    target_caches[target.name] = {}
+                    live_target_name = target.name
                 cache = target_caches.get(target.name)
                 arm_cache = (
                     cache if (arm.preprocessing is None and arm.window is None) else None
