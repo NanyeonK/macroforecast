@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from macroforecast.window.context import OriginContext
+
 import dataclasses as _dc
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -823,19 +825,19 @@ class WindowSpec:
                 int(row["test_end_pos"]) + 1,
                 dtype=int,
             )
-            yield {
-                "row": row.to_dict(),
-                "estimation_idx": estimation_idx,
-                "fit_idx": fit_idx,
-                "test_idx": test_idx,
-                "val_splits": self.val_splits_for_origin(
+            yield OriginContext(
+                row=row.to_dict(),
+                estimation_idx=estimation_idx,
+                fit_idx=fit_idx,
+                test_idx=test_idx,
+                val_splits=self.val_splits_for_origin(
                     labels,
                     int(row["origin_pos"]),
                     exclude_origin=exclude_origin,
                 )
                 if bool(row["retune"])
                 else [],
-            }
+            )
 
     def iter_slices(
         self,
