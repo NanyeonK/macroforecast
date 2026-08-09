@@ -359,7 +359,7 @@ import macroforecast as mf
 ```
 ### collect_provenance
 
-Qualified name: `macroforecast.output.core.collect_provenance`
+Qualified name: `macroforecast.meta.provenance.collect_provenance`
 
 #### Signature
 
