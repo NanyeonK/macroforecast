@@ -21,6 +21,63 @@ and provenance/caveats. Where a purpose does not apply to a given replication it
 **N/A with a stated reason**, so an absence is always a scope decision, not a silent gap.
 `hounyo_li_2026.md` is the exemplar page.
 
+## Where the code is
+
+**The trust notes live on `main`; most of the runners do not.** A note here may print a
+command like `python3 scripts/replication/medeiros_2021_pipeline/run_block.py` while that
+script exists only on its replication branch — so reading the note on `main` does not tell
+you where to run it. This table closes that gap.
+
+Branches move. **Pin the commit**, not the branch name, when you cite a result.
+
+| Paper | Code | Pinned commit | Manifest | Runnable from a fresh clone? |
+|---|---|---|---|---|
+| Medeiros et al. (2021) | `repro/medeiros-2021` | `31e5b451` | `scripts/replication/medeiros_2021_pipeline/replication.yaml` | **yes** — `prepare_data.py --archive …` |
+| Zhang, Wahab & Wang (2023) | `repro/zww-2023` | `d2fc450e` | `scripts/replication/zww_2023_pipeline/replication.yaml` | **no** — raw-source acquisition not scripted |
+| Hounyo & Li (2026) | `repro/hounyo-li-2026` | `c5b46ec3` | *(not yet written)* | **no** — assumes the author package is pre-extracted |
+| Goulet Coulombe et al. (2022) | `repro/gcls-2022` | `0de239ac` | `scripts/replication/gcls_2022_pipeline/replication.yaml` | **yes** — `MF_GCLS_ARCHIVE=… ` |
+| Goulet Coulombe (2024), MRF | on `main` | `1e6a0a33` | *(not yet written)* | — |
+
+Each manifest follows `macroforecast-replication-v1`: paper and exhibit, the branch and
+both commits, every data source with its hash and whether it is redistributable, the
+prepare/smoke/full commands, expected artifacts, and a decomposed status. Fields that would
+have to be invented are marked `[FILL]` rather than guessed — a manifest with made-up
+hashes looks checkable while being unverifiable.
+
+```{admonition} What these replications validate
+:class: warning
+
+Each replication branch pins its own package commit and imports the `macroforecast` in
+that checkout — **not** current `main`. A result on `repro/medeiros-2021` is a statement
+about the package at that commit. Later `main` fixes (target-only fit samples, the custom
+preprocessing state contract, input provenance, the k-fold seed, the interpretation
+audit) are not automatically covered by it.
+
+`repro/gcls-2022` is the deliberate exception and says so in its manifest: it is its base
+commit plus exactly one cherry-pick, so its `,KF` re-run differs from the earlier run in
+the seed and nothing else.
+```
+
+## Status, decomposed
+
+A single label hides disagreements. Medeiros was carried as `STRONG` while its own note
+records UCSV outside tolerance at h = 3, 6 and 12 — both true, of different things. Each
+manifest therefore reports four axes:
+
+| Axis | Question |
+|---|---|
+| `headline_replication` | does the paper's main qualitative result reproduce? |
+| `protocol_fidelity` | is the published specification implemented as written? |
+| `table_cell_parity` | what fraction of cells fall inside the stated tolerance? |
+| `unresolved` | what numerical gap remains, and why? |
+
+| Paper | headline | protocol | cell parity | note |
+|---|---|---|---|---|
+| Medeiros | STRONG | STRONG | **PARTIAL** | UCSV outside tolerance at h = 3, 6, 12 — unpublished sampler calibration |
+| ZWW | STRONG | STRONG | **PARTIAL** | PCA-VS to 1–2 pp; some competing magnitudes direction-only (~2×) |
+| Hounyo–Li | STRONG (author-oracle) | STRONG | 55/60 within \|Δ\| ≤ 0.03 | leak-free output differs for identified reasons |
+| GCLS 2022 | STRONG | STRONG | **PARTIAL** | **IN PROGRESS** — 1 of 5 targets re-run; 104/225 beat AR,BIC vs the paper's 128/225 |
+
 ## Index
 
 | Paper | Target exhibit | Headline verdict | P1 | P2 | P3 | P4 | Doc |
