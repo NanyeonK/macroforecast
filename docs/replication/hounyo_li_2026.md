@@ -10,7 +10,54 @@ The headline finding is a look-ahead leak in the paper's out-of-sample evaluatio
 
 The reproduction evidence is tight. On the matched inflation h=1 PCA case, emulating the author's leaky surface reproduces Table 2: `macroforecast.pcr` gives 0.970590, matching the paper's 0.970 after rounding. The leak-free package-side diagnostic gives 1.080953 instead. The 0.110953 gap decomposes into about 0.0206 from the direct target-y standardization leak, or about 19%, and about 0.0904 from the author K/window surface, or about 81%, mainly K selection tuned on the leaky standardized surface. When `macroforecast.pcr` is fed the author-standardized X block, author leaky target block, author split, and author K, it is bit-identical to the author PCA code, with maximum absolute prediction difference `3.844e-14`, and it reproduces the author K choices in the diagnostic origins.
 
-The implication is methodological, not accusatory. Based on the published MATLAB and cross-validated package checks, the paper's pseudo-OOS factor-method results are optimistically biased by a common but subtle form of target-standardization leakage. `macroforecast` is leak-free by design, so its honest out-of-sample numbers do not equal the paper's leaky Table 2 numbers.
+```{admonition} What this page claims, and what it does not
+:class: important
+
+This is a claim about **another group's published finding**, so it carries a higher
+evidence bar than package documentation and the wording is scoped deliberately.
+
+**Claimed, and evidenced below.** The published replication code standardizes the
+target block using observations that extend beyond each forecast origin
+(`inflation_linear.m:196-197`). Emulating that code path reproduces the reported
+table closely — `macroforecast.pcr` gives 0.970590 against a published 0.970, and is
+bit-identical to the author PCA code at `3.844e-14` when fed the author's inputs.
+An origin-local standardization does not: the same cell gives 1.080953.
+
+**Therefore, and stated as a dependency rather than a verdict.** The published
+numbers depend on a look-ahead standardization surface. Roughly 19% of the 0.110953
+gap traces to the direct target-`y` standardization and roughly 81% to the author's
+K/window surface, mainly K selection tuned on that standardized surface.
+
+**Not claimed here.** What the authors *intended* to implement, and how much the
+published conclusions would move under an origin-local standardization. Determining
+the first needs the authors; the second needs a full re-run of their design, which
+this page has not done. An earlier revision of this section said the results "are
+optimistically biased", which asserted both — it has been narrowed.
+
+**Also relevant to reading the leak-free column.** It confounds two differences: the
+standardization surface and the data pipeline (this run uses `load_fred_md` vintage
+`2023-04` and package transforms, not the author workbooks). The unemployment h=1
+divergence is 97.7% attributable to a single May-2020 observation. Neither is a
+package defect, and neither is evidence about the paper.
+```
+
+`macroforecast` is leak-free by design, so its honest out-of-sample numbers do not
+equal the paper's Table 2 numbers.
+
+```{admonition} Evidence a reader needs and this page does not yet carry
+:class: warning
+
+For a claim at this level the following should be recorded, and currently are not:
+
+- SHA-256 of the author replication archive, and the URL it came from
+- SHA-256 of `inflation_linear.m` as analysed
+- a minimal standalone reproducer — smallest input, two runs, one operation changed
+- a counterfactual isolating **only** the suspected standardization, holding the data
+  pipeline, K and split fixed
+
+Until those are here, treat this section as a documented observation with a strong
+numerical trail, not as a settled result about the paper.
+```
 
 ## Verdict / Bottom line
 
