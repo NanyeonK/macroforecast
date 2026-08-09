@@ -25,7 +25,20 @@ FutureFeaturePolicy = Literal["target_lags", "observed_future"]
 # the same carve-out in ``macroforecast.pipeline.spec.DIRECT_POLICY_GUARD_MODELS``.
 # See ``_feature_spec_for_policy`` for where this gates the
 # default-feature-spec warning.
-_TARGET_LAGS_BY_DESIGN_MODELS = frozenset({"ar", "far"})
+def _target_lags_by_design_models() -> frozenset[str]:
+    """Models that supply their own target lags, from ``ModelSpec`` capability.
+
+    Was a literal ``frozenset({"ar", "far"})`` here while the same carve-out was also
+    written out in ``pipeline.spec``. Derived since A2 so the two cannot drift apart.
+    """
+    from macroforecast.models import MODEL_SPECS
+    from macroforecast.models.specs import forecast_capabilities
+
+    return frozenset(
+        name
+        for name, spec in MODEL_SPECS.items()
+        if forecast_capabilities(spec).builds_own_target_lags
+    )
 
 
 def _feature_target_name(features: FeatureSpec) -> str | None:
@@ -150,7 +163,7 @@ def _feature_spec_for_policy(
         # docs/guide/getting_started.md) is an explicit ``target_lags=...``
         # FeatureSpec with ``predictors=[]`` -- the same ar/far carve-out
         # documented in ``macroforecast.pipeline.spec.DIRECT_POLICY_GUARD_MODELS``.
-        if model_input_kind == "supervised" and model_name not in _TARGET_LAGS_BY_DESIGN_MODELS:
+        if model_input_kind == "supervised" and model_name not in _target_lags_by_design_models():
             _warn_default_feature_spec_used()
         return feature_spec(
             target=target,

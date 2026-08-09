@@ -65,7 +65,16 @@ def result_cell_identity(
     data_fingerprint = data_identity.get("fingerprint")
     try:
         _assert_digestible_data_fingerprint(data_fingerprint)
-        effective_features = _retargeted_features(arm.features, target.name)
+        # One resolver, shared with the execution path (A2). A retarget that fails
+        # now makes the cell UNCACHEABLE rather than silently digesting the
+        # un-retargeted spec -- a digest describing a task that was never run is
+        # worse than no digest.
+        from macroforecast.forecasting.task import FeatureRetargetError, retarget_features
+
+        try:
+            effective_features = retarget_features(arm.features, target.name, arm_name=arm.name)
+        except FeatureRetargetError as exc:
+            raise _UndigestibleCell(str(exc)) from exc
         payload: dict[str, Any] = {
             "data_fingerprint": _json_ready(data_fingerprint),
             "effective_selection_seed": _effective_selection_seed(),

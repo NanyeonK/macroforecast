@@ -74,10 +74,20 @@ LAYERS: dict[str, int] = {
 }
 
 #: (module, imported package) pairs that predate this test. See the docstring.
-KNOWN_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset({
-    ("data/vintage.py", "pipeline"),
-    ("pipeline/run.py", "output"),
-})
+#: Empty since A1 (2026-08-09). Both entries were lower layers reaching up for a
+#: function that had no business living where it lived:
+#:
+#:   data/vintage.py   -> pipeline.run._panel_fingerprint
+#:   pipeline/run.py   -> output.collect_provenance
+#:
+#: A fingerprint is a property of the data and now lives in data/identity.py; a
+#: git/environment probe is not artifact writing and now lives in
+#: meta/provenance.py. Neither move changed behaviour -- the digest is byte-identical
+#: and output.collect_provenance re-exports the same object.
+#:
+#: Keep this empty. An entry added here is a layering violation the project decided to
+#: live with, so it needs a reason in the architecture document, not just a tuple.
+KNOWN_EXCEPTIONS: frozenset[tuple[str, str]] = frozenset()
 
 
 def _layer_of(module_path: Path) -> tuple[str, int] | None:
@@ -93,8 +103,54 @@ def _layer_of(module_path: Path) -> tuple[str, int] | None:
     return top, LAYERS[top]
 
 
-def _imported_packages(tree: ast.AST) -> list[tuple[str, int]]:
-    """Every ``macroforecast.<top>`` this module imports, with its line."""
+#: ``_resolve_relative`` returns this when a relative import walks up to
+#: ``macroforecast`` itself, e.g. ``from .. import pipeline`` inside
+#: ``macroforecast/data/vintage.py``. The package being reached is then one of the
+#: imported NAMES rather than the module path, so the caller reads ``node.names``.
+ROOT_MARKER = "<root>"
+
+
+def _resolve_relative(module_path: Path, level: int, module: str | None) -> str | None:
+    """Resolve a relative import to the ``macroforecast.<top>`` package it reaches.
+
+    ``from ..pipeline import run_pipeline`` inside ``macroforecast/data/vintage.py``
+    is an upward import to a *sibling top-level package*, and skipping every
+    relative import — as this file did until 2026-08-09 — let exactly that through.
+    The comment claimed relative imports stay inside their own layer; that was an
+    assumption, not a property of Python.
+
+    Returns the top-level package name, or ``None`` when the import cannot leave
+    the current one (``from .local import x``, or a level that walks past the root).
+    """
+    try:
+        relative = module_path.relative_to(ROOT)
+    except ValueError:
+        return None
+    # Package parts of the importing module: macroforecast/<a>/<b>/mod.py -> [<a>, <b>]
+    parts = list(relative.parts[:-1])
+    # level=1 is "this package"; each extra level walks one package up.
+    up = level - 1
+    if up > len(parts):
+        return None
+    base = parts[: len(parts) - up] if up else parts
+    if module:
+        return (base + [module.split(".")[0]])[0]
+    if base:
+        # ``from . import x`` / ``from .. import x`` that still lands inside a
+        # package: the package itself is what the import is rooted at.
+        return base[0]
+    # Walked all the way to ``macroforecast`` itself: the imported NAMES are the
+    # top-level packages, so the caller has to read them off ``node.names``.
+    return ROOT_MARKER
+
+
+def _imported_packages(tree: ast.AST, module_path: Path) -> list[tuple[str, int]]:
+    """Every ``macroforecast.<top>`` this module imports, with its line.
+
+    Absolute and relative forms both count. A relative import is resolved against
+    the importing module's own package path, so an upward one is reported as the
+    package it actually reaches rather than skipped.
+    """
     found: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -102,7 +158,15 @@ def _imported_packages(tree: ast.AST) -> list[tuple[str, int]]:
                 if alias.name.startswith("macroforecast."):
                     found.append((alias.name.split(".")[1], node.lineno))
         elif isinstance(node, ast.ImportFrom):
-            if node.level:  # relative: stays inside its own layer
+            if node.level:
+                top = _resolve_relative(module_path, node.level, node.module)
+                if top == ROOT_MARKER:
+                    # ``from .. import pipeline`` -- the packages are the names.
+                    for alias in node.names:
+                        if alias.name in LAYERS:
+                            found.append((alias.name, node.lineno))
+                elif top is not None:
+                    found.append((top, node.lineno))
                 continue
             if node.module and node.module.startswith("macroforecast."):
                 found.append((node.module.split(".")[1], node.lineno))
@@ -128,7 +192,7 @@ def _violations() -> list[tuple[str, str, int, str, int, int]]:
         except SyntaxError as exc:  # pragma: no cover
             pytest.fail(f"{path}: {exc}")
         rel = str(path.relative_to(ROOT))
-        for imported, lineno in _imported_packages(tree):
+        for imported, lineno in _imported_packages(tree, path):
             if imported not in LAYERS or imported == name:
                 continue
             if LAYERS[imported] > level:
@@ -178,4 +242,65 @@ def test_no_top_level_package_is_unclassified() -> None:
     assert not unclassified, (
         "add these to LAYERS at the level their imports allow:\n  "
         + "\n  ".join(unclassified)
+    )
+
+
+@pytest.mark.parametrize(
+    "module, level, imported, expected, why",
+    [
+        # macroforecast/data/vintage.py
+        ("data/vintage.py", 1, "panel", "data",
+         "from .panel -- stays inside data"),
+        ("data/vintage.py", 2, "pipeline", "pipeline",
+         "from ..pipeline -- reaches a SIBLING top-level package, the case that was skipped"),
+        ("data/vintage.py", 2, "window", "window",
+         "from ..window -- sibling, resolved by layer like any absolute import"),
+        ("data/vintage.py", 1, None, "data",
+         "from . import x -- still inside data"),
+        ("data/vintage.py", 2, None, ROOT_MARKER,
+         "from .. import x -- walks up to macroforecast itself, so the package "
+         "being reached is one of the imported NAMES, not the module path"),
+        # a deeper module, so the level arithmetic is exercised
+        ("forecasting/policies/base.py", 1, "helpers", "forecasting",
+         "from .helpers -- inside forecasting"),
+        ("forecasting/policies/base.py", 2, "runner", "forecasting",
+         "from ..runner -- still inside forecasting"),
+        ("forecasting/policies/base.py", 3, "output", "output",
+         "from ...output -- leaves forecasting entirely"),
+    ],
+)
+def test_relative_imports_resolve_to_the_package_they_reach(
+    module, level, imported, expected, why
+):
+    """The blind spot this file had until 2026-08-09.
+
+    Every relative import was skipped on the assumption that relative meant
+    same-layer. It does not: ``from ..pipeline import run_pipeline`` inside
+    ``data/vintage.py`` is a relative import to a sibling top-level package, and the
+    guard waved it through. These cases pin the resolver directly, because a
+    regression here would show up as the guard silently passing rather than as a
+    failure.
+    """
+    resolved = _resolve_relative(ROOT / module, level, imported)
+    assert resolved == expected, why
+
+
+def test_an_upward_relative_import_is_caught_end_to_end():
+    """The guard must reject a lower layer reaching up, however it is written."""
+    source = "from ..pipeline import run_pipeline\n"
+    tree = ast.parse(source)
+    found = _imported_packages(tree, ROOT / "data" / "vintage.py")
+    assert found == [("pipeline", 1)], found
+
+    # The `from .. import pipeline` spelling of the same violation.
+    root_form = ast.parse("from .. import pipeline\n")
+    assert _imported_packages(root_form, ROOT / "data" / "vintage.py") == [
+        ("pipeline", 1)
+    ], "an upward import written as `from .. import <pkg>` slipped through"
+
+    lower = LAYERS["data"]
+    upper = LAYERS["pipeline"]
+    assert upper > lower, (
+        "the fixture assumes pipeline sits above data; if the layer map changed, "
+        "this test needs a different pair rather than deleting"
     )

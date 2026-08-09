@@ -5,6 +5,50 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `interpretation/core.py`, `tests/interpretation/` (**one fix, plus the audit
+  #446 asked for**): the interpretation subsystem had no correctness oracles,
+  and the `custom_interpretation` contract was a one-line docstring.
+
+  **Fixed: a mapping of columns to values became one row of list-valued cells.**
+  `_coerce_custom_table` wrapped every mapping with `pd.DataFrame([mapping])`,
+  which is right for named metrics (`{"r2": 0.81, "mse": 1.2}` is one row) and
+  wrong for the columnar shape (`{"feature": [...], "importance": [...]}`), the
+  more natural way to return a per-feature table. There was no error -- the
+  result looked wrong only if you printed it. The two shapes are now
+  distinguished.
+
+  **Oracles for the decompositions.** Cases where the right answer is known in
+  advance, rather than tests that the functions run: linear SHAP is affine in
+  the feature with slope `beta_j`; per-row attributions sum to the prediction
+  minus the base value (efficiency); a feature the model does not use gets
+  essentially nothing (dummy); permuting one column leaves the others'
+  attribution untouched; the aggregated `shap_linear` view agrees with the
+  per-row `shap_values`; a constant model attributes nothing to anything. Plus
+  native-attribution oracles: `linear_coefficients` recovers the generating
+  coefficients, `tree_importance` puts the mass on the used feature, permutation
+  importance is reproducible under a seed.
+
+  Note on how one of these is written. The obvious oracle -- compare against
+  `beta_j * (x_ij - mean_j)` -- fails, because this implementation does not
+  centre on the sample mean; the difference is a per-feature constant. Testing
+  the exact closed form would pin an incidental convention rather than the
+  axiom, so the test instead requires `attribution - beta_j * x_ij` to be the
+  same in every row, which is the actual claim and survives a defensible change
+  of baseline.
+
+  **Risk (1) in the issue does not hold as stated.** Interpretation dispatches on
+  what an estimator *exposes* (`coef_`, `feature_importances_`), not on its
+  class, so an injected custom model that delegates to `ols` is explained
+  identically to `ols` -- now pinned by a test.
+
+  **`custom_interpretation` is documented**: the exact call signature (`model`
+  passed through unchanged, `X` coerced to a DataFrame, `y` and `metadata`
+  always sent as keywords even when empty), what may be returned, the schema
+  attached -- and, explicitly, what it does **not** do. It validates no axiom.
+  A method returning nonsense is accepted and schema-stamped exactly like a
+  correct one, which a caller putting custom output in a paper needs to know.
+  That non-guarantee is pinned by a test so it cannot be assumed away.
+
 - `models/persistence.py`, `preprocessing/cache.py`, `SECURITY.md`,
   `pipeline/spec.py`, `.gitignore` (**documentation and hygiene only, no
   behaviour change**):

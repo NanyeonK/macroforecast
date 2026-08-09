@@ -35,7 +35,7 @@ def _single_target(y: pd.Series | pd.DataFrame) -> pd.Series:
 def _filter_xy_to_target_availability(
     X: Any,
     y: Any,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     *,
     target_step: int,
     target_only: bool = False,
@@ -51,7 +51,7 @@ def _filter_xy_to_target_availability(
 
 def _target_availability_mask(
     labels: pd.Index,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     *,
     target_step: int,
 ) -> np.ndarray:
@@ -69,7 +69,7 @@ def _target_availability_mask(
 
 
 def _target_availability_base_index(
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     fallback: pd.Index,
 ) -> pd.Index:
     raw = item.get("base_index")
@@ -79,7 +79,7 @@ def _target_availability_base_index(
 
 
 def _target_availability_window_fields(
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     *,
     target_step: int,
     policy: str = "row_pos_plus_target_step_lte_origin_pos",
@@ -173,7 +173,7 @@ def _assert_selection_was_possible(
 
 
 def _availability_safe_selection_splits(
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     selection_index: pd.Index,
     *,
     target_step: int,
@@ -220,13 +220,13 @@ def _availability_safe_selection_splits(
     )
 
 
-def _allow_non_temporal_selection_splits(item: dict[str, Any]) -> bool:
+def _allow_non_temporal_selection_splits(item: Mapping[str, Any]) -> bool:
     window_spec = item.get("window_spec")
     return isinstance(window_spec, WindowSpec) and window_spec.val.method == "random_kfold"
 
 
 def _availability_safe_explicit_splits(
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     selection_index: pd.Index,
     *,
     target_step: int,
