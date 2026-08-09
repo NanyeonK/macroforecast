@@ -1724,7 +1724,7 @@ origins.</p>
 <td><p>Align feature and target objects according to the alignment rule.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">iter_origins</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">iter_origins(self,</span> <span class="pre">index:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">Sequence[Any]</span> <span class="pre">|</span> <span class="pre">pd.Index,</span> <span class="pre">*,</span> <span class="pre">exclude_origin:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False)</span> <span class="pre">-&gt;</span> <span class="pre">Iterator[dict[str,</span> <span class="pre">Any]]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">iter_origins(self,</span> <span class="pre">index:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">Sequence[Any]</span> <span class="pre">|</span> <span class="pre">pd.Index,</span> <span class="pre">*,</span> <span class="pre">exclude_origin:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False)</span> <span class="pre">-&gt;</span> <span class="pre">Iterator[OriginContext]</span></code></p></td>
 <td><p>Yield origin metadata and absolute-position slices for model runners.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">iter_slices</span></code></p></td>

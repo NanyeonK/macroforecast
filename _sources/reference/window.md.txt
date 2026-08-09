@@ -442,7 +442,7 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `align` | `align(self, X: pd.DataFrame \| pd.Series, y: pd.Series \| pd.DataFrame \| None = None) -> pd.DataFrame \| tuple[pd.DataFrame, pd.Series \| pd.DataFrame]` | Align feature and target objects according to the alignment rule. |
-| `iter_origins` | `iter_origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> Iterator[dict[str, Any]]` | Yield origin metadata and absolute-position slices for model runners. |
+| `iter_origins` | `iter_origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> Iterator[OriginContext]` | Yield origin metadata and absolute-position slices for model runners. |
 | `iter_slices` | `iter_slices(self, X: pd.DataFrame \| pd.Series, y: pd.Series \| pd.DataFrame \| None = None) -> Iterator[dict[str, Any]]` | Yield origin metadata with already sliced ``X`` and optional ``y``. |
 | `origins` | `origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> pd.DataFrame` | Return test-origin rows with train and test ranges. |
 | `plan` | `plan(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> pd.DataFrame` | Return an execution plan with estimation, val, and test metadata. |
