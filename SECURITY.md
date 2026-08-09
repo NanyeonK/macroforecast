@@ -47,7 +47,19 @@ same reading you would give a script.
 In scope: anything letting a *data* file — a CSV, a FRED download, a panel —
 cause code execution or escape its expected effect on results.
 
-Out of scope: pickle loading, custom callables, and anything else on this page,
+Expected execution of a pickle the caller explicitly supplied, or of a callable the
+caller explicitly passed, is not by itself a vulnerability — the caller chose the
+input, and the docs say what it costs.
+
+In scope, and please report:
+
+- **unexpected unpickling** — deserialization the caller did not ask for
+- **loading from a path the caller did not select** — an implicit search path, a
+  default directory, an environment variable
+- **path or symlink substitution** in cache, model-store or artifact directories
+- **trust-boundary bypass** — untrusted input reaching a trusted deserializer
+- **code execution triggered by a format documented as data-only** (CSV, Parquet,
+  JSON, a manifest)
 which are documented properties rather than defects. If you can turn one of them
 into a surprise for someone following the documentation, that *is* in scope, and
 worth reporting.
