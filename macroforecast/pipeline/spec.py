@@ -943,23 +943,30 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 # ``tests/pipeline/test_direct_policy_guard.py`` so it cannot silently rot as
 # the models lane adds or removes models -- update it there, not just here, if
 # that test starts failing.
-DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
-    # input_kind == "target": iterate their own one-step dynamics.
-    "ar_bic", "arima", "auto_arima", "ets", "holt_winters", "naive",
-    "random_walk_drift", "seasonal_naive", "stlf", "theta_method", "ucsv",
-    # input_kind == "panel": iterate their own dynamics at the panel level.
-    "bvar_minnesota", "bvar_normal_inverse_wishart",
-    "dfm_mixed_mariano_murasawa", "dfm_unrestricted_midas",
-    # input_kind == "supervised" but genuinely iterated internally (unlike
-    # ar/far, deliberately excluded -- see module docstring above).
-    "favar",
-})
+def _guarded(predicate) -> frozenset[str]:
+    """Model names whose capability satisfies *predicate*."""
+    from macroforecast.models import MODEL_SPECS
+    from macroforecast.models.specs import forecast_capabilities
 
-# Models that support ``forecast_policy="direct"`` as an h-step point projection
-# but not ``forecast_policy="direct_average"`` as a horizon-average target. Keep
-# this policy-specific extension separate from ``DIRECT_POLICY_GUARD_MODELS`` so
-# ``var`` remains valid under plain direct point forecasts.
-DIRECT_AVERAGE_GUARD_MODELS: frozenset[str] = frozenset({"var"})
+    return frozenset(
+        name for name, spec in MODEL_SPECS.items() if predicate(forecast_capabilities(spec))
+    )
+
+
+#: Models that cannot honour ``forecast_policy="direct"``.
+#:
+#: Derived from ``ModelSpec`` capability since A2, not listed here. It was a literal
+#: frozenset of 16 names in two layers plus a third set in ``policy_config``, so adding
+#: a model meant editing three files and a drift test was what kept them agreeing.
+#: The derivation reproduces the previous literal set exactly -- verified by symmetric
+#: difference in both directions before the change landed, and pinned by
+#: ``tests/pipeline/test_direct_policy_guard.py``.
+DIRECT_POLICY_GUARD_MODELS: frozenset[str] = _guarded(lambda cap: not cap.direct)
+
+#: Models valid under plain ``direct`` but not as a horizon-average target.
+DIRECT_AVERAGE_GUARD_MODELS: frozenset[str] = _guarded(
+    lambda cap: cap.direct and not cap.direct_average
+)
 
 _DIRECT_LIKE_POLICIES = frozenset({"direct", "direct_average"})
 
