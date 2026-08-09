@@ -1,0 +1,66 @@
+schema: macroforecast-replication-v1
+
+paper:
+  key: zww-2023
+  citation: >-
+    Zhang, Wang and Wu (2023) — crude-oil realized volatility forecasting with
+    a supervised PCA (PCA-VS) factor.
+  exhibit: "Tables 3 and 4"
+
+code:
+  branch: repro/zww-2023
+  replication_commit: "[FILL: git rev-parse HEAD after merge]"
+  package_commit: "[FILL: the macroforecast commit this was last run against]"
+  python: "3.12"
+
+data:
+  - name: crude-oil-futures-and-spot
+    source: "[FILL: the exact public endpoint each series was downloaded from]"
+    files:
+      - "crude_oil_prc.csv"
+    sha256: "[FILL]"
+    redistribution: not bundled
+    note: >-
+      [GAP] The acquisition path is not yet scripted. `build_stage1_target.py`
+      consumes an already-staged directory (`--staging-root`, default
+      `data/zww_2023_staging`), so a reviewer starting from public sources still
+      has to assemble that directory by hand. Closing this gap means a
+      `fetch_sources.py` that downloads futures and spot separately, records each
+      hash, and writes `crude_oil_prc.csv`.
+  - name: fred-md-predictors
+    source: "https://www.stlouisfed.org/research/economists/mccracken/fred-databases/"
+    sha256: "[FILL]"
+    redistribution: not bundled
+
+commands:
+  prepare: >-
+    python scripts/replication/zww_2023_pipeline/build_stage1_target.py
+    --staging-root data/zww_2023_staging
+    --output-dir runs/zww_b3_stage1
+  smoke: "[FILL]"
+  full: "[FILL]"
+
+expected:
+  staged_panel_shape: "[FILL: rows x columns printed by the builder]"
+  full_runtime: "[FILL: measured, with the machine]"
+  artifacts:
+    - path: "[FILL]"
+      sha256: "[FILL]"
+
+status:
+  headline_replication: STRONG
+  protocol_fidelity: STRONG
+  table_cell_parity: PARTIAL
+  self_contained: NO
+  unresolved:
+    - >-
+      The headline PCA-VS models reproduce to about 1-2 pp, but some
+      competing-model magnitudes reproduce in direction only, running about 2x.
+      Flagged per cell in the trust note.
+    - >-
+      Raw-source acquisition is not scripted (see the data note above), so this
+      replication is not yet runnable end to end from public inputs.
+
+# Covariance PCA is load-bearing here: the trust note records it as the ONLY
+# choice that reproduces ZWW's numbers once the inputs are standardized. Anyone
+# re-running this should not "tidy" it to correlation PCA.

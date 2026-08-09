@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import hashlib
 import json
 import sys
@@ -529,7 +530,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--staging-root",
         type=Path,
-        default=Path("~/second_brain/_pipeline_state/b3_crude_staging").expanduser(),
+        # Repository-local by default. The previous default pointed into a personal
+        # ~/second_brain path, which meant a fresh clone silently looked somewhere
+        # that does not exist for anyone else (external review, 2026-08-09).
+        default=Path(os.environ.get("ZWW_STAGING_ROOT", "data/zww_2023_staging")).expanduser(),
+        help="directory holding the staged crude-oil inputs; see replication.yaml "
+             "for what belongs in it and where each file comes from",
     )
     parser.add_argument("--output-dir", type=Path, default=Path("runs/zww_b3_stage1"))
     parser.add_argument(
