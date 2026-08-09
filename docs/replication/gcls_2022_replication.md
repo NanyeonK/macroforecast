@@ -20,10 +20,42 @@ labelled an author-surface diagnostic.
 
 ## Summary verdict
 
-**macroforecast is verified faithful and correct.** The paper's *headline* results
-reproduce; the residual quantitative gaps are traced, with evidence, to the
-paper's **under-specified pipeline details** (CV fold construction) — **not** to
-package defects. Six package bugs were found and fixed along the way (Purpose 2).
+**GCLS 2022 replication: substantial but PROVISIONAL.**
+
+INDPRO has been revalidated end to end under the corrected `X_t` specification and
+the seeded splitter — 46 arms × 5 horizons, median |Δ rel-RMSPE| 0.0389, family
+ordering reproduced. **The remaining four targets have not.** Their tables below are
+still stacked-panel output from before the `lags` correction, and are labelled as
+such wherever they appear.
+
+So the accurate claim today is narrower than "verified faithful and correct", which
+is what this section said until 2026-08-09. That phrasing described the INDPRO
+result while the document also stated, a few sections down, that four of five
+targets were superseded. A verdict cannot be broader than the run behind it.
+
+**What is established:**
+
+- INDPRO reproduces under the paper's specification, with the headline direction
+  (ML/factor beats AR) intact and the least flattering number recorded: 104/225
+  cells beat the AR,BIC benchmark against the paper's 128/225.
+- The `lags` correction is supported by a *controlled* A/B — same commit, same day,
+  one variable — with a `predictors=[]` control arm at `max |Δ| = 0`.
+- The factor-extraction convention question is answered against the paper, on the
+  120 deterministic cells, with a bit-identical noise floor as its control.
+- Seven package defects were found and fixed along the way (Purpose 2), most
+  recently the k-fold seed (#513 → #515).
+
+**What is required before this reads "complete":**
+
+| # | Remaining work | Status |
+|---|---|---|
+| 1 | 21 `,KF` arms (105 cells) re-run under post-#515 code | **done** — see 1a′ |
+| 2 | `covpca_full` factor-convention grid | **done** — see 1a″ |
+| 3 | CPIAUCSL / HOUST / UNRATE / T10YFFM re-run at `lags=0` | **in progress** |
+| 4 | Pre-fix tables removed or moved to a labelled archive section | not started |
+
+Until 3 and 4 land, the replication index should carry this paper as
+**IN PROGRESS**, not as a completed trust result.
 
 ```{admonition} Correction (2026-08-07): the factor-estimation residual was OURS
 :class: important
