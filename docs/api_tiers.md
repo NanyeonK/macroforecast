@@ -76,26 +76,66 @@ Usable; not covered by a stability promise until audited.
 
 These are not API and never were:
 
-| symbol | actually |
-|---|---|
-| `mf.Any` | `typing.Any` |
-| `mf.annotations` | `__future__.annotations` |
-| `mf.import_module` | `importlib.import_module` |
-| `mf.Split` | a builtin |
+| symbol | actually | reached via |
+|---|---|---|
+| `mf.Any` | `typing.Any` | `mf.tests` |
+| `mf.annotations` | `__future__.annotations` | `mf.data` |
+| `mf.import_module` | `importlib.import_module` | `mf.evaluation` |
 
-Leaked re-exports. Removing them cannot break correct code, because no correct
+Leaked re-exports of the standard library, surfaced because a submodule imported
+them at module scope. Removing them cannot break correct code, because no correct
 code calls `mf.Any`.
+
+```{admonition} Correction (2026-08-09): `Split` was misclassified here
+:class: important
+
+An earlier revision of this page listed `mf.Split` in the table above as "a
+builtin". That was wrong, and the inventory this page is built from said so:
+
+    "name": "Split", "canonical": "mf.window.Split", "kind": "GenericAlias"
+
+`Split` is a public type alias of the window subsystem. Whether the *top-level*
+alias is redundant is the same question as for every other ADVANCED name — but it
+is not a leak, and it is not removable without a deprecation cycle. The prose
+contradicted the generated data; the data was right.
+```
 
 Four more are `typing.Literal` aliases — `MetadataLevel`, `RegimeDirection`,
 `SamePeriodPolicy`, `StageDefaultScope` — which **may** be intentional public
 types. They need a yes/no rather than a rule.
 
-## One name to confirm
+```{admonition} Correction (2026-08-09): `BoogingRegressor` is not a typo
+:class: important
 
-`mf.BoogingRegressor`, defined in `model_ensemble/__init__.py`. It reads as a
-typo for "Boosting" and it is a real export, so removing or renaming it is a
-breaking change either way. Worth confirming which it is before the tier list is
-published, since publishing it as STABLE or ADVANCED settles it by default.
+An earlier revision flagged `mf.BoogingRegressor` as reading like a typo for
+"Boosting" and proposed confirming it before publication. Reading the source
+settles it — it is **Booging**, the algorithm from Goulet Coulombe, *To Bag is to
+Prune* (arXiv:2008.07063), and `model_ensemble/core.py:841` documents the mapping
+to the paper's R function `Booging(y, X, X.new, ...)` line by line, including the
+R defaults `B=100, mtry=0.8, sampling.rate=.75`.
+
+It is correctly named, stays, and needs no decision. What it needs is a docs entry,
+since `in_docs: false` in the inventory means a user meeting the name has nowhere
+to look it up.
+
+The lesson for this document: an unfamiliar name is a prompt to read the source,
+not to propose a rename. Flagging a faithful implementation of a published
+algorithm as a probable typo, inside a proposal to change the public API, is the
+kind of error that costs the whole proposal credibility.
+```
+
+## A caveat on how this inventory was built
+
+`tools/api_inventory.py` resolves an owner by scanning each submodule's `dir()` and
+taking the first module that exposes the name. That misattributes an imported helper
+or an accidental module global — which is exactly how `Any`, `annotations` and
+`import_module` show up owned by `mf.tests`, `mf.data` and `mf.evaluation` rather
+than by the standard library.
+
+For the three leaked names that is harmless, because they are being removed either
+way. For any decision that turns on *which submodule owns a symbol*, the inventory
+should first be rebuilt from authoritative sources — the root `_LAZY_EXPORTS`, each
+submodule's `__all__`, and `object.__module__` — rather than from `dir()` order.
 
 ## Proposed deprecation map
 
