@@ -605,36 +605,76 @@ surfaces still have no oracles.</p></li>
 <thead>
 <tr class="row-odd"><th class="head"><p>symbol</p></th>
 <th class="head"><p>actually</p></th>
+<th class="head"><p>reached via</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mf.Any</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">typing.Any</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mf.tests</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mf.annotations</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">__future__.annotations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mf.data</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mf.import_module</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">importlib.import_module</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mf.Split</span></code></p></td>
-<td><p>a builtin</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mf.evaluation</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Leaked re-exports. Removing them cannot break correct code, because no correct
+<p>Leaked re-exports of the standard library, surfaced because a submodule imported
+them at module scope. Removing them cannot break correct code, because no correct
 code calls <code class="docutils literal notranslate"><span class="pre">mf.Any</span></code>.</p>
-<p>Four more are <code class="docutils literal notranslate"><span class="pre">typing.Literal</span></code> aliases — <code class="docutils literal notranslate"><span class="pre">MetadataLevel</span></code>, <code class="docutils literal notranslate"><span class="pre">RegimeDirection</span></code>,
-<code class="docutils literal notranslate"><span class="pre">SamePeriodPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">StageDefaultScope</span></code> — which <strong>may</strong> be intentional public
-types. They need a yes/no rather than a rule.</p>
+<p>```{admonition} Correction (2026-08-09): <code class="docutils literal notranslate"><span class="pre">Split</span></code> was misclassified here
+:class: important</p>
+<p>An earlier revision of this page listed <code class="docutils literal notranslate"><span class="pre">mf.Split</span></code> in the table above as “a
+builtin”. That was wrong, and the inventory this page is built from said so:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&quot;name&quot;: &quot;Split&quot;, &quot;canonical&quot;: &quot;mf.window.Split&quot;, &quot;kind&quot;: &quot;GenericAlias&quot;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Split</span></code> is a public type alias of the window subsystem. Whether the <em>top-level</em>
+alias is redundant is the same question as for every other ADVANCED name — but it
+is not a leak, and it is not removable without a deprecation cycle. The prose
+contradicted the generated data; the data was right.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+Four more are `typing.Literal` aliases — `MetadataLevel`, `RegimeDirection`,
+`SamePeriodPolicy`, `StageDefaultScope` — which **may** be intentional public
+types. They need a yes/no rather than a rule.
+
+```{admonition} Correction (2026-08-09): `BoogingRegressor` is not a typo
+:class: important
+
+An earlier revision flagged `mf.BoogingRegressor` as reading like a typo for
+&quot;Boosting&quot; and proposed confirming it before publication. Reading the source
+settles it — it is **Booging**, the algorithm from Goulet Coulombe, *To Bag is to
+Prune* (arXiv:2008.07063), and `model_ensemble/core.py:841` documents the mapping
+to the paper&#39;s R function `Booging(y, X, X.new, ...)` line by line, including the
+R defaults `B=100, mtry=0.8, sampling.rate=.75`.
+
+It is correctly named, stays, and needs no decision. What it needs is a docs entry,
+since `in_docs: false` in the inventory means a user meeting the name has nowhere
+to look it up.
+
+The lesson for this document: an unfamiliar name is a prompt to read the source,
+not to propose a rename. Flagging a faithful implementation of a published
+algorithm as a probable typo, inside a proposal to change the public API, is the
+kind of error that costs the whole proposal credibility.
+</pre></div>
+</div>
 </section>
-<section id="one-name-to-confirm">
-<h2>One name to confirm<a class="headerlink" href="#one-name-to-confirm" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">mf.BoogingRegressor</span></code>, defined in <code class="docutils literal notranslate"><span class="pre">model_ensemble/__init__.py</span></code>. It reads as a
-typo for “Boosting” and it is a real export, so removing or renaming it is a
-breaking change either way. Worth confirming which it is before the tier list is
-published, since publishing it as STABLE or ADVANCED settles it by default.</p>
+<section id="a-caveat-on-how-this-inventory-was-built">
+<h2>A caveat on how this inventory was built<a class="headerlink" href="#a-caveat-on-how-this-inventory-was-built" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">tools/api_inventory.py</span></code> resolves an owner by scanning each submodule’s <code class="docutils literal notranslate"><span class="pre">dir()</span></code> and
+taking the first module that exposes the name. That misattributes an imported helper
+or an accidental module global — which is exactly how <code class="docutils literal notranslate"><span class="pre">Any</span></code>, <code class="docutils literal notranslate"><span class="pre">annotations</span></code> and
+<code class="docutils literal notranslate"><span class="pre">import_module</span></code> show up owned by <code class="docutils literal notranslate"><span class="pre">mf.tests</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.data</span></code> and <code class="docutils literal notranslate"><span class="pre">mf.evaluation</span></code> rather
+than by the standard library.</p>
+<p>For the three leaked names that is harmless, because they are being removed either
+way. For any decision that turns on <em>which submodule owns a symbol</em>, the inventory
+should first be rebuilt from authoritative sources — the root <code class="docutils literal notranslate"><span class="pre">_LAZY_EXPORTS</span></code>, each
+submodule’s <code class="docutils literal notranslate"><span class="pre">__all__</span></code>, and <code class="docutils literal notranslate"><span class="pre">object.__module__</span></code> — rather than from <code class="docutils literal notranslate"><span class="pre">dir()</span></code> order.</p>
 </section>
 <section id="proposed-deprecation-map">
 <h2>Proposed deprecation map<a class="headerlink" href="#proposed-deprecation-map" title="Link to this heading">#</a></h2>
@@ -721,7 +761,7 @@ STABLE types; if no they join the removal in step 2.</p></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-things-to-remove-that-are-not-decisions">Three things to remove that are not decisions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-name-to-confirm">One name to confirm</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-caveat-on-how-this-inventory-was-built">A caveat on how this inventory was built</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#proposed-deprecation-map">Proposed deprecation map</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-would-make-this-decidable">What would make this decidable</a></li>
 </ul>
