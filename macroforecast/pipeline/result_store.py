@@ -569,6 +569,9 @@ def _custom_preprocessing_digests(preprocessing: Any) -> list[dict[str, str]]:
                 {
                     "step": str(step.get("name", idx)),
                     "slot": "func",
+                    # Two specs differing ONLY in where the step runs are different
+                    # pipelines; without this they would share a cache key (#453a).
+                    "position": str(step.get("position", "last")),
                     "digest": _callable_digest(func, path=f"preprocessing custom step {step.get('name', idx)!r}"),
                 }
             )
