@@ -6,6 +6,8 @@ macroforecast writes one parquet payload and one JSON manifest per digest under
 """
 from __future__ import annotations
 
+from macroforecast.pipeline.plan import compile_arm_plan
+
 import dataclasses as _dc
 import base64
 import hashlib
@@ -102,7 +104,7 @@ def result_cell_identity(
                 ),
                 "model_selection": _object_identity(arm.model_selection),
                 "model_selection_metric": arm.model_selection_metric,
-                "window": _object_identity(arm.window if arm.window is not None else spec.window),
+                "window": _object_identity(compile_arm_plan(spec, arm).window),
             },
             "evaluation_callables": _evaluation_callable_identity(spec),
         }
