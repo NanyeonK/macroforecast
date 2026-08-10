@@ -116,16 +116,35 @@ def _documented_names(repo: Path) -> set[str]:
 
 
 def _kind(obj: object) -> str:
-    """Describe an object's kind.
+    """Describe an object's kind, publicly and stably across interpreters.
 
-    Deliberately identical to the previous revision so that values already
-    quoted in ``docs/api_tiers.md`` (for example ``Split`` -> ``GenericAlias``)
-    stay correct.
+    ``type(obj).__name__`` is not stable across the interpreters this package
+    supports: ``typing.Any`` is a ``_SpecialForm`` instance on 3.10 and became a
+    class with metaclass ``_AnyMeta`` on 3.11, so recording the raw type name
+    made the committed inventory unmatchable on 3.10 while 3.11 and 3.12 agreed.
+
+    A leading underscore marks a CPython implementation detail, and an
+    implementation detail is exactly the part allowed to change between
+    supported interpreters. Private type names are therefore replaced by a
+    public category. Public type names are a stable contract and are preserved
+    verbatim -- including ``GenericAlias``, which ``docs/api_tiers.md`` quotes
+    for ``Split``.
     """
 
     if inspect.isfunction(obj):
         return "function"
-    return type(obj).__name__
+
+    type_name = type(obj).__name__
+    if not type_name.startswith("_"):
+        return type_name
+    # The typing check must precede the class check: on 3.11+ ``Any`` IS a
+    # class and on 3.10 it is not, so testing isclass first would reintroduce
+    # the very instability this removes.
+    if getattr(obj, "__module__", None) == "typing":
+        return "typing_construct"
+    if inspect.isclass(obj):
+        return "type"
+    return "object"
 
 
 def _supported_rows(mf: Any, documented: set[str]) -> list[dict[str, Any]]:

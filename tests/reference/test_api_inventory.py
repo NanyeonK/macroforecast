@@ -8,6 +8,7 @@ taking whichever hard-coded submodule happened to expose the name first.
 from __future__ import annotations
 
 import importlib
+import typing
 from pathlib import Path
 
 import macroforecast as mf
@@ -262,6 +263,49 @@ def test_inventory_states_no_stability_tier() -> None:
     assert "tiers" not in inventory["counts"]
     assert not hasattr(api_inventory, "EXPERIMENTAL_OWNERS")
     assert not hasattr(api_inventory, "_tier")
+
+
+def test_kind_never_reports_a_private_implementation_type() -> None:
+    """A private type name is an implementation detail, not a fact to record.
+
+    ``typing.Any`` is a ``_SpecialForm`` instance on 3.10 and a class with
+    metaclass ``_AnyMeta`` on 3.11+, so recording the raw type name made the
+    committed inventory unmatchable on 3.10 while 3.11 and 3.12 agreed.
+    """
+
+    offenders = [
+        (row["surface"], row["name"], row["kind"])
+        for rows in api_inventory.build_inventory()["surfaces"].values()
+        for row in rows
+        if str(row["kind"]).startswith("_")
+    ]
+
+    assert offenders == []
+
+
+def test_kind_normalizes_private_types_generally() -> None:
+    """The rule is general, not a special case for ``typing.Any``."""
+
+    class _Hidden:
+        pass
+
+    assert not api_inventory._kind(_Hidden).startswith("_")
+    assert not api_inventory._kind(_Hidden()).startswith("_")
+
+    # Both are typing constructs whose private class names differ by
+    # interpreter, so they must collapse to the same recorded kind.
+    assert api_inventory._kind(typing.Any) == api_inventory._kind(
+        typing.Literal["a", "b"]
+    )
+
+
+def test_kind_preserves_public_type_names() -> None:
+    """Normalizing must not delete facts that are already stable."""
+
+    # docs/api_tiers.md quotes this kind for mf.Split.
+    assert api_inventory._kind(list[tuple[int, int]]) == "GenericAlias"
+    assert api_inventory._kind(lambda: None) == "function"
+    assert api_inventory._kind(1) == "int"
 
 
 def test_version_surface_records_documentation_evidence() -> None:
