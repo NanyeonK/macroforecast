@@ -83,17 +83,27 @@ root names and are not on any removal list.
 ## Tiers over the canonical symbols
 
 The tiers apply to canonical paths, not to root aliases. Across the 23
-namespaces the submodule `__all__` lists declare **808** public paths (759
-distinct names: `feature_diagnostic` and `forecast_diagnostic` mirror
-`feature_analysis` and `forecast_analysis` exactly, 48 paths, and `spec` is
-declared by both `mf.data` and `mf.window` — the root map settles its canonical
-home as `mf.data.spec`).
+namespaces the submodule `__all__` lists declare **808** public paths, and the
+three tiers below partition them exactly: **15 STABLE + 688 ADVANCED + 105
+EXPERIMENTAL = 808**.
 
-### STABLE — the documented entry points (15 paths)
+Those 808 paths carry 759 distinct names, for two different reasons, and the
+difference matters:
+
+- `feature_diagnostic` and `forecast_diagnostic` re-export `feature_analysis`
+  and `forecast_analysis` exactly — 48 paths reaching the *same* objects under a
+  second namespace, verified by identity.
+- `spec` is a name collision, not a shared symbol. `mf.data.spec` and
+  `mf.window.spec` are two different functions (`mf.data.spec is not
+  mf.window.spec`), each declared by its own submodule's `__all__`. Both are
+  canonical public paths and both stay. What the root map settles is only which
+  one the convenience alias `mf.spec` resolves to, and that is `mf.data.spec`.
+
+### STABLE — the documented entry points (15 canonical paths, plus `mf.__version__`)
 
 ```python
 mf.configure                            # canonically mf.meta.configure
-mf.__version__
+mf.__version__                          # special root name, outside the 808
 
 mf.data.load_fred_md
 mf.data.custom_dataset
@@ -114,9 +124,18 @@ bring-your-own-data entry point, with its own guide and reference page — and t
 two types a caller necessarily touches, since `pipeline_spec` returns a
 `PipelineSpec` and `run_pipeline` consumes one and returns a `PipelineReport`.
 
-The promise: these do not move or change signature within 1.x. If one ever has
-to move, it gets a `FutureWarning` naming the replacement for at least one minor
-release before anything breaks.
+Sixteen names appear in that block and the tier count is 15, because
+`mf.__version__` is not one of the 808 submodule paths — it is the special
+stable root name, set directly in `macroforecast/__init__.py` and absent from
+every `__all__`. The other fifteen are canonical submodule paths, and they are
+the STABLE share of the 808.
+
+The promise: **no backward-incompatible move or signature change within 1.x.**
+Compatible evolution stays allowed — a new optional keyword parameter, a widened
+accepted type, an extra attribute on a returned object — because none of those
+break a caller that was already correct. If one of these ever has to move, it
+gets a `FutureWarning` naming the replacement for at least one minor release
+before anything breaks.
 
 ### ADVANCED — public, canonical path is the submodule (688 paths)
 
@@ -274,6 +293,7 @@ warning was visible.
 
 ## What this page does not do
 
-It changes no code. The alias `FutureWarning`s and the removal of the three
-non-API globals are 0.9.6 and 0.9.7 work, tracked separately; publishing the
-policy is step one precisely so that the later steps have something to point at.
+It changes no runtime code. Removing the three non-API globals is **0.9.6**
+follow-up work. Adding the alias `FutureWarning`s is **0.9.7** follow-up work.
+Both are tracked separately, and publishing the policy is step one precisely so
+that those later steps have something to point at.
