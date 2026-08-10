@@ -96,6 +96,7 @@ from macroforecast.forecasting.selection_stage import (
     _SELECTION_DEGRADED_KEY,  # noqa: F401  (re-export)
     _SELECTION_TUNED_KEY,  # noqa: F401  (re-export)
     _align_feature_xy,
+    _is_target_only,
     _allow_non_temporal_selection_splits,  # noqa: F401  (re-export)
     _assert_selection_was_possible,
     _availability_safe_explicit_splits,  # noqa: F401  (re-export)
@@ -456,6 +457,10 @@ def run(
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, Any] = {}
+    # Fitted models within this run. _OriginRunConfig is rebuilt per origin, so a
+    # cache created there would be empty every time; this is the run-scoped dict
+    # the config carries a reference to, exactly as param_cache is.
+    model_fit_cache: dict[Any, Any] = {}
     stage_records: list[dict[str, Any]] = []
     preprocessing_state = _StageUpdateState()
     feature_state = _StageUpdateState()
@@ -586,6 +591,10 @@ def run(
                     feature_stage_policy=feature_stage_policy,
                     item=item,
                     preprocessing_cache=preprocessing_cache,
+                    # Parallel workers are separate processes, so the in-memory
+                    # cache above is always empty for them; the store is how a
+                    # feature fit is shared across cells at all under n_jobs>1.
+                    feature_store=preprocessing_store,
                 )
                 feature_updated = True
                 _mark_stage_updated(feature_state, item)
@@ -604,10 +613,14 @@ def run(
             index=feature_labels,
             metadata=prepared_metadata,
         )
+        all_features, _dropped_nan_cols = _drop_all_nan_fit_columns(
+            all_features, fit_labels
+        )
         train_features = _slice_feature_set(
             all_features,
             fit_labels,
             drop_missing=bool(getattr(fitted_features.spec, "drop_missing", True)),
+            target_only=_is_target_only(model_runs),
         )
         test_features = _slice_feature_set(
             all_features,
@@ -689,6 +702,7 @@ def run(
                 maximize_selection=maximize_selection,
                 param_cache=model_param_cache,
                 selection_cache=selection_cache,
+                fit_cache=model_fit_cache,
                 selection_random_state=config["random_seed"],
                 model_random_seed=model_random_seed,
                 model_random_alias=model_random_alias,
@@ -899,6 +913,10 @@ def _run_feature_set(
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, Any] = {}
+    # Fitted models within this run. _OriginRunConfig is rebuilt per origin, so a
+    # cache created there would be empty every time; this is the run-scoped dict
+    # the config carries a reference to, exactly as param_cache is.
+    model_fit_cache: dict[Any, Any] = {}
     for item in window_spec.iter_slices(X_all, y_all):
         selection_labels = stage_index(X_all.index, item, selection_policy)
         X_selection, y_selection = _align_feature_xy(
@@ -933,6 +951,7 @@ def _run_feature_set(
                     maximize_selection=maximize_selection,
                     param_cache=model_param_cache,
                     selection_cache=selection_cache,
+                    fit_cache=model_fit_cache,
                     selection_random_state=config["random_seed"],
                     model_random_seed=_get_pipeline_random_seed(),
                     model_random_alias=_get_pipeline_arm_alias(),
@@ -1212,6 +1231,10 @@ def _run_vintage_aware(
     records: list[dict[str, Any]] = []
     model_param_cache: dict[str, dict[str, Any]] = {}
     selection_cache: dict[str, Any] = {}
+    # Fitted models within this run. _OriginRunConfig is rebuilt per origin, so a
+    # cache created there would be empty every time; this is the run-scoped dict
+    # the config carries a reference to, exactly as param_cache is.
+    model_fit_cache: dict[Any, Any] = {}
     stage_records: list[dict[str, Any]] = []
     preprocessing_state = _StageUpdateState()
     feature_state = _StageUpdateState()
@@ -1391,6 +1414,10 @@ def _run_vintage_aware(
                     item=item,
                     preprocessing_cache=preprocessing_cache,
                     vintage_id=vintage_id,
+                    # Parallel workers are separate processes, so the in-memory
+                    # cache above is always empty for them; the store is how a
+                    # feature fit is shared across cells at all under n_jobs>1.
+                    feature_store=preprocessing_store,
                 )
                 feature_updated = True
                 _mark_stage_updated(feature_state, item)
@@ -1411,10 +1438,14 @@ def _run_vintage_aware(
             index=test_labels,
             metadata=actual_metadata,
         )
+        all_features, _dropped_nan_cols = _drop_all_nan_fit_columns(
+            all_features, fit_labels
+        )
         train_features = _slice_feature_set(
             all_features,
             fit_labels,
             drop_missing=bool(getattr(fitted_features.spec, "drop_missing", True)),
+            target_only=_is_target_only(model_runs),
         )
         test_features = _slice_feature_set(
             all_features,
@@ -1500,6 +1531,7 @@ def _run_vintage_aware(
                 maximize_selection=maximize_selection,
                 param_cache=model_param_cache,
                 selection_cache=selection_cache,
+                fit_cache=model_fit_cache,
                 selection_random_state=config["random_seed"],
                 model_random_seed=_get_pipeline_random_seed(),
                 model_random_alias=_get_pipeline_arm_alias(),
@@ -2160,7 +2192,7 @@ def _vintage_boundary_audit(
 
 
 def _fit_predict_origin(
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     cfg: _OriginRunConfig,
 ) -> list[dict[str, Any]]:
     """Route one per-origin feature-matrix item to its policy strategy.
@@ -2188,19 +2220,70 @@ def _combined_feature_labels(*indexes: Iterable[Any]) -> pd.Index:
     return labels.unique()
 
 
+def _drop_all_nan_fit_columns(
+    feature_set: FeatureSet, fit_labels: Any
+) -> tuple[FeatureSet, list[str]]:
+    """Drop predictor columns that are ENTIRELY NaN over the fit window.
+
+    A predictor that is fully absent over the fit window -- e.g. a late-starting
+    FRED-MD indicator such as ACOGNO (begins 1992), which is all-NaN over an early
+    expanding-window fit sample, or any series the ``em_factor`` imputation cannot
+    fill because it has zero observations in the window -- yields an all-NaN feature
+    column. Without this prune the row-wise ``dropna`` in ``_slice_feature_set`` (used
+    to build the training sample) drops EVERY row, because every row is NaN in that one
+    column, emptying the whole fit sample and SILENTLY yielding zero forecasts even
+    though every other predictor is dense. The all-NaN column carries no information,
+    so dropping it -- judged ONLY on the fit window, hence leak-free -- lets the model
+    fit on the remaining informative predictors. It is a no-op when no column is
+    all-NaN over the fit window, so existing behaviour is unchanged.
+    """
+    X = getattr(feature_set, "X", None)
+    if X is None or getattr(X, "shape", (0, 0))[1] == 0:
+        return feature_set, []
+    fit_X = X.reindex(pd.Index(fit_labels))
+    if len(fit_X) == 0:
+        return feature_set, []
+    all_nan = fit_X.isna().all(axis=0)
+    if not bool(all_nan.any()):
+        return feature_set, []
+    dropped = [c for c in X.columns[all_nan.to_numpy()]]
+    kept = [c for c in X.columns if c not in set(dropped)]
+    return replace(feature_set, X=X.loc[:, kept]), dropped
+
+
 def _slice_feature_set(
     features: FeatureSet,
     index: Iterable[Any],
     *,
     drop_missing: bool,
+    target_only: bool = False,
 ) -> FeatureSet:
+    """Cut the fit sample for one window.
+
+    ``target_only`` marks a model whose ``ModelSpec.input_kind`` is ``"target"``.
+    Every such model -- ``hist_mean``, ``naive``, ``arima``, ``ets``, ... -- takes
+    exactly one positional argument, the target; there is no parameter through
+    which X could reach it. Its sample is therefore cut on the TARGET's
+    availability alone. Intersecting with X's, as the supervised path does, let a
+    predictor the model never reads delete target rows from the fit window -- and
+    for the prevailing-mean benchmark that silently moves every ``R2_OS`` in the
+    run, by an amount set by whichever contender happened to carry the longest
+    lag. Rows with a missing TARGET are still dropped: those are unusable for any
+    model.
+    """
+
     labels = pd.Index(index)
     X = features.X.reindex(labels)
     y = features.y.reindex(labels)
     if drop_missing:
-        aligned = pd.concat([X, y], axis=1).dropna()
-        X = aligned.loc[:, X.columns]
-        y = aligned.loc[:, y.columns]
+        if target_only:
+            keep = y.notna().all(axis=1)
+            X = X.loc[keep]
+            y = y.loc[keep]
+        else:
+            aligned = pd.concat([X, y], axis=1).dropna()
+            X = aligned.loc[:, X.columns]
+            y = aligned.loc[:, y.columns]
     X = X.copy()
     y = y.copy()
     X.attrs.update(features.X.attrs)
@@ -2297,7 +2380,7 @@ def _validate_runner_window(
 
 
 def _select_existing_features(
-    item: dict[str, Any], prefix: str, policy: StagePolicy
+    item: Mapping[str, Any], prefix: str, policy: StagePolicy
 ) -> Any:
     if policy.scope == "origin_available":
         return item[f"{prefix}_estimation"]
@@ -2513,11 +2596,38 @@ def _merge_checkpoint_records(
     return merged
 
 
+def _drop_empty_mappings(value: Any) -> Any:
+    """Replace empty mappings with ``None``, recursively.
+
+    The forecast table carries metadata columns (``params``, ``model_selection``,
+    ``window``, ...) as nested dicts. A model with no parameters produces an empty
+    dict, and Arrow types an empty dict as a struct with no child fields, which
+    Parquet cannot represent -- so ``report.forecasts.to_parquet(...)`` failed for
+    any run containing such a model (``ols`` is one). An empty mapping and ``None``
+    carry the same information here, and once the empty ones are gone Arrow unions
+    the differing key sets across models without complaint.
+    """
+    if isinstance(value, Mapping):
+        if not value:
+            return None
+        return {key: _drop_empty_mappings(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_drop_empty_mappings(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_drop_empty_mappings(item) for item in value)
+    return value
+
+
 def _forecast_table(records: list[dict[str, Any]]) -> pd.DataFrame:
     frame = pd.DataFrame.from_records(records)
     for column in _FORECAST_TABLE_COLUMNS:
         if column not in frame.columns:
             frame[column] = pd.Series(dtype=object)
+    for column in frame.columns:
+        if frame[column].dtype == object and frame[column].map(
+            lambda item: isinstance(item, (Mapping, list, tuple))
+        ).any():
+            frame[column] = frame[column].map(_drop_empty_mappings)
     extra_columns = [
         str(column) for column in frame.columns if column not in _FORECAST_TABLE_COLUMNS
     ]
@@ -2534,7 +2644,7 @@ def _validate_panel_target(panel: pd.DataFrame, target: str) -> None:
 
 def _stage_update_due(
     policy: StagePolicy | None,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     *,
     origin_count: int,
     state: _StageUpdateState,
@@ -2561,12 +2671,12 @@ def _stage_update_due(
     raise TypeError(f"unsupported stage policy update {update!r}")
 
 
-def _mark_stage_updated(state: _StageUpdateState, item: dict[str, Any]) -> None:
+def _mark_stage_updated(state: _StageUpdateState, item: Mapping[str, Any]) -> None:
     state.updated_once = True
     state.last_origin = item["row"].get("origin")
 
 
-def _origin_timestamp(item: dict[str, Any]) -> pd.Timestamp:
+def _origin_timestamp(item: Mapping[str, Any]) -> pd.Timestamp:
     origin = item["row"].get("origin")
     try:
         timestamp = pd.Timestamp(origin)
@@ -2593,7 +2703,7 @@ def _coerce_last_update_timestamp(origin: Any) -> pd.Timestamp:
 
 def _origin_stage_record(
     stage: str,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     metadata: dict[str, Any],
     *,
     updated: bool,

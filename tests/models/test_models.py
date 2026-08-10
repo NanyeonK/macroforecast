@@ -20,6 +20,24 @@ def _xy(n: int = 60) -> tuple[pd.DataFrame, pd.Series]:
     return X, y
 
 
+def _scale_sensitive_spca_xy() -> tuple[pd.DataFrame, pd.Series]:
+    idx = pd.RangeIndex(80)
+    grid = np.linspace(-1.0, 1.0, len(idx))
+    rng = np.random.default_rng(20260710)
+    small_signal = grid
+    large_weak = 1000.0 * (0.28 * grid + rng.normal(scale=0.4, size=len(idx)))
+    X = pd.DataFrame(
+        {"small_signal": small_signal, "large_weak": large_weak},
+        index=idx,
+    )
+    y = pd.Series(
+        small_signal + 0.02 * rng.normal(size=len(idx)),
+        index=idx,
+        name="y",
+    )
+    return X, y
+
+
 def _rf_xy(n: int = 72, p: int = 8) -> tuple[pd.DataFrame, pd.Series]:
     idx = pd.date_range("2000-01-31", periods=n, freq="ME")
     rng = np.random.default_rng(20260709)
@@ -153,6 +171,157 @@ def _huang_scaled_pca_reference(
     return factors, prediction
 
 
+def _control_residualized_pcr_reference(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_test: pd.DataFrame,
+    *,
+    n_components: int,
+    control_columns: tuple[str, ...] = (),
+    include_constant: bool = True,
+    drop_control_columns: bool = True,
+    standardize: bool = True,
+    standardize_ddof: int = 1,
+    quadratic_factors: bool = False,
+    quadratic_mode: str = "separate",
+) -> np.ndarray:
+    factor_columns = [
+        column
+        for column in X_train.columns
+        if not (drop_control_columns and str(column) in control_columns)
+    ]
+    factor_train = X_train.loc[:, factor_columns].astype(float)
+    factor_test = X_test.loc[:, factor_columns].astype(float)
+    if standardize:
+        x_mean = factor_train.mean(axis=0)
+        x_scale = factor_train.std(axis=0, ddof=standardize_ddof)
+        x_scale = x_scale.where(np.isfinite(x_scale) & (x_scale > 1e-12), 1.0)
+        z_train = ((factor_train - x_mean) / x_scale).to_numpy(dtype=float)
+        z_test = ((factor_test - x_mean) / x_scale).to_numpy(dtype=float)
+    else:
+        z_train = factor_train.to_numpy(dtype=float)
+        z_test = factor_test.to_numpy(dtype=float)
+
+    control_parts_train = []
+    control_parts_test = []
+    if control_columns:
+        control_parts_train.append(X_train.loc[:, list(control_columns)].to_numpy(dtype=float))
+        control_parts_test.append(X_test.loc[:, list(control_columns)].to_numpy(dtype=float))
+    if include_constant:
+        control_parts_train.append(np.ones((len(X_train), 1), dtype=float))
+        control_parts_test.append(np.ones((len(X_test), 1), dtype=float))
+    if control_parts_train:
+        w_train = np.column_stack(control_parts_train)
+        w_test = np.column_stack(control_parts_test)
+    else:
+        w_train = np.empty((len(X_train), 0), dtype=float)
+        w_test = np.empty((len(X_test), 0), dtype=float)
+
+    y_values = y_train.to_numpy(dtype=float)
+    control_coef = np.linalg.pinv(w_train) @ y_values if w_train.size else np.empty(0)
+    residual = y_values - w_train @ control_coef if w_train.size else y_values.copy()
+    k = min(max(1, int(n_components)), len(X_train), len(factor_columns))
+    _, _, vt = np.linalg.svd(z_train, full_matrices=False)
+    loadings = vt[:k].T
+    factors = z_train @ loadings
+    factor_test = z_test @ loadings
+    factor_coef = np.linalg.pinv(factors) @ residual
+    factor_square_coef = np.zeros(k, dtype=float)
+    if quadratic_factors and quadratic_mode == "separate":
+        factor_square_coef = np.linalg.pinv(factors**2) @ residual
+    elif quadratic_factors:
+        gamma = np.linalg.pinv(np.column_stack([factors, factors**2])) @ residual
+        factor_coef = gamma[:k]
+        factor_square_coef = gamma[k:]
+
+    prediction = factor_test @ factor_coef
+    if quadratic_factors:
+        prediction = prediction + (factor_test**2) @ factor_square_coef
+    if w_test.size:
+        prediction = prediction + w_test @ control_coef
+    return np.asarray(prediction, dtype=float)
+
+
+def _control_residualized_pls_reference(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_test: pd.DataFrame,
+    *,
+    n_components: int,
+    score_projection: str = "transform",
+    control_columns: tuple[str, ...] = (),
+    include_constant: bool = True,
+    drop_control_columns: bool = True,
+    scale: bool = True,
+    quadratic_factors: bool = False,
+) -> tuple[np.ndarray, np.ndarray]:
+    from sklearn.cross_decomposition import PLSRegression
+
+    frame = X_train.astype(float)
+    test_frame = X_test.astype(float).reindex(columns=frame.columns, fill_value=0.0)
+    if scale:
+        x_mean = frame.mean(axis=0)
+        x_scale = frame.std(axis=0, ddof=1)
+        x_scale = x_scale.where(np.isfinite(x_scale) & (x_scale > 1e-12), 1.0)
+        z_train = (frame - x_mean) / x_scale
+        z_test = (test_frame - x_mean) / x_scale
+    else:
+        z_train = frame
+        z_test = test_frame
+
+    control_parts_train = []
+    control_parts_test = []
+    if control_columns:
+        control_parts_train.append(
+            z_train.loc[:, list(control_columns)].to_numpy(dtype=float)
+        )
+        control_parts_test.append(
+            z_test.loc[:, list(control_columns)].to_numpy(dtype=float)
+        )
+    if include_constant:
+        control_parts_train.append(np.ones((len(z_train), 1), dtype=float))
+        control_parts_test.append(np.ones((len(z_test), 1), dtype=float))
+    if control_parts_train:
+        w_train = np.column_stack(control_parts_train)
+        w_test = np.column_stack(control_parts_test)
+    else:
+        w_train = np.empty((len(z_train), 0), dtype=float)
+        w_test = np.empty((len(z_test), 0), dtype=float)
+
+    factor_columns = [
+        str(column)
+        for column in z_train.columns
+        if not (drop_control_columns and str(column) in control_columns)
+    ]
+    factor_train = z_train.loc[:, factor_columns].to_numpy(dtype=float)
+    factor_test = z_test.loc[:, factor_columns].to_numpy(dtype=float)
+    y_values = y_train.to_numpy(dtype=float)
+    control_coef = (
+        np.linalg.pinv(w_train) @ y_values if w_train.size else np.empty(0)
+    )
+    residual = y_values - w_train @ control_coef if w_train.size else y_values.copy()
+    k = max(1, min(int(n_components), len(factor_columns), len(z_train)))
+
+    model = PLSRegression(n_components=k, scale=False, max_iter=500, tol=1e-6)
+    model.fit(factor_train, residual)
+    loadings = np.asarray(model.x_weights_, dtype=float)
+    if score_projection == "transform":
+        factors = np.asarray(model.transform(factor_train), dtype=float)
+        factor_test_scores = np.asarray(model.transform(factor_test), dtype=float)
+    else:
+        factors = factor_train @ loadings
+        factor_test_scores = factor_test @ loadings
+
+    factor_coef = np.linalg.pinv(factors) @ residual
+    prediction = factor_test_scores @ factor_coef
+    if quadratic_factors:
+        factor_square_coef = np.linalg.pinv(factors**2) @ residual
+        prediction = prediction + (factor_test_scores**2) @ factor_square_coef
+    if w_test.size:
+        prediction = prediction + w_test @ control_coef
+    return np.asarray(prediction, dtype=float), factor_test_scores
+
+
 def test_linear_models_return_model_fit_with_series_predictions() -> None:
     X, y = _xy()
     fit = mf.models.ridge(X, y, alpha=0.5)
@@ -183,6 +352,36 @@ def test_basic_linear_models_fit_and_predict() -> None:
         assert len(pred) == 4
         assert np.isfinite(pred.to_numpy(dtype=float)).all()
         assert "coefficients" in fit.diagnostics
+
+
+def test_lasso_and_elastic_net_expose_sparse_ic_diagnostics() -> None:
+    X, y = _xy()
+
+    fits = [
+        mf.models.lasso(X, y, alpha=0.01),
+        mf.models.elastic_net(X, y, alpha=0.01, l1_ratio=0.5, standardize=True),
+    ]
+
+    for fit in fits:
+        pred = fit.predict(X).to_numpy(dtype=float)
+        residual = y.to_numpy(dtype=float) - pred
+        final_estimator = (
+            fit.estimator.steps[-1][1]
+            if hasattr(fit.estimator, "steps")
+            else fit.estimator
+        )
+        expected_k = int(
+            np.sum(np.abs(np.asarray(final_estimator.coef_, dtype=float)) > 1e-12)
+        )
+
+        assert fit.ssr_ == pytest.approx(float(residual @ residual))
+        assert fit.nobs_ == len(X)
+        assert fit.n_params_ == expected_k
+        assert fit.n_params_convention_ == (
+            "active_penalized_slope_count_excludes_intercept_and_residual_variance"
+        )
+        assert fit.coef_zero_tol_ == pytest.approx(1e-12)
+        assert "ssr_" not in fit.to_dict()["diagnostics"]
 
 
 def test_ridge_variants_fit_and_record_constraints() -> None:
@@ -447,6 +646,7 @@ def test_top_level_model_exports_include_new_model_families() -> None:
     assert mf.kernel_ridge is mf.models.kernel_ridge
     assert mf.knn is mf.models.knn
     assert mf.mars is mf.models.mars
+    assert mf.pcr is mf.models.pcr
     assert mf.bvar_minnesota is mf.models.bvar_minnesota
     assert mf.dfm_mixed_mariano_murasawa is mf.models.dfm_mixed_mariano_murasawa
     assert mf.dfm_unrestricted_midas is mf.models.dfm_unrestricted_midas
@@ -1390,11 +1590,14 @@ def test_composite_models_record_factor_diagnostics() -> None:
 
     scaled = mf.models.scaled_pca(X, y, n_components=2)
     supervised = mf.models.supervised_pca(X, y, n_components=1, n_selected=1)
+    pcr_fit = mf.models.pcr(X, y, n_components=2)
 
     assert "factor_loadings" in scaled.diagnostics
     assert scaled.diagnostics["factor_loadings"].shape[1] == 2
     assert "factor_loadings" in supervised.diagnostics
     assert "component_selected_features" in supervised.diagnostics
+    assert "factor_loadings" in pcr_fit.diagnostics
+    assert pcr_fit.diagnostics["factor_loadings"].shape[1] == 2
 
 
 def test_save_fit_roundtrip_for_core_model_families(tmp_path) -> None:
@@ -1557,7 +1760,54 @@ def test_pls_default_clamps_components_to_available_predictors() -> None:
     assert fit.estimator.control_names_ == ("const",)
 
 
-def test_pls_supports_hounyo_li_control_residualization() -> None:
+def test_pls_default_transform_predictions_unchanged() -> None:
+    idx = pd.RangeIndex(40)
+    grid = np.linspace(-2.0, 2.0, len(idx))
+    X = pd.DataFrame(
+        {
+            "x1": np.sin(1.1 * grid) + 0.15 * grid,
+            "x2": np.cos(0.7 * grid) - 0.05 * grid**2,
+            "x3": grid**2 - 0.3 * grid,
+            "x4": np.sin(2.3 * grid) * np.cos(0.4 * grid),
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        0.8 + 1.2 * X["x1"] - 0.6 * X["x2"] + 0.35 * X["x3"] + 0.2 * X["x4"],
+        index=idx,
+        name="y",
+    )
+    expected = np.asarray(
+        [
+            float.fromhex("0x1.4d30fbf8c2b4ap+1"),
+            float.fromhex("0x1.5be6b8040faacp+1"),
+            float.fromhex("0x1.6ab9fa0f247c0p+1"),
+            float.fromhex("0x1.79d7dc24bee04p+1"),
+            float.fromhex("0x1.895d048b07dedp+1"),
+            float.fromhex("0x1.9954760410fc1p+1"),
+        ],
+        dtype=float,
+    )
+
+    default_fit = mf.models.pls(X, y, n_components=3)
+    explicit_fit = mf.models.pls(X, y, n_components=3, score_projection="transform")
+
+    assert default_fit.metadata["score_projection"] == "transform"
+    assert explicit_fit.metadata["score_projection"] == "transform"
+    got_default = default_fit.predict(X.iloc[-6:]).to_numpy(dtype=float)
+    got_explicit = explicit_fit.predict(X.iloc[-6:]).to_numpy(dtype=float)
+    # The default and the explicit setting must be the SAME code path, so this one
+    # is exact -- it compares two fits from the same process.
+    assert np.array_equal(got_default, got_explicit)
+    # The pinned literals were captured on one BLAS build. A PLS fit goes through
+    # LAPACK, so its last bits are not portable across builds and an exact
+    # comparison fails on a different runner for no behavioral reason. rtol=1e-9 is
+    # six orders of magnitude tighter than any real change to the projection and
+    # six looser than last-bit noise.
+    np.testing.assert_allclose(got_default, expected, rtol=1e-9)
+
+
+def test_pls_supports_control_residualization() -> None:
     X, y = _xy(48)
     X = X.assign(control=y.shift(1).bfill())
 
@@ -1577,8 +1827,131 @@ def test_pls_supports_hounyo_li_control_residualization() -> None:
     assert "control" not in fit.estimator.factor_features_
     assert fit.estimator.factor_square_coefs_.shape == (2,)
     assert fit.diagnostics["factor_loadings"].shape[1] == 2
-    assert "PLS_emp002.m" in fit.metadata["implementation_note"]
+    assert "external forecast head" in fit.metadata["implementation_note"]
     assert len(fit.predict(X.iloc[-4:])) == 4
+
+
+def test_pls_x_weights_raw_matches_documented_score_construction() -> None:
+    idx = pd.RangeIndex(44)
+    grid = np.linspace(-1.4, 1.8, len(idx))
+    X = pd.DataFrame(
+        {
+            "control": 0.4 + 0.2 * grid,
+            "x1": np.sin(1.3 * grid),
+            "x2": np.cos(0.8 * grid) + 0.1 * grid,
+            "x3": grid**2 - 0.25 * grid,
+            "x4": np.sin(2.1 * grid) + 0.05 * grid**3,
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        1.1
+        + 0.7 * X["control"]
+        + 1.2 * X["x1"]
+        - 0.6 * X["x2"]
+        + 0.35 * X["x3"]
+        - 0.25 * X["x4"],
+        index=idx,
+        name="y",
+    )
+    X_train = X.iloc[:36]
+    y_train = y.iloc[:36]
+    X_test = X.iloc[36:41]
+
+    fit = mf.models.pls(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        score_projection="x_weights_raw",
+    )
+    expected_pred, expected_scores = _control_residualized_pls_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        score_projection="x_weights_raw",
+    )
+    transform_scores = mf.models.pls(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        score_projection="transform",
+    ).estimator.transform(X_test)
+
+    assert fit.metadata["score_projection"] == "x_weights_raw"
+    np.testing.assert_allclose(
+        fit.estimator.transform(X_test).to_numpy(dtype=float),
+        expected_scores,
+        atol=1e-12,
+        rtol=0.0,
+    )
+    np.testing.assert_allclose(
+        fit.predict(X_test).to_numpy(dtype=float),
+        expected_pred,
+        atol=1e-12,
+        rtol=0.0,
+    )
+    assert not np.allclose(
+        fit.estimator.transform(X_test).to_numpy(dtype=float),
+        transform_scores.to_numpy(dtype=float),
+    )
+
+
+def test_pls_x_weights_raw_quadratic_head_matches_reference() -> None:
+    X, y = _xy(50)
+    X = X.assign(
+        control=np.linspace(-0.5, 0.5, len(X)),
+        x3=np.cos(np.linspace(0.0, 4.0, len(X))),
+    )
+    y = y + 0.35 * X["x3"] ** 2 + 0.4 * X["control"]
+    X_train = X.iloc[:40]
+    y_train = y.iloc[:40]
+    X_test = X.iloc[40:45]
+
+    fit = mf.models.pls(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        quadratic_factors=True,
+        score_projection="x_weights_raw",
+    )
+    expected_pred, _ = _control_residualized_pls_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        quadratic_factors=True,
+        score_projection="x_weights_raw",
+    )
+
+    assert fit.metadata["quadratic_factors"] is True
+    assert fit.estimator.factor_square_coefs_.shape == (2,)
+    np.testing.assert_allclose(
+        fit.predict(X_test).to_numpy(dtype=float),
+        expected_pred,
+        atol=1e-12,
+        rtol=0.0,
+    )
+
+
+def test_pls_score_projection_validation_and_registry() -> None:
+    X, y = _xy()
+    spec = mf.models.get_model("pls")
+    parameters = {parameter.name: parameter for parameter in spec.parameters}
+
+    assert spec.default_params["score_projection"] == "transform"
+    assert parameters["score_projection"].default == "transform"
+    assert parameters["score_projection"].tunable is False
+    assert all(
+        "score_projection" not in space for space in spec.search_spaces.values()
+    )
+    with pytest.raises(ValueError, match="score_projection.*transform.*x_weights_raw"):
+        mf.models.pls(X, y, score_projection="raw")  # type: ignore[arg-type]
 
 
 def test_nn_model_fit() -> None:
@@ -1815,6 +2188,164 @@ def test_supervised_scaled_pca_fit_records_slope_scaling() -> None:
     assert "x1" not in fit.estimator.factor_features_
 
 
+@pytest.mark.parametrize(
+    "fit_func",
+    [mf.models.supervised_pca, mf.models.supervised_scaled_pca],
+)
+def test_supervised_pca_default_preselect_stage_matches_explicit_after_standardize(
+    fit_func: object,
+) -> None:
+    X, y = _scale_sensitive_spca_xy()
+    params = {
+        "n_components": 1,
+        "n_selected": 1,
+        "preselect": "elastic_net",
+        "elastic_net_alpha": 0.3,
+        "elastic_net_l1_ratio": 1.0,
+        "random_state": 0,
+    }
+
+    default_fit = fit_func(X, y, **params)  # type: ignore[operator]
+    explicit_fit = fit_func(  # type: ignore[operator]
+        X,
+        y,
+        preselect_stage="after_standardize",
+        **params,
+    )
+
+    assert default_fit.metadata == explicit_fit.metadata
+    assert default_fit.estimator.factor_features_ == ("small_signal",)
+    assert (
+        default_fit.estimator.factor_features_
+        == explicit_fit.estimator.factor_features_
+    )
+    assert (
+        default_fit.estimator.selected_features_
+        == explicit_fit.estimator.selected_features_
+    )
+    assert (
+        default_fit.estimator.component_selected_features_
+        == explicit_fit.estimator.component_selected_features_
+    )
+    assert (
+        default_fit.estimator.screening_scores_
+        == explicit_fit.estimator.screening_scores_
+    )
+    np.testing.assert_array_equal(
+        default_fit.predict(X.iloc[-5:]).to_numpy(dtype=float),
+        explicit_fit.predict(X.iloc[-5:]).to_numpy(dtype=float),
+    )
+    np.testing.assert_array_equal(
+        default_fit.estimator.loadings_,
+        explicit_fit.estimator.loadings_,
+    )
+    np.testing.assert_array_equal(
+        default_fit.estimator.factor_coefs_,
+        explicit_fit.estimator.factor_coefs_,
+    )
+    np.testing.assert_array_equal(
+        default_fit.estimator.control_coef_,
+        explicit_fit.estimator.control_coef_,
+    )
+
+
+@pytest.mark.parametrize(
+    "fit_func",
+    [mf.models.supervised_pca, mf.models.supervised_scaled_pca],
+)
+def test_supervised_pca_raw_preselect_stage_screens_before_standardization(
+    fit_func: object,
+) -> None:
+    X, y = _scale_sensitive_spca_xy()
+    params = {
+        "n_components": 1,
+        "n_selected": 1,
+        "preselect": "elastic_net",
+        "elastic_net_alpha": 0.3,
+        "elastic_net_l1_ratio": 1.0,
+        "random_state": 0,
+    }
+
+    after_fit = fit_func(  # type: ignore[operator]
+        X,
+        y,
+        preselect_stage="after_standardize",
+        **params,
+    )
+    raw_fit = fit_func(  # type: ignore[operator]
+        X,
+        y,
+        preselect_stage="raw_before_standardize",
+        **params,
+    )
+
+    assert after_fit.estimator.factor_features_ == ("small_signal",)
+    assert raw_fit.estimator.factor_features_ == ("large_weak",)
+    assert list(after_fit.estimator.x_mean_.index) == ["small_signal", "large_weak"]
+    assert list(raw_fit.estimator.x_mean_.index) == ["large_weak"]
+    assert raw_fit.metadata["preselect_stage"] == "raw_before_standardize"
+
+    X_changed = X.iloc[-5:].copy()
+    X_changed["small_signal"] = X_changed["small_signal"] + 10000.0
+    np.testing.assert_array_equal(
+        raw_fit.predict(X.iloc[-5:]).to_numpy(dtype=float),
+        raw_fit.predict(X_changed).to_numpy(dtype=float),
+    )
+
+
+def test_supervised_pca_preselect_stage_validation_and_registry() -> None:
+    X, y = _xy()
+
+    for model_name in ("supervised_pca", "supervised_scaled_pca"):
+        spec = mf.models.get_model(model_name)
+        parameters = {parameter.name: parameter for parameter in spec.parameters}
+        assert spec.default_params["preselect_stage"] == "after_standardize"
+        assert parameters["preselect_stage"].default == "after_standardize"
+        assert parameters["preselect_stage"].tunable is False
+        assert all(
+            "preselect_stage" not in space for space in spec.search_spaces.values()
+        )
+        with pytest.raises(
+            ValueError,
+            match="preselect_stage.*after_standardize.*raw_before_standardize",
+        ):
+            getattr(mf.models, model_name)(  # type: ignore[misc]
+                X,
+                y,
+                preselect_stage="raw",
+            )
+
+
+def test_supervised_pca_elastic_net_preselect_accepts_ic_search() -> None:
+    X, y = _scale_sensitive_spca_xy()
+    search = mf.model_selection.SearchSpec(
+        method="information_criterion",
+        criterion="aicc",
+        param_grid={"alpha": (0.0001, 0.001), "l1_ratio": (0.5, 1.0)},
+    )
+
+    default_fit = mf.models.supervised_pca(
+        X,
+        y,
+        preselect="elastic_net",
+        n_components=1,
+    )
+    searched_fit = mf.models.supervised_pca(
+        X,
+        y,
+        preselect="elastic_net",
+        n_components=1,
+        elastic_net_search=search,
+    )
+
+    params = searched_fit.estimator.preselection_params_
+    assert "elastic_net_search" not in default_fit.metadata
+    assert params["lambda_selection"]["criterion"] == "aicc"
+    assert params["lambda_selection"]["selected_params"]["alpha"] in {0.0001, 0.001}
+    assert params["lambda_selection"]["selected_params"]["l1_ratio"] in {0.5, 1.0}
+    assert searched_fit.estimator.factor_features_
+
+
 def test_scaled_pca_matches_huang_spcaest_factor_extraction() -> None:
     X, y = _xy(42)
     X_train = X.iloc[:34]
@@ -1864,6 +2395,155 @@ def test_scaled_pca_supports_hounyo_li_pc2_squared_factor_head() -> None:
     np.testing.assert_allclose(
         fit.predict(X_test).to_numpy(), expected_pred, atol=1e-10
     )
+
+
+def test_pcr_matches_control_residualized_reference_and_differs_from_far() -> None:
+    idx = pd.RangeIndex(36)
+    grid = np.linspace(-1.5, 1.5, len(idx))
+    X = pd.DataFrame(
+        {
+            "control": grid,
+            "x1": np.sin(1.7 * grid),
+            "x2": np.cos(0.8 * grid) + 0.1 * grid,
+            "x3": grid**2 - 0.4 * grid,
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        1.25
+        + 0.9 * X["control"]
+        + 1.4 * X["x1"]
+        - 0.7 * X["x2"]
+        + 0.35 * X["x3"],
+        index=idx,
+        name="target",
+    )
+    X_train = X.iloc[:28]
+    y_train = y.iloc[:28]
+    X_test = X.iloc[28:34]
+
+    fit = mf.models.pcr(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+    )
+    expected = _control_residualized_pcr_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+    )
+    far_fit = mf.models.far(
+        X_train,
+        y_train,
+        n_factors=2,
+        n_lag=1,
+        random_state=0,
+        direct=True,
+    )
+
+    np.testing.assert_allclose(fit.predict(X_test).to_numpy(), expected, atol=1e-10)
+    assert fit.model == "pcr"
+    assert fit.metadata["n_components"] == 2
+    assert fit.metadata["control_columns"] == ("control",)
+    assert fit.estimator.control_names_ == ("control", "const")
+    assert "control" not in fit.estimator.factor_features_
+    assert "factor_loadings" in fit.diagnostics
+    assert np.max(np.abs(fit.predict(X_test).to_numpy() - far_fit.predict(X_test))) > 1e-3
+
+
+def test_pcr_quadratic_factor_modes_match_references() -> None:
+    idx = pd.RangeIndex(40)
+    grid = np.linspace(-2.0, 2.0, len(idx))
+    X = pd.DataFrame(
+        {
+            "control": np.sin(grid),
+            "x1": grid,
+            "x2": grid**2 - 0.5,
+            "x3": np.cos(1.3 * grid),
+        },
+        index=idx,
+    )
+    y = pd.Series(
+        0.4
+        + 0.6 * X["control"]
+        + 0.8 * X["x1"]
+        - 0.2 * X["x2"]
+        + 0.5 * X["x1"] ** 2,
+        index=idx,
+        name="target",
+    )
+    X_train = X.iloc[:31]
+    y_train = y.iloc[:31]
+    X_test = X.iloc[31:37]
+
+    separate = mf.models.pcr(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        quadratic_factors=True,
+    )
+    joint = mf.models.pcr(
+        X_train,
+        y_train,
+        n_components=2,
+        control_columns=["control"],
+        quadratic_factors=True,
+        quadratic_mode="joint",
+    )
+    expected_separate = _control_residualized_pcr_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        quadratic_factors=True,
+        quadratic_mode="separate",
+    )
+    expected_joint = _control_residualized_pcr_reference(
+        X_train,
+        y_train,
+        X_test,
+        n_components=2,
+        control_columns=("control",),
+        quadratic_factors=True,
+        quadratic_mode="joint",
+    )
+
+    np.testing.assert_allclose(
+        separate.predict(X_test).to_numpy(),
+        expected_separate,
+        atol=1e-10,
+    )
+    np.testing.assert_allclose(
+        joint.predict(X_test).to_numpy(),
+        expected_joint,
+        atol=1e-10,
+    )
+    assert separate.metadata["quadratic_mode"] == "separate"
+    assert joint.metadata["quadratic_mode"] == "joint"
+    assert not np.allclose(separate.predict(X_test), joint.predict(X_test))
+
+
+def test_pcr_validation_and_nan_policy() -> None:
+    X, y = _xy(12)
+    X_bad = X.copy()
+    X_bad.loc[X_bad.index[3], "x1"] = np.inf
+
+    with pytest.raises(ValueError, match="standardize_ddof"):
+        mf.models.pcr(X, y, standardize_ddof=-1)
+    with pytest.raises(ValueError, match="nan_policy"):
+        mf.models.pcr(X, y, nan_policy="drop")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="quadratic_mode"):
+        mf.models.pcr(X, y, quadratic_mode="other")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="factor block"):
+        mf.models.pcr(X_bad, y, nan_policy="raise")
+
+    fit = mf.models.pcr(X_bad, y, nan_policy="zero_after_standardize")
+    assert np.isfinite(fit.predict(X_bad.iloc[:3]).to_numpy(dtype=float)).all()
 
 
 def test_supervised_pca_matches_matlab_style_spca_recursion() -> None:
@@ -2039,7 +2719,9 @@ def test_macro_random_forest_position_validation() -> None:
         ("catboost", "catboost", lambda X, y: mf.models.catboost(X, y)),
         ("arch", "arch", lambda X, y: mf.models.garch11(y)),
         (
-            "matplotlib",
+            # joblib, not matplotlib: the vendored MRF imports matplotlib only inside
+            # its two plotting methods, so fitting no longer requires it.
+            "joblib",
             "macro_random_forest",
             lambda X, y: mf.models.macro_random_forest(X, y),
         ),
@@ -2073,10 +2755,28 @@ def test_optional_external_models_fail_lazily_when_missing(
         fit_call(X, y)
 
 
-def test_pcr_is_not_public_model_family() -> None:
-    assert not hasattr(mf.models, "pcr")
-    assert "pcr" not in mf.models.__all__
-    assert "pcr" not in mf.models.MODEL_SPECS
+def test_pcr_is_public_model_family() -> None:
+    assert mf.pcr is mf.models.pcr
+    assert "pcr" in mf.models.__all__
+    assert "PCRRegressor" in mf.models.__all__
+    spec = mf.models.get_model("pcr")
+    assert spec.family == "composite"
+    assert spec.default_params == {
+        "n_components": 3,
+        "control_columns": None,
+        "include_constant": True,
+        "drop_control_columns": True,
+        "standardize": True,
+        "standardize_ddof": 1,
+        "nan_policy": "raise",
+        "quadratic_factors": False,
+        "quadratic_mode": "separate",
+    }
+    assert spec.search_spaces == {
+        "small": {"n_components": (1, 2, 3)},
+        "standard": {"n_components": (1, 2, 3, 5, 8)},
+        "wide": {"n_components": (1, 2, 3, 5, 8, 10, 12, 20)},
+    }
 
 
 def test_mars_is_public_package_native_model_family() -> None:
@@ -2133,7 +2833,6 @@ def test_macro_random_forest_adapter_wires_reference_backend(
 
 def test_macro_random_forest_vendored_backend_smoke() -> None:
     pytest.importorskip("joblib")
-    pytest.importorskip("matplotlib")
     X, y = _xy(48)
 
     fit = mf.models.macro_random_forest(
@@ -2152,6 +2851,124 @@ def test_macro_random_forest_vendored_backend_smoke() -> None:
     assert np.isfinite(pred).all()
     assert fit.estimator.output_ is not None
     assert "pred" in fit.estimator.output_
+
+
+def test_macro_random_forest_intercept_only_is_plain_rf() -> None:
+    """X_t = iota (intercept-only linear part) is the paper's plain-RF benchmark.
+
+    The vendored backend previously raised "You need to specify at least one X."
+    for an empty linear part, so ``RF = MRF with X_t = iota`` could not be
+    expressed and plain-RF cells had to fall back to a different estimator. An
+    empty linear part must now run: K = len(z_pos) + 1 always carries the
+    auto-intercept, so it yields a pure time-varying intercept = a random forest
+    of y on the state S_t.
+    """
+    pytest.importorskip("joblib")
+    X, y = _xy(64)
+
+    fit = mf.models.macro_random_forest(
+        X.iloc[:48],
+        y.iloc[:48],
+        x_columns=(),  # empty linear part => X_t = iota (plain RF)
+        S_columns=["x1", "x2"],
+        B=2,
+        minsize=10,
+        mtry_frac=1.0,
+        parallelise=False,
+        print_b=False,
+        random_state=0,
+    )
+    pred = fit.predict(X.iloc[48:52])
+
+    assert len(pred) == 4
+    assert np.isfinite(pred).all()
+    # the empty linear part was accepted and reduced to an intercept-only design
+    assert list(fit.estimator.model_.z_pos) == []
+
+
+def test_macro_random_forest_gtvp_and_vi_accessors() -> None:
+    """GTVP (time-varying betas) is the paper's headline output and must be
+    reachable via a labeled accessor; variable importance is stubbed to zeros in
+    the vendored backend and must fail loudly instead of returning a fake zero
+    ranking.
+    """
+    pytest.importorskip("joblib")
+    X, y = _xy(72)
+
+    fit = mf.models.macro_random_forest(
+        X.iloc[:56],
+        y.iloc[:56],
+        x_columns=["x1"],
+        S_columns=["x2"],
+        B=3,
+        mtry_frac=1.0,
+        parallelise=False,
+        print_b=False,
+        random_state=0,
+    )
+    fit.predict(X.iloc[56:60])
+
+    gtvp = fit.estimator.gtvp()
+    assert list(gtvp.columns) == ["intercept", "x1"]
+    assert len(gtvp) == 60  # 56 training rows + 4 predicted rows
+    assert np.isfinite(gtvp.to_numpy()).any()
+
+    # VI is not implemented upstream (shuffled betas are zeros); it must raise
+    # loudly rather than silently return a zero importance vector.
+    with pytest.raises(NotImplementedError):
+        mf.models.macro_random_forest(
+            X.iloc[:56], y.iloc[:56], x_columns=["x1"], S_columns=["x2"], VI=True
+        )
+    with pytest.raises(NotImplementedError):
+        fit.estimator.variable_importance()
+
+
+def test_macro_random_forest_ensemble_skips_degenerate_trees() -> None:
+    """A single NaN tree must not destroy the ensemble forecast.
+
+    `pred_ensemble` is the raw per-tree committee, so reducing it IS the ensemble
+    average and it has to skip trees that returned NaN for a row -- the backend's
+    own ensemble output is `pd.DataFrame(committee).mean(axis=0)`, which is
+    nan-skipping. A nan-propagating mean let one degenerate tree out of B wipe out
+    the forecast for that row, and with it any RMSE computed from it.
+    """
+    reduce = mf.models.MacroRandomForestRegressor._prediction_values
+    count = mf.models.MacroRandomForestRegressor._degenerate_tree_count
+
+    committee = np.arange(20.0).reshape(4, 5)
+    clean = reduce({"pred_ensemble": committee}, 5, 4)
+    np.testing.assert_allclose(clean, committee.mean(axis=0))
+    assert count({"pred_ensemble": committee}, 5) == 0
+
+    spoiled = committee.copy()
+    spoiled[2, 3] = np.nan
+    values = reduce({"pred_ensemble": spoiled}, 5, 4)
+    assert np.isfinite(values).all()
+    np.testing.assert_allclose(values, np.nanmean(spoiled, axis=0))
+    assert count({"pred_ensemble": spoiled}, 5) == 1
+
+    # a row no tree could predict is genuinely undefined and must stay NaN
+    hopeless = committee.copy()
+    hopeless[:, 1] = np.nan
+    values = reduce({"pred_ensemble": hopeless}, 5, 4)
+    assert np.isnan(values[1])
+    assert np.isfinite(values[[0, 2, 3, 4]]).all()
+
+
+def test_macro_random_forest_committee_axis_uses_tree_count() -> None:
+    """Resolving the committee axis from shape alone breaks when B == n_oos.
+
+    The committee is always (B, n_oos); when those are equal the shape test
+    matched the wrong branch and averaged across forecast dates instead of across
+    trees. B=25 is the package default, so the collision is reachable.
+    """
+    reduce = mf.models.MacroRandomForestRegressor._prediction_values
+    rng = np.random.default_rng(0)
+    committee = rng.normal(size=(25, 25))
+
+    values = reduce({"pred_ensemble": committee}, 25, 25)
+    np.testing.assert_allclose(values, committee.mean(axis=0))
+    assert not np.allclose(values, committee.mean(axis=1))
 
 
 def test_lgb_plus_competition_records_reference_channels() -> None:
@@ -2299,3 +3116,33 @@ def test_var_rejects_invalid_type_label() -> None:
 
     with pytest.raises(ValueError, match="type must be one of"):
         mf.models.var(panel, target="y", type="ctt")
+
+
+def test_penalized_scaling_guard_ignores_constant_columns() -> None:
+    """The scale guard must not fire on a numerically constant column.
+
+    A constant column has std ~ float64 rounding noise (2e-17 against a real
+    column at 0.2 reads as a 1e16x "spread"), carries no information, and so
+    cannot make the L1/L2 penalty non-uniform. Counting it produced false
+    positives that blocked legitimate default-path fits.
+    """
+    rng = np.random.default_rng(0)
+    n = 200
+    y = pd.Series(rng.normal(size=n))
+
+    # exact constant + a normal column: must fit
+    exact = pd.DataFrame({"const": np.full(n, 3.0), "b": rng.normal(0, 1.0, n)})
+    mf.models.ridge(exact, y)
+
+    # constant carrying float noise: must also fit
+    noisy = pd.DataFrame(
+        {"const": np.full(n, 1.0) + rng.normal(0, 2e-17, n), "b": rng.normal(0, 0.2, n)}
+    )
+    mf.models.ridge(noisy, y)
+
+    # a genuine scale spread must still be rejected
+    heterogeneous = pd.DataFrame(
+        {"tiny": rng.normal(0, 1e-4, n), "huge": rng.normal(0, 100.0, n)}
+    )
+    with pytest.raises(ValueError, match="feature scales span"):
+        mf.models.ridge(heterogeneous, y)

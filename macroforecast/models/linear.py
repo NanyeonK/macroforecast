@@ -1,14 +1,68 @@
 from __future__ import annotations
 
+import warnings
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
 
 from macroforecast.feature_engineering.screening import marginal_t_stats as _screen_marginal_t_stats
 from macroforecast.models.types import ModelFit
-from macroforecast.models.utils import fit_estimator, resolve_xy
+from macroforecast.models.utils import (
+    attach_sparse_ic_diagnostics,
+    fit_estimator,
+    resolve_xy,
+)
+
+
+def _warn_if_rank_deficient(fit: ModelFit, *, model: str) -> None:
+    """Say so when the design was numerically rank-deficient.
+
+    A rank-deficient least-squares problem is not an error -- it still returns *a*
+    solution -- but it is not *the* solution: infinitely many coefficient vectors
+    attain the same minimum, and which one comes back is decided by whether LAPACK
+    truncates the null direction. When it does not, the coefficients arrive as an
+    enormous cancelling pair and the prediction carries the floating-point residue
+    of that cancellation -- measured at up to 0.56 in level on real data (issue
+    #487), with nothing said about it.
+
+    ``rank_`` is not the detector: in that failure LAPACK reported full rank on a
+    rank-one matrix, and the mis-report IS the failure. ``singular_``, which the
+    estimator has already computed, does expose it -- so this check costs nothing
+    and, deliberately, changes nothing: the fit is returned exactly as it was.
+
+    The threshold is LAPACK's own rank criterion, ``max(n, p) * eps``, so this
+    fires precisely when the solve is degenerate rather than merely
+    ill-conditioned. A near-collinear design still has a unique answer and is left
+    to the caller.
+    """
+
+    singular = getattr(fit.estimator, "singular_", None)
+    if singular is None:
+        return  # e.g. positive=True, which uses a different solver
+    singular = np.asarray(singular, dtype=float)
+    if singular.size == 0 or not np.isfinite(singular).all() or singular.max() <= 0.0:
+        return
+    n_obs = int(fit.metadata.get("n_obs", 0)) or singular.size
+    n_features = len(fit.feature_names)
+    tol = max(n_obs, n_features) * float(np.finfo(float).eps)
+    if singular.min() > singular.max() * tol:
+        return
+    warnings.warn(
+        f"{model}: the design matrix is numerically rank-deficient "
+        f"(smallest/largest singular value "
+        f"{singular.min() / singular.max():.2e}, below the {tol:.1e} rank "
+        f"tolerance for {n_obs} rows x {n_features} columns), so the "
+        f"least-squares coefficients are not unique and the ones returned depend "
+        f"on the solver rather than on the data. Predictions can carry the "
+        f"floating-point residue of cancelling coefficients. Drop the dependent "
+        f"column(s) -- a duplicated series, a lag that repeats a level, or a "
+        f"complete dummy set alongside the intercept -- or use a regularized "
+        f"model such as `ridge`, which has a unique solution here.",
+        UserWarning,
+        stacklevel=3,
+    )
 
 
 def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
@@ -16,16 +70,65 @@ def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
 
     from sklearn.linear_model import LinearRegression
 
-    return fit_estimator(LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs))
+    fit = fit_estimator(
+        LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs)
+    )
+    _warn_if_rank_deficient(fit, model="ols")
+    return fit
 
 
-def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, **kwargs: Any) -> ModelFit:
+_PENALIZED_SCALE_RATIO_MAX = 1.0e3
+# A column whose standard deviation is this small relative to the widest column is
+# numerically constant -- float64 rounding noise, not a scale. Such a column carries
+# no information, so it cannot make the L1/L2 penalty non-uniform in any meaningful
+# sense, and including it in the ratio produces enormous false positives (a constant
+# column at std 2e-17 against a real one at 0.2 reads as a 1e16x "spread").
+_PENALIZED_NEAR_CONSTANT_REL_TOL = 1.0e-12
+
+
+def _check_penalized_scaling(frame: Any, standardize: bool, model: str) -> None:
+    """Guard: penalized (L1/L2) regression applies the penalty per COEFFICIENT, so on
+    unstandardized features whose scales differ wildly the penalty is applied
+    non-uniformly and the fit is scale-dependent and usually meaningless. Raise unless
+    the caller standardizes or the feature scales are comparable."""
+    if standardize:
+        return
+    Xf = pd.DataFrame(frame).apply(pd.to_numeric, errors="coerce")
+    if Xf.shape[1] < 2:
+        return
+    stds = Xf.std(axis=0, ddof=0).to_numpy(dtype=float)
+    stds = stds[np.isfinite(stds) & (stds > 0.0)]
+    if stds.size < 2:
+        return
+    # Ignore numerically constant columns; see _PENALIZED_NEAR_CONSTANT_REL_TOL.
+    stds = stds[stds > stds.max() * _PENALIZED_NEAR_CONSTANT_REL_TOL]
+    if stds.size < 2:
+        return
+    ratio = float(stds.max() / stds.min())
+    if ratio > _PENALIZED_SCALE_RATIO_MAX:
+        raise ValueError(
+            f"{model}: feature scales span {ratio:.0f}x (column std "
+            f"{stds.min():.3g}..{stds.max():.3g}); penalized regression on "
+            f"unstandardized heterogeneous-scale features applies the L1/L2 penalty "
+            f"non-uniformly and is typically meaningless. Pass standardize=True (or "
+            f"pre-scale the features)."
+        )
+
+
+def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, standardize: bool = False, **kwargs: Any) -> ModelFit:
     """Fit ridge regression."""
 
     from sklearn.linear_model import Ridge
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
 
-    params = {"alpha": float(alpha), **kwargs}
-    return fit_estimator(Ridge(**params), X, y, model="ridge", metadata=params)
+    frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "ridge")
+    estimator: Any = Ridge(alpha=float(alpha), **kwargs)
+    if standardize:
+        estimator = make_pipeline(StandardScaler(), estimator)
+    params = {"alpha": float(alpha), "standardize": bool(standardize), **kwargs}
+    return fit_estimator(estimator, frame, target, model="ridge", metadata=params)
 
 
 class _NonNegativeRidge:
@@ -592,13 +695,17 @@ def lasso(
         **estimator_params,
         "standardize": bool(standardize),
     }
-    return fit_estimator(
+    frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "lasso")
+    fit = fit_estimator(
         estimator,
-        X,
-        y,
+        frame,
+        target,
         model="lasso",
         metadata=params,
     )
+    attach_sparse_ic_diagnostics(fit.estimator, frame, target)
+    return fit
 
 
 def elastic_net(
@@ -630,13 +737,17 @@ def elastic_net(
         **estimator_params,
         "standardize": bool(standardize),
     }
-    return fit_estimator(
+    frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "elastic_net")
+    fit = fit_estimator(
         estimator,
-        X,
-        y,
+        frame,
+        target,
         model="elastic_net",
         metadata=params,
     )
+    attach_sparse_ic_diagnostics(fit.estimator, frame, target)
+    return fit
 
 
 class _AdaptiveLinear:
@@ -910,10 +1021,19 @@ class _GroupLinear:
             group: np.flatnonzero(np.asarray(groups, dtype=object) == group)
             for group in dict.fromkeys(groups)
         }
-        self.resolved_group_weights_ = {
-            group: float(self.group_weights.get(group, np.sqrt(len(index))))
-            for group, index in self.group_index_.items()
-        }
+        # Resolve the fallback explicitly rather than through ``get``'s default:
+        # depending on the installed stubs the lookup widens to ``float | None``,
+        # and ``float(None)`` would be a TypeError at runtime rather than a type
+        # complaint. Behaviour is unchanged for every present key.
+        resolved: dict[str, float] = {}
+        for group, index in self.group_index_.items():
+            configured = self.group_weights.get(group)
+            resolved[group] = (
+                float(configured)
+                if configured is not None
+                else float(np.sqrt(len(index)))
+            )
+        self.resolved_group_weights_ = resolved
         coef_scaled = self._solve(x_work, y_centered)
         self.coef_ = coef_scaled / self.x_scale_
         self.intercept_ = self.y_mean_ - float(self.x_mean_ @ self.coef_)
@@ -966,8 +1086,13 @@ class _GroupLinear:
                 for group, index in self.group_index_.items():
                     block = coef[index]
                     norm = float(np.linalg.norm(block, ord=2))
-                    weight = self.resolved_group_weights_.get(group, np.sqrt(len(index)))
-                    threshold = step * group_penalty * float(weight)
+                    configured = self.resolved_group_weights_.get(group)
+                    weight = (
+                        float(configured)
+                        if configured is not None
+                        else float(np.sqrt(len(index)))
+                    )
+                    threshold = step * group_penalty * weight
                     if norm <= threshold:
                         coef[index] = 0.0
                     else:
@@ -1301,18 +1426,12 @@ def _resolve_glmboost_candidate_count(
     return max(1, min(n_features, max(lower, raw)))
 
 
-class _PLSCompositeRegressor:
-    """PLS regression with optional Hounyo-Li-style control residualization."""
+PLSScoreProjection = Literal["transform", "x_weights_raw"]
+_PLS_SCORE_PROJECTIONS = ("transform", "x_weights_raw")
 
-    # Source alignment:
-    # - Hounyo-Li's MATLAB baseline PLS_emp002.m first residualizes ytplush on
-    #   wt, then calls plsregress() on standardized predictors and the residual,
-    #   extracts stats.W, builds factors, re-estimates factor coefficients, and
-    #   adds the control forecast back.
-    # - macroforecast keeps that forecasting contract but delegates the PLS
-    #   component extraction to sklearn.cross_decomposition.PLSRegression. The
-    #   optional control block mirrors wt. With no controls, include_constant=True
-    #   gives the usual intercept-only residualization.
+
+class _PLSCompositeRegressor:
+    """PLS regression with optional control residualization and external score head."""
 
     def __init__(
         self,
@@ -1325,8 +1444,12 @@ class _PLSCompositeRegressor:
         include_constant: bool = True,
         drop_control_columns: bool = True,
         quadratic_factors: bool = False,
+        score_projection: PLSScoreProjection = "transform",
         **kwargs: Any,
     ) -> None:
+        if score_projection not in _PLS_SCORE_PROJECTIONS:
+            allowed = ", ".join(repr(value) for value in _PLS_SCORE_PROJECTIONS)
+            raise ValueError(f"score_projection must be one of: {allowed}")
         self.n_components = max(1, int(n_components))
         self.scale = bool(scale)
         self.max_iter = int(max_iter)
@@ -1335,6 +1458,7 @@ class _PLSCompositeRegressor:
         self.include_constant = bool(include_constant)
         self.drop_control_columns = bool(drop_control_columns)
         self.quadratic_factors = bool(quadratic_factors)
+        self.score_projection = score_projection
         self.kwargs = dict(kwargs)
         self.x_mean_: pd.Series | None = None
         self.x_scale_: pd.Series | None = None
@@ -1357,12 +1481,18 @@ class _PLSCompositeRegressor:
         if self.scale:
             self.x_mean_ = frame.mean(axis=0)
             self.x_scale_ = _safe_series_scale(frame.std(axis=0, ddof=1))
-            standardized_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+            standardized_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(
+                dtype=float
+            )
         else:
             self.x_mean_ = pd.Series(0.0, index=frame.columns)
             self.x_scale_ = pd.Series(1.0, index=frame.columns)
             standardized_values = frame.to_numpy(dtype=float)
-        standardized = pd.DataFrame(standardized_values, index=frame.index, columns=frame.columns)
+        standardized = pd.DataFrame(
+            standardized_values,
+            index=frame.index,
+            columns=frame.columns,
+        )
 
         control_frame = _control_matrix(
             standardized,
@@ -1382,8 +1512,16 @@ class _PLSCompositeRegressor:
         y_values = target.to_numpy(dtype=float)
         control_values = control_frame.to_numpy(dtype=float)
         self.control_coef_ = _least_squares_coef(control_values, y_values)
-        residual = y_values - control_values @ self.control_coef_ if control_values.size else y_values.copy()
-        resolved_components = min(self.n_components, factor_frame.shape[1], len(factor_frame))
+        residual = (
+            y_values - control_values @ self.control_coef_
+            if control_values.size
+            else y_values.copy()
+        )
+        resolved_components = min(
+            self.n_components,
+            factor_frame.shape[1],
+            len(factor_frame),
+        )
         resolved_components = max(1, int(resolved_components))
         model = PLSRegression(
             n_components=resolved_components,
@@ -1393,7 +1531,14 @@ class _PLSCompositeRegressor:
             **self.kwargs,
         )
         model.fit(factor_frame.to_numpy(dtype=float), residual)
-        factors = np.asarray(model.transform(factor_frame.to_numpy(dtype=float)), dtype=float)
+        loadings = np.asarray(model.x_weights_, dtype=float)
+        if self.score_projection == "transform":
+            factors = np.asarray(
+                model.transform(factor_frame.to_numpy(dtype=float)),
+                dtype=float,
+            )
+        else:
+            factors = factor_frame.to_numpy(dtype=float) @ loadings
         self.factor_coefs_ = _least_squares_coef(factors, residual)
         self.factor_square_coefs_ = (
             _least_squares_coef(factors**2, residual)
@@ -1401,7 +1546,7 @@ class _PLSCompositeRegressor:
             else np.zeros(resolved_components, dtype=float)
         )
         self.factor_features_ = tuple(str(column) for column in factor_frame.columns)
-        self.factor_loadings_ = np.asarray(model.x_weights_, dtype=float)
+        self.factor_loadings_ = loadings
         self.n_components_ = resolved_components
         self.pls_model_ = model
         return self
@@ -1413,10 +1558,26 @@ class _PLSCompositeRegressor:
         if self.x_mean_ is None or self.x_scale_ is None:
             raise ValueError("pls is missing fitted scaling state")
         frame = frame.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
-        values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float) if self.scale else frame.to_numpy(dtype=float)
-        standardized = pd.DataFrame(values, index=frame.index, columns=self.x_mean_.index)
-        factor_values = standardized.reindex(columns=list(self.factor_features_), fill_value=0.0).to_numpy(dtype=float)
-        factors = np.asarray(self.pls_model_.transform(factor_values), dtype=float)
+        values = (
+            ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+            if self.scale
+            else frame.to_numpy(dtype=float)
+        )
+        standardized = pd.DataFrame(
+            values,
+            index=frame.index,
+            columns=self.x_mean_.index,
+        )
+        factor_values = standardized.reindex(
+            columns=list(self.factor_features_),
+            fill_value=0.0,
+        ).to_numpy(dtype=float)
+        if self.score_projection == "transform":
+            factors = np.asarray(self.pls_model_.transform(factor_values), dtype=float)
+        else:
+            if self.factor_loadings_ is None:
+                raise ValueError("pls is missing fitted score projection state")
+            factors = factor_values @ self.factor_loadings_
         columns = [f"pls_factor{i}" for i in range(1, self.n_components_ + 1)]
         return pd.DataFrame(factors, index=frame.index, columns=columns)
 
@@ -1428,14 +1589,24 @@ class _PLSCompositeRegressor:
         if self.x_mean_ is None or self.x_scale_ is None:
             raise ValueError("pls is missing fitted scaling state")
         frame = frame.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
-        values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float) if self.scale else frame.to_numpy(dtype=float)
-        standardized = pd.DataFrame(values, index=frame.index, columns=self.x_mean_.index)
+        values = (
+            ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+            if self.scale
+            else frame.to_numpy(dtype=float)
+        )
+        standardized = pd.DataFrame(
+            values,
+            index=frame.index,
+            columns=self.x_mean_.index,
+        )
         control_values = _control_matrix(
             standardized,
             self.control_columns,
             include_constant=self.include_constant,
         ).to_numpy(dtype=float)
-        control_part = control_values @ self.control_coef_ if control_values.size else 0.0
+        control_part = (
+            control_values @ self.control_coef_ if control_values.size else 0.0
+        )
         factor_part = factors @ self.factor_coefs_
         if self.quadratic_factors and self.factor_square_coefs_ is not None:
             factor_part = factor_part + (factors**2) @ self.factor_square_coefs_
@@ -1454,10 +1625,14 @@ def pls(
     include_constant: bool = True,
     drop_control_columns: bool = True,
     quadratic_factors: bool = False,
+    score_projection: Literal["transform", "x_weights_raw"] = "transform",
     **kwargs: Any,
 ) -> ModelFit:
     """Fit partial least squares regression."""
 
+    if score_projection not in _PLS_SCORE_PROJECTIONS:
+        allowed = ", ".join(repr(value) for value in _PLS_SCORE_PROJECTIONS)
+        raise ValueError(f"score_projection must be one of: {allowed}")
     frame, target = resolve_xy(X, y)
     requested_components = max(1, int(n_components))
     factor_columns = _factor_columns(
@@ -1476,7 +1651,8 @@ def pls(
         "include_constant": bool(include_constant),
         "drop_control_columns": bool(drop_control_columns),
         "quadratic_factors": bool(quadratic_factors),
-        "source": "sklearn PLSRegression with optional Hounyo-Li PLS_emp002-style controls",
+        "score_projection": score_projection,
+        "source": "sklearn PLSRegression with optional control residualization",
         **kwargs,
     }
     metadata = {
@@ -1485,11 +1661,13 @@ def pls(
         "resolved_n_components": resolved_components,
         "backend": "sklearn.cross_decomposition.PLSRegression",
         "implementation_note": (
-            "Uses sklearn PLS latent components; when control_columns or "
-            "include_constant are set, y is residualized on the control block "
-            "and the control forecast is added back, matching the Hounyo-Li "
-            "PLS_emp002.m forecasting contract. quadratic_factors=True adds "
-            "the PLS_PC2.m squared-factor forecast head."
+            "Uses sklearn PLS latent component extraction with an external "
+            "forecast head. When control_columns or include_constant are set, "
+            "y is residualized on the control block and the control forecast "
+            "is added back. score_projection='transform' uses sklearn "
+            "transform scores; score_projection='x_weights_raw' projects "
+            "factor predictors through fitted PLS x-weights. "
+            "quadratic_factors=True adds a separate squared-score forecast head."
         ),
     }
     return fit_estimator(
@@ -1502,6 +1680,7 @@ def pls(
             include_constant=bool(include_constant),
             drop_control_columns=bool(drop_control_columns),
             quadratic_factors=bool(quadratic_factors),
+            score_projection=score_projection,
             **kwargs,
         ),
         frame,
@@ -1509,6 +1688,183 @@ def pls(
         model="pls",
         metadata=metadata,
     )
+
+
+class PCRRegressor:
+    """Principal component regression with optional control residualization."""
+
+    _NAN_POLICIES = {"raise", "zero_after_standardize", "fill_zero"}
+    _QUADRATIC_MODES = {"separate", "joint"}
+
+    def __init__(
+        self,
+        *,
+        n_components: int = 3,
+        control_columns: Sequence[str] | None = None,
+        include_constant: bool = True,
+        drop_control_columns: bool = True,
+        standardize: bool = True,
+        standardize_ddof: int = 1,
+        nan_policy: Literal["raise", "zero_after_standardize", "fill_zero"] = "raise",
+        quadratic_factors: bool = False,
+        quadratic_mode: Literal["separate", "joint"] = "separate",
+    ) -> None:
+        if int(standardize_ddof) < 0:
+            raise ValueError("standardize_ddof must be non-negative")
+        if nan_policy not in self._NAN_POLICIES:
+            raise ValueError(
+                "nan_policy must be one of: raise, zero_after_standardize, fill_zero"
+            )
+        if quadratic_mode not in self._QUADRATIC_MODES:
+            raise ValueError("quadratic_mode must be one of: separate, joint")
+        self.n_components = max(1, int(n_components))
+        self.control_columns = tuple(str(column) for column in (control_columns or ()))
+        self.include_constant = bool(include_constant)
+        self.drop_control_columns = bool(drop_control_columns)
+        self.standardize = bool(standardize)
+        self.standardize_ddof = int(standardize_ddof)
+        self.nan_policy = nan_policy
+        self.quadratic_factors = bool(quadratic_factors)
+        self.quadratic_mode = quadratic_mode
+        self.feature_names_in_: tuple[str, ...] = ()
+        self.x_mean_: pd.Series | None = None
+        self.x_scale_: pd.Series | None = None
+        self.factor_features_: tuple[str, ...] = ()
+        self.factor_loadings_: np.ndarray | None = None
+        self.factor_scores_: np.ndarray | None = None
+        self.factor_coefs_: np.ndarray = np.empty(0, dtype=float)
+        self.factor_square_coefs_: np.ndarray = np.empty(0, dtype=float)
+        self.control_coef_: np.ndarray = np.empty(0, dtype=float)
+        self.control_names_: tuple[str, ...] = ()
+        self.n_components_: int = 0
+        self.requested_n_components_: int = self.n_components
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "PCRRegressor":
+        frame = X.astype(float).copy()
+        frame.columns = [str(column) for column in frame.columns]
+        target = pd.Series(y, index=frame.index).astype(float)
+        if frame.shape[1] == 0:
+            raise ValueError("pcr requires at least one predictor")
+        self.feature_names_in_ = tuple(str(column) for column in frame.columns)
+
+        control_frame = _control_matrix(
+            frame,
+            self.control_columns,
+            include_constant=self.include_constant,
+        )
+        self.control_names_ = tuple(str(column) for column in control_frame.columns)
+        factor_columns = _factor_columns(
+            frame.columns,
+            self.control_columns,
+            drop_controls=self.drop_control_columns,
+        )
+        factor_frame = frame.loc[:, factor_columns].copy()
+        factor_values = self._prepare_factor_values(factor_frame, fit=True)
+
+        control_values = control_frame.to_numpy(dtype=float)
+        target_values = target.to_numpy(dtype=float)
+        if not np.isfinite(control_values).all():
+            raise ValueError("control columns must contain only finite values")
+        if not np.isfinite(target_values).all():
+            raise ValueError("target must contain only finite values")
+
+        self.control_coef_ = _least_squares_coef(control_values, target_values)
+        residual = (
+            target_values - control_values @ self.control_coef_
+            if control_values.size
+            else target_values.copy()
+        )
+        n_obs, n_factor_columns = factor_values.shape
+        resolved_components = min(self.requested_n_components_, n_obs, n_factor_columns)
+        _, _, vt = np.linalg.svd(factor_values, full_matrices=False)
+        self.factor_loadings_ = np.asarray(vt[:resolved_components].T, dtype=float)
+        factors = factor_values @ self.factor_loadings_
+        self.factor_coefs_ = _least_squares_coef(factors, residual)
+        if not self.quadratic_factors:
+            self.factor_square_coefs_ = np.zeros(resolved_components, dtype=float)
+        elif self.quadratic_mode == "separate":
+            self.factor_square_coefs_ = _least_squares_coef(factors**2, residual)
+        else:
+            gamma = _least_squares_coef(np.column_stack([factors, factors**2]), residual)
+            self.factor_coefs_ = gamma[:resolved_components]
+            self.factor_square_coefs_ = gamma[resolved_components:]
+        self.factor_features_ = tuple(str(column) for column in factor_frame.columns)
+        self.factor_scores_ = factors
+        self.n_components_ = resolved_components
+        return self
+
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        if self.factor_loadings_ is None:
+            raise ValueError("pcr is not fitted")
+        frame = self._prediction_frame(X)
+        factor_frame = frame.loc[:, list(self.factor_features_)]
+        factor_values = self._prepare_factor_values(factor_frame, fit=False)
+        factors = factor_values @ self.factor_loadings_
+        columns = [f"pc{i}" for i in range(1, self.n_components_ + 1)]
+        return pd.DataFrame(factors, index=frame.index, columns=columns)
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        if self.factor_loadings_ is None:
+            raise ValueError("pcr is not fitted")
+        frame = self._prediction_frame(X)
+        factors = self.transform(frame).to_numpy(dtype=float)
+        control_values = _control_matrix(
+            frame,
+            self.control_columns,
+            include_constant=self.include_constant,
+        ).to_numpy(dtype=float)
+        if not np.isfinite(control_values).all():
+            raise ValueError("control columns must contain only finite values")
+        control_part = (
+            control_values @ self.control_coef_
+            if control_values.size
+            else np.zeros(len(frame), dtype=float)
+        )
+        factor_part = factors @ self.factor_coefs_
+        if self.quadratic_factors:
+            factor_part = factor_part + (factors**2) @ self.factor_square_coefs_
+        return np.asarray(control_part + factor_part, dtype=float)
+
+    def _prediction_frame(self, X: pd.DataFrame) -> pd.DataFrame:
+        if not self.feature_names_in_:
+            raise ValueError("pcr is not fitted")
+        frame = X.astype(float).copy()
+        frame.columns = [str(column) for column in frame.columns]
+        return frame.reindex(columns=list(self.feature_names_in_), fill_value=0.0)
+
+    def _prepare_factor_values(self, frame: pd.DataFrame, *, fit: bool) -> np.ndarray:
+        work = frame.astype(float).copy()
+        if self.nan_policy == "raise" and not np.isfinite(
+            work.to_numpy(dtype=float)
+        ).all():
+            raise ValueError("factor block must contain only finite values")
+        if self.nan_policy == "fill_zero":
+            work = work.where(np.isfinite(work), 0.0)
+        if fit:
+            if self.standardize:
+                with warnings.catch_warnings():
+                    if self.nan_policy == "zero_after_standardize":
+                        warnings.simplefilter("ignore", RuntimeWarning)
+                    self.x_mean_ = work.mean(axis=0)
+                    self.x_scale_ = _safe_series_scale(
+                        work.std(axis=0, ddof=self.standardize_ddof)
+                    )
+            else:
+                self.x_mean_ = pd.Series(0.0, index=work.columns, dtype=float)
+                self.x_scale_ = pd.Series(1.0, index=work.columns, dtype=float)
+        if self.x_mean_ is None or self.x_scale_ is None:
+            raise ValueError("pcr is missing fitted scaling state")
+        aligned = work.reindex(columns=list(self.x_mean_.index), fill_value=0.0)
+        if self.standardize:
+            transformed = (aligned - self.x_mean_) / self.x_scale_
+        else:
+            transformed = aligned
+        values = transformed.to_numpy(dtype=float)
+        if self.nan_policy == "zero_after_standardize":
+            values = np.where(np.isfinite(values), values, 0.0)
+        elif not np.isfinite(values).all():
+            raise ValueError("factor block must contain only finite values")
+        return values
 
 
 class ScaledPCARegressor:
@@ -1649,9 +2005,11 @@ class SupervisedPCARegressor:
         include_constant: bool = True,
         drop_control_columns: bool = True,
         preselect: str = "none",
+        preselect_stage: str = "after_standardize",
         t_threshold: float = 1.28,
         elastic_net_alpha: float = 0.0002,
         elastic_net_l1_ratio: float = 0.5,
+        elastic_net_search: Any | None = None,
         slope_scale: bool = False,
         quadratic_factors: bool = False,
         random_state: int = 0,
@@ -1664,14 +2022,17 @@ class SupervisedPCARegressor:
         self.include_constant = bool(include_constant)
         self.drop_control_columns = bool(drop_control_columns)
         self.preselect = _normalize_preselect(preselect)
+        self.preselect_stage = _normalize_preselect_stage(preselect_stage)
         self.t_threshold = float(max(0.0, t_threshold))
         self.elastic_net_alpha = float(max(0.0, elastic_net_alpha))
         self.elastic_net_l1_ratio = float(min(1.0, max(0.0, elastic_net_l1_ratio)))
+        self.elastic_net_search = elastic_net_search
         self.slope_scale = bool(slope_scale)
         self.quadratic_factors = bool(quadratic_factors)
         self.random_state = int(random_state)
         self.selected_features_: tuple[str, ...] = ()
         self.screening_scores_: dict[str, float] = {}
+        self.preselection_params_: dict[str, Any] = {}
         self.component_selected_features_: list[tuple[str, ...]] = []
         self.n_components_: int = 0
         self.x_mean_: pd.Series | None = None
@@ -1692,45 +2053,99 @@ class SupervisedPCARegressor:
         if frame.shape[1] == 0:
             raise ValueError("supervised_pca requires at least one predictor")
 
-        x_values = frame.to_numpy(dtype=float)
-        y_values = target.to_numpy(dtype=float)
-        if self.scale:
-            self.x_mean_ = frame.mean(axis=0)
-            self.x_scale_ = _safe_series_scale(frame.std(axis=0, ddof=1))
-            x_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
-            self.y_mean_ = float(np.nanmean(y_values))
-            y_std = float(np.nanstd(y_values, ddof=1))
-            self.y_scale_ = y_std if np.isfinite(y_std) and y_std > 1e-12 else 1.0
-            y_values = (y_values - self.y_mean_) / self.y_scale_
-        else:
-            self.x_mean_ = pd.Series(0.0, index=frame.columns)
-            self.x_scale_ = pd.Series(1.0, index=frame.columns)
-            self.y_mean_ = 0.0
-            self.y_scale_ = 1.0
+        if self.preselect_stage == "after_standardize":
+            x_values = frame.to_numpy(dtype=float)
+            y_values = target.to_numpy(dtype=float)
+            if self.scale:
+                self.x_mean_ = frame.mean(axis=0)
+                self.x_scale_ = _safe_series_scale(frame.std(axis=0, ddof=1))
+                x_values = ((frame - self.x_mean_) / self.x_scale_).to_numpy(dtype=float)
+                self.y_mean_ = float(np.nanmean(y_values))
+                y_std = float(np.nanstd(y_values, ddof=1))
+                self.y_scale_ = y_std if np.isfinite(y_std) and y_std > 1e-12 else 1.0
+                y_values = (y_values - self.y_mean_) / self.y_scale_
+            else:
+                self.x_mean_ = pd.Series(0.0, index=frame.columns)
+                self.x_scale_ = pd.Series(1.0, index=frame.columns)
+                self.y_mean_ = 0.0
+                self.y_scale_ = 1.0
 
-        standardized = pd.DataFrame(x_values, index=frame.index, columns=frame.columns)
-        control_frame = _control_matrix(
-            standardized,
-            self.control_columns,
-            include_constant=self.include_constant,
-        )
-        self.control_names_ = tuple(str(column) for column in control_frame.columns)
-        factor_columns = _factor_columns(
-            standardized.columns,
-            self.control_columns,
-            drop_controls=self.drop_control_columns,
-        )
-        factor_frame = standardized.loc[:, factor_columns]
-        preselected = _preselect_columns(
-            factor_frame,
-            y_values,
-            method=self.preselect,
-            t_threshold=self.t_threshold,
-            elastic_net_alpha=self.elastic_net_alpha,
-            elastic_net_l1_ratio=self.elastic_net_l1_ratio,
-            random_state=self.random_state,
-        )
-        factor_frame = factor_frame.loc[:, preselected]
+            standardized = pd.DataFrame(x_values, index=frame.index, columns=frame.columns)
+            control_frame = _control_matrix(
+                standardized,
+                self.control_columns,
+                include_constant=self.include_constant,
+            )
+            self.control_names_ = tuple(str(column) for column in control_frame.columns)
+            factor_columns = _factor_columns(
+                standardized.columns,
+                self.control_columns,
+                drop_controls=self.drop_control_columns,
+            )
+            factor_frame = standardized.loc[:, factor_columns]
+            preselected, preselection_params = _preselect_columns(
+                factor_frame,
+                y_values,
+                method=self.preselect,
+                t_threshold=self.t_threshold,
+                elastic_net_alpha=self.elastic_net_alpha,
+                elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                elastic_net_search=self.elastic_net_search,
+                random_state=self.random_state,
+            )
+            self.preselection_params_ = preselection_params
+            factor_frame = factor_frame.loc[:, preselected]
+        else:
+            y_raw_values = target.to_numpy(dtype=float)
+            factor_columns = _factor_columns(
+                frame.columns,
+                self.control_columns,
+                drop_controls=self.drop_control_columns,
+            )
+            raw_factor_frame = frame.loc[:, factor_columns]
+            preselected, preselection_params = _preselect_columns(
+                raw_factor_frame,
+                y_raw_values,
+                method=self.preselect,
+                t_threshold=self.t_threshold,
+                elastic_net_alpha=self.elastic_net_alpha,
+                elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                elastic_net_search=self.elastic_net_search,
+                random_state=self.random_state,
+            )
+            self.preselection_params_ = preselection_params
+            model_columns = _model_used_columns(
+                frame.columns,
+                self.control_columns,
+                preselected,
+            )
+            model_frame = frame.loc[:, model_columns]
+            y_values = y_raw_values.copy()
+            if self.scale:
+                self.x_mean_ = model_frame.mean(axis=0)
+                self.x_scale_ = _safe_series_scale(model_frame.std(axis=0, ddof=1))
+                x_values = ((model_frame - self.x_mean_) / self.x_scale_).to_numpy(
+                    dtype=float
+                )
+                self.y_mean_ = float(np.nanmean(y_values))
+                y_std = float(np.nanstd(y_values, ddof=1))
+                self.y_scale_ = y_std if np.isfinite(y_std) and y_std > 1e-12 else 1.0
+                y_values = (y_values - self.y_mean_) / self.y_scale_
+            else:
+                self.x_mean_ = pd.Series(0.0, index=model_frame.columns)
+                self.x_scale_ = pd.Series(1.0, index=model_frame.columns)
+                self.y_mean_ = 0.0
+                self.y_scale_ = 1.0
+                x_values = model_frame.to_numpy(dtype=float)
+
+            standardized = pd.DataFrame(x_values, index=frame.index, columns=model_frame.columns)
+            control_frame = _control_matrix(
+                standardized,
+                self.control_columns,
+                include_constant=self.include_constant,
+            )
+            self.control_names_ = tuple(str(column) for column in control_frame.columns)
+            factor_frame = standardized.loc[:, preselected]
         if factor_frame.empty:
             raise ValueError("supervised_pca selected no predictors")
 
@@ -1788,6 +2203,78 @@ class SupervisedPCARegressor:
         control_part = control_values @ self.control_coef_ if control_values.size else 0.0
         y_scaled = np.asarray(factor_part + control_part, dtype=float)
         return y_scaled * self.y_scale_ + self.y_mean_
+
+    @classmethod
+    def fit_prefix(
+        cls,
+        X: pd.DataFrame,
+        y: pd.Series,
+        k_values: Sequence[int],
+        **params: Any,
+    ) -> dict[int, ModelFit]:
+        """Fit once at ``max(k_values)`` and derive every smaller-K prediction view.
+
+        This is purely additive. It reuses the untouched ``fit()``/``predict()``
+        recursion and only slices the K-dependent fitted arrays. It exists to let
+        the model-selection grouped evaluator avoid one refit per (K, other-params)
+        candidate. ``predict()`` on the returned ``ModelFit`` objects is byte-for-
+        byte identical to a standalone ``cls(n_components=k, **params).fit(...).
+        predict(...)`` call, because no new arithmetic is introduced here.
+        """
+
+        k_values_unique = sorted({int(k) for k in k_values})
+        if not k_values_unique:
+            return {}
+        k_max = k_values_unique[-1]
+
+        frame, target = resolve_xy(X, y)
+        base = cls(n_components=k_max, **params)
+        base.fit(frame, target)
+
+        feature_names = tuple(str(c) for c in frame.columns)
+        target_name = str(target.name) if target.name is not None else None
+        n_features = len(base.factor_features_)
+        n_samples = len(frame)
+
+        assert base.loadings_ is not None
+        assert base.factor_coefs_ is not None
+        assert base.factor_square_coefs_ is not None
+
+        views: dict[int, ModelFit] = {}
+        for k in k_values_unique:
+            effective_k = min(max(1, k), n_features, n_samples)
+            # active(K) = min(active(K_max), K): the greedy component recursion in
+            # `_extract_supervised_components` computes each component independent
+            # of the loop bound, so a prefix of `base`'s fitted arrays is exactly
+            # what a standalone K-fit would produce (including its early `break`
+            # on `denom <= 1e-12` and the resulting active-component count).
+            active_k = min(base.n_components_, effective_k)
+            view = cls(n_components=k, **params)
+            view.x_mean_ = base.x_mean_
+            view.x_scale_ = base.x_scale_
+            view.y_mean_ = base.y_mean_
+            view.y_scale_ = base.y_scale_
+            view.control_coef_ = base.control_coef_
+            view.control_names_ = base.control_names_
+            view.factor_features_ = base.factor_features_
+            view.selected_features_ = base.selected_features_
+            view.scaling_slopes_ = base.scaling_slopes_
+            view.screening_scores_ = base.screening_scores_
+            view.preselection_params_ = base.preselection_params_
+            view.n_components_ = active_k
+            view.loadings_ = base.loadings_[:active_k]
+            view.factor_coefs_ = base.factor_coefs_[:active_k]
+            view.factor_square_coefs_ = base.factor_square_coefs_[:active_k]
+            view.component_selected_features_ = base.component_selected_features_[:active_k]
+            views[k] = ModelFit(
+                estimator=view,
+                model=type(base).__name__.lower(),
+                feature_names=feature_names,
+                target_name=target_name,
+                metadata={},
+                diagnostics={},
+            )
+        return views
 
 
 class SupervisedScaledPCARegressor(SupervisedPCARegressor):
@@ -1907,6 +2394,36 @@ def _normalize_preselect(value: str) -> str:
     return aliases[key]
 
 
+_PRESELECT_STAGES = ("after_standardize", "raw_before_standardize")
+
+
+def _normalize_preselect_stage(value: str) -> str:
+    key = str(value)
+    if key not in _PRESELECT_STAGES:
+        allowed = ", ".join(_PRESELECT_STAGES)
+        raise ValueError(f"preselect_stage must be one of: {allowed}")
+    return key
+
+
+def _model_used_columns(
+    columns: pd.Index,
+    controls: tuple[str, ...],
+    selected_factors: Sequence[str],
+) -> list[str]:
+    control_set = set(controls)
+    factor_set = set(selected_factors)
+    out: list[str] = []
+    seen: set[str] = set()
+    for column in columns:
+        name = str(column)
+        if name in seen:
+            continue
+        if name in control_set or name in factor_set:
+            out.append(name)
+            seen.add(name)
+    return out
+
+
 def _factor_columns(
     columns: pd.Index,
     controls: tuple[str, ...],
@@ -1959,7 +2476,9 @@ def _winsorize(values: np.ndarray, percentiles: tuple[float, float]) -> np.ndarr
     low, high = (float(percentiles[0]), float(percentiles[1]))
     if low < 0 or high > 100 or low > high:
         raise ValueError("winsorize_slopes must contain percentiles between 0 and 100")
-    lower, upper = np.nanpercentile(values, [low, high])
+    bounds = np.asarray(np.nanpercentile(values, [low, high]), dtype=float)
+    lower = float(bounds[0])
+    upper = float(bounds[1])
     return np.clip(values, lower, upper)
 
 
@@ -1987,26 +2506,65 @@ def _preselect_columns(
     t_threshold: float,
     elastic_net_alpha: float,
     elastic_net_l1_ratio: float,
+    elastic_net_search: Any | None,
     random_state: int,
-) -> list[str]:
+) -> tuple[list[str], dict[str, Any]]:
     if method == "none":
-        return [str(column) for column in X.columns]
+        return [str(column) for column in X.columns], {"method": "none"}
     values = X.to_numpy(dtype=float)
     if method == "hard_tstat":
         keep = np.abs(_marginal_t_stats(values, y)) > t_threshold
+        metadata = {"method": "hard_tstat", "t_threshold": float(t_threshold)}
     else:
         from sklearn.linear_model import ElasticNet
 
+        alpha = float(elastic_net_alpha)
+        l1_ratio = float(elastic_net_l1_ratio)
+        metadata = {
+            "method": "elastic_net",
+            "alpha": alpha,
+            "l1_ratio": l1_ratio,
+            "random_state": int(random_state),
+        }
+        if elastic_net_search is not None:
+            from macroforecast.feature_engineering._sparse_ic import (
+                select_sparse_ic_params,
+                sparse_ic_metadata,
+            )
+
+            result = select_sparse_ic_params(
+                "elastic_net",
+                X,
+                pd.Series(y, index=X.index, name="target"),
+                elastic_net_search,
+                allowed_params={"alpha", "l1_ratio"},
+                fixed_params={
+                    "max_iter": 20000,
+                    "random_state": int(random_state),
+                    "l1_ratio": l1_ratio,
+                },
+            )
+            selected = dict(result.best_params)
+            alpha = float(selected["alpha"])
+            if "l1_ratio" in selected:
+                l1_ratio = float(selected["l1_ratio"])
+            metadata.update(
+                {
+                    "alpha": alpha,
+                    "l1_ratio": l1_ratio,
+                    "lambda_selection": sparse_ic_metadata(result),
+                }
+            )
         model = ElasticNet(
-            alpha=elastic_net_alpha,
-            l1_ratio=elastic_net_l1_ratio,
+            alpha=alpha,
+            l1_ratio=l1_ratio,
             max_iter=20000,
             random_state=random_state,
         )
         model.fit(values, y)
         keep = np.abs(np.asarray(model.coef_, dtype=float)) > 1e-12
     columns = [str(column) for column, use in zip(X.columns, keep, strict=True) if bool(use)]
-    return columns or [str(column) for column in X.columns]
+    return columns or [str(column) for column in X.columns], metadata
 
 
 def _marginal_t_stats(X: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -2106,9 +2664,11 @@ def supervised_pca(
     include_constant: bool = True,
     drop_control_columns: bool = True,
     preselect: str = "none",
+    preselect_stage: str = "after_standardize",
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    elastic_net_search: Any | None = None,
     quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
@@ -2123,12 +2683,15 @@ def supervised_pca(
         "include_constant": bool(include_constant),
         "drop_control_columns": bool(drop_control_columns),
         "preselect": _normalize_preselect(preselect),
+        "preselect_stage": _normalize_preselect_stage(preselect_stage),
         "t_threshold": float(t_threshold),
         "elastic_net_alpha": float(elastic_net_alpha),
         "elastic_net_l1_ratio": float(elastic_net_l1_ratio),
         "quadratic_factors": bool(quadratic_factors),
         "random_state": int(random_state),
     }
+    if elastic_net_search is not None:
+        params["elastic_net_search"] = elastic_net_search
     return fit_estimator(
         SupervisedPCARegressor(
             n_components=int(n_components),
@@ -2139,9 +2702,11 @@ def supervised_pca(
             include_constant=bool(include_constant),
             drop_control_columns=bool(drop_control_columns),
             preselect=preselect,
+            preselect_stage=preselect_stage,
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            elastic_net_search=elastic_net_search,
             quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),
@@ -2150,6 +2715,58 @@ def supervised_pca(
         model="supervised_pca",
         metadata=params,
     )
+
+
+def pcr(
+    X: Any,
+    y: Any | None = None,
+    *,
+    n_components: int = 3,
+    control_columns: Sequence[str] | None = None,
+    include_constant: bool = True,
+    drop_control_columns: bool = True,
+    standardize: bool = True,
+    standardize_ddof: int = 1,
+    nan_policy: Literal["raise", "zero_after_standardize", "fill_zero"] = "raise",
+    quadratic_factors: bool = False,
+    quadratic_mode: Literal["separate", "joint"] = "separate",
+) -> ModelFit:
+    """Fit principal component regression with optional control residualization."""
+
+    params: dict[str, Any] = {
+        "n_components": max(1, int(n_components)),
+        "requested_n_components": max(1, int(n_components)),
+        "resolved_n_components": max(1, int(n_components)),
+        "control_columns": tuple(str(column) for column in (control_columns or ())),
+        "include_constant": bool(include_constant),
+        "drop_control_columns": bool(drop_control_columns),
+        "standardize": bool(standardize),
+        "standardize_ddof": int(standardize_ddof),
+        "nan_policy": nan_policy,
+        "quadratic_factors": bool(quadratic_factors),
+        "quadratic_mode": quadratic_mode,
+        "backend": "numpy.linalg.svd + pseudoinverse linear heads",
+    }
+    estimator = PCRRegressor(
+        n_components=int(n_components),
+        control_columns=control_columns,
+        include_constant=bool(include_constant),
+        drop_control_columns=bool(drop_control_columns),
+        standardize=bool(standardize),
+        standardize_ddof=int(standardize_ddof),
+        nan_policy=nan_policy,
+        quadratic_factors=bool(quadratic_factors),
+        quadratic_mode=quadratic_mode,
+    )
+    fit = fit_estimator(estimator, X, y, model="pcr", metadata=params)
+    fit.metadata.update(
+        {
+            "n_components": estimator.n_components_,
+            "requested_n_components": estimator.requested_n_components_,
+            "resolved_n_components": estimator.n_components_,
+        }
+    )
+    return fit
 
 
 def scaled_pca(
@@ -2205,9 +2822,11 @@ def supervised_scaled_pca(
     include_constant: bool = True,
     drop_control_columns: bool = True,
     preselect: str = "none",
+    preselect_stage: str = "after_standardize",
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    elastic_net_search: Any | None = None,
     quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
@@ -2222,6 +2841,7 @@ def supervised_scaled_pca(
         "include_constant": bool(include_constant),
         "drop_control_columns": bool(drop_control_columns),
         "preselect": _normalize_preselect(preselect),
+        "preselect_stage": _normalize_preselect_stage(preselect_stage),
         "t_threshold": float(t_threshold),
         "elastic_net_alpha": float(elastic_net_alpha),
         "elastic_net_l1_ratio": float(elastic_net_l1_ratio),
@@ -2229,6 +2849,8 @@ def supervised_scaled_pca(
         "random_state": int(random_state),
         "source": "Hounyo and Li IJF 2026 SsPCA MATLAB reproducibility package",
     }
+    if elastic_net_search is not None:
+        params["elastic_net_search"] = elastic_net_search
     return fit_estimator(
         SupervisedScaledPCARegressor(
             n_components=int(n_components),
@@ -2239,9 +2861,11 @@ def supervised_scaled_pca(
             include_constant=bool(include_constant),
             drop_control_columns=bool(drop_control_columns),
             preselect=preselect,
+            preselect_stage=preselect_stage,
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            elastic_net_search=elastic_net_search,
             quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),
@@ -2253,6 +2877,7 @@ def supervised_scaled_pca(
 
 
 __all__ = [
+    "PCRRegressor",
     "ScaledPCARegressor",
     "SupervisedPCARegressor",
     "SupervisedScaledPCARegressor",
@@ -2268,6 +2893,7 @@ __all__ = [
     "nonneg_ridge",
     "ols",
     "pls",
+    "pcr",
     "random_walk_ridge",
     "ridge",
     "scaled_pca",

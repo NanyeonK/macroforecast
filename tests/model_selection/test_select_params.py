@@ -209,6 +209,125 @@ def test_select_params_supports_custom_metric_and_maximize() -> None:
     assert result.trials["score"].max() == 3.0
 
 
+class _PredictionColumnFit:
+    def __init__(self, scale: float) -> None:
+        self.scale = float(scale)
+
+    def predict(self, X: pd.DataFrame) -> pd.Series:
+        return pd.Series(
+            self.scale * X["prediction"].to_numpy(dtype=float),
+            index=X.index,
+            name="prediction",
+        )
+
+
+def _prediction_column_model(
+    X: pd.DataFrame,
+    y: pd.Series,
+    *,
+    scale: float = 1.0,
+) -> _PredictionColumnFit:
+    return _PredictionColumnFit(scale)
+
+
+def _unequal_expanding_fold_data() -> tuple[pd.DataFrame, pd.Series]:
+    index = pd.RangeIndex(9)
+    X = pd.DataFrame(
+        {"prediction": [0.0, 0.0, 0.0, 0.0, 10.0, 1.0, 1.0, 1.0, 1.0]},
+        index=index,
+    )
+    y = pd.Series(np.zeros(len(index)), index=index, name="target")
+    return X, y
+
+
+def test_score_aggregation_mean_fold_pools_emitted_splits_by_logical_fold() -> None:
+    X, y = _unequal_expanding_fold_data()
+    search = mf.model_selection.grid(
+        {"scale": [1.0]},
+        validation_splitter=mf.model_selection.explicit_folds(
+            [3, 5, 9],
+            within_fold="expanding",
+        ),
+        score_aggregation="mean_fold",
+    )
+
+    result = mf.model_selection.select_params(
+        _prediction_column_model,
+        X,
+        y,
+        search,
+    )
+    override_result = mf.model_selection.select_params(
+        _prediction_column_model,
+        X,
+        y,
+        mf.model_selection.grid(
+            {"scale": [1.0]},
+            validation_splitter=mf.model_selection.explicit_folds(
+                [3, 5, 9],
+                within_fold="expanding",
+            ),
+            score_aggregation="mean_split",
+        ),
+        score_aggregation="mean_fold",
+    )
+
+    assert result.best_score == pytest.approx(25.5)
+    assert override_result.best_score == pytest.approx(result.best_score)
+    assert result.trials.loc[0, "score"] == pytest.approx(25.5)
+    assert result.trials.loc[0, "n_splits"] == 6
+    assert result.metadata["score_aggregation"] == "mean_fold"
+    assert search.to_metadata()["score_aggregation"] == "mean_fold"
+
+
+def test_score_aggregation_default_mean_split_is_unchanged() -> None:
+    X, y = _unequal_expanding_fold_data()
+    search = mf.model_selection.grid(
+        {"scale": [1.0]},
+        validation_splitter=mf.model_selection.explicit_folds(
+            [3, 5, 9],
+            within_fold="expanding",
+        ),
+    )
+
+    default = mf.model_selection.select_params(_prediction_column_model, X, y, search)
+    explicit_default = mf.model_selection.select_params(
+        _prediction_column_model,
+        X,
+        y,
+        search,
+        score_aggregation="mean_split",
+    )
+
+    pd.testing.assert_frame_equal(default.trials, explicit_default.trials)
+    assert default.best_score == pytest.approx(104.0 / 6.0)
+    assert explicit_default.best_score == pytest.approx(default.best_score)
+    assert default.trials.columns.tolist() == [
+        "trial",
+        "scale",
+        "score",
+        "n_splits",
+        "status",
+        "error",
+    ]
+    assert "score_aggregation" not in default.metadata
+    assert "score_aggregation" not in search.to_metadata()
+    assert "score_aggregation" not in search.to_dict()
+
+
+def test_score_aggregation_validates_inputs() -> None:
+    X, y = xy()
+
+    with pytest.raises(ValueError, match="score_aggregation"):
+        mf.model_selection.select_params(
+            _prediction_column_model,
+            X,
+            y,
+            mf.model_selection.grid({"scale": [1.0]}),
+            score_aggregation="mean_observation",
+        )
+
+
 def test_select_params_aligns_array_predictions_to_validation_index() -> None:
     X, y = xy()
 

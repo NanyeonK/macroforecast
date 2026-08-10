@@ -1476,6 +1476,7 @@ class MacroRandomForestRegressor:
         print_b: bool = False,
         parallelise: bool = False,
         n_cores: int = 1,
+        random_state: int | None = None,
         **kwargs: Any,
     ) -> None:
         if int(y_pos) != 0:
@@ -1483,6 +1484,14 @@ class MacroRandomForestRegressor:
                 "macro_random_forest receives target values through y, so y_pos "
                 "must be 0. Use x_columns/S_columns or x_pos/S_pos to select "
                 "feature roles."
+            )
+        if bool(VI):
+            raise NotImplementedError(
+                "variable importance (VI=True) is not available: the vendored "
+                "MacroRandomForest backend stubs the permutation-shuffled betas to "
+                "zeros and never computes impZ/VI_poos, so any importance it "
+                "returned would be identically zero. The time-varying coefficients "
+                "(GTVP) are fully computed and reachable via .gtvp() after predict()."
             )
         if x_columns is not None and x_pos is not None:
             raise ValueError("Use either x_columns or x_pos, not both.")
@@ -1524,6 +1533,7 @@ class MacroRandomForestRegressor:
             "print_b": bool(print_b),
             "parallelise": bool(parallelise),
             "n_cores": int(n_cores),
+            "random_state": None if random_state is None else int(random_state),
             **kwargs,
         }
         self._train_X: pd.DataFrame | None = None
@@ -1533,11 +1543,12 @@ class MacroRandomForestRegressor:
         self.model_: Any = None
         self._prediction_cache_key: tuple[Any, ...] | None = None
         self._prediction_cache_values: np.ndarray | None = None
+        self._gtvp_index: list[Any] | None = None
+        self.degenerate_tree_predictions_: int = 0
 
     @staticmethod
     def _import_external():
         optional_import("joblib", extra="macro_random_forest")
-        optional_import("matplotlib", extra="macro_random_forest")
         from macroforecast.models._mrf_reference import MacroRandomForest
 
         return MacroRandomForest
@@ -1602,7 +1613,23 @@ class MacroRandomForestRegressor:
                 "MacroRandomForest backend failed while running _ensemble_loop(). "
                 "Check x_columns/S_columns and sample size."
             ) from exc
-        values = self._prediction_values(self.output_, len(test_X))
+        self._gtvp_index = list(train_X.index) + list(test_X.index)
+        values = self._prediction_values(
+            self.output_, len(test_X), int(self.params["B"])
+        )
+        self.degenerate_tree_predictions_ = self._degenerate_tree_count(
+            self.output_, len(test_X)
+        )
+        if self.degenerate_tree_predictions_:
+            warnings.warn(
+                f"macro_random_forest: {self.degenerate_tree_predictions_} of "
+                f"{self.params['B'] * len(test_X)} per-tree forecasts were NaN and "
+                "were skipped when averaging the ensemble. This happens on small, "
+                "collinear, trend-dominated state sets; the remaining trees still "
+                "produce a valid forecast, but treat those rows with care.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         self._prediction_cache_key = cache_key
         self._prediction_cache_values = values.copy()
         return values
@@ -1637,7 +1664,9 @@ class MacroRandomForestRegressor:
         return [int(feature_index.get_loc(column)) + 1 for column in columns]
 
     @staticmethod
-    def _prediction_values(output: dict[str, Any], n: int) -> np.ndarray:
+    def _prediction_values(
+        output: dict[str, Any], n: int, n_trees: int | None = None
+    ) -> np.ndarray:
         # Python backend output uses `pred_ensemble`/`S_names`; the R prototype
         # reports analogous fields as `pred.ensemble`/`S.names`. Since this
         # adapter calls the Python backend, only Python keys are accepted here.
@@ -1655,12 +1684,31 @@ class MacroRandomForestRegressor:
         else:
             arr = np.asarray(values, dtype=float)
         if arr.ndim == 2:
-            if arr.shape[0] == n:
-                arr = arr.reshape(-1) if arr.shape[1] == 1 else arr.mean(axis=1)
-            elif arr.shape[1] == n:
-                arr = arr.mean(axis=0)
-            else:
-                arr = arr.reshape(-1)
+            # `pred_ensemble` is the raw per-tree committee, so this reduction IS
+            # the ensemble average. It must skip trees that returned NaN for a
+            # row: the backend's own ensemble output (`pred`) is
+            # `pd.DataFrame(committee).mean(axis=0)`, which is nan-skipping, and
+            # the R prototype averages the same way. Using a nan-propagating mean
+            # here let a single degenerate tree out of B destroy the forecast for
+            # that row -- and therefore any RMSE computed from it. With no NaNs
+            # present this is identical to the previous plain mean.
+            with warnings.catch_warnings():
+                # an all-NaN row is genuinely undefined and stays NaN; it is
+                # counted and reported by _degenerate_tree_count instead.
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                if n_trees is not None and arr.shape == (n_trees, n):
+                    # The committee is always (B, n_oos). Resolving the axis from
+                    # shape alone silently picks the wrong one when B == n_oos --
+                    # averaging across forecast dates instead of across trees --
+                    # and B=25 is the package default, so that collision is
+                    # reachable. Prefer the known tree count.
+                    arr = np.nanmean(arr, axis=0)
+                elif arr.shape[0] == n:
+                    arr = arr.reshape(-1) if arr.shape[1] == 1 else np.nanmean(arr, axis=1)
+                elif arr.shape[1] == n:
+                    arr = np.nanmean(arr, axis=0)
+                else:
+                    arr = arr.reshape(-1)
         out = np.asarray(arr, dtype=float).reshape(-1)
         if len(out) < n:
             raise RuntimeError(
@@ -1680,6 +1728,72 @@ class MacroRandomForestRegressor:
             tuple(str(column) for column in X.columns),
             X.shape,
             value_hash,
+        )
+
+    @staticmethod
+    def _degenerate_tree_count(output: dict[str, Any], n: int) -> int:
+        """How many individual tree forecasts came back NaN.
+
+        The vendored backend can return NaN from a single tree on a degenerate
+        state (small, collinear, trend-dominated `S_t`) without raising. Those
+        trees are skipped when averaging; this reports how many there were so the
+        condition is visible rather than silent.
+        """
+        values = output.get("pred_ensemble")
+        if values is None:
+            return 0
+        arr = (
+            values.to_numpy(dtype=float)
+            if isinstance(values, (pd.Series, pd.DataFrame))
+            else np.asarray(values, dtype=float)
+        )
+        if arr.ndim != 2 or n == 0:
+            return 0
+        return int(np.isnan(arr).sum())
+
+    def gtvp(self) -> pd.DataFrame:
+        """Generalized time-varying parameters -- the paper's headline output.
+
+        Returns the out-of-bag-averaged time-varying linear coefficients
+        ``beta_t``, one row per time index (training rows followed by the most
+        recent prediction rows). Columns are the auto-intercept followed by the
+        linear part (``x_columns``); for an intercept-only fit (``X_t = iota``)
+        the single column is the intercept -- the plain-RF conditional-mean path.
+
+        Requires ``predict`` to have run: the betas are produced by the MRF
+        ensemble fit inside ``predict``.
+        """
+        if self.output_ is None or self.output_.get("betas") is None:
+            raise RuntimeError(
+                "Call predict(...) before gtvp(): the time-varying betas are "
+                "produced by the MRF ensemble fit."
+            )
+        betas = np.asarray(self.output_["betas"], dtype=float)
+        if betas.ndim != 2:
+            betas = betas.reshape(len(betas), -1)
+        if self.x_columns is not None:
+            names = list(self.x_columns)
+        elif self.x_pos is not None:
+            names = [self._feature_names[int(pos) - 1] for pos in self.x_pos]
+        else:
+            names = list(self._feature_names)
+        labels = (["intercept"] + names)[: betas.shape[1]]
+        if len(labels) < betas.shape[1]:
+            labels += [f"beta{i}" for i in range(len(labels), betas.shape[1])]
+        index = self._gtvp_index
+        if index is not None and len(index) == betas.shape[0]:
+            return pd.DataFrame(betas, index=pd.Index(index), columns=labels)
+        return pd.DataFrame(betas, columns=labels)
+
+    def variable_importance(self) -> "pd.Series":
+        """Not available: the vendored backend does not compute variable
+        importance (the shuffled-beta machinery is stubbed to zeros). Use
+        :meth:`gtvp` for the time-varying coefficients instead.
+        """
+        raise NotImplementedError(
+            "variable importance is not implemented in the vendored "
+            "MacroRandomForest backend (permutation-shuffled betas are stubbed to "
+            "zeros). GTVP is available via .gtvp()."
         )
 
 
@@ -1718,6 +1832,7 @@ def macro_random_forest(
     print_b: bool = False,
     parallelise: bool = False,
     n_cores: int = 1,
+    random_state: int | None = None,
     **kwargs: Any,
 ) -> ModelFit:
     """Fit Macroeconomic Random Forest with the vendored reference backend.
@@ -1758,6 +1873,7 @@ def macro_random_forest(
         "print_b": bool(print_b),
         "parallelise": bool(parallelise),
         "n_cores": int(n_cores),
+        "random_state": None if random_state is None else int(random_state),
         **kwargs,
     }
     estimator = MacroRandomForestRegressor(**params)

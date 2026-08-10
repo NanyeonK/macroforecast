@@ -36,7 +36,7 @@ from macroforecast.forecasting.selection_stage import _selection_for_model
 
 
 def forecast_panel_origin(
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     *,
     fit_panel: pd.DataFrame,
     test_panel: pd.DataFrame,

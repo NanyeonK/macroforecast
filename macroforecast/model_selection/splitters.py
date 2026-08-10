@@ -45,6 +45,19 @@ def resolve_validation_splitter(
 ) -> tuple[list[Split], str, dict[str, Any]]:
     """Resolve a validation-splitter override against an index."""
 
+    splits, name, metadata, _ = _resolve_validation_splitter_with_fold_ids(
+        index,
+        splitter,
+    )
+    return splits, name, metadata
+
+
+def _resolve_validation_splitter_with_fold_ids(
+    index: pd.Index,
+    splitter: ValidationSplitterLike,
+) -> tuple[list[Split], str, dict[str, Any], list[int]]:
+    """Resolve a validation splitter and logical fold IDs."""
+
     labels = pd.Index(index)
     if callable(splitter) and not isinstance(splitter, ValidationSplitterSpec):
         splits = _normalize_callable_splits(splitter(labels), labels)
@@ -55,7 +68,7 @@ def resolve_validation_splitter(
             "window": None,
             "temporal_order": _splits_are_temporal(splits),
         }
-        return splits, name, metadata
+        return splits, name, metadata, list(range(len(splits)))
 
     spec = (
         ValidationSplitterSpec(method=splitter)
@@ -63,16 +76,22 @@ def resolve_validation_splitter(
         else splitter
     )
     if spec.method == "explicit_folds":
-        splits = _explicit_fold_splits(labels, spec.explicit_folds, spec.within_fold)
+        splits, fold_ids = _explicit_fold_splits_with_fold_ids(
+            labels,
+            spec.explicit_folds,
+            spec.within_fold,
+        )
         name = "explicit_folds"
         temporal = True
     elif spec.method == "recursive_threefold":
         splits = _recursive_threefold_splits(labels)
+        fold_ids = list(range(len(splits)))
         name = "recursive_threefold"
         temporal = True
     else:
         method = normalize_window_name(spec.method)
         splits = make_splitter(method, len(labels), **dict(spec.params))
+        fold_ids = list(range(len(splits)))
         name = method
         temporal = method != "random_kfold"
     metadata = {
@@ -81,7 +100,7 @@ def resolve_validation_splitter(
         "window": None,
         "temporal_order": temporal,
     }
-    return splits, name, metadata
+    return splits, name, metadata, fold_ids
 
 
 def _coerce_within_fold(value: str) -> WithinFoldMode:
@@ -96,23 +115,35 @@ def _explicit_fold_splits(
     boundaries: Sequence[Any],
     within_fold: str,
 ) -> list[Split]:
+    splits, _ = _explicit_fold_splits_with_fold_ids(index, boundaries, within_fold)
+    return splits
+
+
+def _explicit_fold_splits_with_fold_ids(
+    index: pd.Index,
+    boundaries: Sequence[Any],
+    within_fold: str,
+) -> tuple[list[Split], list[int]]:
     positions = _boundary_positions(index, boundaries)
     splits: list[Split] = []
-    for start, end in zip(positions[:-1], positions[1:], strict=True):
+    fold_ids: list[int] = []
+    for fold_id, (start, end) in enumerate(zip(positions[:-1], positions[1:], strict=True)):
         if within_fold == "fixed":
             splits.append((
                 np.arange(start, dtype=int),
                 np.arange(start, end, dtype=int),
             ))
+            fold_ids.append(fold_id)
         else:
             for val_pos in range(start, end):
                 splits.append((
                     np.arange(val_pos, dtype=int),
                     np.asarray([val_pos], dtype=int),
                 ))
+                fold_ids.append(fold_id)
     if not splits:
         raise ValueError("explicit_folds produced no validation splits")
-    return splits
+    return splits, fold_ids
 
 
 def _recursive_threefold_splits(index: pd.Index) -> list[Split]:

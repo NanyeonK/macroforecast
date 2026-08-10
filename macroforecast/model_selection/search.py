@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 
 from collections.abc import Callable, Sequence
 from dataclasses import replace
@@ -33,18 +34,27 @@ from macroforecast.model_selection.builders import (
 from macroforecast.model_selection.optimizers import run_bayesian, run_genetic
 from macroforecast.model_selection.runner import (
     evaluate_candidate,
+    evaluate_candidate_group,
     parameter_columns,
     trial_frame,
 )
-from macroforecast.model_selection.splitters import resolve_validation_splitter
+from macroforecast.model_selection.splitters import _resolve_validation_splitter_with_fold_ids
 from macroforecast.model_selection.types import (
+    ScoreAggregation,
     SearchError,
     SearchResult,
     SearchSpec,
     SearchTrial,
+    _normalize_score_aggregation,
 )
-from macroforecast.models.specs import ModelSpec, get_model
-from macroforecast.models.utils import align_xy, as_frame, as_series, resolve_xy
+from macroforecast.models.specs import ModelSpec, PrefixSearchSpec, get_model
+from macroforecast.models.utils import (
+    SPARSE_N_PARAMS_CONVENTION,
+    align_xy,
+    as_frame,
+    as_series,
+    resolve_xy,
+)
 from macroforecast.window import Split, WindowSpec, resolve_window
 
 
@@ -67,6 +77,7 @@ def select_params(
     generations: int | None = None,
     mutation_rate: float | None = None,
     allow_non_temporal_splits: bool = False,
+    score_aggregation: ScoreAggregation | None = None,
 ) -> SearchResult:
     """Select model parameters by temporal validation.
 
@@ -106,6 +117,15 @@ def select_params(
         else fixed(random_state=random_state)
     )
     spec = _prepare_search_spec(spec)
+    score_aggregation_value = _resolve_score_aggregation(
+        score_aggregation,
+        spec.score_aggregation,
+    )
+    if score_aggregation_value != spec.score_aggregation:
+        spec = replace(spec, score_aggregation=score_aggregation_value)
+    # Bound on every path: only the grid branch fills this, and the edge check
+    # below reads it for all of them.
+    candidates: list[dict[str, Any]] = []
     if spec.method == "information_criterion":
         return select_by_information_criterion(
             model,
@@ -117,7 +137,7 @@ def select_params(
             preset=preset,
         )
     metric_fn = get_metric(metric)
-    validation_splits, split_name, split_metadata = _resolve_selection_splits(
+    validation_splits, split_name, split_metadata, fold_ids = _resolve_selection_splits(
         frame.index,
         window=window,
         splits=splits,
@@ -139,6 +159,8 @@ def select_params(
             base_params,
             rng,
             maximize=maximize,
+            fold_ids=fold_ids,
+            score_aggregation=score_aggregation_value,
         )
     elif spec.method == "bayesian":
         rows, runtime_metadata = run_bayesian(
@@ -151,6 +173,8 @@ def select_params(
             base_params,
             rng,
             maximize=maximize,
+            fold_ids=fold_ids,
+            score_aggregation=score_aggregation_value,
         )
     elif spec.method == "custom":
         rows, runtime_metadata = _run_custom_search(
@@ -163,22 +187,40 @@ def select_params(
             base_params,
             rng,
             maximize=maximize,
+            fold_ids=fold_ids,
+            score_aggregation=score_aggregation_value,
         )
     else:
         candidates = _candidates(spec, rng)
-        rows = [
-            evaluate_candidate(
-                fit_model,
+        prefix_search = getattr(model_spec, "prefix_search", None) if model_spec is not None else None
+        if prefix_search is not None and _all_candidates_have_key(candidates, prefix_search.param):
+            rows = _evaluate_grid_with_prefix_groups(
+                prefix_search,
                 frame,
                 target,
                 validation_splits,
                 metric_fn,
                 base_params,
-                params,
-                i,
+                candidates,
+                fold_ids=fold_ids,
+                score_aggregation=score_aggregation_value,
             )
-            for i, params in enumerate(candidates)
-        ]
+        else:
+            rows = [
+                evaluate_candidate(
+                    fit_model,
+                    frame,
+                    target,
+                    validation_splits,
+                    metric_fn,
+                    base_params,
+                    params,
+                    i,
+                    fold_ids=fold_ids,
+                    score_aggregation=score_aggregation_value,
+                )
+                for i, params in enumerate(candidates)
+            ]
 
     trials = trial_frame(rows)
     ok = trials.loc[trials["status"] == "ok"].copy()
@@ -192,6 +234,18 @@ def select_params(
     successful_rows = {int(row.trial): row for row in rows if row.status == "ok"}
     best_trial = int(best_row["trial"])
     best_params = dict(successful_rows[best_trial].params)
+    edge_hits = _grid_edge_hits(candidates, best_params)
+    for _param, _edge in edge_hits.items():
+        # Deliberately origin-free wording: a recursive search runs this once per origin,
+        # so an origin-specific message would repeat thousands of times. Identical text
+        # lets the warnings filter collapse it to one report per parameter and edge.
+        warnings.warn(
+            f"model selection chose {_param!r} at the {_edge} edge of its search grid; "
+            "the optimum may lie outside the grid. Widen it, or check that the grid is "
+            "on the right scale for these data.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     return SearchResult(
         best_params=best_params,
         best_score=float(best_row["score"]),
@@ -200,15 +254,117 @@ def select_params(
         method=spec.method,
         window=split_name,
         metadata={
+            "grid_edge_hits": edge_hits,
             "n_obs": len(frame),
             "n_splits": len(validation_splits),
             "maximize": maximize,
             **split_metadata,
             **_model_metadata(model_spec),
             **spec.metadata,
+            **_score_aggregation_metadata(score_aggregation_value),
             **runtime_metadata,
         },
     )
+
+
+def _grid_edge_hits(
+    candidates: list[dict[str, Any]], best_params: dict[str, Any]
+) -> dict[str, str]:
+    """Which searched parameters were selected at an edge of their own grid.
+
+    A search that keeps landing on the smallest or largest value it was offered is
+    reporting that the optimum may lie outside the grid -- the usual cause is a grid
+    written on the wrong scale. Silently returning that edge value looks exactly like a
+    genuine interior optimum, so it is recorded here (and warned about once) instead.
+
+    Only parameters with at least two distinct comparable values are considered; a
+    single-valued (fixed) parameter has no edge to speak of.
+    """
+    hits: dict[str, str] = {}
+    if not candidates or not best_params:
+        return hits
+    for key, chosen in best_params.items():
+        values = [c[key] for c in candidates if key in c]
+        try:
+            uniq = sorted({float(v) for v in values})
+            chosen_f = float(chosen)
+        except (TypeError, ValueError):
+            continue
+        if len(uniq) < 2:
+            continue
+        if chosen_f <= uniq[0]:
+            hits[str(key)] = "lower"
+        elif chosen_f >= uniq[-1]:
+            hits[str(key)] = "upper"
+    return hits
+
+
+def _all_candidates_have_key(candidates: list[dict[str, Any]], key: str) -> bool:
+    """Gate for the K-prefix grouped path: every candidate must search ``key``."""
+
+    return bool(candidates) and all(key in candidate for candidate in candidates)
+
+
+def _evaluate_grid_with_prefix_groups(
+    prefix_search: PrefixSearchSpec,
+    frame: pd.DataFrame,
+    target: pd.Series,
+    validation_splits: list[Split],
+    metric_fn: Callable[[Any, Any], float],
+    base_params: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    fold_ids: list[int] | None,
+    score_aggregation: ScoreAggregation,
+) -> list[SearchTrial]:
+    """Group candidates identical except ``prefix_search.param`` and evaluate each
+    group with a single shared fit per validation split (see ``evaluate_candidate_group``).
+    Preserves the original ``enumerate(candidates)`` trial ids; grouping only changes
+    which function computes each ``SearchTrial``, never the trial-id/candidate pairing.
+    """
+
+    groups: dict[tuple[Any, ...], list[tuple[int, dict[str, Any]]]] = {}
+    group_order: list[tuple[Any, ...]] = []
+    for trial_id, candidate_params in enumerate(candidates):
+        trial_params = {**base_params, **candidate_params}
+        key = _group_key(trial_params, prefix_search.param)
+        if key not in groups:
+            groups[key] = []
+            group_order.append(key)
+        groups[key].append((trial_id, candidate_params))
+    rows: list[SearchTrial] = []
+    for key in group_order:
+        rows.extend(
+            evaluate_candidate_group(
+                prefix_search,
+                frame,
+                target,
+                validation_splits,
+                metric_fn,
+                base_params,
+                groups[key],
+                fold_ids=fold_ids,
+                score_aggregation=score_aggregation,
+            )
+        )
+    return rows
+
+
+def _group_key(trial_params: dict[str, Any], prefix_param: str) -> tuple[Any, ...]:
+    """Canonical, hashable grouping key: every ``trial_params`` entry except the
+    prefix param, sorted by key. Unhashable values fall back to ``repr()``."""
+
+    items = sorted(
+        (key, value) for key, value in trial_params.items() if key != prefix_param
+    )
+    canonical: list[tuple[Any, Any]] = []
+    for key, value in items:
+        try:
+            hash(value)
+            canonical.append((key, value))
+        except TypeError:
+            canonical.append((key, repr(value)))
+    return tuple(canonical)
 
 
 def _resolve_model(
@@ -341,13 +497,13 @@ def _resolve_selection_splits(
     splits: Sequence[tuple[Any, Any]] | None,
     validation_splitter: Any | None = None,
     allow_non_temporal_splits: bool = False,
-) -> tuple[list[Split], str, dict[str, Any]]:
+) -> tuple[list[Split], str, dict[str, Any], list[int]]:
     n_obs = len(index)
     if splits is not None and window is not None:
         raise ValueError("pass either window or splits, not both")
     if splits is None:
         if validation_splitter is not None:
-            resolved, split_name, metadata = resolve_validation_splitter(
+            resolved, split_name, metadata, fold_ids = _resolve_validation_splitter_with_fold_ids(
                 index,
                 validation_splitter,
             )
@@ -362,6 +518,7 @@ def _resolve_selection_splits(
                 resolved,
                 split_name,
                 {**metadata, "split_summary": _split_summary(resolved)},
+                fold_ids,
             )
         window_spec = resolve_window(window)
         resolved = window_spec.split(n_obs)
@@ -378,6 +535,7 @@ def _resolve_selection_splits(
                 "temporal_order": not allow_non_temporal_splits,
                 "split_summary": _split_summary(resolved),
             },
+            list(range(len(resolved))),
         )
     resolved = _normalize_splits(
         splits,
@@ -393,6 +551,7 @@ def _resolve_selection_splits(
             "temporal_order": not allow_non_temporal_splits,
             "split_summary": _split_summary(resolved),
         },
+        list(range(len(resolved))),
     )
 
 
@@ -489,9 +648,29 @@ def _has_search_overrides(**values: Any) -> bool:
     return any(value is not None for value in values.values())
 
 
+def _resolve_score_aggregation(
+    override: ScoreAggregation | None,
+    spec_value: ScoreAggregation,
+) -> ScoreAggregation:
+    return _normalize_score_aggregation(
+        spec_value if override is None else override
+    )
+
+
+def _score_aggregation_metadata(
+    score_aggregation: ScoreAggregation,
+) -> dict[str, str]:
+    if score_aggregation == "mean_split":
+        return {}
+    return {"score_aggregation": score_aggregation}
+
+
 def _prepare_search_spec(spec: SearchSpec) -> SearchSpec:
     prepared = replace(spec)
     prepared.method = _normalize_method(prepared.method)
+    prepared.score_aggregation = _normalize_score_aggregation(
+        prepared.score_aggregation
+    )
     if prepared.criterion is not None:
         prepared.criterion = str(prepared.criterion).lower()
     prepared.param_grid = {
@@ -568,9 +747,51 @@ def _run_custom_search(
     rng: np.random.Generator,
     *,
     maximize: bool,
+    fold_ids: list[int] | tuple[int, ...] | None = None,
+    score_aggregation: ScoreAggregation = "mean_split",
 ) -> tuple[list[SearchTrial], dict[str, Any]]:
     if spec.custom_func is None:
         raise ValueError("custom search requires custom_func")
+    resolved_fold_ids = tuple(fold_ids or range(len(splits)))
+    default_score_aggregation = score_aggregation
+
+    def evaluate_candidate_with_aggregation(
+        candidate_model: Callable[..., Any],
+        candidate_X: pd.DataFrame,
+        candidate_y: pd.Series,
+        candidate_splits: list[Split],
+        candidate_metric: Callable[[Any, Any], float],
+        candidate_fixed_params: dict[str, Any],
+        candidate_params: dict[str, Any],
+        candidate_trial: int,
+        *,
+        fold_ids: list[int] | tuple[int, ...] | None = None,
+        score_aggregation: ScoreAggregation | None = None,
+    ) -> SearchTrial:
+        candidate_fold_ids = fold_ids
+        if (
+            candidate_fold_ids is None
+            and len(candidate_splits) == len(resolved_fold_ids)
+        ):
+            candidate_fold_ids = resolved_fold_ids
+        candidate_score_aggregation = (
+            default_score_aggregation
+            if score_aggregation is None
+            else score_aggregation
+        )
+        return evaluate_candidate(
+            candidate_model,
+            candidate_X,
+            candidate_y,
+            candidate_splits,
+            candidate_metric,
+            candidate_fixed_params,
+            candidate_params,
+            candidate_trial,
+            fold_ids=candidate_fold_ids,
+            score_aggregation=candidate_score_aggregation,
+        )
+
     output = spec.custom_func(
         model=model,
         X=X,
@@ -581,7 +802,7 @@ def _run_custom_search(
         search=spec,
         rng=rng,
         maximize=maximize,
-        evaluate_candidate=evaluate_candidate,
+        evaluate_candidate=evaluate_candidate_with_aggregation,
         **spec.custom_params,
     )
     runtime_metadata: dict[str, Any] = {}
@@ -683,6 +904,44 @@ def _gaussian_information_criterion(
     raise ValueError("criterion must be one of: aic, aicc, bic")
 
 
+def _sparse_information_criterion(
+    ssr: float, nobs: int, n_params: int, criterion: str
+) -> float:
+    n = int(nobs)
+    k = int(n_params)
+    if n <= 0:
+        raise ValueError("information-criterion scoring requires nobs_ > 0")
+    if ssr <= 0.0:
+        raise ValueError("information-criterion scoring requires SSR > 0")
+    if k < 0:
+        raise ValueError("information-criterion scoring requires n_params_ >= 0")
+    crit = str(criterion).lower()
+    base = n * math.log(ssr / n)
+    if crit == "aic":
+        return base + 2.0 * k
+    if crit == "aicc":
+        denom = n - k - 1
+        if denom <= 0:
+            raise ValueError("AICc requires nobs_ - n_params_ - 1 > 0")
+        return base + 2.0 * k + 2.0 * k * (k + 1) / denom
+    if crit == "bic":
+        return base + k * math.log(n)
+    raise ValueError("criterion must be one of: aic, aicc, bic")
+
+
+def _information_criterion_score(
+    ssr: float,
+    nobs: int,
+    n_params: int,
+    criterion: str,
+    *,
+    score_family: str,
+) -> float:
+    if score_family == "sparse_active_set":
+        return _sparse_information_criterion(ssr, nobs, n_params, criterion)
+    return _gaussian_information_criterion(ssr, nobs, n_params, criterion)
+
+
 def select_by_information_criterion(
     model: "str | Callable[..., Any] | ModelSpec",
     X: Any,
@@ -724,14 +983,21 @@ def select_by_information_criterion(
     for trial, candidate in enumerate(candidates):
         params = {**base_params, **candidate}
         try:
+            _validate_sparse_ic_candidate_params(params)
             fitted = fit_model(frame, target, **params)
-            ssr, nobs, n_params = _ic_inputs(fitted, criterion=criterion_key)
-            score = _gaussian_information_criterion(
-                ssr,
-                int(nobs),
-                int(n_params),
-                criterion_key,
+            ssr, nobs, n_params, score_family = _ic_inputs(
+                fitted,
+                criterion=criterion_key,
             )
+            score = _information_criterion_score(
+                ssr,
+                nobs,
+                n_params,
+                criterion_key,
+                score_family=score_family,
+            )
+            if not np.isfinite(score):
+                raise ValueError("information-criterion score is not finite")
             rows.append({
                 "trial": trial,
                 **candidate,
@@ -778,7 +1044,18 @@ def select_by_information_criterion(
     )
 
 
-def _ic_inputs(fitted: Any, *, criterion: str) -> tuple[float, int, int]:
+def _validate_sparse_ic_candidate_params(params: dict[str, Any]) -> None:
+    if "alpha" in params and float(params["alpha"]) <= 0.0:
+        raise ValueError("information-criterion sparse alpha candidates must be > 0")
+    if "l1_ratio" in params:
+        l1_ratio = float(params["l1_ratio"])
+        if not 0.0 < l1_ratio <= 1.0:
+            raise ValueError(
+                "information-criterion elastic-net l1_ratio candidates must be in (0, 1]"
+            )
+
+
+def _ic_inputs(fitted: Any, *, criterion: str) -> tuple[float, int, int, str]:
     estimator = getattr(fitted, "estimator", fitted)
     ssr = getattr(estimator, "ssr_", None)
     nobs = getattr(estimator, "nobs_", None)
@@ -789,7 +1066,25 @@ def _ic_inputs(fitted: Any, *, criterion: str) -> tuple[float, int, int]:
             f"ssr_, nobs_, and n_params_; {criterion!r} cannot be computed for "
             f"{type(estimator).__name__}"
         )
-    return float(ssr), int(nobs), int(n_params)
+    ssr_value = float(ssr)
+    nobs_value = _coerce_ic_integer(nobs, name="nobs_")
+    n_params_value = _coerce_ic_integer(n_params, name="n_params_")
+    if not np.isfinite(ssr_value) or ssr_value <= 0.0:
+        raise ValueError("information-criterion scoring requires finite SSR > 0")
+    score_family = (
+        "sparse_active_set"
+        if getattr(estimator, "n_params_convention_", None)
+        == SPARSE_N_PARAMS_CONVENTION
+        else "gaussian"
+    )
+    return ssr_value, nobs_value, n_params_value, score_family
+
+
+def _coerce_ic_integer(value: Any, *, name: str) -> int:
+    numeric = float(value)
+    if not np.isfinite(numeric) or not numeric.is_integer():
+        raise ValueError(f"information-criterion scoring requires integer {name}")
+    return int(numeric)
 
 
 def _ic_trial_frame(rows: list[dict[str, Any]]) -> pd.DataFrame:

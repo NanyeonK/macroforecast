@@ -6,8 +6,6 @@ macroforecast/preprocessing/cache.py.
 from __future__ import annotations
 
 import os
-import pickle
-import struct
 from pathlib import Path
 from typing import Any
 
@@ -147,6 +145,37 @@ def test_store_distinguishes_spec_hash(tmp_path: Path) -> None:
     assert store.get(key_b) == "value_b"
     assert store.get(key_c) is None
     assert store.get(key_d) is None
+
+
+def test_store_distinguishes_standardize_scope(tmp_path: Path) -> None:
+    store = PreprocessorStore(tmp_path)
+    fit_window = _make_spec(
+        impute="mean",
+        standardize="zscore",
+        standardize_scope="fit_window",
+    )
+    origin_predictors = _make_spec(
+        impute="mean",
+        standardize="zscore",
+        standardize_scope="origin_available_predictors",
+    )
+
+    assert store.key(fit_window, target="y", origin_pos=10) != store.key(
+        origin_predictors,
+        target="y",
+        origin_pos=10,
+    )
+    assert store.frame_key(
+        fit_window,
+        target="y",
+        cache_key=("origin_pos", 10),
+        kind="prepared_base",
+    ) != store.frame_key(
+        origin_predictors,
+        target="y",
+        cache_key=("origin_pos", 10),
+        kind="prepared_base",
+    )
 
 
 def test_store_uses_mf_digest_for_custom_callable_keys(tmp_path: Path) -> None:

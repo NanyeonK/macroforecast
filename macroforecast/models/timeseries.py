@@ -31,14 +31,18 @@ def _select_lag_columns(X: Any, n_lag: int, target_name: Any = None) -> list[str
     Without a ``target_name`` (or no base matches) every ``*_lag`` column in range is
     used, which is correct when the spec carries only target lags (``predictors=[]``).
     """
-    triples: list[tuple[int, str, str]] = []
+    # Collect EVERY lag column (any index) so the target base can be matched even
+    # when its own lags fall outside [0, n_lag-1]; range restriction happens AFTER
+    # base selection so a target whose lags start at 1 is never silently replaced
+    # by predictors' *_lag0 columns.
+    all_lags: list[tuple[int, str, str]] = []
     for col in pd.DataFrame(X).columns:
         match = _LAG_COL_RE.search(str(col))
-        if match is not None and 0 <= int(match.group(1)) <= int(n_lag) - 1:
+        if match is not None:
             base = str(col)[: match.start()]
-            triples.append((int(match.group(1)), base, str(col)))
+            all_lags.append((int(match.group(1)), base, str(col)))
     if target_name is not None:
-        bases = {base for _, base, _ in triples}
+        bases = {base for _, base, _ in all_lags}
         chosen: str | None = None
         if str(target_name) in bases:
             chosen = str(target_name)
@@ -46,10 +50,20 @@ def _select_lag_columns(X: Any, n_lag: int, target_name: Any = None) -> list[str
             prefixes = [b for b in bases if b and str(target_name).startswith(b)]
             if prefixes:
                 chosen = max(prefixes, key=len)
-        if chosen is not None:
-            triples = [t for t in triples if t[1] == chosen]
-    triples.sort()
-    return [col for _, _, col in triples]
+            elif len(bases) == 1:
+                # A single lag base that does not name-match the target is still the
+                # target's OWN lags (the spec carries only target lags, predictors=[]);
+                # a benign name mismatch, not a predictor block.
+                chosen = next(iter(bases))
+        if chosen is None:
+            # Multiple lag bases and none name the target: the target's own lags are
+            # absent. Return empty so the caller falls back to the mean rather than
+            # regressing the target on predictors' contemporaneous values.
+            return []
+        all_lags = [t for t in all_lags if t[1] == chosen]
+    in_range = [t for t in all_lags if 0 <= t[0] <= int(n_lag) - 1]
+    in_range.sort()
+    return [col for _, _, col in in_range]
 
 
 def _ols_with_intercept(design: np.ndarray, response: np.ndarray) -> np.ndarray:
@@ -79,6 +93,43 @@ class _AR:
         self.n_params_: int | None = None
         self._direct_cols: list[str] | None = None
         self._direct_coef: np.ndarray | None = None
+
+    def _set_mean_ic(self, target: pd.Series) -> None:
+        # IC stats for the degenerate mean-only direct model (no usable target lags),
+        # so information-criterion order selection can compute BIC/AIC for it.
+        resid = pd.Series(target).astype(float).dropna().to_numpy(dtype=float) - self._fallback
+        self.ssr_ = float(resid @ resid)
+        self.nobs_ = int(resid.shape[0])
+        self.n_params_ = 1
+
+    def _warn_if_predictor_lags_present(self, Xdf: pd.DataFrame, target: pd.Series) -> None:
+        # A direct AR that finds no usable target lag but DOES carry non-target
+        # ``*_lag`` columns is almost always a mis-specified benchmark: the feature
+        # spec omitted the target's lag 0 (``feature_spec`` ``target_lags`` is
+        # 1-indexed) while including predictors, so the "AR" would have regressed the
+        # target on predictors' contemporaneous values. We now fall back to the mean;
+        # surface the mistake loudly rather than silently shipping a degenerate
+        # benchmark that corrupts every relative metric normalized against it.
+        tgt = str(getattr(target, "name", "") or "")
+        foreign = [
+            c
+            for c in map(str, Xdf.columns)
+            if (m := _LAG_COL_RE.search(c)) is not None
+            and (base := c[: m.start()]) != tgt
+            and not (tgt and base and tgt.startswith(base))
+        ]
+        if foreign:
+            warnings.warn(
+                f"direct AR for target {tgt!r} found no usable target lag columns "
+                f"(n_lag={self.n_lag}) yet the feature matrix carries "
+                f"{len(foreign)} predictor lag column(s) (e.g. {foreign[0]!r}); "
+                f"falling back to the unconditional mean. The feature spec likely "
+                f"omitted the target's lag 0 -- feature_spec target_lags is 1-indexed, "
+                f"so pass target_lags=range(0, K) (and predictors=[] for a pure "
+                f"autoregression) to include the origin value.",
+                UserWarning,
+                stacklevel=2,
+            )
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_AR":
         if self.direct:
@@ -111,13 +162,19 @@ class _AR:
         self._fallback = float(target.dropna().mean()) if not target.dropna().empty else 0.0
         self._direct_cols = _select_lag_columns(Xdf, self.n_lag, target_name=getattr(target, "name", None))
         if not self._direct_cols:
-            # No usable lag features (e.g. a feature spec without target_lags); fall
-            # back to the unconditional mean rather than a stale-persistence forecast.
+            # No usable target lags (e.g. n_lag restricts to lag0 but the spec's target
+            # lags start at 1): fall back to the unconditional mean rather than a
+            # stale-persistence forecast. Expose IC stats for the mean-only model so
+            # information-criterion order selection can score and skip this order, and
+            # warn if predictor lag columns are present (a mis-specified AR benchmark).
+            self._warn_if_predictor_lags_present(Xdf, target)
+            self._set_mean_ic(target)
             return self
         design_df = Xdf[self._direct_cols].astype(float)
         joined = pd.concat([design_df, target.rename("__target__")], axis=1).dropna()
         if joined.empty:
             self._direct_cols = None
+            self._set_mean_ic(target)
             return self
         design = joined[self._direct_cols].to_numpy(dtype=float)
         response = joined["__target__"].to_numpy(dtype=float)
@@ -178,6 +235,573 @@ def ar(X: Any, y: Any | None = None, *, n_lag: int = 1, direct: bool = False) ->
     return fit_estimator(
         _AR(n_lag=n_lag, direct=bool(direct)), features, target,
         model="ar", metadata={"n_lag": int(n_lag), "direct": bool(direct)},
+    )
+
+
+class _SETAR:
+    """Self-Exciting Threshold AR: two OLS regimes on the target's own lags, split
+    by a threshold on the most recent lag (the self-exciting state variable), chosen
+    to minimize total in-sample SSR. Direct h-step when X carries the h-ahead target."""
+
+    def __init__(self, *, n_lag: int = 2, min_regime: int = 15, n_thresholds: int = 15) -> None:
+        self.n_lag = max(1, int(n_lag))
+        self.min_regime = max(2, int(min_regime))
+        self.n_thresholds = max(3, int(n_thresholds))
+        self._cols: list[str] | None = None
+        self._tau: float | None = None
+        self._b_lo: np.ndarray | None = None
+        self._b_hi: np.ndarray | None = None
+        self._fallback: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_SETAR":
+        Xdf = pd.DataFrame(X)
+        target = pd.Series(y).astype(float)
+        self._fallback = float(target.dropna().mean()) if target.notna().any() else 0.0
+        cols = _select_lag_columns(Xdf, 999, target_name=getattr(target, "name", None))[: self.n_lag]
+        if not cols:
+            return self
+        joined = pd.concat([Xdf[cols], target.rename("__target__")], axis=1).dropna()
+        if len(joined) < 2 * self.min_regime:
+            return self
+        L = joined[cols].to_numpy(dtype=float)
+        yv = joined["__target__"].to_numpy(dtype=float)
+        state = L[:, 0]  # lowest lag index = y_{t-1}
+        grid = np.quantile(state, np.linspace(0.15, 0.85, self.n_thresholds))
+        best_ssr, best = float("inf"), None
+        for tau in np.unique(grid):
+            lo = state <= tau
+            if int(lo.sum()) < self.min_regime or int((~lo).sum()) < self.min_regime:
+                continue
+            b_lo = _ols_with_intercept(L[lo], yv[lo])
+            b_hi = _ols_with_intercept(L[~lo], yv[~lo])
+            r_lo = yv[lo] - np.column_stack([np.ones(int(lo.sum())), L[lo]]) @ b_lo
+            r_hi = yv[~lo] - np.column_stack([np.ones(int((~lo).sum())), L[~lo]]) @ b_hi
+            ssr = float(r_lo @ r_lo + r_hi @ r_hi)
+            if ssr < best_ssr:
+                best_ssr, best = ssr, (float(tau), b_lo, b_hi)
+        if best is None:
+            return self
+        self._cols, (self._tau, self._b_lo, self._b_hi) = cols, best
+        self.ssr_ = best_ssr
+        self.nobs_ = int(len(yv))
+        self.n_params_ = int(2 * (len(cols) + 1) + 1)  # two regimes + threshold
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        Xdf = pd.DataFrame(X)
+        if self._cols is None or self._b_lo is None:
+            return np.full(len(Xdf), self._fallback, dtype=float)
+        L = Xdf.reindex(columns=self._cols).astype(float).fillna(0.0).to_numpy()
+        A = np.column_stack([np.ones(len(L)), L])
+        lo = L[:, 0] <= self._tau
+        return np.where(lo, A @ self._b_lo, A @ self._b_hi)
+
+
+class _STAR:
+    """Smooth Transition AR: convex combination of two AR regimes weighted by a
+    logistic transition G(gamma,(state-c)/sd) on the most recent lag. (gamma,c) are
+    concentrated out on a small grid; the regime coefficients are OLS given G."""
+
+    def __init__(self, *, n_lag: int = 2, gammas: tuple = (1.0, 3.0, 8.0, 20.0), n_c: int = 5) -> None:
+        self.n_lag = max(1, int(n_lag))
+        self.gammas = tuple(float(g) for g in gammas)
+        self.n_c = max(3, int(n_c))
+        self._cols: list[str] | None = None
+        self._gamma: float | None = None
+        self._c: float | None = None
+        self._sd: float = 1.0
+        self._beta: np.ndarray | None = None
+        self._fallback: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
+
+    def _stack(self, L, G):
+        one = np.ones((len(L), 1)); Xa = np.column_stack([one, L])
+        return np.column_stack([(1.0 - G)[:, None] * Xa, G[:, None] * Xa])
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_STAR":
+        Xdf = pd.DataFrame(X); target = pd.Series(y).astype(float)
+        self._fallback = float(target.dropna().mean()) if target.notna().any() else 0.0
+        cols = _select_lag_columns(Xdf, 999, target_name=getattr(target, "name", None))[: self.n_lag]
+        if not cols:
+            return self
+        joined = pd.concat([Xdf[cols], target.rename("__target__")], axis=1).dropna()
+        if len(joined) < max(20, 2 * (len(cols) + 1)):
+            return self
+        L = joined[cols].to_numpy(dtype=float); yv = joined["__target__"].to_numpy(dtype=float)
+        s = L[:, 0]; sd = float(np.std(s)) or 1.0
+        best_ssr, best = float("inf"), None
+        for gamma in self.gammas:
+            for c in np.unique(np.quantile(s, np.linspace(0.25, 0.75, self.n_c))):
+                G = 1.0 / (1.0 + np.exp(-gamma * (s - c) / sd))
+                D = self._stack(L, G)
+                beta, *_ = np.linalg.lstsq(D, yv, rcond=None)
+                r = yv - D @ beta
+                ssr = float(r @ r)
+                if ssr < best_ssr:
+                    best_ssr, best = ssr, (float(gamma), float(c), beta)
+        if best is None:
+            return self
+        self._cols, self._sd = cols, sd
+        self._gamma, self._c, self._beta = best
+        self.ssr_ = best_ssr; self.nobs_ = int(len(yv)); self.n_params_ = int(D.shape[1] + 2)
+        return self
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        Xdf = pd.DataFrame(X)
+        # fit() assigns _cols/_gamma/_c/_beta together, so any one being None
+        # means the fit fell through; check all four rather than a proxy.
+        if (
+            self._cols is None
+            or self._beta is None
+            or self._gamma is None
+            or self._c is None
+        ):
+            return np.full(len(Xdf), self._fallback, dtype=float)
+        L = Xdf.reindex(columns=self._cols).astype(float).fillna(0.0).to_numpy()
+        G = 1.0 / (1.0 + np.exp(-self._gamma * (L[:, 0] - self._c) / self._sd))
+        return self._stack(L, G) @ self._beta
+
+
+def setar(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit:
+    """Self-exciting threshold autoregression (two regimes, min-SSR threshold)."""
+    target = as_series(y if y is not None else X)
+    features = as_frame(X)
+    return fit_estimator(_SETAR(n_lag=int(n_lag)), features, target,
+                         model="setar", metadata={"n_lag": int(n_lag), "direct": bool(direct)})
+
+
+def star(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit:
+    """Smooth-transition autoregression (logistic transition on the most recent lag)."""
+    target = as_series(y if y is not None else X)
+    features = as_frame(X)
+    return fit_estimator(_STAR(n_lag=int(n_lag)), features, target,
+                         model="star", metadata={"n_lag": int(n_lag), "direct": bool(direct)})
+
+
+
+_AR_BIC_CRITERIA = frozenset({"aic", "aicc", "bic"})
+_AR_BIC_PARAMETER_COUNTS = frozenset({"standard", "lag_square"})
+_AR_BIC_ESTIMATORS = frozenset({"ols", "yule_walker", "burg", "matlab_ar"})
+_AR_BIC_FORECAST_MODES = frozenset(
+    {"iterated", "direct_lag_projection", "coefficient_power"}
+)
+_AR_BIC_VARIANCE_FLOOR = float(np.finfo(float).tiny)
+
+
+def _positive_int(value: Any, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+        raise ValueError(f"{name} must be a positive integer")
+    out = int(value)
+    if out <= 0:
+        raise ValueError(f"{name} must be a positive integer")
+    return out
+
+
+def _bool_param(value: Any, name: str) -> bool:
+    if not isinstance(value, (bool, np.bool_)):
+        raise ValueError(f"{name} must be a boolean")
+    return bool(value)
+
+
+def _ar_lagged_response(values: np.ndarray, p: int) -> tuple[np.ndarray, np.ndarray]:
+    if p <= 0 or len(values) <= p:
+        return np.empty(0, dtype=float), np.empty((0, max(0, p)), dtype=float)
+    response = values[p:]
+    lags = np.column_stack([values[p - j : len(values) - j] for j in range(1, p + 1)])
+    valid = np.isfinite(response) & np.isfinite(lags).all(axis=1)
+    return response[valid], lags[valid]
+
+
+def _ar_design(lags: np.ndarray, *, include_constant: bool) -> np.ndarray:
+    if include_constant:
+        return np.column_stack([np.ones(len(lags)), lags])
+    return lags
+
+
+def _ar_score_parameter_count(
+    p: int, *, include_constant: bool, ic_parameter_count: str
+) -> int:
+    if ic_parameter_count == "lag_square":
+        return int(p * p)
+    return int(p + 1 if include_constant else p)
+
+
+def _residual_variance_ic(
+    ssr: float, nobs: int, n_params: int, criterion: str
+) -> tuple[float, str]:
+    if nobs <= 0 or not np.isfinite(ssr):
+        return float("inf"), "invalid"
+    variance = max(float(ssr) / float(nobs), _AR_BIC_VARIANCE_FLOOR)
+    base = float(nobs) * float(np.log(variance))
+    if criterion == "aic":
+        return base + 2.0 * float(n_params), "ok"
+    if criterion == "aicc":
+        denom = int(nobs) - int(n_params) - 1
+        if denom <= 0:
+            return float("inf"), "aicc_degenerate"
+        penalty = 2.0 * float(n_params) * float(n_params + 1) / float(denom)
+        return base + 2.0 * float(n_params) + penalty, "ok"
+    return base + float(n_params) * float(np.log(float(nobs))), "ok"
+
+
+def _ar_ols_fit(
+    values: np.ndarray, p: int, *, include_constant: bool
+) -> tuple[float, np.ndarray, float, int, int]:
+    response, lags = _ar_lagged_response(values, p)
+    if response.size == 0:
+        raise ValueError("not enough observations for final AR fit")
+    design = _ar_design(lags, include_constant=include_constant)
+    beta = np.linalg.lstsq(design, response, rcond=None)[0]
+    fitted = design @ beta
+    resid = response - fitted
+    if include_constant:
+        intercept = float(beta[0])
+        coef = np.asarray(beta[1:], dtype=float)
+    else:
+        intercept = 0.0
+        coef = np.asarray(beta, dtype=float)
+    return intercept, coef, float(resid @ resid), int(len(response)), int(len(beta))
+
+
+def _ar_common_residuals(
+    values: np.ndarray, p: int, intercept: float, coef: np.ndarray
+) -> tuple[float, int]:
+    response, lags = _ar_lagged_response(values, p)
+    if response.size == 0:
+        raise ValueError("not enough observations for final AR residuals")
+    resid = response - (float(intercept) + lags @ np.asarray(coef, dtype=float))
+    return float(resid @ resid), int(len(response))
+
+
+def _yule_walker_coefficients(u: np.ndarray, p: int) -> tuple[np.ndarray, str]:
+    gamma = np.asarray(
+        [float(u[k:] @ u[: len(u) - k]) / float(len(u)) for k in range(p + 1)],
+        dtype=float,
+    )
+    toeplitz = gamma[np.abs(np.subtract.outer(np.arange(p), np.arange(p)))]
+    rhs = gamma[1 : p + 1]
+    status = "ok"
+    try:
+        condition = float(np.linalg.cond(toeplitz))
+    except np.linalg.LinAlgError:
+        condition = float("inf")
+    if not np.isfinite(condition) or condition > 1.0 / np.sqrt(np.finfo(float).eps):
+        coef = np.linalg.pinv(toeplitz) @ rhs
+        status = "pinv"
+    else:
+        try:
+            coef = np.linalg.solve(toeplitz, rhs)
+        except np.linalg.LinAlgError:
+            coef = np.linalg.pinv(toeplitz) @ rhs
+            status = "pinv"
+    return np.asarray(coef, dtype=float), status
+
+
+def _burg_coefficients(u: np.ndarray, p: int) -> np.ndarray:
+    if len(u) <= p:
+        raise ValueError("not enough observations for Burg AR fit")
+    forward = np.asarray(u[1:], dtype=float).copy()
+    backward = np.asarray(u[:-1], dtype=float).copy()
+    coef: np.ndarray = np.empty(0, dtype=float)
+    for order in range(p):
+        denom = float(forward @ forward + backward @ backward)
+        if denom <= _AR_BIC_VARIANCE_FLOOR or not np.isfinite(denom):
+            raise ValueError("Burg AR recursion encountered a zero denominator")
+        reflection = float(2.0 * (forward @ backward) / denom)
+        if coef.size:
+            coef = np.concatenate([coef - reflection * coef[::-1], [reflection]])
+        else:
+            coef = np.asarray([reflection], dtype=float)
+        if order < p - 1:
+            old_forward = forward
+            old_backward = backward
+            forward = old_forward[1:] - reflection * old_backward[1:]
+            backward = old_backward[:-1] - reflection * old_forward[:-1]
+    if not np.isfinite(coef).all():
+        raise ValueError("Burg AR fit produced non-finite coefficients")
+    return coef
+
+
+def _matlab_ar_coefficients(u: np.ndarray, p: int) -> np.ndarray:
+    if len(u) <= p:
+        raise ValueError("not enough observations for MATLAB-compatible AR fit")
+    forward_response = u[p:]
+    forward_lags = np.column_stack([u[p - j : len(u) - j] for j in range(1, p + 1)])
+    origins = np.arange(0, len(u) - p)
+    backward_response = u[origins]
+    backward_lags = np.column_stack([u[origins + j] for j in range(1, p + 1)])
+    response = np.concatenate([forward_response, backward_response])
+    design = np.vstack([forward_lags, backward_lags])
+    coef = np.linalg.lstsq(design, response, rcond=None)[0]
+    if not np.isfinite(coef).all():
+        raise ValueError("MATLAB-compatible AR fit produced non-finite coefficients")
+    return np.asarray(coef, dtype=float)
+
+
+class _ARBIC:
+    def __init__(
+        self,
+        *,
+        min_lag: int = 1,
+        max_lag: int = 12,
+        criterion: str = "bic",
+        include_constant: bool = True,
+        ic_parameter_count: str = "standard",
+        estimator: str = "ols",
+        forecast_mode: str = "iterated",
+        horizon: int = 1,
+    ) -> None:
+        self.min_lag = _positive_int(min_lag, "min_lag")
+        self.max_lag = _positive_int(max_lag, "max_lag")
+        if self.min_lag > self.max_lag:
+            raise ValueError("min_lag must be less than or equal to max_lag")
+        self.criterion = str(criterion).lower()
+        if self.criterion not in _AR_BIC_CRITERIA:
+            raise ValueError("criterion must be one of: aic, aicc, bic")
+        self.include_constant = _bool_param(include_constant, "include_constant")
+        self.ic_parameter_count = str(ic_parameter_count).lower()
+        if self.ic_parameter_count not in _AR_BIC_PARAMETER_COUNTS:
+            raise ValueError("ic_parameter_count must be one of: standard, lag_square")
+        self.estimator = str(estimator).lower()
+        if self.estimator not in _AR_BIC_ESTIMATORS:
+            raise ValueError("estimator must be one of: ols, yule_walker, burg, matlab_ar")
+        self.forecast_mode = str(forecast_mode).lower()
+        if self.forecast_mode not in _AR_BIC_FORECAST_MODES:
+            raise ValueError(
+                "forecast_mode must be one of: iterated, direct_lag_projection, "
+                "coefficient_power"
+            )
+        if self.forecast_mode == "direct_lag_projection" and self.estimator != "ols":
+            raise ValueError("direct_lag_projection requires estimator='ols'")
+        self.horizon = _positive_int(horizon, "horizon")
+        self.selected_lag_: int | None = None
+        self.coef_: np.ndarray | None = None
+        self.intercept_: float = 0.0
+        self.ssr_: float | None = None
+        self.nobs_: int | None = None
+        self.n_params_: int | None = None
+        self.ic_trials_: pd.DataFrame | None = None
+        self.selected_ic_: float | None = None
+        self.selected_nobs_: int | None = None
+        self.selected_n_params_: int | None = None
+        self.backend_status_: str = "ok"
+        self._values: np.ndarray | None = None
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "_ARBIC":
+        del X
+        raw = pd.Series(y).astype(float).to_numpy(dtype=float)
+        values = raw[np.isfinite(raw)]
+        self._values = values
+        rows = self._score_lags(values)
+        self.ic_trials_ = pd.DataFrame(rows)
+        ok = self.ic_trials_[np.isfinite(self.ic_trials_["score"].to_numpy(dtype=float))]
+        if ok.empty:
+            raise ValueError(
+                "No finite AR information-criterion score for lags "
+                f"{self.min_lag}..{self.max_lag} using {self.criterion}."
+            )
+        best = ok.sort_values(["score", "lag"], kind="mergesort").iloc[0]
+        self.selected_lag_ = int(best["lag"])
+        self.selected_ic_ = float(best["score"])
+        self.selected_nobs_ = int(best["nobs"])
+        self.selected_n_params_ = int(best["n_params"])
+        self._fit_final(values, self.selected_lag_)
+        return self
+
+    def _score_lags(self, values: np.ndarray) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        for p in range(self.min_lag, self.max_lag + 1):
+            response, lags = _ar_lagged_response(values, p)
+            nobs = int(len(response))
+            n_params = _ar_score_parameter_count(
+                p,
+                include_constant=self.include_constant,
+                ic_parameter_count=self.ic_parameter_count,
+            )
+            row: dict[str, Any] = {
+                "lag": int(p),
+                "score": float("inf"),
+                "nobs": nobs,
+                "n_params": int(n_params),
+                "ssr": float("nan"),
+                "status": "no_rows" if nobs <= 0 else "ok",
+            }
+            if nobs > 0:
+                try:
+                    design = _ar_design(lags, include_constant=self.include_constant)
+                    beta = np.linalg.lstsq(design, response, rcond=None)[0]
+                    resid = response - design @ beta
+                    ssr = float(resid @ resid)
+                    score, status = _residual_variance_ic(
+                        ssr, nobs, n_params, self.criterion
+                    )
+                    row.update({"score": float(score), "ssr": ssr, "status": status})
+                except np.linalg.LinAlgError as exc:
+                    row.update({"status": "error", "error": str(exc)})
+            rows.append(row)
+        return rows
+
+    def _fit_final(self, values: np.ndarray, p: int) -> None:
+        if self.estimator == "ols" or self.forecast_mode == "direct_lag_projection":
+            intercept, coef, ssr, nobs, n_params = _ar_ols_fit(
+                values, p, include_constant=self.include_constant
+            )
+            self.intercept_ = intercept
+            self.coef_ = coef
+            self.ssr_ = ssr
+            self.nobs_ = nobs
+            self.n_params_ = n_params
+            return
+        mean = float(np.mean(values)) if self.include_constant else 0.0
+        u = values - mean if self.include_constant else values
+        if self.estimator == "yule_walker":
+            coef, status = _yule_walker_coefficients(u, p)
+            self.backend_status_ = status
+        elif self.estimator == "burg":
+            coef = _burg_coefficients(u, p)
+        else:
+            coef = _matlab_ar_coefficients(u, p)
+        intercept = mean * (1.0 - float(np.sum(coef))) if self.include_constant else 0.0
+        ssr, nobs = _ar_common_residuals(values, p, intercept, coef)
+        self.intercept_ = float(intercept)
+        self.coef_ = np.asarray(coef, dtype=float)
+        self.ssr_ = float(ssr)
+        self.nobs_ = int(nobs)
+        self.n_params_ = int(p + 1 if self.include_constant else p)
+
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
+        steps = len(X)
+        if steps == 0:
+            return np.empty(0, dtype=float)
+        if self._values is None or self.coef_ is None or self.selected_lag_ is None:
+            raise ValueError("ar_bic estimator is not fitted")
+        if self.forecast_mode == "direct_lag_projection":
+            return self._predict_direct(steps)
+        max_step = self.horizon + steps - 1
+        if self.forecast_mode == "coefficient_power":
+            return self._predict_coefficient_power(max_step)[self.horizon - 1 :]
+        return self._predict_iterated(max_step)[self.horizon - 1 :]
+
+    def _latest_state(self) -> np.ndarray:
+        if self._values is None or self.selected_lag_ is None:
+            raise ValueError("ar_bic estimator is not fitted")
+        p = self.selected_lag_
+        return self._values[-p:][::-1].astype(float)
+
+    def _predict_iterated(self, max_step: int) -> np.ndarray:
+        state = self._latest_state()
+        coef = np.asarray(self.coef_, dtype=float)
+        out: np.ndarray = np.empty(max_step, dtype=float)
+        for i in range(max_step):
+            pred = float(self.intercept_ + coef @ state)
+            out[i] = pred
+            state = np.concatenate([[pred], state[:-1]])
+        return out
+
+    def _predict_coefficient_power(self, max_step: int) -> np.ndarray:
+        state = self._latest_state()
+        coef = np.asarray(self.coef_, dtype=float)
+        return np.asarray(
+            [float((coef ** step) @ state) for step in range(1, max_step + 1)],
+            dtype=float,
+        )
+
+    def _predict_direct(self, steps: int) -> np.ndarray:
+        if self._values is None or self.selected_lag_ is None:
+            raise ValueError("ar_bic estimator is not fitted")
+        values = self._values
+        p = self.selected_lag_
+        state = self._latest_state()
+        preds: list[float] = []
+        for offset in range(steps):
+            step = self.horizon + offset
+            origins = np.arange(p - 1, len(values) - step)
+            if origins.size == 0:
+                raise ValueError(
+                    f"not enough observations for direct_lag_projection step {step}"
+                )
+            response = values[origins + step]
+            lags = np.column_stack([values[origins - j] for j in range(p)])
+            design = _ar_design(lags, include_constant=self.include_constant)
+            beta = np.linalg.lstsq(design, response, rcond=None)[0]
+            if self.include_constant:
+                pred = float(beta[0] + beta[1:] @ state)
+            else:
+                pred = float(beta @ state)
+            preds.append(pred)
+        return np.asarray(preds, dtype=float)
+
+
+def ar_bic(
+    y: Any,
+    *,
+    min_lag: int = 1,
+    max_lag: int = 12,
+    criterion: str = "bic",
+    include_constant: bool = True,
+    ic_parameter_count: str = "standard",
+    estimator: str = "ols",
+    forecast_mode: str = "iterated",
+    horizon: int = 1,
+) -> ModelFit:
+    """Target-only AR with internal residual-variance IC lag selection.
+
+    The input target is used as supplied: callers own differencing, moving
+    averages, scaling, and other leak-free target preparation. Candidate lags
+    are scored by AIC/AICc/BIC on target-only OLS lag regressions, then the
+    selected lag is refit with the requested AR backend and forecast contract.
+    """
+
+    target = as_series(y)
+    estimator_obj = _ARBIC(
+        min_lag=min_lag,
+        max_lag=max_lag,
+        criterion=criterion,
+        include_constant=include_constant,
+        ic_parameter_count=ic_parameter_count,
+        estimator=estimator,
+        forecast_mode=forecast_mode,
+        horizon=horizon,
+    )
+    dummy = pd.DataFrame(
+        {"__origin__": np.arange(len(target), dtype=float)}, index=target.index
+    )
+    estimator_obj.fit(dummy, target)
+    assert estimator_obj.selected_lag_ is not None
+    assert estimator_obj.selected_ic_ is not None
+    assert estimator_obj.selected_nobs_ is not None
+    assert estimator_obj.selected_n_params_ is not None
+    metadata = {
+        "n_obs": int(len(estimator_obj._values)) if estimator_obj._values is not None else 0,
+        "min_lag": estimator_obj.min_lag,
+        "max_lag": estimator_obj.max_lag,
+        "criterion": estimator_obj.criterion,
+        "include_constant": estimator_obj.include_constant,
+        "ic_parameter_count": estimator_obj.ic_parameter_count,
+        "estimator": estimator_obj.estimator,
+        "forecast_mode": estimator_obj.forecast_mode,
+        "horizon": estimator_obj.horizon,
+        "selected_lag": estimator_obj.selected_lag_,
+        "selected_ic": estimator_obj.selected_ic_,
+        "selected_nobs": estimator_obj.selected_nobs_,
+        "selected_n_params": estimator_obj.selected_n_params_,
+    }
+    diagnostics = {
+        "ic_trials": estimator_obj.ic_trials_,
+        "backend_status": estimator_obj.backend_status_,
+    }
+    return ModelFit(
+        estimator=estimator_obj,
+        model="ar_bic",
+        feature_names=("__origin__",),
+        target_name=str(target.name) if target.name is not None else None,
+        metadata=metadata,
+        diagnostics=diagnostics,
     )
 
 
@@ -1079,7 +1703,7 @@ def bvar_normal_inverse_wishart(
 
 class _FAR:
     def __init__(self, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0,
-                 direct: bool = False) -> None:
+                 direct: bool = False, scale: bool = False) -> None:
         self.n_factors = max(1, int(n_factors))
         self.ssr_: float | None = None
         self.nobs_: int | None = None
@@ -1091,9 +1715,18 @@ class _FAR:
         # observed, not look-ahead), regressed on the h-ahead target and predicted per
         # row. direct=False is the legacy roll-forward (recursive/path).
         self.direct = bool(direct)
+        # scale=False (the default and the historical behaviour) extracts factors
+        # from the CENTERED predictor block -- covariance PCA. scale=True divides
+        # by each column's standard deviation first -- correlation PCA, which is
+        # what ``pca_step`` does by default. The two give different factors
+        # whenever the predictors differ in scale, and in macro panels they
+        # differ by orders of magnitude (a level series against growth rates), so
+        # this is a modelling choice, not a numerical detail. See issue #495.
+        self.scale = bool(scale)
         self._pca: Any = None
         self._regression: Any = None
         self._x_mean: pd.Series | None = None
+        self._x_scale: pd.Series | None = None
         self._y_history: np.ndarray | None = None
         self._fallback: float = 0.0
         self._direct_pred_cols: list[str] | None = None
@@ -1104,12 +1737,33 @@ class _FAR:
         parts: list[np.ndarray] = []
         if self._direct_pred_cols and self._pca is not None and self._x_mean is not None:
             block = Xdf.reindex(columns=self._direct_pred_cols).astype(float)
-            parts.append(self._pca.transform((block - self._x_mean).fillna(0.0)))
+            parts.append(self._pca.transform(self._prepare_pca_input(block)))
         if self._direct_lag_cols:
             parts.append(Xdf.reindex(columns=self._direct_lag_cols).astype(float).fillna(0.0).to_numpy())
         if not parts:
             return np.empty((len(Xdf), 0), dtype=float)
         return np.column_stack(parts)
+
+    def _standardizer(self, block: pd.DataFrame) -> pd.Series | None:
+        """Per-column divisor for the PCA input, or None under covariance PCA.
+
+        A zero-variance column would divide to NaN, so its divisor is pinned to
+        1.0 -- it contributes nothing to either convention and must not poison
+        the whole block.
+        """
+
+        if not self.scale:
+            return None
+        sd = block.std(axis=0, ddof=0)
+        return sd.where(sd > 0.0, 1.0)
+
+    def _prepare_pca_input(self, block: pd.DataFrame) -> pd.DataFrame:
+        """Center (and under ``scale=True`` standardize) the predictor block."""
+
+        out = block - self._x_mean if self._x_mean is not None else block
+        if self._x_scale is not None:
+            out = out / self._x_scale
+        return out.fillna(0.0)
 
     def _fit_direct(self, X: pd.DataFrame, y: pd.Series) -> "_FAR":
         from sklearn.linear_model import LinearRegression
@@ -1138,8 +1792,9 @@ class _FAR:
         if self._direct_pred_cols:
             block = Xdf.loc[mask, self._direct_pred_cols].astype(float)
             self._x_mean = block.mean(axis=0)
+            self._x_scale = self._standardizer(block)
             n_factors = min(self.n_factors, block.shape[1], max(1, block.shape[0] - 1))
-            centered = (block - self._x_mean).fillna(0.0)
+            centered = self._prepare_pca_input(block)
             self._pca = _deterministic_pca(n_factors, *centered.shape, random_state=self.random_state)
             self._pca.fit(centered)
         design_df = pd.DataFrame(self._direct_design(Xdf), index=Xdf.index)
@@ -1168,7 +1823,6 @@ class _FAR:
     def fit(self, X: pd.DataFrame, y: pd.Series) -> "_FAR":
         if self.direct:
             return self._fit_direct(X, y)
-        from sklearn.decomposition import PCA
         from sklearn.linear_model import LinearRegression
 
         joined = pd.concat([X, y.rename("__target__")], axis=1).dropna()
@@ -1178,9 +1832,10 @@ class _FAR:
         y_clean = joined["__target__"]
         self._fallback = float(y_clean.mean())
         self._x_mean = X_clean.mean(axis=0)
+        self._x_scale = self._standardizer(X_clean)
         n_factors = min(self.n_factors, X_clean.shape[1], max(1, X_clean.shape[0] - 1))
         from macroforecast.feature_engineering.shared import _deterministic_pca
-        fit_block = (X_clean - self._x_mean).fillna(0.0)
+        fit_block = self._prepare_pca_input(X_clean)
         self._pca = _deterministic_pca(n_factors, *fit_block.shape, random_state=self.random_state)
         factors = self._pca.fit_transform(fit_block)
         values = y_clean.to_numpy(dtype=float)
@@ -1192,7 +1847,8 @@ class _FAR:
         if not rows:
             self._y_history = values[-self.n_lag :]
             return self
-        design = np.asarray(rows); response = np.asarray(target)
+        design = np.asarray(rows)
+        response = np.asarray(target)
         self._regression = LinearRegression().fit(design, response)
         # In-sample one-step residuals for information-criterion order selection.
         resid = response - self._regression.predict(design)
@@ -1227,6 +1883,7 @@ def far(
     n_lag: int = 1,
     random_state: int = 0,
     direct: bool = False,
+    scale: bool = False,
 ) -> ModelFit:
     """Fit factor-augmented autoregression.
 
@@ -1235,15 +1892,35 @@ def far(
     (``*_lag0`` = the origin value, observed, not look-ahead) are regressed on the
     (h-ahead) target and predicted per row (no roll-forward). The runner sets
     ``direct=True`` only for the direct/direct_average policies.
+
+    ``scale`` selects the factor-extraction convention, and the two answer
+    different questions:
+
+    - ``scale=False`` (default) extracts factors from the CENTERED predictor
+      block -- **covariance PCA**. The largest-variance series dominate the
+      factors. In a FRED-MD-style panel that means a level-coded series can
+      outweigh dozens of growth-rate series.
+    - ``scale=True`` divides each column by its standard deviation first --
+      **correlation PCA**, which weights every predictor equally and is the
+      Stock-Watson / McCracken-Ng norm. This is what
+      :func:`~macroforecast.feature_engineering.pca_step` does by default.
+
+    The default is ``False`` for backward compatibility, so it differs from
+    ``pca_step``'s default; pass ``scale`` explicitly when the convention
+    matters. It is not a numerical detail: a published replication in
+    ``docs/replication/zww_2023_replication.md`` documents a paper whose entire
+    headline result turned on this choice.
     """
 
     return fit_estimator(
-        _FAR(n_factors=n_factors, n_lag=n_lag, random_state=random_state, direct=bool(direct)),
+        _FAR(n_factors=n_factors, n_lag=n_lag, random_state=random_state,
+             direct=bool(direct), scale=bool(scale)),
         X,
         y,
         model="far",
         metadata={"n_factors": int(n_factors), "n_lag": int(n_lag),
-                  "random_state": int(random_state), "direct": bool(direct)},
+                  "random_state": int(random_state), "direct": bool(direct),
+                  "scale": bool(scale)},
     )
 
 
@@ -4189,6 +4866,7 @@ __all__ = [
     "stlf",
     "random_walk_drift",
     "ar",
+    "ar_bic",
     "arima",
     "auto_arima",
     "bvar_minnesota",

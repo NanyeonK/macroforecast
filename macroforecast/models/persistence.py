@@ -78,10 +78,27 @@ def save_fit(
 
 
 def load_fit(model_path: str | Path) -> Any:
-    """Load a fitted model object saved by `save_fit()`."""
+    """Load a fitted model object saved by :func:`save_fit`.
+
+    .. warning::
+
+       **Unpickling executes code.** A pickle file is a program, not a data
+       format: loading one can run arbitrary code before it returns anything.
+       Load only files you produced yourself or received from a source you
+       trust as much as you trust your own machine -- never one downloaded
+       from an untrusted location, and never one arriving with a replication
+       package you have not reviewed.
+
+       There is no way to make this safe by inspecting the file first. If you
+       need to distribute fitted state across a trust boundary, ship the code
+       and the specification that reproduce the fit instead of the pickle.
+
+    The sidecar JSON that :func:`save_fit` writes alongside the model is plain
+    data and carries no such risk; read it when you only need the metadata.
+    """
 
     with Path(model_path).open("rb") as handle:
-        return pickle.load(handle)
+        return pickle.load(handle)  # noqa: S301 -- documented above
 
 
 def _json_ready(value: Any) -> Any:

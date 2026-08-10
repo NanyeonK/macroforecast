@@ -54,7 +54,7 @@ TCODE_TARGET_MAP = dict(7 entries: 1, 2, 3, 4, 5, 6, 7)
 Kind: `data`
 
 ```python
-DIRECT_POLICY_GUARD_MODELS = frozenset({'arima', 'auto_arima', 'bvar_minnesota', 'bvar_normal_inverse_wishart', 'dfm_mixed_mariano_murasawa', 'dfm_unrestricted_midas', 'ets', 'favar', 'holt_winters', 'naive', 'random_walk_drift', 'seasonal_naive', 'stlf', 'theta_met...
+DIRECT_POLICY_GUARD_MODELS = frozenset({'ar_bic', 'arima', 'auto_arima', 'bvar_minnesota', 'bvar_normal_inverse_wishart', 'dfm_mixed_mariano_murasawa', 'dfm_unrestricted_midas', 'ets', 'favar', 'holt_winters', 'naive', 'random_walk_drift', 'seasonal_naive', 'stlf', ...
 ```
 
 ## Callable And Class Reference
@@ -781,12 +781,20 @@ Qualified name: `macroforecast.pipeline.spec.CombinationContender`
 #### Signature
 
 ```python
-macroforecast.pipeline.CombinationContender(name: str, method: str, over: tuple[str, ...] | str = "all", by: tuple[str, ...] = ('target', 'horizon'), params: Mapping[str, Any] | None = None, weight_window: int | None = None, shrink_to_equal: float | None = None) -> None
+macroforecast.pipeline.CombinationContender(name: str, method: str, over: tuple[str, ...] | str = "all", by: tuple[str, ...] = ('target', 'horizon'), params: Mapping[str, Any] | None = None, weight_window: int | None = None, shrink_to_equal: float | None = None, nested_in_benchmark: bool = False) -> None
 ```
 
 #### Description
 
 A forecast combination that becomes an additional contender.
+
+``nested_in_benchmark`` licenses Clark-West for the combination, exactly as
+:attr:`Arm.nested_in_benchmark` does for a single arm. Set it when the
+benchmark is recoverable from the combination under a parameter restriction
+-- a simple pool (mean/median/trimmed) of arms that each nest the benchmark
+does nest it, since zeroing every slope returns the benchmark forecast. It
+is not inferred from the members: an estimated-weight combination need not
+nest what its members nest, so the declaration stays with the caller.
 
 #### Parameters
 
@@ -799,6 +807,7 @@ A forecast combination that becomes an additional contender.
 | `params` | positional or keyword | `Mapping[str, Any] \| None` | `None` |
 | `weight_window` | positional or keyword | `int \| None` | `None` |
 | `shrink_to_equal` | positional or keyword | `float \| None` | `None` |
+| `nested_in_benchmark` | positional or keyword | `bool` | `False` |
 
 #### Returns
 
@@ -823,6 +832,7 @@ import macroforecast as mf
 | `params` | `Mapping[str, Any] \| None` | `None` |
 | `weight_window` | `int \| None` | `None` |
 | `shrink_to_equal` | `float \| None` | `None` |
+| `nested_in_benchmark` | `bool` | `False` |
 ### EvalSpec
 
 Qualified name: `macroforecast.pipeline.spec.EvalSpec`

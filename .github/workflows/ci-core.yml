@@ -39,7 +39,13 @@ jobs:
 
       - name: Check seed hardcoding absent (Phase 0)
         run: |
-          ! grep -rE 'random_state=42|random_seed=42' macroforecast scripts --include='*.py' --exclude-dir='__pycache__' || (echo "Found hardcoded seed literal in package or scripts; use configured RNG plumbing instead" && exit 1)
+          # Scope: the PACKAGE. The guard is about macroforecast baking a seed in
+          # instead of threading the configured RNG. Replication runners under
+          # scripts/ are callers, and they pin random_state deliberately -- a
+          # faithful replication has to be reproducible, which is the same
+          # objective-4 property tests/models/test_mrf_deterministic_seed.py locks.
+          # Scanning them conflated correct use with the defect.
+          ! grep -rE 'random_state=42|random_seed=42' macroforecast --include='*.py' --exclude-dir='__pycache__' || (echo "Found hardcoded seed literal in the package; use configured RNG plumbing instead" && exit 1)
 
       - name: Check version consistency (pyproject.toml ↔ macroforecast/__init__.py)
         run: |

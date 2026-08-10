@@ -19,6 +19,9 @@ serialisation of ``(spec_dict, target, origin_pos)`` where ``spec_dict`` is
 ``spec.to_dict()``.  ``PreprocessSpec.to_dict()`` calls ``_json_ready`` on the
 options dict, converting callables to their qualified name strings and tuples to
 lists, so the output is always JSON-serialisable with ``json.dumps(sort_keys=True)``.
+When a preprocessing spec configures ``standardize_scope`` (for example
+``origin_available_predictors``), that option is part of ``spec_dict`` and
+therefore separates fitted/prepared cache entries from other scopes.
 
 When the store is constructed with a ``namespace`` (any JSON-serialisable
 value -- e.g. the effective ``StagePolicy.to_dict()`` the caller fitted under),
@@ -107,9 +110,11 @@ class PreprocessorStore:
         Second caveat: the key does NOT independently encode the ``fit_policy``
         (``origin_available`` vs ``fit_window``) used when calling
         ``PreprocessSpec.fit`` -- UNLESS the store was constructed with a
-        ``namespace`` that carries it (see :meth:`__init__`). Within a single
-        run/pipeline the scope is constant, so reuse is safe without a
-        namespace. Never share one store directory across runs that differ in
+        ``namespace`` that carries it (see :meth:`__init__`). The preprocessing
+        spec's own ``standardize_scope`` option is encoded separately through
+        the spec identity. Within a single run/pipeline the policy scope is
+        constant, so reuse is safe without a namespace. Never share one store
+        directory across runs that differ in
         ``preprocessing_policy.scope`` for the same spec WITHOUT namespacing by
         that scope -- a fit_window fit would be served where an
         origin_available fit is expected (or vice versa), silently producing
@@ -198,7 +203,12 @@ class PreprocessorStore:
             return None
         try:
             data = path.read_bytes()
-            return pickle.loads(data)  # noqa: S301 — trusted local filesystem
+            # noqa: S301 -- this store is written by the package into a
+            # directory the caller chose. Unpickling executes code, so a
+            # cache directory must be treated as trusted as the machine
+            # itself: never point one at a location another party can
+            # write to, and never ship one across a trust boundary.
+            return pickle.loads(data)  # noqa: S301
         except Exception:  # noqa: BLE001 — any unpickling / IO error → miss
             return None
 

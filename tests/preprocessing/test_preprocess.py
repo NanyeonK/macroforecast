@@ -308,6 +308,109 @@ def test_reprocess_can_standardize_predictors_only_from_data_spec():
     assert result.metadata["preprocessing"]["standardize_columns"] == ["x"]
 
 
+def test_standardize_panel_origin_available_predictors_scope_is_predictor_only():
+    idx = pd.date_range("2020-01-01", periods=4, freq="MS")
+    panel = pd.DataFrame(
+        {
+            "y": [1.0, 2.0, 3.0, 10_000.0],
+            "x": [0.0, 2.0, 4.0, 1_000.0],
+        },
+        index=idx,
+    )
+
+    result = mf.preprocessing.standardize_panel(
+        panel,
+        method="zscore",
+        standardize_scope="origin_available_predictors",
+        available=idx[:3],
+        predictors=["x"],
+        target="y",
+    )
+
+    expected_center = pd.Series([0.0, 2.0, 4.0]).mean()
+    expected_scale = pd.Series([0.0, 2.0, 4.0]).std(ddof=0)
+    assert result.loc[idx[2], "x"] == pytest.approx((4.0 - expected_center) / expected_scale)
+    assert result["y"].tolist() == panel["y"].tolist()
+
+
+def test_standardize_panel_zero_after_standardize_fills_nonfinite_predictors_leak_free():
+    idx = pd.date_range("2020-01-01", periods=5, freq="MS")
+    panel = pd.DataFrame(
+        {
+            "y": [1.0, 2.0, 3.0, np.nan, np.inf],
+            "x": [0.0, 2.0, 4.0, np.nan, np.inf],
+        },
+        index=idx,
+    )
+
+    result = mf.preprocessing.standardize_panel(
+        panel,
+        method="zscore",
+        standardize_scope="origin_available_predictors",
+        available=idx[:3],
+        predictors=["x"],
+        target="y",
+        nan_policy="zero_after_standardize",
+    )
+    alias_result = mf.preprocessing.standardize_panel(
+        panel,
+        method="zscore",
+        standardize_scope="origin_available_predictors",
+        available=idx[:3],
+        predictors=["x"],
+        target="y",
+        standardize_nan_fill=0.0,
+    )
+
+    expected_center = pd.Series([0.0, 2.0, 4.0]).mean()
+    expected_scale = pd.Series([0.0, 2.0, 4.0]).std(ddof=0)
+    assert result.loc[idx[2], "x"] == pytest.approx((4.0 - expected_center) / expected_scale)
+    assert result.loc[idx[3], "x"] == 0.0
+    assert result.loc[idx[4], "x"] == 0.0
+    assert np.isnan(result.loc[idx[3], "y"])
+    assert np.isinf(result.loc[idx[4], "y"])
+    pd.testing.assert_frame_equal(result, alias_result)
+
+
+def test_standardize_panel_nan_policy_default_propagates_unchanged():
+    idx = pd.date_range("2020-01-01", periods=5, freq="MS")
+    panel = pd.DataFrame(
+        {
+            "y": [1.0, 2.0, 3.0, np.nan, np.inf],
+            "x": [0.0, 2.0, 4.0, np.nan, np.inf],
+        },
+        index=idx,
+    )
+    kwargs = {
+        "method": "zscore",
+        "standardize_scope": "origin_available_predictors",
+        "available": idx[:3],
+        "predictors": ["x"],
+        "target": "y",
+    }
+
+    default = mf.preprocessing.standardize_panel(panel, **kwargs)
+    explicit_default = mf.preprocessing.standardize_panel(
+        panel,
+        **kwargs,
+        nan_policy="propagate",
+        standardize_nan_fill=None,
+    )
+
+    pd.testing.assert_frame_equal(default, explicit_default)
+    assert np.isnan(default.loc[idx[3], "x"])
+    assert np.isinf(default.loc[idx[4], "x"])
+
+
+def test_standardize_panel_nan_policy_validates_inputs():
+    panel = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
+
+    with pytest.raises(ValueError, match="nan_policy"):
+        mf.preprocessing.standardize_panel(panel, nan_policy="zero_before_standardize")
+    with pytest.raises(ValueError, match="standardize_nan_fill"):
+        mf.preprocessing.standardize_panel(panel, standardize_nan_fill=1.0)
+
+
 def test_preprocess_spec_reuses_train_standardization_state_for_transform():
     metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
     panel = mf.data.as_panel(
@@ -367,6 +470,112 @@ def test_preprocess_spec_preserves_data_spec_choices_and_predictor_scaling():
     assert standardize_step["fitted_on"] == "train_window"
     assert fitted.standardization_state is not None
     assert fitted.standardization_state["columns"] == ["x"]
+
+
+def test_preprocess_spec_normalizes_origin_predictor_standardize_scope():
+    prep = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="zscore",
+        standardize_scope="available_predictors",
+        frame="keep",
+    )
+    via_flag = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="zscore",
+        include_current_predictor_rows=True,
+        frame="keep",
+    )
+
+    assert prep.options["standardize_scope"] == "origin_available_predictors"
+    assert via_flag.options["standardize_scope"] == "origin_available_predictors"
+
+    with pytest.raises(ValueError, match="conflicts with standardize_scope"):
+        mf.preprocessing.preprocess_spec(
+            standardize_scope="fit_window",
+            include_current_predictor_rows=True,
+        )
+
+
+def test_origin_available_predictor_standardization_excludes_future_and_target():
+    metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
+    idx = pd.date_range("2020-01-01", periods=5, freq="MS")
+    panel = mf.data.as_panel(
+        pd.DataFrame(
+            {
+                "date": idx,
+                "y": [10.0, 20.0, 30.0, 40.0, 999_999.0],
+                "x": [0.0, 2.0, 4.0, 1_000.0, 5_000.0],
+            }
+        ),
+        date="date",
+        metadata=metadata,
+    )
+    pre = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="zscore",
+        standardize_scope="origin_available_predictors",
+        frame="keep",
+    )
+    train = mf.data.spec(
+        mf.data.DataBundle(panel.iloc[:2], metadata),
+        target="y",
+        horizons=[2],
+        predictors=["x"],
+    )
+    fitted = pre.fit(train)
+    apply = mf.data.spec(
+        mf.data.DataBundle(panel.iloc[2:], metadata),
+        target="y",
+        horizons=[2],
+        predictors=["x"],
+    )
+
+    with pytest.raises(ValueError, match="requires available rows"):
+        fitted.transform(apply, history=panel.iloc[:2])
+
+    transformed = fitted.transform(
+        apply,
+        history=panel.iloc[:2],
+        available=panel.index[:3],
+    )
+    changed_future = panel.copy()
+    changed_future.loc[idx[3], "x"] = 1_000_000.0
+    changed_future.loc[idx[4], "y"] = -1_000_000.0
+    changed_apply = mf.data.spec(
+        mf.data.DataBundle(changed_future.iloc[2:], metadata),
+        target="y",
+        horizons=[2],
+        predictors=["x"],
+    )
+    transformed_changed = fitted.transform(
+        changed_apply,
+        history=changed_future.iloc[:2],
+        available=changed_future.index[:3],
+    )
+
+    available_x = pd.Series([0.0, 2.0, 4.0])
+    expected_center = available_x.mean()
+    expected_scale = available_x.std(ddof=0)
+    expected_current = (4.0 - expected_center) / expected_scale
+    state = transformed.metadata["preprocessing"]["standardization_state"]
+
+    assert fitted.standardization_state is None
+    assert state["columns"] == ["x"]
+    assert state["center"]["x"] == pytest.approx(expected_center)
+    assert state["scale"]["x"] == pytest.approx(expected_scale)
+    assert state["fitted_on"] == "origin_available_predictors"
+    assert state["fit_rows"] == 3
+    assert transformed.metadata["preprocess_transform"]["standardize_fit_rows"] == 3
+    assert transformed.panel.loc[idx[2], "x"] == pytest.approx(expected_current)
+    assert transformed_changed.panel.loc[idx[2], "x"] == pytest.approx(expected_current)
+    assert transformed.panel.loc[idx[4], "y"] == 999_999.0
+    assert transformed_changed.panel.loc[idx[4], "y"] == -1_000_000.0
 
 
 def test_preprocess_spec_fit_window_policy_applies_outlier_and_mean_state():
@@ -511,9 +720,20 @@ def test_origin_available_transform_without_custom_steps_matches_old_order():
     old_order = apply_standardization_state(old_order, fitted.standardization_state)
 
     pd.testing.assert_frame_equal(transformed.panel, old_order)
+    assert "standardize_scope" not in pre.to_dict()["options"]
+    assert "standardize_scope" not in transformed.metadata["preprocessing"]
+    assert "standardize_scope" not in transformed.metadata["preprocess_transform"]
+    assert transformed.metadata["preprocess_transform"]["standardize_refit"] is False
 
 
-def test_fit_window_custom_steps_warn_stateless_contract():
+def test_fit_window_custom_steps_refuse_an_undeclared_contract():
+    """Was a warning; #449 makes it a refusal.
+
+    The package cannot tell by looking whether a callable aggregates, so under
+    ``fit_window`` -- where a step is re-executed on a window containing
+    post-origin rows -- an undeclared one is refused rather than run with a
+    caveat.
+    """
     metadata = {"dataset": "custom", "source_family": "custom", "frequency": "monthly"}
     panel = mf.data.as_panel(
         pd.DataFrame(
@@ -536,8 +756,24 @@ def test_fit_window_custom_steps_warn_stateless_contract():
         ],
     )
 
-    with pytest.warns(UserWarning, match="row-local/stateless"):
+    with pytest.raises(ValueError, match="row_local=True"):
         pre.fit((panel, metadata), policy="fit_window")
+
+    # declaring it row-local is accepted, and is the whole point of the escape
+    declared = mf.preprocessing.preprocess_spec(
+        transform="none",
+        outliers="none",
+        impute="none",
+        standardize="none",
+        frame="keep",
+        custom_steps=[
+            mf.preprocessing.custom_preprocess_step(
+                "copy_x", _copy_x_custom_step, row_local=True
+            )
+        ],
+    )
+    fitted = declared.fit((panel, metadata), policy="fit_window")
+    assert fitted.preprocessing_scope == "fit_window"
 
 
 def test_preprocess_spec_rejects_non_preprocessing_options_early():

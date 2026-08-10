@@ -31,6 +31,7 @@ from macroforecast.models.linear import (
     nonneg_ridge,
     ols,
     pls,
+    pcr,
     random_walk_ridge,
     ridge,
     scaled_pca,
@@ -38,6 +39,8 @@ from macroforecast.models.linear import (
     sparse_group_lasso,
     supervised_pca,
     supervised_scaled_pca,
+    SupervisedPCARegressor,
+    SupervisedScaledPCARegressor,
 )
 from macroforecast.models.model_averaging import csr, jma
 from macroforecast.models.neural import density_hnn, gru, hemisphere_nn, lstm, nn, transformer
@@ -46,6 +49,9 @@ from macroforecast.models.spline import mars
 from macroforecast.models.svm import linear_svr, nu_svr, svr
 from macroforecast.models.timeseries import (
     ar,
+    ar_bic,
+    setar,
+    star,
     naive,
     hist_mean,
     seasonal_naive,
@@ -120,6 +126,93 @@ class ModelParameter:
 
 
 @dataclass(frozen=True)
+class PrefixSearchSpec:
+    """Declares that a model can fit once and read K-prefix predictions with no recompute.
+
+    ``fit_prefix`` contract: ``fit_prefix(X, y, k_values, **params) -> dict[int,
+    <object with .predict(X) -> array-like>]``. Placed in this module (rather than
+    ``model_selection.types``) to avoid a circular import between ``model_selection``
+    and ``models`` -- ``models.specs`` already imports the concrete model callables
+    it registers ``prefix_search`` for.
+    """
+
+    param: str
+    fit_prefix: Callable[..., dict[int, Any]]
+
+
+@dataclass(frozen=True)
+class ForecastCapabilities:
+    """What forecast policies a model supports, and what features it expects.
+
+    Lives on the model because it is a property of the model. Before A2 the same
+    knowledge was spelled out in two hard-coded sets in `pipeline/spec.py` and one in
+    `forecasting/policy_config.py`, so adding a model meant editing three files across
+    two layers and a registry-drift test was what kept them agreeing.
+
+    ``direct`` means the model can be asked for an h-step point projection of an
+    already-transformed target. A model that iterates its own one-step dynamics
+    (``arima``, ``ets``, a BVAR) cannot: asking it for "direct" silently returns
+    something other than what the caller means, which is why the guard exists.
+
+    ``builds_own_target_lags`` marks the models whose documented usage supplies an
+    explicit ``target_lags`` FeatureSpec with ``predictors=[]`` -- ``ar`` and ``far``.
+    They are ``input_kind="supervised"`` but must not trigger the implicit-feature
+    warning aimed at supervised models that got a default design matrix by accident.
+    """
+
+    direct: bool = True
+    direct_average: bool = True
+    recursive: bool = False
+    builds_own_target_lags: bool = False
+
+    @classmethod
+    def for_input_kind(cls, input_kind: "InputKind") -> "ForecastCapabilities":
+        """The default implied by how a model consumes data.
+
+        ``target`` and ``panel`` models iterate their own dynamics, so a direct
+        h-step projection is not something they can honour. ``supervised`` and
+        ``volatility`` models are fitted per horizon and can.
+        """
+        if input_kind in ("target", "panel"):
+            return cls(direct=False, direct_average=False, recursive=True)
+        return cls(direct=True, direct_average=True, recursive=False)
+
+
+#: Models whose capability differs from what ``input_kind`` implies. Three, and each
+#: has a reason rather than a convention:
+#:
+#:   hist_mean  -- input_kind "target", but it is a constant-mean benchmark with no
+#:                 dynamics to iterate, so a direct h-step projection is exactly what
+#:                 it does.
+#:   var        -- input_kind "panel"; valid as a direct point forecast, not as a
+#:                 horizon-average target.
+#:   favar      -- input_kind "supervised", but genuinely iterated internally, unlike
+#:                 ar/far.
+#:   ar, far    -- input_kind "supervised" and direct-capable, but they supply their
+#:                 own target lags by design.
+_CAPABILITY_OVERRIDES: dict[str, "ForecastCapabilities"] = {
+    "hist_mean": ForecastCapabilities(direct=True, direct_average=True, recursive=False),
+    "var": ForecastCapabilities(direct=True, direct_average=False, recursive=True),
+    "favar": ForecastCapabilities(direct=False, direct_average=False, recursive=True),
+    "ar": ForecastCapabilities(direct=True, direct_average=True, builds_own_target_lags=True),
+    "far": ForecastCapabilities(direct=True, direct_average=True, builds_own_target_lags=True),
+}
+
+
+def forecast_capabilities(spec: "ModelSpec") -> ForecastCapabilities:
+    """Capability for one model: an explicit override, else the ``input_kind`` default.
+
+    A function rather than a field so this lands without touching every ModelSpec
+    construction site or the ``custom_model`` signature. Making it a real field is the
+    next step, once the guards read it and the drift test proves the two agree.
+    """
+    override = _CAPABILITY_OVERRIDES.get(spec.name)
+    if override is not None:
+        return override
+    return ForecastCapabilities.for_input_kind(spec.input_kind)
+
+
+@dataclass(frozen=True)
 class ModelSpec:
     """Callable model plus model-owned defaults and hyperparameter spaces."""
 
@@ -140,6 +233,7 @@ class ModelSpec:
     recommended_preprocessing: tuple[str, ...] = ()
     description: str = ""
     selection_method: str = "cv"
+    prefix_search: "PrefixSearchSpec | None" = None
 
     def with_preset(self, preset: str) -> "ModelSpec":
         """Return the same model spec with a different hyperparameter preset."""
@@ -477,6 +571,7 @@ def _spec(
     recommended_preprocessing: tuple[str, ...] = (),
     description: str = "",
     selection_method: str = "cv",
+    prefix_search: "PrefixSearchSpec | None" = None,
 ) -> ModelSpec:
     return ModelSpec(
         name=name,
@@ -493,6 +588,7 @@ def _spec(
         requires_scaling=requires_scaling,
         recommended_preprocessing=tuple(recommended_preprocessing),
         description=description,
+        prefix_search=prefix_search,
     )
 
 
@@ -578,6 +674,15 @@ _AR_SPACES: SearchSpaces = {
     "small": {"n_lag": (1, 2, 4)},
     "standard": {"n_lag": (1, 2, 4, 6, 12)},
     "wide": {"n_lag": (1, 2, 3, 4, 6, 9, 12, 18, 24)},
+}
+
+_AR_BIC_SPACES: SearchSpaces = {
+    "small": {"max_lag": (4, 8, 12)},
+    "standard": {"max_lag": (12,)},
+    "wide": {
+        "max_lag": (6, 12, 18, 24),
+        "criterion": ("aic", "aicc", "bic"),
+    },
 }
 
 # favar's own (n_factors, n_lag) grid -- NOT the shared _FACTOR_SPACES/_AR_SPACES
@@ -715,8 +820,12 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "ridge",
         "linear",
         ridge,
-        default_params={"alpha": 1.0},
-        parameters=(_p("alpha", 1.0, "float", "L2 penalty strength."),),
+        default_params={"alpha": 1.0, "standardize": False},
+        parameters=(
+            _p("alpha", 1.0, "float", "L2 penalty strength."),
+            _p("standardize", False, "bool",
+               "Standardize features before fitting; required when feature scales are heterogeneous.", False),
+        ),
         spaces=_ALPHA_SPACES,
         method="cv_path",
         backend="sklearn.linear_model.Ridge",
@@ -2237,6 +2346,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "include_constant": True,
             "drop_control_columns": True,
             "quadratic_factors": False,
+            "score_projection": "transform",
         },
         parameters=(
             _p("n_components", 3, "int", "Number of latent PLS components."),
@@ -2274,7 +2384,14 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 "quadratic_factors",
                 False,
                 "bool",
-                "Whether to add the Hounyo-Li PC2 squared-factor forecast head.",
+                "Whether to add a separate squared-score forecast head.",
+                False,
+            ),
+            _p(
+                "score_projection",
+                "transform",
+                "Literal['transform', 'x_weights_raw']",
+                "How fitted PLS scores are projected for the external forecast head.",
                 False,
             ),
         ),
@@ -2284,7 +2401,89 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "wide": {"n_components": (1, 2, 3, 5, 8, 10, 12, 20)},
         },
         backend="sklearn.cross_decomposition.PLSRegression",
-        description="Partial least squares regression with optional Hounyo-Li-style control residualization.",
+        description="Partial least squares regression with optional control residualization.",
+    ),
+    "pcr": _spec(
+        "pcr",
+        "composite",
+        pcr,
+        default_params={
+            "n_components": 3,
+            "control_columns": None,
+            "include_constant": True,
+            "drop_control_columns": True,
+            "standardize": True,
+            "standardize_ddof": 1,
+            "nan_policy": "raise",
+            "quadratic_factors": False,
+            "quadratic_mode": "separate",
+        },
+        parameters=(
+            _p("n_components", 3, "int", "Number of principal component scores."),
+            _p(
+                "control_columns",
+                None,
+                "Sequence[str] | None",
+                "Optional X columns used as raw forecasting controls.",
+                False,
+            ),
+            _p(
+                "include_constant",
+                True,
+                "bool",
+                "Whether to include a constant in the control block.",
+                False,
+            ),
+            _p(
+                "drop_control_columns",
+                True,
+                "bool",
+                "Whether controls are excluded from the PCA block.",
+                False,
+            ),
+            _p(
+                "standardize",
+                True,
+                "bool",
+                "Whether to standardize predictor factor columns inside the model.",
+                False,
+            ),
+            _p(
+                "standardize_ddof",
+                1,
+                "int",
+                "Degrees of freedom for predictor standard deviations.",
+                False,
+            ),
+            _p(
+                "nan_policy",
+                "raise",
+                "raise | zero_after_standardize | fill_zero",
+                "How non-finite factor-block values are handled.",
+                False,
+            ),
+            _p(
+                "quadratic_factors",
+                False,
+                "bool",
+                "Whether to add a squared-score forecast head.",
+                False,
+            ),
+            _p(
+                "quadratic_mode",
+                "separate",
+                "separate | joint",
+                "How linear and squared score heads are estimated.",
+                False,
+            ),
+        ),
+        spaces={
+            "small": {"n_components": (1, 2, 3)},
+            "standard": {"n_components": (1, 2, 3, 5, 8)},
+            "wide": {"n_components": (1, 2, 3, 5, 8, 10, 12, 20)},
+        },
+        backend="numpy.linalg.svd + pseudoinverse linear heads",
+        description="Principal component regression with optional control residualization.",
     ),
     "scaled_pca": _spec(
         "scaled_pca",
@@ -2364,6 +2563,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "include_constant": True,
             "drop_control_columns": True,
             "preselect": "none",
+            "preselect_stage": "after_standardize",
             "t_threshold": 1.28,
             "elastic_net_alpha": 0.0002,
             "elastic_net_l1_ratio": 0.5,
@@ -2417,6 +2617,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 False,
             ),
             _p(
+                "preselect_stage",
+                "after_standardize",
+                "str",
+                "Stage at which optional pre-selection runs: after_standardize or raw_before_standardize.",
+                False,
+            ),
+            _p(
                 "t_threshold",
                 1.28,
                 "float",
@@ -2435,6 +2642,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 0.5,
                 "float",
                 "Elastic-net pre-selection L1 ratio.",
+                False,
+            ),
+            _p(
+                "elastic_net_search",
+                None,
+                "SearchSpec | Mapping[str, Any] | None",
+                "Optional information-criterion search for elastic-net pre-selection alpha/l1_ratio.",
                 False,
             ),
             _p(
@@ -2470,6 +2684,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             },
         },
         description="Original-style iterative supervised PCA with residual correlation screening and projection.",
+        prefix_search=PrefixSearchSpec(param="n_components", fit_prefix=SupervisedPCARegressor.fit_prefix),
     ),
     "supervised_scaled_pca": _spec(
         "supervised_scaled_pca",
@@ -2484,6 +2699,7 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             "include_constant": True,
             "drop_control_columns": True,
             "preselect": "none",
+            "preselect_stage": "after_standardize",
             "t_threshold": 1.28,
             "elastic_net_alpha": 0.0002,
             "elastic_net_l1_ratio": 0.5,
@@ -2540,6 +2756,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 False,
             ),
             _p(
+                "preselect_stage",
+                "after_standardize",
+                "str",
+                "Stage at which optional pre-selection runs: after_standardize or raw_before_standardize.",
+                False,
+            ),
+            _p(
                 "t_threshold",
                 1.28,
                 "float",
@@ -2558,6 +2781,13 @@ MODEL_SPECS: dict[str, ModelSpec] = {
                 0.5,
                 "float",
                 "Elastic-net pre-selection L1 ratio.",
+                False,
+            ),
+            _p(
+                "elastic_net_search",
+                None,
+                "SearchSpec | Mapping[str, Any] | None",
+                "Optional information-criterion search for elastic-net pre-selection alpha/l1_ratio.",
                 False,
             ),
             _p(
@@ -2593,6 +2823,31 @@ MODEL_SPECS: dict[str, ModelSpec] = {
             },
         },
         description="Hounyo-Li supervised scaled PCA: marginal predictive-slope scaling followed by SPCA.",
+        prefix_search=PrefixSearchSpec(param="n_components", fit_prefix=SupervisedScaledPCARegressor.fit_prefix),
+    ),
+    "setar": _spec(
+        "setar",
+        "timeseries",
+        setar,
+        default_params={"n_lag": 2, "direct": False},
+        parameters=(
+            _p("n_lag", 2, "int", "Number of autoregressive lags per regime."),
+            _p("direct", False, "bool", "Direct multi-step (set by the forecast policy).", False),
+        ),
+        input_kind="supervised",
+        description="Self-exciting threshold autoregression (two regimes).",
+    ),
+    "star": _spec(
+        "star",
+        "timeseries",
+        star,
+        default_params={"n_lag": 2, "direct": False},
+        parameters=(
+            _p("n_lag", 2, "int", "Number of autoregressive lags per regime."),
+            _p("direct", False, "bool", "Direct multi-step (set by the forecast policy).", False),
+        ),
+        input_kind="supervised",
+        description="Smooth-transition autoregression (logistic transition).",
     ),
     "ar": _spec(
         "ar",
@@ -2607,6 +2862,60 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         spaces=_AR_SPACES,
         input_kind="supervised",
         description="Univariate autoregression.",
+        selection_method="bic",
+    ),
+    "ar_bic": _spec(
+        "ar_bic",
+        "timeseries",
+        ar_bic,
+        default_params={
+            "min_lag": 1,
+            "max_lag": 12,
+            "criterion": "bic",
+            "include_constant": True,
+            "ic_parameter_count": "standard",
+            "estimator": "ols",
+            "forecast_mode": "iterated",
+            "horizon": 1,
+        },
+        parameters=(
+            _p("min_lag", 1, "int", "Minimum AR lag order considered internally.", False),
+            _p("max_lag", 12, "int", "Maximum AR lag order considered internally."),
+            _p("criterion", "bic", "str", "Lag-selection criterion: aic, aicc, or bic."),
+            _p(
+                "include_constant",
+                True,
+                "bool",
+                "Include an intercept in lag-selection and compatible final fits.",
+                False,
+            ),
+            _p(
+                "ic_parameter_count",
+                "standard",
+                "str",
+                "IC parameter count: standard or lag_square.",
+                False,
+            ),
+            _p(
+                "estimator",
+                "ols",
+                "str",
+                "Final selected-lag backend: ols, yule_walker, burg, or matlab_ar.",
+                False,
+            ),
+            _p(
+                "forecast_mode",
+                "iterated",
+                "str",
+                "Forecast mode: iterated, direct_lag_projection, or coefficient_power.",
+                False,
+            ),
+            _p("horizon", 1, "int", "First forecast step returned by predict().", False),
+        ),
+        spaces=_AR_BIC_SPACES,
+        input_kind="target",
+        backend="internal",
+        description="Target-only AR with internal information-criterion lag selection.",
         selection_method="bic",
     ),
     "arima": _spec(
@@ -3396,13 +3705,22 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "far",
         "factor",
         far,
-        default_params={"n_factors": 3, "n_lag": 1, "random_state": 0, "direct": False},
+        default_params={"n_factors": 3, "n_lag": 1, "random_state": 0, "direct": False,
+                        "scale": False},
         parameters=(
             _p("n_factors", 3, "int", "Number of PCA factors."),
             _p("n_lag", 1, "int", "Autoregressive lag order."),
             _p("random_state", 0, "int", "PCA random seed.", False),
             _p("direct", False, "bool",
                "Direct multi-step projection onto fresh lags (set by the forecast policy).", False),
+            # Deliberately NOT tunable: the factor-extraction convention is a
+            # modelling decision (which method a study specifies), not a
+            # hyperparameter. Searching over it would amount to picking whichever
+            # convention fits best, which is exactly what a replication must not do.
+            _p("scale", False, "bool",
+               "Standardize the predictor block before the PCA (correlation PCA). False, the "
+               "default, centers only (covariance PCA), so the largest-variance series dominate "
+               "the factors. Note pca_step defaults the other way.", False),
         ),
         spaces={
             key: {**space, **_AR_SPACES[key]} for key, space in _FACTOR_SPACES.items()

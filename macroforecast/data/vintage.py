@@ -461,7 +461,7 @@ def _coerce_static_extra(value: DataBundle | pd.DataFrame) -> DataBundle:
 
 
 def _panel_fingerprint_for_vintage(panel: pd.DataFrame) -> dict[str, Any]:
-    from macroforecast.pipeline.run import _panel_fingerprint
+    from macroforecast.data.identity import panel_fingerprint as _panel_fingerprint
 
     return _panel_fingerprint(panel)
 

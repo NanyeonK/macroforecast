@@ -9,6 +9,11 @@ import pandas as pd
 from macroforecast.feature_engineering import FeatureSet
 from macroforecast.models.types import ModelFit
 
+SPARSE_ACTIVE_COEF_TOL = 1e-12
+SPARSE_N_PARAMS_CONVENTION = (
+    "active_penalized_slope_count_excludes_intercept_and_residual_variance"
+)
+
 
 def as_frame(X: Any, *, name_prefix: str = "x") -> pd.DataFrame:
     # Unwrap a DataBundle-like object (carries a ``.panel`` DataFrame). The runner's
@@ -154,6 +159,53 @@ def fit_estimator(
         metadata={"n_obs": len(frame), **(metadata or {})},
         diagnostics=diagnostics,
     )
+
+
+def attach_sparse_ic_diagnostics(
+    estimator: Any,
+    X: pd.DataFrame,
+    y: pd.Series,
+    *,
+    coef_tolerance: float = SPARSE_ACTIVE_COEF_TOL,
+) -> None:
+    """Attach training-sample IC diagnostics for sparse linear estimators."""
+
+    predictions = np.asarray(estimator.predict(X), dtype=float).reshape(-1)
+    if len(predictions) != len(y):
+        raise ValueError("sparse IC diagnostics require one prediction per training row")
+    if not np.all(np.isfinite(predictions)):
+        raise ValueError("sparse IC diagnostics require finite fitted predictions")
+    target = y.to_numpy(dtype=float).reshape(-1)
+    if not np.all(np.isfinite(target)):
+        raise ValueError("sparse IC diagnostics require a finite training target")
+    residuals = target - predictions
+    ssr = float(residuals @ residuals)
+    if not np.isfinite(ssr) or ssr < 0.0:
+        raise ValueError("sparse IC diagnostics require finite non-negative SSR")
+
+    target_estimator = _final_pipeline_estimator(estimator)
+    coef = getattr(target_estimator, "coef_", None)
+    if coef is None:
+        raise AttributeError("sparse IC diagnostics require fitted coef_")
+    coef_values = np.asarray(coef, dtype=float).reshape(-1)
+    if not np.all(np.isfinite(coef_values)):
+        raise ValueError("sparse IC diagnostics require finite coefficients")
+    active = int(np.sum(np.abs(coef_values) > float(coef_tolerance)))
+
+    estimator.ssr_ = ssr
+    estimator.nobs_ = int(len(y))
+    estimator.n_params_ = active
+    estimator.n_params_convention_ = SPARSE_N_PARAMS_CONVENTION
+    estimator.coef_zero_tol_ = float(coef_tolerance)
+
+
+def _final_pipeline_estimator(estimator: Any) -> Any:
+    if hasattr(estimator, "steps"):
+        try:
+            return estimator.steps[-1][1]
+        except Exception:  # noqa: BLE001 - keep diagnostics failure explanatory below.
+            return estimator
+    return estimator
 
 
 def _fit_diagnostics(estimator: Any, X: pd.DataFrame, y: pd.Series) -> dict[str, Any]:
@@ -385,9 +437,12 @@ __all__ = [
     "align_xy",
     "as_frame",
     "as_series",
+    "attach_sparse_ic_diagnostics",
     "binary_feature_mask",
     "fit_estimator",
     "optional_import",
     "resolve_feature_count",
     "resolve_xy",
+    "SPARSE_ACTIVE_COEF_TOL",
+    "SPARSE_N_PARAMS_CONVENTION",
 ]

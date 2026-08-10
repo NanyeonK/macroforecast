@@ -15,7 +15,6 @@ for macroforecast pandas inputs/outputs and current numpy scalar assignment.
 import numpy as np
 import pandas as pd
 import math
-import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 
 
@@ -42,7 +41,7 @@ class MacroRandomForest:
                  rw_regul=0.75, keep_forest=False, block_size=12,
                  fast_rw=True, ridge_lambda=0.1, HRW=0,
                  B=50, resampling_opt=2, print_b=True,
-                 parallelise=True, n_cores=-1):
+                 parallelise=True, n_cores=-1, random_state=None):
 
         ######## INITIALISE VARIABLES ###########
 
@@ -87,6 +86,11 @@ class MacroRandomForest:
 
         # Speed Variables
         self.block_size, self.fast_rw, self.parallelise, self.n_cores = block_size, fast_rw, parallelise, n_cores
+        # Deterministic per-tree seeding: with random_state set, tree b draws from
+        # a fixed seed derived from (random_state, b), so serial and parallel forests
+        # are bit-identical and the whole fit is reproducible run-to-run.
+        self.random_state = None if random_state is None else int(random_state)
+        self._tree_seeds = None
 
         if isinstance(self.S_pos, str):
             self.S_pos = np.arange(1, len(self.data.columns))
@@ -177,7 +181,12 @@ class MacroRandomForest:
             print('Are you sure you want to mix a customized prior with random X?')
 
         if len(self.z_pos) < 1:
-            raise Exception('You need to specificy at least one X.')
+            # Intercept-only linear part (X_t = iota). The paper's plain-RF
+            # benchmark is exactly MRF with X_t = iota; K = len(z_pos)+1 always
+            # carries the auto-intercept, so an empty z_pos yields a pure
+            # time-varying intercept = a random forest of y on the state S_t.
+            # The original raise was over-strict versus the MRF definition.
+            self.z_pos = np.asarray([], dtype=int)
 
         if len(self.prior_var) != 0 or self.have_prior_mean:
             if self.prior_var == None and self.prior_mean != None:
@@ -199,8 +208,8 @@ class MacroRandomForest:
 
         if self.min_leaf_fracz*(len(self.z_pos)+1) < 2:
             self.min_leaf_fracz = 2/(len(self.z_pos)+1)
-            print(f'Min.leaf.frac.of.x was too low. Thus, it was forced to ', 2 /
-                  ({len(self.z_pos)}+1), ' -- a bare minimum. You should consider a higher one.', sep='')
+            print('Min.leaf.frac.of.x was too low. Thus, it was forced to ', 2 /
+                  (len(self.z_pos)+1), ' -- a bare minimum. You should consider a higher one.', sep='')
 
         if len(self.oos_pos) == 0:
             self.oos_flag = True
@@ -264,6 +273,8 @@ class MacroRandomForest:
         '''
 
         Bs = np.arange(0, self.B)
+        if self.random_state is not None:
+            self._tree_seeds = np.random.SeedSequence(int(self.random_state)).generate_state(int(self.B))
 
         # The original basis for this code is taken from publicly available code for a simple tree by André Bleier.
         # Standardize data (remeber, we are doing ridge in the end)
@@ -453,6 +464,8 @@ class MacroRandomForest:
         '''
         Function to create a single MRF tree.
         '''
+        if getattr(self, 'random_state', None) is not None:
+            np.random.seed(int(self._tree_seeds[b]))
 
         if self.print_b:
             print(f"Tree {b+1} out of {self.B}")
@@ -643,9 +656,13 @@ class MacroRandomForest:
 
                 if stop_flag:
                     tree_info.loc[j, "TERMINAL"] = "LEAF"
-
-                tree_info = pd.concat(
-                    [tree_info, children]).reset_index(drop=True)
+                else:
+                    # BUGFIX: children is only defined when a split is made
+                    # (not stop_flag). A node with no valid split (all SSE inf)
+                    # is a LEAF and adds no children; the unconditional concat
+                    # here raised UnboundLocalError on `children`.
+                    tree_info = pd.concat(
+                        [tree_info, children]).reset_index(drop=True)
 
                 do_splits = not (
                     all(np.array(tree_info['TERMINAL']) != "SPLIT"))
@@ -888,8 +905,15 @@ class MacroRandomForest:
 
         for i in range(0, len(leafs)):
 
-            ind_all = list(self.data_ori[eval(
-                leafs_mat[i, 2].replace("[", "self.data_ori["))].index)
+            _filt = leafs_mat[i, 2]
+            if _filt is None:
+                # BUGFIX: a no-split (root) leaf carries FILTER=None; all rows
+                # belong to it. The unconditional .replace() raised
+                # AttributeError('NoneType') on degenerate single-leaf trees.
+                ind_all = list(self.data_ori.index)
+            else:
+                ind_all = list(self.data_ori[eval(
+                    _filt.replace("[", "self.data_ori["))].index)
 
             ind = np.array([j for j in ind_all if j <
                             self.oos_pos[0] if not np.isnan(j)])
@@ -1105,6 +1129,8 @@ class MacroRandomForest:
         return beta_bank_shu, fitted_shu
 
     def band_plots(self):
+        import matplotlib.pyplot as plt
+
 
         if self.cheap_look_at_GTVPs:
             if self.B*(1-self.BS4_frac) < 30:
@@ -1228,6 +1254,8 @@ class MacroRandomForest:
         return daily_profit, cumulative_profit, annualised_return, sharpe_ratio, max_drawdown
 
     def monkey_trader_plot(self, close_prices):
+        import matplotlib.pyplot as plt
+
 
         np.random.seed(1)
         fig, ax = plt.subplots()

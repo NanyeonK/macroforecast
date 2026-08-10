@@ -227,7 +227,7 @@ Qualified name: `macroforecast.model_selection.types.SearchSpec`
 #### Signature
 
 ```python
-macroforecast.model_selection.SearchSpec(method: str, param_grid: dict[str, tuple[Any, ...]] = <factory>, param_distributions: dict[str, ParamDistribution] = <factory>, n_iter: int = 20, random_state: int | None = None, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, custom_func: Callable[..., Any] | None = None, custom_params: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>, criterion: str | None = None, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None) -> None
+macroforecast.model_selection.SearchSpec(method: str, param_grid: dict[str, tuple[Any, ...]] = <factory>, param_distributions: dict[str, ParamDistribution] = <factory>, n_iter: int = 20, random_state: int | None = None, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, custom_func: Callable[..., Any] | None = None, custom_params: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>, criterion: str | None = None, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None, score_aggregation: ScoreAggregation = "mean_split") -> None
 ```
 
 #### Description
@@ -251,6 +251,7 @@ Parameter-search specification consumed by ``select_params``.
 | `metadata` | positional or keyword | `dict[str, Any]` | `<factory>` |
 | `criterion` | positional or keyword | `str \| None` | `None` |
 | `validation_splitter` | positional or keyword | `ValidationSplitterSpec \| Callable[..., Any] \| str \| None` | `None` |
+| `score_aggregation` | positional or keyword | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
@@ -281,6 +282,7 @@ import macroforecast as mf
 | `metadata` | `dict[str, Any]` | `default_factory` |
 | `criterion` | `str \| None` | `None` |
 | `validation_splitter` | `ValidationSplitterSpec \| Callable[..., Any] \| str \| None` | `None` |
+| `score_aggregation` | `ScoreAggregation` | `"mean_split"` |
 
 #### Public Methods
 
@@ -345,7 +347,7 @@ Qualified name: `macroforecast.model_selection.builders.bayesian_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.bayesian_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = None) -> SearchSpec
+macroforecast.model_selection.bayesian_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
@@ -359,6 +361,7 @@ Sequential Gaussian-process Bayesian search request.
 | `param_distributions` | positional or keyword | `dict[str, ParamDistribution \| Iterable[Any] \| Any]` | `required` |
 | `n_iter` | keyword only | `int` | `20` |
 | `random_state` | keyword only | `int \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
@@ -409,7 +412,7 @@ Qualified name: `macroforecast.model_selection.builders.custom_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.custom_search(name: str, func: Callable[..., Any], *, param_grid: dict[str, Iterable[Any] | Any] | None = None, param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None, n_iter: int = 20, random_state: int | None = None, metadata: dict[str, Any] | None = None, **params: Any) -> SearchSpec
+macroforecast.model_selection.custom_search(name: str, func: Callable[..., Any], *, param_grid: dict[str, Iterable[Any] | Any] | None = None, param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None, n_iter: int = 20, random_state: int | None = None, metadata: dict[str, Any] | None = None, score_aggregation: ScoreAggregation = "mean_split", **params: Any) -> SearchSpec
 ```
 
 #### Description
@@ -427,6 +430,7 @@ Build a user-supplied parameter-search request.
 | `n_iter` | keyword only | `int` | `20` |
 | `random_state` | keyword only | `int \| None` | `None` |
 | `metadata` | keyword only | `dict[str, Any] \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 | `params` | var keyword | `Any` | `required` |
 
 #### Returns
@@ -447,7 +451,7 @@ Qualified name: `macroforecast.model_selection.builders.cv_path`
 #### Signature
 
 ```python
-macroforecast.model_selection.cv_path(*, param: str = "alpha", values: Iterable[Any] | None = None) -> SearchSpec
+macroforecast.model_selection.cv_path(*, param: str = "alpha", values: Iterable[Any] | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
@@ -460,6 +464,7 @@ Evaluate an ordered one-parameter path, commonly lasso/ridge alpha values.
 | --- | --- | --- | --- |
 | `param` | keyword only | `str` | `"alpha"` |
 | `values` | keyword only | `Iterable[Any] \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
@@ -511,7 +516,7 @@ Qualified name: `macroforecast.model_selection.builders.fixed`
 #### Signature
 
 ```python
-macroforecast.model_selection.fixed(params: dict[str, Any] | None = None, *, random_state: int | None = None) -> SearchSpec
+macroforecast.model_selection.fixed(params: dict[str, Any] | None = None, *, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
@@ -524,6 +529,7 @@ Evaluate one fixed parameter set without tuning.
 | --- | --- | --- | --- |
 | `params` | positional or keyword | `dict[str, Any] \| None` | `None` |
 | `random_state` | keyword only | `int \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
@@ -543,7 +549,7 @@ Qualified name: `macroforecast.model_selection.builders.genetic_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.genetic_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, random_state: int | None = None) -> SearchSpec
+macroforecast.model_selection.genetic_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
@@ -559,6 +565,7 @@ Lightweight genetic-style stochastic search over parameter distributions.
 | `generations` | keyword only | `int` | `4` |
 | `mutation_rate` | keyword only | `float` | `0.2` |
 | `random_state` | keyword only | `int \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
@@ -578,7 +585,7 @@ Qualified name: `macroforecast.model_selection.builders.grid`
 #### Signature
 
 ```python
-macroforecast.model_selection.grid(param_grid: dict[str, Iterable[Any] | Any], *, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None) -> SearchSpec
+macroforecast.model_selection.grid(param_grid: dict[str, Iterable[Any] | Any], *, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
@@ -591,6 +598,7 @@ Grid-search over explicit parameter values.
 | --- | --- | --- | --- |
 | `param_grid` | positional or keyword | `dict[str, Iterable[Any] \| Any]` | `required` |
 | `validation_splitter` | keyword only | `ValidationSplitterSpec \| Callable[..., Any] \| str \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
@@ -642,7 +650,7 @@ Qualified name: `macroforecast.model_selection.builders.random_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.random_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = None) -> SearchSpec
+macroforecast.model_selection.random_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
@@ -656,6 +664,7 @@ Seeded random search over parameter distributions.
 | `param_distributions` | positional or keyword | `dict[str, ParamDistribution \| Iterable[Any] \| Any]` | `required` |
 | `n_iter` | keyword only | `int` | `20` |
 | `random_state` | keyword only | `int \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
@@ -732,7 +741,7 @@ Qualified name: `macroforecast.model_selection.search.select_params`
 #### Signature
 
 ```python
-macroforecast.model_selection.select_params(model: str | Callable[..., Any] | ModelSpec, X: Any, y: Any | None = None, search: SearchSpec | None = None, *, window: WindowSpec | str | None = None, splits: Sequence[tuple[Any, Any]] | None = None, metric: MetricLike = "mse", maximize: bool = False, fixed_params: dict[str, Any] | None = None, preset: str | None = None, method: str | None = None, random_state: int | None = None, n_iter: int | None = None, population_size: int | None = None, generations: int | None = None, mutation_rate: float | None = None, allow_non_temporal_splits: bool = False) -> SearchResult
+macroforecast.model_selection.select_params(model: str | Callable[..., Any] | ModelSpec, X: Any, y: Any | None = None, search: SearchSpec | None = None, *, window: WindowSpec | str | None = None, splits: Sequence[tuple[Any, Any]] | None = None, metric: MetricLike = "mse", maximize: bool = False, fixed_params: dict[str, Any] | None = None, preset: str | None = None, method: str | None = None, random_state: int | None = None, n_iter: int | None = None, population_size: int | None = None, generations: int | None = None, mutation_rate: float | None = None, allow_non_temporal_splits: bool = False, score_aggregation: ScoreAggregation | None = None) -> SearchResult
 ```
 
 #### Description
@@ -767,6 +776,7 @@ produced by ``macroforecast.window``.
 | `generations` | keyword only | `int \| None` | `None` |
 | `mutation_rate` | keyword only | `float \| None` | `None` |
 | `allow_non_temporal_splits` | keyword only | `bool` | `False` |
+| `score_aggregation` | keyword only | `ScoreAggregation \| None` | `None` |
 
 #### Returns
 
@@ -786,7 +796,7 @@ Qualified name: `macroforecast.model_selection.builders.search_spec`
 #### Signature
 
 ```python
-macroforecast.model_selection.search_spec(model: str | Callable[..., Any] | ModelSpec, *, preset: str | None = None, method: str | None = None, random_state: int | None = None, n_iter: int | None = None, population_size: int | None = None, generations: int | None = None, mutation_rate: float | None = None) -> SearchSpec
+macroforecast.model_selection.search_spec(model: str | Callable[..., Any] | ModelSpec, *, preset: str | None = None, method: str | None = None, random_state: int | None = None, n_iter: int | None = None, population_size: int | None = None, generations: int | None = None, mutation_rate: float | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
@@ -805,6 +815,7 @@ Build a SearchSpec from a registered model's owned search space.
 | `population_size` | keyword only | `int \| None` | `None` |
 | `generations` | keyword only | `int \| None` | `None` |
 | `mutation_rate` | keyword only | `float \| None` | `None` |
+| `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
 
