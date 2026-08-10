@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+import inspect
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -36,7 +37,12 @@ from macroforecast.pipeline import (
     resolve_evaluation_inputs,
 )
 
-# ``mf.pipeline.evaluate`` is the re-exported FUNCTION, not the module.
+# ``macroforecast.pipeline.evaluate`` is two things: the submodule, and the
+# FUNCTION the package re-exports under the same name. ``mf.pipeline.evaluate``
+# resolves to whichever the import order left on the package, so the module is
+# fetched by name here rather than off the attribute -- reading ``__file__`` from
+# the attribute happens to work only while something else has already imported
+# the submodule, and fails on a fresh import.
 eval_mod = importlib.import_module("macroforecast.pipeline.evaluate")
 EVALUATOR = Path(eval_mod.__file__)
 
@@ -131,6 +137,22 @@ def test_the_evaluator_never_names_a_loader() -> None:
 def test_the_evaluator_module_exposes_no_loader_attribute() -> None:
     """The symbol tests used to monkeypatch is gone, not merely unused."""
     assert not hasattr(eval_mod, "load_fred_series")
+
+
+def test_the_public_evaluate_name_is_the_callable_not_the_module() -> None:
+    """The overloaded name resolves the way callers depend on, whatever imported first.
+
+    ``from macroforecast.pipeline import evaluate`` must give the function --
+    users call it -- while the module of the same name stays reachable by import.
+    Asserting both keeps this file honest about which one it is reading, and
+    would catch a re-export that stopped shadowing the submodule.
+    """
+    assert callable(evaluate)
+    assert evaluate is eval_mod.evaluate
+    assert evaluate is not eval_mod
+    assert eval_mod.__name__ == "macroforecast.pipeline.evaluate"
+    # Signature, not just callability: ``inputs`` is the seam this file exists for.
+    assert "inputs" in inspect.signature(evaluate).parameters
 
 
 RESOLVER_MODULE = "macroforecast.pipeline.evaluation_inputs"

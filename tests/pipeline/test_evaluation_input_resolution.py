@@ -119,7 +119,7 @@ def test_recession_and_expansion_share_one_fetch_per_evaluation(monkeypatch) -> 
 
 
 def test_a_second_evaluation_resolves_again_rather_than_reusing_a_stale_load(monkeypatch):
-    """"Once per evaluation operation", not "once per process": no hidden global cache."""
+    """Once per evaluation *operation*, not once per process: no hidden global cache."""
     dates = pd.date_range("2020-01-01", periods=24, freq="MS")
     calls = _record_loads(monkeypatch, dates, [1] * 24)
     spec = _spec(
