@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from macroforecast.window.context import OriginContext
+
+import dataclasses as _dc
+
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypeAlias, cast
@@ -385,7 +389,11 @@ class ValWindow:
     horizon: int = 1
     step: int = 1
     embargo: int | None = None
-    random_state: int | None = None
+    # Seeded by default. ``random_kfold_split`` seeds itself with 0, but a ``None``
+    # default here is forwarded EXPLICITLY and so overrides it -- which made every
+    # k-fold CV selection irreproducible (#513). Pass ``None`` to opt into an
+    # unseeded shuffle deliberately.
+    random_state: int | None = 0
     retune_every: TemporalCadence = 1
     retune_on_retrain: bool = True
     reuse_params: bool = True
@@ -481,6 +489,84 @@ class AlignmentWindow:
         }
 
 
+#: The flat fields' own defaults, so "the caller set this" can be told from "this is
+#: what the dataclass fills in". Without it, supplying only the NESTED value looks like
+#: a conflict with the flat default and gets refused -- which is what the first draft
+#: of this function did.
+_FLAT_DEFAULTS: dict[str, Any] = {
+    "validation_size": None,
+    "validation_ratio": 0.2,
+    "min_train_size": None,
+    "n_splits": 5,
+    "embargo": 0,
+    "horizon": 1,
+    "step": 1,
+}
+
+#: ``WindowSpec`` carries each of these twice: once inside its nested window object and
+#: once as a legacy flat field. Each entry is (flat name, nested attribute, nested field
+#: name), and :func:`_reconcile_flat_aliases` makes the pair agree or refuses.
+_FLAT_ALIASES: tuple[tuple[str, str, str], ...] = (
+    ("validation_size", "val", "size"),
+    ("validation_ratio", "val", "ratio"),
+    ("min_train_size", "val", "min_train_size"),
+    ("n_splits", "val", "n_splits"),
+    ("embargo", "val", "embargo"),
+    ("horizon", "test", "horizon"),
+    ("step", "test", "step"),
+)
+
+
+def _reconcile_flat_aliases(spec: "WindowSpec") -> None:
+    """Compile a flat value into its nested field, or refuse if both were set.
+
+    Silently keeping both is the failure this removes: the caller believes the value
+    they passed is in force, and different consumers read different fields --
+    ``split()``, ``to_table()`` and ``val_splits_for_origin()`` do not all read the same
+    one.
+
+    Only a *disagreement between two explicit values* is an error. A flat value with the
+    nested field still at its own default is the documented alias case and compiles
+    through, which is what keeps every existing builder working.
+    """
+    for flat_name, nested_name, nested_field in _FLAT_ALIASES:
+        nested_obj = getattr(spec, nested_name, None)
+        if nested_obj is None:
+            continue
+        flat_value = getattr(spec, flat_name, None)
+        nested_value = getattr(nested_obj, nested_field, None)
+        if flat_value == nested_value:
+            continue
+        flat_default = _FLAT_DEFAULTS[flat_name]
+        if flat_value == flat_default:
+            # Only the nested value was set. It wins, and the flat field is left
+            # showing its default -- reading it would be reading a field the caller
+            # never touched. (Removing the flat field is the follow-up; this slice
+            # only removes the ambiguity about which value is in force.)
+            if isinstance(nested_value, int) and not isinstance(nested_value, bool):
+                # Mirror it back so a caller reading either field sees the same window.
+                # Only for plain ints: the flat fields are validated as ints further
+                # down, while the nested ones legitimately carry None (embargo) and
+                # pandas calendar offsets (step, e.g. MonthEnd). Mirroring those would
+                # fail validation for a reason that has nothing to do with the caller.
+                object.__setattr__(spec, flat_name, nested_value)
+            continue
+        nested_default = getattr(type(nested_obj)(), nested_field, None)
+        if nested_value == nested_default:
+            # Alias case: the caller set only the flat one. Compile it in.
+            object.__setattr__(
+                spec, nested_name, _dc.replace(nested_obj, **{nested_field: flat_value})
+            )
+            continue
+        raise ValueError(
+            f"WindowSpec received two different values for the same quantity: "
+            f"{flat_name}={flat_value!r} and {nested_name}.{nested_field}={nested_value!r}. "
+            f"The flat field is a builder-level alias for the nested one; pass either, "
+            f"not both. Keeping both would leave the answer depending on which field a "
+            f"consumer happens to read."
+        )
+
+
 @dataclass(frozen=True)
 class WindowSpec:
     """Macro forecasting time frame passed across selection/model/evaluation."""
@@ -516,6 +602,7 @@ class WindowSpec:
                     embargo=self.embargo,
                 ),
             )
+        _reconcile_flat_aliases(self)
         object.__setattr__(self, "method", self.val.method)
         if self.validation_size is not None:
             object.__setattr__(
@@ -718,8 +805,16 @@ class WindowSpec:
         index: int | Sequence[Any] | pd.Index,
         *,
         exclude_origin: bool = False,
-    ) -> Iterator[dict[str, Any]]:
-        """Yield origin metadata and absolute-position slices for model runners."""
+    ) -> Iterator[OriginContext]:
+        """Yield origin metadata and absolute-position slices for model runners.
+
+        Returns :class:, which IS a
+        Mapping over the same keys this yielded as a plain dict before A3 --
+        origin["fit_idx"] and dict(origin) are unchanged -- while also
+        exposing typed attributes such as origin.fit_idx and
+        origin.origin_pos. The annotation says OriginContext rather than
+        Mapping so a reader is told the attributes exist.
+        """
 
         labels = _coerce_index(index)
         for _, row in self.plan(labels, exclude_origin=exclude_origin).iterrows():
@@ -738,19 +833,19 @@ class WindowSpec:
                 int(row["test_end_pos"]) + 1,
                 dtype=int,
             )
-            yield {
-                "row": row.to_dict(),
-                "estimation_idx": estimation_idx,
-                "fit_idx": fit_idx,
-                "test_idx": test_idx,
-                "val_splits": self.val_splits_for_origin(
+            yield OriginContext(
+                row=row.to_dict(),
+                estimation_idx=estimation_idx,
+                fit_idx=fit_idx,
+                test_idx=test_idx,
+                val_splits=self.val_splits_for_origin(
                     labels,
                     int(row["origin_pos"]),
                     exclude_origin=exclude_origin,
                 )
                 if bool(row["retune"])
                 else [],
-            }
+            )
 
     def iter_slices(
         self,
@@ -1219,7 +1314,7 @@ def from_cutoffs(
     val_horizon: int | None = None,
     val_step: int = 1,
     val_embargo: int | None = None,
-    val_random_state: int | None = None,
+    val_random_state: int | None = 0,
     retune_every: TemporalCadence = 1,
     retune_on_retrain: bool = True,
     reuse_params: bool = True,
@@ -1910,7 +2005,9 @@ def make_splitter(
     n_splits: int = 5,
     step: int = 1,
     horizon: int = 1,
-    random_state: int | None = None,
+    # Seeded by default, and deliberately matching ``random_kfold_split``'s own
+    # default -- forwarding a ``None`` from here silently overrode it (#513).
+    random_state: int | None = 0,
     embargo: int = 0,
 ) -> list[Split]:
     """Build validation splits from a validation method name."""
@@ -1979,7 +2076,9 @@ def split_table(
     n_splits: int = 5,
     step: int = 1,
     horizon: int = 1,
-    random_state: int | None = None,
+    # Seeded by default, and deliberately matching ``random_kfold_split``'s own
+    # default -- forwarding a ``None`` from here silently overrode it (#513).
+    random_state: int | None = 0,
     embargo: int = 0,
 ) -> pd.DataFrame:
     """Return validation splits as an inspectable table."""

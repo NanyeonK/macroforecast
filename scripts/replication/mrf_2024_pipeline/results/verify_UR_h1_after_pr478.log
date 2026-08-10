@@ -1,0 +1,76 @@
+loaded FRED-MD: panel=(732, 127) range=1959-01-01 00:00:00..2019-12-01 00:00:00
+loaded cached predictor block: F_pred=(732, 529) RF12=(732, 1404) (0.1s)
+poos=144 months, est points=[datetime.date(2003, 1, 1), datetime.date(2005, 1, 1), datetime.date(2007, 1, 1), datetime.date(2009, 1, 1), datetime.date(2011, 1, 1), datetime.date(2013, 1, 1)]
+    RF         h= 1 tau=2003-01-01 n_tr= 509 n_blk= 24  6.5s
+    RF-MAF     h= 1 tau=2003-01-01 n_tr= 509 n_blk= 24  2.7s
+    ARRF       h= 1 tau=2003-01-01 n_tr= 509 n_blk= 24  455.2s
+    FA-ARRF    h= 1 tau=2003-01-01 n_tr= 509 n_blk= 24  423.0s
+    Tiny ARRF  h= 1 tau=2003-01-01 n_tr= 509 n_blk= 24  14.1s
+    VARRF      h= 1 tau=2003-01-01 n_tr= 509 n_blk= 24  397.2s
+    RF         h= 1 tau=2005-01-01 n_tr= 533 n_blk= 24  6.6s
+    RF-MAF     h= 1 tau=2005-01-01 n_tr= 533 n_blk= 24  2.9s
+    ARRF       h= 1 tau=2005-01-01 n_tr= 533 n_blk= 24  467.4s
+    FA-ARRF    h= 1 tau=2005-01-01 n_tr= 533 n_blk= 24  458.8s
+/home/nanyeon99/project/macroforecast/macroforecast/models/types.py:28: RuntimeWarning: macro_random_forest: 2 of 1200 per-tree forecasts were NaN and were skipped when averaging the ensemble. This happens on small, collinear, trend-dominated state sets; the remaining trees still produce a valid forecast, but treat those rows with care.
+  values = np.asarray(self.estimator.predict(frame), dtype=float).reshape(-1)
+    Tiny ARRF  h= 1 tau=2005-01-01 n_tr= 533 n_blk= 24  15.6s
+    VARRF      h= 1 tau=2005-01-01 n_tr= 533 n_blk= 24  444.6s
+    RF         h= 1 tau=2007-01-01 n_tr= 557 n_blk= 24  7.0s
+    RF-MAF     h= 1 tau=2007-01-01 n_tr= 557 n_blk= 24  3.1s
+    ARRF       h= 1 tau=2007-01-01 n_tr= 557 n_blk= 24  542.9s
+    FA-ARRF    h= 1 tau=2007-01-01 n_tr= 557 n_blk= 24  523.7s
+    Tiny ARRF  h= 1 tau=2007-01-01 n_tr= 557 n_blk= 24  17.2s
+    VARRF      h= 1 tau=2007-01-01 n_tr= 557 n_blk= 24  517.4s
+    RF         h= 1 tau=2009-01-01 n_tr= 581 n_blk= 24  7.9s
+    RF-MAF     h= 1 tau=2009-01-01 n_tr= 581 n_blk= 24  3.1s
+    ARRF       h= 1 tau=2009-01-01 n_tr= 581 n_blk= 24  598.7s
+    FA-ARRF    h= 1 tau=2009-01-01 n_tr= 581 n_blk= 24  564.6s
+/home/nanyeon99/project/macroforecast/macroforecast/models/types.py:28: RuntimeWarning: macro_random_forest: 3 of 1200 per-tree forecasts were NaN and were skipped when averaging the ensemble. This happens on small, collinear, trend-dominated state sets; the remaining trees still produce a valid forecast, but treat those rows with care.
+  values = np.asarray(self.estimator.predict(frame), dtype=float).reshape(-1)
+    Tiny ARRF  h= 1 tau=2009-01-01 n_tr= 581 n_blk= 24  18.8s
+    VARRF      h= 1 tau=2009-01-01 n_tr= 581 n_blk= 24  518.3s
+    RF         h= 1 tau=2011-01-01 n_tr= 605 n_blk= 24  7.7s
+    RF-MAF     h= 1 tau=2011-01-01 n_tr= 605 n_blk= 24  3.2s
+    ARRF       h= 1 tau=2011-01-01 n_tr= 605 n_blk= 24  588.8s
+    FA-ARRF    h= 1 tau=2011-01-01 n_tr= 605 n_blk= 24  639.2s
+    Tiny ARRF  h= 1 tau=2011-01-01 n_tr= 605 n_blk= 24  20.4s
+    VARRF      h= 1 tau=2011-01-01 n_tr= 605 n_blk= 24  562.7s
+    RF         h= 1 tau=2013-01-01 n_tr= 629 n_blk= 24  8.8s
+    RF-MAF     h= 1 tau=2013-01-01 n_tr= 629 n_blk= 24  3.4s
+    ARRF       h= 1 tau=2013-01-01 n_tr= 629 n_blk= 24  622.2s
+    FA-ARRF    h= 1 tau=2013-01-01 n_tr= 629 n_blk= 24  700.6s
+    Tiny ARRF  h= 1 tau=2013-01-01 n_tr= 629 n_blk= 24  21.0s
+    VARRF      h= 1 tau=2013-01-01 n_tr= 629 n_blk= 24  629.7s
+  h=1 done in 164.1 min
+RES_START UR h=[1]
+--- benchmark=AR12 ---
+| model | h1 | mean|Δ| |
+|---|---|---|
+| AR4 | 1.017/1.01 | 0.007 |
+| AO-12 | 1.037/1.03 | 0.007 |
+| AO-h | 1.444/1.09 | 0.354 |
+| FA-AR | 0.974/0.95 | 0.024 |
+| RF | 0.972/0.97 | 0.002 |
+| RF-MAF | 0.965/0.87 | 0.095 |
+| AR+RF | 0.979/0.95 | 0.029 |
+| ARRF | 0.984/0.91 | 0.074 |
+| FA-ARRF | 0.958/0.90 | 0.058 |
+| Tiny ARRF | 1.023/0.98 | 0.043 |
+| VARRF | 1.021/0.94 | 0.081 |
+TARGET UR h=[1] benchmark=AR12 partial mean|Δ| = 0.070
+--- benchmark=AR4 ---
+| model | h1 | mean|Δ| |
+|---|---|---|
+| AR4 | 1.000/1.01 | 0.010 |
+| AO-12 | 1.020/1.03 | 0.010 |
+| AO-h | 1.420/1.09 | 0.330 |
+| FA-AR | 0.958/0.95 | 0.008 |
+| RF | 0.956/0.97 | 0.014 |
+| RF-MAF | 0.949/0.87 | 0.079 |
+| AR+RF | 0.963/0.95 | 0.013 |
+| ARRF | 0.968/0.91 | 0.058 |
+| FA-ARRF | 0.942/0.90 | 0.042 |
+| Tiny ARRF | 1.007/0.98 | 0.027 |
+| VARRF | 1.004/0.94 | 0.064 |
+TARGET UR h=[1] benchmark=AR4 partial mean|Δ| = 0.060
+RES_END total=164.1 min

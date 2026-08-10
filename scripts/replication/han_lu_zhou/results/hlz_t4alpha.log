@@ -1,0 +1,59 @@
+
+########## design=L1 (L=1)  alpha=0.001  arms=3 ##########
+  LASSO  alpha=0.001   mine= -8.450%  paper= -0.31%  Δ= -8.140pp   path max|Δ|=4.885e+00  (1.8 min)
+  ENet   alpha=0.001   mine= -8.409%  paper= -0.35%  Δ= -8.059pp   path max|Δ|=5.041e+00  (1.8 min)
+
+########## design=L1 (L=1)  alpha=0.01  arms=3 ##########
+  LASSO  alpha=0.01    mine= -7.327%  paper= -0.31%  Δ= -7.017pp   path max|Δ|=4.440e+00  (1.7 min)
+  ENet   alpha=0.01    mine= -7.138%  paper= -0.35%  Δ= -6.788pp   path max|Δ|=4.596e+00  (1.7 min)
+
+########## design=L1 (L=1)  alpha=0.05  arms=3 ##########
+  LASSO  alpha=0.05    mine= -3.832%  paper= -0.31%  Δ= -3.522pp   path max|Δ|=3.192e+00  (1.7 min)
+  ENet   alpha=0.05    mine= -4.210%  paper= -0.35%  Δ= -3.860pp   path max|Δ|=3.673e+00  (1.7 min)
+
+########## design=L6 (L=6)  alpha=0.001  arms=13 ##########
+  LASSO  alpha=0.001   mine= -6.928%  paper=  0.86%  Δ= -7.788pp   path max|Δ|=4.295e+00  (15.2 min)
+  ENet   alpha=0.001   mine= -6.887%  paper=  0.59%  Δ= -7.477pp   path max|Δ|=4.217e+00  (15.2 min)
+
+########## design=L6 (L=6)  alpha=0.01  arms=13 ##########
+  LASSO  alpha=0.01    mine= -5.964%  paper=  0.86%  Δ= -6.824pp   path max|Δ|=3.879e+00  (14.8 min)
+  ENet   alpha=0.01    mine= -5.858%  paper=  0.59%  Δ= -6.448pp   path max|Δ|=3.778e+00  (14.8 min)
+
+########## design=L6 (L=6)  alpha=0.05  arms=13 ##########
+  LASSO  alpha=0.05    mine= -3.011%  paper=  0.86%  Δ= -3.871pp   path max|Δ|=2.833e+00  (14.9 min)
+  ENet   alpha=0.05    mine= -3.192%  paper=  0.59%  Δ= -3.782pp   path max|Δ|=2.868e+00  (14.9 min)
+
+########## design=L12 (L=12)  alpha=0.001  arms=25 ##########
+  LASSO  alpha=0.001   mine= -4.272%  paper=  1.11%  Δ= -5.382pp   path max|Δ|=3.719e+00  (59.5 min)
+  ENet   alpha=0.001   mine= -4.243%  paper=  1.18%  Δ= -5.423pp   path max|Δ|=3.637e+00  (59.5 min)
+
+########## design=L12 (L=12)  alpha=0.01  arms=25 ##########
+  LASSO  alpha=0.01    mine= -3.538%  paper=  1.11%  Δ= -4.648pp   path max|Δ|=3.302e+00  (58.1 min)
+  ENet   alpha=0.01    mine= -3.516%  paper=  1.18%  Δ= -4.696pp   path max|Δ|=3.272e+00  (58.1 min)
+
+########## design=L12 (L=12)  alpha=0.05  arms=25 ##########
+  LASSO  alpha=0.05    mine= -1.640%  paper=  1.11%  Δ= -2.750pp   path max|Δ|=2.137e+00  (56.9 min)
+  ENet   alpha=0.05    mine= -1.803%  paper=  1.18%  Δ= -2.983pp   path max|Δ|=2.294e+00  (56.9 min)
+
+########## TABLE 4 stage 2b — penalty sensitivity ##########
+| design | alpha | model | mine % | paper % | Δ pp | path max|Δ| |
+|---|---|---|---|---|---|---|
+| L1 | 0.001 | LASSO | -8.450 | -0.31 | -8.140 | 4.89e+00 |
+| L1 | 0.001 | ENet | -8.409 | -0.35 | -8.059 | 5.04e+00 |
+| L1 | 0.01 | LASSO | -7.327 | -0.31 | -7.017 | 4.44e+00 |
+| L1 | 0.01 | ENet | -7.138 | -0.35 | -6.788 | 4.60e+00 |
+| L1 | 0.05 | LASSO | -3.832 | -0.31 | -3.522 | 3.19e+00 |
+| L1 | 0.05 | ENet | -4.210 | -0.35 | -3.860 | 3.67e+00 |
+| L6 | 0.001 | LASSO | -6.928 | 0.86 | -7.788 | 4.29e+00 |
+| L6 | 0.001 | ENet | -6.887 | 0.59 | -7.477 | 4.22e+00 |
+| L6 | 0.01 | LASSO | -5.964 | 0.86 | -6.824 | 3.88e+00 |
+| L6 | 0.01 | ENet | -5.858 | 0.59 | -6.448 | 3.78e+00 |
+| L6 | 0.05 | LASSO | -3.011 | 0.86 | -3.871 | 2.83e+00 |
+| L6 | 0.05 | ENet | -3.192 | 0.59 | -3.782 | 2.87e+00 |
+| L12 | 0.001 | LASSO | -4.272 | 1.11 | -5.382 | 3.72e+00 |
+| L12 | 0.001 | ENet | -4.243 | 1.18 | -5.423 | 3.64e+00 |
+| L12 | 0.01 | LASSO | -3.538 | 1.11 | -4.648 | 3.30e+00 |
+| L12 | 0.01 | ENet | -3.516 | 1.18 | -4.696 | 3.27e+00 |
+| L12 | 0.05 | LASSO | -1.640 | 1.11 | -2.750 | 2.14e+00 |
+| L12 | 0.05 | ENet | -1.803 | 1.18 | -2.983 | 2.29e+00 |
+T4_ALPHA_SENS_DONE

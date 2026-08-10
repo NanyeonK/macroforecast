@@ -124,7 +124,7 @@ def _prepare_origin_panel(
     features: FeatureSpec | None,
     preprocessing: PreprocessSpec | None,
     preprocessing_policy: StagePolicy | None,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     include_target_pos: bool = True,
     fitted_preprocessing: FittedPreprocessor | None = None,
     preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None,
@@ -401,7 +401,7 @@ def _origin_target_pos(index: pd.Index, item: Mapping[str, Any]) -> int:
 
 def _origin_apply_labels(
     index: pd.Index,
-    item: dict[str, Any],
+    item: Mapping[str, Any],
     *,
     include_target_pos: bool = True,
 ) -> pd.Index:
@@ -422,7 +422,7 @@ def _origin_apply_labels(
     return index[positions]
 
 
-def _origin_available_labels(index: pd.Index, item: dict[str, Any]) -> pd.Index:
+def _origin_available_labels(index: pd.Index, item: Mapping[str, Any]) -> pd.Index:
     """Labels observable at the forecast origin: apply positions <= origin_pos.
 
     ``test_idx`` spans the whole forward horizon block for direct/path policies,

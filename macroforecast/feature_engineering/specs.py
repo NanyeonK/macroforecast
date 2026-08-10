@@ -2296,8 +2296,10 @@ def _fit_feature_step(
             if scaling_policy == "marginal_R2":
                 beta = np.sign(beta) * np.abs(beta)
             x_scaled = x_scaled * beta
-        order = np.argsort(train_y.to_numpy(dtype=float))
-        z_sorted = x_scaled.to_numpy(dtype=float)[order]
+        # Named apart from the polynomial `order` this long function binds in
+        # another branch: same name, one an int, one a sort index.
+        sort_order = np.argsort(train_y.to_numpy(dtype=float))
+        z_sorted = x_scaled.to_numpy(dtype=float)[sort_order]
         n_total = z_sorted.shape[0]
         resolved_slices = min(n_slices, n_total)
         slice_size = max(1, n_total // resolved_slices)
@@ -2377,6 +2379,7 @@ def _fit_feature_step(
         min_train_size = params.pop("min_train_size", None)
         drop_missing = bool(params.pop("drop_missing", False))
         random_state = params.pop("random_state", 0)
+        hac_lags = params.pop("hac_lags", None)
         params.pop("fit_policy", None)
         params.pop("warn_full_sample", None)
         _reject_extra_params(params, plan.name)
@@ -2400,6 +2403,7 @@ def _fit_feature_step(
             max_iter=max_iter,
             random_state=None if random_state is None else int(random_state),
             min_train_size=min_train_size,
+            hac_lags=None if hac_lags is None else int(hac_lags),
         )
         screen_columns = tuple(
             column

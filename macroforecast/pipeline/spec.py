@@ -51,6 +51,71 @@ class _FrozenTagMapping(Mapping[str, ArmTagValue]):
         return hash(self._items)
 
 
+def _freeze_value(value: Any) -> Any:
+    """Return an immutable copy of *value*, deeply.
+
+    Shallow freezing would leave ``params={"grid": {"alpha": [1, 2]}}`` mutable one
+    level down, which is the same defect with an extra step.
+    """
+    if isinstance(value, Mapping):
+        return _FrozenMapping(tuple((k, _freeze_value(v)) for k, v in value.items()))
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_value(v) for v in value)
+    if isinstance(value, set):
+        return frozenset(_freeze_value(v) for v in value)
+    return value
+
+
+class _FrozenMapping(Mapping[str, Any]):
+    """Immutable, pickleable mapping for spec fields that were plain dicts.
+
+    Deliberately NOT hashable, because the values are arbitrary -- a params dict can
+    hold a numpy array. That is no regression: ``params`` was a plain ``dict`` before,
+    so anything hashing an ``Arm`` already failed.
+    """
+
+    _items: tuple[tuple[str, Any], ...]
+    _dict: dict[str, Any]
+
+    def __init__(self, items: "Sequence[tuple[str, Any]]") -> None:
+        # Plain assignment: this is an ordinary class, not a frozen dataclass, so the
+        # object.__setattr__ dance the first draft used bought nothing and hid the
+        # attributes from the type checker.
+        self._items = tuple(items)
+        self._dict = dict(self._items)
+
+    def __getitem__(self, key: str) -> Any:
+        return self._dict[key]
+
+    def __iter__(self) -> "Iterator[str]":
+        return iter(self._dict)
+
+    def __len__(self) -> int:
+        return len(self._dict)
+
+    def __repr__(self) -> str:
+        return repr(self._dict)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Mapping):
+            return dict(self._items) == dict(other)
+        return NotImplemented
+
+    def __reduce__(self):
+        return (_FrozenMapping, (self._items,))
+
+
+def _canonical_mapping(value: "Mapping[str, Any] | None") -> "Mapping[str, Any] | None":
+    """Freeze a caller-supplied mapping at the builder boundary.
+
+    ``None`` stays ``None`` -- an absent params block and an empty one are different
+    to the model registry, and collapsing them here would change behaviour.
+    """
+    if value is None:
+        return None
+    return _FrozenMapping(tuple((k, _freeze_value(v)) for k, v in value.items()))
+
+
 def _canonical_tags(tags: Mapping[str, ArmTagValue] | None) -> Mapping[str, ArmTagValue]:
     if tags is None:
         return _FrozenTagMapping(())
@@ -193,11 +258,26 @@ class Arm:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "tags", _canonical_tags(self.tags))
+        # frozen=True freezes the REFERENCE, not the mapping. Without these two, a
+        # caller mutating the dict they passed in still moves the run, the
+        # result-store digest and the provenance echo -- after the spec was
+        # supposedly fixed. See tests/architecture/test_task_resolution_contracts.py.
+        object.__setattr__(self, "params", _canonical_mapping(self.params))
+        object.__setattr__(self, "metadata", _canonical_mapping(self.metadata))
 
 
 @dataclass(frozen=True)
 class CombinationContender:
-    """A forecast combination that becomes an additional contender."""
+    """A forecast combination that becomes an additional contender.
+
+    ``nested_in_benchmark`` licenses Clark-West for the combination, exactly as
+    :attr:`Arm.nested_in_benchmark` does for a single arm. Set it when the
+    benchmark is recoverable from the combination under a parameter restriction
+    -- a simple pool (mean/median/trimmed) of arms that each nest the benchmark
+    does nest it, since zeroing every slope returns the benchmark forecast. It
+    is not inferred from the members: an estimated-weight combination need not
+    nest what its members nest, so the declaration stays with the caller.
+    """
 
     name: str
     method: str
@@ -206,6 +286,7 @@ class CombinationContender:
     params: Mapping[str, Any] | None = None
     weight_window: int | None = None
     shrink_to_equal: float | None = None
+    nested_in_benchmark: bool = False
 
 
 #: Test names ``EvalSpec.tests`` currently wires into the evaluation. The pairwise
@@ -357,9 +438,13 @@ def _validate_unimplemented_eval_fields(evaluation: "EvalSpec") -> None:
             "evaluation.primary_axis is not implemented; use test_options / file an issue"
         )
     if evaluation.multiple_testing is not None:
-        raise ValueError(
-            "evaluation.multiple_testing is not implemented; use test_options / file an issue"
-        )
+        from macroforecast.tests import MULTIPLE_TESTING_METHODS
+
+        if str(evaluation.multiple_testing).strip().lower() not in MULTIPLE_TESTING_METHODS:
+            raise ValueError(
+                "evaluation.multiple_testing must be one of "
+                f"{', '.join(MULTIPLE_TESTING_METHODS)}; got {evaluation.multiple_testing!r}"
+            )
 
 
 def _parse_subsample_date(value: Any, *, label: str) -> pd.Timestamp | None:
@@ -618,7 +703,15 @@ class EvalSpec:
     benchmark: str
     metrics: tuple[str | Callable[..., float], ...] = ("rmse", "relative_mse", "r2_oos")
     tests: tuple[str, ...] = ("dm", "cw", "mcs")
+    #: Reserved. Only the default is supported; any other value raises
+    #: ValueError at pipeline_spec time. Evaluation currently always
+    #: groups by ("target", "horizon"). The field is named because that
+    #: grouping is what a multiple-testing family is defined over -- but
+    #: nothing reads a non-default value today.
     by: tuple[str, ...] = ("target", "horizon")
+    #: Reserved. Only the default is supported; any other value raises
+    #: ValueError at pipeline_spec time. Contenders are always the
+    #: axis compared within a cell.
     primary_axis: str = "contender"
     cw_for_nested: bool = True
     mcs_alpha: float = 0.10
@@ -921,23 +1014,30 @@ def is_vintage_aware(spec: PipelineSpec) -> bool:
 # ``tests/pipeline/test_direct_policy_guard.py`` so it cannot silently rot as
 # the models lane adds or removes models -- update it there, not just here, if
 # that test starts failing.
-DIRECT_POLICY_GUARD_MODELS: frozenset[str] = frozenset({
-    # input_kind == "target": iterate their own one-step dynamics.
-    "ar_bic", "arima", "auto_arima", "ets", "holt_winters", "naive",
-    "random_walk_drift", "seasonal_naive", "stlf", "theta_method", "ucsv",
-    # input_kind == "panel": iterate their own dynamics at the panel level.
-    "bvar_minnesota", "bvar_normal_inverse_wishart",
-    "dfm_mixed_mariano_murasawa", "dfm_unrestricted_midas",
-    # input_kind == "supervised" but genuinely iterated internally (unlike
-    # ar/far, deliberately excluded -- see module docstring above).
-    "favar",
-})
+def _guarded(predicate) -> frozenset[str]:
+    """Model names whose capability satisfies *predicate*."""
+    from macroforecast.models import MODEL_SPECS
+    from macroforecast.models.specs import forecast_capabilities
 
-# Models that support ``forecast_policy="direct"`` as an h-step point projection
-# but not ``forecast_policy="direct_average"`` as a horizon-average target. Keep
-# this policy-specific extension separate from ``DIRECT_POLICY_GUARD_MODELS`` so
-# ``var`` remains valid under plain direct point forecasts.
-DIRECT_AVERAGE_GUARD_MODELS: frozenset[str] = frozenset({"var"})
+    return frozenset(
+        name for name, spec in MODEL_SPECS.items() if predicate(forecast_capabilities(spec))
+    )
+
+
+#: Models that cannot honour ``forecast_policy="direct"``.
+#:
+#: Derived from ``ModelSpec`` capability since A2, not listed here. It was a literal
+#: frozenset of 16 names in two layers plus a third set in ``policy_config``, so adding
+#: a model meant editing three files and a drift test was what kept them agreeing.
+#: The derivation reproduces the previous literal set exactly -- verified by symmetric
+#: difference in both directions before the change landed, and pinned by
+#: ``tests/pipeline/test_direct_policy_guard.py``.
+DIRECT_POLICY_GUARD_MODELS: frozenset[str] = _guarded(lambda cap: not cap.direct)
+
+#: Models valid under plain ``direct`` but not as a horizon-average target.
+DIRECT_AVERAGE_GUARD_MODELS: frozenset[str] = _guarded(
+    lambda cap: cap.direct and not cap.direct_average
+)
 
 _DIRECT_LIKE_POLICIES = frozenset({"direct", "direct_average"})
 

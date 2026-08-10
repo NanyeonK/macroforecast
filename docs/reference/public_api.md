@@ -327,6 +327,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `selection_frequency_table` | [`macroforecast.pipeline`](pipeline.md) | function |
 | `selection_history` | [`macroforecast.pipeline`](pipeline.md) | function |
 | `set_frequencies` | [`macroforecast.data`](data.md) | function |
+| `setar` | [`macroforecast.models`](models.md) | function |
 | `shrink_to_target_ridge` | [`macroforecast.models`](models.md) | function |
 | `sliced_inverse_regression_features` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
 | `sliced_inverse_regression_step` | [`macroforecast.feature_engineering`](feature_engineering.md) | function |
@@ -346,6 +347,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `stage_panel` | [`macroforecast.window`](window.md) | function |
 | `stage_policy` | [`macroforecast.window`](window.md) | function |
 | `standardize_panel` | [`macroforecast.preprocessing`](preprocessing.md) | function |
+| `star` | [`macroforecast.models`](models.md) | function |
 | `stlf` | [`macroforecast.models`](models.md) | function |
 | `subagging` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |
 | `super_learner` | [`macroforecast.model_ensemble`](model_ensemble.md) | function |

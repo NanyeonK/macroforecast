@@ -30,6 +30,58 @@ papers:
 runner-fitted execution. The returned `FeatureSpec` is passed to `forecasting.run`
 or to an `Arm`.
 
+```{warning}
+**`lags` defaults to `(0, 1)`, so every predictor enters at both `t` and `t-1`.**
+It is worth setting explicitly, because it changes the *width* of the predictor
+block and therefore what any downstream dimension reduction is reducing:
+
+| `lags` | columns from a 132-series panel | what a PCA over them means |
+|---|---|---|
+| `0` | 132 | components of the cross-section `X_t` |
+| `(0, 1)` (default) | **264** | components of the stacked `[X_t, X_{t-1}]` panel |
+
+For a plain regression the extra lags are just more regressors. The setting bites on
+a model like `far`, which runs PCA **internally on whatever design matrix it is
+handed** — so widening the design silently changes what its factors are, with no
+error.
+
+```{admonition} `lags` does NOT reach an explicit feature-step pipeline
+:class: important
+
+An earlier version of this warning listed `pca_step` and `maf_step` alongside `far`.
+That was wrong. The shortcut `lags` builds the *shortcut* design matrix; a step
+supplied through `feature_steps` reduces the block named by its own `input=`
+argument (default `"panel"`), and does not inherit the shortcut. Measured on a
+6-predictor panel:
+
+| configuration | columns out | PCs |
+|---|---|---|
+| shortcut only, `lags=(0, 1)` | 13 | — |
+| shortcut only, `lags=0` | 7 | — |
+| explicit `pca_step(input="panel")`, `lags` default | **3** | 2 |
+| explicit `pca_step(input="panel")`, `lags=0` | **3** | 2 |
+
+The last two are identical: once an explicit pipeline is supplied, the shortcut
+`lags` no longer changes anything downstream of it.
+
+So the rule is about *which door the block comes through*. `far` receives the
+shortcut design, so `lags` decides its PCA input. `pca_step` names its own input, so
+`lags` does not. This is the distinction the GCLS-2022 replication got wrong in the
+other direction — see `docs/replication/gcls_2022_replication.md`, where `far` was
+handed a stacked `[X_t, X_{t-1}]` panel because `lags` was left at its default.
+```
+
+The Stock-Watson diffusion-index model that most macro papers specify is
+`X_t = Lambda F_t + u_t`: factors of the cross-section at **one** time index. To
+reproduce it, pass `lags=0` and add factor lags deliberately with `lag_step` if
+the paper's specification calls for them.
+
+A related asymmetry worth knowing: `pca_step` standardizes before the PCA
+(`scale=True`), while `far` centers only (`scale=False`, covariance PCA). Both
+conventions are defensible and papers differ, so state which one you want rather
+than inheriting a default.
+```
+
 ```python
 import macroforecast as mf
 
@@ -129,6 +181,39 @@ removes rows with any gap in the raw slice. Feature engineering works best on a
 `PreprocessedData` panel from `reprocess`, which fills those gaps before the
 ladder is built. Inside a runner, `feature_spec` fits these same steps on each
 train window so that stateful operations such as PCA never see test rows.
+
+## Available steps
+
+`feature_steps` accepts any of these; each links to its signature in the
+reference page. Target-aware steps (marked †) are fitted against the resolved
+direct target inside the training window, never the test rows.
+
+| step | what it builds |
+|---|---|
+| `lag_step` | lags of a named block |
+| `seasonal_lag_step` | seasonal lags |
+| `moving_average_step` | a moving-average ladder |
+| `rolling_step` | a rolling mean |
+| `marx_step` | the MARX mixed lag/moving-average ladder |
+| `pca_step` | principal components |
+| `group_pca_step` | principal components within groups |
+| `sparse_pca_chen_rohe_step` | Chen-Rohe sparse components |
+| `maf_step` | maximum-autocorrelation factors |
+| `varimax_step` | an orthogonal varimax rotation |
+| `partial_least_squares_step` † | PLS components |
+| `sliced_inverse_regression_step` † | SIR directions |
+| `predictor_screen` † | a screened predictor subset |
+| `scale_step` | standardized / rescaled columns |
+| `transform_step` | a deterministic column transform |
+| `polynomial_step` | polynomial expansions |
+| `interaction_step` | pairwise interactions |
+| `nystroem_step` | a Nystroem kernel approximation |
+| `random_projection_step` | a Gaussian random projection |
+| `hamilton_step` | the Hamilton filter |
+| `fourier_step` | Fourier seasonal terms |
+| `season_dummy_step` | seasonal dummies |
+| `time_step` | deterministic trend / month / quarter / year |
+| `custom_step` | your own callable |
 
 ## Reference
 

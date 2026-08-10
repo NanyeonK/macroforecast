@@ -1,0 +1,29 @@
+
+########## design=ma6  signals=42  n_jobs=4 ##########
+R2_OS mine = 0.686%   authors = 0.700%   Δ = -0.014pp   (23.4 min)
+  tests: contender   dm_stat     dm_p  cw_stat  cw_p
+ COMB_ma6 -2.064904 0.039302      NaN   NaN
+
+########## design=ma12  signals=56  n_jobs=4 ##########
+R2_OS mine = 0.693%   authors = 0.760%   Δ = -0.067pp   (36.8 min)
+  tests: contender   dm_stat     dm_p  cw_stat  cw_p
+COMB_ma12 -2.135598 0.033061      NaN   NaN
+
+########## design=lag6  signals=84  n_jobs=4 ##########
+R2_OS mine = 0.573%   authors = 0.590%   Δ = -0.017pp   (75.9 min)
+  tests: contender   dm_stat     dm_p  cw_stat  cw_p
+COMB_lag6 -1.900713 0.057753      NaN   NaN
+
+########## design=lag12  signals=168  n_jobs=4 ##########
+R2_OS mine = 0.509%   authors = 0.570%   Δ = -0.061pp   (338.3 min)
+  tests:  contender   dm_stat     dm_p  cw_stat  cw_p
+COMB_lag12 -1.589267 0.112455      NaN   NaN
+
+########## TABLE 2 — mine vs PRINTED paper ##########
+| design | signals | mine R2_OS % | authors % | Δ pp | min |
+|---|---|---|---|---|---|
+| B: Xt;MA3;MA6 (42) | 42 | 0.686 | 0.700 | -0.014 | 23.4 |
+| C: Xt;MA3;MA6;MA12 (56) | 56 | 0.693 | 0.760 | -0.067 | 36.8 |
+| B: Xt..Xt-5 (84) | 84 | 0.573 | 0.590 | -0.017 | 75.9 |
+| C: Xt..Xt-11 (168) | 168 | 0.509 | 0.570 | -0.061 | 338.3 |
+ALL_DESIGNS_DONE

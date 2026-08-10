@@ -124,6 +124,59 @@ def _feature_cache_key(
     return key + ("vintage", vintage_id)
 
 
+def _fit_panel_fingerprint(feature_fit_panel: Any) -> str:
+    """Content fingerprint of the exact rows about to be fitted.
+
+    Row-position bounds identify a sample WITHIN one run's panel; across runs
+    sharing a directory they do not, because two different datasets can occupy
+    the same positions. Hashing the frame that is about to be handed to
+    ``.fit()`` closes that gap directly, and it is cheap next to the fit it
+    guards -- a hash is O(n*p) where the PCA/MARX/SIR fit it saves is not.
+
+    Falls back to a coarse shape/column descriptor if the object is not a frame
+    pandas can hash; a coarser fingerprint only costs a missed cache hit, and
+    the caller pairs it with the content digest and bounds regardless.
+    """
+
+    try:
+        import pandas as pd
+
+        frame = pd.DataFrame(feature_fit_panel)
+        hashed = pd.util.hash_pandas_object(frame, index=True).to_numpy()
+        return hashlib.sha256(
+            hashed.tobytes() + ",".join(map(str, frame.columns)).encode("utf-8")
+        ).hexdigest()
+    except Exception:
+        shape = getattr(feature_fit_panel, "shape", None)
+        columns = getattr(feature_fit_panel, "columns", None)
+        descriptor = json.dumps(
+            {"shape": list(shape) if shape is not None else None,
+             "columns": [str(c) for c in columns] if columns is not None else None},
+            sort_keys=True,
+            default=str,
+        )
+        return "coarse-" + hashlib.sha256(descriptor.encode("utf-8")).hexdigest()
+
+
+def _feature_store_key(cache_key: tuple[Any, ...], *, fit_panel_fingerprint: str) -> str:
+    """A disk-store key for the fit the in-memory ``cache_key`` identifies.
+
+    The in-memory key is a tuple and the store takes a string, so this is its
+    SHA-256 -- plus the fit panel's content fingerprint. An in-memory dict lives
+    inside one run, where the data cannot change underneath it; a directory does
+    not. The preprocessing tier's key documents that it does not encode the
+    panel and warns callers off sharing a directory across runs; this tier does
+    not inherit that footgun.
+    """
+
+    canonical = json.dumps(
+        {"cache_key": list(cache_key), "fit_panel": fit_panel_fingerprint},
+        sort_keys=True,
+        default=str,
+    )
+    return "features-" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def _fitted_feature_builder_for_origin(
     features: FeatureSpec,
     feature_fit_panel: Any,
@@ -133,6 +186,7 @@ def _fitted_feature_builder_for_origin(
     item: Mapping[str, Any],
     preprocessing_cache: dict[Any, Any] | None,
     vintage_id: Any | None = None,
+    feature_store: Any | None = None,
 ) -> FittedFeatureBuilder:
     """Fit the per-origin feature builder, sharing it across arms when possible.
 
@@ -162,14 +216,41 @@ def _fitted_feature_builder_for_origin(
         cached = preprocessing_cache.get(cache_key)  # type: ignore[union-attr]
         if isinstance(cached, FittedFeatureBuilder):
             return cached
+
+    # Second tier: the on-disk store, mirroring ``preprocessing_stage.py``. This
+    # is what the parallel backend needs -- workers are separate PROCESSES, so
+    # the in-memory dict above is always empty for them and every cell refits the
+    # same PCA/MARX/SIR state. The key is derived from the same self-verifying
+    # (content digest + fit-sample bounds) tuple used in memory, so a stored fit
+    # is served only for a byte-identical sample.
+    #
+    # The store key is computed independently of ``cache_key``'s own None-ness
+    # rule: bounds that cannot be resolved robustly mean no sharing AT ALL, on
+    # disk as in memory.
+    store_key: str | None = None
+    if cache_key is not None and feature_store is not None:
+        store_key = _feature_store_key(
+            cache_key,
+            fit_panel_fingerprint=_fit_panel_fingerprint(feature_fit_panel),
+        )
+        loaded = feature_store.get(store_key)
+        if isinstance(loaded, FittedFeatureBuilder):
+            if preprocessing_cache is not None:
+                preprocessing_cache[cache_key] = loaded
+            return loaded
+
     fitted = features.fit(feature_fit_panel, metadata=prepared_metadata)
     if cache_key is not None:
         preprocessing_cache[cache_key] = fitted  # type: ignore[index]
+    if store_key is not None and feature_store is not None:
+        feature_store.put(store_key, fitted)
     return fitted
 
 
 __all__ = [
     "_feature_cache_key",
+    "_feature_store_key",
+    "_fit_panel_fingerprint",
     "_feature_content_digest",
     "_feature_fit_sample_bounds",
     "_fitted_feature_builder_for_origin",

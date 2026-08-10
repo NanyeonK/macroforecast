@@ -50,6 +50,8 @@ from macroforecast.models.svm import linear_svr, nu_svr, svr
 from macroforecast.models.timeseries import (
     ar,
     ar_bic,
+    setar,
+    star,
     naive,
     hist_mean,
     seasonal_naive,
@@ -136,6 +138,78 @@ class PrefixSearchSpec:
 
     param: str
     fit_prefix: Callable[..., dict[int, Any]]
+
+
+@dataclass(frozen=True)
+class ForecastCapabilities:
+    """What forecast policies a model supports, and what features it expects.
+
+    Lives on the model because it is a property of the model. Before A2 the same
+    knowledge was spelled out in two hard-coded sets in `pipeline/spec.py` and one in
+    `forecasting/policy_config.py`, so adding a model meant editing three files across
+    two layers and a registry-drift test was what kept them agreeing.
+
+    ``direct`` means the model can be asked for an h-step point projection of an
+    already-transformed target. A model that iterates its own one-step dynamics
+    (``arima``, ``ets``, a BVAR) cannot: asking it for "direct" silently returns
+    something other than what the caller means, which is why the guard exists.
+
+    ``builds_own_target_lags`` marks the models whose documented usage supplies an
+    explicit ``target_lags`` FeatureSpec with ``predictors=[]`` -- ``ar`` and ``far``.
+    They are ``input_kind="supervised"`` but must not trigger the implicit-feature
+    warning aimed at supervised models that got a default design matrix by accident.
+    """
+
+    direct: bool = True
+    direct_average: bool = True
+    recursive: bool = False
+    builds_own_target_lags: bool = False
+
+    @classmethod
+    def for_input_kind(cls, input_kind: "InputKind") -> "ForecastCapabilities":
+        """The default implied by how a model consumes data.
+
+        ``target`` and ``panel`` models iterate their own dynamics, so a direct
+        h-step projection is not something they can honour. ``supervised`` and
+        ``volatility`` models are fitted per horizon and can.
+        """
+        if input_kind in ("target", "panel"):
+            return cls(direct=False, direct_average=False, recursive=True)
+        return cls(direct=True, direct_average=True, recursive=False)
+
+
+#: Models whose capability differs from what ``input_kind`` implies. Three, and each
+#: has a reason rather than a convention:
+#:
+#:   hist_mean  -- input_kind "target", but it is a constant-mean benchmark with no
+#:                 dynamics to iterate, so a direct h-step projection is exactly what
+#:                 it does.
+#:   var        -- input_kind "panel"; valid as a direct point forecast, not as a
+#:                 horizon-average target.
+#:   favar      -- input_kind "supervised", but genuinely iterated internally, unlike
+#:                 ar/far.
+#:   ar, far    -- input_kind "supervised" and direct-capable, but they supply their
+#:                 own target lags by design.
+_CAPABILITY_OVERRIDES: dict[str, "ForecastCapabilities"] = {
+    "hist_mean": ForecastCapabilities(direct=True, direct_average=True, recursive=False),
+    "var": ForecastCapabilities(direct=True, direct_average=False, recursive=True),
+    "favar": ForecastCapabilities(direct=False, direct_average=False, recursive=True),
+    "ar": ForecastCapabilities(direct=True, direct_average=True, builds_own_target_lags=True),
+    "far": ForecastCapabilities(direct=True, direct_average=True, builds_own_target_lags=True),
+}
+
+
+def forecast_capabilities(spec: "ModelSpec") -> ForecastCapabilities:
+    """Capability for one model: an explicit override, else the ``input_kind`` default.
+
+    A function rather than a field so this lands without touching every ModelSpec
+    construction site or the ``custom_model`` signature. Making it a real field is the
+    next step, once the guards read it and the drift test proves the two agree.
+    """
+    override = _CAPABILITY_OVERRIDES.get(spec.name)
+    if override is not None:
+        return override
+    return ForecastCapabilities.for_input_kind(spec.input_kind)
 
 
 @dataclass(frozen=True)
@@ -746,8 +820,12 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "ridge",
         "linear",
         ridge,
-        default_params={"alpha": 1.0},
-        parameters=(_p("alpha", 1.0, "float", "L2 penalty strength."),),
+        default_params={"alpha": 1.0, "standardize": False},
+        parameters=(
+            _p("alpha", 1.0, "float", "L2 penalty strength."),
+            _p("standardize", False, "bool",
+               "Standardize features before fitting; required when feature scales are heterogeneous.", False),
+        ),
         spaces=_ALPHA_SPACES,
         method="cv_path",
         backend="sklearn.linear_model.Ridge",
@@ -2747,6 +2825,30 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         description="Hounyo-Li supervised scaled PCA: marginal predictive-slope scaling followed by SPCA.",
         prefix_search=PrefixSearchSpec(param="n_components", fit_prefix=SupervisedScaledPCARegressor.fit_prefix),
     ),
+    "setar": _spec(
+        "setar",
+        "timeseries",
+        setar,
+        default_params={"n_lag": 2, "direct": False},
+        parameters=(
+            _p("n_lag", 2, "int", "Number of autoregressive lags per regime."),
+            _p("direct", False, "bool", "Direct multi-step (set by the forecast policy).", False),
+        ),
+        input_kind="supervised",
+        description="Self-exciting threshold autoregression (two regimes).",
+    ),
+    "star": _spec(
+        "star",
+        "timeseries",
+        star,
+        default_params={"n_lag": 2, "direct": False},
+        parameters=(
+            _p("n_lag", 2, "int", "Number of autoregressive lags per regime."),
+            _p("direct", False, "bool", "Direct multi-step (set by the forecast policy).", False),
+        ),
+        input_kind="supervised",
+        description="Smooth-transition autoregression (logistic transition).",
+    ),
     "ar": _spec(
         "ar",
         "timeseries",
@@ -3603,13 +3705,22 @@ MODEL_SPECS: dict[str, ModelSpec] = {
         "far",
         "factor",
         far,
-        default_params={"n_factors": 3, "n_lag": 1, "random_state": 0, "direct": False},
+        default_params={"n_factors": 3, "n_lag": 1, "random_state": 0, "direct": False,
+                        "scale": False},
         parameters=(
             _p("n_factors", 3, "int", "Number of PCA factors."),
             _p("n_lag", 1, "int", "Autoregressive lag order."),
             _p("random_state", 0, "int", "PCA random seed.", False),
             _p("direct", False, "bool",
                "Direct multi-step projection onto fresh lags (set by the forecast policy).", False),
+            # Deliberately NOT tunable: the factor-extraction convention is a
+            # modelling decision (which method a study specifies), not a
+            # hyperparameter. Searching over it would amount to picking whichever
+            # convention fits best, which is exactly what a replication must not do.
+            _p("scale", False, "bool",
+               "Standardize the predictor block before the PCA (correlation PCA). False, the "
+               "default, centers only (covariance PCA), so the largest-variance series dominate "
+               "the factors. Note pca_step defaults the other way.", False),
         ),
         spaces={
             key: {**space, **_AR_SPACES[key]} for key, space in _FACTOR_SPACES.items()

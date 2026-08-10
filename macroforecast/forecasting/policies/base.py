@@ -6,7 +6,7 @@ through (Phase 3 of the runner decomposition; bodies moved verbatim from
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +56,12 @@ class _OriginRunConfig:
     model_random_alias: str | None
     save_models: bool
     model_store: "str | Path"
+    #: Fitted models, keyed by the exact fit sample and call parameters. With
+    #: ``retrain_every > 1`` the fit window is frozen between retrain points, so
+    #: consecutive origins hand the estimator identical rows and get identical
+    #: coefficients back; this is where the repeat is avoided. Shared across
+    #: origins within one run() only -- never across runs, and never on disk.
+    fit_cache: dict[Any, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -79,6 +85,47 @@ class _EffectiveSelection:
     model_spec: ModelSpec
     search: SearchSpec | None
     should_select: bool
+
+
+def _fit_reuse_key(
+    model_run: "_ModelRun",
+    X_fit: Any,
+    y_fit: Any,
+    call_params: Mapping[str, Any],
+) -> tuple[Any, ...] | None:
+    """A key that identifies a fit by what actually determines it.
+
+    Deliberately keyed on the CONTENT of the fit sample rather than on the
+    origin's window bounds. Bounds would be cheaper and would also be a bet --
+    that nothing between the window and the estimator can change the rows. A
+    per-arm window override, a preprocessing policy, an imputation refit: each is
+    a way for two origins to share bounds and not share data, and serving a
+    stale fit there would be a wrong number rather than a slow one.
+
+    Hashing the frame is O(n*p); the fit it replaces is not, which is the whole
+    reason this is worth doing.
+
+    Returns ``None`` when the inputs cannot be hashed reliably -- an object
+    column, a custom callable in the parameters. A missing key means "fit it",
+    which is the behaviour that existed before this cache.
+    """
+
+    try:
+        import hashlib
+        import json
+
+        frame = pd.DataFrame(X_fit)
+        target = pd.DataFrame(y_fit) if not isinstance(y_fit, pd.DataFrame) else y_fit
+        digest = hashlib.sha256()
+        for part in (frame, target):
+            digest.update(
+                pd.util.hash_pandas_object(part, index=True).to_numpy().tobytes()
+            )
+            digest.update(",".join(map(str, part.columns)).encode("utf-8"))
+        params = json.dumps(dict(call_params), sort_keys=True, default=str)
+    except Exception:
+        return None
+    return (str(model_run.alias), str(getattr(model_run, "name", "")), digest.hexdigest(), params)
 
 
 def _fit_one_model_at_origin(
@@ -153,7 +200,18 @@ def _fit_one_model_at_origin(
     model_owned_ic = str(
         getattr(model_spec, "selection_method", "cv")
     ).lower() in ("bic", "aic", "aicc")
-    uses_ic = explicit_ic or (ic_selection_enabled and model_owned_ic)
+    # An explicit non-IC SearchSpec (grid/cv/random/etc. with a validation
+    # splitter) must suppress a model's built-in IC selection; otherwise
+    # IC-owning models (ar/far, selection_method="bic") silently route to
+    # select_by_information_criterion and never run the requested CV.
+    explicit_non_ic = (
+        selected is not None
+        and selected_method not in ("", "information_criterion", "ic")
+        and getattr(selected, "validation_splitter", None) is not None
+    )
+    uses_ic = explicit_ic or (
+        ic_selection_enabled and model_owned_ic and not explicit_non_ic
+    )
     if should_select and uses_ic:
         # Information-criterion models (AR, FM) select their order by BIC/AIC on
         # the full training sample, so they need no validation split. This is
@@ -197,7 +255,10 @@ def _fit_one_model_at_origin(
                 }
             best_params = dict(cfg.param_cache.get(cache_key, {}))
     elif should_select:
-        if not selection_splits:
+        splitter_override = (
+            selected is not None and selected.validation_splitter is not None
+        )
+        if not selection_splits and not splitter_override:
             best_params, selection_metadata = _resolve_degraded_selection(
                 cache_key=cache_key,
                 alias=degraded_alias if degraded_alias is not None else model_run.alias,
@@ -210,9 +271,6 @@ def _fit_one_model_at_origin(
             if reused_metadata_extras and isinstance(selection_metadata, dict):
                 selection_metadata = {**selection_metadata, **reused_metadata_extras}
         elif retune or cache_key not in cfg.param_cache:
-            splitter_override = (
-                selected is not None and selected.validation_splitter is not None
-            )
             result = select_params(
                 selection_model_spec,
                 X_sel,
@@ -256,7 +314,12 @@ def _fit_one_model_at_origin(
         alias=cfg.model_random_alias or model_run.alias,
     )
     fit_params = _actual_model_params(model_spec, call_params)
-    fit = model_spec(X_fit, y_fit, **call_params)
+    fit_key = _fit_reuse_key(model_run, X_fit, y_fit, call_params)
+    fit = cfg.fit_cache.get(fit_key) if fit_key is not None else None
+    if fit is None:
+        fit = model_spec(X_fit, y_fit, **call_params)
+        if fit_key is not None:
+            cfg.fit_cache[fit_key] = fit
     stored_model = (
         _store_model_fit(
             fit,

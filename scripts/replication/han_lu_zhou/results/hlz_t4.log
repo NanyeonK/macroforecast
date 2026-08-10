@@ -1,0 +1,61 @@
+
+########## design=L1 (L=1)  J=1  arms=43  n_jobs=4 ##########
+  PCR    J=1  mine=  0.599%  paper= 0.60%  Δ= -0.001pp   path max|Δ|=8.882e-16  (17.1 min)
+  PLS    J=1  mine=  0.599%  paper= 0.60%  Δ= -0.001pp   path max|Δ|=9.992e-16  (17.1 min)
+  S-PCR  J=1  mine=  0.599%  paper= 0.60%  Δ= -0.001pp   path max|Δ|=9.992e-16  (17.1 min)
+
+########## design=L6 (L=6)  J=1  arms=43  n_jobs=4 ##########
+  PCR    J=1  mine=  0.723%  paper= 0.74%  Δ= -0.017pp   path max|Δ|=2.306e-03  (39.6 min)
+  PLS    J=1  mine=  0.811%  paper= 0.79%  Δ= +0.021pp   path max|Δ|=1.970e-01  (39.6 min)
+  S-PCR  J=1  mine=  0.814%  paper= 0.80%  Δ= +0.014pp   path max|Δ|=8.219e-02  (39.6 min)
+
+########## design=L6 (L=6)  J=2  arms=43  n_jobs=4 ##########
+  PCR    J=2  mine=  0.674%  paper= 0.74%  Δ= -0.066pp   path max|Δ|=4.362e-01  (39.3 min)
+  PLS    J=2  mine=  0.811%  paper= 0.79%  Δ= +0.021pp   path max|Δ|=1.970e-01  (39.3 min)
+  S-PCR  J=2  mine=  0.850%  paper= 0.80%  Δ= +0.050pp   path max|Δ|=3.585e-01  (39.3 min)
+
+########## design=L6 (L=6)  J=3  arms=43  n_jobs=4 ##########
+  PCR    J=3  mine=  0.585%  paper= 0.74%  Δ= -0.155pp   path max|Δ|=9.918e-01  (39.4 min)
+  PLS    J=3  mine=  0.811%  paper= 0.79%  Δ= +0.021pp   path max|Δ|=1.970e-01  (39.4 min)
+  S-PCR  J=3  mine=  0.521%  paper= 0.80%  Δ= -0.279pp   path max|Δ|=8.958e-01  (39.4 min)
+
+########## design=L12 (L=12)  J=1  arms=43  n_jobs=4 ##########
+  PCR    J=1  mine=  0.853%  paper= 0.91%  Δ= -0.057pp   path max|Δ|=3.042e-03  (90.8 min)
+  PLS    J=1  mine=  0.835%  paper= 0.94%  Δ= -0.105pp   path max|Δ|=1.427e-01  (90.8 min)
+  S-PCR  J=1  mine=  0.889%  paper= 0.92%  Δ= -0.031pp   path max|Δ|=9.560e-02  (90.8 min)
+
+########## design=L12 (L=12)  J=2  arms=43  n_jobs=4 ##########
+  PCR    J=2  mine=  1.146%  paper= 0.91%  Δ= +0.236pp   path max|Δ|=5.841e-01  (91.6 min)
+  PLS    J=2  mine=  0.835%  paper= 0.94%  Δ= -0.105pp   path max|Δ|=1.427e-01  (91.6 min)
+  S-PCR  J=2  mine=  1.161%  paper= 0.92%  Δ= +0.241pp   path max|Δ|=5.405e-01  (91.6 min)
+
+########## design=L12 (L=12)  J=3  arms=43  n_jobs=4 ##########
+  PCR    J=3  mine=  1.039%  paper= 0.91%  Δ= +0.129pp   path max|Δ|=6.821e-01  (91.6 min)
+  PLS    J=3  mine=  0.835%  paper= 0.94%  Δ= -0.105pp   path max|Δ|=1.427e-01  (91.6 min)
+  S-PCR  J=3  mine=  1.047%  paper= 0.92%  Δ= +0.127pp   path max|Δ|=7.102e-01  (91.6 min)
+
+########## TABLE 4 stage 1 — factor columns ##########
+| design | J | model | mine % | paper % | Δ pp | path max|Δ| |
+|---|---|---|---|---|---|---|
+| L1 | 1 | PCR | 0.599 | 0.60 | -0.001 | 8.88e-16 |
+| L1 | 1 | PLS | 0.599 | 0.60 | -0.001 | 9.99e-16 |
+| L1 | 1 | S-PCR | 0.599 | 0.60 | -0.001 | 9.99e-16 |
+| L6 | 1 | PCR | 0.723 | 0.74 | -0.017 | 2.31e-03 |
+| L6 | 1 | PLS | 0.811 | 0.79 | +0.021 | 1.97e-01 |
+| L6 | 1 | S-PCR | 0.814 | 0.80 | +0.014 | 8.22e-02 |
+| L6 | 2 | PCR | 0.674 | 0.74 | -0.066 | 4.36e-01 |
+| L6 | 2 | PLS | 0.811 | 0.79 | +0.021 | 1.97e-01 |
+| L6 | 2 | S-PCR | 0.850 | 0.80 | +0.050 | 3.58e-01 |
+| L6 | 3 | PCR | 0.585 | 0.74 | -0.155 | 9.92e-01 |
+| L6 | 3 | PLS | 0.811 | 0.79 | +0.021 | 1.97e-01 |
+| L6 | 3 | S-PCR | 0.521 | 0.80 | -0.279 | 8.96e-01 |
+| L12 | 1 | PCR | 0.853 | 0.91 | -0.057 | 3.04e-03 |
+| L12 | 1 | PLS | 0.835 | 0.94 | -0.105 | 1.43e-01 |
+| L12 | 1 | S-PCR | 0.889 | 0.92 | -0.031 | 9.56e-02 |
+| L12 | 2 | PCR | 1.146 | 0.91 | +0.236 | 5.84e-01 |
+| L12 | 2 | PLS | 0.835 | 0.94 | -0.105 | 1.43e-01 |
+| L12 | 2 | S-PCR | 1.161 | 0.92 | +0.241 | 5.41e-01 |
+| L12 | 3 | PCR | 1.039 | 0.91 | +0.129 | 6.82e-01 |
+| L12 | 3 | PLS | 0.835 | 0.94 | -0.105 | 1.43e-01 |
+| L12 | 3 | S-PCR | 1.047 | 0.92 | +0.127 | 7.10e-01 |
+T4_STAGE1_DONE

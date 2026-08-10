@@ -120,7 +120,7 @@ def select_features(
         scores = x_train.var(axis=0, skipna=True).fillna(0.0).abs()
         metadata = {"score": "sample_variance"}
     elif method_value == "correlation_selection":
-        scores = x_train.corrwith(y_train).abs().fillna(0.0)  # type: ignore[arg-type]
+        scores = x_train.corrwith(y_train).abs().fillna(0.0)
         metadata = {"score": "absolute_target_correlation"}
     elif method_value == "lasso_selection":
         scores, metadata = _lasso_scores(x_train, y_train, params=params)

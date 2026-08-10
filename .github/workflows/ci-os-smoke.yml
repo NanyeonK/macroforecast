@@ -1,0 +1,66 @@
+name: ci-os-smoke
+
+# Every other job runs on ubuntu-latest.
+#
+# The things that differ across operating systems are not the statistics -- they
+# are the plumbing the statistics sit on: path separators and case sensitivity,
+# the multiprocessing start method (fork on Linux, spawn on Windows and macOS),
+# file locking, and whether a pickle written by one process can be read by
+# another. All of those are load-bearing here, because the package writes caches,
+# forks workers, and stores fitted models.
+#
+# Deliberately a smoke test, not the full matrix. Ubuntu keeps the suite; this
+# answers "does it work at all" on the other two, which is the question nobody
+# can currently answer.
+#
+# The probes live in tools/os_smoke/ as real files rather than heredocs. Two
+# reasons, both learned the hard way on the first run of this job: under spawn the
+# worker re-imports __main__ to unpickle its payload, and a __main__ of "<stdin>"
+# does not exist on disk, so a piped script fails with BrokenProcessPool for a
+# reason no real user would ever hit; and a heredoc indented inside a YAML block
+# scalar writes its own indentation into the file, which Python then rejects.
+# Files are also runnable locally, which is how they get verified before CI.
+#
+# shell: bash is pinned for the whole job because the default shell on
+# windows-latest is PowerShell.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[ci]"
+
+      - name: Import and version
+        run: python -c "import macroforecast as mf; print(mf.__version__)"
+
+      - name: A pipeline, serial and parallel, must agree
+        run: python tools/os_smoke/parallel_agrees.py
+
+      - name: Paths and caches survive this filesystem
+        run: python tools/os_smoke/paths_and_caches.py
+
+      - name: Save and reload a fitted model
+        run: python tools/os_smoke/save_reload.py

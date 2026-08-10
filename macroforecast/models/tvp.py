@@ -755,7 +755,7 @@ def _estimate_garch_weights(
     if not use_garch:
         return np.ones_like(residual, dtype=float), "disabled"
     try:
-        from arch import arch_model  # type: ignore[import-not-found]
+        from arch import arch_model
     except ImportError:
         return np.ones_like(residual, dtype=float), "arch_not_installed"
 
@@ -763,7 +763,7 @@ def _estimate_garch_weights(
         model = arch_model(
             residual,
             mean="Zero",
-            vol="Garch",
+            vol="GARCH",
             p=1,
             q=1,
             rescale=False,

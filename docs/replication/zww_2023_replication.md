@@ -51,6 +51,8 @@ not a package defect.
 Covariance PCA (`scale=False`), Newey-West-consistent selection convention, expanding window,
 OOS 1998:01-2018:12.
 
+Cells are out-of-sample R²_OS in percent, reported as **macroforecast / ZWW-published** (`--` = value not tabulated by ZWW; the `h=12 (ours)` column is macroforecast only). Verdict band for the `verdict` column: **reproduced** = macroforecast R²_OS within about 1-2 pp of ZWW's published value (or same sign and ≈0 for the near-zero `PCA-all` arm); **near-exact** = within about 0.5 pp; **direction** = same sign and story as ZWW but the magnitude differs (flagged where it runs about 2x). The headline PCA-VS models reproduce to about 1-2 pp.
+
 | Model | h=1 | h=3 | h=6 | h=12 (ours) | verdict |
 |---|---|---|---|---|---|
 | PCA-t_stat        | 1.72 / 2.02  | 1.39 / 1.84  | **5.93 / 4.57** | 8.17 | reproduced |
@@ -71,6 +73,8 @@ Significance: PCA-VS Clark-West statistics are positive/significant (as in ZWW);
 are not.
 
 ## Table 4 — spot (robustness). R²_OS (%): macroforecast (ZWW Table 4 PCA-VS ~+5% at long horizon)
+
+Cells are macroforecast out-of-sample R²_OS in percent. ZWW's Table 4 is summarized (PCA-VS about +5% at the long horizon) rather than tabulated cell-by-cell, so this exhibit is a direction/level check under the same verdict band as Table 3, not a cell-by-cell parity.
 
 | Model | h=1 | h=3 | h=6 | h=12 |
 |---|---|---|---|---|

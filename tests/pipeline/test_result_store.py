@@ -516,3 +516,88 @@ def test_result_store_summary_and_purge(tmp_path):
     digest = str(summary.iloc[0]["digest"])
     assert mf.pipeline.purge_result_store(store, digests=[digest]) == 1
     assert digest not in set(mf.pipeline.result_store_summary(store)["digest"])
+
+
+def _undigestible_mean_fit(X, y):
+    # Deliberately NO ``__mf_digest__`` -> the cell is undigestible and is therefore
+    # NEVER written to the store (only digestible cells attempt a write).
+    return _ConstantFit(float(np.nanmean(np.asarray(y, dtype=float))))
+
+
+def _write_failure_spec(store):
+    feats = _features()
+    return pipeline_spec(
+        data=_bundle(),
+        targets=["y"],
+        horizons=[1],
+        window=_window(),
+        arms=[
+            Arm("A", model=_recording_model(), features=feats, is_benchmark=True),
+            Arm("B", model=_recording_model(), features=feats, params={"offset": 0.1}),
+            Arm(
+                "U",
+                model=mf.models.custom_model("u_mean", _undigestible_mean_fit),
+                features=feats,
+            ),
+        ],
+        evaluation=EvalSpec(benchmark="A", metrics=("rmse", "relative_mse", "r2_oos")),
+        save_models=False,
+        result_store=store,
+    )
+
+
+def test_result_store_write_failure_does_not_drop_cells(tmp_path):
+    """A store WRITE failure must not drop the correctly-computed cells.
+
+    Regression for the ZWW replication bug: when the store's ``cells/`` directory
+    was unwritable (disk-full / ENOSPC / read-only / quota / permissions), every
+    DIGESTIBLE cell -- including the benchmark -- was discarded, because the write
+    failure was caught as a per-cell COMPUTE failure. Only the UNDIGESTIBLE arms
+    (never written) survived, with ``benchmark_present=False`` and NaN metrics, and
+    the ``cells/`` dir was empty. The report must instead be identical to a no-store
+    run; only cache persistence is skipped, and the failure is surfaced.
+    """
+    import os
+    import stat
+    import warnings as _warnings
+
+    baseline = run_pipeline(_dc.replace(_write_failure_spec(tmp_path / "unused"), result_store=None))
+
+    store = tmp_path / "ro_store"
+    cells = store / "cells"
+    cells.mkdir(parents=True)
+    os.chmod(cells, stat.S_IRUSR | stat.S_IXUSR)  # r-x------ : file writes fail
+    try:
+        with _warnings.catch_warnings(record=True) as caught:
+            _warnings.simplefilter("always")
+            report = run_pipeline(_write_failure_spec(store))
+    finally:
+        os.chmod(cells, stat.S_IRWXU)
+
+    # (1) No cell is dropped; the report equals the no-store baseline.
+    assert set(report.accuracy["contender"]) == {"A", "B", "U"}
+    assert bool(report.accuracy["benchmark_present"].all())
+    assert not report.failed_cells
+    pd.testing.assert_frame_equal(_frame_sort(baseline.accuracy), _frame_sort(report.accuracy))
+
+    # (2) The write failure is surfaced (metadata + warning), not silent.
+    meta = report.provenance["result_store"]
+    failed_write_arms = {rec["arm"] for rec in meta.get("write_failures", [])}
+    assert failed_write_arms == {"A", "B"}   # both digestible arms attempted a write
+    assert "U" not in failed_write_arms      # the undigestible arm is never written
+    assert list(cells.iterdir()) == []       # nothing was persisted
+    assert any("could not persist" in str(w.message) for w in caught)
+
+
+def test_result_store_write_success_still_persists_and_is_bit_identical(tmp_path):
+    """Golden path: with a WRITABLE store the report is identical to the no-store run
+    and every digestible cell is persisted (no write_failures recorded)."""
+    baseline = run_pipeline(_dc.replace(_write_failure_spec(tmp_path / "unused"), result_store=None))
+    report = run_pipeline(_write_failure_spec(tmp_path / "ok_store"))
+
+    pd.testing.assert_frame_equal(_frame_sort(baseline.accuracy), _frame_sort(report.accuracy))
+    assert not report.failed_cells
+    assert report.provenance["result_store"].get("write_failures", []) == []
+    assert report.provenance["result_store"]["n_computed"] == 3
+    persisted = sorted((tmp_path / "ok_store" / "cells").glob("*.parquet"))
+    assert len(persisted) == 2  # A and B are digestible; U is not

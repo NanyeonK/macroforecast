@@ -36,6 +36,8 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `albacore_ranks` | function | Fit the inflation-specific rank-space Albacore wrapper. |
 | `ar` | function | Fit a fixed-order AR(``n_lag``) by OLS. |
 | `ar_bic` | function | Target-only AR with internal residual-variance IC lag selection. |
+| `setar` | function | Self-exciting threshold autoregression (two regimes, min-SSR threshold). |
+| `star` | function | Smooth-transition autoregression (logistic transition on the most recent lag). |
 | `naive` | function | Random-walk (naive) forecaster: carry the last observed value forward. |
 | `hist_mean` | function | Historical (prevailing) mean benchmark for the transformed target. |
 | `seasonal_naive` | function | Seasonal-naive forecaster: repeat the last full seasonal cycle. |
@@ -83,7 +85,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `lgba_plus` | function | Fit alternating LGB^A+ hybrid tree/linear boosting. |
 | `lgb_plus` | function | Fit competition-based LGB+ hybrid tree/linear boosting. |
 | `list_model_specs` | function | List registered model specs. |
-| `load_fit` | function | Load a fitted model object saved by `save_fit()`. |
+| `load_fit` | function | Load a fitted model object saved by :func:`save_fit`. |
 | `lstm` | function | Fit a torch-backed LSTM regressor. Requires ``macroforecast[deep]``. |
 | `macro_random_forest` | function | Fit Macroeconomic Random Forest with the vendored reference backend. |
 | `mars` | function | Fit package-native multivariate adaptive regression splines. |
@@ -205,8 +207,10 @@ These rows come from `macroforecast.models.MODEL_SPECS` / `list_model_specs()`.
 | `ridge` | `linear` | `supervised` | `standard` | none | no | Ridge regression. |
 | `scaled_pca` | `composite` | `supervised` | `standard` | none | no | Huang et al. scaled PCA: marginal predictive-slope scaling followed by PCA. |
 | `seasonal_naive` | `timeseries` | `target` | `standard` | none | no | Seasonal-naive baseline: repeat the last seasonal cycle (forecast::snaive). |
+| `setar` | `timeseries` | `supervised` | `standard` | none | no | Self-exciting threshold autoregression (two regimes). |
 | `shrink_to_target_ridge` | `linear` | `supervised` | `standard` | none | no | Ridge regression shrinking coefficients toward a target vector. |
 | `sparse_group_lasso` | `linear` | `supervised` | `standard` | none | no | Package-native sparse group lasso with group and feature-level sparsity. |
+| `star` | `timeseries` | `supervised` | `standard` | none | no | Smooth-transition autoregression (logistic transition). |
 | `stlf` | `timeseries` | `target` | `standard` | none | no | STL decomposition + forecast of the seasonally-adjusted series (forecast::stlf). |
 | `supervised_aggregation` | `assemblage` | `supervised` | `standard` | none | no | Generic constrained supervised aggregation derived from Albacore/assemblage primitives. |
 | `supervised_pca` | `composite` | `supervised` | `standard` | none | no | Original-style iterative supervised PCA with residual correlation screening and projection. |
@@ -1122,7 +1126,7 @@ Family: `factor`
 #### Fit Signature
 
 ```python
-macroforecast.models.far(X: Any, y: Any | None = None, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0, direct: bool = False) -> ModelFit
+macroforecast.models.far(X: Any, y: Any | None = None, *, n_factors: int = 3, n_lag: int = 1, random_state: int = 0, direct: bool = False, scale: bool = False) -> ModelFit
 ```
 
 | Field | Value |
@@ -1144,6 +1148,7 @@ Factor-augmented autoregression.
 | `n_lag` | `1` | `int` | True | Autoregressive lag order. |
 | `random_state` | `0` | `int` | False | PCA random seed. |
 | `direct` | `False` | `bool` | False | Direct multi-step projection onto fresh lags (set by the forecast policy). |
+| `scale` | `False` | `bool` | False | Standardize the predictor block before the PCA (correlation PCA). False, the default, centers only (covariance PCA), so the largest-variance series dominate the factors. Note pca_step defaults the other way. |
 
 #### Search Spaces
 
@@ -1993,7 +1998,7 @@ Family: `tree`
 #### Fit Signature
 
 ```python
-macroforecast.models.macro_random_forest(X: Any, y: Any | None = None, *, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, **kwargs: Any) -> ModelFit
+macroforecast.models.macro_random_forest(X: Any, y: Any | None = None, *, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, random_state: int | None = None, **kwargs: Any) -> ModelFit
 ```
 
 | Field | Value |
@@ -2233,7 +2238,7 @@ Family: `neural`
 #### Fit Signature
 
 ```python
-macroforecast.models.nn(X: Any, y: Any | None = None, *, hidden_layer_sizes: tuple[int, ...] = (100,), activation: str = "relu", dropout: float = 0.0, learning_rate: float = 0.001, max_epochs: int = 100, batch_size: int = 32, weight_decay: float = 0.0, optimizer: TorchOptimizer = "adam", loss: TorchLoss = "mse", random_state: int = 0, device: TorchDevice = "auto") -> ModelFit
+macroforecast.models.nn(X: Any, y: Any | None = None, *, hidden_layer_sizes: tuple[int, ...] = (100,), activation: str = "relu", dropout: float = 0.0, learning_rate: float = 0.001, max_epochs: int = 100, validation_fraction: float = 0.0, early_stopping_patience: int | None = None, batch_size: int = 32, weight_decay: float = 0.0, optimizer: TorchOptimizer = "adam", loss: TorchLoss = "mse", random_state: int = 0, device: TorchDevice = "auto") -> ModelFit
 ```
 
 | Field | Value |
@@ -2724,7 +2729,7 @@ Family: `linear`
 #### Fit Signature
 
 ```python
-macroforecast.models.ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, **kwargs: Any) -> ModelFit
+macroforecast.models.ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, standardize: bool = False, **kwargs: Any) -> ModelFit
 ```
 
 | Field | Value |
@@ -2743,6 +2748,7 @@ Ridge regression.
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `alpha` | `1.0` | `float` | True | L2 penalty strength. |
+| `standardize` | `False` | `bool` | False | Standardize features before fitting; required when feature scales are heterogeneous. |
 
 #### Search Spaces
 
@@ -2819,6 +2825,34 @@ Seasonal-naive baseline: repeat the last seasonal cycle (forecast::snaive).
 | Name | Default | Kind | Tunable | Description |
 | --- | --- | --- | --- | --- |
 | `period` | `None` | `int \| None` | False | Seasonal period m; repeats the last m values. |
+
+### setar
+
+Family: `timeseries`
+
+#### Fit Signature
+
+```python
+macroforecast.models.setar(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `supervised` |
+| `default_preset` | `standard` |
+| `default_search_method` | `grid` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Self-exciting threshold autoregression (two regimes).
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `n_lag` | `2` | `int` | True | Number of autoregressive lags per regime. |
+| `direct` | `False` | `bool` | False | Direct multi-step (set by the forecast policy). |
 
 ### shrink_to_target_ridge
 
@@ -2902,6 +2936,34 @@ Package-native sparse group lasso with group and feature-level sparsity.
 | `standard` | `alpha`: `(0.001, 0.01, 0.1, 1.0, 10.0)`, `l1_ratio`: `(0.1, 0.25, 0.5, 0.75, 0.9)` |
 | `wide` | `alpha`: `(0.0001, 0.001, 0.01, 0.1, 1.0, 10.0)`, `l1_ratio`: `(0.05, 0.1, 0.25, 0.5, 0.75, 0.9)` |
 
+### star
+
+Family: `timeseries`
+
+#### Fit Signature
+
+```python
+macroforecast.models.star(X: Any, y: Any | None = None, *, n_lag: int = 2, direct: bool = False) -> ModelFit
+```
+
+| Field | Value |
+| --- | --- |
+| `input_kind` | `supervised` |
+| `default_preset` | `standard` |
+| `default_search_method` | `grid` |
+| `requires_extra` | none |
+| `requires_scaling` | no |
+| `recommended_preprocessing` | `()` |
+
+Smooth-transition autoregression (logistic transition).
+
+#### Model Parameters
+
+| Name | Default | Kind | Tunable | Description |
+| --- | --- | --- | --- | --- |
+| `n_lag` | `2` | `int` | True | Number of autoregressive lags per regime. |
+| `direct` | `False` | `bool` | False | Direct multi-step (set by the forecast policy). |
+
 ### stlf
 
 Family: `timeseries`
@@ -2983,7 +3045,7 @@ Family: `composite`
 #### Fit Signature
 
 ```python
-macroforecast.models.supervised_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
+macroforecast.models.supervised_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, elastic_net_search: Any | None = None, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
 ```
 
 | Field | Value |
@@ -3013,6 +3075,7 @@ Original-style iterative supervised PCA with residual correlation screening and 
 | `t_threshold` | `1.28` | `float` | False | Hard t-stat pre-selection threshold. |
 | `elastic_net_alpha` | `0.0002` | `float` | False | Elastic-net pre-selection penalty. |
 | `elastic_net_l1_ratio` | `0.5` | `float` | False | Elastic-net pre-selection L1 ratio. |
+| `elastic_net_search` | `None` | `SearchSpec \| Mapping[str, Any] \| None` | False | Optional information-criterion search for elastic-net pre-selection alpha/l1_ratio. |
 | `quadratic_factors` | `False` | `bool` | False | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
 | `random_state` | `0` | `int` | False | Elastic-net pre-selection random seed. |
 
@@ -3031,7 +3094,7 @@ Family: `composite`
 #### Fit Signature
 
 ```python
-macroforecast.models.supervised_scaled_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
+macroforecast.models.supervised_scaled_pca(X: Any, y: Any | None = None, *, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, elastic_net_search: Any | None = None, quadratic_factors: bool = False, random_state: int = 0) -> ModelFit
 ```
 
 | Field | Value |
@@ -3061,6 +3124,7 @@ Hounyo-Li supervised scaled PCA: marginal predictive-slope scaling followed by S
 | `t_threshold` | `1.28` | `float` | False | Hard t-stat pre-selection threshold. |
 | `elastic_net_alpha` | `0.0002` | `float` | False | Elastic-net pre-selection penalty. |
 | `elastic_net_l1_ratio` | `0.5` | `float` | False | Elastic-net pre-selection L1 ratio. |
+| `elastic_net_search` | `None` | `SearchSpec \| Mapping[str, Any] \| None` | False | Optional information-criterion search for elastic-net pre-selection alpha/l1_ratio. |
 | `quadratic_factors` | `False` | `bool` | False | Whether to add the Hounyo-Li PC2 squared-factor forecast head. |
 | `random_state` | `0` | `int` | False | Elastic-net pre-selection random seed. |
 
@@ -3426,7 +3490,7 @@ XGBoost regressor.
 Kind: `data`
 
 ```python
-MODEL_SPECS = dict(82 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, ar_bic, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, ...)
+MODEL_SPECS = dict(84 entries: adaptive_elastic_net, adaptive_lasso, albacore_components, albacore_ranks, ar, ar_bic, arima, assemblage_regression, auto_arima, bayesian_ridge, bvar_minnesota, bvar_normal_inverse_wishart, ...)
 ```
 
 ## Callable And Class Reference
@@ -3623,7 +3687,7 @@ Qualified name: `macroforecast.models.tree.MacroRandomForestRegressor`
 #### Signature
 
 ```python
-macroforecast.models.MacroRandomForestRegressor(*, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, **kwargs: Any) -> None
+macroforecast.models.MacroRandomForestRegressor(*, x_columns: Sequence[str] | None = None, S_columns: Sequence[str] | None = None, x_pos: Sequence[int] | None = None, S_pos: Sequence[int] | None = None, y_pos: int = 0, B: int = 25, minsize: int = 10, mtry_frac: float = 0.3333333333333333, min_leaf_frac_of_x: float = 1.0, VI: bool = False, ERT: bool = False, quantile_rate: float | None = None, S_priority_vec: Sequence[float] | None = None, random_x: bool = False, trend_push: int = 1, howmany_random_x: int = 1, howmany_keep_best_VI: int = 20, cheap_look_at_GTVPs: bool = True, prior_var: Sequence[float] | None = None, prior_mean: Sequence[float] | None = None, subsampling_rate: float = 0.75, rw_regul: float = 0.75, keep_forest: bool = False, block_size: int = 12, fast_rw: bool = True, ridge_lambda: float = 0.1, HRW: int = 0, resampling_opt: int = 2, print_b: bool = False, parallelise: bool = False, n_cores: int = 1, random_state: int | None = None, **kwargs: Any) -> None
 ```
 
 #### Description
@@ -3665,6 +3729,7 @@ Adapter for the vendored MacroRandomForest reference implementation.
 | `print_b` | keyword only | `bool` | `False` |
 | `parallelise` | keyword only | `bool` | `False` |
 | `n_cores` | keyword only | `int` | `1` |
+| `random_state` | keyword only | `int \| None` | `None` |
 | `kwargs` | var keyword | `Any` | `required` |
 
 #### Returns
@@ -3684,7 +3749,9 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `fit` | `fit(self, X: pd.DataFrame, y: pd.Series) -> "'MacroRandomForestRegressor'"` | No public docstring is available. |
+| `gtvp` | `gtvp(self) -> pd.DataFrame` | Generalized time-varying parameters -- the paper's headline output. |
 | `predict` | `predict(self, X: pd.DataFrame) -> np.ndarray` | No public docstring is available. |
+| `variable_importance` | `variable_importance(self) -> "'pd.Series'"` | Not available: the vendored backend does not compute variable |
 ### MARSRegressor
 
 Qualified name: `macroforecast.models.spline.MARSRegressor`
@@ -4231,7 +4298,7 @@ Qualified name: `macroforecast.models.linear.SupervisedPCARegressor`
 #### Signature
 
 ```python
-macroforecast.models.SupervisedPCARegressor(*, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, slope_scale: bool = False, quadratic_factors: bool = False, random_state: int = 0) -> None
+macroforecast.models.SupervisedPCARegressor(*, n_components: int = 3, n_selected: int | None = 50, min_abs_corr: float = 0.0, scale: bool = True, control_columns: Sequence[str] | None = None, include_constant: bool = True, drop_control_columns: bool = True, preselect: str = "none", preselect_stage: str = "after_standardize", t_threshold: float = 1.28, elastic_net_alpha: float = 0.0002, elastic_net_l1_ratio: float = 0.5, elastic_net_search: Any | None = None, slope_scale: bool = False, quadratic_factors: bool = False, random_state: int = 0) -> None
 ```
 
 #### Description
@@ -4254,6 +4321,7 @@ Original-style SPCA with iterative screening, PCA, and projection.
 | `t_threshold` | keyword only | `float` | `1.28` |
 | `elastic_net_alpha` | keyword only | `float` | `0.0002` |
 | `elastic_net_l1_ratio` | keyword only | `float` | `0.5` |
+| `elastic_net_search` | keyword only | `Any \| None` | `None` |
 | `slope_scale` | keyword only | `bool` | `False` |
 | `quadratic_factors` | keyword only | `bool` | `False` |
 | `random_state` | keyword only | `int` | `0` |
@@ -4592,7 +4660,23 @@ macroforecast.models.load_fit(model_path: str | Path) -> Any
 
 #### Description
 
-Load a fitted model object saved by `save_fit()`.
+Load a fitted model object saved by :func:`save_fit`.
+
+.. warning::
+
+   **Unpickling executes code.** A pickle file is a program, not a data
+   format: loading one can run arbitrary code before it returns anything.
+   Load only files you produced yourself or received from a source you
+   trust as much as you trust your own machine -- never one downloaded
+   from an untrusted location, and never one arriving with a replication
+   package you have not reviewed.
+
+   There is no way to make this safe by inspecting the file first. If you
+   need to distribute fitted state across a trust boundary, ship the code
+   and the specification that reproduce the fit instead of the pickle.
+
+The sidecar JSON that :func:`save_fit` writes alongside the model is plain
+data and carries no such risk; read it when you only need the metadata.
 
 #### Parameters
 

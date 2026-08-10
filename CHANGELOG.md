@@ -5,6 +5,446 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `interpretation/core.py`, `tests/interpretation/` (**one fix, plus the audit
+  #446 asked for**): the interpretation subsystem had no correctness oracles,
+  and the `custom_interpretation` contract was a one-line docstring.
+
+  **Fixed: a mapping of columns to values became one row of list-valued cells.**
+  `_coerce_custom_table` wrapped every mapping with `pd.DataFrame([mapping])`,
+  which is right for named metrics (`{"r2": 0.81, "mse": 1.2}` is one row) and
+  wrong for the columnar shape (`{"feature": [...], "importance": [...]}`), the
+  more natural way to return a per-feature table. There was no error -- the
+  result looked wrong only if you printed it. The two shapes are now
+  distinguished.
+
+  **Oracles for the decompositions.** Cases where the right answer is known in
+  advance, rather than tests that the functions run: linear SHAP is affine in
+  the feature with slope `beta_j`; per-row attributions sum to the prediction
+  minus the base value (efficiency); a feature the model does not use gets
+  essentially nothing (dummy); permuting one column leaves the others'
+  attribution untouched; the aggregated `shap_linear` view agrees with the
+  per-row `shap_values`; a constant model attributes nothing to anything. Plus
+  native-attribution oracles: `linear_coefficients` recovers the generating
+  coefficients, `tree_importance` puts the mass on the used feature, permutation
+  importance is reproducible under a seed.
+
+  Note on how one of these is written. The obvious oracle -- compare against
+  `beta_j * (x_ij - mean_j)` -- fails, because this implementation does not
+  centre on the sample mean; the difference is a per-feature constant. Testing
+  the exact closed form would pin an incidental convention rather than the
+  axiom, so the test instead requires `attribution - beta_j * x_ij` to be the
+  same in every row, which is the actual claim and survives a defensible change
+  of baseline.
+
+  **Risk (1) in the issue does not hold as stated.** Interpretation dispatches on
+  what an estimator *exposes* (`coef_`, `feature_importances_`), not on its
+  class, so an injected custom model that delegates to `ols` is explained
+  identically to `ols` -- now pinned by a test.
+
+  **`custom_interpretation` is documented**: the exact call signature (`model`
+  passed through unchanged, `X` coerced to a DataFrame, `y` and `metadata`
+  always sent as keywords even when empty), what may be returned, the schema
+  attached -- and, explicitly, what it does **not** do. It validates no axiom.
+  A method returning nonsense is accepted and schema-stamped exactly like a
+  correct one, which a caller putting custom output in a paper needs to know.
+  That non-guarantee is pinned by a test so it cannot be assumed away.
+
+- `models/persistence.py`, `preprocessing/cache.py`, `SECURITY.md`,
+  `pipeline/spec.py`, `.gitignore` (**documentation and hygiene only, no
+  behaviour change**):
+
+  - `load_fit()` now says that unpickling executes code. It reads a pickle, and
+    a pickle is a program: loading one can run arbitrary code before it returns.
+    The docstring had been a single line naming `save_fit`, which told a reader
+    nothing about that. The preprocessing cache's existing `# noqa: S301 —
+    trusted local filesystem` now states what "trusted" has to mean rather than
+    asserting it.
+  - New `SECURITY.md`: private reporting route, the two trust assumptions the
+    package makes about files it reads (pickles, user-supplied callables), and
+    an explicit scope — those two are documented properties rather than defects,
+    but turning one into a surprise for someone following the documentation is
+    in scope.
+  - `EvalSpec.by` and `EvalSpec.primary_axis` are documented as **reserved**.
+    Both are public dataclass fields that raise `ValueError` for any
+    non-default value, which reads as a feature you can use. The docstrings now
+    say only the default is supported and that nothing reads another value
+    today — deliberately not "coming soon", which would be a promise.
+  - `.gitignore` drops three blocks left over from the `macrocast` rename
+    (`.macrocast/`, `macrocastR/*`, `macrocast_output/`).
+- `window/policy.py`, `docs/architecture.md`, `tests/architecture/` (**one
+  behaviour change, deliberate**): the package's layering is now written down
+  and enforced, and one field that looked like a setting is now refused.
+
+  **`StagePolicy.apply_to` was a silent no-op.** It is a public field, is
+  normalized in `__post_init__`, and appears in `to_dict()` and in two builder
+  signatures -- so a policy written with `apply_to=("fit",)` looked configured.
+  Nothing in the package reads it: a search finds the field only inside
+  `window/policy.py` itself. That stage would have been applied to the test rows
+  anyway. It now raises `ValueError` for any value other than `("fit", "test")`,
+  which is a behaviour change for code that passed something else -- code whose
+  intent was already not being honoured.
+
+  This is worse than `EvalSpec.by`, which at least refuses. A no-op that looks
+  like a setting is the harder failure, because the run *looks* configured.
+
+  **`tests/architecture/test_import_boundaries.py`** reads import statements and
+  fails on any new upward one, so `forecasting.run()` stays usable without a
+  pipeline and `models/` stays readable without the orchestrator -- the two
+  properties every replication under `docs/replication` relies on. Layers were
+  derived from what each package actually imports, not assigned by taste.
+
+  Two upward imports exist today and are listed explicitly rather than
+  tolerated: `data/vintage.py` reaching into `pipeline.run._panel_fingerprint`
+  (a layer-0 module using a layer-3 private function) and `pipeline/run.py`
+  importing `output.collect_provenance`. A second test fails if either is fixed
+  without being removed from the list, so it cannot rot into fiction.
+
+  **`docs/architecture.md`** records the layering, why it is load-bearing rather
+  than tidy, and two `[GAP]`s found while writing it: a forecast task's identity
+  is re-derived in four places rather than resolved once, and
+  `pipeline/evaluate.py` calls `load_fred_series()` to resolve named subsample
+  masks, which makes evaluating one fixed forecast table depend on network and
+  cache state.
+- `preprocessing/specs.py`, `docs/guide/concepts/preprocessing.md`
+  (**breaking under `policy="fit_window"`**): custom preprocessing steps now
+  declare whether they aggregate, and are held to it (issue #449).
+
+  A custom step used to be one callable. Under `fit_window` that callable is
+  re-executed on each apply window -- and the apply window contains the rows
+  after the forecast origin -- so a step computing any statistic there read the
+  future. The package warned and ran anyway.
+
+  Two shapes are now available:
+
+  - `custom_preprocess_step(name, func, row_local=True)` -- a claim that each
+    output row depends only on the matching input row, which makes re-execution
+    on a longer frame harmless.
+  - `custom_preprocess_step(name, fit_func=..., transform_func=...)` --
+    `fit_func` runs **once**, on the estimation window; `transform_func` applies
+    what it returned without recomputing.
+
+  A bare `func` declaring neither is **refused** under `fit_window`, with an
+  error naming all three ways out (declare row-local, split it, or use
+  `origin_available`). `origin_available` still accepts it, since the sample
+  handed to a step there is already restricted to observable rows.
+
+  Verified by the property rather than the mechanism: with the split step,
+  replacing every post-origin predictor with `1e6` leaves the first forecast
+  identical. A separate test counts `fit_func` calls to show the state is
+  derived once and never refitted at transform time.
+
+  **A note that made this harder to see than it looks.** OLS with an intercept
+  is invariant to any affine transform of `X`, so a leaky centering or rescaling
+  step changes the fitted coefficients and leaves the prediction untouched. The
+  first attempt at a demonstration used demeaning and *passed*. Only a
+  non-affine step -- clipping at a sample quantile -- moves the forecast. The
+  leak is equally real either way; whether it surfaces depends on the model it
+  feeds, which is why this is enforced rather than left to inspection.
+
+- `models/timeseries.py`, `models/specs.py` (**no default behaviour change**):
+  `far` now takes `scale`, so a caller can choose the factor-extraction
+  convention. Previously it centered the predictor block and ran PCA on that --
+  covariance PCA -- with no way to ask for anything else, while
+  `pca_step` standardizes by default. The same package therefore extracted
+  factors two different ways depending on the route, silently, and one of them
+  could not be changed (issue #495).
+
+  This is a modelling choice, not a numerical detail. Under covariance PCA the
+  largest-variance series dominate the factors, and in a FRED-MD-style panel a
+  level-coded series can outweigh dozens of growth rates.
+  `docs/replication/zww_2023_replication.md` documents a published paper whose
+  entire headline result turned on exactly this choice.
+
+  `scale=False` remains the default, so every existing `far` result is
+  unchanged; the tests pin the default against a hand-computed covariance PCA
+  and `scale=True` against a hand-computed correlation PCA. Both of `far`'s fit
+  paths (direct projection and roll-forward) honour it, a zero-variance column
+  is given a divisor of 1.0 rather than dividing to NaN, and the docstrings on
+  both routes now say that their defaults differ.
+- `tests.py`, `pipeline/evaluate.py`, `pipeline/spec.py`: `EvalSpec.multiple_testing`
+  works. It was declared but refused -- setting it raised "not implemented" --
+  so a horse-race reported N unadjusted tests against one benchmark, where a 5%
+  rule expects one false winner in twenty even if nothing has any skill
+  (issue #454).
+
+  Two new public functions, usable on their own:
+
+  - `adjust_pvalues(p, method=...)` -- `"bonferroni"`, `"holm"` (step-down,
+    uniformly at least as powerful, so prefer it wherever Bonferroni was meant),
+    and `"bh"` (Benjamini-Hochberg step-up, FDR rather than FWER).
+  - `romano_wolf_pvalues(loss_differentials, ...)` -- Romano-Wolf (2005)
+    step-down over a moving-block bootstrap. Unlike the closed-form three it
+    resamples the contenders JOINTLY, so it inherits their cross-sectional
+    correlation instead of assuming the worst case, and in a forecast horse-race
+    -- where contenders are fit on the same data and are highly correlated -- it
+    is markedly less conservative. Studentization and the block bootstrap follow
+    `multi_horizon_spa_test`'s existing convention.
+
+  `significance_table` gains a `<test>_p_adj` column per wide test when a method
+  is configured. **The family is the set of contenders within one
+  `(target, horizon)` cell** -- what a reader scans at once when looking down a
+  results column for the winner.
+
+  All four methods adjust the *same* family: a contender whose test did not
+  produce a p-value gets `NaN`, not an adjustment. Romano-Wolf can compute one
+  from the differentials alone, and the first implementation did -- putting a
+  `dm_p_adj` beside an empty `dm_p`, and letting those columns inflate the max
+  statistic every other contender is charged against. It was caught by running
+  the pipeline rather than by reading the code, and is pinned by a test.
+
+  With no method configured the report is unchanged, and `spec.py` now validates
+  the name instead of refusing every value.
+
+  `tests/pipeline/test_evalspec_threading.py` listed `multiple_testing` among
+  the dead fields that refuse every value; it now checks that a known method is
+  accepted and an unknown one refused, so the validation cannot regress to
+  accept-anything. `by` and `primary_axis` stay fail-closed.
+
+- `forecasting/feature_stage.py`, `forecasting/runner.py` (performance, **no
+  number changes**): the fitted feature builder (the PCA/MARX/SIR numerical
+  state) was shared across arms through an in-memory dict only. Under
+  `n_jobs > 1` each cell runs in its own **process**, so that dict is always
+  empty for a worker and every (arm x horizon) cell refits the same transform
+  (issue #448).
+
+  `preprocessing_stage.py` already solved exactly this with a second, on-disk
+  tier over the shared `PreprocessorStore`; this is that tier for features, and
+  it needed no new persistence layer -- the store is already generic and the
+  parallel workers already share it whenever `preprocessing_cache_dir` is set.
+  The hard part, a self-verifying cache key (content digest + the integer
+  fit-sample bounds), was already in place.
+
+  **The disk key is content-addressed on the fit panel, which the preprocessing
+  tier's key deliberately is not.** An in-memory dict lives inside one run,
+  where the data cannot change underneath it; a directory outlives the run, and
+  row-position bounds do not distinguish two datasets that occupy the same
+  positions. Hashing the frame about to be handed to `.fit()` closes that
+  directly and is cheap next to the fit it guards, so this tier does not inherit
+  the "never share a directory across runs" caveat the preprocessing tier
+  documents.
+
+  Measured on 3 arms x 2 horizons sharing one feature spec over 20 origins:
+  **38 feature fits without the store, 38 cold, 0 warm** -- with predictions
+  identical to `0.000e+00` in both cases. Behaviour without
+  `preprocessing_cache_dir` is byte-for-byte unchanged: no store, no new code
+  path.
+
+- `pyproject.toml`, `data/panel.py`, `data_analysis/summary.py`,
+  `feature_engineering/{specs,feature_selection}.py`, `models/tvp.py`,
+  `interpretation/core.py` (type checking, **no behavior change**): the mypy
+  configuration set `follow_imports = "skip"`, which made a green run close to
+  meaningless -- each module was checked in isolation, so a call into another
+  module was never verified against that module's signatures (issue #451).
+
+  Switched to `"normal"`. The cost was **seven errors in three files**, far below
+  the "real fix fallout" the issue anticipated, and each is fixed rather than
+  suppressed:
+  - `models/tvp.py` passed `vol="Garch"` where `arch` declares uppercase
+    literals. Verified at runtime that `arch_model` accepts `Garch`/`GARCH`/
+    `garch` identically (same `GARCH` volatility object), so this is a
+    declaration mismatch, not a live bug; the call now uses `"GARCH"`.
+  - `feature_engineering/specs.py` bound `order` to an `int` in one branch of
+    `_fit_feature_step` and to an `argsort` index array in another. The branches
+    are mutually exclusive, so nothing was wrong at runtime; the index array is
+    now `sort_order`, matching the `selected_order` already used nearby.
+  - `data_analysis/summary.py` passed `str` parameters into `arch`'s
+    `Literal`-typed `trend`/`test_type`/`method`. Each call site already
+    validates its argument at runtime, so the three sites now `cast` after that
+    guard -- stating what the guard established rather than asserting anything
+    new.
+
+  Then the cheap strictness tier, each measured before being enabled:
+  `no_implicit_optional` (0 errors), `strict_equality` (1), `warn_unused_ignores`
+  (4, all stale suppressions, removed). `strict_equality` found a real piece of
+  dead logic: `data/panel.py` guarded `required_columns.update(...)` behind
+  `if predictor_values != "all"`, but both branches above it bind a tuple, so
+  the guard could never be false. Removing it changes nothing and stops the code
+  implying there is a path where requested columns go unchecked.
+
+  Left off, with their cost measured and recorded in the config so the next step
+  is a decision rather than an investigation: `disallow_untyped_defs` (22 errors
+  in 12 files) and `warn_return_any` (137 in 38).
+
+  `warn_unused_ignores` was tried and **rejected**: whether a `type: ignore` is
+  unused depends on the installed stub versions, so the flag asserts something
+  about the environment rather than about the code -- it passed locally and
+  failed CI on a *different* comment than the four this change removes. The four
+  removals stand; the flag does not. CI also surfaced two `float | None`
+  group-weight lookups in `models/linear.py` that this machine's stubs did not --
+  a latent `float(None)` TypeError, now resolved explicitly rather than through
+  `.get`'s default argument.
+
+- `models/linear.py` (diagnostic, **no number changes**): `ols` now warns when its
+  design matrix is numerically rank-deficient. Such a fit is not an error --
+  least squares still returns *a* solution -- but it is not *the* solution:
+  infinitely many coefficient vectors attain the same minimum, and which one comes
+  back is decided by whether LAPACK truncates the null direction rather than by
+  the data. When it does not truncate, the coefficients arrive as an enormous
+  cancelling pair and the prediction keeps the floating-point residue of that
+  cancellation. On the case that surfaced it (issue #487) that residue reached
+  **0.56 in level**, delivered silently, at 11 of 232 origins.
+
+  `rank_` cannot be the detector: in that failure LAPACK reported full rank on a
+  rank-one matrix, and the mis-report **is** the failure. `singular_` -- which the
+  estimator has already computed -- does expose it, so the check costs nothing.
+  The threshold is LAPACK's own rank criterion, `max(n, p) * eps`, so it fires
+  precisely when the solve is degenerate rather than merely ill-conditioned: a
+  near-collinear design still has a unique answer and is left alone.
+
+  **Nothing about the fit changes** -- verified on the original case, where the
+  prediction is bit-identical to plain `LinearRegression` and only the warning is
+  new. The shapes this catches are ordinary accidents: the same series entering as
+  both a predictor and a control (which is what the replicated paper's own
+  specification produces), a lag that repeats a level, or a complete dummy set
+  alongside the intercept. `positive=True` uses a different solver and exposes no
+  singular values; that path is skipped rather than guessed at.
+
+- `forecasting/runner.py`, `forecasting/selection_stage.py`,
+  `forecasting/policies/direct.py` (bug fix, **THIS CHANGES NUMBERS** — see below):
+  a model whose `ModelSpec.input_kind` is `"target"` had its fit sample cut by
+  the missingness of predictors it cannot receive. All twelve such models
+  (`hist_mean`, `naive`, `random_walk_drift`, `seasonal_naive`, `arima`,
+  `auto_arima`, `ar_bic`, `ets`, `holt_winters`, `stlf`, `theta_method`, `ucsv`)
+  take the target as their **only** positional argument — passing X raises
+  `TypeError` — yet both fit-sample alignments (`_slice_feature_set`, and
+  `_align_feature_xy` again inside the direct policy) did
+  `concat([X, y]).dropna()`. A predictor with leading NaNs therefore deleted
+  target rows from the fit window.
+
+  The damage was worst for the benchmark. `hist_mean` is the prevailing-mean
+  benchmark and its value IS the mean of the target over the fit window, so the
+  denominator of every `R²_OS` in a run moved by an amount set by whichever
+  contender happened to carry the longest lag — the same benchmark scoring
+  differently depending on which arms shared the bundle, which is the one thing a
+  benchmark must not do. Both alignments now cut a target-only model's sample on
+  the target's availability alone. Rows with a missing **target** are still
+  dropped. Supervised arms are untouched: X is part of their fit, so a NaN
+  predictor genuinely makes a row unusable for them.
+
+  **Numbers that change.** Any run in which a target-only model's feature spec
+  resolved to predictors carrying leading NaNs — including `features=None`, which
+  resolves to the whole panel. Measured on the replication that surfaced this,
+  the error stops scaling with the ladder and becomes a constant benchmark
+  offset: `R²_OS` 0.599 / 0.682 / 0.743 before, **0.594 / 0.694 / 0.800** after,
+  against printed 0.599 / 0.699 / 0.805 — Δ was 0.000 / −0.017 / −0.062 and is
+  now −0.005 / −0.005 / −0.005. A reference prevailing mean that the benchmark
+  missed by 7.6e-04 in a 2-column bundle and 1.2e-02 in an 84-column one is now
+  matched to **0.000e+00 in both**. No look-ahead is introduced: window
+  boundaries are unchanged and every recovered row sits strictly before its
+  origin (verified across 39 origins).
+
+  **Which target-only models actually move**, measured by restoring ten leading
+  rows: `hist_mean` (3.8e-02), `ar_bic` (2.0e-02), `holt_winters` (7.6e-03),
+  `random_walk_drift` (6.5e-03), `theta_method` (6.5e-03), `arima` (3.7e-03),
+  `stlf` (3.7e-03), `ets` (2.6e-03), `auto_arima` (1.8e-03), `ucsv` (5.6e-04).
+  **`naive` and `seasonal_naive` do not move at all**: they carry a value forward,
+  and restoring EARLIER rows cannot change the last one. That matters for the
+  committed replication notes — `docs/replication/medeiros_2021.md` scores against
+  `Arm("rw", model="naive", ...)`, so its denominator is unchanged and its tables
+  stand. No committed replication runner uses a sensitive target-only model as an
+  arm (all use `ar`, `far`, `random_forest` and friends, which are supervised).
+
+  **The runner golden snapshot is regenerated**, and its diff is the audit trail:
+  **18 of 522 predictions moved and every one is `arima`** — the only target-only
+  model in the matrix — with max absolute drift 2.13e-03. The fixture's dataset
+  has no missing values at all; the single row `arima` regains per origin is the
+  one the lag-1 feature's leading NaN was deleting. Every other model in the
+  matrix is byte-identical. The snapshot on `origin/main` was passing 522/522
+  before this change, so the drift is attributable to it alone rather than
+  mixed with pre-existing noise.
+
+  The snapshot's tolerance is now per family. Closed-form fits (`ols`, `ar`,
+  `far`, `ridge`, `elastic_net`, ...) keep the 1e-10 byte-identical gate the
+  fixture exists to enforce. The likelihood-optimized statsmodels models
+  (`arima`, `auto_arima`, `ets`, `holt_winters`, `stlf`, `theta_method`) move to
+  1e-6: their last bits belong to the LAPACK/BLAS build rather than to the
+  runner, which this change exposed -- the regenerated fixture reproduces to
+  1.1e-16 across local Python 3.11 and 3.12 yet lands 2.8e-08 away on one cell in
+  CI's 3.10/3.11 images. 1e-6 is four orders below any behavior change this
+  fixture has caught (the fix above moved arima by 2.1e-03) and two above the
+  observed cross-build spread.
+
+- `pipeline/spec.py`, `pipeline/evaluate.py` (bug fix, Clark-West was
+  inexpressible for a forecast combination): `significance_table` built its set
+  of CW-eligible contenders by walking `spec.arms` and reading
+  `Arm.nested_in_benchmark`, and `CombinationContender` had no such field, so a
+  combination could never be eligible -- its `cw_stat`/`cw_p` came back NaN with
+  no warning saying why. That is the wrong default for the forecast-combination
+  literature, where CW *on the combination* is the headline test (Welch and
+  Goyal 2008; Rapach, Strauss and Zhou 2010), and it is a licensed test: a
+  simple pool of arms that each nest the benchmark nests the benchmark, since
+  zeroing every slope returns the benchmark forecast. `CombinationContender`
+  gains `nested_in_benchmark: bool = False`; declared combinations join the
+  nested set; and the previously silent case (CW requested, some arms nested, no
+  combination declared) now emits a `UserWarning` naming the fix. Nestedness is
+  not inferred from the members -- an estimated-weight combination need not nest
+  what its members nest. Default behavior is unchanged for every existing spec.
+- `models/_mrf_reference.py`, `models/tree.py`, `models/timeseries.py`,
+  `tools/docgen/renderer.py`, `tests/models/*` (CI health, four independent
+  causes, no behavior change): `main`'s CI was failing in four jobs, which made
+  every PR unmergeable and made a red run uninformative.
+  (1) The vendored Macro Random Forest imported `matplotlib.pyplot` at module
+  level although it uses it in exactly two plotting methods, so fitting required
+  a plotting library and four determinism tests died on `ImportError` in a core
+  install. The import is now inside those two methods and the `optional_import`
+  gate for it is gone; MRF fits and predicts without matplotlib, and those tests
+  now RUN in core CI rather than skipping.
+  (2) `test_pls_default_transform_predictions_unchanged` and
+  `test_default_ar_signature_metadata_and_forecast_unchanged` pinned predictions
+  at bit-exact equality against hex-float literals. Both pass locally and fail on
+  the CI runner: an LAPACK-backed fit is not bit-portable across BLAS builds (CI
+  showed max abs diff 5.33e-15 against `atol=5e-15`, max rel diff 6.7e-16, with
+  both arrays printing identically). The literal comparisons move to
+  `rtol=1e-9` -- still orders of magnitude tighter than any real change -- while
+  the default-vs-explicit comparison, which runs in one process, stays exact.
+  (3) `tools.docgen` rendered `pandas.core.frame.DataFrame` or
+  `pandas.DataFrame` depending on the pandas build, so the committed reference
+  tree could never match. Public pandas class paths are now canonicalized to
+  their top-level form. `docs/reference/models.md` is also regenerated: it had
+  been stale since the `gtvp`/`variable_importance` and `nn` early-stopping
+  merges.
+  (4) `_STAR` initialized seven attributes as bare `None`, so mypy typed them
+  `None` and every later assignment was an error. They are annotated, and
+  `predict`'s guard now narrows `_gamma`/`_c` alongside `_cols`/`_beta` (all four
+  are assigned together in `fit`, so the added branch is unreachable in
+  practice). `mypy` is clean across all 119 source files.
+  (5) `tests/mc/test_dm_size.py::[n50-h1-none]` is marked as a known distortion,
+  matching how this file already treats its n=50, h=4 cases. The uncorrected DM
+  statistic at n=50, h=1 is correctly sized at alpha=.05 (0.0550, CI99
+  [0.0448,0.0666]) and mildly oversized at alpha=.10 (0.1147, CI99
+  [0.1001,0.1304] -- a lower bound one ten-thousandth above nominal). This is the
+  small-sample variance-estimator bias the file documents for h=4, one order
+  milder, and it is the UNCORRECTED variant: `correction="hln"` -- the package
+  default, introduced for exactly this problem -- is correctly sized at both
+  alphas for the same n and h. `strict=True` keeps it a tripwire.
+  (6) `docs/guide/model_overview.md` and `docs/guide/models/timeseries.md`
+  regenerated: the `setar`/`star` entries were never added after those models
+  landed, so `tools/gen_model_overview.py --check` failed on `main` too.
+  (7) The replication trust notes were orphaned -- `docs/replication/README.md`
+  was not referenced from `docs/index.md` and did not list the notes itself, so
+  `sphinx-build -W` failed on six `toc.not_included` warnings and the notes
+  appeared nowhere in the built site. Wired in with a globbed toctree.
+  (8) The Phase-0 seed-hardcoding guard scanned `scripts/` as well as the
+  package. Every hit is a replication runner pinning `random_state=42`
+  deliberately -- a faithful replication has to be reproducible, the same
+  objective-4 property the MRF determinism tests lock -- while `macroforecast/`
+  itself has zero hits. Scoped to the package.
+
+- `forecasting/policies/base.py` (bug fix, CV selection fell through to the
+  degraded fallback for IC-owning models): a grid/CV `SearchSpec` carrying its
+  own `validation_splitter` (POOS / K-fold CV over `n_lag` for `ar`/`far`) was
+  intercepted by the `if not selection_splits:` degraded-selection guard
+  whenever the estimation window carried no validation block -- the exact
+  configuration of IC-owning models (`ar`/`far`, `selection_method="bic"`). The
+  arm silently returned unselected (`params=None`) forecasts numerically
+  indistinguishable from BIC instead of running the requested cross-validation.
+  The degraded guard now also requires `not splitter_override`, so a SearchSpec
+  that supplies its own splitter reaches `select_params` and derives its
+  validation splits from the training sample. Non-splitter selection is
+  unchanged; the runner golden snapshot is byte-identical; the
+  `information_criterion` fallback for a splitter-less grid on an IC-owning
+  model is unchanged.
+
 - `models/linear.py`, `models/specs.py`, `model_selection/runner.py`,
   `model_selection/search.py` (performance, opt-in K-prefix grouped evaluator):
   added `SupervisedPCARegressor.fit_prefix` (inherited by

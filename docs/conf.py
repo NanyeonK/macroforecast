@@ -44,6 +44,12 @@ exclude_patterns = [
     "superpowers/plans/*",
     "Thumbs.db",
     ".DS_Store",
+    # An automatic mirror of the Mac control tower's research-system policy
+    # (``managed_by: research-system-sync.py``). It is operational metadata for
+    # the working repo, not documentation for users of the package, and the sync
+    # script rewrites it -- so it is excluded from the built site rather than
+    # wired into a toctree. Without this, `sphinx-build -W` fails it as an orphan.
+    "research_system_policy.md",
 ]
 
 # -- MyST ---------------------------------------------------------------------

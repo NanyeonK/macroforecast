@@ -29,6 +29,10 @@ from macroforecast.pipeline.spec import (
     is_vintage_aware,
     _model_default_name,
 )
+from macroforecast.data.identity import (  # noqa: F401  (re-exported)
+    _FINGERPRINT_FULL_CELL_CAP,
+    panel_fingerprint as _panel_fingerprint,
+)
 from macroforecast.pipeline.result_store import ResultCellIdentity, ResultStore, result_cell_identity
 
 
@@ -75,10 +79,9 @@ def _effective_target_for_arm(
     arm: Arm,
     target: ResolvedTarget,
 ) -> ResolvedTarget:
-    policy = spec.policy_overrides.get((arm.name, target.name))
-    if policy is None or policy == target.policy:
-        return target
-    return _dc.replace(target, policy=policy)
+    from macroforecast.forecasting.task import effective_target
+
+    return effective_target(spec, arm, target)
 
 
 def _arm_tag_columns(arm: Arm) -> dict[str, Any]:
@@ -133,23 +136,12 @@ def _run_one_arm_target(
 
     # A multi-target pipeline runs each arm for every target, but an arm's feature
     # spec carries a single target; align it (and its transform) to this target.
-    features = arm.features
-    if features is not None:
-        needs_retarget = (
-            getattr(features, "target", None) != target.name
-            or bool(getattr(features, "targets", ()))
-        )
-        if needs_retarget:
-            kwargs: dict[str, Any] = {"target": target.name}
-            if getattr(features, "targets", None):
-                kwargs["targets"] = ()
-            try:
-                features = _dc.replace(features, **kwargs)
-            except Exception as exc:  # surface a real misconfiguration
-                raise ValueError(
-                    f"could not re-target feature spec of arm {arm.name!r} "
-                    f"to {target.name!r}: {exc}"
-                ) from exc
+    # Shared with the cache-identity path (A2), so the two cannot drift: before this
+    # the same retarget was written twice, and the copies disagreed about what a
+    # failure means -- this one raised, result_store swallowed it.
+    from macroforecast.forecasting.task import retarget_features
+
+    features = retarget_features(arm.features, target.name, arm_name=arm.name)
 
     result = run(
         spec.data,
@@ -957,12 +949,41 @@ def _result_store_note_computed(
         metadata["n_computed"] += 1
     if store is None or identity is None or identity.digest is None or identity.cell_echo is None:
         return
-    store.write(
-        identity.digest,
-        _drop_arm_tag_columns(frame, arm),
-        data_fingerprint=identity.data_fingerprint,
-        cell_echo=identity.cell_echo,
-    )
+    try:
+        store.write(
+            identity.digest,
+            _drop_arm_tag_columns(frame, arm),
+            data_fingerprint=identity.data_fingerprint,
+            cell_echo=identity.cell_echo,
+        )
+    except Exception as exc:
+        # A result-store WRITE is a best-effort cache side-effect: it persists the
+        # already-computed cell so a LATER run can reuse it. A failure to persist
+        # (disk full / ENOSPC, a read-only or quota-limited store, a permissions
+        # error, a parquet-engine error, ...) must NEVER drop the correctly-computed
+        # forecast from THIS run's report. Record the failure so it is surfaced, but
+        # return normally so the caller keeps the frame. Reads are already fail-safe
+        # in the same spirit -- ``ResultStore.load`` returns ``None`` on any error and
+        # the cell is simply recomputed. Conflating a cache-write failure with a
+        # cell-COMPUTE failure previously discarded every digestible cell (including
+        # the benchmark) whenever the store was unwritable, leaving only the
+        # undigestible arms with ``benchmark_present=False`` and NaN metrics.
+        if metadata is not None:
+            echo = identity.cell_echo if isinstance(identity.cell_echo, Mapping) else {}
+            target_echo = echo.get("target", {}) if isinstance(echo, Mapping) else {}
+            metadata.setdefault("write_failures", []).append(
+                {
+                    "digest": identity.digest,
+                    "arm": arm.name,
+                    "target": (
+                        target_echo.get("name")
+                        if isinstance(target_echo, Mapping)
+                        else None
+                    ),
+                    "horizon": echo.get("horizon") if isinstance(echo, Mapping) else None,
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
 
 
 def _warn_result_store_version_mismatches(metadata: Mapping[str, Any] | None) -> None:
@@ -979,6 +1000,31 @@ def _warn_result_store_version_mismatches(metadata: Mapping[str, Any] | None) ->
     _warnings.warn(
         "result_store reused cell(s) written by a different macroforecast version: "
         f"{cells}",
+        UserWarning,
+        stacklevel=3,
+    )
+
+
+def _warn_result_store_write_failures(metadata: Mapping[str, Any] | None) -> None:
+    """Warn once about cells the store could not persist.
+
+    These cells ARE present in this run's report (a write failure is a cache-miss
+    on the persistence side, not a compute failure); they were simply not cached
+    for reuse by a later run.
+    """
+    failures = list((metadata or {}).get("write_failures", []))
+    if not failures:
+        return
+    import warnings as _warnings
+
+    cells = ", ".join(
+        f"{f.get('target')}/{f.get('arm')}/h{f.get('horizon')} ({f.get('error')})"
+        for f in failures
+    )
+    _warnings.warn(
+        f"result_store could not persist {len(failures)} computed cell(s); they "
+        "remain in this run's report but were NOT cached for reuse "
+        f"(check the store path is writable and has free space): {cells}",
         UserWarning,
         stacklevel=3,
     )
@@ -1146,10 +1192,40 @@ def _run_cells(
             # (origin_pos alone), so a window-overriding arm must not share the
             # preprocessing tier either. Gating both tiers on the same eligibility
             # check keeps one dict, one invariant.
-            target_caches: dict[str, dict[Any, Any]] = {t.name: {} for t in spec.targets}
+            #
+            # Only ONE target's cache is live at a time (#452). Building a dict per
+            # target up front kept every finished target's prepared panels -- a
+            # transformed panel per (origin x horizon), plus the FittedPreprocessor
+            # holding its own fit panel -- reachable until the run ended, so peak
+            # memory scaled with the number of targets rather than with the largest
+            # one. ``_enumerate_cells`` visits target -> arm -> horizon, so a
+            # target's entries are provably dead once a cell for a different target
+            # appears: no later key can reach them.
+            #
+            # The previous target's dict is CLEARED, not just unreferenced. Anything
+            # still holding the object (a caller's instrumentation, a traceback
+            # frame) would otherwise keep the panels alive and the release would be
+            # a release only on paper.
+            #
+            # This is NOT capacity-bounded eviction, and deliberately so. Within one
+            # target the working set IS the whole cache: the first arm fills every
+            # (origin x horizon) entry and every later arm reads all of them, so the
+            # reuse distance is a full pass over the origins and any LRU smaller than
+            # that pass would evict each entry exactly before its reuse -- trading a
+            # memory problem for a larger compute one, since the cross-arm sharing
+            # described above is the dominant saving in a multi-arm run. Dropping at
+            # the target boundary loses no hit, because no hit crosses it.
+            target_caches: dict[str, dict[Any, Any]] = {}
+            live_target_name: str | None = None
             for cell in pending_cells:
                 arm = spec.arms[cell.arm_idx]
                 target = spec.targets[cell.target_idx]
+                if target.name != live_target_name:
+                    for finished in target_caches.values():
+                        finished.clear()
+                    target_caches.clear()
+                    target_caches[target.name] = {}
+                    live_target_name = target.name
                 cache = target_caches.get(target.name)
                 arm_cache = (
                     cache if (arm.preprocessing is None and arm.window is None) else None
@@ -1230,6 +1306,7 @@ def _run_cells(
             )
 
         _warn_result_store_version_mismatches(result_store_metadata)
+        _warn_result_store_write_failures(result_store_metadata)
         master.attrs["macroforecast_failed_cells"] = list(failed)
         master.attrs["macroforecast_empty_cells"] = list(empty_cells)
         return master, failed, empty_cells, result_store_metadata
@@ -1302,7 +1379,6 @@ def _panel_index(data: Any):
 # is always the full-content digest; the cap below is a safety valve for a
 # pathologically large custom panel, not something real usage is expected to
 # hit.
-_FINGERPRINT_FULL_CELL_CAP = 20_000_000
 _VINTAGE_MAP_INLINE_LIMIT = 500
 
 
@@ -1334,53 +1410,9 @@ def _environment_provenance() -> dict[str, Any]:
     produced this report regardless of what directory the analysis script
     itself was run from.
     """
-    from macroforecast.output import collect_provenance
+    from macroforecast.meta.provenance import collect_provenance
 
     return collect_provenance(cwd=_package_source_root())
-
-
-def _panel_fingerprint(frame: pd.DataFrame) -> dict[str, Any]:
-    """A stable sha256 fingerprint over the panel's index, columns, and values.
-
-    Full content by default (index as int64 ns timestamps, column names in
-    order, values as explicit little-endian float64 bytes -- so the digest is
-    stable across platforms/byte orders, not just across runs on one machine).
-    Above :data:`_FINGERPRINT_FULL_CELL_CAP` cells the digest is computed from
-    a deterministic strided subsample instead (same row/col stride every call
-    for the same shape), and ``method``/``row_stride``/``col_stride`` record
-    this so a referee never mistakes it for a full-content digest.
-    """
-    n_rows, n_cols = frame.shape
-    total_cells = n_rows * n_cols
-    row_stride = col_stride = 1
-    method = "full_content"
-    sampled = frame
-    if total_cells > _FINGERPRINT_FULL_CELL_CAP and n_rows > 0 and n_cols > 0:
-        reduction = total_cells / _FINGERPRINT_FULL_CELL_CAP
-        row_stride = max(1, round(reduction ** 0.5))
-        col_stride = max(1, round(reduction / row_stride))
-        sampled = frame.iloc[::row_stride, ::col_stride]
-        method = "strided_subsample"
-
-    digest = hashlib.sha256()
-    try:
-        digest.update(np.ascontiguousarray(sampled.index.asi8).tobytes())
-    except AttributeError:
-        # Non-datetime index (should not happen for a canonical panel, but the
-        # fingerprint must never raise): fall back to a stable string form.
-        digest.update("\x1f".join(str(v) for v in sampled.index).encode())
-    digest.update("\x1f".join(str(c) for c in sampled.columns).encode())
-    values = np.ascontiguousarray(sampled.to_numpy(dtype="float64"))
-    digest.update(values.astype("<f8", copy=False).tobytes())
-
-    return {
-        "algorithm": "sha256",
-        "method": method,
-        "value": digest.hexdigest(),
-        "row_stride": row_stride,
-        "col_stride": col_stride,
-        "sampled_shape": [int(sampled.shape[0]), int(sampled.shape[1])],
-    }
 
 
 def _data_identity(data: Any) -> dict[str, Any]:
