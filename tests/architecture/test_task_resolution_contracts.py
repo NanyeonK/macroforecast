@@ -1,17 +1,24 @@
 """A0 — characterization tests for the contracts a structural refactor must preserve.
 
-These pin four properties that nothing currently guarantees, because the same research
-design is resolved independently in several places: `pipeline/spec.py` resolves the
-target, `pipeline/run.py` retargets the arm's `FeatureSpec`, `forecasting/policy_config.py`
-re-derives transform/horizon/target-mode, and `pipeline/result_store.py` retargets the
-features *again* for cache identity.
+These pin four properties, because the same research design used to be resolved
+independently in several places: `pipeline/spec.py` resolves the target, `pipeline/run.py`
+retargeted the arm's `FeatureSpec`, `forecasting/policy_config.py` re-derives
+transform/horizon/target-mode, and `pipeline/result_store.py` retargeted the features
+*again* for cache identity.
 
-Nothing here proposes a new structure. Each test states a property that must survive
-`ResolvedForecastTask`, canonical `WindowSpec`, `OriginContext` and the compiled stage
-plans, so that a refactor which breaks one is caught by a failing test rather than by a
-wrong number six months later.
+The feature-retarget duplication is now closed: `pipeline/run.py` resolves each cell once
+into `ResolvedForecastTask` objects and hands the SAME objects to execution, checkpoint
+identity, result-store identity and the provenance echo, so the first section below
+counts resolutions over a real run instead of comparing two copies. The
+`policy_config.py` re-derivation is still separate -- the runner normalizes a task back
+into the loose keywords at its entry, which is exactly why that refactor could be
+behavior-preserving.
 
-Where current behaviour already violates a property, the test says so explicitly rather
+Each test states a property that must survive `ResolvedForecastTask`, canonical
+`WindowSpec`, `OriginContext` and the compiled stage plans, so that a refactor which
+breaks one is caught by a failing test rather than by a wrong number six months later.
+
+Where current behaviour still violates a property, the test says so explicitly rather
 than encoding the violation as expected.
 """
 from __future__ import annotations
@@ -112,24 +119,75 @@ def test_one_cell_pipeline_matches_a_direct_forecasting_run(panel):
     )
 
 
-def test_the_pipeline_resolves_the_feature_target_exactly_once(panel):
-    """`FeatureSpec` retargeting happens in at least three places today.
+def test_the_pipeline_resolves_the_feature_target_exactly_once(panel, monkeypatch, tmp_path):
+    """The single-resolution contract, stated as a count over a real production run.
 
-    `pipeline/run.py` replaces the arm's spec, `forecasting` re-derives it per policy,
-    and `result_store._retargeted_features` does it a third time for cache identity.
-    They must agree on the target; a refactor should make that structural rather than
-    coincidental.
+    This test used to reach for `result_store._retargeted_features` and assert that a
+    THIRD private copy of the retarget produced the right target. That asserted the
+    wrong thing twice over: the helper was dead code no production path called, so the
+    test passed while saying nothing about the pipeline, and "the copies agree" is a
+    weaker property than "there is one copy". Both are now gone -- the helper is
+    deleted and the property is counted here.
+
+    A (target, arm) cell forecasting three horizons must retarget ONCE: the retarget is
+    horizon-independent, so a per-horizon or per-consumer resolution shows up as a
+    count above one. `run_pipeline` here exercises execution, the checkpoint cell
+    manifests and the provenance echo, all of which need the resolved features.
     """
-    from macroforecast.pipeline.result_store import _retargeted_features
+    import macroforecast.forecasting.task as task_mod
 
-    features = mf.feature_engineering.feature_spec(
-        target="SOMETHING_ELSE", predictors=["x0"], lags=0, target_lags=1
+    idx, bundle = panel
+    calls: list[tuple[str, str]] = []
+    real = task_mod.retarget_features
+
+    def counting(features, target_name, *, arm_name=""):
+        calls.append((arm_name, target_name))
+        return real(features, target_name, arm_name=arm_name)
+
+    monkeypatch.setattr(task_mod, "retarget_features", counting)
+
+    arm = Arm(
+        "OLS",
+        model="ols",
+        # Deliberately pointed at another series, so the retarget is not a no-op and a
+        # path that skipped it would forecast the wrong target rather than pass quietly.
+        features=mf.feature_engineering.feature_spec(
+            target="SOMETHING_ELSE", predictors=["x0", "x1"], lags=0, target_lags=2
+        ),
+        is_benchmark=True,
     )
-    retargeted = _retargeted_features(features, "y")
-    assert getattr(retargeted, "target", None) == "y", (
-        "the result-store retargeting no longer produces the pipeline's target; "
-        "cache identity and execution would then disagree about which series was "
-        "being forecast"
+    spec = _spec(
+        idx, bundle, arms=[arm], horizons=(1, 2, 3),
+        checkpoint_dir=str(tmp_path / "ckpt"),
+    )
+    report = run_pipeline(spec)
+
+    assert list(report.failed_cells) == [], f"the run failed: {list(report.failed_cells)}"
+    assert calls == [("OLS", "y")], (
+        f"one (target, arm) cell over three horizons retargeted {len(calls)} times "
+        f"({calls}). Execution, checkpoint identity and the provenance echo must all "
+        f"read one resolution; a count above one means a consumer re-derived it and "
+        f"can therefore disagree with the others."
+    )
+    assert sorted(report.forecasts["horizon"].unique().tolist()) == [1, 2, 3], (
+        "resolving once must not cost a horizon"
+    )
+    assert set(report.forecasts["target"].unique()) == {"y"}
+
+
+def test_the_result_store_no_longer_carries_its_own_retarget_copy(panel):
+    """The deleted duplicate, pinned so it cannot quietly come back.
+
+    `result_store._retargeted_features` retargeted the arm's `FeatureSpec` a third
+    time and SWALLOWED a failure that the execution path raised on, so a digest could
+    describe a task that was never run. Cache identity now takes the resolved features
+    from the task the run used, or resolves them through the one shared resolver.
+    """
+    import macroforecast.pipeline.result_store as result_store_mod
+
+    assert not hasattr(result_store_mod, "_retargeted_features"), (
+        "a second feature-retarget implementation is back in result_store; identity "
+        "and execution can drift again"
     )
 
 

@@ -42,6 +42,11 @@ from macroforecast.forecasting.combination import (
     resolve_combinations,
 )
 from macroforecast.forecasting.types import ForecastResult
+from macroforecast.forecasting.task import (
+    ResolvedForecastTask,
+    _same,
+    validate_task_sequence,
+)
 from macroforecast.forecasting.checkpoint import (
     LEAN_FORECAST_COLUMNS,
     append_origin_records,
@@ -173,6 +178,87 @@ class _VintageActualValue:
     found: bool
 
 
+def _task_conflict(field: str, supplied: Any, resolved: Any) -> ValueError:
+    return ValueError(
+        f"forecasting.run received both a resolved task and a disagreeing "
+        f"{field}={supplied!r} (the task says {resolved!r}). Pass one or the other: "
+        "the task IS the resolved answer to that question, so reconciling them would "
+        "have to silently pick a winner."
+    )
+
+
+def _apply_task(
+    task: ResolvedForecastTask | None,
+    tasks: Sequence[ResolvedForecastTask] | None,
+    *,
+    model: Any,
+    target: str | None,
+    features: FeatureSpec | None,
+    horizon: int,
+    horizons: Sequence[int] | int | None,
+    forecast_policy: str,
+    target_transform: str | None,
+) -> tuple[str | None, FeatureSpec | None, int, Sequence[int] | int | None, str, str | None]:
+    """Normalize an optional resolved task back into the loose runner keywords.
+
+    Returning keywords (rather than threading the task object through every stage) is
+    what keeps this behavior-preserving: past this point ``run`` is byte-for-byte the
+    function it was, and a task-driven call is indistinguishable from the equivalent
+    loose-keyword call. The task's value is upstream -- ONE resolution shared by
+    execution, cache identity, checkpoint identity and provenance -- not in how the
+    runner then uses it.
+
+    A single-horizon task is returned as a one-element ``horizons`` tuple, which
+    ``_resolve_runner_horizons`` resolves to exactly what ``horizon=h`` resolves to.
+    """
+    if task is None and tasks is None:
+        return target, features, horizon, horizons, forecast_policy, target_transform
+    if task is not None and tasks is not None:
+        raise ValueError(
+            "forecasting.run accepts task= or tasks=, not both; pass tasks= for a "
+            "horizon-group cell and task= for a single horizon"
+        )
+    items = (task,) if task is not None else tuple(tasks or ())
+    shared, task_horizons = validate_task_sequence(cast("Sequence[ResolvedForecastTask]", items))
+
+    if target is not None and str(target) != shared.target_name:
+        raise _task_conflict("target", target, shared.target_name)
+    if features is not None and not _same(features, shared.features):
+        raise _task_conflict("features", features, shared.features)
+    if target_transform is not None and target_transform != shared.target_transform:
+        raise _task_conflict("target_transform", target_transform, shared.target_transform)
+    # ``forecast_policy`` has a non-None default, so "not supplied" and "supplied as
+    # 'direct'" are indistinguishable here. Only a value that both differs from the
+    # default AND disagrees with the task can be an actual conflicting instruction.
+    if forecast_policy != "direct" and forecast_policy != shared.forecast_policy:
+        raise _task_conflict("forecast_policy", forecast_policy, shared.forecast_policy)
+    if horizons is not None:
+        supplied = (
+            (int(horizons),)
+            if isinstance(horizons, (int, np.integer)) and not isinstance(horizons, bool)
+            else tuple(int(value) for value in cast("Sequence[int]", horizons))
+        )
+        if supplied != task_horizons:
+            raise _task_conflict("horizons", list(supplied), list(task_horizons))
+    if int(horizon) != 1 and (int(horizon),) != task_horizons:
+        raise _task_conflict("horizon", horizon, list(task_horizons))
+    # ``model`` is positional and required, so there is no "not supplied" state to skip
+    # -- but a task carrying a DIFFERENT model than the one being fitted means the
+    # cache identity and the fit describe different arms, which is the exact class of
+    # divergence the task exists to prevent.
+    if shared.model is not None and not _same(model, shared.model):
+        raise _task_conflict("model", model, shared.model)
+
+    return (
+        shared.target_name,
+        shared.features,
+        1,
+        task_horizons,
+        shared.forecast_policy,
+        shared.target_transform,
+    )
+
+
 def run(
     data: Any,
     model: str | Callable[..., Any] | ModelSpec,
@@ -205,6 +291,8 @@ def run(
     preprocessing_store: PreprocessorStore | None = None,
     checkpoint_path: str | Path | None = None,
     selection_history: bool = False,
+    task: ResolvedForecastTask | None = None,
+    tasks: Sequence[ResolvedForecastTask] | None = None,
 ) -> ForecastResult:
     """Run a windowed macro forecasting experiment.
 
@@ -218,7 +306,34 @@ def run(
     fit-time model-ensemble spec still counts as one model). Passing a sequence
     or a mapping of models raises ``TypeError`` -- run one model per call, or use
     the pipeline with one ``Arm`` per model when comparing models.
+
+    ``task`` / ``tasks`` are the pre-resolved alternative to the loose ``target``,
+    ``features``, ``horizon``/``horizons``, ``forecast_policy`` and
+    ``target_transform`` keywords: a caller that has already resolved "which
+    forecast is this" (the pipeline, via
+    :func:`~macroforecast.forecasting.task.resolve_forecast_tasks`) hands the same
+    :class:`~macroforecast.forecasting.task.ResolvedForecastTask` objects to
+    execution, cache identity, checkpoint identity and provenance, so those cannot
+    drift. ``tasks`` is one horizon-group cell: the tasks must agree on everything
+    except horizon, and every horizon is run.
+
+    The loose keywords remain the public surface and are unchanged when no task is
+    passed. Passing both a task and a DISAGREEING loose keyword is refused rather
+    than reconciled: there is no defensible winner, and the caller who passed the
+    loser would never find out.
     """
+
+    target, features, horizon, horizons, forecast_policy, target_transform = _apply_task(
+        task,
+        tasks,
+        model=model,
+        target=target,
+        features=features,
+        horizon=horizon,
+        horizons=horizons,
+        forecast_policy=forecast_policy,
+        target_transform=target_transform,
+    )
 
     selection = model_selection
     selection_policy = model_selection_policy

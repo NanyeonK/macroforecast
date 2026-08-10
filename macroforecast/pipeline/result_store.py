@@ -20,12 +20,15 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
 
 from macroforecast.pipeline.spec import Arm, PipelineSpec, ResolvedTarget, is_vintage_aware
+
+if TYPE_CHECKING:  # imported for typing only, matching the function-local runtime import
+    from macroforecast.forecasting.task import ResolvedForecastTask
 
 
 @dataclass(frozen=True)
@@ -50,6 +53,74 @@ class _UndigestibleCell(Exception):
     """Raised internally when a cell contains an unsafe custom callable."""
 
 
+def _model_definitely_differs(arm_model: Any, task_model: Any) -> bool:
+    """Whether *task_model* is DEMONSTRABLY not the model this arm fits.
+
+    Deliberately one-sided, because this guard has to stay compatible with callers
+    that predate the task argument and with arbitrary user-supplied model objects:
+
+    * a task carrying no model at all (``None``) states nothing to contradict -- the
+      runner's own task check reads it the same way, so a hand-built task without a
+      model keeps working;
+    * the production task is built FROM ``arm.model``, so the identity check answers
+      this in the common case, including across the parallel payload (spec and tasks
+      travel in one pickle, which preserves sharing);
+    * an ``__eq__`` that raises or returns a non-boolean (a numpy array, an estimator
+      with elementwise comparison) is not evidence of anything, so it is not treated
+      as a mismatch. Refusing to digest a legitimate cell over an exotic ``__eq__``
+      would be a worse failure than the divergence being guarded against.
+    """
+    if task_model is None or arm_model is task_model:
+        return False
+    try:
+        return not bool(arm_model == task_model)
+    except Exception:
+        return False
+
+
+def _assert_task_describes_cell(
+    task: "ResolvedForecastTask",
+    arm: Arm,
+    target: ResolvedTarget,
+    *,
+    horizon: int,
+) -> None:
+    """Refuse a task that answers a DIFFERENT question than the cell being digested.
+
+    A ValueError, not an undigestible cell: an undigestible cell is a legitimate
+    configuration the store declines to cache, whereas a task/cell mismatch is a
+    caller bug that would silently mint a digest for one cell and file the forecast of
+    another under it. Cheap to check, and it is the whole point of resolving once.
+
+    The model is checked alongside the labels because it is the one field the digest
+    is computed from that the labels cannot vouch for: two arms may share a name in
+    two specs, and a digest minted for one arm's model while another's is fitted is
+    precisely the cache/fit divergence the shared task exists to make impossible. The
+    runner refuses the same disagreement at its own entry.
+    """
+    mismatches: list[tuple[str, Any, Any]] = [
+        (field, supplied, resolved)
+        for field, supplied, resolved in (
+            ("arm", arm.name, task.arm_name),
+            ("target", target.name, task.target_name),
+            ("forecast_policy", target.policy, task.forecast_policy),
+            ("target_transform", target.transform, task.target_transform),
+            ("horizon", int(horizon), int(task.horizon)),
+        )
+        if supplied != resolved
+    ]
+    if _model_definitely_differs(arm.model, task.model):
+        mismatches.append(("model", arm.model, task.model))
+    if mismatches:
+        detail = ", ".join(
+            f"{field}={supplied!r} but the task says {resolved!r}"
+            for field, supplied, resolved in mismatches
+        )
+        raise ValueError(
+            f"result_cell_identity was given a task for a different cell: {detail}"
+        )
+
+
 def result_cell_identity(
     spec: PipelineSpec,
     arm: Arm,
@@ -57,11 +128,20 @@ def result_cell_identity(
     *,
     horizon: int,
     data_identity: Mapping[str, Any],
+    task: "ResolvedForecastTask | None" = None,
 ) -> ResultCellIdentity:
     """Return the digest and human-readable echo for one result-store cell.
 
     A ``None`` digest means the cell is deliberately not cacheable, normally
     because a user-owned callable lacks an explicit ``__mf_digest__`` opt-in.
+
+    ``task`` is the already-resolved
+    :class:`~macroforecast.forecasting.task.ResolvedForecastTask` for this cell, as
+    produced once by the execution path. Passing it means the digest is computed from
+    the SAME resolved features the run used, instead of re-deriving them here -- the
+    two answers were previously produced by separate code that had drifted. When it is
+    omitted (a direct caller with only a spec in hand) the features are resolved here
+    through the same resolver, so both spellings agree by construction.
     """
 
     data_fingerprint = data_identity.get("fingerprint")
@@ -73,10 +153,18 @@ def result_cell_identity(
         # worse than no digest.
         from macroforecast.forecasting.task import FeatureRetargetError, retarget_features
 
-        try:
-            effective_features = retarget_features(arm.features, target.name, arm_name=arm.name)
-        except FeatureRetargetError as exc:
-            raise _UndigestibleCell(str(exc)) from exc
+        if task is not None:
+            _assert_task_describes_cell(task, arm, target, horizon=horizon)
+            # Already retargeted (and already raised if it could not be), so there is
+            # nothing left to fail here: an unresolvable cell has no task at all.
+            effective_features = task.features
+        else:
+            try:
+                effective_features = retarget_features(
+                    arm.features, target.name, arm_name=arm.name
+                )
+            except FeatureRetargetError as exc:
+                raise _UndigestibleCell(str(exc)) from exc
         payload: dict[str, Any] = {
             "data_fingerprint": _json_ready(data_fingerprint),
             "effective_selection_seed": _effective_selection_seed(),
@@ -314,24 +402,6 @@ def purge_result_store(
         _unlink_quietly(manifest_path)
         deleted += 1
     return deleted
-
-
-def _retargeted_features(features: Any, target_name: str) -> Any:
-    if features is None:
-        return None
-    needs_retarget = (
-        getattr(features, "target", None) != target_name
-        or bool(getattr(features, "targets", ()))
-    )
-    if not needs_retarget:
-        return features
-    try:
-        kwargs: dict[str, Any] = {"target": target_name}
-        if getattr(features, "targets", None):
-            kwargs["targets"] = ()
-        return _dc.replace(features, **kwargs)
-    except Exception:
-        return features
 
 
 def _encode_frame_for_parquet(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, Any]]:

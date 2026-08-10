@@ -7,6 +7,12 @@ cache identity therefore disagreed about what a failed retarget means.
 
 In practice execution raised first, so the bad digest was never used. "In practice the
 wrong one never runs" is not a contract, and these tests make it one.
+
+The later sections cover the horizon-GROUP resolver, which is what makes "resolve once"
+structural rather than a convention: a cell answers "which series, under which policy,
+from which features" once and then stamps every horizon it was asked for, and a sequence
+of tasks that disagrees about any of that is refused rather than executed under the first
+task's design.
 """
 from __future__ import annotations
 
@@ -16,9 +22,12 @@ import pytest
 
 from macroforecast.forecasting.task import (
     FeatureRetargetError,
+    ResolvedForecastTask,
     effective_target,
     resolve_forecast_task,
+    resolve_forecast_tasks,
     retarget_features,
+    validate_task_sequence,
 )
 
 
@@ -122,3 +131,138 @@ def test_a_failed_retarget_raises_rather_than_returning_the_wrong_spec():
 def test_none_features_stay_none():
     assert retarget_features(None, "y") is None
     assert resolve_forecast_task(_Spec(), _Arm("A"), _Target("y"), horizon=1).features is None
+
+
+# --------------------------------------------------------------------------- #
+# A horizon GROUP resolves the design once and stamps every horizon
+# --------------------------------------------------------------------------- #
+
+def test_a_horizon_group_resolves_the_design_once_and_keeps_every_horizon():
+    """The property that makes "resolve once" structural rather than a convention.
+
+    The policy override and the feature retarget answer "which series, under which
+    policy, from which features" -- none of which depends on the horizon. A cell that
+    forecasts three horizons must therefore resolve once and stamp three horizons, and
+    it must not lose one along the way.
+    """
+    spec = _Spec(policy_overrides={("A", "y"): "recursive"})
+    arm = _Arm("A", features=_Features(target="OTHER"))
+    tasks = resolve_forecast_tasks(spec, arm, _Target("y", policy="direct"), (1, 3, 6))
+
+    assert [task.horizon for task in tasks] == [1, 3, 6], "every requested horizon survives"
+    # One resolution: the horizon-independent parts are the SAME OBJECTS, not merely
+    # equal copies. Sharing the object is what a per-horizon re-resolution cannot fake.
+    assert len({id(task.features) for task in tasks}) == 1
+    assert len({id(task.target) for task in tasks}) == 1
+    assert all(task.features.target == "y" for task in tasks)
+    assert all(task.forecast_policy == "recursive" for task in tasks)
+
+
+def test_the_single_horizon_resolver_is_the_group_resolver():
+    """Two spellings, one code path, so the two cannot drift."""
+    spec = _Spec(policy_overrides={("A", "y"): "recursive"})
+    arm = _Arm("A", features=_Features(target="OTHER"))
+    single = resolve_forecast_task(spec, arm, _Target("y"), horizon=4)
+    (grouped,) = resolve_forecast_tasks(spec, arm, _Target("y"), (4,))
+    assert single == grouped
+
+
+def test_a_cell_with_no_horizons_is_refused():
+    with pytest.raises(ValueError, match="at least one horizon"):
+        resolve_forecast_tasks(_Spec(), _Arm("A"), _Target("y"), ())
+
+
+def test_a_failed_retarget_produces_no_tasks_at_all():
+    """Not "some horizons resolved and some not" -- an unresolvable cell has no tasks."""
+
+    class _Unreplaceable:
+        target = "OTHER"
+        targets = ()
+
+    with pytest.raises(FeatureRetargetError):
+        resolve_forecast_tasks(_Spec(), _Arm("A", features=_Unreplaceable()), _Target("y"), (1, 2))
+
+
+# --------------------------------------------------------------------------- #
+# A task sequence is ONE cell
+# --------------------------------------------------------------------------- #
+
+def _task(**kw):
+    base = dict(
+        target=_Target("y"),
+        horizon=1,
+        features=_Features(target="y"),
+        arm_name="A",
+        model="ols",
+    )
+    base.update(kw)
+    return ResolvedForecastTask(**base)
+
+
+def test_a_valid_sequence_reports_its_shared_design_and_every_horizon():
+    tasks = resolve_forecast_tasks(_Spec(), _Arm("A"), _Target("y"), (2, 5))
+    shared, horizons = validate_task_sequence(tasks)
+    assert horizons == (2, 5), "no horizon may be dropped or collapsed"
+    assert shared is tasks[0]
+
+
+def test_the_sequence_order_is_preserved_rather_than_sorted():
+    """Uniqueness and ordering are the runner's existing horizon validation's job.
+
+    Sorting here would mean the task path and the loose ``horizons=`` path refuse
+    different inputs, which is exactly the kind of quiet divergence being removed.
+    """
+    _, horizons = validate_task_sequence([_task(horizon=6), _task(horizon=2)])
+    assert horizons == (6, 2)
+
+
+@pytest.mark.parametrize(
+    "field, other",
+    [
+        ("target", _Target("z")),
+        ("features", _Features(target="z")),
+        ("arm_name", "B"),
+        ("model", "ridge"),
+    ],
+)
+def test_a_mixed_sequence_is_refused(field, other):
+    """A sequence's consumer applies ONE design to every horizon.
+
+    A mixed sequence would therefore forecast the first task's design and label the
+    rows with the others', which is a wrong number rather than an error.
+    """
+    with pytest.raises(ValueError) as exc:
+        validate_task_sequence([_task(horizon=1), _task(horizon=2, **{field: other})])
+    assert "ONE cell" in str(exc.value)
+
+
+def test_a_sequence_mixing_forecast_policy_is_refused():
+    with pytest.raises(ValueError, match="forecast_policy"):
+        validate_task_sequence(
+            [_task(horizon=1), _task(horizon=2, target=_Target("y", policy="recursive"))]
+        )
+
+
+def test_a_sequence_mixing_target_transform_is_refused():
+    with pytest.raises(ValueError, match="target_transform"):
+        validate_task_sequence(
+            [_task(horizon=1), _task(horizon=2, target=_Target("y", transform="growth"))]
+        )
+
+
+def test_an_empty_sequence_is_refused():
+    with pytest.raises(ValueError, match="at least one task"):
+        validate_task_sequence([])
+
+
+def test_equivalent_targets_that_are_not_identical_are_accepted():
+    """The refusal is about the FORECAST, not about object identity.
+
+    Two structurally equivalent targets describe the same forecast; refusing them
+    would make the guard reject correct callers for a reason unrelated to forecasting.
+    """
+    shared, horizons = validate_task_sequence(
+        [_task(horizon=1, target=_Target("y")), _task(horizon=2, target=_Target("y"))]
+    )
+    assert shared.target_name == "y"
+    assert horizons == (1, 2)

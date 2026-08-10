@@ -825,7 +825,7 @@ Qualified name: `macroforecast.forecasting.runner.run`
 #### Signature
 
 ```python
-macroforecast.forecasting.run(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None, selection_history: bool = False) -> ForecastResult
+macroforecast.forecasting.run(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None, selection_history: bool = False, task: ResolvedForecastTask | None = None, tasks: Sequence[ResolvedForecastTask] | None = None) -> ForecastResult
 ```
 
 #### Description
@@ -842,6 +842,21 @@ A ``run`` is ATOMIC: it fits exactly ONE model. ``model`` must be a single
 fit-time model-ensemble spec still counts as one model). Passing a sequence
 or a mapping of models raises ``TypeError`` -- run one model per call, or use
 the pipeline with one ``Arm`` per model when comparing models.
+
+``task`` / ``tasks`` are the pre-resolved alternative to the loose ``target``,
+``features``, ``horizon``/``horizons``, ``forecast_policy`` and
+``target_transform`` keywords: a caller that has already resolved "which
+forecast is this" (the pipeline, via
+:func:`~macroforecast.forecasting.task.resolve_forecast_tasks`) hands the same
+:class:`~macroforecast.forecasting.task.ResolvedForecastTask` objects to
+execution, cache identity, checkpoint identity and provenance, so those cannot
+drift. ``tasks`` is one horizon-group cell: the tasks must agree on everything
+except horizon, and every horizon is run.
+
+The loose keywords remain the public surface and are unchanged when no task is
+passed. Passing both a task and a DISAGREEING loose keyword is refused rather
+than reconciled: there is no defensible winner, and the caller who passed the
+loser would never find out.
 
 #### Parameters
 
@@ -873,6 +888,8 @@ the pipeline with one ``Arm`` per model when comparing models.
 | `preprocessing_store` | keyword only | `PreprocessorStore \| None` | `None` |
 | `checkpoint_path` | keyword only | `str \| Path \| None` | `None` |
 | `selection_history` | keyword only | `bool` | `False` |
+| `task` | keyword only | `ResolvedForecastTask \| None` | `None` |
+| `tasks` | keyword only | `Sequence[ResolvedForecastTask] \| None` | `None` |
 
 #### Returns
 
@@ -892,7 +909,7 @@ Qualified name: `macroforecast.forecasting.runner.run`
 #### Signature
 
 ```python
-macroforecast.forecasting.run_forecast(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None, selection_history: bool = False) -> ForecastResult
+macroforecast.forecasting.run_forecast(data: Any, model: str | Callable[..., Any] | ModelSpec, *, window: WindowSpec | str | None = None, preprocessing: PreprocessSpec | None = None, preprocessing_policy: StagePolicy | str | None = None, features: FeatureSpec | None = None, feature_policy: StagePolicy | str | None = None, model_selection: SearchSpec | Mapping[str, SearchSpec | None] | None = None, model_selection_policy: StagePolicy | str | None = None, model_selection_metric: str | Callable[..., float] = "mse", maximize_model_selection: bool = False, preset: str | Mapping[str, str | None] | None = None, params: Mapping[str, Any] | None = None, target: str | None = None, horizon: int = 1, horizons: Sequence[int] | int | None = None, forecast_policy: str = "direct", future_feature_policy: str | None = None, target_transform: str | None = None, combination: str | CombinationSpec | Sequence[str | CombinationSpec | Mapping[str, Any]] | Mapping[str, Any] | None = None, save_models: bool = True, model_store: str | Path = "trained_model", preprocessing_cache: dict[Any, FittedPreprocessor | _PreparedStage | FittedFeatureBuilder] | None = None, preprocessing_store: PreprocessorStore | None = None, checkpoint_path: str | Path | None = None, selection_history: bool = False, task: ResolvedForecastTask | None = None, tasks: Sequence[ResolvedForecastTask] | None = None) -> ForecastResult
 ```
 
 #### Description
@@ -909,6 +926,21 @@ A ``run`` is ATOMIC: it fits exactly ONE model. ``model`` must be a single
 fit-time model-ensemble spec still counts as one model). Passing a sequence
 or a mapping of models raises ``TypeError`` -- run one model per call, or use
 the pipeline with one ``Arm`` per model when comparing models.
+
+``task`` / ``tasks`` are the pre-resolved alternative to the loose ``target``,
+``features``, ``horizon``/``horizons``, ``forecast_policy`` and
+``target_transform`` keywords: a caller that has already resolved "which
+forecast is this" (the pipeline, via
+:func:`~macroforecast.forecasting.task.resolve_forecast_tasks`) hands the same
+:class:`~macroforecast.forecasting.task.ResolvedForecastTask` objects to
+execution, cache identity, checkpoint identity and provenance, so those cannot
+drift. ``tasks`` is one horizon-group cell: the tasks must agree on everything
+except horizon, and every horizon is run.
+
+The loose keywords remain the public surface and are unchanged when no task is
+passed. Passing both a task and a DISAGREEING loose keyword is refused rather
+than reconciled: there is no defensible winner, and the caller who passed the
+loser would never find out.
 
 #### Parameters
 
@@ -940,6 +972,8 @@ the pipeline with one ``Arm`` per model when comparing models.
 | `preprocessing_store` | keyword only | `PreprocessorStore \| None` | `None` |
 | `checkpoint_path` | keyword only | `str \| Path \| None` | `None` |
 | `selection_history` | keyword only | `bool` | `False` |
+| `task` | keyword only | `ResolvedForecastTask \| None` | `None` |
+| `tasks` | keyword only | `Sequence[ResolvedForecastTask] \| None` | `None` |
 
 #### Returns
 
