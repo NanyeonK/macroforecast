@@ -398,23 +398,63 @@ above rather than absorbed.
 
 ---
 
-**1b — Accuracy by model family** (median |Δ rel-RMSPE| vs paper, full sample).
-**Stacked-panel run; superseded for INDPRO by 1a′ above, not yet re-run for the
-other four targets:**
+**1b — Accuracy by model family** (median |Δ rel-RMSPE| vs paper, full sample, all
+five targets under the corrected `X_t`, all post-seed-fix).
 
-| Model family | median \|Δ\| | n cells | reading |
+| Model family | median \|Δ\| | n cells | previous (stacked panel) |
 |---|---|---|---|
-| RF (random forest) | **0.0202** | 100 | essentially reproduced (~2pp) |
-| CV-selected (POOS/KF) | 0.0263 | 100 | good |
-| Shrinkage (Ridge/Lasso/EN) | 0.0467 | 550 | ~5pp |
-| Linear (AR/ARDI BIC/AIC) | 0.0478 | 100 | ~5pp |
-| KRR (kernel ridge) | 0.0705 | 100 | weakest — see §Package verification |
-| SVR | 0.0772 | 200 | weakest (solver + kernel) |
-| **all 45 contenders** | **0.0473** | 1125 | |
+| RF (random forest) | **0.0202** | 100 | 0.0202 |
+| CV-selected (POOS/KF) | 0.0278 | 100 | 0.0263 |
+| Linear (AR/ARDI BIC/AIC) | 0.0371 | 75 | 0.0478 (over 100) |
+| Shrinkage (Ridge/Lasso/EN) | 0.0479 | 550 | 0.0467 |
+| KRR (kernel ridge) | 0.0683 | 100 | 0.0705 |
+| SVR | 0.0746 | 200 | 0.0772 |
+| **all 45 contenders** | **0.0479** | 1125 | 0.0473 |
 
-**1c — Accuracy by target** (median |Δ|, stacked-panel run): HOUST 0.032,
-UNRATE 0.037, INDPRO 0.042, T10YFFM 0.065, CPIAUCSL 0.077. **INDPRO's corrected
-value is 0.0405 (1a′); the other four are not yet re-run.**
+Two things in this table are easy to miss.
+
+**The overall number did not improve: 0.0473 → 0.0479.** The corrected `X_t` is
+justified because eq. (swardi2) is what the paper writes, not because parity got
+better; where it did not, that is recorded rather than absorbed. Families moved in both
+directions — SVR, KRR and Linear closer to the paper, Shrinkage and CV-selected farther.
+
+**Linear is 75 cells, not the 100 the superseded row claimed.** The Linear family has
+four arms and one of them, `AR,BIC`, is the benchmark, so it is not a contender; the old
+row counted it anyway. With the corrected denominator the six families partition the
+1125 contender cells exactly (100 + 100 + 75 + 550 + 100 + 200), which the superseded
+row set did not (it summed to 1150 against a stated total of 1125).
+
+**1c — Accuracy by target** (median |Δ|, corrected `X_t`, post-seed-fix, 225 cells each):
+
+| Target | median \|Δ\| | previous (stacked panel) |
+|---|---|---|
+| HOUST | **0.0341** | 0.032 |
+| UNRATE | 0.0361 | 0.037 |
+| INDPRO | 0.0389 | 0.042 |
+| T10YFFM | 0.0679 | 0.065 |
+| CPIAUCSL | 0.0768 | 0.077 |
+
+The ordering is unchanged: HOUST and UNRATE reproduce best, CPIAUCSL worst. Only INDPRO
+moved materially (0.042 → 0.0389), and §1a′ above explains why that movement is not
+attributable to the `X_t` fix alone.
+
+**Provenance of these five rows, because it decides whether they are comparable.**
+INDPRO comes from the seeded re-run (`kfseed_accuracy.csv`, 2026-08-09), NOT from
+`xlag0_full_accuracy.csv` (2026-08-07), which predates the #515 k-fold seed fix that
+landed 2026-08-08 06:24. The other four targets come from `rest4_accuracy.csv` (920
+cells, 2026-08-09 → 2026-08-11), also post-fix. Taking INDPRO from the older store would
+have put one pre-seed target in a table with four post-seed ones, so the pre-seed figure
+is reported separately instead:
+
+| INDPRO, the same 225 cells | median \|Δ\| |
+|---|---|
+| unseeded (`xlag0_full`, 2026-08-07) | 0.0405 |
+| seeded (`kfseed`, 2026-08-09) | **0.0389** |
+
+Cell by cell, seeding moved 35 closer to the paper, 38 farther, and left 152 unchanged.
+The median improved while more cells got worse — seeding removes run-to-run noise, it
+does not move the design toward the paper. Reproducibility and accuracy are different
+properties, and this is what that looks like in the numbers.
 
 ---
 

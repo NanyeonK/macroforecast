@@ -59,15 +59,26 @@ expected:
       sha256: "[FILL]"
 
 status:
-  overall: IN_PROGRESS
+  overall: TABLE_A1_COMPLETE            # all 5 targets run under the corrected X_t
   headline_replication: STRONG          # ML/factor beats AR reproduces
   protocol_fidelity: STRONG             # corrected X_t spec, seeded splitter
-  table_cell_parity: PARTIAL            # 104/225 beat AR,BIC vs the paper's 128/225
-  targets_complete: 1                   # INDPRO only
+  table_cell_parity: PARTIAL            # 104/225 beat AR,BIC vs the paper's 128/225 (INDPRO)
+  targets_complete: 5
   targets_total: 5
+  # Measured 2026-08-11 over 1125 contender cells (45 arms x 5 targets x 5 horizons),
+  # full sample, every target post the #515 k-fold seed fix.
+  median_abs_delta_by_target:
+    HOUST: 0.0341
+    UNRATE: 0.0361
+    INDPRO: 0.0389
+    T10YFFM: 0.0679
+    CPIAUCSL: 0.0768
+  median_abs_delta_all_contenders: 0.0479
   unresolved:
-    - "CPIAUCSL / HOUST / UNRATE / T10YFFM not yet re-run at lags=0 (in flight)"
     - "Pre-fix tables still present; to be retired or moved to a labelled archive section"
+    - "Overall parity did not improve under the corrected X_t (0.0473 -> 0.0479); the fix
+       is justified by eq. (swardi2), not by parity, and the non-improvement is recorded
+       in section 1b rather than absorbed"
 
 # Two package defects were found by this replication and fixed upstream:
 # the k-fold seed (#513 -> #515) and the kitchen-sink AR benchmark (#468).
