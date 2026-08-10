@@ -62,16 +62,30 @@ decided to live with, which needs a reason recorded here rather than a tuple in 
 test. A test also fails if a listed exception is *fixed* without being removed
 from the list, so the list cannot drift into fiction.
 
-## The guard does not see same-layer cycles
+## Same-layer cycles are outside the contract
 
-`[GAP]` The check rejects an *upward* import and permits imports within a layer,
-so a cycle among same-level packages passes it. Layer 1 contains such a cycle:
+The contract is directional — a lower layer never imports a higher one — and it
+has never promised an *acyclic* graph. Imports between packages at the same
+level are allowed on purpose: `feature_engineering`, `model_selection`,
+`model_ensemble` and `models` sit together in layer 1 precisely because they are
+peers rather than a stack.
+
+Layer 1 therefore contains a loop, and it is accepted rather than outstanding:
 `feature_engineering` -> `model_selection` -> `model_ensemble` -> `models` ->
-`feature_engineering`. Every edge but one is module-level; the edge that closes
-the loop, `feature_engineering/_sparse_ic.py` reaching `model_selection`, is
-function-local, so the four packages still import independently and no test is
-failing. It is recorded because "no upward imports" is a weaker property than an
-acyclic package graph, and only the first one is enforced.
+`feature_engineering`. Every edge except the one that closes it is module-level;
+the closing edge, `feature_engineering/_sparse_ic.py` reaching
+`model_selection`, is function-local, so each of the four still imports on its
+own in a fresh interpreter. That last property is the one users actually have,
+and `test_import_boundaries.py` holds it directly rather than by inspection: a
+module-level cycle would leave one package raising when imported first while
+`import macroforecast` — which loads them in an order that happens to work —
+still looked fine.
+
+So, precisely: an upward import is enforced and fails the suite; a same-layer
+import is permitted, and the loop above is a recorded decision, not a defect to
+be fixed under this heading. What is *not* claimed anywhere is an acyclic
+package graph. Making layer 1 acyclic would be a change to `_sparse_ic.py` and
+its peers — runtime work with its own risk — not a documentation change.
 
 ## The two-stage forecasting structure
 

@@ -25,11 +25,23 @@ into `data/identity.py`, the git/environment probe out of `output` and into
 The list stays because a future exception needs somewhere to be written down,
 and a second test fails if a listed entry stops occurring, so it cannot rot into
 fiction.
+
+## What this does not check
+
+The contract is directional, not acyclic. Same-layer imports are allowed, so the
+layer comparison below says nothing about a cycle *within* a layer, and layer 1
+has one: `feature_engineering` -> `model_selection` -> `model_ensemble` ->
+`models` -> `feature_engineering`. It is an accepted boundary rather than an open
+defect -- those four are peers by design, and the edge that closes the loop is
+function-local. `docs/architecture.md` records the decision; what keeps it
+harmless is checked here, by importing each of the four on its own.
 """
 
 from __future__ import annotations
 
 import ast
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -37,6 +49,10 @@ import pytest
 import macroforecast
 
 ROOT = Path(macroforecast.__file__).parent
+
+#: Repo root, so a fresh interpreter imports the tracked source rather than
+#: whatever happens to be installed.
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 #: package -> layer. Lower may not import higher.
 LAYERS: dict[str, int] = {
@@ -240,6 +256,36 @@ def test_no_top_level_package_is_unclassified() -> None:
     assert not unclassified, (
         "add these to LAYERS at the level their imports allow:\n  "
         + "\n  ".join(unclassified)
+    )
+
+
+#: The layer-1 loop recorded in ``docs/architecture.md``. Same-layer edges are
+#: permitted, so ``_violations()`` is silent about these by design; what makes the
+#: loop harmless is that the edge closing it is function-local.
+LAYER_1_LOOP = ("feature_engineering", "model_selection", "model_ensemble", "models")
+
+
+@pytest.mark.parametrize("package", LAYER_1_LOOP)
+def test_each_package_in_the_layer_1_loop_imports_on_its_own(package: str) -> None:
+    """A fresh interpreter, because an in-process import would not show the failure.
+
+    Hoisting ``_sparse_ic.py``'s function-local ``model_selection`` import to
+    module level closes the loop at import time. Nothing else here would notice:
+    the edge is same-layer, so it is not a violation, and ``import macroforecast``
+    pulls the four in an order that happens to work. It breaks only when one of
+    them is the *first* thing imported -- which is what a reader doing
+    ``import macroforecast.models`` to check an estimator actually does.
+    """
+    result = subprocess.run(
+        [sys.executable, "-c", f"import macroforecast.{package}"],
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, (
+        f"macroforecast.{package} no longer imports on its own, which is what a "
+        f"module-level import cycle inside layer 1 looks like:\n{result.stderr}"
     )
 
 
