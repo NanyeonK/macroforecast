@@ -74,6 +74,58 @@ FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES: dict[str, int] = {
 }
 
 
+#: The named stage boundaries a custom preprocessing step may be positioned at.
+#: These are not invented for #453 -- they are the stage names ``reprocess`` already
+#: records in its step ledger, which is the artifact users read.
+CUSTOM_STEP_STAGES: tuple[str, ...] = (
+    "frequency",
+    "transform",
+    "tcode_lag",
+    "outliers",
+    "impute",
+    "standardize",
+    "frame",
+)
+
+#: ``"last"`` (the default) means after the whole built-in chain, which is where
+#: custom steps ran unconditionally before positions existed.
+CUSTOM_STEP_POSITIONS: tuple[str, ...] = ("last",) + tuple(
+    f"{when}:{stage}" for stage in CUSTOM_STEP_STAGES for when in ("before", "after")
+)
+
+
+def _run_custom_hook(panel, hooks, when, stage, steps):
+    """Apply the custom steps positioned at one boundary, if any.
+
+    ``reprocess`` stays ignorant of what a custom step means: the caller hands in
+    closures that already know how to fit-and-apply (during ``PreprocessSpec.fit``)
+    or apply-with-stored-state (during ``transform``). This decides only WHEN they
+    run, and records that they did.
+
+    The ledger entry matters as much as the call. A step at ``before:impute`` and the
+    same step at ``last`` are different preprocessing pipelines; if the recorded steps
+    did not distinguish them, two runs that differ would be indistinguishable in their
+    own provenance.
+    """
+    if not hooks:
+        return panel
+    key = f"{when}:{stage}"
+    hook = hooks.get(key)
+    if hook is None:
+        return panel
+    before_shape = tuple(int(value) for value in panel.shape)
+    result = hook(panel)
+    steps.append(
+        {
+            "step": "custom",
+            "position": key,
+            "input_shape": before_shape,
+            "output_shape": tuple(int(value) for value in result.shape),
+        }
+    )
+    return result
+
+
 def reprocess(
     data: PreprocessInput,
     *,
@@ -104,6 +156,7 @@ def reprocess(
     standardize_ddof: int = 0,
     frame: str = "keep",
     warn_metadata: bool = True,
+    custom_hooks=None,
 ) -> PreprocessedData:
     """Preprocess a canonical macroforecast panel.
 
@@ -140,8 +193,9 @@ def reprocess(
             transform_codes=transform_codes,
             transform_code_overrides=transform_code_overrides,
             steps=steps,
+            custom_hooks=custom_hooks,
         )
-        panel = _apply_tcode_lag_step(panel, method=tcode_lag_method, codes=applied_codes, steps=steps)
+        panel = _apply_tcode_lag_step(panel, method=tcode_lag_method, codes=applied_codes, steps=steps, custom_hooks=custom_hooks)
         panel = _apply_frequency_step(
             panel,
             method=frequency_method,
@@ -150,6 +204,7 @@ def reprocess(
             monthly_to_quarterly=monthly_to_quarterly,
             weekly_to_quarterly=weekly_to_quarterly,
             steps=steps,
+            custom_hooks=custom_hooks,
         )
     else:
         panel = _apply_frequency_step(
@@ -160,6 +215,7 @@ def reprocess(
             monthly_to_quarterly=monthly_to_quarterly,
             weekly_to_quarterly=weekly_to_quarterly,
             steps=steps,
+            custom_hooks=custom_hooks,
         )
         panel, applied_codes, transform_state = _apply_transform_step(
             panel,
@@ -168,9 +224,11 @@ def reprocess(
             transform_codes=transform_codes,
             transform_code_overrides=transform_code_overrides,
             steps=steps,
+            custom_hooks=custom_hooks,
         )
-        panel = _apply_tcode_lag_step(panel, method=tcode_lag_method, codes=applied_codes, steps=steps)
+        panel = _apply_tcode_lag_step(panel, method=tcode_lag_method, codes=applied_codes, steps=steps, custom_hooks=custom_hooks)
 
+    panel = _run_custom_hook(panel, custom_hooks, "before", "outliers", steps)
     outlier_method = _normalize_outliers(outliers)
     before_missing = int(panel.isna().sum().sum())
     panel = handle_outliers(
@@ -190,6 +248,8 @@ def reprocess(
         }
     )
 
+    panel = _run_custom_hook(panel, custom_hooks, "after", "outliers", steps)
+    panel = _run_custom_hook(panel, custom_hooks, "before", "impute", steps)
     impute_method = _normalize_impute(impute)
     before_missing = int(panel.isna().sum().sum())
     panel = impute_missing(
@@ -209,6 +269,8 @@ def reprocess(
         }
     )
 
+    panel = _run_custom_hook(panel, custom_hooks, "after", "impute", steps)
+    panel = _run_custom_hook(panel, custom_hooks, "before", "standardize", steps)
     standardize_method = _normalize_standardize(standardize)
     standardize_ddof_value = _normalize_standardize_ddof(standardize_ddof)
     standardization_state: dict[str, Any] = {}
@@ -235,6 +297,8 @@ def reprocess(
         }
     )
 
+    panel = _run_custom_hook(panel, custom_hooks, "after", "standardize", steps)
+    panel = _run_custom_hook(panel, custom_hooks, "before", "frame", steps)
     frame_method = _normalize_frame(frame)
     before_shape = tuple(int(value) for value in panel.shape)
     panel = handle_frame_edges(panel, method=frame_method)
@@ -247,6 +311,7 @@ def reprocess(
         }
     )
 
+    panel = _run_custom_hook(panel, custom_hooks, "after", "frame", steps)
     if panel.empty:
         raise ValueError("preprocessing leaves an empty panel")
     panel = as_panel(panel, metadata=base.metadata)
@@ -761,7 +826,9 @@ def _apply_frequency_step(
     monthly_to_quarterly: str,
     weekly_to_quarterly: str,
     steps: list[dict[str, Any]],
+    custom_hooks=None,
 ) -> pd.DataFrame:
+    panel = _run_custom_hook(panel, custom_hooks, "before", "frequency", steps)
     before_shape = tuple(int(value) for value in panel.shape)
     _frequencies, frequency_source = infer_frequencies(panel)
     result = align_frequency(
@@ -781,7 +848,7 @@ def _apply_frequency_step(
             "output_shape": tuple(int(value) for value in result.shape),
         }
     )
-    return result
+    return _run_custom_hook(result, custom_hooks, "after", "frequency", steps)
 
 
 def _apply_transform_step(
@@ -792,10 +859,12 @@ def _apply_transform_step(
     transform_codes: Mapping[str, int] | None,
     transform_code_overrides: Mapping[str, int] | None,
     steps: list[dict[str, Any]],
+    custom_hooks=None,
 ) -> tuple[pd.DataFrame, dict[str, int], dict[str, Any]]:
+    panel = _run_custom_hook(panel, custom_hooks, "before", "transform", steps)
     if transform_method == "none":
         steps.append({"step": "transform", "method": "none", "applied": {}})
-        return panel.copy(), {}, {}
+        return _run_custom_hook(panel.copy(), custom_hooks, "after", "transform", steps), {}, {}
 
     codes = _resolve_transform_codes(
         panel,
@@ -827,6 +896,7 @@ def _apply_transform_step(
             "ignored_metadata_codes": ignored_codes,
         }
     )
+    result = _run_custom_hook(result, custom_hooks, "after", "transform", steps)
     return result, applied_codes, transform_state
 
 
@@ -836,7 +906,9 @@ def _apply_tcode_lag_step(
     method: str,
     codes: Mapping[str, int],
     steps: list[dict[str, Any]],
+    custom_hooks=None,
 ) -> pd.DataFrame:
+    panel = _run_custom_hook(panel, custom_hooks, "before", "tcode_lag", steps)
     before_shape = tuple(int(value) for value in panel.shape)
     result = handle_tcode_lag(panel, method=method, codes=codes)
     steps.append(
@@ -848,7 +920,7 @@ def _apply_tcode_lag_step(
             "rows_removed": before_shape[0] - int(result.shape[0]),
         }
     )
-    return result
+    return _run_custom_hook(result, custom_hooks, "after", "tcode_lag", steps)
 
 
 def _data_metadata_warning_message(metadata: Mapping[str, Any]) -> str | None:
