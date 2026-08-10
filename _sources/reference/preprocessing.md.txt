@@ -83,7 +83,7 @@ Qualified name: `macroforecast.preprocessing.preprocess.reprocess`
 #### Signature
 
 ```python
-macroforecast.preprocessing.reprocess(data: PreprocessInput, *, metadata: Mapping[str, Any] | None = None, frequency: str = "keep", quarterly_to_monthly: str = "step_forward", weekly_to_monthly: str = "mean", monthly_to_quarterly: str = "quarterly_average", weekly_to_quarterly: str = "mean", transform_order: str = "after_frequency", transform: str = "official", transform_codes: Mapping[str, int] | None = None, transform_code_overrides: Mapping[str, int] | None = None, tcode_lag: str = "drop", outliers: str = "iqr", outlier_action: str = "flag_as_nan", iqr_threshold: float = 10.0, zscore_threshold: float = 3.0, winsorize_quantiles: tuple[float, float] = (0.01, 0.99), impute: str = "em_factor", em_n_factors: int = 8, em_factor_selection: str = "baing_p2", em_demean: int = 2, em_max_iter: int = 50, em_tolerance: float = 1e-06, standardize: str = "none", standardize_columns: str | Sequence[str] = "all", standardize_ddof: int = 0, frame: str = "keep", warn_metadata: bool = True) -> PreprocessedData
+macroforecast.preprocessing.reprocess(data: PreprocessInput, *, metadata: Mapping[str, Any] | None = None, frequency: str = "keep", quarterly_to_monthly: str = "step_forward", weekly_to_monthly: str = "mean", monthly_to_quarterly: str = "quarterly_average", weekly_to_quarterly: str = "mean", transform_order: str = "after_frequency", transform: str = "official", transform_codes: Mapping[str, int] | None = None, transform_code_overrides: Mapping[str, int] | None = None, tcode_lag: str = "drop", outliers: str = "iqr", outlier_action: str = "flag_as_nan", iqr_threshold: float = 10.0, zscore_threshold: float = 3.0, winsorize_quantiles: tuple[float, float] = (0.01, 0.99), impute: str = "em_factor", em_n_factors: int = 8, em_factor_selection: str = "baing_p2", em_demean: int = 2, em_max_iter: int = 50, em_tolerance: float = 1e-06, standardize: str = "none", standardize_columns: str | Sequence[str] = "all", standardize_ddof: int = 0, frame: str = "keep", warn_metadata: bool = True, custom_hooks=None) -> PreprocessedData
 ```
 
 #### Description
@@ -126,6 +126,7 @@ returned metadata records the canonical direct-call names.
 | `standardize_ddof` | keyword only | `int` | `0` |
 | `frame` | keyword only | `str` | `"keep"` |
 | `warn_metadata` | keyword only | `bool` | `True` |
+| `custom_hooks` | keyword only | `unspecified` | `None` |
 
 #### Returns
 
@@ -488,7 +489,7 @@ Qualified name: `macroforecast.preprocessing.specs.custom_preprocess_step`
 #### Signature
 
 ```python
-macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any] | None = None, *, fit_func: Callable[..., Any] | None = None, transform_func: Callable[..., Any] | None = None, row_local: bool = False, **params: Any) -> dict[str, Any]
+macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any] | None = None, *, fit_func: Callable[..., Any] | None = None, transform_func: Callable[..., Any] | None = None, row_local: bool = False, position: str = "last", **params: Any) -> dict[str, Any]
 ```
 
 #### Description
@@ -548,6 +549,7 @@ recomputes instead of risking stale reuse.
 | `fit_func` | keyword only | `Callable[..., Any] \| None` | `None` |
 | `transform_func` | keyword only | `Callable[..., Any] \| None` | `None` |
 | `row_local` | keyword only | `bool` | `False` |
+| `position` | keyword only | `str` | `"last"` |
 | `params` | var keyword | `Any` | `required` |
 
 #### Returns

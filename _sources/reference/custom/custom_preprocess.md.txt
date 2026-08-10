@@ -114,7 +114,7 @@ Qualified name: `macroforecast.preprocessing.specs.custom_preprocess_step`
 #### Signature
 
 ```python
-macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any] | None = None, *, fit_func: Callable[..., Any] | None = None, transform_func: Callable[..., Any] | None = None, row_local: bool = False, **params: Any) -> dict[str, Any]
+macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any] | None = None, *, fit_func: Callable[..., Any] | None = None, transform_func: Callable[..., Any] | None = None, row_local: bool = False, position: str = "last", **params: Any) -> dict[str, Any]
 ```
 
 #### Description
@@ -174,6 +174,7 @@ recomputes instead of risking stale reuse.
 | `fit_func` | keyword only | `Callable[..., Any] \| None` | `None` |
 | `transform_func` | keyword only | `Callable[..., Any] \| None` | `None` |
 | `row_local` | keyword only | `bool` | `False` |
+| `position` | keyword only | `str` | `"last"` |
 | `params` | var keyword | `Any` | `required` |
 
 #### Returns
