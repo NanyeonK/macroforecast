@@ -18,8 +18,8 @@
   },
   "documented": 6,
   "special": 1,
-  "non_api_globals": 3,
-  "public_dir": 379
+  "non_api_globals": 0,
+  "public_dir": 376
  },
  "identities": {
   "supported == lazy_exports + lazy_modules": true,
@@ -4567,34 +4567,6 @@
     "reason": "Stable, documented, and set directly in the root module. It is absent from __all__ and, because the name is underscore-prefixed, invisible to a dir() scan that filters on a leading underscore."
    }
   ],
-  "non_api_globals": [
-   {
-    "name": "Any",
-    "surface": "non_api_global",
-    "canonical": "mf.Any",
-    "kind": "_AnyMeta",
-    "bound_in_root_globals": true,
-    "declared_module": "typing",
-    "reason": "Bound at macroforecast/__init__.py module scope by an import statement the lazy loader needs. Not exported, not documented, and not owned by any submodule."
-   },
-   {
-    "name": "annotations",
-    "surface": "non_api_global",
-    "canonical": "mf.annotations",
-    "kind": "_Feature",
-    "bound_in_root_globals": true,
-    "declared_module": "__future__",
-    "reason": "Bound at macroforecast/__init__.py module scope by an import statement the lazy loader needs. Not exported, not documented, and not owned by any submodule."
-   },
-   {
-    "name": "import_module",
-    "surface": "non_api_global",
-    "canonical": "mf.import_module",
-    "kind": "function",
-    "bound_in_root_globals": true,
-    "declared_module": "importlib",
-    "reason": "Bound at macroforecast/__init__.py module scope by an import statement the lazy loader needs. Not exported, not documented, and not owned by any submodule."
-   }
-  ]
+  "non_api_globals": []
  }
 }

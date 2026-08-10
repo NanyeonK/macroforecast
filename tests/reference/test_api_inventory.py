@@ -74,20 +74,63 @@ def test_surfaces_are_disjoint_and_account_for_public_dir() -> None:
     assert "__version__" not in non_api
 
 
+def test_non_api_globals_surface_is_empty() -> None:
+    """Nothing is bound at root scope outside ``__all__`` any more.
+
+    Before this cleanup the surface held ``Any``, ``annotations`` and
+    ``import_module``. ``__version__`` is unaffected: it is public on purpose,
+    underscore-prefixed, and carried by the separate ``special`` surface.
+    """
+
+    inventory = api_inventory.build_inventory()
+
+    assert inventory["surfaces"]["non_api_globals"] == []
+    assert inventory["counts"]["non_api_globals"] == 0
+    assert inventory["counts"]["public_dir"] == inventory["counts"]["supported"]
+    assert _public_dir() == set(mf.__all__)
+
+    for name in ("Any", "annotations", "import_module"):
+        assert not hasattr(mf, name), name
+
+
 def test_non_api_globals_are_root_globals_not_submodule_owned() -> None:
-    rows = _surfaces()["non_api_globals"]
+    """The empty surface above is a measurement, not a query that stopped working.
 
-    assert _names(rows) == _public_dir() - set(mf.__all__)
+    Binding a name at root module scope is exactly what an unaliased
+    ``from typing import Any`` does, so injecting one reproduces the condition
+    the surface exists to catch -- and proves the preceding test is not vacuous.
+    """
 
-    for row in rows:
-        assert row["bound_in_root_globals"] is True
-        # A root global is owned by the root module, so its canonical path can
-        # never carry a submodule segment.
-        assert row["canonical"] == f"mf.{row['name']}"
+    assert _surfaces()["non_api_globals"] == []
 
-    any_row = next(row for row in rows if row["name"] == "Any")
+    setattr(mf, "leaked_probe", object())
+    try:
+        rows = _surfaces()["non_api_globals"]
+        names = _names(rows)
+        public_while_leaked = _public_dir()
+    finally:
+        delattr(mf, "leaked_probe")
 
-    assert any_row["canonical"] == "mf.Any"
+    assert names == {"leaked_probe"}
+    assert names == public_while_leaked - set(mf.__all__)
+
+    (row,) = rows
+    assert row["surface"] == "non_api_global"
+    assert row["bound_in_root_globals"] is True
+    # A root global is owned by the root module, so its canonical path can
+    # never carry a submodule segment.
+    assert row["canonical"] == "mf.leaked_probe"
+
+    # The probe is a plain assignment, not an import -- so a row must not state
+    # a provenance the query never established. The three names this surface
+    # used to hold happened to be imports; that is history, not a rule, and it
+    # belongs in the module docstring rather than in generated per-row data.
+    reason = str(row["reason"])
+    assert "import statement" not in reason, reason
+    assert "lazy loader" not in reason, reason
+    assert "module scope" in reason
+
+    assert _surfaces()["non_api_globals"] == []
 
 
 def test_canonical_owner_matches_root_lazy_exports() -> None:

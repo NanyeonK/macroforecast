@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
-from importlib import import_module
-from typing import Any
+# Every global in this module is attribute-reachable as ``mf.<name>``; the ones
+# without a leading underscore are also the surface ``dir(mf)`` discovers and
+# ``__all__`` publishes. Three landed on that public surface and none was API:
+# ``Any`` and ``import_module``, bound privately below so they stay reachable
+# but undiscovered, and ``annotations``, which the future statement above binds
+# as a runtime side effect -- its actual effect, PEP 563, is compiled in before
+# this body runs, so only the name goes. See docs/api_tiers.md.
+from importlib import import_module as _import_module
+from typing import Any as _Any
+
+del annotations
 
 __version__ = "0.9.5"
 
@@ -392,15 +401,15 @@ _LAZY_MODULES: tuple[str, ...] = (
 __all__ = sorted(set(_LAZY_EXPORTS) | set(_LAZY_MODULES))
 
 
-def __getattr__(name: str) -> Any:
+def __getattr__(name: str) -> _Any:
     if name in _LAZY_MODULES:
-        module = import_module(f".{name}", __name__)
+        module = _import_module(f".{name}", __name__)
         globals()[name] = module
         return module
     module_name = _LAZY_EXPORTS.get(name)
     if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    module = import_module(module_name, __name__)
+    module = _import_module(module_name, __name__)
     value = getattr(module, name)
     globals()[name] = value
     return value
