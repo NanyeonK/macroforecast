@@ -94,6 +94,7 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
         current spec identity and ``allow_stale`` is false.
     """
     from macroforecast.pipeline.evaluate import evaluate
+    from macroforecast.pipeline.evaluation_inputs import resolve_evaluation_inputs
     from macroforecast.pipeline.spec import PipelineReport
 
     checkpoint_root = Path(checkpoint_dir)
@@ -176,7 +177,10 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
         )
 
     master = pd.concat(frames, ignore_index=True)
-    results = evaluate(master, spec)
+    # Named subsample masks are resolved once here, before a pure-frame
+    # evaluate(); re-scoring the same checkpoints is otherwise at the mercy of
+    # the FRED cache (see pipeline/evaluation_inputs.py).
+    results = evaluate(master, spec, inputs=resolve_evaluation_inputs(master, spec))
     subsamples = results["forecasts"].attrs.get("macroforecast_subsample_provenance")
 
     provenance = {

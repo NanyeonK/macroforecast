@@ -26,7 +26,7 @@ from macroforecast.pipeline import (
     run_pipeline,
 )
 
-eval_mod = importlib.import_module("macroforecast.pipeline.evaluate")
+inputs_mod = importlib.import_module("macroforecast.pipeline.evaluation_inputs")
 
 
 def _toy(checkpoint_dir=None, *, evaluation=None):
@@ -218,8 +218,10 @@ def test_rescore_can_add_subsamples_to_checkpointed_run(monkeypatch, tmp_path):
     run_pipeline(_toy(ckpt))
 
     fred_dates = pd.date_range("1999-01-01", periods=60, freq="MS")
+    calls: list[str] = []
 
     def fake_load_fred_series(series_id: str, *, frequency=None, **_kwargs):
+        calls.append(series_id)
         assert series_id == "USREC"
         assert frequency == "monthly"
         panel = pd.DataFrame({series_id: [1] * len(fred_dates)}, index=fred_dates)
@@ -238,7 +240,7 @@ def test_rescore_can_add_subsamples_to_checkpointed_run(monkeypatch, tmp_path):
             },
         )
 
-    monkeypatch.setattr(eval_mod, "load_fred_series", fake_load_fred_series)
+    monkeypatch.setattr(inputs_mod, "load_fred_series", fake_load_fred_series)
     evaluation = EvalSpec(
         benchmark="RIDGE",
         metrics=("rmse",),
@@ -268,3 +270,7 @@ def test_rescore_can_add_subsamples_to_checkpointed_run(monkeypatch, tmp_path):
     assert live_subsamples["nber"]["mask_source"] == "nber_recession"
     assert live_subsamples["nber"]["mask_summary"]["series_id"] == "USREC"
     assert rescored.provenance["rescore_stale_cells"] == ()
+    # One named mask, two evaluation operations (the rescore and the live run):
+    # each resolves its inputs once, and neither the evaluator nor the second
+    # subsample goes back for more.
+    assert calls == ["USREC", "USREC"]
