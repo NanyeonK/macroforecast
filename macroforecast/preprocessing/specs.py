@@ -14,6 +14,7 @@ from macroforecast.preprocessing.clean import (
     fit_standardization_state,
 )
 from macroforecast.preprocessing.preprocess import (
+    CUSTOM_STEP_POSITIONS,
     _coerce_input,
     _callable_name,
     _coerce_custom_preprocess_output,
@@ -98,10 +99,19 @@ class PreprocessSpec:
         standardize_scope = _effective_standardize_scope(self.options)
         if _uses_origin_predictor_standardization(self.options):
             fit_options["standardize"] = "none"
+        trailing_steps, positioned_steps = _partition_custom_steps_by_position(custom_steps)
+        custom_states: dict[str, Any] = {}
+        if positioned_steps:
+            # A positioned step is fitted on the panel AS IT IS at its boundary, not
+            # on the finished one -- a winsorizer at before:impute has to see the
+            # holes, or it fits to a sample that does not exist there.
+            fit_options["custom_hooks"] = _build_custom_hooks(
+                positioned_steps, metadata, custom_states, fit=True
+            )
         processed = reprocess(data, metadata=metadata, **fit_options)
-        custom_states = _fit_custom_preprocess_states(processed, custom_steps)
+        custom_states.update(_fit_custom_preprocess_states(processed, trailing_steps))
         processed = _apply_custom_preprocess_steps(
-            processed, custom_steps, custom_states
+            processed, trailing_steps, custom_states
         )
         processed = _record_standardize_scope(processed, self.options)
         state_panel: pd.DataFrame | None = None
@@ -265,7 +275,16 @@ class FittedPreprocessor:
             )
             out = _record_standardize_scope(out, self.spec.options)
             return _apply_custom_preprocess_steps(
-                out, custom_steps, self.custom_step_states
+                out, trailing_steps, self.custom_step_states
+            )
+
+        trailing_steps, positioned_steps = _partition_custom_steps_by_position(custom_steps)
+        if positioned_steps:
+            transform_options["custom_hooks"] = _build_custom_hooks(
+                positioned_steps,
+                combined_metadata,
+                self.custom_step_states,
+                fit=False,
             )
 
         def _run(frame: pd.DataFrame) -> PreprocessedData:
@@ -405,6 +424,7 @@ class FittedPreprocessor:
         if self.standardization_state is not None:
             selected = apply_standardization_state(selected, self.standardization_state)
         custom_steps = _normalize_custom_steps(self.spec.options.get("custom_steps"))
+        _reject_positioned_steps_on_manual_replay(custom_steps)
         if custom_steps:
             custom_processed = _apply_custom_preprocess_steps(
                 PreprocessedData(
@@ -519,6 +539,7 @@ def custom_preprocess_step(
     fit_func: Callable[..., Any] | None = None,
     transform_func: Callable[..., Any] | None = None,
     row_local: bool = False,
+    position: str = "last",
     **params: Any,
 ) -> dict[str, Any]:
     """Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``.
@@ -596,14 +617,93 @@ def custom_preprocess_step(
     if func is not None and row_local is False and fit_func is None:
         # not an error -- only fit_window refuses it, and that check lives there
         pass
+    position_value = str(position)
+    if position_value not in CUSTOM_STEP_POSITIONS:
+        raise ValueError(
+            f"custom preprocessing step {name!r}: position {position!r} is not a stage "
+            f"boundary. Available: {', '.join(CUSTOM_STEP_POSITIONS)}. These are the "
+            f"stage names reprocess() already records in its step ledger."
+        )
     return {
         "name": str(name),
         "func": func,
         "fit_func": fit_func,
         "transform_func": transform_func,
         "row_local": bool(row_local),
+        "position": position_value,
         "params": dict(params),
     }
+
+
+def _reject_positioned_steps_on_manual_replay(steps) -> None:
+    """Refuse a positioned step on the path that replays stages by hand.
+
+    Under ``standardize_scope="origin_available_predictors"`` the predictor frame is
+    rebuilt by applying the stored outlier/impute/standardization states directly,
+    without going back through ``reprocess`` -- so there are no stage boundaries to
+    position against on that path. Running the step last anyway would be the exact
+    failure the position feature exists to prevent: the parameter accepted and
+    quietly ignored, on one code path only, so the same spec would mean two
+    different pipelines depending on an unrelated option.
+    """
+    offenders = [
+        str(step.get("name"))
+        for step in steps
+        if str(step.get("position", "last")) != "last"
+    ]
+    if offenders:
+        raise NotImplementedError(
+            f"custom preprocessing steps {sorted(offenders)} declare a position, but "
+            f"standardize_scope='origin_available_predictors' rebuilds the predictor "
+            f"frame by replaying stored stage states instead of re-running the stage "
+            f"chain, so there is no boundary to position against. Use position='last' "
+            f"or a different standardize_scope."
+        )
+
+
+def _partition_custom_steps_by_position(steps):
+    """Split custom steps into the trailing ones and the positioned ones.
+
+    ``position="last"`` is the default and reproduces the behaviour every spec
+    written before positions existed had: run after the whole built-in chain.
+    """
+    trailing = []
+    positioned: dict[str, list] = {}
+    for step in steps:
+        where = str(step.get("position", "last"))
+        if where == "last":
+            trailing.append(step)
+        else:
+            positioned.setdefault(where, []).append(step)
+    return tuple(trailing), positioned
+
+
+def _build_custom_hooks(positioned, metadata, states=None, *, fit: bool):
+    """Closures ``reprocess`` can call at a boundary, one per position.
+
+    During ``fit`` each closure derives its steps' states from the panel as it is
+    at that boundary and records them into ``states``; during ``transform`` it
+    applies the states already fitted. ``reprocess`` never learns what any of that
+    means -- it only knows when to call.
+    """
+    hooks = {}
+    for where, steps in positioned.items():
+        def _hook(panel, steps=tuple(steps), where=where):
+            if fit:
+                fitted = _fit_custom_step_states_on_panel(panel, metadata, steps)
+                if states is not None:
+                    states.update(fitted)
+                local = fitted
+            else:
+                local = states or {}
+            current = panel
+            for step in steps:
+                _func, output = _invoke_custom_step(step, current, metadata, local)
+                current, _meta = _coerce_custom_preprocess_output(output, metadata or {})
+            return current
+
+        hooks[where] = _hook
+    return hooks
 
 
 def _combine_panels(history: pd.DataFrame, panel: pd.DataFrame) -> pd.DataFrame:
@@ -959,6 +1059,50 @@ def _fit_custom_preprocess_states(
     return states
 
 
+def _invoke_custom_step(step, panel, metadata, states):
+    """Call one custom step and return (callable, raw output).
+
+    Extracted so the positioned path (mid-``reprocess``, panel only) and the
+    ``position="last"`` path (after ``reprocess``, full ``PreprocessedData``) cannot
+    drift about HOW a step is invoked -- which arguments it gets, and whether a
+    stateful step is allowed to recompute its state. They differ only in what they
+    do with the result.
+    """
+    params = dict(step.get("params", {}))
+    transform_func = step.get("transform_func")
+    if transform_func is not None:
+        # Stateful: apply the state fitted on the estimation window. The callable
+        # never recomputes it, so a longer frame cannot change what it does to a
+        # row that was already there.
+        return transform_func, transform_func(
+            panel.copy(),
+            state=(states or {}).get(str(step["name"])),
+            metadata=dict(metadata or {}),
+            **params,
+        )
+    func = step["func"]
+    return func, func(panel.copy(), metadata=dict(metadata or {}), **params)
+
+
+def _fit_custom_step_states_on_panel(panel, metadata, steps):
+    """``_fit_custom_preprocess_states`` for a bare mid-chain panel.
+
+    A step positioned at, say, ``before:impute`` must derive its state from the
+    panel AS IT IS THERE -- a winsorizer placed before imputation has to see the
+    holes, or it is fitting to a sample that does not exist at that point in the
+    chain.
+    """
+    states = {}
+    for step in steps:
+        fit_func = step.get("fit_func")
+        if fit_func is None:
+            continue
+        states[str(step["name"])] = fit_func(
+            panel.copy(), metadata=dict(metadata or {}), **dict(step.get("params", {}))
+        )
+    return states
+
+
 def _apply_custom_preprocess_steps(
     data: PreprocessedData,
     steps: tuple[dict[str, Any], ...],
@@ -972,22 +1116,7 @@ def _apply_custom_preprocess_steps(
         name = str(step["name"])
         params = dict(step.get("params", {}))
         transform_func = step.get("transform_func")
-        if transform_func is not None:
-            # Stateful: apply the state fitted on the estimation window. The
-            # callable never recomputes it, so a longer frame cannot change what
-            # it does to a row that was already there.
-            func = transform_func
-            output = transform_func(
-                current.panel.copy(),
-                state=states.get(name),
-                metadata=dict(current.metadata),
-                **params,
-            )
-        else:
-            func = step["func"]
-            output = func(
-                current.panel.copy(), metadata=dict(current.metadata), **params
-            )
+        func, output = _invoke_custom_step(step, current.panel, current.metadata, states)
         panel, metadata = _coerce_custom_preprocess_output(output, current.metadata)
         record = {
             "name": name,
