@@ -7,6 +7,8 @@ into one cell; the parallel backend splits one horizon per cell.
 """
 from __future__ import annotations
 
+from macroforecast.pipeline.plan import compile_arm_plan
+
 import hashlib
 import json
 import os
@@ -143,13 +145,17 @@ def _run_one_arm_target(
 
     features = retarget_features(arm.features, target.name, arm_name=arm.name)
 
+    # One compiled answer for the arm's overrides, shared with the store namespace
+    # and the result-store digest so the three cannot disagree about which window
+    # and which preprocessing policy this cell ran under.
+    plan = compile_arm_plan(spec, arm)
+
     result = run(
         spec.data,
         arm.model,
-        window=arm.window if getattr(arm, "window", None) is not None else spec.window,
-        preprocessing=arm.preprocessing if arm.preprocessing is not None else spec.preprocessing,
-        preprocessing_policy=(arm.preprocessing_policy if arm.preprocessing is not None
-                              else spec.preprocessing_policy),
+        window=plan.window,
+        preprocessing=plan.preprocess.spec,
+        preprocessing_policy=plan.preprocess.policy_input,
         features=features,
         feature_policy=arm.feature_policy,
         params=arm.params,
@@ -390,26 +396,12 @@ def _lpt_dispatch_order(spec: PipelineSpec, cells: list[_Cell]) -> list[_Cell]:
 def _effective_preprocessing_policy(spec: PipelineSpec, arm: Arm):
     """The ``StagePolicy`` that will actually govern this arm's preprocessing fit.
 
-    Mirrors the exact override rule ``_run_one_arm_target`` uses when it calls
-    ``run()``: an arm with its own ``preprocessing`` override also supplies its own
-    ``preprocessing_policy`` (the spec-level policy never applies to an override
-    arm); otherwise the arm inherits the spec-level policy. The result is resolved
-    (string/``None``/``StagePolicy`` -> a concrete ``StagePolicy``) through the same
-    ``resolve_stage_policy`` + ``default_preprocessing_scope`` that ``run()`` itself
-    uses, so this is not a re-derivation that could drift from the runner -- it is
-    the identical resolution, called one layer earlier.
+    Thin wrapper over :func:`~macroforecast.pipeline.plan.compile_arm_plan`, kept
+    because the preprocessor-store tests and the docstring at ``_execute_cell``
+    refer to it by name. The override rule itself lives in one place now, so this
+    cannot drift from what ``run()`` is handed a few lines above.
     """
-    from macroforecast.meta import get_config
-    from macroforecast.window.policy import resolve_stage_policy
-
-    effective_preprocessing = arm.preprocessing if arm.preprocessing is not None else spec.preprocessing
-    if effective_preprocessing is None:
-        return None
-    effective_policy = (
-        arm.preprocessing_policy if arm.preprocessing is not None else spec.preprocessing_policy
-    )
-    default_scope = str(get_config()["default_preprocessing_scope"])
-    return resolve_stage_policy(effective_policy, default_scope=default_scope)
+    return compile_arm_plan(spec, arm).preprocess.resolve_policy()
 
 
 def _execute_cell(
