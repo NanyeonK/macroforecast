@@ -317,7 +317,7 @@ Qualified name: `macroforecast.window.core.ValWindow`
 #### Signature
 
 ```python
-macroforecast.window.ValWindow(method: str = "expanding", size: int | None = None, ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, horizon: int = 1, step: int = 1, embargo: int | None = None, random_state: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> None
+macroforecast.window.ValWindow(method: str = "expanding", size: int | None = None, ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, horizon: int = 1, step: int = 1, embargo: int | None = None, random_state: int | None = 0, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True) -> None
 ```
 
 #### Description
@@ -336,7 +336,7 @@ Validation rule used for model and hyperparameter selection.
 | `horizon` | positional or keyword | `int` | `1` |
 | `step` | positional or keyword | `int` | `1` |
 | `embargo` | positional or keyword | `int \| None` | `None` |
-| `random_state` | positional or keyword | `int \| None` | `None` |
+| `random_state` | positional or keyword | `int \| None` | `0` |
 | `retune_every` | positional or keyword | `TemporalCadence` | `1` |
 | `retune_on_retrain` | positional or keyword | `bool` | `True` |
 | `reuse_params` | positional or keyword | `bool` | `True` |
@@ -365,7 +365,7 @@ import macroforecast as mf
 | `horizon` | `int` | `1` |
 | `step` | `int` | `1` |
 | `embargo` | `int \| None` | `None` |
-| `random_state` | `int \| None` | `None` |
+| `random_state` | `int \| None` | `0` |
 | `retune_every` | `TemporalCadence` | `1` |
 | `retune_on_retrain` | `bool` | `True` |
 | `reuse_params` | `bool` | `True` |
@@ -442,7 +442,7 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `align` | `align(self, X: pd.DataFrame \| pd.Series, y: pd.Series \| pd.DataFrame \| None = None) -> pd.DataFrame \| tuple[pd.DataFrame, pd.Series \| pd.DataFrame]` | Align feature and target objects according to the alignment rule. |
-| `iter_origins` | `iter_origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> Iterator[dict[str, Any]]` | Yield origin metadata and absolute-position slices for model runners. |
+| `iter_origins` | `iter_origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> Iterator[OriginContext]` | Yield origin metadata and absolute-position slices for model runners. |
 | `iter_slices` | `iter_slices(self, X: pd.DataFrame \| pd.Series, y: pd.Series \| pd.DataFrame \| None = None) -> Iterator[dict[str, Any]]` | Yield origin metadata with already sliced ``X`` and optional ``y``. |
 | `origins` | `origins(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> pd.DataFrame` | Return test-origin rows with train and test ranges. |
 | `plan` | `plan(self, index: int \| Sequence[Any] \| pd.Index, *, exclude_origin: bool = False) -> pd.DataFrame` | Return an execution plan with estimation, val, and test metadata. |
@@ -797,7 +797,7 @@ Qualified name: `macroforecast.window.core.from_cutoffs`
 #### Signature
 
 ```python
-macroforecast.window.from_cutoffs(*, test_start: Any, test_end: Any | None = None, estimation_start: Any | None = None, mode: str = "expanding", estimation_size: int | None = None, estimation_size_rule: Callable[[int, int], int] | None = None, estimation_size_by_horizon: Mapping[int, int] | None = None, estimation_min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1, val_method: str = "last_block", val_size: int | None = None, val_ratio: float = 0.2, val_min_train_size: int | None = None, val_n_splits: int = 5, val_horizon: int | None = None, val_step: int = 1, val_embargo: int | None = None, val_random_state: int | None = None, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True, horizon: int = 1, step: TestStep = 1, drop_incomplete: bool = True, exclude: Sequence[tuple[Any | None, Any | None]] = (), alignment: AlignmentWindow | None = None, metadata: dict[str, Any] | None = None) -> WindowSpec
+macroforecast.window.from_cutoffs(*, test_start: Any, test_end: Any | None = None, estimation_start: Any | None = None, mode: str = "expanding", estimation_size: int | None = None, estimation_size_rule: Callable[[int, int], int] | None = None, estimation_size_by_horizon: Mapping[int, int] | None = None, estimation_min_size: int | None = None, embargo: int = 0, retrain_every: TemporalCadence = 1, val_method: str = "last_block", val_size: int | None = None, val_ratio: float = 0.2, val_min_train_size: int | None = None, val_n_splits: int = 5, val_horizon: int | None = None, val_step: int = 1, val_embargo: int | None = None, val_random_state: int | None = 0, retune_every: TemporalCadence = 1, retune_on_retrain: bool = True, reuse_params: bool = True, horizon: int = 1, step: TestStep = 1, drop_incomplete: bool = True, exclude: Sequence[tuple[Any | None, Any | None]] = (), alignment: AlignmentWindow | None = None, metadata: dict[str, Any] | None = None) -> WindowSpec
 ```
 
 #### Description
@@ -849,7 +849,7 @@ set the embargoes explicitly when the forecasting protocol requires it.
 | `val_horizon` | keyword only | `int \| None` | `None` |
 | `val_step` | keyword only | `int` | `1` |
 | `val_embargo` | keyword only | `int \| None` | `None` |
-| `val_random_state` | keyword only | `int \| None` | `None` |
+| `val_random_state` | keyword only | `int \| None` | `0` |
 | `retune_every` | keyword only | `TemporalCadence` | `1` |
 | `retune_on_retrain` | keyword only | `bool` | `True` |
 | `reuse_params` | keyword only | `bool` | `True` |
@@ -945,7 +945,7 @@ Qualified name: `macroforecast.window.core.make_splitter`
 #### Signature
 
 ```python
-macroforecast.window.make_splitter(validation: str, n_samples: int, *, validation_size: int | None = None, validation_ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, step: int = 1, horizon: int = 1, random_state: int | None = None, embargo: int = 0) -> list[Split]
+macroforecast.window.make_splitter(validation: str, n_samples: int, *, validation_size: int | None = None, validation_ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, step: int = 1, horizon: int = 1, random_state: int | None = 0, embargo: int = 0) -> list[Split]
 ```
 
 #### Description
@@ -964,7 +964,7 @@ Build validation splits from a validation method name.
 | `n_splits` | keyword only | `int` | `5` |
 | `step` | keyword only | `int` | `1` |
 | `horizon` | keyword only | `int` | `1` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `embargo` | keyword only | `int` | `0` |
 
 #### Returns
@@ -1421,7 +1421,7 @@ Qualified name: `macroforecast.window.core.split_table`
 #### Signature
 
 ```python
-macroforecast.window.split_table(validation: str, n_samples: int, *, index: pd.Index | None = None, validation_size: int | None = None, validation_ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, step: int = 1, horizon: int = 1, random_state: int | None = None, embargo: int = 0) -> pd.DataFrame
+macroforecast.window.split_table(validation: str, n_samples: int, *, index: pd.Index | None = None, validation_size: int | None = None, validation_ratio: float = 0.2, min_train_size: int | None = None, n_splits: int = 5, step: int = 1, horizon: int = 1, random_state: int | None = 0, embargo: int = 0) -> pd.DataFrame
 ```
 
 #### Description
@@ -1441,7 +1441,7 @@ Return validation splits as an inspectable table.
 | `n_splits` | keyword only | `int` | `5` |
 | `step` | keyword only | `int` | `1` |
 | `horizon` | keyword only | `int` | `1` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `embargo` | keyword only | `int` | `0` |
 
 #### Returns

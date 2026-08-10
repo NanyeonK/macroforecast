@@ -16,6 +16,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+import pandas as pd
+
 import macroforecast as mf
 
 
@@ -408,10 +410,28 @@ def _signature(name: str, obj: Any) -> str:
     return f"{name}{text}"
 
 
+#: Public names re-exported at the top level of ``pandas``. Used to decide whether a
+#: ``pandas.core.<sub>.<Name>`` path can be safely shortened to ``pandas.<Name>``.
+_PANDAS_PUBLIC_NAMES: frozenset[str] = frozenset(
+    name for name in dir(pd) if not name.startswith("_")
+)
+_PANDAS_INTERNAL_PATH = re.compile(r"pandas\.core\.[A-Za-z0-9_.]+?\.([A-Za-z_][A-Za-z0-9_]*)")
+
+
+def _canonicalize_pandas_paths(text: str) -> str:
+    """``pandas.core.frame.DataFrame`` -> ``pandas.DataFrame`` (public names only)."""
+
+    def shorten(match: re.Match[str]) -> str:
+        name = match.group(1)
+        return f"pandas.{name}" if name in _PANDAS_PUBLIC_NAMES else match.group(0)
+
+    return _PANDAS_INTERNAL_PATH.sub(shorten, text)
+
+
 def _clean_annotation_text(text: str) -> str:
     text = re.sub(r"<object object at 0x[0-9a-fA-F]+>", "<UNSET>", text)
     text = re.sub(r"<function ([A-Za-z_][A-Za-z0-9_]*) at 0x[0-9a-fA-F]+>", r"<function \1>", text)
-    return text
+    return _canonicalize_pandas_paths(text)
 
 
 def _annotation(annotation: Any) -> str:

@@ -46,7 +46,7 @@ Qualified name: `macroforecast.output.core.write_artifacts`
 #### Signature
 
 ```python
-macroforecast.output.write_artifacts(artifacts: Mapping[str, Any] | ForecastResult | pd.DataFrame | OutputBundle, output_dir: str | Path, *, formats: tuple[ExportFormat, ...] = ('json', 'csv'), manifest_format: ManifestFormat = "json", include_provenance: bool = True, provenance_fields: tuple[str, ...] | None = None, compression: CompressionFormat = "none", layout: ArtifactLayout = "flat") -> ArtifactManifest
+macroforecast.output.write_artifacts(artifacts: Mapping[str, Any] | ForecastResult | pd.DataFrame | OutputBundle, output_dir: str | Path, *, formats: tuple[ExportFormat, ...] = ('json', 'csv'), manifest_format: ManifestFormat = "json", include_provenance: bool = True, provenance_fields: tuple[str, ...] | None = None, run_provenance: Mapping[str, Any] | None = None, compression: CompressionFormat = "none", layout: ArtifactLayout = "flat") -> ArtifactManifest
 ```
 
 #### Description
@@ -63,6 +63,7 @@ Write forecast/package artifacts and a reproducibility manifest.
 | `manifest_format` | keyword only | `ManifestFormat` | `"json"` |
 | `include_provenance` | keyword only | `bool` | `True` |
 | `provenance_fields` | keyword only | `tuple[str, ...] \| None` | `None` |
+| `run_provenance` | keyword only | `Mapping[str, Any] \| None` | `None` |
 | `compression` | keyword only | `CompressionFormat` | `"none"` |
 | `layout` | keyword only | `ArtifactLayout` | `"flat"` |
 

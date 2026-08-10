@@ -57,7 +57,7 @@ Guide context: [../guide/concepts/preprocessing.md](../guide/concepts/preprocess
 Kind: `data`
 
 ```python
-PreprocessInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.core.frame.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.core.frame.DataFrame
+PreprocessInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.DataFrame
 ```
 ### `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES`
 
@@ -325,7 +325,7 @@ Qualified name: `macroforecast.preprocessing.specs.FittedPreprocessor`
 #### Signature
 
 ```python
-macroforecast.preprocessing.FittedPreprocessor(spec: PreprocessSpec, fit_panel: pd.DataFrame, fit_metadata: dict[str, Any], processed_train: PreprocessedData, preprocessing_scope: str = "origin_available", standardization_state: dict[str, Any] | None = None, state_panel: pd.DataFrame | None = None, outlier_state: dict[str, Any] | None = None, impute_state: dict[str, Any] | None = None, train_after_outlier: pd.DataFrame | None = None) -> None
+macroforecast.preprocessing.FittedPreprocessor(spec: PreprocessSpec, fit_panel: pd.DataFrame, fit_metadata: dict[str, Any], processed_train: PreprocessedData, preprocessing_scope: str = "origin_available", standardization_state: dict[str, Any] | None = None, state_panel: pd.DataFrame | None = None, outlier_state: dict[str, Any] | None = None, impute_state: dict[str, Any] | None = None, train_after_outlier: pd.DataFrame | None = None, custom_step_states: dict[str, Any] = <factory>) -> None
 ```
 
 #### Description
@@ -346,6 +346,7 @@ Preprocessing spec fitted on a training window.
 | `outlier_state` | positional or keyword | `dict[str, Any] \| None` | `None` |
 | `impute_state` | positional or keyword | `dict[str, Any] \| None` | `None` |
 | `train_after_outlier` | positional or keyword | `pd.DataFrame \| None` | `None` |
+| `custom_step_states` | positional or keyword | `dict[str, Any]` | `<factory>` |
 
 #### Returns
 
@@ -373,6 +374,7 @@ import macroforecast as mf
 | `outlier_state` | `dict[str, Any] \| None` | `None` |
 | `impute_state` | `dict[str, Any] \| None` | `None` |
 | `train_after_outlier` | `pd.DataFrame \| None` | `None` |
+| `custom_step_states` | `dict[str, Any]` | `default_factory` |
 
 #### Public Methods
 
@@ -486,24 +488,66 @@ Qualified name: `macroforecast.preprocessing.specs.custom_preprocess_step`
 #### Signature
 
 ```python
-macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any], **params: Any) -> dict[str, Any]
+macroforecast.preprocessing.custom_preprocess_step(name: str, func: Callable[..., Any] | None = None, *, fit_func: Callable[..., Any] | None = None, transform_func: Callable[..., Any] | None = None, row_local: bool = False, **params: Any) -> dict[str, Any]
 ```
 
 #### Description
 
 Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``.
 
-For disk-backed preprocessing caches, set ``func.__mf_digest__`` to a stable
-string and update it when the callable's behavior changes. Without that
-opt-in digest, the runner skips disk get/put for specs containing the
-callable and recomputes instead of risking stale reuse.
+There are two ways to write a step, and which one you need depends on
+whether it aggregates.
+
+**Row-local** -- each output row depends only on the same input row::
+
+    custom_preprocess_step("log1p", log1p_step, row_local=True)
+
+A log, a ratio between two columns, a sign: nothing that looks along the
+index. These are safe under any policy, because re-running them on a longer
+frame cannot change a row that was already there. Declare ``row_local=True``
+to say so.
+
+**Stateful** -- the step derives something from the sample first::
+
+    custom_preprocess_step(
+        "winsorize",
+        fit_func=fit_bounds,        # (panel, metadata, **params) -> state
+        transform_func=apply_bounds,  # (panel, state=..., metadata=..., **params) -> panel
+    )
+
+``fit_func`` sees only the estimation window and returns whatever state it
+needs; ``transform_func`` receives that state and applies it. A quantile, a
+mean, a fitted scaler, a selected column subset -- anything computed *from*
+the data belongs in ``fit_func``, not recomputed inside ``transform_func``.
+
+Why the split matters: under ``policy="fit_window"`` a step is applied to
+each apply window, and that window contains the rows after the forecast
+origin. A step that recomputes its own statistic there reads the future.
+That is not hypothetical -- it changes forecasts, though whether it *reaches*
+the forecast depends on the model. An affine leak (centering, rescaling) is
+absorbed by an OLS intercept and leaves predictions untouched; a non-affine
+one (clipping at a sample quantile) does not.
+
+A bare ``func`` that declares neither is still accepted under
+``policy="origin_available"``, where the sample is already restricted to
+observable rows. Under ``fit_window`` it is refused: say ``row_local=True``
+if it never aggregates, or split it into ``fit_func``/``transform_func`` if
+it does.
+
+For disk-backed preprocessing caches, set ``__mf_digest__`` on each callable
+to a stable string and update it when behaviour changes. Without that opt-in
+digest, the runner skips disk get/put for specs containing the callable and
+recomputes instead of risking stale reuse.
 
 #### Parameters
 
 | Name | Kind | Type | Default |
 | --- | --- | --- | --- |
 | `name` | positional or keyword | `str` | `required` |
-| `func` | positional or keyword | `Callable[..., Any]` | `required` |
+| `func` | positional or keyword | `Callable[..., Any] \| None` | `None` |
+| `fit_func` | keyword only | `Callable[..., Any] \| None` | `None` |
+| `transform_func` | keyword only | `Callable[..., Any] \| None` | `None` |
+| `row_local` | keyword only | `bool` | `False` |
 | `params` | var keyword | `Any` | `required` |
 
 #### Returns

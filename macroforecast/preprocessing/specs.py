@@ -92,14 +92,17 @@ class PreprocessSpec:
             _validate_fit_window_options(self.options)
         custom_steps = _normalize_custom_steps(self.options.get("custom_steps"))
         if scope == "fit_window" and custom_steps:
-            _warn_fit_window_custom_steps(self)
+            _reject_unrestricted_fit_window_steps(custom_steps)
         fit_options = _reprocess_options(self.options)
         fit_options.setdefault("warn_metadata", False)
         standardize_scope = _effective_standardize_scope(self.options)
         if _uses_origin_predictor_standardization(self.options):
             fit_options["standardize"] = "none"
         processed = reprocess(data, metadata=metadata, **fit_options)
-        processed = _apply_custom_preprocess_steps(processed, custom_steps)
+        custom_states = _fit_custom_preprocess_states(processed, custom_steps)
+        processed = _apply_custom_preprocess_steps(
+            processed, custom_steps, custom_states
+        )
         processed = _record_standardize_scope(processed, self.options)
         state_panel: pd.DataFrame | None = None
         outlier_state: dict[str, Any] | None = None
@@ -146,6 +149,7 @@ class PreprocessSpec:
             outlier_state=outlier_state,
             impute_state=impute_state,
             train_after_outlier=None if train_after_outlier is None else train_after_outlier.copy(),
+            custom_step_states=custom_states,
         )
 
     def fit_transform(
@@ -184,6 +188,9 @@ class FittedPreprocessor:
     outlier_state: dict[str, Any] | None = None
     impute_state: dict[str, Any] | None = None
     train_after_outlier: pd.DataFrame | None = None
+    #: name -> whatever each stateful custom step's ``fit_func`` returned, fitted
+    #: on the estimation window and never recomputed downstream.
+    custom_step_states: dict[str, Any] = field(default_factory=dict)
 
     def transform(
         self,
@@ -257,7 +264,9 @@ class FittedPreprocessor:
                 fitted_on=fitted_on,
             )
             out = _record_standardize_scope(out, self.spec.options)
-            return _apply_custom_preprocess_steps(out, custom_steps)
+            return _apply_custom_preprocess_steps(
+                out, custom_steps, self.custom_step_states
+            )
 
         def _run(frame: pd.DataFrame) -> PreprocessedData:
             out = reprocess((frame, combined_metadata), **transform_options)
@@ -505,22 +514,96 @@ def preprocess_spec(**options: Any) -> PreprocessSpec:
 
 def custom_preprocess_step(
     name: str,
-    func: Callable[..., Any],
+    func: Callable[..., Any] | None = None,
+    *,
+    fit_func: Callable[..., Any] | None = None,
+    transform_func: Callable[..., Any] | None = None,
+    row_local: bool = False,
     **params: Any,
 ) -> dict[str, Any]:
     """Return a custom preprocessing step for ``preprocess_spec(custom_steps=...)``.
 
-    For disk-backed preprocessing caches, set ``func.__mf_digest__`` to a stable
-    string and update it when the callable's behavior changes. Without that
-    opt-in digest, the runner skips disk get/put for specs containing the
-    callable and recomputes instead of risking stale reuse.
+    There are two ways to write a step, and which one you need depends on
+    whether it aggregates.
+
+    **Row-local** -- each output row depends only on the same input row::
+
+        custom_preprocess_step("log1p", log1p_step, row_local=True)
+
+    A log, a ratio between two columns, a sign: nothing that looks along the
+    index. These are safe under any policy, because re-running them on a longer
+    frame cannot change a row that was already there. Declare ``row_local=True``
+    to say so.
+
+    **Stateful** -- the step derives something from the sample first::
+
+        custom_preprocess_step(
+            "winsorize",
+            fit_func=fit_bounds,        # (panel, metadata, **params) -> state
+            transform_func=apply_bounds,  # (panel, state=..., metadata=..., **params) -> panel
+        )
+
+    ``fit_func`` sees only the estimation window and returns whatever state it
+    needs; ``transform_func`` receives that state and applies it. A quantile, a
+    mean, a fitted scaler, a selected column subset -- anything computed *from*
+    the data belongs in ``fit_func``, not recomputed inside ``transform_func``.
+
+    Why the split matters: under ``policy="fit_window"`` a step is applied to
+    each apply window, and that window contains the rows after the forecast
+    origin. A step that recomputes its own statistic there reads the future.
+    That is not hypothetical -- it changes forecasts, though whether it *reaches*
+    the forecast depends on the model. An affine leak (centering, rescaling) is
+    absorbed by an OLS intercept and leaves predictions untouched; a non-affine
+    one (clipping at a sample quantile) does not.
+
+    A bare ``func`` that declares neither is still accepted under
+    ``policy="origin_available"``, where the sample is already restricted to
+    observable rows. Under ``fit_window`` it is refused: say ``row_local=True``
+    if it never aggregates, or split it into ``fit_func``/``transform_func`` if
+    it does.
+
+    For disk-backed preprocessing caches, set ``__mf_digest__`` on each callable
+    to a stable string and update it when behaviour changes. Without that opt-in
+    digest, the runner skips disk get/put for specs containing the callable and
+    recomputes instead of risking stale reuse.
     """
 
-    if not callable(func):
-        raise TypeError("custom preprocessing step func must be callable")
     if not name:
         raise ValueError("custom preprocessing step name must be non-empty")
-    return {"name": str(name), "func": func, "params": dict(params)}
+    if func is not None and (fit_func is not None or transform_func is not None):
+        raise ValueError(
+            f"custom preprocessing step {name!r}: pass either func, or "
+            "fit_func/transform_func, not both"
+        )
+    if func is None and transform_func is None:
+        raise ValueError(
+            f"custom preprocessing step {name!r} requires func or transform_func"
+        )
+    if fit_func is not None and transform_func is None:
+        raise ValueError(
+            f"custom preprocessing step {name!r}: fit_func needs a transform_func "
+            "to apply the state it produces"
+        )
+    for label, candidate in (
+        ("func", func),
+        ("fit_func", fit_func),
+        ("transform_func", transform_func),
+    ):
+        if candidate is not None and not callable(candidate):
+            raise TypeError(
+                f"custom preprocessing step {name!r}: {label} must be callable"
+            )
+    if func is not None and row_local is False and fit_func is None:
+        # not an error -- only fit_window refuses it, and that check lives there
+        pass
+    return {
+        "name": str(name),
+        "func": func,
+        "fit_func": fit_func,
+        "transform_func": transform_func,
+        "row_local": bool(row_local),
+        "params": dict(params),
+    }
 
 
 def _combine_panels(history: pd.DataFrame, panel: pd.DataFrame) -> pd.DataFrame:
@@ -699,6 +782,41 @@ def _metadata_options(options: Mapping[str, Any]) -> dict[str, Any]:
     return _json_ready(dict(options))
 
 
+def _reject_unrestricted_fit_window_steps(steps: tuple[dict[str, Any], ...]) -> None:
+    """Refuse a bare ``func`` under ``fit_window``.
+
+    Such a step is re-executed on each apply window, and that window contains
+    the rows after the forecast origin. If it aggregates at all, it reads the
+    future -- and the package cannot tell whether it aggregates by looking at it.
+
+    So the caller says which it is. ``row_local=True`` is a claim that each
+    output row depends only on the matching input row, which makes re-execution
+    on a longer frame harmless. ``fit_func``/``transform_func`` is the answer
+    when it does aggregate: derive on the estimation window, apply downstream.
+    """
+
+    offenders = [
+        str(step["name"])
+        for step in steps
+        if step.get("transform_func") is None and not step.get("row_local")
+    ]
+    if not offenders:
+        return
+    names = ", ".join(repr(n) for n in offenders)
+    raise ValueError(
+        f"custom preprocessing step(s) {names} cannot run under "
+        "policy='fit_window': a bare func is re-executed on each apply window, "
+        "which contains rows after the forecast origin, so any statistic it "
+        "computes there reads the future.\n"
+        "  - if each output row depends only on the matching input row, declare "
+        "it: custom_preprocess_step(name, func, row_local=True)\n"
+        "  - if it derives anything from the sample, split it: "
+        "custom_preprocess_step(name, fit_func=..., transform_func=...)\n"
+        "  - or use policy='origin_available', where the sample is already "
+        "restricted to observable rows."
+    )
+
+
 def _warn_fit_window_custom_steps(spec: PreprocessSpec) -> None:
     key = id(spec)
     if key in _FIT_WINDOW_CUSTOM_WARNED:
@@ -796,29 +914,88 @@ def _normalize_custom_step(value: Any) -> dict[str, Any]:
         raise TypeError("each custom preprocessing step must be a mapping or callable")
     raw = dict(value)
     func = raw.pop("func", raw.pop("callable", None))
-    if not callable(func):
-        raise TypeError("custom preprocessing step requires callable 'func'")
-    name = str(raw.pop("name", _callable_name(func)))
+    fit_func = raw.pop("fit_func", None)
+    transform_func = raw.pop("transform_func", None)
+    row_local = bool(raw.pop("row_local", False))
+    if func is None and transform_func is None:
+        raise TypeError(
+            "custom preprocessing step requires callable 'func' or 'transform_func'"
+        )
+    default_name = _callable_name(func if func is not None else transform_func)
+    name = str(raw.pop("name", default_name))
     params = dict(raw.pop("params", {}))
     params.update(raw)
-    return custom_preprocess_step(name, func, **params)
+    return custom_preprocess_step(
+        name,
+        func,
+        fit_func=fit_func,
+        transform_func=transform_func,
+        row_local=row_local,
+        **params,
+    )
+
+
+def _fit_custom_preprocess_states(
+    data: PreprocessedData,
+    steps: tuple[dict[str, Any], ...],
+) -> dict[str, Any]:
+    """Run each step's ``fit_func`` on the estimation window.
+
+    Called once, on the fit panel. Whatever a step needs to derive from the
+    sample is derived here and nowhere else -- which is what keeps the later
+    ``transform_func`` from having anything to recompute.
+    """
+
+    states: dict[str, Any] = {}
+    for step in steps:
+        fit_func = step.get("fit_func")
+        if fit_func is None:
+            continue
+        states[str(step["name"])] = fit_func(
+            data.panel.copy(),
+            metadata=dict(data.metadata),
+            **dict(step.get("params", {})),
+        )
+    return states
 
 
 def _apply_custom_preprocess_steps(
     data: PreprocessedData,
     steps: tuple[dict[str, Any], ...],
+    states: Mapping[str, Any] | None = None,
 ) -> PreprocessedData:
     if not steps:
         return data
     current = data
+    states = dict(states or {})
     for step in steps:
-        func = step["func"]
+        name = str(step["name"])
         params = dict(step.get("params", {}))
-        output = func(current.panel.copy(), metadata=dict(current.metadata), **params)
+        transform_func = step.get("transform_func")
+        if transform_func is not None:
+            # Stateful: apply the state fitted on the estimation window. The
+            # callable never recomputes it, so a longer frame cannot change what
+            # it does to a row that was already there.
+            func = transform_func
+            output = transform_func(
+                current.panel.copy(),
+                state=states.get(name),
+                metadata=dict(current.metadata),
+                **params,
+            )
+        else:
+            func = step["func"]
+            output = func(
+                current.panel.copy(), metadata=dict(current.metadata), **params
+            )
         panel, metadata = _coerce_custom_preprocess_output(output, current.metadata)
         record = {
-            "name": str(step["name"]),
+            "name": name,
             "callable": _callable_name(func),
+            "kind": (
+                "stateful" if transform_func is not None
+                else "row_local" if step.get("row_local") else "unrestricted"
+            ),
             "params": _json_ready(params),
             "input_panel": panel_info(DataBundle(current.panel, current.metadata)),
             "output_panel": panel_info(DataBundle(panel, metadata)),

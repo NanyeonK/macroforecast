@@ -1,0 +1,13 @@
+
+########## design=L1 (L=1)  signals=14  seeds=8 top5 ##########
+  NN1  mine= -2.691%  paper= -0.11%  Δ= -2.581pp   path max|Δ|=1.038e+01  (83.6 min)
+  NN2  mine= -7.209%  paper=  0.03%  Δ= -7.239pp   path max|Δ|=1.454e+01  (92.3 min)
+  NN3  mine= -3.108%  paper=  0.41%  Δ= -3.518pp   path max|Δ|=9.560e+00  (100.9 min)
+  NN4  mine= -2.157%  paper= -2.07%  Δ= -0.087pp   path max|Δ|=6.523e+00  (109.3 min)
+  NN5  mine= -0.732%  paper= -1.69%  Δ= +0.958pp   path max|Δ|=8.118e+00  (119.1 min)
+
+########## design=L6 (L=6)  signals=84  seeds=8 top5 ##########
+  NN1  mine= -8.458%  paper=  0.67%  Δ= -9.128pp   path max|Δ|=9.751e+00  (83.2 min)
+  NN2  mine= -7.589%  paper=  0.23%  Δ= -7.819pp   path max|Δ|=1.343e+01  (92.0 min)
+  NN3  mine=-18.923%  paper=  1.77%  Δ=-20.693pp   path max|Δ|=1.724e+01  (100.6 min)
+  NN4  mine=-20.001%  paper=  0.41%  Δ=-20.411pp   path max|Δ|=1.477e+01  (109.1 min)

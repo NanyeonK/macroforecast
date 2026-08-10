@@ -3110,7 +3110,56 @@ def custom_interpretation(
     metadata: Mapping[str, Any] | None = None,
     **params: Any,
 ) -> pd.DataFrame:
-    """Run a user-supplied interpretation callable and attach metadata."""
+    """Run a user-supplied interpretation callable and attach schema metadata.
+
+    This is the escape hatch for an attribution method the package does not
+    ship. What it does is small and worth stating exactly, because everything
+    else about the result depends on it.
+
+    **How your callable is invoked.** Always with this signature::
+
+        func(model, X, y=y, metadata={...}, **params)
+
+    - ``model`` is passed through unchanged -- a ``ModelFit`` if that is what you
+      gave, not an unwrapped estimator. Use ``fit.estimator`` if you need the
+      underlying object, and ``fit.feature_names`` for the column order it was
+      trained on.
+    - ``X`` is coerced to a DataFrame first, so you can rely on ``.columns``.
+    - ``y`` and ``metadata`` are always passed as keywords, even when ``None``
+      and ``{}``. Accept them explicitly or absorb them with ``**kwargs``; a
+      callable taking only ``(model, X)`` will raise ``TypeError``.
+
+    **What you must return.** A table: a DataFrame, or something that coerces to
+    one (a mapping of column to values, or a sequence of row mappings). A scalar
+    or a bare array is not accepted, because the result has to be joinable with
+    every other interpretation output.
+
+    **What this function does NOT do**, and each absence is deliberate:
+
+    - It does not validate that your numbers mean anything. No axiom is checked
+      -- not efficiency, not that attributions sum to a prediction, not that an
+      unused feature gets zero. If your method is wrong, the output is wrong and
+      carries the same schema as a correct one.
+    - It does not restrict what your callable sees. You get the full ``X`` you
+      passed in. Inside a runner that is the stage's own frame, but calling this
+      directly on a full-sample panel explains a full-sample fit, which is not
+      the same thing as explaining a forecast.
+    - It does not make your method reproducible. If it samples, seed it yourself.
+
+    What it *does* add is the schema every other interpretation output carries:
+    ``kind="custom_interpretation"``, the resolved ``name``, the callable's
+    qualified name, the parameters, ``n_obs``, ``n_features``, whether a target
+    was supplied, and your own ``metadata`` under ``user_metadata`` -- so a
+    custom result is as traceable in a report as a built-in one.
+
+    Example::
+
+        def range_importance(model, X, *, y=None, metadata=None, **params):
+            spread = X.max() - X.min()
+            return {"feature": list(X.columns), "importance": spread.to_numpy()}
+
+        table = mf.interpretation.custom_interpretation(fit, X, range_importance)
+    """
 
     frame = _as_feature_frame(X)
     resolved_name = str(name or _callable_name(func) or "custom_interpretation")
@@ -3249,7 +3298,7 @@ def _forest_bootstrap_samples(estimator: Any, n_train: int) -> list[np.ndarray] 
     if getattr(estimator, "bootstrap", True) is False:
         return None
     try:
-        from sklearn.ensemble._forest import (  # type: ignore
+        from sklearn.ensemble._forest import (
             _generate_sample_indices,
             _get_n_samples_bootstrap,
         )
@@ -4311,7 +4360,25 @@ def _coerce_custom_table(value: Any) -> pd.DataFrame:
         name = "value" if value.name is None else str(value.name)
         return value.rename(name).to_frame()
     if isinstance(value, Mapping):
-        return pd.DataFrame([dict(value)])
+        # Two shapes are natural here and they need different handling:
+        #
+        #   {"r2": 0.81, "mse": 1.2}                    -> one row of metrics
+        #   {"feature": [...], "importance": [...]}     -> a column per key
+        #
+        # Wrapping in a list unconditionally, as this did, turned the second into
+        # a single row whose cells each held a list -- no error, and a table that
+        # looks wrong only if you print it.
+        items = dict(value)
+        lengths = {
+            len(v)
+            for v in items.values()
+            if isinstance(v, (list, tuple, np.ndarray, pd.Series, pd.Index))
+        }
+        columnar = bool(items) and len(lengths) == 1 and all(
+            isinstance(v, (list, tuple, np.ndarray, pd.Series, pd.Index))
+            for v in items.values()
+        )
+        return pd.DataFrame(items) if columnar else pd.DataFrame([items])
     if isinstance(value, (list, tuple)):
         return pd.DataFrame(value)
     raise TypeError(

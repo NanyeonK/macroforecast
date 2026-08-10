@@ -226,4 +226,8 @@ def test_default_ar_signature_metadata_and_forecast_unchanged() -> None:
     assert fit.metadata == {"n_obs": 5, "n_lag": 1, "direct": False}
     assert fit.feature_names == ("__origin__",)
     assert fit.estimator.__class__.__name__ == "_AR"
-    np.testing.assert_allclose(pred, np.asarray([6.0, 7.0, 8.0]), rtol=0, atol=5e-15)
+    # atol=5e-15 was ~3 ULP at these magnitudes, so a different BLAS build lands
+    # outside it (CI: max abs diff 5.33e-15, max rel diff 6.7e-16 -- both arrays
+    # print as [6., 7., 8.]). rtol=1e-9 is still seven orders tighter than any
+    # change to what  computes.
+    np.testing.assert_allclose(pred, np.asarray([6.0, 7.0, 8.0]), rtol=1e-9)

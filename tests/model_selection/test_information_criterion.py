@@ -25,6 +25,22 @@ def _ar2(n: int = 300, seed: int = 0, sigma: float = 1.0) -> pd.Series:
     return pd.Series(y, index=idx, name="Y")
 
 
+def _sparse_regression_xy(
+    n: int = 120,
+    seed: int = 0,
+) -> tuple[pd.DataFrame, pd.Series]:
+    rng = np.random.default_rng(seed)
+    idx = pd.date_range("2000-01-31", periods=n, freq="ME")
+    x1 = rng.normal(size=n)
+    x2 = rng.normal(size=n)
+    x3 = rng.normal(size=n)
+    y = 1.0 + 1.5 * x1 - 0.4 * x2 + 0.15 * rng.normal(size=n)
+    return (
+        pd.DataFrame({"x1": x1, "x2": x2, "x3": x3}, index=idx),
+        pd.Series(y, index=idx, name="Y"),
+    )
+
+
 def test_ic_selector_recovers_true_ar_order() -> None:
     y = _ar2()
     spec = SearchSpec(method="grid", param_grid={"n_lag": (1, 2, 4, 6, 12)})
@@ -32,6 +48,52 @@ def test_ic_selector_recovers_true_ar_order() -> None:
     assert result.best_params["n_lag"] == 2
     assert result.metadata["validation"] == "none"
     assert result.method == "information_criterion:bic"
+
+
+def test_sparse_lasso_ic_uses_constant_free_aicc_formula() -> None:
+    X, y = _sparse_regression_xy()
+    spec = SearchSpec(
+        method="information_criterion",
+        criterion="aicc",
+        param_grid={"alpha": (0.001, 0.01, 0.1, 1.0)},
+    )
+
+    result = mf.model_selection.select_params("lasso", X, y, search=spec)
+
+    ok = result.trials.loc[result.trials["status"] == "ok"]
+    assert not ok.empty
+    for row in ok.itertuples(index=False):
+        fit = mf.models.lasso(X, y, alpha=float(row.alpha))
+        n = fit.nobs_
+        k = fit.n_params_
+        expected = (
+            n * np.log(fit.ssr_ / n)
+            + 2.0 * k
+            + 2.0 * k * (k + 1) / (n - k - 1)
+        )
+        assert row.score == pytest.approx(expected)
+    assert result.best_params == dict(
+        ok.loc[ok["score"].idxmin(), ["alpha"]].to_dict()
+    )
+    assert result.method == "information_criterion:aicc"
+
+
+def test_sparse_elastic_net_ic_rejects_invalid_l1_ratio_trial() -> None:
+    X, y = _sparse_regression_xy(seed=4)
+    spec = SearchSpec(
+        method="information_criterion",
+        criterion="bic",
+        param_grid={"alpha": (0.01,), "l1_ratio": (0.0, 0.5)},
+    )
+
+    result = mf.model_selection.select_params("elastic_net", X, y, search=spec)
+
+    invalid = result.trials.loc[result.trials["l1_ratio"] == 0.0].iloc[0]
+    valid = result.trials.loc[result.trials["l1_ratio"] == 0.5].iloc[0]
+    assert invalid["status"] == "error"
+    assert "l1_ratio" in invalid["error"]
+    assert valid["status"] == "ok"
+    assert result.best_params == {"alpha": 0.01, "l1_ratio": 0.5}
 
 
 def test_explicit_ic_search_spec_selects_ar2_and_bic_is_stricter() -> None:

@@ -354,6 +354,36 @@ def test_basic_linear_models_fit_and_predict() -> None:
         assert "coefficients" in fit.diagnostics
 
 
+def test_lasso_and_elastic_net_expose_sparse_ic_diagnostics() -> None:
+    X, y = _xy()
+
+    fits = [
+        mf.models.lasso(X, y, alpha=0.01),
+        mf.models.elastic_net(X, y, alpha=0.01, l1_ratio=0.5, standardize=True),
+    ]
+
+    for fit in fits:
+        pred = fit.predict(X).to_numpy(dtype=float)
+        residual = y.to_numpy(dtype=float) - pred
+        final_estimator = (
+            fit.estimator.steps[-1][1]
+            if hasattr(fit.estimator, "steps")
+            else fit.estimator
+        )
+        expected_k = int(
+            np.sum(np.abs(np.asarray(final_estimator.coef_, dtype=float)) > 1e-12)
+        )
+
+        assert fit.ssr_ == pytest.approx(float(residual @ residual))
+        assert fit.nobs_ == len(X)
+        assert fit.n_params_ == expected_k
+        assert fit.n_params_convention_ == (
+            "active_penalized_slope_count_excludes_intercept_and_residual_variance"
+        )
+        assert fit.coef_zero_tol_ == pytest.approx(1e-12)
+        assert "ssr_" not in fit.to_dict()["diagnostics"]
+
+
 def test_ridge_variants_fit_and_record_constraints() -> None:
     X, y = _xy()
 
@@ -1764,14 +1794,17 @@ def test_pls_default_transform_predictions_unchanged() -> None:
 
     assert default_fit.metadata["score_projection"] == "transform"
     assert explicit_fit.metadata["score_projection"] == "transform"
-    assert np.array_equal(
-        default_fit.predict(X.iloc[-6:]).to_numpy(dtype=float),
-        expected,
-    )
-    assert np.array_equal(
-        explicit_fit.predict(X.iloc[-6:]).to_numpy(dtype=float),
-        expected,
-    )
+    got_default = default_fit.predict(X.iloc[-6:]).to_numpy(dtype=float)
+    got_explicit = explicit_fit.predict(X.iloc[-6:]).to_numpy(dtype=float)
+    # The default and the explicit setting must be the SAME code path, so this one
+    # is exact -- it compares two fits from the same process.
+    assert np.array_equal(got_default, got_explicit)
+    # The pinned literals were captured on one BLAS build. A PLS fit goes through
+    # LAPACK, so its last bits are not portable across builds and an exact
+    # comparison fails on a different runner for no behavioral reason. rtol=1e-9 is
+    # six orders of magnitude tighter than any real change to the projection and
+    # six looser than last-bit noise.
+    np.testing.assert_allclose(got_default, expected, rtol=1e-9)
 
 
 def test_pls_supports_control_residualization() -> None:
@@ -2283,6 +2316,36 @@ def test_supervised_pca_preselect_stage_validation_and_registry() -> None:
             )
 
 
+def test_supervised_pca_elastic_net_preselect_accepts_ic_search() -> None:
+    X, y = _scale_sensitive_spca_xy()
+    search = mf.model_selection.SearchSpec(
+        method="information_criterion",
+        criterion="aicc",
+        param_grid={"alpha": (0.0001, 0.001), "l1_ratio": (0.5, 1.0)},
+    )
+
+    default_fit = mf.models.supervised_pca(
+        X,
+        y,
+        preselect="elastic_net",
+        n_components=1,
+    )
+    searched_fit = mf.models.supervised_pca(
+        X,
+        y,
+        preselect="elastic_net",
+        n_components=1,
+        elastic_net_search=search,
+    )
+
+    params = searched_fit.estimator.preselection_params_
+    assert "elastic_net_search" not in default_fit.metadata
+    assert params["lambda_selection"]["criterion"] == "aicc"
+    assert params["lambda_selection"]["selected_params"]["alpha"] in {0.0001, 0.001}
+    assert params["lambda_selection"]["selected_params"]["l1_ratio"] in {0.5, 1.0}
+    assert searched_fit.estimator.factor_features_
+
+
 def test_scaled_pca_matches_huang_spcaest_factor_extraction() -> None:
     X, y = _xy(42)
     X_train = X.iloc[:34]
@@ -2656,7 +2719,9 @@ def test_macro_random_forest_position_validation() -> None:
         ("catboost", "catboost", lambda X, y: mf.models.catboost(X, y)),
         ("arch", "arch", lambda X, y: mf.models.garch11(y)),
         (
-            "matplotlib",
+            # joblib, not matplotlib: the vendored MRF imports matplotlib only inside
+            # its two plotting methods, so fitting no longer requires it.
+            "joblib",
             "macro_random_forest",
             lambda X, y: mf.models.macro_random_forest(X, y),
         ),
@@ -2768,7 +2833,6 @@ def test_macro_random_forest_adapter_wires_reference_backend(
 
 def test_macro_random_forest_vendored_backend_smoke() -> None:
     pytest.importorskip("joblib")
-    pytest.importorskip("matplotlib")
     X, y = _xy(48)
 
     fit = mf.models.macro_random_forest(
@@ -2787,6 +2851,124 @@ def test_macro_random_forest_vendored_backend_smoke() -> None:
     assert np.isfinite(pred).all()
     assert fit.estimator.output_ is not None
     assert "pred" in fit.estimator.output_
+
+
+def test_macro_random_forest_intercept_only_is_plain_rf() -> None:
+    """X_t = iota (intercept-only linear part) is the paper's plain-RF benchmark.
+
+    The vendored backend previously raised "You need to specify at least one X."
+    for an empty linear part, so ``RF = MRF with X_t = iota`` could not be
+    expressed and plain-RF cells had to fall back to a different estimator. An
+    empty linear part must now run: K = len(z_pos) + 1 always carries the
+    auto-intercept, so it yields a pure time-varying intercept = a random forest
+    of y on the state S_t.
+    """
+    pytest.importorskip("joblib")
+    X, y = _xy(64)
+
+    fit = mf.models.macro_random_forest(
+        X.iloc[:48],
+        y.iloc[:48],
+        x_columns=(),  # empty linear part => X_t = iota (plain RF)
+        S_columns=["x1", "x2"],
+        B=2,
+        minsize=10,
+        mtry_frac=1.0,
+        parallelise=False,
+        print_b=False,
+        random_state=0,
+    )
+    pred = fit.predict(X.iloc[48:52])
+
+    assert len(pred) == 4
+    assert np.isfinite(pred).all()
+    # the empty linear part was accepted and reduced to an intercept-only design
+    assert list(fit.estimator.model_.z_pos) == []
+
+
+def test_macro_random_forest_gtvp_and_vi_accessors() -> None:
+    """GTVP (time-varying betas) is the paper's headline output and must be
+    reachable via a labeled accessor; variable importance is stubbed to zeros in
+    the vendored backend and must fail loudly instead of returning a fake zero
+    ranking.
+    """
+    pytest.importorskip("joblib")
+    X, y = _xy(72)
+
+    fit = mf.models.macro_random_forest(
+        X.iloc[:56],
+        y.iloc[:56],
+        x_columns=["x1"],
+        S_columns=["x2"],
+        B=3,
+        mtry_frac=1.0,
+        parallelise=False,
+        print_b=False,
+        random_state=0,
+    )
+    fit.predict(X.iloc[56:60])
+
+    gtvp = fit.estimator.gtvp()
+    assert list(gtvp.columns) == ["intercept", "x1"]
+    assert len(gtvp) == 60  # 56 training rows + 4 predicted rows
+    assert np.isfinite(gtvp.to_numpy()).any()
+
+    # VI is not implemented upstream (shuffled betas are zeros); it must raise
+    # loudly rather than silently return a zero importance vector.
+    with pytest.raises(NotImplementedError):
+        mf.models.macro_random_forest(
+            X.iloc[:56], y.iloc[:56], x_columns=["x1"], S_columns=["x2"], VI=True
+        )
+    with pytest.raises(NotImplementedError):
+        fit.estimator.variable_importance()
+
+
+def test_macro_random_forest_ensemble_skips_degenerate_trees() -> None:
+    """A single NaN tree must not destroy the ensemble forecast.
+
+    `pred_ensemble` is the raw per-tree committee, so reducing it IS the ensemble
+    average and it has to skip trees that returned NaN for a row -- the backend's
+    own ensemble output is `pd.DataFrame(committee).mean(axis=0)`, which is
+    nan-skipping. A nan-propagating mean let one degenerate tree out of B wipe out
+    the forecast for that row, and with it any RMSE computed from it.
+    """
+    reduce = mf.models.MacroRandomForestRegressor._prediction_values
+    count = mf.models.MacroRandomForestRegressor._degenerate_tree_count
+
+    committee = np.arange(20.0).reshape(4, 5)
+    clean = reduce({"pred_ensemble": committee}, 5, 4)
+    np.testing.assert_allclose(clean, committee.mean(axis=0))
+    assert count({"pred_ensemble": committee}, 5) == 0
+
+    spoiled = committee.copy()
+    spoiled[2, 3] = np.nan
+    values = reduce({"pred_ensemble": spoiled}, 5, 4)
+    assert np.isfinite(values).all()
+    np.testing.assert_allclose(values, np.nanmean(spoiled, axis=0))
+    assert count({"pred_ensemble": spoiled}, 5) == 1
+
+    # a row no tree could predict is genuinely undefined and must stay NaN
+    hopeless = committee.copy()
+    hopeless[:, 1] = np.nan
+    values = reduce({"pred_ensemble": hopeless}, 5, 4)
+    assert np.isnan(values[1])
+    assert np.isfinite(values[[0, 2, 3, 4]]).all()
+
+
+def test_macro_random_forest_committee_axis_uses_tree_count() -> None:
+    """Resolving the committee axis from shape alone breaks when B == n_oos.
+
+    The committee is always (B, n_oos); when those are equal the shape test
+    matched the wrong branch and averaged across forecast dates instead of across
+    trees. B=25 is the package default, so the collision is reachable.
+    """
+    reduce = mf.models.MacroRandomForestRegressor._prediction_values
+    rng = np.random.default_rng(0)
+    committee = rng.normal(size=(25, 25))
+
+    values = reduce({"pred_ensemble": committee}, 25, 25)
+    np.testing.assert_allclose(values, committee.mean(axis=0))
+    assert not np.allclose(values, committee.mean(axis=1))
 
 
 def test_lgb_plus_competition_records_reference_channels() -> None:
@@ -2934,3 +3116,33 @@ def test_var_rejects_invalid_type_label() -> None:
 
     with pytest.raises(ValueError, match="type must be one of"):
         mf.models.var(panel, target="y", type="ctt")
+
+
+def test_penalized_scaling_guard_ignores_constant_columns() -> None:
+    """The scale guard must not fire on a numerically constant column.
+
+    A constant column has std ~ float64 rounding noise (2e-17 against a real
+    column at 0.2 reads as a 1e16x "spread"), carries no information, and so
+    cannot make the L1/L2 penalty non-uniform. Counting it produced false
+    positives that blocked legitimate default-path fits.
+    """
+    rng = np.random.default_rng(0)
+    n = 200
+    y = pd.Series(rng.normal(size=n))
+
+    # exact constant + a normal column: must fit
+    exact = pd.DataFrame({"const": np.full(n, 3.0), "b": rng.normal(0, 1.0, n)})
+    mf.models.ridge(exact, y)
+
+    # constant carrying float noise: must also fit
+    noisy = pd.DataFrame(
+        {"const": np.full(n, 1.0) + rng.normal(0, 2e-17, n), "b": rng.normal(0, 0.2, n)}
+    )
+    mf.models.ridge(noisy, y)
+
+    # a genuine scale spread must still be rejected
+    heterogeneous = pd.DataFrame(
+        {"tiny": rng.normal(0, 1e-4, n), "huge": rng.normal(0, 100.0, n)}
+    )
+    with pytest.raises(ValueError, match="feature scales span"):
+        mf.models.ridge(heterogeneous, y)

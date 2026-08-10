@@ -9,7 +9,60 @@ import pandas as pd
 
 from macroforecast.feature_engineering.screening import marginal_t_stats as _screen_marginal_t_stats
 from macroforecast.models.types import ModelFit
-from macroforecast.models.utils import fit_estimator, resolve_xy
+from macroforecast.models.utils import (
+    attach_sparse_ic_diagnostics,
+    fit_estimator,
+    resolve_xy,
+)
+
+
+def _warn_if_rank_deficient(fit: ModelFit, *, model: str) -> None:
+    """Say so when the design was numerically rank-deficient.
+
+    A rank-deficient least-squares problem is not an error -- it still returns *a*
+    solution -- but it is not *the* solution: infinitely many coefficient vectors
+    attain the same minimum, and which one comes back is decided by whether LAPACK
+    truncates the null direction. When it does not, the coefficients arrive as an
+    enormous cancelling pair and the prediction carries the floating-point residue
+    of that cancellation -- measured at up to 0.56 in level on real data (issue
+    #487), with nothing said about it.
+
+    ``rank_`` is not the detector: in that failure LAPACK reported full rank on a
+    rank-one matrix, and the mis-report IS the failure. ``singular_``, which the
+    estimator has already computed, does expose it -- so this check costs nothing
+    and, deliberately, changes nothing: the fit is returned exactly as it was.
+
+    The threshold is LAPACK's own rank criterion, ``max(n, p) * eps``, so this
+    fires precisely when the solve is degenerate rather than merely
+    ill-conditioned. A near-collinear design still has a unique answer and is left
+    to the caller.
+    """
+
+    singular = getattr(fit.estimator, "singular_", None)
+    if singular is None:
+        return  # e.g. positive=True, which uses a different solver
+    singular = np.asarray(singular, dtype=float)
+    if singular.size == 0 or not np.isfinite(singular).all() or singular.max() <= 0.0:
+        return
+    n_obs = int(fit.metadata.get("n_obs", 0)) or singular.size
+    n_features = len(fit.feature_names)
+    tol = max(n_obs, n_features) * float(np.finfo(float).eps)
+    if singular.min() > singular.max() * tol:
+        return
+    warnings.warn(
+        f"{model}: the design matrix is numerically rank-deficient "
+        f"(smallest/largest singular value "
+        f"{singular.min() / singular.max():.2e}, below the {tol:.1e} rank "
+        f"tolerance for {n_obs} rows x {n_features} columns), so the "
+        f"least-squares coefficients are not unique and the ones returned depend "
+        f"on the solver rather than on the data. Predictions can carry the "
+        f"floating-point residue of cancelling coefficients. Drop the dependent "
+        f"column(s) -- a duplicated series, a lag that repeats a level, or a "
+        f"complete dummy set alongside the intercept -- or use a regularized "
+        f"model such as `ridge`, which has a unique solution here.",
+        UserWarning,
+        stacklevel=3,
+    )
 
 
 def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
@@ -17,16 +70,65 @@ def ols(X: Any, y: Any | None = None, **kwargs: Any) -> ModelFit:
 
     from sklearn.linear_model import LinearRegression
 
-    return fit_estimator(LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs))
+    fit = fit_estimator(
+        LinearRegression(**kwargs), X, y, model="ols", metadata=dict(kwargs)
+    )
+    _warn_if_rank_deficient(fit, model="ols")
+    return fit
 
 
-def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, **kwargs: Any) -> ModelFit:
+_PENALIZED_SCALE_RATIO_MAX = 1.0e3
+# A column whose standard deviation is this small relative to the widest column is
+# numerically constant -- float64 rounding noise, not a scale. Such a column carries
+# no information, so it cannot make the L1/L2 penalty non-uniform in any meaningful
+# sense, and including it in the ratio produces enormous false positives (a constant
+# column at std 2e-17 against a real one at 0.2 reads as a 1e16x "spread").
+_PENALIZED_NEAR_CONSTANT_REL_TOL = 1.0e-12
+
+
+def _check_penalized_scaling(frame: Any, standardize: bool, model: str) -> None:
+    """Guard: penalized (L1/L2) regression applies the penalty per COEFFICIENT, so on
+    unstandardized features whose scales differ wildly the penalty is applied
+    non-uniformly and the fit is scale-dependent and usually meaningless. Raise unless
+    the caller standardizes or the feature scales are comparable."""
+    if standardize:
+        return
+    Xf = pd.DataFrame(frame).apply(pd.to_numeric, errors="coerce")
+    if Xf.shape[1] < 2:
+        return
+    stds = Xf.std(axis=0, ddof=0).to_numpy(dtype=float)
+    stds = stds[np.isfinite(stds) & (stds > 0.0)]
+    if stds.size < 2:
+        return
+    # Ignore numerically constant columns; see _PENALIZED_NEAR_CONSTANT_REL_TOL.
+    stds = stds[stds > stds.max() * _PENALIZED_NEAR_CONSTANT_REL_TOL]
+    if stds.size < 2:
+        return
+    ratio = float(stds.max() / stds.min())
+    if ratio > _PENALIZED_SCALE_RATIO_MAX:
+        raise ValueError(
+            f"{model}: feature scales span {ratio:.0f}x (column std "
+            f"{stds.min():.3g}..{stds.max():.3g}); penalized regression on "
+            f"unstandardized heterogeneous-scale features applies the L1/L2 penalty "
+            f"non-uniformly and is typically meaningless. Pass standardize=True (or "
+            f"pre-scale the features)."
+        )
+
+
+def ridge(X: Any, y: Any | None = None, *, alpha: float = 1.0, standardize: bool = False, **kwargs: Any) -> ModelFit:
     """Fit ridge regression."""
 
     from sklearn.linear_model import Ridge
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
 
-    params = {"alpha": float(alpha), **kwargs}
-    return fit_estimator(Ridge(**params), X, y, model="ridge", metadata=params)
+    frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "ridge")
+    estimator: Any = Ridge(alpha=float(alpha), **kwargs)
+    if standardize:
+        estimator = make_pipeline(StandardScaler(), estimator)
+    params = {"alpha": float(alpha), "standardize": bool(standardize), **kwargs}
+    return fit_estimator(estimator, frame, target, model="ridge", metadata=params)
 
 
 class _NonNegativeRidge:
@@ -593,13 +695,17 @@ def lasso(
         **estimator_params,
         "standardize": bool(standardize),
     }
-    return fit_estimator(
+    frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "lasso")
+    fit = fit_estimator(
         estimator,
-        X,
-        y,
+        frame,
+        target,
         model="lasso",
         metadata=params,
     )
+    attach_sparse_ic_diagnostics(fit.estimator, frame, target)
+    return fit
 
 
 def elastic_net(
@@ -631,13 +737,17 @@ def elastic_net(
         **estimator_params,
         "standardize": bool(standardize),
     }
-    return fit_estimator(
+    frame, target = resolve_xy(X, y)
+    _check_penalized_scaling(frame, standardize, "elastic_net")
+    fit = fit_estimator(
         estimator,
-        X,
-        y,
+        frame,
+        target,
         model="elastic_net",
         metadata=params,
     )
+    attach_sparse_ic_diagnostics(fit.estimator, frame, target)
+    return fit
 
 
 class _AdaptiveLinear:
@@ -911,10 +1021,19 @@ class _GroupLinear:
             group: np.flatnonzero(np.asarray(groups, dtype=object) == group)
             for group in dict.fromkeys(groups)
         }
-        self.resolved_group_weights_ = {
-            group: float(self.group_weights.get(group, np.sqrt(len(index))))
-            for group, index in self.group_index_.items()
-        }
+        # Resolve the fallback explicitly rather than through ``get``'s default:
+        # depending on the installed stubs the lookup widens to ``float | None``,
+        # and ``float(None)`` would be a TypeError at runtime rather than a type
+        # complaint. Behaviour is unchanged for every present key.
+        resolved: dict[str, float] = {}
+        for group, index in self.group_index_.items():
+            configured = self.group_weights.get(group)
+            resolved[group] = (
+                float(configured)
+                if configured is not None
+                else float(np.sqrt(len(index)))
+            )
+        self.resolved_group_weights_ = resolved
         coef_scaled = self._solve(x_work, y_centered)
         self.coef_ = coef_scaled / self.x_scale_
         self.intercept_ = self.y_mean_ - float(self.x_mean_ @ self.coef_)
@@ -967,8 +1086,13 @@ class _GroupLinear:
                 for group, index in self.group_index_.items():
                     block = coef[index]
                     norm = float(np.linalg.norm(block, ord=2))
-                    weight = self.resolved_group_weights_.get(group, np.sqrt(len(index)))
-                    threshold = step * group_penalty * float(weight)
+                    configured = self.resolved_group_weights_.get(group)
+                    weight = (
+                        float(configured)
+                        if configured is not None
+                        else float(np.sqrt(len(index)))
+                    )
+                    threshold = step * group_penalty * weight
                     if norm <= threshold:
                         coef[index] = 0.0
                     else:
@@ -1885,6 +2009,7 @@ class SupervisedPCARegressor:
         t_threshold: float = 1.28,
         elastic_net_alpha: float = 0.0002,
         elastic_net_l1_ratio: float = 0.5,
+        elastic_net_search: Any | None = None,
         slope_scale: bool = False,
         quadratic_factors: bool = False,
         random_state: int = 0,
@@ -1901,11 +2026,13 @@ class SupervisedPCARegressor:
         self.t_threshold = float(max(0.0, t_threshold))
         self.elastic_net_alpha = float(max(0.0, elastic_net_alpha))
         self.elastic_net_l1_ratio = float(min(1.0, max(0.0, elastic_net_l1_ratio)))
+        self.elastic_net_search = elastic_net_search
         self.slope_scale = bool(slope_scale)
         self.quadratic_factors = bool(quadratic_factors)
         self.random_state = int(random_state)
         self.selected_features_: tuple[str, ...] = ()
         self.screening_scores_: dict[str, float] = {}
+        self.preselection_params_: dict[str, Any] = {}
         self.component_selected_features_: list[tuple[str, ...]] = []
         self.n_components_: int = 0
         self.x_mean_: pd.Series | None = None
@@ -1956,15 +2083,17 @@ class SupervisedPCARegressor:
                 drop_controls=self.drop_control_columns,
             )
             factor_frame = standardized.loc[:, factor_columns]
-            preselected = _preselect_columns(
+            preselected, preselection_params = _preselect_columns(
                 factor_frame,
                 y_values,
                 method=self.preselect,
                 t_threshold=self.t_threshold,
                 elastic_net_alpha=self.elastic_net_alpha,
                 elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                elastic_net_search=self.elastic_net_search,
                 random_state=self.random_state,
             )
+            self.preselection_params_ = preselection_params
             factor_frame = factor_frame.loc[:, preselected]
         else:
             y_raw_values = target.to_numpy(dtype=float)
@@ -1974,15 +2103,17 @@ class SupervisedPCARegressor:
                 drop_controls=self.drop_control_columns,
             )
             raw_factor_frame = frame.loc[:, factor_columns]
-            preselected = _preselect_columns(
+            preselected, preselection_params = _preselect_columns(
                 raw_factor_frame,
                 y_raw_values,
                 method=self.preselect,
                 t_threshold=self.t_threshold,
                 elastic_net_alpha=self.elastic_net_alpha,
                 elastic_net_l1_ratio=self.elastic_net_l1_ratio,
+                elastic_net_search=self.elastic_net_search,
                 random_state=self.random_state,
             )
+            self.preselection_params_ = preselection_params
             model_columns = _model_used_columns(
                 frame.columns,
                 self.control_columns,
@@ -2129,6 +2260,7 @@ class SupervisedPCARegressor:
             view.selected_features_ = base.selected_features_
             view.scaling_slopes_ = base.scaling_slopes_
             view.screening_scores_ = base.screening_scores_
+            view.preselection_params_ = base.preselection_params_
             view.n_components_ = active_k
             view.loadings_ = base.loadings_[:active_k]
             view.factor_coefs_ = base.factor_coefs_[:active_k]
@@ -2374,26 +2506,65 @@ def _preselect_columns(
     t_threshold: float,
     elastic_net_alpha: float,
     elastic_net_l1_ratio: float,
+    elastic_net_search: Any | None,
     random_state: int,
-) -> list[str]:
+) -> tuple[list[str], dict[str, Any]]:
     if method == "none":
-        return [str(column) for column in X.columns]
+        return [str(column) for column in X.columns], {"method": "none"}
     values = X.to_numpy(dtype=float)
     if method == "hard_tstat":
         keep = np.abs(_marginal_t_stats(values, y)) > t_threshold
+        metadata = {"method": "hard_tstat", "t_threshold": float(t_threshold)}
     else:
         from sklearn.linear_model import ElasticNet
 
+        alpha = float(elastic_net_alpha)
+        l1_ratio = float(elastic_net_l1_ratio)
+        metadata = {
+            "method": "elastic_net",
+            "alpha": alpha,
+            "l1_ratio": l1_ratio,
+            "random_state": int(random_state),
+        }
+        if elastic_net_search is not None:
+            from macroforecast.feature_engineering._sparse_ic import (
+                select_sparse_ic_params,
+                sparse_ic_metadata,
+            )
+
+            result = select_sparse_ic_params(
+                "elastic_net",
+                X,
+                pd.Series(y, index=X.index, name="target"),
+                elastic_net_search,
+                allowed_params={"alpha", "l1_ratio"},
+                fixed_params={
+                    "max_iter": 20000,
+                    "random_state": int(random_state),
+                    "l1_ratio": l1_ratio,
+                },
+            )
+            selected = dict(result.best_params)
+            alpha = float(selected["alpha"])
+            if "l1_ratio" in selected:
+                l1_ratio = float(selected["l1_ratio"])
+            metadata.update(
+                {
+                    "alpha": alpha,
+                    "l1_ratio": l1_ratio,
+                    "lambda_selection": sparse_ic_metadata(result),
+                }
+            )
         model = ElasticNet(
-            alpha=elastic_net_alpha,
-            l1_ratio=elastic_net_l1_ratio,
+            alpha=alpha,
+            l1_ratio=l1_ratio,
             max_iter=20000,
             random_state=random_state,
         )
         model.fit(values, y)
         keep = np.abs(np.asarray(model.coef_, dtype=float)) > 1e-12
     columns = [str(column) for column, use in zip(X.columns, keep, strict=True) if bool(use)]
-    return columns or [str(column) for column in X.columns]
+    return columns or [str(column) for column in X.columns], metadata
 
 
 def _marginal_t_stats(X: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -2497,6 +2668,7 @@ def supervised_pca(
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    elastic_net_search: Any | None = None,
     quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
@@ -2518,6 +2690,8 @@ def supervised_pca(
         "quadratic_factors": bool(quadratic_factors),
         "random_state": int(random_state),
     }
+    if elastic_net_search is not None:
+        params["elastic_net_search"] = elastic_net_search
     return fit_estimator(
         SupervisedPCARegressor(
             n_components=int(n_components),
@@ -2532,6 +2706,7 @@ def supervised_pca(
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            elastic_net_search=elastic_net_search,
             quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),
@@ -2651,6 +2826,7 @@ def supervised_scaled_pca(
     t_threshold: float = 1.28,
     elastic_net_alpha: float = 0.0002,
     elastic_net_l1_ratio: float = 0.5,
+    elastic_net_search: Any | None = None,
     quadratic_factors: bool = False,
     random_state: int = 0,
 ) -> ModelFit:
@@ -2673,6 +2849,8 @@ def supervised_scaled_pca(
         "random_state": int(random_state),
         "source": "Hounyo and Li IJF 2026 SsPCA MATLAB reproducibility package",
     }
+    if elastic_net_search is not None:
+        params["elastic_net_search"] = elastic_net_search
     return fit_estimator(
         SupervisedScaledPCARegressor(
             n_components=int(n_components),
@@ -2687,6 +2865,7 @@ def supervised_scaled_pca(
             t_threshold=float(t_threshold),
             elastic_net_alpha=float(elastic_net_alpha),
             elastic_net_l1_ratio=float(elastic_net_l1_ratio),
+            elastic_net_search=elastic_net_search,
             quadratic_factors=bool(quadratic_factors),
             random_state=int(random_state),
         ),

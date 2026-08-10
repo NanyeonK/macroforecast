@@ -15,10 +15,63 @@ is added. Every layer is shown in two ways. The first states what the paper did 
 closest `macroforecast` construction that matches it. The second treats each combination
 of model, preprocessing, target, target type, and horizon as one cell of a pipeline run.
 
+## Executive summary
+
+This is a leak-free, configuration-faithful, from-scratch replication of Goulet Coulombe,
+Leroux, Stevanovic and Surprenant (2021), built entirely on the callable `macroforecast`
+API. Its value is confirming that the pipeline implements the published methodology, not
+reproducing an R-based paper bit for bit.
+
+**Headline verdict.** Faithful and leak-free: at horizon 1 the replicated relative-RMSE
+matches Appendix B within about 0.02 and plain `ols` reproduces the direct and path-average
+objects exactly; after four bugs were fixed the long-horizon divergence flattens (the direct
+FM absolute RMSE is within a median 11% of the appendix, the AR relative-RMSE within a median
+0.05), leaving only the expected R `randomForest`-versus-scikit-learn engine and RNG gap.
+
+### The four purposes
+
+This page is one of four `macroforecast` replication trust notes, which share four purposes:
+**P1** trust via faithful replication (reproduced-vs-paper parity plus a headline verdict);
+**P2** bugs caught during replication; **P3** technical efficiency; **P4**
+statistically-identical speedups (an identity gate). For this replication:
+
+- **P1 — trust / faithful replication (STRONG).** The pipeline is leak-free and
+  configuration-faithful — see the [verification summary](#verification-summary-and-bugs-found)
+  and the Configuration faithfulness table below. Horizon-1 relative-RMSE matches Appendix B
+  within about 0.02; plain `ols` reproduces the direct and path-average objects exactly; after
+  the fixes the direct FM absolute RMSE deviates from the appendix by a median of 11% (39 of 60
+  cells within 15%) and the AR relative RMSE by a median of 0.05 (51 of 60 within 0.10); for
+  UNRATE at horizon 24 the direct FM is 0.0665 versus the paper's 0.068. Metric: relative RMSE
+  against the direct-FM benchmark (with FM absolute RMSE reported alongside). Because this is a
+  correctness/faithfulness verification rather than a rounding-tolerance parity, no single
+  numeric "reproduced" band is claimed; the residual is the expected R
+  `randomForest`/factor-code versus Python engine-and-RNG difference.
+- **P2 — bugs caught during replication (STRONG).** Four critical bugs surfaced and were
+  fixed: Bug 1 evaluation-sample truncation, Bug 2 horizon-1 direct-vs-path order selection for
+  the information-criterion models, Bug 3 direct-policy stale persistence in the iterated
+  benchmarks (the main long-horizon divergence — not the random-forest engine), and Bug 4
+  factor collapse in the direct FM benchmark. See Bugs 1-4, the Divergence attribution, and the
+  Hypotheses raised and retracted sections below. This is the fullest P2 record of the four
+  notes.
+- **P3 — technical efficiency: N/A (stated scope).** This was a leak-free
+  faithfulness/correctness replication. Its efficiency lever was per-origin preprocessing /
+  factor caching — re-scoring the saved per-origin forecasts rather than re-fitting — not a
+  measured, reportable speedup like B2's K-prefix evaluator, and it carried no supervised-scale
+  bottleneck to optimise. There is no wall-clock speedup figure to report as a purpose here; the
+  absence is a stated scope decision, not a silent gap.
+- **P4 — statistically-identical speedups / identity gate: N/A (stated scope).** The
+  "identical" claims in this replication — plain `ols` reproducing the direct/path-average
+  object exactly, the horizon-1 direct-equals-path invariant — are correctness invariants, not a
+  speedup-identity gate: there is no approximate or parallel fast path proven statistically equal
+  to an exact slow path (as in B2's K-prefix gate with `max_forecast_abs_diff = 0.0`). The
+  absence is a stated scope decision, not a silent gap.
+
+---
+
 ## How this document is organised
 
 The build proceeds in eight steps. A [verification summary](#verification-summary-and-bugs-found)
-records the honest outcome and the two package bugs the replication surfaced, and
+records the honest outcome and the four critical bugs the replication surfaced, and
 the detailed appendix numbers the run must reproduce are collected in
 [Appendix B ground-truth tables](#appendix-b-ground-truth-tables) at the foot of
 this page (machine-readable form: `docs/replication/data/clss2021_appendix_ground_truth.csv`).

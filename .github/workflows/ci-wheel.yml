@@ -1,0 +1,125 @@
+name: ci-wheel
+
+# What the other jobs cannot see.
+#
+# ci-core installs with `pip install -e .`, which imports the package from the
+# source tree. That never exercises the distribution: a module missing from the
+# wheel, a package-data file that is not declared, an entry point that does not
+# resolve -- all of it works in an editable install and fails for the first
+# person to `pip install macroforecast`.
+#
+# So this job builds the artifacts, installs the WHEEL into a clean environment
+# with the source tree deleted, and checks the package still works from there.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          python -m twine check dist/*
+
+      - name: Install the wheel into a clean environment
+        run: |
+          python -m venv /tmp/wheel-env
+          /tmp/wheel-env/bin/pip install --upgrade pip
+          /tmp/wheel-env/bin/pip install dist/*.whl
+
+      - name: Move the source tree out of the way
+        # Without this, an import could still resolve against the checkout and
+        # the whole job would prove nothing.
+        run: mv macroforecast /tmp/source-tree-moved-aside
+
+      - name: Import and report the version
+        run: |
+          cd /tmp
+          /tmp/wheel-env/bin/python -c "
+          import macroforecast as mf
+          print('version:', mf.__version__)
+          print('loaded from:', mf.__file__)
+          assert 'wheel-env' in mf.__file__, 'imported the source tree, not the wheel'
+          "
+
+      - name: Run a minimal pipeline from the installed package
+        run: |
+          cd /tmp
+          /tmp/wheel-env/bin/python - <<'PY'
+          import numpy as np, pandas as pd
+          import macroforecast as mf
+          from macroforecast.pipeline import (
+              Arm, EvalSpec, TargetSpec, pipeline_spec, run_pipeline,
+          )
+
+          n = 60
+          idx = pd.date_range("1990-01-31", periods=n, freq="ME", name="date")
+          rng = np.random.default_rng(0)
+          panel = pd.DataFrame({"x": rng.normal(size=n)}, index=idx)
+          panel["y"] = 0.5 * panel["x"] + rng.normal(size=n) * 0.3
+          bundle = mf.data.custom_dataset(
+              panel, transform_codes={c: 1 for c in panel.columns}
+          )
+          spec = pipeline_spec(
+              data=bundle,
+              targets=[TargetSpec("y", transform="level")],
+              horizons=[1],
+              window=mf.window.from_cutoffs(
+                  test_start=idx[45], horizon=1, embargo=0,
+                  val_method="expanding", val_min_train_size=10,
+              ),
+              arms=[Arm("AR", model="ar", is_benchmark=True)],
+              evaluation=EvalSpec(benchmark="AR", metrics=("rmse",), tests=()),
+              save_models=False,
+          )
+          report = run_pipeline(spec)
+          assert not report.forecasts.empty, "the installed package produced no forecasts"
+          print("forecast rows:", len(report.forecasts))
+          PY
+
+      - name: Optional extras fail with a clear message, not a traceback
+        # The base wheel deliberately does not pull torch/shap. A user who asks
+        # for one of those features should be told which extra to install.
+        run: |
+          cd /tmp
+          /tmp/wheel-env/bin/python - <<'PY'
+          import macroforecast as mf
+
+          try:
+              import shap  # noqa: F401
+          except ImportError:
+              pass
+          else:
+              raise SystemExit("shap is installed in the base env; this check is void")
+
+          import numpy as np, pandas as pd
+          X = pd.DataFrame({"a": np.arange(30.0), "b": np.arange(30.0)[::-1]})
+          y = pd.Series(np.arange(30.0), name="y")
+          fit = mf.models.ols(X, y)
+          try:
+              mf.interpretation.shap_values(fit, X)
+          except ImportError as exc:
+              message = str(exc)
+              assert "shap" in message.lower(), f"unhelpful ImportError: {message}"
+              print("optional-extra error names the missing package:", message[:120])
+          except Exception as exc:
+              raise SystemExit(
+                  f"expected ImportError when shap is absent, got "
+                  f"{type(exc).__name__}: {exc}"
+              )
+          else:
+              print("shap_values ran without shap installed (pure-python fallback)")
+          PY

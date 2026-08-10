@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+# Re-exported so ``output.collect_provenance`` keeps working unchanged; the
+# implementation moved to ``meta`` in A1 because it probes the environment.
+from macroforecast.meta.provenance import collect_provenance  # noqa: F401
+
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
@@ -575,6 +579,7 @@ def write_artifacts(
     manifest_format: ManifestFormat = "json",
     include_provenance: bool = True,
     provenance_fields: tuple[str, ...] | None = None,
+    run_provenance: Mapping[str, Any] | None = None,
     compression: CompressionFormat = "none",
     layout: ArtifactLayout = "flat",
 ) -> ArtifactManifest:
@@ -729,6 +734,8 @@ def write_artifacts(
     provenance = (
         collect_provenance(fields=provenance_fields) if include_provenance else {}
     )
+    if include_provenance and run_provenance:
+        provenance = _with_run_provenance(provenance, run_provenance)
     manifest = ArtifactManifest(
         output_dir=str(out),
         artifacts=paths,
@@ -739,29 +746,39 @@ def write_artifacts(
     return manifest
 
 
-def collect_provenance(
-    *,
-    cwd: str | Path | None = None,
-    fields: tuple[str, ...] | None = None,
+def _with_run_provenance(
+    provenance: dict[str, Any],
+    run_provenance: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Collect lightweight package, Python, platform, and git provenance."""
+    """Carry a run's INPUT provenance into the manifest, when one is available.
 
-    root = Path(cwd or Path.cwd())
-    provenance = {
-        "macroforecast_version": __version__,
-        "python": sys.version,
-        "python_executable": sys.executable,
-        "platform": platform.platform(),
-        "cwd": str(root),
-        "git": _git_provenance(root),
-        "packages": {
-            package: _package_version(package)
-            for package in ("numpy", "pandas", "scipy", "scikit-learn", "statsmodels")
-        },
-    }
-    if fields is None:
-        return provenance
-    return {field: provenance[field] for field in fields if field in provenance}
+    ``collect_provenance()`` answers "which machine and which build produced
+    this". A replication package also has to answer "from what" -- and the
+    package already computes that: ``run_pipeline`` records the data identity
+    (dataset, source family, vintage, frequency, shape, date range and a
+    full-content SHA-256 of the panel) and a spec echo on
+    ``PipelineReport.provenance``. Until now neither reached the manifest, so a
+    package could hash its outputs perfectly and still leave a reader unable to
+    tell which panel went in.
+
+    Nothing is recomputed here. Pass ``run_provenance=report.provenance`` and its
+    ``data`` and ``spec_echo`` blocks are copied across; pass nothing and the
+    manifest is unchanged, because there is no input to describe and inventing
+    one would be worse than omitting it.
+
+    Taken as an argument rather than read off the ``artifacts`` object on
+    purpose: ``write_artifacts`` accepts a mapping, a ``ForecastResult``, a
+    DataFrame or an ``OutputBundle`` -- not a ``PipelineReport`` -- so that
+    ``output`` need not know what a pipeline is. Sniffing for a ``.provenance``
+    attribute would couple the two layers by duck-typing.
+    """
+
+    enriched = dict(provenance)
+    for key in ("data", "spec_echo", "seed", "effective_seeds"):
+        value = run_provenance.get(key)
+        if value is not None and key not in enriched:
+            enriched[key] = _json_ready(value)
+    return enriched
 
 
 def _attach_output_schema(
@@ -1126,32 +1143,6 @@ def _file_metadata(path: str | Path) -> dict[str, Any]:
 def _safe_name(name: str) -> str:
     safe = "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in str(name))
     return safe.strip("_") or "artifact"
-
-
-def _git_provenance(cwd: Path) -> dict[str, Any]:
-    def run_git(*args: str) -> str | None:
-        try:
-            return subprocess.check_output(
-                ["git", *args],
-                cwd=str(cwd),
-                stderr=subprocess.DEVNULL,
-                text=True,
-            ).strip()
-        except Exception:
-            return None
-
-    return {
-        "commit": run_git("rev-parse", "HEAD"),
-        "branch": run_git("branch", "--show-current"),
-        "dirty": bool(run_git("status", "--porcelain")),
-    }
-
-
-def _package_version(package: str) -> str | None:
-    try:
-        return version(package)
-    except PackageNotFoundError:
-        return None
 
 
 def _forecast_result_metadata(value: ForecastResult) -> dict[str, Any]:

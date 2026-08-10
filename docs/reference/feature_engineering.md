@@ -107,7 +107,7 @@ Guide context: [../guide/concepts/features.md](../guide/concepts/features.md).
 Kind: `data`
 
 ```python
-FeatureInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.core.frame.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.core.frame.DataFrame
+FeatureInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.DataFrame
 ```
 
 ## Callable And Class Reference
@@ -1722,7 +1722,7 @@ Qualified name: `macroforecast.feature_engineering.feature_selection.lasso_selec
 #### Signature
 
 ```python
-macroforecast.feature_engineering.lasso_selection(data: FeatureInput, target: str | pd.Series | None = None, *, metadata: Mapping[str, Any] | None = None, columns: Iterable[str] | None = None, n_features: int | float = 0.5, alpha: float = 0.001, min_train_size: int | None = None, warn_full_sample: bool = True) -> pd.DataFrame
+macroforecast.feature_engineering.lasso_selection(data: FeatureInput, target: str | pd.Series | None = None, *, metadata: Mapping[str, Any] | None = None, columns: Iterable[str] | None = None, n_features: int | float = 0.5, alpha: float = 0.001, lambda_search: Any | None = None, min_train_size: int | None = None, warn_full_sample: bool = True) -> pd.DataFrame
 ```
 
 #### Description
@@ -1739,6 +1739,7 @@ Select columns by absolute lasso coefficient magnitude.
 | `columns` | keyword only | `Iterable[str] \| None` | `None` |
 | `n_features` | keyword only | `int \| float` | `0.5` |
 | `alpha` | keyword only | `float` | `0.001` |
+| `lambda_search` | keyword only | `Any \| None` | `None` |
 | `min_train_size` | keyword only | `int \| None` | `None` |
 | `warn_full_sample` | keyword only | `bool` | `True` |
 
@@ -2551,7 +2552,7 @@ Qualified name: `macroforecast.feature_engineering.compose.predictor_screen`
 #### Signature
 
 ```python
-macroforecast.feature_engineering.predictor_screen(*, method: str = "t_stat", name: str = "screen", input: str = "panel", columns: Iterable[str] | None = None, threshold: float | None = None, top_k: int | None = None, min_k: int | None = None, controls: Iterable[str] | None = None, alpha: float = 0.001, l1_ratio: float = 0.5, max_iter: int = 20000, min_train_size: int | None = None, include: bool = True, drop_missing: bool = False, random_state: int | None = 0, warn_full_sample: bool = True) -> dict[str, Any]
+macroforecast.feature_engineering.predictor_screen(*, method: str = "t_stat", name: str = "screen", input: str = "panel", columns: Iterable[str] | None = None, threshold: float | None = None, top_k: int | None = None, min_k: int | None = None, controls: Iterable[str] | None = None, alpha: float = 0.001, l1_ratio: float = 0.5, lambda_search: Any | None = None, max_iter: int = 20000, min_train_size: int | None = None, include: bool = True, drop_missing: bool = False, random_state: int | None = 0, warn_full_sample: bool = True, hac_lags: int | None = None) -> dict[str, Any]
 ```
 
 #### Description
@@ -2572,12 +2573,14 @@ Return a target-aware predictor-screen step for ``feature_spec``.
 | `controls` | keyword only | `Iterable[str] \| None` | `None` |
 | `alpha` | keyword only | `float` | `0.001` |
 | `l1_ratio` | keyword only | `float` | `0.5` |
+| `lambda_search` | keyword only | `Any \| None` | `None` |
 | `max_iter` | keyword only | `int` | `20000` |
 | `min_train_size` | keyword only | `int \| None` | `None` |
 | `include` | keyword only | `bool` | `True` |
 | `drop_missing` | keyword only | `bool` | `False` |
 | `random_state` | keyword only | `int \| None` | `0` |
 | `warn_full_sample` | keyword only | `bool` | `True` |
+| `hac_lags` | keyword only | `int \| None` | `None` |
 
 #### Returns
 
