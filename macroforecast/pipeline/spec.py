@@ -51,6 +51,71 @@ class _FrozenTagMapping(Mapping[str, ArmTagValue]):
         return hash(self._items)
 
 
+def _freeze_value(value: Any) -> Any:
+    """Return an immutable copy of *value*, deeply.
+
+    Shallow freezing would leave ``params={"grid": {"alpha": [1, 2]}}`` mutable one
+    level down, which is the same defect with an extra step.
+    """
+    if isinstance(value, Mapping):
+        return _FrozenMapping(tuple((k, _freeze_value(v)) for k, v in value.items()))
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_value(v) for v in value)
+    if isinstance(value, set):
+        return frozenset(_freeze_value(v) for v in value)
+    return value
+
+
+class _FrozenMapping(Mapping[str, Any]):
+    """Immutable, pickleable mapping for spec fields that were plain dicts.
+
+    Deliberately NOT hashable, because the values are arbitrary -- a params dict can
+    hold a numpy array. That is no regression: ``params`` was a plain ``dict`` before,
+    so anything hashing an ``Arm`` already failed.
+    """
+
+    _items: tuple[tuple[str, Any], ...]
+    _dict: dict[str, Any]
+
+    def __init__(self, items: "Sequence[tuple[str, Any]]") -> None:
+        # Plain assignment: this is an ordinary class, not a frozen dataclass, so the
+        # object.__setattr__ dance the first draft used bought nothing and hid the
+        # attributes from the type checker.
+        self._items = tuple(items)
+        self._dict = dict(self._items)
+
+    def __getitem__(self, key: str) -> Any:
+        return self._dict[key]
+
+    def __iter__(self) -> "Iterator[str]":
+        return iter(self._dict)
+
+    def __len__(self) -> int:
+        return len(self._dict)
+
+    def __repr__(self) -> str:
+        return repr(self._dict)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Mapping):
+            return dict(self._items) == dict(other)
+        return NotImplemented
+
+    def __reduce__(self):
+        return (_FrozenMapping, (self._items,))
+
+
+def _canonical_mapping(value: "Mapping[str, Any] | None") -> "Mapping[str, Any] | None":
+    """Freeze a caller-supplied mapping at the builder boundary.
+
+    ``None`` stays ``None`` -- an absent params block and an empty one are different
+    to the model registry, and collapsing them here would change behaviour.
+    """
+    if value is None:
+        return None
+    return _FrozenMapping(tuple((k, _freeze_value(v)) for k, v in value.items()))
+
+
 def _canonical_tags(tags: Mapping[str, ArmTagValue] | None) -> Mapping[str, ArmTagValue]:
     if tags is None:
         return _FrozenTagMapping(())
@@ -193,6 +258,12 @@ class Arm:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "tags", _canonical_tags(self.tags))
+        # frozen=True freezes the REFERENCE, not the mapping. Without these two, a
+        # caller mutating the dict they passed in still moves the run, the
+        # result-store digest and the provenance echo -- after the spec was
+        # supposedly fixed. See tests/architecture/test_task_resolution_contracts.py.
+        object.__setattr__(self, "params", _canonical_mapping(self.params))
+        object.__setattr__(self, "metadata", _canonical_mapping(self.metadata))
 
 
 @dataclass(frozen=True)

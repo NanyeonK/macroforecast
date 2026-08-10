@@ -137,14 +137,6 @@ def test_the_pipeline_resolves_the_feature_target_exactly_once(panel):
 # 2. Spec immutability
 # --------------------------------------------------------------------------- #
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="FINDING (2026-08-09): pipeline_spec stores Arm.params BY REFERENCE. "
-    " is True, so a later mutation changes the "
-    "run, the digest and the provenance echo. frozen=True freezes the reference, "
-    "not the mapping. Fix is deep canonicalization at the builder boundary; "
-    "strict=True so this flips to a failure the moment it is fixed.",
-)
 def test_mutating_the_caller_dict_after_building_cannot_change_the_spec(panel):
     """A frozen spec must be frozen through its containers, not only at the top level.
 
@@ -169,12 +161,6 @@ def test_mutating_the_caller_dict_after_building_cannot_change_the_spec(panel):
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="FINDING (2026-08-09): the same by-reference storage moves the result-store "
-    "digest. A cached cell can be served for a configuration that no longer matches, "
-    "or recomputed for one that does.",
-)
 def test_the_result_store_digest_does_not_move_when_the_caller_dict_moves(panel):
     """The digest is what makes a cached cell reusable; it must be as frozen as the spec."""
     from macroforecast.pipeline.result_store import result_cell_identity as cell_identity
