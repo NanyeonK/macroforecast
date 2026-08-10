@@ -16,13 +16,16 @@ CI. (Note: ``impute="median"`` is not a valid imputation method in
 ``forward_fill``, and ``none`` -- so ``mean`` is used here.)
 """
 
+import gc
 from pathlib import Path
+import warnings
 
 import numpy as np
 import pandas as pd
 import pytest
 
 import macroforecast as mf
+from macroforecast.forecasting import preprocessing_stage as _preprocessing_stage
 from macroforecast.forecasting import runner as _runner
 from macroforecast.preprocessing import FittedPreprocessor
 from macroforecast.preprocessing.cache import PreprocessorStore
@@ -317,6 +320,97 @@ def test_disk_store_custom_callable_requires_digest_for_reuse(tmp_path):
     )
     assert changed_digest == digest_first
     delattr(_custom_marker_step, "__mf_digest__")
+
+
+# --------------------------------------------------------------------------- #
+# Undigestible-spec warning dedup (identity state must not outlive the spec)
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture
+def undigestible_warning_registry():
+    """Isolate the module-global "already warned" dedup state for one test.
+
+    The registry records which specs have already produced the "disk cache
+    disabled" warning, and it lives for the whole process, so a test that counts
+    warnings must neither inherit nor leak entries. Clearing is safe in both
+    directions: an empty registry can only make the warning fire MORE often.
+    """
+
+    registry = _preprocessing_stage._UNDIGESTIBLE_PREPROCESSING_WARNED
+    registry.clear()
+    try:
+        yield registry
+    finally:
+        registry.clear()
+
+
+def _warn_undigestible(spec) -> list:
+    """Emit the undigestible-spec warning for ``spec``; return the UserWarnings.
+
+    ``simplefilter("always")`` switches off Python's own per-location message
+    dedup, so the count observed here reflects ONLY the module's identity-based
+    dedup -- which is what these tests are about.
+    """
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        _preprocessing_stage._warn_undigestible_preprocessing_spec(
+            spec, "custom step has no __mf_digest__"
+        )
+    return [w for w in caught if issubclass(w.category, UserWarning)]
+
+
+def test_undigestible_warning_fires_once_per_distinct_live_spec(
+    undigestible_warning_registry,
+):
+    """Each distinct spec warns once; reusing one live spec does not spam.
+
+    Both specs are held alive for the whole test, so their identities cannot
+    collide. The assertion is therefore about the dedup RULE, independent of any
+    allocator behaviour.
+    """
+
+    first = PreprocessSpec(options={"impute": "mean"})
+    second = PreprocessSpec(options={"impute": "mean"})
+    assert first is not second
+
+    assert len(_warn_undigestible(first)) == 1  # first sighting warns
+    assert _warn_undigestible(first) == []  # same live spec stays quiet
+    assert _warn_undigestible(first) == []
+    assert len(_warn_undigestible(second)) == 1  # a DISTINCT spec warns again
+    assert _warn_undigestible(second) == []
+
+
+def test_undigestible_warning_state_does_not_retain_dead_spec_identity(
+    undigestible_warning_registry,
+):
+    """Dedup state must be released as soon as the spec it describes dies.
+
+    Regression. The registry used to hold raw ``id()`` integers forever. CPython
+    reuses the address of a freed object, so a later, unrelated spec allocated at
+    that address matched a stale entry and had its warning silently swallowed --
+    the CI failure in ``test_disk_store_custom_callable_requires_digest_for_reuse``,
+    whose two ``run()`` calls each build a short-lived spec that is already dead
+    before the next one is created.
+
+    Asserting that nothing survives collection proves a reused address can never
+    match, WITHOUT depending on whether the allocator actually reuses one (that
+    dependence is exactly what made the original failure intermittent). The same
+    assertion pins that the registry cannot grow without bound over a long run.
+    """
+
+    spec = PreprocessSpec(options={"impute": "mean"})
+    assert len(_warn_undigestible(spec)) == 1
+
+    dead_id = id(spec)
+    assert dead_id in undigestible_warning_registry
+
+    del spec
+    gc.collect()
+
+    assert dead_id not in undigestible_warning_registry
+    assert len(undigestible_warning_registry) == 0
 
 
 def test_disk_store_dedupes_prepared_base_across_pipeline_runs(tmp_path):

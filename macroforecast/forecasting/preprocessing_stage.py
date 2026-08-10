@@ -11,6 +11,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 import warnings
+import weakref
 
 import numpy as np
 import pandas as pd
@@ -39,7 +40,15 @@ class _PreparedStage:
     panel_metadata: dict[str, Any] | None = None
 
 
-_UNDIGESTIBLE_PREPROCESSING_WARNED: set[int] = set()
+# Specs that already produced the "disk cache disabled" warning, so it is emitted
+# once per spec instead of once per origin. Keyed by ``id()`` because
+# ``PreprocessSpec`` is an unhashable frozen dataclass (its ``options`` field is a
+# dict), which rules out ``WeakSet``/``WeakKeyDictionary``. The VALUE is a weak
+# reference whose callback drops the entry the moment the spec is collected: a
+# bare ``set`` of ids kept them forever, and CPython reuses the address of a freed
+# object, so a stale id silently swallowed the warning for an unrelated later spec
+# allocated at that address (and the set grew without bound across a long run).
+_UNDIGESTIBLE_PREPROCESSING_WARNED: dict[int, weakref.ref[PreprocessSpec]] = {}
 
 
 def _preprocessing_cache_key(
@@ -350,7 +359,22 @@ def _warn_undigestible_preprocessing_spec(preprocessing: PreprocessSpec, reason:
     key = id(preprocessing)
     if key in _UNDIGESTIBLE_PREPROCESSING_WARNED:
         return
-    _UNDIGESTIBLE_PREPROCESSING_WARNED.add(key)
+
+    def _forget(ref: weakref.ref[PreprocessSpec], key: int = key) -> None:
+        # Drop only OUR entry. CPython invokes weakref callbacks while the object
+        # is being deallocated, i.e. before its address can be handed out again,
+        # but the identity check makes the eviction correct regardless of order.
+        if _UNDIGESTIBLE_PREPROCESSING_WARNED.get(key) is ref:
+            del _UNDIGESTIBLE_PREPROCESSING_WARNED[key]
+
+    try:
+        # The closure captures only the int ``key`` and the module global, never
+        # ``preprocessing`` -- recording a spec must not keep it alive.
+        _UNDIGESTIBLE_PREPROCESSING_WARNED[key] = weakref.ref(preprocessing, _forget)
+    except TypeError:
+        # Not weak-referenceable: warn without recording rather than retain an id
+        # we could never invalidate. A repeated warning is safer than a silenced one.
+        pass
     warnings.warn(
         "preprocessing disk cache disabled for this spec because its identity "
         f"is undigestible: {reason}",
