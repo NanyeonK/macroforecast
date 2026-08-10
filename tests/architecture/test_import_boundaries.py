@@ -16,17 +16,15 @@ is reported as the file and line that introduced it.
 
 ## Known exceptions
 
-Two upward imports exist today. Both are function-local, so neither creates an
-import cycle, and both are listed explicitly rather than tolerated silently --
-this file is a ratchet against NEW violations, not a claim that the package is
-already clean.
+`KNOWN_EXCEPTIONS` is currently empty: no module imports a layer above its own.
+Two did until 2026-08-09, and each was fixed by moving the function down rather
+than by tolerating the import -- the panel fingerprint out of `pipeline.run` and
+into `data/identity.py`, the git/environment probe out of `output` and into
+`meta/provenance.py`. `docs/architecture.md` records why each belongs there.
 
-- `data/vintage.py` -> `pipeline.run._panel_fingerprint`. A layer-0 module
-  reaching into a layer-3 **private** function. The fingerprinting belongs
-  lower; moving it is a behaviour-preserving refactor left for its own change.
-- `pipeline/run.py` -> `output.collect_provenance`. Less clear-cut: it is really
-  a question of whether `output` sits above `pipeline` or beside it. Recorded so
-  the decision is made deliberately rather than by accretion.
+The list stays because a future exception needs somewhere to be written down,
+and a second test fails if a listed entry stops occurring, so it cannot rot into
+fiction.
 """
 
 from __future__ import annotations
