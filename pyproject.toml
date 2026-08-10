@@ -21,12 +21,22 @@ classifiers = [
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
 ]
+# Floors are what ci-minimum-deps installs, so each one is a promise that gets
+# executed. Two of them were false until 2026-08-10 and the job caught it:
+#   pandas>=2.2   -- 2.2.0/2.2.1 predate numpy 2 support, so the floor set was
+#                    ResolutionImpossible against numpy==2.0 on 3.10, and on 3.12
+#                    pip fell through to a source build that cannot transpile.
+#   scipy>=1.11   -- 1.11.0 ships a 3.10 wheel and no 3.12 one, so the floor was
+#                    uninstallable on an interpreter this package claims to support.
+# statsmodels>=0.14 was measured and left alone: 0.14 installs and imports cleanly
+# with the corrected pandas/scipy, so raising it too would have tightened a floor
+# that nothing was wrong with.
 dependencies = [
-    "pandas>=2.2",
+    "pandas>=2.2.2",
     "numpy>=2.0",
     "scikit-learn>=1.5",
     "statsmodels>=0.14",
-    "scipy>=1.11",
+    "scipy>=1.13",
     "openpyxl>=3.1",
 ]
 
