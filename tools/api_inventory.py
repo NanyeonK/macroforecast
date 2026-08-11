@@ -12,10 +12,12 @@ produced two measurable errors:
 
 * ``axis_contribution`` lives in ``macroforecast.analysis``, which was missing
   from the hard-coded list, so it was reported with no submodule home at all.
-* ``Any``, ``annotations`` and ``import_module`` are globals of the *root*
+* ``Any``, ``annotations`` and ``import_module`` were globals of the *root*
   ``macroforecast/__init__.py`` (``from typing import Any`` and friends). The
   scan attributed them to ``mf.tests``, ``mf.data`` and ``mf.evaluation``
-  because those submodules also happen to expose them.
+  because those submodules also happen to expose them. The root-namespace
+  cleanup on this branch unbound all three, so that surface now measures
+  empty -- a result, not a reason to delete the surface: see below.
 
 So ownership now comes from sources that actually declare it:
 
@@ -39,7 +41,10 @@ inventory splits them:
   ``__version__`` is the only member: it is stable and documented, but an
   underscore-name filter over ``dir()`` silently drops it.
 * ``non_api_globals`` -- public in ``dir(mf)``, absent from ``__all__``, and not
-  API: stdlib names bound at root module scope.
+  API: whatever the root module binds at its own scope, by whatever means.
+  Zero or more; the count is a measurement, not an expectation. It is 0 on this
+  branch, and the surface stays so that a re-introduced binding is reported
+  rather than going unnoticed.
 
 Facts, not policy
 -----------------
@@ -229,9 +234,18 @@ def _special_rows(mf: Any, documented: set[str]) -> list[dict[str, Any]]:
 def _non_api_global_rows(mf: Any) -> list[dict[str, Any]]:
     """Public in ``dir(mf)``, absent from ``__all__``, and not API.
 
-    These are stdlib names bound at root ``__init__`` scope. Their real
-    provenance is the root module itself; any submodule attribution is an
-    artefact of scanning ``dir()`` rather than a declaration.
+    The query is over bindings, not over imports. Historically the three it
+    caught were the loader's own ``from typing import Any`` and friends, but a
+    module-level assignment, a helper defined without a leading underscore, or a
+    name re-bound by a later edit lands here identically -- so the row below
+    records *that* a name is bound at root scope, and does not infer *how*.
+    Provenance is the root module itself either way; a submodule attribution
+    would be an artefact of scanning ``dir()`` rather than a declaration.
+
+    Returns zero or more rows. The root namespace holds none on this branch, so
+    this is an empty list; the query still runs, because an empty surface is a
+    fact worth re-measuring on every regeneration rather than an assumption
+    worth hard-coding.
     """
 
     public_dir = {name for name in dir(mf) if not name.startswith("_")}
@@ -249,9 +263,10 @@ def _non_api_global_rows(mf: Any) -> list[dict[str, Any]]:
                 "bound_in_root_globals": name in mf.__dict__,
                 "declared_module": getattr(obj, "__module__", None),
                 "reason": (
-                    "Bound at macroforecast/__init__.py module scope by an "
-                    "import statement the lazy loader needs. Not exported, not "
-                    "documented, and not owned by any submodule."
+                    "Bound at macroforecast/__init__.py module scope, which "
+                    "makes it reachable as mf.<name>. Absent from __all__ and "
+                    "owned by no submodule. What bound it is not inferred "
+                    "here; read the root module to find out."
                 ),
             }
         )
