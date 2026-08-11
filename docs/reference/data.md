@@ -758,6 +758,17 @@ later forecast origins. For example, ``lags=1`` shifts ``x[t-1]`` onto row
 data policy module; release calendars can be expressed by passing a per-column
 lag mapping.
 
+Every lag -- the scalar and each mapping value -- must be a non-negative Python or
+NumPy integer. Floats are rejected even when integral-valued, as are strings and
+booleans, because truncating or parsing them would shift the data by a different
+amount than the caller asked for and record it as though they had asked. Accepted
+NumPy integers are stored as plain ``int`` in metadata, so the record stays
+JSON-serializable. Zero is a valid lag.
+
+With ``drop_missing=True`` the shifted rows are dropped, and the result is checked
+against the canonical panel contract before it is returned: a lag that removes every
+row raises rather than yielding an empty panel that fails somewhere later.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -796,6 +807,13 @@ This implements the standard Chow-Lin regression-distribution identity with
 an AR(1) high-frequency residual covariance. The returned high-frequency
 series conserves the supplied low-frequency observations under
 ``aggregation='mean'`` or ``aggregation='sum'``.
+
+Inputs that cannot support that estimate are refused rather than approximated: both
+series need a ``DatetimeIndex``, at least two usable observations each after missing
+values are dropped, and an identifiable design. This function never returns anything
+other than a Chow-Lin result. If what you want is a low-frequency value repeated
+deterministically across its high-frequency periods, that is a different policy and
+it is spelled ``align_frequency(..., quarterly_to_monthly="step_forward")``.
 
 #### Parameters
 
@@ -860,7 +878,7 @@ Qualified name: `macroforecast.data.policies.define_regime`
 #### Signature
 
 ```python
-macroforecast.data.define_regime(data: PanelInput, *, name: str = "regime", column: str | None = None, threshold: float | None = None, direction: RegimeDirection = "above", dates: Iterable[str | pd.Timestamp] | None = None, values: Sequence[bool | int | float] | pd.Series | None = None, append: bool = False, output_column: str | None = None) -> DataBundle
+macroforecast.data.define_regime(data: PanelInput, *, name: str = "regime", column: str | None = None, threshold: float | None = None, direction: RegimeDirection = "above", dates: Iterable[str | pd.Timestamp] | None = None, values: Sequence[bool | int | float | None] | pd.Series | None = None, append: bool = False, output_column: str | None = None) -> DataBundle
 ```
 
 #### Description
@@ -870,6 +888,20 @@ Attach a binary regime series to panel metadata.
 Regimes can be built from a threshold rule, explicit regime dates, or an
 aligned vector/Series of values. The panel is unchanged unless
 ``append=True``.
+
+**Missing inputs stay missing.** A period whose threshold column is ``NaN`` is not a
+period known to be out of regime, so it is recorded as missing rather than ``False``.
+The same holds for values: a ``Series`` is aligned on the panel index and rows it
+does not cover stay missing, and a sequence's missing entries -- ``None``, ``NaN``,
+``pd.NA`` -- stay missing too. Every other value uses ordinary truthiness, so a
+numeric source reads ``0`` as out of regime and anything else as in. Explicit
+``dates`` are fully observed, because membership is knowable for every row.
+
+``n_regime``, ``n_observations`` and the serialized ``series`` in metadata therefore
+describe observed periods only.
+
+``append=True`` refuses an ``output_column`` that already exists in the panel rather
+than overwriting it, so a target or predictor cannot be replaced by a regime flag.
 
 #### Parameters
 
@@ -881,7 +913,7 @@ aligned vector/Series of values. The panel is unchanged unless
 | `threshold` | keyword only | `float \| None` | `None` |
 | `direction` | keyword only | `RegimeDirection` | `"above"` |
 | `dates` | keyword only | `Iterable[str \| pd.Timestamp] \| None` | `None` |
-| `values` | keyword only | `Sequence[bool \| int \| float] \| pd.Series \| None` | `None` |
+| `values` | keyword only | `Sequence[bool \| int \| float \| None] \| pd.Series \| None` | `None` |
 | `append` | keyword only | `bool` | `False` |
 | `output_column` | keyword only | `str \| None` | `None` |
 
@@ -943,6 +975,13 @@ Infer or read native frequency by panel column.
 
 Metadata from ``set_frequencies`` / ``combine(..., frequency="native")`` is
 preferred, then FRED-SD series reports, then observed-date spacing.
+
+Metadata labels are normalized through the same strict vocabulary
+:mod:`macroforecast.data.panel` uses for the panel contract, so the supported
+aliases resolve (``m``/``month``/``state_monthly`` to ``monthly``, ``q``/``quarter``
+to ``quarterly``, ``a``/``yearly`` to ``annual``, and so on) and an unrecognized
+label raises. A typo such as ``"montly"`` is refused here rather than passed through
+to become a frequency nothing downstream can match.
 
 #### Parameters
 
@@ -1488,6 +1527,12 @@ Apply a same-period predictor policy to a run-level data spec.
 selected predictors from the spec. ``forbid`` raises when selected
 same-period predictors are present. Targets are never shifted by this
 helper.
+
+``lag`` follows the same contract as :func:`availability_lag`: a non-negative Python
+or NumPy integer, with floats, strings and booleans rejected rather than truncated
+or parsed. Under ``policy="lag"`` with ``drop_missing=True``, the shifted-and-dropped
+panel is checked against the canonical panel contract before the spec is returned, so
+a lag that removes every row raises instead of producing an empty spec.
 
 #### Parameters
 
