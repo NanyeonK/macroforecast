@@ -27,7 +27,13 @@ import numpy as np
 import pandas as pd
 from pandas.tseries.offsets import DateOffset
 
-from macroforecast.pipeline.spec import Arm, PipelineSpec, ResolvedTarget, is_vintage_aware
+from macroforecast.pipeline.spec import (
+    Arm,
+    PipelineSpec,
+    ResolvedTarget,
+    _FrozenByteArray,
+    is_vintage_aware,
+)
 
 if TYPE_CHECKING:  # imported for typing only, matching the function-local runtime import
     from macroforecast.forecasting.task import ResolvedForecastTask
@@ -1140,7 +1146,11 @@ def _json_ready(value: Any, *, path: str = "value", seen: frozenset[int] = froze
         # different objects to anything that consumes them.
         return {
             "__bytes__": {
-                "type": type(value).__name__,
+                "type": (
+                    "bytearray"
+                    if isinstance(value, _FrozenByteArray)
+                    else type(value).__name__
+                ),
                 "base64": base64.b64encode(bytes(value)).decode("ascii"),
             }
         }
