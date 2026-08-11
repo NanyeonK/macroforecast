@@ -377,7 +377,10 @@ Each completed origin writes `origin_<pos>_selection.jsonl` next to its forecast
 parquet file. `selection_history(...)` also accepts a checkpoint directory or a
 rescored report, returning tidy rows with `arm`, `origin`, `horizon`, `kind`,
 `name`, and `value`; feature-screen selections use `kind="feature"` and selected
-model parameters use `kind="param"`. With the default
+model parameters use `kind="param"`. When loading a checkpoint directory without
+its spec, non-null target and arm labels stored in these sidecars take precedence
+over the sanitized directory name. Ambiguous legacy directory-only labels remain
+missing instead of being guessed. With the default
 `selection_history=False`, no sidecars are written.
 
 ## Reference

@@ -25,7 +25,10 @@ def selection_history(report_or_store: Any) -> pd.DataFrame:
     ``report_or_store`` may be a ``PipelineReport`` from ``run_pipeline`` or
     ``rescore``, a checkpoint root path, or an already-loaded DataFrame. Live and
     rescored reports are resolved through their spec/checkpoint provenance so the
-    returned ``target`` and ``arm`` labels use the original unsanitized names.
+    returned ``target`` and ``arm`` labels use the original unsanitized names. For
+    a bare checkpoint path, non-null sidecar labels are authoritative; a uniquely
+    parsed directory name fills only missing labels, while an ambiguous legacy
+    directory leaves missing identity unknown rather than guessing.
     """
     if isinstance(report_or_store, pd.DataFrame):
         return _normalize_history_frame(report_or_store)
@@ -125,6 +128,12 @@ def _load_history_spec(root: Path, spec: Any) -> pd.DataFrame:
 
 
 def _load_history_root(root: Path) -> pd.DataFrame:
+    """Load a spec-less checkpoint tree without overriding sidecar identity.
+
+    Identity precedence is sidecar non-null value, then a uniquely parsed path,
+    then ``pd.NA``. The last case is intentional for ambiguous legacy paths.
+    """
+
     frames: list[pd.DataFrame] = []
     if not root.exists():
         return _normalize_history_frame(pd.DataFrame())
@@ -138,20 +147,33 @@ def _load_history_root(root: Path) -> pd.DataFrame:
             if frame.empty:
                 continue
             frame = frame.copy()
-            if target is not None:
-                frame["target"] = target
-            if arm is not None:
-                frame["arm"] = arm
+            for column, value in (("target", target), ("arm", arm)):
+                if value is None:
+                    continue
+                if column not in frame.columns:
+                    frame[column] = value
+                    continue
+                present = frame[column].notna()
+                frame[column] = frame[column].astype("object").where(present, value)
             frame["horizon"] = int(match.group(1))
             frames.append(frame)
     return _concat_history(frames)
 
 
 def _parse_cell_dir(name: str) -> tuple[str | None, str | None]:
-    if "__" not in name:
+    """Parse an unambiguous ``<target>__<arm>`` checkpoint directory.
+
+    Because underscores are valid inside both sanitized components, overlapping
+    or repeated separators are genuinely ambiguous. Return ``(None, None)`` in
+    that case so sidecar metadata can supply identity without a guessed split.
+    """
+
+    separator = name.find("__")
+    if separator < 0:
         return None, name
-    target, arm = name.split("__", 1)
-    return target, arm
+    if name.find("__", separator + 1) >= 0:
+        return None, None
+    return name[:separator], name[separator + 2 :]
 
 
 def _concat_history(frames: Sequence[pd.DataFrame]) -> pd.DataFrame:

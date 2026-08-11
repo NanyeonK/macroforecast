@@ -21,7 +21,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, NamedTuple
 
-import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:  # imported for typing only, matching the function-local runtime import
@@ -818,10 +817,31 @@ def _failed_cell_warning(record: Mapping[str, Any]) -> str:
 
 
 def _validate_parallel_picklable(spec: PipelineSpec) -> None:
-    """Fail before process dispatch when an arm carries unpicklable objects."""
+    """Fail before process dispatch when the worker payload is unpicklable.
+
+    Known extension fields are checked first so the error names the value the
+    caller must change. The final probe serializes the same data-less spec sent
+    to each worker and catches any future payload field not listed explicitly.
+    ``spec.data`` is transferred separately through the worker initializer and
+    is therefore not part of this spec-payload check.
+    """
 
     if spec.n_jobs <= 1:
         return
+
+    def require_picklable(value: Any, subject: str) -> None:
+        try:
+            pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
+        except Exception as exc:
+            # User-defined __reduce__/__getstate__ methods may raise any ordinary
+            # exception. At this pre-dispatch boundary every such exception means
+            # the value cannot be sent to a worker; preserve its type/message and
+            # chain while adding the actionable parallelism remedy.
+            raise ValueError(
+                f"{subject} for n_jobs>1: {type(exc).__name__}: {exc}. "
+                "Use a module-level def or run with n_jobs=1."
+            ) from exc
+
     labels = (
         ("model", "model"),
         ("features", "features"),
@@ -829,20 +849,25 @@ def _validate_parallel_picklable(spec: PipelineSpec) -> None:
         ("feature_policy", "feature_policy"),
         ("preprocessing_policy", "preprocessing_policy"),
         ("model_selection", "model_selection"),
+        ("params", "params"),
     )
     for arm in spec.arms:
         for attr, label in labels:
             value = getattr(arm, attr, None)
             if value is None:
                 continue
-            try:
-                pickle.dumps(value, protocol=pickle.HIGHEST_PROTOCOL)
-            except (pickle.PicklingError, TypeError, AttributeError) as exc:
-                raise ValueError(
-                    f"arm {arm.name!r} has an unpicklable {label} for n_jobs>1: "
-                    f"{type(exc).__name__}: {exc}. Use a module-level def or "
-                    "run with n_jobs=1."
-                ) from exc
+            require_picklable(value, f"arm {arm.name!r} has an unpicklable {label}")
+
+    for index, metric in enumerate(spec.evaluation.metrics):
+        require_picklable(
+            metric,
+            f"evaluation.metrics[{index}] is unpicklable",
+        )
+    if spec.evaluation.loss is not None:
+        require_picklable(spec.evaluation.loss, "evaluation.loss is unpicklable")
+
+    payload = _dc.replace(spec, data=None)
+    require_picklable(payload, "pipeline spec payload (excluding data) is unpicklable")
 
 
 def _find_empty_cells(

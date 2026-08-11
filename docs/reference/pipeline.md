@@ -168,10 +168,11 @@ PipelineReport
     - ``failed_cells`` is always empty -- a cell that failed during the
       original run wrote no checkpoint files and is indistinguishable here
       from a cell that never ran.
-    - ``empty_cells`` is best-effort: a (target, horizon) is reported empty
-      only when NONE of its arms produced any checkpoint rows; an arm that
-      failed outright (vs. produced zero rows) cannot be distinguished from
-      one that was simply never run with this checkpoint_dir.
+    - ``empty_cells`` uses the live pipeline's
+      ``{"target", "horizon", "arms"}`` schema: each (target, horizon)
+      missing at least one arm is listed once, with missing arms in spec
+      order. This is best-effort because checkpoints cannot distinguish an
+      arm that failed from one that never ran or produced zero rows.
     - ``provenance``/``leakage_audit`` carry a ``rescored_from`` marker and a
       note that they were not recomputed from a live run.
 
@@ -436,7 +437,10 @@ Return tidy per-origin selection-history rows.
 ``report_or_store`` may be a ``PipelineReport`` from ``run_pipeline`` or
 ``rescore``, a checkpoint root path, or an already-loaded DataFrame. Live and
 rescored reports are resolved through their spec/checkpoint provenance so the
-returned ``target`` and ``arm`` labels use the original unsanitized names.
+returned ``target`` and ``arm`` labels use the original unsanitized names. For
+a bare checkpoint path, non-null sidecar labels are authoritative; a uniquely
+parsed directory name fills only missing labels, while an ambiguous legacy
+directory leaves missing identity unknown rather than guessing.
 
 #### Parameters
 

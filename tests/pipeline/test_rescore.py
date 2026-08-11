@@ -210,7 +210,25 @@ def test_rescore_missing_arm_surfaces_in_empty_cells(tmp_path):
 
     rescored = rescore(ckpt, _toy(ckpt))
     assert set(rescored.forecasts["contender"].unique()) == {"RIDGE"}
-    assert {c["arm"] for c in rescored.empty_cells} == {"LASSO"}
+    expected = [
+        {"target": "Y", "horizon": horizon, "arms": ["LASSO"]}
+        for horizon in (1, 3)
+    ]
+    assert list(rescored.empty_cells) == expected
+    assert rescored.leakage_audit["empty_cells"] == expected
+
+
+def test_rescore_partial_horizon_gap_uses_live_empty_cell_schema(tmp_path):
+    import shutil
+
+    ckpt = tmp_path / "ckpt"
+    run_pipeline(_toy(ckpt))
+    shutil.rmtree(ckpt / "Y__LASSO" / "h3")
+
+    rescored = rescore(ckpt, _toy(ckpt))
+    expected = [{"target": "Y", "horizon": 3, "arms": ["LASSO"]}]
+    assert list(rescored.empty_cells) == expected
+    assert rescored.leakage_audit["empty_cells"] == expected
 
 
 def test_rescore_can_add_subsamples_to_checkpointed_run(monkeypatch, tmp_path):

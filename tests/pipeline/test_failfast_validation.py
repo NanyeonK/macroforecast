@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses as _dc
 import importlib
 from types import SimpleNamespace
 
@@ -12,6 +13,16 @@ import pytest
 import macroforecast as mf
 from macroforecast.pipeline import Arm, CombinationContender, EvalSpec, TargetSpec, pipeline_spec, run_pipeline
 from macroforecast.pipeline.evaluate import evaluate
+from macroforecast.pipeline.run import _validate_parallel_picklable
+
+
+def _picklable_metric(y_true, y_pred):
+    return float(np.mean(np.abs(np.asarray(y_true) - np.asarray(y_pred))))
+
+
+class _ExplodingReduce:
+    def __reduce__(self):
+        raise RuntimeError("boom from reduce")
 
 
 def _bundle(n: int = 72):
@@ -145,6 +156,105 @@ def test_unpicklable_custom_model_fails_before_parallel_dispatch():
 
     with pytest.raises(ValueError, match=r"unpicklable model.*module-level def.*n_jobs=1"):
         run_pipeline(spec)
+
+
+def test_parallel_preflight_rejects_unpicklable_arm_params():
+    def local_callback():
+        return None
+
+    spec = _spec(
+        arms=[
+            Arm(
+                "AR",
+                model="ar",
+                features=_features(),
+                params={"callback": local_callback},
+            )
+        ],
+        evaluation=EvalSpec(benchmark="AR"),
+        n_jobs=2,
+    )
+
+    with pytest.raises(ValueError, match=r"arm 'AR'.*unpicklable params.*n_jobs=1"):
+        _validate_parallel_picklable(spec)
+
+
+@pytest.mark.parametrize("field", ["metrics", "loss"])
+def test_parallel_preflight_rejects_unpicklable_evaluation_callable(field):
+    def local_callable(*_args):
+        return 0.0
+
+    evaluation = (
+        EvalSpec(benchmark="AR", metrics=("rmse", local_callable))
+        if field == "metrics"
+        else EvalSpec(benchmark="AR", loss=local_callable)
+    )
+    spec = _spec(evaluation=evaluation, n_jobs=2)
+
+    with pytest.raises(ValueError, match=rf"evaluation\.{field}.*n_jobs=1"):
+        _validate_parallel_picklable(spec)
+
+
+def test_parallel_preflight_payload_backstop_catches_other_spec_state():
+    def local_callback():
+        return None
+
+    spec = _dc.replace(
+        _spec(n_jobs=2),
+        provenance={"callback": local_callback},
+    )
+
+    with pytest.raises(ValueError, match=r"pipeline spec payload \(excluding data\)"):
+        _validate_parallel_picklable(spec)
+
+
+def test_parallel_preflight_serial_bypass_and_picklable_callables():
+    def local_callback():
+        return None
+
+    serial = _dc.replace(
+        _spec(n_jobs=2),
+        arms=(
+            Arm(
+                "AR",
+                model="ar",
+                features=_features(),
+                params={"callback": local_callback},
+            ),
+        ),
+        evaluation=EvalSpec(benchmark="AR"),
+        n_jobs=1,
+    )
+    _validate_parallel_picklable(serial)
+
+    parallel = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            metrics=("rmse", _picklable_metric),
+            loss=_picklable_metric,
+        ),
+        n_jobs=2,
+    )
+    _validate_parallel_picklable(parallel)
+
+
+def test_parallel_preflight_wraps_user_reduce_exception():
+    spec = _spec(
+        arms=[
+            Arm(
+                "AR",
+                model="ar",
+                features=_features(),
+                params={"bad": _ExplodingReduce()},
+            )
+        ],
+        evaluation=EvalSpec(benchmark="AR"),
+        n_jobs=2,
+    )
+
+    with pytest.raises(ValueError, match="RuntimeError: boom from reduce") as caught:
+        _validate_parallel_picklable(spec)
+    assert isinstance(caught.value.__cause__, RuntimeError)
 
 
 def test_evaluation_error_returns_partial_report_with_master_frame(monkeypatch):
