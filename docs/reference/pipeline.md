@@ -1009,15 +1009,29 @@ like every other test name, are opt-in only (absent from the default).
 test's underlying public callable. Option blocks are validated when
 :func:`pipeline_spec` is built: the key must appear in ``tests``, every
 option name must be accepted by that test's callable, and the option must
-not be one the pipeline supplies itself. The set-comparison tests
-(``"mcs"``, ``"spa"``, ``"rc"``, ``"stepm"``) take their loss panel's column
-names as keywords, and the pipeline builds that panel, so ``loss``,
-``model``, ``origin``, ``target``, ``horizon`` -- and ``benchmark`` for
-``"spa"``/``"rc"``/``"stepm"`` -- are refused with a pointer to their public
-owner (``EvalSpec.loss``, ``EvalSpec.benchmark``) rather than accepted and
-then overwritten. Everything the caller genuinely controls -- ``alpha``,
-``n_boot``, ``block_length``, ``bootstrap_method``, ``statistic``,
-``studentize``, an explicit ``random_state`` -- stays valid.
+not be one the evaluator supplies itself. The refused set is per test, and
+each is reported with a pointer to its real owner rather than accepted and
+then overwritten:
+
+* set-comparison (``"mcs"``, ``"spa"``, ``"rc"``, ``"stepm"``) -- these take
+  their loss panel's column names as keywords and the pipeline builds that
+  panel, so ``loss``, ``model``, ``origin``, ``target``, ``horizon``, plus
+  ``benchmark`` for ``"spa"``/``"rc"``/``"stepm"``, belong to
+  ``EvalSpec.loss``/``EvalSpec.benchmark`` or to the internal schema;
+* pairwise (``"dm"``, ``"cw"``, ``"gw"``, ``"enc_t"``) -- ``horizon`` is the
+  horizon of the cell being evaluated, from ``pipeline_spec(horizons=...)``,
+  and ``"dm"``'s ``input_type`` is fixed because the pipeline passes losses
+  it has already computed;
+* dispatch-by-name (``"pt"``, ``"hm"``, ``"ag"``, ``"gr"`` via ``method``;
+  ``"uspa"``, ``"aspa"`` via ``statistic``) -- the requested test name in
+  ``tests`` already chooses it.
+
+Everything the caller genuinely controls stays valid: ``alpha``,
+``hac_lags``, ``threshold``, ``kernel``, ``correction``, ``small_sample``,
+``cw_adjustment``, ``critical_value``, ``instruments``, ``"gr"``'s
+``lag_truncate``, and every bootstrap parameter (``n_boot``,
+``block_length``, ``bootstrap_method``, ``studentize``, an explicit
+``random_state``).
 
 Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
 ``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,

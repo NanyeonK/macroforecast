@@ -1164,3 +1164,261 @@ def test_rescore_roundtrip_honors_custom_metric(tmp_path):
     live_acc = live.accuracy.sort_values(key).reset_index(drop=True)
     re_acc = rescored.accuracy.sort_values(key).reset_index(drop=True)
     pd.testing.assert_frame_equal(live_acc, re_acc, atol=1e-12)
+
+
+# --------------------------------------------------------------------------- #
+# F-047: Romano-Wolf resamples the SERIES, not the p-value, so each wide family
+# needs the series whose mean is its own statistic. One DM-oriented panel used
+# to be reused for every family, which made cw_p_adj a step-down adjustment of a
+# statistic Clark-West never computed.
+# --------------------------------------------------------------------------- #
+
+
+def _wide_panels(master: pd.DataFrame, *, cw_adjustment: bool = True):
+    """The DM and Clark-West series, rebuilt here independently of the package."""
+    group = next(iter(master.groupby(["target", "horizon"], dropna=False)))[1]
+    pivot = group.pivot_table(
+        index="origin", columns="contender", values="prediction", aggfunc="mean"
+    )
+    actual = group.groupby("origin")["actual"].first().reindex(pivot.index)
+    bench = pivot["AR"]
+    names = [str(name) for name in pivot.columns if name != "AR"]
+    dm, cw = {}, {}
+    for name in names:
+        contender = pivot[name]
+        common = actual.notna() & bench.notna() & contender.notna()
+        y = actual[common].to_numpy(float)
+        fb = bench[common].to_numpy(float)
+        fc = contender[common].to_numpy(float)
+        raw = (fb - y) ** 2 - (fc - y) ** 2
+        dm[name] = pd.Series(raw, index=actual[common].index)
+        cw[name] = pd.Series(
+            raw + (fb - fc) ** 2 if cw_adjustment else raw,
+            index=actual[common].index,
+        )
+    return names, pd.DataFrame(dm), pd.DataFrame(cw)
+
+
+def test_romano_wolf_adjusts_dm_and_cw_from_their_own_series():
+    from macroforecast.tests import romano_wolf_pvalues
+
+    master = _golden_master()
+    spec = _spec(
+        evaluation=EvalSpec(benchmark="AR", tests=("dm", "cw"), multiple_testing="romano_wolf")
+    )
+
+    sig = evaluate(master, spec)["significance"].set_index("contender")
+    names, dm_panel, cw_panel = _wide_panels(master)
+    expected_dm = romano_wolf_pvalues(dm_panel)
+    expected_cw = romano_wolf_pvalues(cw_panel)
+
+    # The fixture has to separate the two, or the assertion below proves nothing.
+    assert not np.array_equal(expected_dm, expected_cw)
+    np.testing.assert_allclose(sig.loc[names, "dm_p_adj"], expected_dm)
+    np.testing.assert_allclose(sig.loc[names, "cw_p_adj"], expected_cw)
+
+
+def test_cw_romano_wolf_panel_honors_cw_adjustment_false():
+    """``cw_adjustment=False`` drops the forecast-difference correction, so the
+    Clark-West series IS the raw differential -- exactly what the test then does."""
+    from macroforecast.tests import romano_wolf_pvalues
+
+    master = _golden_master()
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm", "cw"),
+            multiple_testing="romano_wolf",
+            test_options={"cw": {"cw_adjustment": False}},
+        )
+    )
+
+    sig = evaluate(master, spec)["significance"].set_index("contender")
+    names, dm_panel, cw_panel = _wide_panels(master, cw_adjustment=False)
+
+    pd.testing.assert_frame_equal(dm_panel, cw_panel)
+    np.testing.assert_allclose(sig.loc[names, "cw_p_adj"], romano_wolf_pvalues(dm_panel))
+
+
+def test_closed_form_wide_adjustment_is_unchanged_by_the_panel_split():
+    """The closed-form methods never used the panels; splitting them must not move them."""
+    from macroforecast.tests import adjust_pvalues
+
+    spec = _spec(
+        evaluation=EvalSpec(benchmark="AR", tests=("dm", "cw"), multiple_testing="holm")
+    )
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    for test in ("dm", "cw"):
+        np.testing.assert_allclose(
+            sig[f"{test}_p_adj"].to_numpy(float),
+            adjust_pvalues(sig[f"{test}_p"].to_numpy(float), method="holm"),
+        )
+
+
+# --------------------------------------------------------------------------- #
+# F-046: the same accepted-then-overwritten class packet 14 closed for the
+# set-comparison tests, now closed for significance_table's own dispatch.
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize(
+    "test_name,option",
+    [
+        ("dm", "horizon"), ("dm", "input_type"),
+        ("cw", "horizon"), ("gw", "horizon"), ("enc_t", "horizon"),
+        ("pt", "method"), ("hm", "method"), ("ag", "method"), ("gr", "method"),
+    ],
+)
+def test_evaluator_owned_pairwise_options_raise_at_spec_build_time(test_name, option):
+    with pytest.raises(ValueError, match=r"pipeline-owned option"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR", tests=(test_name,), test_options={test_name: {option: "x"}},
+            )
+        )
+
+
+@pytest.mark.parametrize("test_name", ["uspa", "aspa"])
+def test_joint_tests_refuse_a_pipeline_owned_statistic(test_name):
+    with pytest.raises(ValueError, match=r"pipeline-owned option"):
+        _spec(
+            horizons=[1, 2],
+            evaluation=EvalSpec(
+                benchmark="AR", tests=(test_name,), test_options={test_name: {"statistic": "x"}},
+            ),
+        )
+
+
+def test_owned_horizon_names_the_cell_horizon_not_the_panel_schema():
+    """``horizon`` is owned twice over, by two different things.
+
+    For a set-comparison test it is a COLUMN NAME in the loss panel the pipeline
+    builds; for a pairwise test it is the cell's own forecast horizon. A single
+    shared owner string would be wrong for one of them, so the map is keyed by
+    (test, option) and this pins both messages apart.
+    """
+    with pytest.raises(ValueError) as pairwise:
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm",), test_options={"dm": {"horizon": 3}}))
+    with pytest.raises(ValueError) as set_comparison:
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("mcs",), test_options={"mcs": {"horizon": "h"}}))
+
+    assert "pipeline_spec(horizons=...)" in str(pairwise.value)
+    assert "loss-panel schema" in str(set_comparison.value)
+
+
+def test_newly_refused_options_do_not_touch_the_options_the_caller_owns():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("dm", "cw", "gw", "pt", "gr", "enc_t"),
+            test_options={
+                "dm": {"hac_lags": 2, "small_sample": False, "kernel": "acf"},
+                "cw": {"cw_adjustment": False, "hac_lags": 2},
+                "gw": {"alpha": 0.2, "hac_lags": 2},
+                "pt": {"threshold": 0.1},
+                # The deliberate hac_lags-over-lag_truncate precedence must survive:
+                # both are the caller's, and `gr` resolves between them itself.
+                "gr": {"hac_lags": 2, "lag_truncate": 5},
+                "enc_t": {"critical_value": 1.28},
+            },
+        )
+    )
+
+    assert spec.evaluation.test_options["cw"]["cw_adjustment"] is False
+    assert spec.evaluation.test_options["gr"] == {"hac_lags": 2, "lag_truncate": 5}
+    assert spec.evaluation.test_options["dm"]["kernel"] == "acf"
+    assert spec.evaluation.test_options["enc_t"]["critical_value"] == 1.28
+
+
+def test_enc_new_and_mz_keep_every_option_they_accept():
+    """Neither is overridden by the evaluator: ``mz`` uses ``setdefault`` for
+    ``hac_lags``, and ``enc_new`` is called with the caller's options verbatim."""
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("enc_new", "mz"),
+            test_options={"enc_new": {"critical_value": 2.0}, "mz": {"hac_lags": 3}},
+        )
+    )
+
+    assert spec.evaluation.test_options["enc_new"] == {"critical_value": 2.0}
+    assert spec.evaluation.test_options["mz"] == {"hac_lags": 3}
+
+
+def _retained_panels(monkeypatch, master, **evaluation_kwargs):
+    """The ``loss_diffs`` panels ``significance_table`` actually hands the adjuster."""
+    import sys
+
+    import macroforecast.pipeline.evaluate  # noqa: F401  (populates sys.modules)
+
+    module = sys.modules["macroforecast.pipeline.evaluate"]
+    real = module._apply_multiple_testing
+    captured: dict[str, list[str]] = {}
+
+    def spy(frame, spec, loss_diffs):
+        captured.clear()
+        for cell in loss_diffs.values():
+            for test, contenders in cell.items():
+                captured[test] = sorted(contenders)
+        return real(frame, spec, loss_diffs)
+
+    monkeypatch.setattr(module, "_apply_multiple_testing", spy)
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR", multiple_testing="romano_wolf", **evaluation_kwargs
+        )
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        evaluate(master, spec)
+    return captured
+
+
+@pytest.mark.parametrize(
+    "evaluation_kwargs,expected",
+    [
+        ({"tests": ("dm", "cw")}, {"dm", "cw"}),
+        ({"tests": ("dm",)}, {"dm"}),
+        ({"tests": ("cw",)}, {"cw"}),
+        # cw_for_nested off: Clark-West never runs, so it retains nothing.
+        ({"tests": ("dm", "cw"), "cw_for_nested": False}, {"dm"}),
+        # A long-form-only request has no wide family to adjust at all.
+        ({"tests": ("gw",)}, set()),
+    ],
+)
+def test_a_wide_panel_is_retained_only_when_its_test_runs(
+    monkeypatch, evaluation_kwargs, expected
+):
+    assert set(_retained_panels(monkeypatch, _golden_master(), **evaluation_kwargs)) == expected
+
+
+def test_custom_loss_blocks_clark_west_and_therefore_its_panel(monkeypatch):
+    """A custom loss makes CW invalid, so the improvement series is never formed.
+
+    Building it anyway would add ``(f_b - f_c)**2`` to a differential of an
+    arbitrary loss -- a series no test would accept, retained for no reader.
+
+    The accompanying UserWarning is pinned by
+    ``test_custom_loss_skips_nested_quadratic_pairwise_tests_with_warning``; the
+    helper here silences warnings so the long-form Romano-Wolf notice does not
+    drown the panels being inspected.
+    """
+    panels = _retained_panels(
+        monkeypatch,
+        _golden_master(),
+        tests=("dm", "cw"),
+        loss=lambda y_true, y_pred: np.abs(np.asarray(y_true) - np.asarray(y_pred)),
+    )
+
+    assert set(panels) == {"dm"}
+
+
+def test_contender_that_never_declared_nesting_retains_no_cw_panel(monkeypatch):
+    master = _golden_master().copy()
+    master.loc[master["contender"] == "OLS", "contender"] = "UNDECLARED"
+
+    panels = _retained_panels(monkeypatch, master, tests=("dm", "cw"))
+
+    assert panels["dm"] == ["RIDGE", "UNDECLARED"]
+    assert panels["cw"] == ["RIDGE"]
