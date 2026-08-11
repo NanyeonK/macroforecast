@@ -70,6 +70,12 @@ target directly (`direct_average`) or h one-step models are averaged after the
 fact (`path_average`). Neither feeds a prediction back into the next step's
 inputs -- only `recursive` does that.
 
+Panel-input models are a separate execution strategy: their prediction input keeps
+available non-target future columns but masks the future target. They currently
+forecast the canonical target in its own units, so `target_transform` must normalize
+to `"level"` or `"value"`; transformed targets fail explicitly instead of being
+reported as mislabeled level forecasts.
+
 The t-code to policy mapping is documented in the
 [Pipeline reference](../../reference/pipeline.md).
 

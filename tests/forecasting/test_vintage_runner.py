@@ -540,6 +540,65 @@ def test_vintage_panel_model_uses_origin_bundle_fit_rows_and_latest_actuals() ->
         pdt.assert_index_equal(record["fit_panel"].index, expected_index)
 
 
+def test_vintage_panel_prediction_masks_observed_future_target_only() -> None:
+    reference = pd.date_range("2000-01-31", periods=9, freq="ME", name="date")
+    full_panel = pd.DataFrame(
+        {
+            "A": np.arange(1.0, len(reference) + 1.0),
+            "B": np.arange(10.0, 10.0 * (len(reference) + 1.0), 10.0),
+        },
+        index=reference,
+    )
+    bundles = {
+        reference[i]: mf.data.DataBundle(
+            full_panel.copy(),
+            {
+                "dataset": "future_observed_synthetic",
+                "frequency": "monthly",
+                "vintage": f"v{i}",
+            },
+        )
+        for i in range(2, len(reference))
+    }
+    records: list[dict[str, pd.DataFrame]] = []
+    spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
+
+    with pytest.warns(RuntimeWarning, match="vintage boundary audit"):
+        result = mf.forecasting.run(
+            spec,
+            _recording_panel_model(records),
+            window=_window(reference),
+            target="A",
+            features=None,
+            save_models=False,
+        )
+
+    table = result.to_frame()
+    assert not table.empty
+    assert table["actual"].notna().all()
+    assert records
+    for record in records:
+        received = record["test_panel"]
+        assert received["A"].isna().all()
+        pdt.assert_series_equal(received["B"], full_panel.loc[received.index, "B"])
+
+
+def test_vintage_panel_model_rejects_transformed_target() -> None:
+    reference, bundles = _oracle_bundles()
+    spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
+
+    with pytest.raises(ValueError, match="panel-input models cannot produce"):
+        mf.forecasting.run(
+            spec,
+            _recording_panel_model([]),
+            window=_window(reference),
+            target="A",
+            target_transform="change",
+            features=None,
+            save_models=False,
+        )
+
+
 def test_vintage_full_panel_stage_scopes_resolve_per_origin() -> None:
     reference, bundles = _oracle_bundles()
     spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)

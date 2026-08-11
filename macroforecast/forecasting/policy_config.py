@@ -12,7 +12,11 @@ from dataclasses import replace
 from typing import Literal, cast
 
 from macroforecast.feature_engineering import FeatureSpec, feature_spec
-from macroforecast.feature_engineering.shared import TargetMode, TargetTransform
+from macroforecast.feature_engineering.shared import (
+    TargetMode,
+    TargetTransform,
+    _normalize_target_transform,
+)
 from macroforecast.window import ValWindow, WindowSpec
 
 ForecastPolicy = Literal["direct", "direct_average", "path_average", "recursive"]
@@ -246,6 +250,38 @@ def _warn_default_feature_spec_used() -> None:
         UserWarning,
         stacklevel=3,
     )
+
+
+_PANEL_TARGET_TRANSFORMS = frozenset({"level", "value"})
+
+
+def _panel_target_transform(target_transform: str | None) -> TargetTransform:
+    """Resolve the raw-value target transform supported by panel models.
+
+    Feature-matrix policies explicitly construct the requested transformed target.
+    Panel-input policies instead fit the canonical panel and read the model's own
+    prediction, so accepting a change, growth, or average transform would only
+    mislabel a level forecast.
+    """
+
+    if target_transform is None:
+        return "level"
+    transform = _normalize_target_transform(target_transform)
+    if transform not in _PANEL_TARGET_TRANSFORMS:
+        raise ValueError(
+            f"target_transform={target_transform!r} resolves to {transform!r}, "
+            "which panel-input models cannot produce: the panel runner fits the "
+            "canonical panel and reads the model's own prediction, so the forecast "
+            f"object stays a level and labelling it {transform!r} would misstate "
+            "it. Pass target_transform=None, 'level' or 'value', or use a "
+            "feature-matrix model with features=feature_spec(target_transform=...)."
+        )
+    # Panel predictions are always the canonical target in its own units. Collapse
+    # the equivalent public spelling ``value`` to the package's downstream canonical
+    # ``level`` label: forecast-scale analysis currently treats only ``level`` as
+    # directly back-transformable, so preserving ``value`` here would turn an
+    # otherwise unchanged numeric panel forecast into a missing scale view.
+    return "level"
 
 
 def _target_transform_for_policy(

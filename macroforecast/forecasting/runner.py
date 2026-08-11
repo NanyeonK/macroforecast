@@ -16,7 +16,6 @@ from macroforecast.data import (
     DataBundle,
     DataSpec,
     VintagePanelSpec,
-    VintageUnavailableError,
     as_panel,
     panel_info,
     validate_panel,
@@ -78,6 +77,7 @@ from macroforecast.forecasting.policy_config import (
     _horizon_val_window,  # noqa: F401  (re-export)
     _normalize_forecast_policy,
     _normalize_future_feature_policy,
+    _panel_target_transform,
     _panel_window_for_horizon,
     _target_transform_for_policy,  # noqa: F401  (re-export)
     _validate_recursive_feature_contract,
@@ -323,6 +323,11 @@ def run(
     passed. Passing both a task and a DISAGREEING loose keyword is refused rather
     than reconciled: there is no defensible winner, and the caller who passed the
     loser would never find out.
+
+    Panel-input models forecast the canonical target in its own units and therefore
+    accept only target transforms that normalize to ``"level"`` or ``"value"``.
+    Other transforms raise instead of labelling an untransformed panel forecast as
+    a change, growth rate, or average.
     """
 
     target, features, horizon, horizons, forecast_policy, target_transform = _apply_task(
@@ -507,6 +512,7 @@ def run(
             model_store=model_store,
             forecast_policy=policy,
             future_feature_policy=future_policy,
+            target_transform=target_transform,
         )
     _validate_feature_model_runs(model_runs)
     # ``run`` is atomic (exactly one model per call, enforced by
@@ -1129,11 +1135,13 @@ def _run_panel_models(
     model_store: str | Path,
     forecast_policy: ForecastPolicy,
     future_feature_policy: FutureFeaturePolicy | None,
+    target_transform: str | None,
 ) -> ForecastResult:
     """Run models that fit on the canonical panel rather than engineered X/y."""
 
     _validate_panel_target(panel, target)
     _validate_runner_window(window_spec, panel.index, exclude_origin=True)
+    panel_target_transform = _panel_target_transform(target_transform)
     metadata = dict(panel.attrs.get("macroforecast_metadata", {}))
     records: list[dict[str, Any]] = []
     stage_records: list[dict[str, Any]] = []
@@ -1230,6 +1238,7 @@ def _run_panel_models(
                 save_models=save_models,
                 model_store=model_store,
                 forecast_policy=forecast_policy,
+                target_transform=panel_target_transform,
             )
         )
 
@@ -1322,6 +1331,7 @@ def _run_vintage_aware(
             model_store=model_store,
             forecast_policy=forecast_policy,
             future_feature_policy=future_feature_policy,
+            target_transform=target_transform,
         )
     _validate_feature_model_runs(model_runs)
     features = _feature_spec_for_policy(
@@ -1739,11 +1749,13 @@ def _run_vintage_panel_models(
     model_store: str | Path,
     forecast_policy: ForecastPolicy,
     future_feature_policy: FutureFeaturePolicy | None,
+    target_transform: str | None,
 ) -> ForecastResult:
     """Run panel-input models against one resolved vintage per origin."""
 
     reference_index = pd.DatetimeIndex(data.reference_calendar)
     _validate_runner_window(window_spec, reference_index, exclude_origin=True)
+    panel_target_transform = _panel_target_transform(target_transform)
     _warn_vintage_embargo(window_spec)
 
     actual_resolver = _VintageActualResolver(data, reference_index)
@@ -1884,6 +1896,7 @@ def _run_vintage_panel_models(
             save_models=save_models,
             model_store=model_store,
             forecast_policy=forecast_policy,
+            target_transform=panel_target_transform,
         )
         for record in origin_records:
             date = record.get("date")

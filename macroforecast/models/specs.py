@@ -423,7 +423,9 @@ def custom_model(
     at construction, and ``default_preset`` must name a key in ``search_spaces``
     when search spaces are supplied. Pass ``mf_digest=`` when this model should
     be reusable through ``pipeline_spec(result_store=...)``; the digest is stamped
-    on ``fit_func.__mf_digest__``.
+    on ``fit_func.__mf_digest__``. For ``input_kind="panel"``, the fitted object's
+    ``predict`` method receives the future panel with the target column masked to
+    missing; non-target future columns remain available.
     """
 
     if not name:
