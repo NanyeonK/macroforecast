@@ -23,6 +23,16 @@ import pandas as pd
 ArmTagValue = str | int | float | bool
 
 
+class _FrozenByteArray(bytes):
+    """Immutable byte-compatible copy of a caller-owned ``bytearray``."""
+
+    def __new__(cls, value: bytes | bytearray) -> "_FrozenByteArray":
+        return super().__new__(cls, bytes(value))
+
+    def __reduce__(self):
+        return (_FrozenByteArray, (bytes(self),))
+
+
 class _FrozenTagMapping(Mapping[str, ArmTagValue]):
     """Small immutable, pickleable mapping used for ``Arm.tags``."""
 
@@ -51,6 +61,19 @@ class _FrozenTagMapping(Mapping[str, ArmTagValue]):
         return hash(self._items)
 
 
+def _freeze_ndarray(value: np.ndarray) -> np.ndarray:
+    """Return a detached, read-only array with object elements frozen."""
+    frozen = value.copy()
+    if frozen.dtype.kind == "O":
+        for index in np.ndindex(frozen.shape):
+            frozen[index] = _freeze_value(frozen[index])
+    frozen.setflags(write=False)
+    mask = getattr(frozen, "_mask", None)
+    if isinstance(mask, np.ndarray):
+        mask.setflags(write=False)
+    return frozen
+
+
 def _freeze_value(value: Any) -> Any:
     """Return an immutable copy of *value*, deeply.
 
@@ -59,6 +82,10 @@ def _freeze_value(value: Any) -> Any:
     """
     if isinstance(value, Mapping):
         return _FrozenMapping(tuple((k, _freeze_value(v)) for k, v in value.items()))
+    if isinstance(value, np.ndarray):
+        return _freeze_ndarray(value)
+    if isinstance(value, bytearray):
+        return _FrozenByteArray(value)
     if isinstance(value, (list, tuple)):
         return tuple(_freeze_value(v) for v in value)
     if isinstance(value, set):
@@ -105,15 +132,40 @@ class _FrozenMapping(Mapping[str, Any]):
         return (_FrozenMapping, (self._items,))
 
 
-def _canonical_mapping(value: "Mapping[str, Any] | None") -> "Mapping[str, Any] | None":
+def _canonical_mapping(
+    value: "Mapping[str, Any] | None",
+    *,
+    field_name: str,
+    allow_none: bool,
+) -> "Mapping[str, Any] | None":
     """Freeze a caller-supplied mapping at the builder boundary.
 
     ``None`` stays ``None`` -- an absent params block and an empty one are different
     to the model registry, and collapsing them here would change behaviour.
     """
     if value is None:
-        return None
+        if allow_none:
+            return None
+        raise TypeError(f"Arm.{field_name} must be a mapping, got NoneType")
+    if not isinstance(value, Mapping):
+        raise TypeError(
+            f"Arm.{field_name} must be a mapping"
+            + (" or None" if allow_none else "")
+            + f", got {type(value).__name__}"
+        )
     return _FrozenMapping(tuple((k, _freeze_value(v)) for k, v in value.items()))
+
+
+def _append_provenance_warning(notes: dict[str, Any], message: str) -> None:
+    """Append one warning without splitting a scalar warning value."""
+    existing = notes.get("warnings")
+    if existing is None:
+        previous: list[Any] = []
+    elif isinstance(existing, (list, tuple)):
+        previous = list(existing)
+    else:
+        previous = [existing]
+    notes["warnings"] = [*previous, message]
 
 
 def _canonical_tags(tags: Mapping[str, ArmTagValue] | None) -> Mapping[str, ArmTagValue]:
@@ -226,7 +278,8 @@ class Arm:
     cell (executed by one ``run()`` call); in the evaluation it appears as exactly
     one contender (one arm = one contender). ``tags`` are descriptive scalar
     labels for post-run designs; they become ``tag_<key>`` columns in the master
-    forecast frame but do not affect result-store cell digests.
+    forecast frame but do not affect result-store cell digests. ``metadata`` must
+    be a mapping; ``params`` may be ``None`` to retain model-registry defaults.
     """
 
     name: str
@@ -262,8 +315,22 @@ class Arm:
         # caller mutating the dict they passed in still moves the run, the
         # result-store digest and the provenance echo -- after the spec was
         # supposedly fixed. See tests/architecture/test_task_resolution_contracts.py.
-        object.__setattr__(self, "params", _canonical_mapping(self.params))
-        object.__setattr__(self, "metadata", _canonical_mapping(self.metadata))
+        object.__setattr__(
+            self,
+            "params",
+            _canonical_mapping(self.params, field_name="params", allow_none=True),
+        )
+        object.__setattr__(
+            self,
+            "metadata",
+            _canonical_mapping(self.metadata, field_name="metadata", allow_none=False),
+        )
+
+    def __setstate__(self, state: Mapping[str, Any]) -> None:
+        """Restore and re-freeze nested values after a pickle round trip."""
+        for name, value in state.items():
+            object.__setattr__(self, name, value)
+        self.__post_init__()
 
 
 @dataclass(frozen=True)
@@ -1278,7 +1345,7 @@ def _resolve_unsupported_direct_policy(
             warnings.warn(
                 _direct_policy_guard_message(arm, model_name, policies),
                 UserWarning,
-                stacklevel=2,
+                stacklevel=3,
             )
             continue
         for target in affected:
@@ -1288,7 +1355,7 @@ def _resolve_unsupported_direct_policy(
             + " Rerouting affected arm-target cell(s) to forecast_policy='recursive'; "
             "emitted rows will be labeled recursive.",
             UserWarning,
-            stacklevel=2,
+            stacklevel=3,
         )
     return overrides
 
@@ -1715,6 +1782,8 @@ def pipeline_spec(
     independent of ``provenance=`` above (caller-supplied notes merged into
     whichever shape results); "basic" does not drop caller-supplied notes, it
     only omits the "environment"/"data"/"spec_echo" blocks.
+    If caller provenance supplies ``warnings`` as one string, that string remains
+    one warning when pipeline-generated warnings are appended.
 
     ``result_store`` is an optional directory for cross-run reuse of completed
     forecast cells. When left at ``None`` (the default), the runner follows the
@@ -1885,12 +1954,11 @@ def pipeline_spec(
 
     notes = dict(provenance or {})
     if not save_models and any(a.interpret for a in arms):
-        notes.setdefault(
-            "warnings", []
+        _append_provenance_warning(
+            notes,
+            "save_models=False but an arm requests interpretation; "
+            "interpretation will re-fit models.",
         )
-        notes["warnings"] = [*notes.get("warnings", []),
-                             "save_models=False but an arm requests interpretation; "
-                             "interpretation will re-fit models."]
 
     return PipelineSpec(
         data=data, targets=resolved, horizons=horizon_tuple, window=window,

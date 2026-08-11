@@ -848,7 +848,8 @@ An arm is NOT itself a cell. Applied to a target and a horizon it forms one
 cell (executed by one ``run()`` call); in the evaluation it appears as exactly
 one contender (one arm = one contender). ``tags`` are descriptive scalar
 labels for post-run designs; they become ``tag_<key>`` columns in the master
-forecast frame but do not affect result-store cell digests.
+forecast frame but do not affect result-store cell digests. ``metadata`` must
+be a mapping; ``params`` may be ``None`` to retain model-registry defaults.
 
 #### Parameters
 
@@ -1567,6 +1568,8 @@ attaches -- see the field docstring on :class:`PipelineSpec`. Note this is
 independent of ``provenance=`` above (caller-supplied notes merged into
 whichever shape results); "basic" does not drop caller-supplied notes, it
 only omits the "environment"/"data"/"spec_echo" blocks.
+If caller provenance supplies ``warnings`` as one string, that string remains
+one warning when pipeline-generated warnings are appended.
 
 ``result_store`` is an optional directory for cross-run reuse of completed
 forecast cells. When left at ``None`` (the default), the runner follows the
