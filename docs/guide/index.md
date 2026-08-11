@@ -199,7 +199,6 @@ vintages
 concepts/preprocessing
 concepts/features
 concepts/models_and_arms
-model_policy_matrix
 concepts/windows
 concepts/running
 concepts/evaluation

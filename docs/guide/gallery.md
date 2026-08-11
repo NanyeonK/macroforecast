@@ -147,10 +147,3 @@ print(report.significance)   # DM and CW p-values
 print(report.mcs)            # Model Confidence Set membership
 forecasts = report.forecasts  # full forecast DataFrame
 ```
-
-```{toctree}
-:hidden:
-:maxdepth: 1
-
-/replication/gcls_2021_replication
-```

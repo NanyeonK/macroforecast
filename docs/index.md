@@ -91,7 +91,6 @@ guide/index
 guide/model_overview
 datasets/index
 guide/gallery
-guide/figures
 reference/index
 replication/README
 api_tiers
