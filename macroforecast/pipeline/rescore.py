@@ -26,6 +26,7 @@ from macroforecast.pipeline.run import (
     _data_identity,
     _effective_target_for_arm,
     _environment_provenance,
+    _find_empty_cells,
 )
 
 
@@ -77,10 +78,11 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
         - ``failed_cells`` is always empty -- a cell that failed during the
           original run wrote no checkpoint files and is indistinguishable here
           from a cell that never ran.
-        - ``empty_cells`` is best-effort: a (target, horizon) is reported empty
-          only when NONE of its arms produced any checkpoint rows; an arm that
-          failed outright (vs. produced zero rows) cannot be distinguished from
-          one that was simply never run with this checkpoint_dir.
+        - ``empty_cells`` uses the live pipeline's
+          ``{"target", "horizon", "arms"}`` schema: each (target, horizon)
+          missing at least one arm is listed once, with missing arms in spec
+          order. This is best-effort because checkpoints cannot distinguish an
+          arm that failed from one that never ran or produced zero rows.
         - ``provenance``/``leakage_audit`` carry a ``rescored_from`` marker and a
           note that they were not recomputed from a live run.
 
@@ -102,14 +104,12 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
     data_identity = _data_identity(spec.data)
 
     frames: list[pd.DataFrame] = []
-    empty_cells: list[dict[str, Any]] = []
     stale_cells: list[str] = []
     unverified_cells: list[str] = []
     any_cell_dir_found = False
     for target in spec.targets:
         for arm in spec.arms:
             cell_dir = _cell_checkpoint_path(probe_spec, arm, target)
-            arm_produced_any_horizon = False
             for h in spec.horizons:
                 h_dir = cell_dir / f"h{int(h)}"
                 if h_dir.exists():
@@ -129,15 +129,14 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
                 frame = load_checkpoint_frame(h_dir)
                 if frame.empty:
                     continue
-                arm_produced_any_horizon = True
                 frame = frame.copy()
                 frame["arm"] = arm.name
                 frame["contender"] = arm.name
                 if "target" not in frame.columns or frame["target"].isna().all():
                     frame["target"] = target.name
+                if "horizon" not in frame.columns or frame["horizon"].isna().all():
+                    frame["horizon"] = int(h)
                 frames.append(frame)
-            if not arm_produced_any_horizon:
-                empty_cells.append({"target": target.name, "arm": arm.name})
 
     if stale_cells and not allow_stale:
         raise ValueError(
@@ -177,6 +176,9 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
         )
 
     master = pd.concat(frames, ignore_index=True)
+    # Use the same grid/schema as a live report. Rescore has no failed-cell
+    # ledger, so every missing checkpoint arm remains a best-effort empty arm.
+    empty_cells = _find_empty_cells(spec, master, set())
     # Named subsample masks are resolved once here, before a pure-frame
     # evaluate(); re-scoring the same checkpoints is otherwise at the mercy of
     # the FRED cache (see pipeline/evaluation_inputs.py).
@@ -189,8 +191,9 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
         "rescore_note": (
             "This report was reassembled from saved checkpoints, not a live run: "
             "interpretation is unavailable, failed_cells could not be recovered "
-            "(indistinguishable from never-run), and empty_cells is best-effort "
-            "(an arm with zero checkpoint rows for every horizon)."
+            "(indistinguishable from never-run), and empty_cells reports each "
+            "(target, horizon) with missing checkpoint arms but cannot distinguish "
+            "failed, never-run, and zero-row arms."
         ),
         "rescore_unverified_cells": tuple(unverified_cells),
         "rescore_stale_cells": tuple(stale_cells),
