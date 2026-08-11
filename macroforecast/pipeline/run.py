@@ -7,7 +7,7 @@ into one cell; the parallel backend splits one horizon per cell.
 """
 from __future__ import annotations
 
-from macroforecast.pipeline.plan import compile_arm_plan
+from macroforecast.pipeline.plan import compile_arm_plan, compile_stage_policies
 
 import hashlib
 import json
@@ -1582,11 +1582,22 @@ def _data_identity(data: Any) -> dict[str, Any]:
                 end = str(frame.index[-1])
         try:
             fingerprint = _panel_fingerprint(frame)
-        except Exception as exc:  # pragma: no cover - defensive, never break a run
+        except Exception as exc:
+            # Provenance collection must never break a run, so the failure is
+            # recorded rather than raised -- but a descriptor that carries no
+            # content cannot identify the panel either, and a digest built over the
+            # error text alone would be shared by every panel that fails the same
+            # way. Emit the canonical undigestible marker (the shape
+            # ``_vintage_data_identity`` already uses) so the cell is recomputed
+            # instead of matched against an unrelated one.
             fingerprint = {
                 "algorithm": "sha256",
-                "method": "unavailable",
-                "error": f"{type(exc).__name__}: {exc}",
+                "method": "undigestible",
+                "reason": (
+                    "panel content fingerprint could not be computed "
+                    f"({type(exc).__name__}: {exc}); result-store reuse is disabled "
+                    "for this cell"
+                ),
             }
 
     return {
@@ -2111,8 +2122,17 @@ def _audit(
                         warnings_seen.append(tagged)
         leakage["window_warnings"] = warnings_seen
         leakage["window_ok"] = window_ok
+    # The EFFECTIVE policy each arm was fit under, not the raw field: an arm that
+    # sets nothing inherits the spec's policy, and an unset spec policy resolves
+    # against the package default -- so the raw field reads ``None`` for a run that
+    # actually used ``full_panel``, which is the one thing a leakage audit must not
+    # say. ``None`` here means what it says: the arm fits no preprocessing.
+    effective_preprocessing = {
+        arm.name: compile_stage_policies(spec, arm).preprocessing for arm in spec.arms
+    }
     leakage["preprocessing_policies"] = {
-        a.name: str(a.preprocessing_policy) for a in spec.arms
+        name: None if policy is None else policy.to_dict()
+        for name, policy in effective_preprocessing.items()
     }
     vintage_audits = execution_metadata.get("vintage_boundary_audits")
     if vintage_audits:

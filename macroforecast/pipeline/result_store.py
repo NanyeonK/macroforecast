@@ -6,7 +6,7 @@ macroforecast writes one parquet payload and one JSON manifest per digest under
 """
 from __future__ import annotations
 
-from macroforecast.pipeline.plan import compile_arm_plan
+from macroforecast.pipeline.plan import compile_arm_plan, compile_stage_policies
 
 import dataclasses as _dc
 import base64
@@ -165,6 +165,10 @@ def result_cell_identity(
                 )
             except FeatureRetargetError as exc:
                 raise _UndigestibleCell(str(exc)) from exc
+        # One compiled answer per cell, shared by the window, the preprocessing spec
+        # and the stage policies below, so the digest cannot describe a different
+        # arrangement than the one ``run()`` is handed.
+        plan = compile_arm_plan(spec, arm)
         payload: dict[str, Any] = {
             "data_fingerprint": _json_ready(data_fingerprint),
             "effective_selection_seed": _effective_selection_seed(),
@@ -181,18 +185,15 @@ def result_cell_identity(
                 "params": _json_ready(arm.params),
                 "preset": _model_preset(arm.model),
                 "features": _feature_identity(effective_features),
-                "feature_policy": _object_identity(arm.feature_policy),
-                "preprocessing": _preprocessing_identity(
-                    arm.preprocessing if arm.preprocessing is not None else spec.preprocessing
-                ),
-                "preprocessing_policy": _object_identity(
-                    arm.preprocessing_policy
-                    if arm.preprocessing is not None
-                    else spec.preprocessing_policy
-                ),
+                "preprocessing": _preprocessing_identity(plan.preprocess.spec),
                 "model_selection": _object_identity(arm.model_selection),
                 "model_selection_metric": arm.model_selection_metric,
-                "window": _object_identity(compile_arm_plan(spec, arm).window),
+                # The RESOLVED policies, not the raw fields they came from. A raw
+                # ``None`` says only "the caller did not choose", and what it means
+                # depends on package config at run time; two runs that resolve to the
+                # same policy are the same fit whichever spelling asked for it.
+                "stage_policies": compile_stage_policies(spec, arm, plan=plan).to_dict(),
+                "window": _object_identity(plan.window),
             },
             "evaluation_callables": _evaluation_callable_identity(spec),
         }
@@ -483,10 +484,25 @@ def _model_preset(model: Any) -> Any:
     return getattr(model, "preset", None) or getattr(model, "default_preset", None)
 
 
+#: Fingerprint ``method`` values that do not identify the data and therefore must
+#: not be cached against. ``undigestible`` is the canonical one the data layer emits
+#: when it knows it cannot identify the panel; ``unavailable`` is the legacy marker a
+#: fingerprint FAILURE used to produce, and it is rejected here too so a prebuilt
+#: descriptor cannot route around the rule.
+_UNIDENTIFIED_FINGERPRINT_METHODS: frozenset[str] = frozenset({"undigestible", "unavailable"})
+
+
 def _assert_digestible_data_fingerprint(fingerprint: Any) -> None:
-    if isinstance(fingerprint, Mapping) and fingerprint.get("method") == "undigestible":
-        reason = fingerprint.get("reason") or "data fingerprint is undigestible"
-        raise _UndigestibleCell(str(reason))
+    if not isinstance(fingerprint, Mapping):
+        return
+    if str(fingerprint.get("method")) not in _UNIDENTIFIED_FINGERPRINT_METHODS:
+        return
+    reason = (
+        fingerprint.get("reason")
+        or fingerprint.get("error")
+        or "data fingerprint is undigestible"
+    )
+    raise _UndigestibleCell(str(reason))
 
 
 def _effective_selection_seed() -> int | None:

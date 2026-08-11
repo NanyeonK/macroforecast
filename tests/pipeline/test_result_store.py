@@ -72,7 +72,15 @@ def _recording_model():
     return mf.models.custom_model("recording_mean", _recording_fit)
 
 
-def _spec(tmp_path, *, arms=None, features=None, preprocessing=None, data=None):
+def _spec(
+    tmp_path,
+    *,
+    arms=None,
+    features=None,
+    preprocessing=None,
+    preprocessing_policy=None,
+    data=None,
+):
     feats = _features() if features is None else features
     return pipeline_spec(
         data=_bundle() if data is None else data,
@@ -88,6 +96,7 @@ def _spec(tmp_path, *, arms=None, features=None, preprocessing=None, data=None):
         evaluation=EvalSpec(benchmark="A", metrics=("rmse", "relative_mse")),
         save_models=False,
         preprocessing=preprocessing,
+        preprocessing_policy=preprocessing_policy,
         result_store=tmp_path / "results",
     )
 
@@ -601,3 +610,225 @@ def test_result_store_write_success_still_persists_and_is_bit_identical(tmp_path
     assert report.provenance["result_store"]["n_computed"] == 3
     persisted = sorted((tmp_path / "ok_store" / "cells").glob("*.parquet"))
     assert len(persisted) == 2  # A and B are digestible; U is not
+
+
+# --------------------------------------------------------------------------- #
+# Effective stage policies are part of cell identity (F-017)
+# --------------------------------------------------------------------------- #
+# A stage policy left unset is not "no policy": ``forecasting/runner.py`` resolves it
+# against a package default, so the same spec fits differently after
+# ``mf.meta.configure(default_preprocessing_scope=...)``. ``origin_available`` and
+# ``full_panel`` are the leak-aware and the whole-panel fit, which is why a digest
+# that cannot tell them apart can serve one run's forecasts to the other.
+
+
+def _digest_under(spec, **config):
+    with mf.meta.use_config(**config):
+        return result_cell_identity(
+            spec,
+            spec.arms[0],
+            spec.targets[0],
+            horizon=1,
+            data_identity=_data_identity(spec.data),
+        ).digest
+
+
+def _preprocessed_spec(tmp_path, **over):
+    return _spec(
+        tmp_path,
+        arms=[Arm("A", model=_recording_model(), features=_features())],
+        preprocessing=mf.preprocess_spec(standardize=True),
+        **over,
+    )
+
+
+@pytest.mark.parametrize(
+    ("option", "left", "right"),
+    [
+        ("default_preprocessing_scope", "origin_available", "full_panel"),
+        ("default_feature_scope", "fit_window", "full_panel"),
+        ("default_selection_scope", "fit_window", "full_panel"),
+    ],
+)
+def test_result_store_digest_tracks_every_effective_stage_default(
+    tmp_path, option, left, right
+):
+    """Each of the three defaults decides a real fit, so each must move the digest."""
+    spec = _preprocessed_spec(tmp_path)
+
+    assert _digest_under(spec, **{option: left}) != _digest_under(spec, **{option: right})
+
+
+def test_result_store_digest_ignores_a_default_the_spec_overrides(tmp_path):
+    """An explicit policy wins, so its default no longer describes anything.
+
+    The complement of the test above: identity must follow the RESOLVED policy, which
+    means an explicit one pins the digest and leaves it unmoved by a default that can
+    no longer reach this stage. Without this, hardening identity would invalidate a
+    store on every unrelated config change.
+    """
+    spec = _preprocessed_spec(
+        tmp_path, preprocessing_policy=mf.window.stage_policy(scope="origin_available")
+    )
+
+    assert _digest_under(spec, default_preprocessing_scope="origin_available") == _digest_under(
+        spec, default_preprocessing_scope="full_panel"
+    )
+
+
+def test_result_store_digest_records_the_arms_own_effective_preprocessing_policy(tmp_path):
+    """An arm that overrides preprocessing owns its policy; the spec's must not leak."""
+    spec = _spec(
+        tmp_path,
+        arms=[
+            Arm(
+                "A",
+                model=_recording_model(),
+                features=_features(),
+                preprocessing=mf.preprocess_spec(standardize=True),
+                preprocessing_policy="origin_available",
+            )
+        ],
+        preprocessing=mf.preprocess_spec(standardize=False),
+        preprocessing_policy="full_panel",
+    )
+
+    identity = result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+    policies = identity.cell_echo["arm"]["stage_policies"]
+    assert policies["preprocessing"]["scope"] == "origin_available"
+    assert set(policies) == {"preprocessing", "feature_engineering", "model_selection"}
+
+
+def test_result_store_digest_says_no_policy_when_an_arm_has_no_preprocessing(tmp_path):
+    """No stage means no timing rule -- not a fabricated scope."""
+    spec = _spec(tmp_path, arms=[Arm("A", model=_recording_model(), features=_features())])
+
+    identity = result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+    policies = identity.cell_echo["arm"]["stage_policies"]
+    assert policies["preprocessing"] is None
+    assert policies["feature_engineering"]["scope"]
+    assert policies["model_selection"]["scope"]
+
+
+def test_result_store_stage_policies_agree_between_spec_only_and_task_identity(tmp_path):
+    """Both identity spellings must resolve the same policies.
+
+    ``tests/pipeline/test_shared_cell_task.py`` pins that the two digests are equal in
+    general; this states the same for the newly added block, so a future change that
+    resolved policies from the task could not silently give the two paths different
+    answers.
+    """
+    from macroforecast.forecasting.task import resolve_forecast_tasks
+
+    spec = _preprocessed_spec(tmp_path)
+    arm, target = spec.arms[0], spec.targets[0]
+    task = resolve_forecast_tasks(spec, arm, target, [1])[0]
+    data_identity = _data_identity(spec.data)
+
+    without_task = result_cell_identity(
+        spec, arm, target, horizon=1, data_identity=data_identity
+    )
+    with_task = result_cell_identity(
+        spec, arm, target, horizon=1, data_identity=data_identity, task=task
+    )
+
+    assert without_task.digest == with_task.digest
+    assert (
+        without_task.cell_echo["arm"]["stage_policies"]
+        == with_task.cell_echo["arm"]["stage_policies"]
+    )
+
+
+# --------------------------------------------------------------------------- #
+# A panel fingerprint failure disables reuse (F-023)
+# --------------------------------------------------------------------------- #
+
+
+def _break_fingerprint(monkeypatch):
+    def _raise(frame):
+        raise TypeError("synthetic fingerprint failure")
+
+    import macroforecast.pipeline.run as run_mod
+
+    monkeypatch.setattr(run_mod, "_panel_fingerprint", _raise)
+
+
+def test_result_store_refuses_a_cell_whose_panel_fingerprint_failed(tmp_path, monkeypatch):
+    """A descriptor carrying no content cannot identify a panel.
+
+    Provenance still has to survive -- a failed fingerprint must not take the run down
+    -- so the failure is recorded rather than raised. But it is recorded as the
+    canonical undigestible marker, because a digest computed over an error string is
+    shared by every panel that fails the same way.
+    """
+    spec = _spec(tmp_path, arms=[Arm("A", model=_recording_model(), features=_features())])
+    _break_fingerprint(monkeypatch)
+
+    data_identity = _data_identity(spec.data)
+    json.dumps(data_identity)  # provenance must stay serialisable
+    assert data_identity["fingerprint"]["method"] == "undigestible"
+    assert "synthetic fingerprint failure" in data_identity["fingerprint"]["reason"]
+
+    identity = result_cell_identity(
+        spec, spec.arms[0], spec.targets[0], horizon=1, data_identity=data_identity
+    )
+    assert identity.digest is None
+    assert "fingerprint" in str(identity.reason)
+
+
+def test_result_store_recomputes_when_the_panel_fingerprint_fails(tmp_path, monkeypatch):
+    """End to end: no cell is stored, and a second run recomputes rather than reuses."""
+    arms = [Arm("A", model=_recording_model(), features=_features())]
+    _break_fingerprint(monkeypatch)
+
+    FIT_COUNTS.clear()
+    with pytest.warns(RuntimeWarning, match="cannot digest cell"):
+        first = run_pipeline(_spec(tmp_path, arms=arms))
+    assert first.provenance["result_store"]["n_undigestible"] == 1
+    assert first.provenance["result_store"]["n_reused"] == 0
+    assert not list((tmp_path / "results" / "cells").glob("*.json"))
+    assert FIT_COUNTS.get("recording", 0) > 0
+
+    FIT_COUNTS.clear()
+    with pytest.warns(RuntimeWarning, match="cannot digest cell"):
+        second = run_pipeline(_spec(tmp_path, arms=arms))
+    assert second.provenance["result_store"]["n_reused"] == 0
+    assert FIT_COUNTS.get("recording", 0) > 0
+
+
+def test_result_store_refuses_the_legacy_unavailable_fingerprint_marker(tmp_path):
+    """The old marker is refused at the identity boundary, not just at the producer.
+
+    ``_data_identity`` no longer emits ``unavailable``, but a caller can hand
+    ``result_cell_identity`` a prebuilt descriptor -- a stored provenance block from an
+    older run, say -- and that must not become a reusable digest either.
+    """
+    spec = _spec(tmp_path, arms=[Arm("A", model=_recording_model(), features=_features())])
+
+    identity = result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity={
+            "fingerprint": {
+                "algorithm": "sha256",
+                "method": "unavailable",
+                "error": "TypeError: legacy failure",
+            }
+        },
+    )
+    assert identity.digest is None
+    assert "legacy failure" in str(identity.reason)
