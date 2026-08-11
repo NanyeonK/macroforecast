@@ -665,6 +665,14 @@
 <td><p>function</p></td>
 <td><p>Score every <code class="docutils literal notranslate"><span class="pre">(arm,</span> <span class="pre">forecast_policy)</span></code> contender against ONE benchmark fixed</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">resolve_evaluation_inputs</span></code></p></td>
+<td><p>function</p></td>
+<td><p>Load the named subsample masks <em>spec</em> asks for, against <em>master</em>’s target dates.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ResolvedEvaluationInputs</span></code></p></td>
+<td><p>class</p></td>
+<td><p>Every input one <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> call needs that it cannot compute itself.</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">apply_combinations</span></code></p></td>
 <td><p>function</p></td>
 <td><p>Append cross-arm combination contenders to the master forecast frame.</p></td>
@@ -1582,7 +1590,7 @@ and never aborts the others.</p>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.evaluate.evaluate</span></code></p>
 <section id="id51">
 <h4>Signature<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">master</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PipelineSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">master</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PipelineSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">ResolvedEvaluationInputs</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
@@ -1596,6 +1604,15 @@ and never aborts the others.</p>
 (see <code class="docutils literal notranslate"><span class="pre">density_table</span></code>/<code class="docutils literal notranslate"><span class="pre">calibration_table</span></code>); a default <code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> never
 computes them (empty frames), so <code class="docutils literal notranslate"><span class="pre">forecasts</span></code>/<code class="docutils literal notranslate"><span class="pre">accuracy</span></code>/<code class="docutils literal notranslate"><span class="pre">significance</span></code>/
 <code class="docutils literal notranslate"><span class="pre">mcs</span></code> stay byte-identical to before these two keys existed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">inputs</span></code> carries the evaluation inputs that have to be <em>loaded</em> rather than
+computed – today, the state series behind a named subsample mask such as
+<code class="docutils literal notranslate"><span class="pre">&quot;nber_recession&quot;</span></code>. This function never loads them itself, so scoring one
+fixed frame is deterministic and works offline: <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> and
+<code class="docutils literal notranslate"><span class="pre">rescore</span></code> call
+:func:<code class="docutils literal notranslate"><span class="pre">~macroforecast.pipeline.resolve_evaluation_inputs</span></code> and pass the result
+here, and a direct call whose <code class="docutils literal notranslate"><span class="pre">EvalSpec.subsamples</span></code> names an indicator must
+do the same or it raises. Everything else – user-supplied masks, plain date
+windows, no subsamples at all – needs no <code class="docutils literal notranslate"><span class="pre">inputs</span></code> and is unaffected.</p>
 </section>
 <section id="id53">
 <h4>Parameters<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
@@ -1617,6 +1634,11 @@ computes them (empty frames), so <code class="docutils literal notranslate"><spa
 <td><p>positional or keyword</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PipelineSpec</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code></p></td>
+<td><p>keyword only</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ResolvedEvaluationInputs</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1733,18 +1755,25 @@ benchmark – plus <code class="docutils literal notranslate"><span class="pre">
 </div>
 </section>
 </section>
-<section id="apply-combinations">
-<h3>apply_combinations<a class="headerlink" href="#apply-combinations" title="Link to this heading">#</a></h3>
-<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.evaluate.apply_combinations</span></code></p>
+<section id="resolve-evaluation-inputs">
+<h3>resolve_evaluation_inputs<a class="headerlink" href="#resolve-evaluation-inputs" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.evaluation_inputs.resolve_evaluation_inputs</span></code></p>
 <section id="id61">
 <h4>Signature<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">apply_combinations</span><span class="p">(</span><span class="n">master</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PipelineSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">resolve_evaluation_inputs</span><span class="p">(</span><span class="n">master</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PipelineSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResolvedEvaluationInputs</span>
 </pre></div>
 </div>
 </section>
 <section id="id62">
 <h4>Description<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
-<p>Append cross-arm combination contenders to the master forecast frame.</p>
+<p>Load the named subsample masks <em>spec</em> asks for, against <em>master</em>’s target dates.</p>
+<p>Call this once per evaluation operation and hand the result to
+<code class="docutils literal notranslate"><span class="pre">evaluate(master,</span> <span class="pre">spec,</span> <span class="pre">inputs=...)</span></code>; <code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> and <code class="docutils literal notranslate"><span class="pre">rescore</span></code>
+already do. Every distinct FRED series is fetched at most once, so an
+<code class="docutils literal notranslate"><span class="pre">EvalSpec</span></code> with both <code class="docutils literal notranslate"><span class="pre">&quot;nber_recession&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;nber_expansion&quot;</span></code> costs
+one load rather than two.</p>
+<p>Returns an empty :class:<code class="docutils literal notranslate"><span class="pre">ResolvedEvaluationInputs</span></code> when there is nothing to
+load, which is every evaluation that does not name an indicator.</p>
 </section>
 <section id="id63">
 <h4>Parameters<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
@@ -1773,10 +1802,128 @@ benchmark – plus <code class="docutils literal notranslate"><span class="pre">
 </section>
 <section id="id64">
 <h4>Returns<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
-<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">ResolvedEvaluationInputs</span></code></p>
 </section>
 <section id="id65">
 <h4>Minimal Use<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Call with the signature above:</span>
+<span class="c1"># mf.pipeline.resolve_evaluation_inputs(...)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="resolvedevaluationinputs">
+<h3>ResolvedEvaluationInputs<a class="headerlink" href="#resolvedevaluationinputs" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.evaluation_inputs.ResolvedEvaluationInputs</span></code></p>
+<section id="id66">
+<h4>Signature<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">ResolvedEvaluationInputs</span><span class="p">(</span><span class="n">subsample_masks</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ResolvedSubsampleMask</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</section>
+<section id="id67">
+<h4>Description<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
+<p>Every input one <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> call needs that it cannot compute itself.</p>
+<p>Empty – the default – is the common case: user-supplied masks, plain date
+windows, and evaluations without subsamples need nothing loaded, and an
+<code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> call for those is offline with or without this object.</p>
+</section>
+<section id="id68">
+<h4>Parameters<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subsample_masks</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">ResolvedSubsampleMask]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;factory&gt;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id69">
+<h4>Returns<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</section>
+<section id="id70">
+<h4>Minimal Use<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
+<span class="c1"># Construct with the signature above:</span>
+<span class="c1"># mf.pipeline.ResolvedEvaluationInputs(...)</span>
+</pre></div>
+</div>
+</section>
+<section id="id71">
+<h4>Dataclass Fields<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subsample_masks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Mapping[str,</span> <span class="pre">ResolvedSubsampleMask]</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">default_factory</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="apply-combinations">
+<h3>apply_combinations<a class="headerlink" href="#apply-combinations" title="Link to this heading">#</a></h3>
+<p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.evaluate.apply_combinations</span></code></p>
+<section id="id72">
+<h4>Signature<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">apply_combinations</span><span class="p">(</span><span class="n">master</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">PipelineSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+</pre></div>
+</div>
+</section>
+<section id="id73">
+<h4>Description<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
+<p>Append cross-arm combination contenders to the master forecast frame.</p>
+</section>
+<section id="id74">
+<h4>Parameters<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Kind</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">master</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">spec</span></code></p></td>
+<td><p>positional or keyword</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PipelineSpec</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id75">
+<h4>Returns<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
+</section>
+<section id="id76">
+<h4>Minimal Use<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.pipeline.apply_combinations(...)</span>
@@ -1787,14 +1934,14 @@ benchmark – plus <code class="docutils literal notranslate"><span class="pre">
 <section id="arm">
 <h3>Arm<a class="headerlink" href="#arm" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.Arm</span></code></p>
-<section id="id66">
-<h4>Signature<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
+<section id="id77">
+<h4>Signature<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">Arm</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">feature_policy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">interpret</span><span class="p">:</span> <span class="n">InterpretSpec</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_benchmark</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">nested_in_benchmark</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">tags</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArmTagValue</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id67">
-<h4>Description<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
+<section id="id78">
+<h4>Description<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
 <p>A target-agnostic configuration: preprocessing + features + a single model.</p>
 <p>An arm is NOT itself a cell. Applied to a target and a horizon it forms one
 cell (executed by one <code class="docutils literal notranslate"><span class="pre">run()</span></code> call); in the evaluation it appears as exactly
@@ -1802,8 +1949,8 @@ one contender (one arm = one contender). <code class="docutils literal notransla
 labels for post-run designs; they become <code class="docutils literal notranslate"><span class="pre">tag_&lt;key&gt;</span></code> columns in the master
 forecast frame but do not affect result-store cell digests.</p>
 </section>
-<section id="id68">
-<h4>Parameters<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
+<section id="id79">
+<h4>Parameters<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1892,20 +2039,20 @@ forecast frame but do not affect result-store cell digests.</p>
 </table>
 </div>
 </section>
-<section id="id69">
-<h4>Returns<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
+<section id="id80">
+<h4>Returns<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id70">
-<h4>Minimal Use<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
+<section id="id81">
+<h4>Minimal Use<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.Arm(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id71">
-<h4>Dataclass Fields<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
+<section id="id82">
+<h4>Dataclass Fields<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -1982,14 +2129,14 @@ forecast frame but do not affect result-store cell digests.</p>
 <section id="combinationcontender">
 <h3>CombinationContender<a class="headerlink" href="#combinationcontender" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.CombinationContender</span></code></p>
-<section id="id72">
-<h4>Signature<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
+<section id="id83">
+<h4>Signature<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">CombinationContender</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">over</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">weight_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nested_in_benchmark</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id73">
-<h4>Description<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
+<section id="id84">
+<h4>Description<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
 <p>A forecast combination that becomes an additional contender.</p>
 <p><code class="docutils literal notranslate"><span class="pre">nested_in_benchmark</span></code> licenses Clark-West for the combination, exactly as
 :attr:<code class="docutils literal notranslate"><span class="pre">Arm.nested_in_benchmark</span></code> does for a single arm. Set it when the
@@ -1999,8 +2146,8 @@ does nest it, since zeroing every slope returns the benchmark forecast. It
 is not inferred from the members: an estimated-weight combination need not
 nest what its members nest, so the declaration stays with the caller.</p>
 </section>
-<section id="id74">
-<h4>Parameters<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
+<section id="id85">
+<h4>Parameters<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2054,20 +2201,20 @@ nest what its members nest, so the declaration stays with the caller.</p>
 </table>
 </div>
 </section>
-<section id="id75">
-<h4>Returns<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
+<section id="id86">
+<h4>Returns<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id76">
-<h4>Minimal Use<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
+<section id="id87">
+<h4>Minimal Use<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.CombinationContender(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id77">
-<h4>Dataclass Fields<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
+<section id="id88">
+<h4>Dataclass Fields<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -2116,14 +2263,14 @@ nest what its members nest, so the declaration stays with the caller.</p>
 <section id="evalspec">
 <h3>EvalSpec<a class="headerlink" href="#evalspec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.EvalSpec</span></code></p>
-<section id="id78">
-<h4>Signature<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
+<section id="id89">
+<h4>Signature<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">EvalSpec</span><span class="p">(</span><span class="n">benchmark</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;rmse&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_mse&#39;</span><span class="p">,</span> <span class="s1">&#39;r2_oos&#39;</span><span class="p">),</span> <span class="n">tests</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;dm&#39;</span><span class="p">,</span> <span class="s1">&#39;cw&#39;</span><span class="p">,</span> <span class="s1">&#39;mcs&#39;</span><span class="p">),</span> <span class="n">by</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">primary_axis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;contender&quot;</span><span class="p">,</span> <span class="n">cw_for_nested</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">mcs_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">mcs_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;iterative&quot;</span><span class="p">,</span> <span class="n">multiple_testing</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">subsamples</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SubsampleWindow</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dm_kwargs</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">loss</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">test_options</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">calibration_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id79">
-<h4>Description<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
+<section id="id90">
+<h4>Description<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
 <p>Automatic evaluation and significance-testing configuration.</p>
 <p><code class="docutils literal notranslate"><span class="pre">metrics</span></code> entries are either a name resolved through the metric registry
 (:func:<code class="docutils literal notranslate"><span class="pre">macroforecast.metrics.get_metric</span></code>, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;mae&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mape&quot;</span></code>) or a
@@ -2178,8 +2325,8 @@ These are evaluation-window splits of an already-produced POOS forecast
 frame: target-date rows are filtered before scoring and testing, without
 refitting models or creating new forecast cells.</p>
 </section>
-<section id="id80">
-<h4>Parameters<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
+<section id="id91">
+<h4>Parameters<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2263,20 +2410,20 @@ refitting models or creating new forecast cells.</p>
 </table>
 </div>
 </section>
-<section id="id81">
-<h4>Returns<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
+<section id="id92">
+<h4>Returns<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id82">
-<h4>Minimal Use<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
+<section id="id93">
+<h4>Minimal Use<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.EvalSpec(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id83">
-<h4>Dataclass Fields<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
+<section id="id94">
+<h4>Dataclass Fields<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -2349,18 +2496,18 @@ refitting models or creating new forecast cells.</p>
 <section id="interpretspec">
 <h3>InterpretSpec<a class="headerlink" href="#interpretspec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.InterpretSpec</span></code></p>
-<section id="id84">
-<h4>Signature<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
+<section id="id95">
+<h4>Signature<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">InterpretSpec</span><span class="p">(</span><span class="n">methods</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">which_fit</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">background</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">top_k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">on_targets</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shap_kind</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id85">
-<h4>Description<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
+<section id="id96">
+<h4>Description<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
 <p>ML interpretation request for an arm (deferred, multi-method).</p>
 </section>
-<section id="id86">
-<h4>Parameters<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
+<section id="id97">
+<h4>Parameters<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2404,20 +2551,20 @@ refitting models or creating new forecast cells.</p>
 </table>
 </div>
 </section>
-<section id="id87">
-<h4>Returns<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
+<section id="id98">
+<h4>Returns<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id88">
-<h4>Minimal Use<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
+<section id="id99">
+<h4>Minimal Use<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.InterpretSpec(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id89">
-<h4>Dataclass Fields<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
+<section id="id100">
+<h4>Dataclass Fields<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -2458,18 +2605,18 @@ refitting models or creating new forecast cells.</p>
 <section id="pipelinespec">
 <h3>PipelineSpec<a class="headerlink" href="#pipelinespec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.PipelineSpec</span></code></p>
-<section id="id90">
-<h4>Signature<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
+<section id="id101">
+<h4>Signature<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">PipelineSpec</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ResolvedTarget</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">horizons</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">window</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">arms</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Arm</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">combinations</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CombinationContender</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">save_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trained_model&quot;</span><span class="p">,</span> <span class="n">checkpoint_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">selection_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">result_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">parallel_cell_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="n">model_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">preprocessing_cache_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span> <span class="n">provenance</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">provenance_level</span><span class="p">:</span> <span class="s2">&quot;Literal[&#39;full&#39;, &#39;basic&#39;]&quot;</span> <span class="o">=</span> <span class="s2">&quot;full&quot;</span><span class="p">,</span> <span class="n">policy_overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id91">
-<h4>Description<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
+<section id="id102">
+<h4>Description<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
 <p>Validated, frozen configuration produced by :func:<code class="docutils literal notranslate"><span class="pre">pipeline_spec</span></code>.</p>
 </section>
-<section id="id92">
-<h4>Parameters<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
+<section id="id103">
+<h4>Parameters<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2593,20 +2740,20 @@ refitting models or creating new forecast cells.</p>
 </table>
 </div>
 </section>
-<section id="id93">
-<h4>Returns<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
+<section id="id104">
+<h4>Returns<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id94">
-<h4>Minimal Use<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
+<section id="id105">
+<h4>Minimal Use<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.PipelineSpec(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id95">
-<h4>Dataclass Fields<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
+<section id="id106">
+<h4>Dataclass Fields<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -2711,18 +2858,18 @@ refitting models or creating new forecast cells.</p>
 <section id="resolvedtarget">
 <h3>ResolvedTarget<a class="headerlink" href="#resolvedtarget" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.ResolvedTarget</span></code></p>
-<section id="id96">
-<h4>Signature<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
+<section id="id107">
+<h4>Signature<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">ResolvedTarget</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tcode</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">annualize</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id97">
-<h4>Description<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
+<section id="id108">
+<h4>Description<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
 <p>A target with its forecast policy and transform resolved.</p>
 </section>
-<section id="id98">
-<h4>Parameters<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
+<section id="id109">
+<h4>Parameters<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2761,20 +2908,20 @@ refitting models or creating new forecast cells.</p>
 </table>
 </div>
 </section>
-<section id="id99">
-<h4>Returns<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
+<section id="id110">
+<h4>Returns<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id100">
-<h4>Minimal Use<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
+<section id="id111">
+<h4>Minimal Use<a class="headerlink" href="#id111" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.ResolvedTarget(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id101">
-<h4>Dataclass Fields<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
+<section id="id112">
+<h4>Dataclass Fields<a class="headerlink" href="#id112" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -2811,14 +2958,14 @@ refitting models or creating new forecast cells.</p>
 <section id="subsamplewindow">
 <h3>SubsampleWindow<a class="headerlink" href="#subsamplewindow" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.SubsampleWindow</span></code></p>
-<section id="id102">
-<h4>Signature<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
+<section id="id113">
+<h4>Signature<a class="headerlink" href="#id113" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">SubsampleWindow</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">exclude</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">mask</span><span class="p">:</span> <span class="n">SubsampleMaskInput</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id103">
-<h4>Description<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
+<section id="id114">
+<h4>Description<a class="headerlink" href="#id114" title="Link to this heading">#</a></h4>
 <p>Evaluation-window filter applied to forecast target dates.</p>
 <p>Bounds are inclusive date strings. <code class="docutils literal notranslate"><span class="pre">exclude</span></code> removes inclusive date ranges
 after the optional start/end bounds are applied. <code class="docutils literal notranslate"><span class="pre">mask</span></code> intersects the
@@ -2826,8 +2973,8 @@ window with dates where a boolean state indicator is true; it accepts a
 date-indexed boolean Series, a date-to-bool mapping, or the named indicators
 <code class="docutils literal notranslate"><span class="pre">&quot;nber_recession&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;nber_expansion&quot;</span></code>.</p>
 </section>
-<section id="id104">
-<h4>Parameters<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
+<section id="id115">
+<h4>Parameters<a class="headerlink" href="#id115" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2861,20 +3008,20 @@ date-indexed boolean Series, a date-to-bool mapping, or the named indicators
 </table>
 </div>
 </section>
-<section id="id105">
-<h4>Returns<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
+<section id="id116">
+<h4>Returns<a class="headerlink" href="#id116" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id106">
-<h4>Minimal Use<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
+<section id="id117">
+<h4>Minimal Use<a class="headerlink" href="#id117" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.SubsampleWindow(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id107">
-<h4>Dataclass Fields<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
+<section id="id118">
+<h4>Dataclass Fields<a class="headerlink" href="#id118" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -2907,14 +3054,14 @@ date-indexed boolean Series, a date-to-bool mapping, or the named indicators
 <section id="targetspec">
 <h3>TargetSpec<a class="headerlink" href="#targetspec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.TargetSpec</span></code></p>
-<section id="id108">
-<h4>Signature<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
+<section id="id119">
+<h4>Signature<a class="headerlink" href="#id119" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">TargetSpec</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">annualize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">reduce_i2</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
-<section id="id109">
-<h4>Description<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
+<section id="id120">
+<h4>Description<a class="headerlink" href="#id120" title="Link to this heading">#</a></h4>
 <p>A forecast target and how its forecast object is defined.</p>
 <p><code class="docutils literal notranslate"><span class="pre">name</span></code> is the panel column to forecast. <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">policy</span></code> may
 be left as <code class="docutils literal notranslate"><span class="pre">None</span></code> so FRED transformation-code metadata chooses the
@@ -2937,8 +3084,8 @@ target = TargetSpec(name=“INDPRO”, annualize=True)</p>
 </div></blockquote>
 </div></blockquote>
 </section>
-<section id="id110">
-<h4>Parameters<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
+<section id="id121">
+<h4>Parameters<a class="headerlink" href="#id121" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2977,20 +3124,20 @@ target = TargetSpec(name=“INDPRO”, annualize=True)</p>
 </table>
 </div>
 </section>
-<section id="id111">
-<h4>Returns<a class="headerlink" href="#id111" title="Link to this heading">#</a></h4>
+<section id="id122">
+<h4>Returns<a class="headerlink" href="#id122" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
-<section id="id112">
-<h4>Minimal Use<a class="headerlink" href="#id112" title="Link to this heading">#</a></h4>
+<section id="id123">
+<h4>Minimal Use<a class="headerlink" href="#id123" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.pipeline.TargetSpec(...)</span>
 </pre></div>
 </div>
 </section>
-<section id="id113">
-<h4>Dataclass Fields<a class="headerlink" href="#id113" title="Link to this heading">#</a></h4>
+<section id="id124">
+<h4>Dataclass Fields<a class="headerlink" href="#id124" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -3027,18 +3174,18 @@ target = TargetSpec(name=“INDPRO”, annualize=True)</p>
 <section id="contender-names">
 <h3>contender_names<a class="headerlink" href="#contender-names" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.contender_names</span></code></p>
-<section id="id114">
-<h4>Signature<a class="headerlink" href="#id114" title="Link to this heading">#</a></h4>
+<section id="id125">
+<h4>Signature<a class="headerlink" href="#id125" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">contender_names</span><span class="p">(</span><span class="n">arm</span><span class="p">:</span> <span class="n">Arm</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id115">
-<h4>Description<a class="headerlink" href="#id115" title="Link to this heading">#</a></h4>
+<section id="id126">
+<h4>Description<a class="headerlink" href="#id126" title="Link to this heading">#</a></h4>
 <p>Display contender labels for an arm. A contender IS exactly an arm.</p>
 </section>
-<section id="id116">
-<h4>Parameters<a class="headerlink" href="#id116" title="Link to this heading">#</a></h4>
+<section id="id127">
+<h4>Parameters<a class="headerlink" href="#id127" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3057,12 +3204,12 @@ target = TargetSpec(name=“INDPRO”, annualize=True)</p>
 </table>
 </div>
 </section>
-<section id="id117">
-<h4>Returns<a class="headerlink" href="#id117" title="Link to this heading">#</a></h4>
+<section id="id128">
+<h4>Returns<a class="headerlink" href="#id128" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">list[str]</span></code></p>
 </section>
-<section id="id118">
-<h4>Minimal Use<a class="headerlink" href="#id118" title="Link to this heading">#</a></h4>
+<section id="id129">
+<h4>Minimal Use<a class="headerlink" href="#id129" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.pipeline.contender_names(...)</span>
@@ -3073,18 +3220,18 @@ target = TargetSpec(name=“INDPRO”, annualize=True)</p>
 <section id="is-vintage-aware">
 <h3>is_vintage_aware<a class="headerlink" href="#is-vintage-aware" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.is_vintage_aware</span></code></p>
-<section id="id119">
-<h4>Signature<a class="headerlink" href="#id119" title="Link to this heading">#</a></h4>
+<section id="id130">
+<h4>Signature<a class="headerlink" href="#id130" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">is_vintage_aware</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PipelineSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span>
 </pre></div>
 </div>
 </section>
-<section id="id120">
-<h4>Description<a class="headerlink" href="#id120" title="Link to this heading">#</a></h4>
+<section id="id131">
+<h4>Description<a class="headerlink" href="#id131" title="Link to this heading">#</a></h4>
 <p>Return whether a pipeline spec runs against per-origin vintage data.</p>
 </section>
-<section id="id121">
-<h4>Parameters<a class="headerlink" href="#id121" title="Link to this heading">#</a></h4>
+<section id="id132">
+<h4>Parameters<a class="headerlink" href="#id132" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3103,12 +3250,12 @@ target = TargetSpec(name=“INDPRO”, annualize=True)</p>
 </table>
 </div>
 </section>
-<section id="id122">
-<h4>Returns<a class="headerlink" href="#id122" title="Link to this heading">#</a></h4>
+<section id="id133">
+<h4>Returns<a class="headerlink" href="#id133" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p>
 </section>
-<section id="id123">
-<h4>Minimal Use<a class="headerlink" href="#id123" title="Link to this heading">#</a></h4>
+<section id="id134">
+<h4>Minimal Use<a class="headerlink" href="#id134" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.pipeline.is_vintage_aware(...)</span>
@@ -3119,14 +3266,14 @@ target = TargetSpec(name=“INDPRO”, annualize=True)</p>
 <section id="model-arms">
 <h3>model_arms<a class="headerlink" href="#model-arms" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.model_arms</span></code></p>
-<section id="id124">
-<h4>Signature<a class="headerlink" href="#id124" title="Link to this heading">#</a></h4>
+<section id="id135">
+<h4>Signature<a class="headerlink" href="#id135" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">model_arms</span><span class="p">(</span><span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">feature_policy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">interpret</span><span class="p">:</span> <span class="n">InterpretSpec</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nested_in_benchmark</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Arm</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
-<section id="id125">
-<h4>Description<a class="headerlink" href="#id125" title="Link to this heading">#</a></h4>
+<section id="id136">
+<h4>Description<a class="headerlink" href="#id136" title="Link to this heading">#</a></h4>
 <p>Build one :class:<code class="docutils literal notranslate"><span class="pre">Arm</span></code> per model for a pure model comparison.</p>
 <p>A model comparison is “several Arms identical except <code class="docutils literal notranslate"><span class="pre">model</span></code>”. This helper
 is the pipeline idiom for that: it returns a <code class="docutils literal notranslate"><span class="pre">list[Arm]</span></code> – one arm (one
@@ -3149,8 +3296,8 @@ of arm names that nest the benchmark.</p>
 comparison shares all config; comparing feature cases still needs explicit
 Arms (build them by hand, varying <code class="docutils literal notranslate"><span class="pre">features</span></code>).</p>
 </section>
-<section id="id126">
-<h4>Parameters<a class="headerlink" href="#id126" title="Link to this heading">#</a></h4>
+<section id="id137">
+<h4>Parameters<a class="headerlink" href="#id137" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3224,12 +3371,12 @@ Arms (build them by hand, varying <code class="docutils literal notranslate"><sp
 </table>
 </div>
 </section>
-<section id="id127">
-<h4>Returns<a class="headerlink" href="#id127" title="Link to this heading">#</a></h4>
+<section id="id138">
+<h4>Returns<a class="headerlink" href="#id138" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">list[Arm]</span></code></p>
 </section>
-<section id="id128">
-<h4>Minimal Use<a class="headerlink" href="#id128" title="Link to this heading">#</a></h4>
+<section id="id139">
+<h4>Minimal Use<a class="headerlink" href="#id139" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.pipeline.model_arms(...)</span>
@@ -3240,14 +3387,14 @@ Arms (build them by hand, varying <code class="docutils literal notranslate"><sp
 <section id="pipeline-spec">
 <h3>pipeline_spec<a class="headerlink" href="#pipeline-spec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.pipeline_spec</span></code></p>
-<section id="id129">
-<h4>Signature<a class="headerlink" href="#id129" title="Link to this heading">#</a></h4>
+<section id="id140">
+<h4>Signature<a class="headerlink" href="#id140" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">pipeline_spec</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">TargetSpec</span><span class="p">],</span> <span class="n">horizons</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">arms</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Arm</span><span class="p">],</span> <span class="n">evaluation</span><span class="p">:</span> <span class="n">EvalSpec</span><span class="p">,</span> <span class="n">combinations</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">CombinationContender</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tcode_target_map</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;trained_model&quot;</span><span class="p">,</span> <span class="n">checkpoint_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">selection_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">result_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">parallel_cell_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">3600.0</span><span class="p">,</span> <span class="n">preprocessing_cache_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span> <span class="n">provenance</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">provenance_level</span><span class="p">:</span> <span class="s2">&quot;Literal[&#39;full&#39;, &#39;basic&#39;]&quot;</span> <span class="o">=</span> <span class="s2">&quot;full&quot;</span><span class="p">,</span> <span class="n">on_unsupported_direct</span><span class="p">:</span> <span class="s2">&quot;Literal[&#39;error&#39;, &#39;warn&#39;, &#39;reroute&#39;]&quot;</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PipelineSpec</span>
 </pre></div>
 </div>
 </section>
-<section id="id130">
-<h4>Description<a class="headerlink" href="#id130" title="Link to this heading">#</a></h4>
+<section id="id141">
+<h4>Description<a class="headerlink" href="#id141" title="Link to this heading">#</a></h4>
 <p>Validate and build a :class:<code class="docutils literal notranslate"><span class="pre">PipelineSpec</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> is a positive int (explicit cell-worker count) or the literal
 <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> inspects the core budget and the work structure
@@ -3294,8 +3441,8 @@ iterates its own dynamics is combined with <code class="docutils literal notrans
 benchmark behavior, and <code class="docutils literal notranslate"><span class="pre">&quot;reroute&quot;</span></code> runs only the affected arm-target
 cells as <code class="docutils literal notranslate"><span class="pre">recursive</span></code>.</p>
 </section>
-<section id="id131">
-<h4>Parameters<a class="headerlink" href="#id131" title="Link to this heading">#</a></h4>
+<section id="id142">
+<h4>Parameters<a class="headerlink" href="#id142" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3419,12 +3566,12 @@ cells as <code class="docutils literal notranslate"><span class="pre">recursive<
 </table>
 </div>
 </section>
-<section id="id132">
-<h4>Returns<a class="headerlink" href="#id132" title="Link to this heading">#</a></h4>
+<section id="id143">
+<h4>Returns<a class="headerlink" href="#id143" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">PipelineSpec</span></code></p>
 </section>
-<section id="id133">
-<h4>Minimal Use<a class="headerlink" href="#id133" title="Link to this heading">#</a></h4>
+<section id="id144">
+<h4>Minimal Use<a class="headerlink" href="#id144" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.pipeline.pipeline_spec(...)</span>
@@ -3435,22 +3582,22 @@ cells as <code class="docutils literal notranslate"><span class="pre">recursive<
 <section id="resolve-target">
 <h3>resolve_target<a class="headerlink" href="#resolve-target" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.pipeline.spec.resolve_target</span></code></p>
-<section id="id134">
-<h4>Signature<a class="headerlink" href="#id134" title="Link to this heading">#</a></h4>
+<section id="id145">
+<h4>Signature<a class="headerlink" href="#id145" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">resolve_target</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">TargetSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tcode</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tcode_map</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce_i2</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResolvedTarget</span>
 </pre></div>
 </div>
 </section>
-<section id="id135">
-<h4>Description<a class="headerlink" href="#id135" title="Link to this heading">#</a></h4>
+<section id="id146">
+<h4>Description<a class="headerlink" href="#id146" title="Link to this heading">#</a></h4>
 <p>Resolve a target to its (forecast_policy, target_transform).</p>
 <p>Explicit <code class="docutils literal notranslate"><span class="pre">TargetSpec.transform</span></code>/<code class="docutils literal notranslate"><span class="pre">policy</span></code> win; otherwise the t-code (passed
 or read from <code class="docutils literal notranslate"><span class="pre">data</span></code> metadata) is mapped through <code class="docutils literal notranslate"><span class="pre">tcode_map</span></code> (defaults to
 :data:<code class="docutils literal notranslate"><span class="pre">TCODE_TARGET_MAP</span></code>). Raises if neither an explicit transform nor a
 t-code is available.</p>
 </section>
-<section id="id136">
-<h4>Parameters<a class="headerlink" href="#id136" title="Link to this heading">#</a></h4>
+<section id="id147">
+<h4>Parameters<a class="headerlink" href="#id147" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3489,12 +3636,12 @@ t-code is available.</p>
 </table>
 </div>
 </section>
-<section id="id137">
-<h4>Returns<a class="headerlink" href="#id137" title="Link to this heading">#</a></h4>
+<section id="id148">
+<h4>Returns<a class="headerlink" href="#id148" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ResolvedTarget</span></code></p>
 </section>
-<section id="id138">
-<h4>Minimal Use<a class="headerlink" href="#id138" title="Link to this heading">#</a></h4>
+<section id="id149">
+<h4>Minimal Use<a class="headerlink" href="#id149" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.pipeline.resolve_target(...)</span>
@@ -3665,7 +3812,7 @@ t-code is available.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id60">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-combinations">apply_combinations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resolve-evaluation-inputs">resolve_evaluation_inputs</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id61">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id62">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id63">Parameters</a></li>
@@ -3673,7 +3820,7 @@ t-code is available.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id65">Minimal Use</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#arm">Arm</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resolvedevaluationinputs">ResolvedEvaluationInputs</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id66">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id67">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id68">Parameters</a></li>
@@ -3682,107 +3829,124 @@ t-code is available.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id71">Dataclass Fields</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#combinationcontender">CombinationContender</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apply-combinations">apply_combinations</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id72">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id73">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id74">Parameters</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id75">Returns</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id76">Minimal Use</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id77">Dataclass Fields</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#arm">Arm</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id77">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id78">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id79">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id80">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id81">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id82">Dataclass Fields</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#combinationcontender">CombinationContender</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id83">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id84">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id85">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id86">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id87">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id88">Dataclass Fields</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evalspec">EvalSpec</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id78">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id79">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id80">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id81">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id82">Minimal Use</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id83">Dataclass Fields</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id89">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id90">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id91">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id92">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id93">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id94">Dataclass Fields</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#interpretspec">InterpretSpec</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id84">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id85">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id86">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id87">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id88">Minimal Use</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id89">Dataclass Fields</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id95">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id96">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id97">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id98">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id99">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id100">Dataclass Fields</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pipelinespec">PipelineSpec</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id90">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id91">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id92">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id93">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id94">Minimal Use</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id95">Dataclass Fields</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id101">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id102">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id103">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id104">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id105">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id106">Dataclass Fields</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resolvedtarget">ResolvedTarget</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id96">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id97">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id98">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id99">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id100">Minimal Use</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id101">Dataclass Fields</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id107">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id108">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id109">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id110">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id111">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id112">Dataclass Fields</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#subsamplewindow">SubsampleWindow</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id102">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id103">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id104">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id105">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id106">Minimal Use</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id107">Dataclass Fields</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id113">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id114">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id115">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id116">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id117">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id118">Dataclass Fields</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#targetspec">TargetSpec</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id108">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id109">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id110">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id111">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id112">Minimal Use</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id113">Dataclass Fields</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#contender-names">contender_names</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id114">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id115">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id116">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id117">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id118">Minimal Use</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-vintage-aware">is_vintage_aware</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id119">Signature</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id120">Description</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id121">Parameters</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id122">Returns</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id123">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id124">Dataclass Fields</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#contender-names">contender_names</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id125">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id126">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id127">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id128">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id129">Minimal Use</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-vintage-aware">is_vintage_aware</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id130">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id131">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id132">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id133">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id134">Minimal Use</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-arms">model_arms</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id124">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id125">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id126">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id127">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id128">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id135">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id136">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id137">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id138">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id139">Minimal Use</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pipeline-spec">pipeline_spec</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id129">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id130">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id131">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id132">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id133">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id140">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id141">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id142">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id143">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id144">Minimal Use</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#resolve-target">resolve_target</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id134">Signature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id135">Description</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id136">Parameters</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id137">Returns</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id138">Minimal Use</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id145">Signature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id146">Description</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id147">Parameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id148">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id149">Minimal Use</a></li>
 </ul>
 </li>
 </ul>

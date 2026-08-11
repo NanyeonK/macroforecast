@@ -635,10 +635,10 @@ scored. <code class="docutils literal notranslate"><span class="pre">forecasting
 <code class="docutils literal notranslate"><span class="pre">direct_average</span></code>, <code class="docutils literal notranslate"><span class="pre">path_average</span></code>, <code class="docutils literal notranslate"><span class="pre">recursive</span></code>) are strategies inside the second
 stage, not branches in the first.</p>
 </section>
-<section id="where-a-forecast-task-is-resolved-today">
-<h2>Where a forecast task is resolved today<a class="headerlink" href="#where-a-forecast-task-is-resolved-today" title="Link to this heading">#</a></h2>
-<p>A single task’s identity — target, horizon, policy, transform — is currently
-assembled in more than one place:</p>
+<section id="where-a-forecast-task-is-resolved">
+<h2>Where a forecast task is resolved<a class="headerlink" href="#where-a-forecast-task-is-resolved" title="Link to this heading">#</a></h2>
+<p>A single task’s identity — which target, under which policy, from which
+features — is resolved once and passed down:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>step</p></th>
@@ -647,34 +647,82 @@ assembled in more than one place:</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>declared</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pipeline/spec.py</span></code> (<code class="docutils literal notranslate"><span class="pre">TargetSpec</span></code>, horizons, arm overrides)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pipeline/spec.py</span></code> (<code class="docutils literal notranslate"><span class="pre">TargetSpec</span></code>, horizons, arm policy overrides)</p></td>
 </tr>
-<tr class="row-odd"><td><p>resolved per cell</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pipeline/run.py</span></code></p></td>
+<tr class="row-odd"><td><p>resolved</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forecasting/task.py</span></code> (<code class="docutils literal notranslate"><span class="pre">resolve_forecast_tasks</span></code> → <code class="docutils literal notranslate"><span class="pre">ResolvedForecastTask</span></code>)</p></td>
 </tr>
-<tr class="row-even"><td><p>re-resolved for the policy</p></td>
+<tr class="row-even"><td><p>resolved once per cell</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pipeline/run.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_run_cells</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>shaped for the policy</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forecasting/policy_config.py</span></code> (<code class="docutils literal notranslate"><span class="pre">_feature_spec_for_policy</span></code>)</p></td>
 </tr>
-<tr class="row-odd"><td><p>materialized</p></td>
+<tr class="row-even"><td><p>materialized</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">feature_engineering/specs.py</span></code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">[GAP]</span></code> This is a known weakness rather than a defect with a reproduction: a
-task’s identity is re-derived rather than resolved once and passed down, which
-is the kind of arrangement in which <code class="docutils literal notranslate"><span class="pre">TargetSpec.transform</span></code> and
-<code class="docutils literal notranslate"><span class="pre">FeatureSpec.target_transform</span></code> can drift apart. Consolidating it behind a single
-resolved task object is the next structural change; nothing here claims a
-current disagreement between those surfaces.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ResolvedForecastTask</span></code> is the single answer, and <code class="docutils literal notranslate"><span class="pre">_run_cells</span></code> resolves each
+(target, arm) cell once and hands the same objects to every consumer:
+execution, the result-store digest, the checkpoint cell manifests, and the
+provenance echo. Those four used to derive the policy override and the feature
+retarget independently, and two of them disagreed about what an unretargetable
+feature spec means — a digest could describe a forecast that was never run.
+<code class="docutils literal notranslate"><span class="pre">tests/pipeline/test_shared_cell_task.py</span></code> counts the retargets over a
+production run so the coincidence that hid it cannot come back.</p>
+<p><code class="docutils literal notranslate"><span class="pre">_feature_spec_for_policy</span></code> still builds a fresh <code class="docutils literal notranslate"><span class="pre">FeatureSpec</span></code> per (horizon,
+policy), but it bakes in the horizon and transform the resolved task already
+fixed rather than deciding again which forecast this is.</p>
 </section>
-<section id="evaluation-reads-data">
-<h2>Evaluation reads data<a class="headerlink" href="#evaluation-reads-data" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">[GAP]</span></code> <code class="docutils literal notranslate"><span class="pre">pipeline/evaluate.py</span></code> calls <code class="docutils literal notranslate"><span class="pre">load_fred_series()</span></code> to resolve a named
-subsample mask (for example <code class="docutils literal notranslate"><span class="pre">nber_recession</span></code>). Evaluation is otherwise pure
-computation over a forecast table, so this makes the evaluation of one fixed
-table depend on network and cache state. Resolving named masks earlier — at spec
-time, alongside their provenance — would restore that purity.</p>
+<section id="evaluation-does-not-read-data">
+<h2>Evaluation does not read data<a class="headerlink" href="#evaluation-does-not-read-data" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pipeline/evaluate.py</span></code> is computation over a forecast table and nothing else:
+the same table and the same spec produce the same tables whatever the network,
+the FRED cache, and the filesystem are doing. One input used to break that. A
+named subsample mask (<code class="docutils literal notranslate"><span class="pre">nber_recession</span></code>, <code class="docutils literal notranslate"><span class="pre">nber_expansion</span></code>) is a <em>name</em>, and
+turning it into a boolean state series meant a <code class="docutils literal notranslate"><span class="pre">load_fred_series()</span></code> call from
+inside the evaluator, so scoring one fixed table could disagree between runs, or
+fail offline, for reasons that had nothing to do with the forecasts.</p>
+<p>Named masks are resolved before evaluation now, once per evaluation operation:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>step</p></th>
+<th class="head"><p>file</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>declared</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pipeline/spec.py</span></code> (<code class="docutils literal notranslate"><span class="pre">SubsampleWindow.mask</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>resolved</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pipeline/evaluation_inputs.py</span></code> (<code class="docutils literal notranslate"><span class="pre">resolve_evaluation_inputs</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>aligned and applied</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pipeline/evaluate.py</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">run_pipeline</span></code> and <code class="docutils literal notranslate"><span class="pre">rescore</span></code> call the resolver on the master forecast frame and
+pass what comes back to <code class="docutils literal notranslate"><span class="pre">evaluate(...,</span> <span class="pre">inputs=...)</span></code>. The evaluator aligns that
+state series against the forecast target dates, enforces the same strict
+overlap/coverage/NaN errors it always did, and publishes the provenance it was
+handed. It never calls a loader, which is why <code class="docutils literal notranslate"><span class="pre">evaluate()</span></code> invoked directly with
+a named mask and no resolved inputs raises and says how to resolve them rather
+than quietly reaching for the network. Masks a user supplies as a Series or
+mapping never needed data and are unchanged.</p>
+<p>The split follows the question each half answers: which series a name means at
+the frame’s frequency is a data question, and whether that series covers the
+forecast dates is a question about the frame. Resolving also de-duplicates —
+both NBER indicators read one series per frequency (<code class="docutils literal notranslate"><span class="pre">USREC</span></code> monthly, <code class="docutils literal notranslate"><span class="pre">USRECQ</span></code>
+quarterly) and differ only in polarity, so an evaluation using recession <em>and</em>
+expansion now loads once rather than twice.</p>
+<p>This is enforced by <code class="docutils literal notranslate"><span class="pre">tests/architecture/test_evaluation_purity.py</span></code>, from both
+ends: the evaluator’s source may import no loader and no I/O module, and a full
+named-mask evaluation over already-resolved inputs must still run — twice,
+identically — with the loader replaced by a function that raises.</p>
 </section>
 </section>
 
@@ -729,8 +777,8 @@ time, alongside their provenance — would restore that purity.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-matters">Why it matters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-known-exceptions">Two known exceptions</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-two-stage-forecasting-structure">The two-stage forecasting structure</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-a-forecast-task-is-resolved-today">Where a forecast task is resolved today</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluation-reads-data">Evaluation reads data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-a-forecast-task-is-resolved">Where a forecast task is resolved</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluation-does-not-read-data">Evaluation does not read data</a></li>
 </ul>
   </nav></div>
 
