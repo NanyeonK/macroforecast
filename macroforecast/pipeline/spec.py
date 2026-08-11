@@ -203,7 +203,9 @@ def _canonical_tags(tags: Mapping[str, ArmTagValue] | None) -> Mapping[str, ArmT
 # The forecast object is the h-period CUMULATION (direct_average), not the raw
 # single-period transform. I(2) price/level series (6, 3) are reduced to the
 # first-difference object averaged over the horizon (the standard convention:
-# forecast average inflation, not the twice-differenced object).
+# forecast average inflation, not the twice-differenced object). Callers that
+# refuse this substitution can pass reduce_i2=False and receive an actionable
+# error, or explicitly declare the target object or active t-code mapping.
 TCODE_TARGET_MAP: dict[int, tuple[str, str]] = {
     1: ("direct", "level"),
     2: ("direct_average", "change"),
@@ -215,6 +217,8 @@ TCODE_TARGET_MAP: dict[int, tuple[str, str]] = {
     7: ("direct_average", "growth"),
 }
 
+_I2_REDUCED_TCODES = frozenset({3, 6})
+
 
 @dataclass(frozen=True)
 class TargetSpec:
@@ -224,9 +228,10 @@ class TargetSpec:
     be left as ``None`` so FRED transformation-code metadata chooses the
     conventional forecast object. For example, a FRED-MD growth-rate target
     resolves to a direct-average growth forecast rather than a raw level
-    forecast. ``annualize`` affects reporting scale only, while ``reduce_i2``
-    keeps the package's convention for I(2) series by forecasting the
-    first-difference object.
+    forecast. ``annualize`` affects reporting scale only. ``reduce_i2=True``
+    accepts the package convention for t-codes 3 and 6, which forecasts the
+    first-difference object. Setting it to ``False`` refuses that convention
+    and raises when no explicit target object or t-code mapping replaces it.
 
     Returns
     -------
@@ -1124,20 +1129,43 @@ def resolve_target(
 
     Explicit ``TargetSpec.transform``/``policy`` win; otherwise the t-code (passed
     or read from ``data`` metadata) is mapped through ``tcode_map`` (defaults to
-    :data:`TCODE_TARGET_MAP`). Raises if neither an explicit transform nor a
-    t-code is available.
+    :data:`TCODE_TARGET_MAP`). ``reduce_i2=False`` on either the function or the
+    target refuses the package's default first-difference convention for t-codes
+    3 and 6. In that case the caller must supply an explicit transform or an
+    explicit ``tcode_map`` entry for the active code. Raises if neither an
+    explicit transform nor a t-code is available.
     """
     spec = target if isinstance(target, TargetSpec) else TargetSpec(name=str(target))
     code = tcode if tcode is not None else _tcode_for(data, spec.name)
     mapping = dict(TCODE_TARGET_MAP)
+    override_codes: set[int] = set()
     if tcode_map is not None:
-        mapping.update({int(k): cast("tuple[str, str]", tuple(v)) for k, v in tcode_map.items()})
+        overrides = {
+            int(k): cast("tuple[str, str]", tuple(v))
+            for k, v in tcode_map.items()
+        }
+        mapping.update(overrides)
+        override_codes = set(overrides)
 
     if spec.transform is not None:
         transform = str(spec.transform)
         policy = spec.policy or _POLICY_BY_TRANSFORM.get(transform, "direct_average")
     elif code is not None and int(code) in mapping:
-        policy, transform = mapping[int(code)]
+        code_int = int(code)
+        if (
+            code_int in _I2_REDUCED_TCODES
+            and code_int not in override_codes
+            and not (bool(reduce_i2) and bool(spec.reduce_i2))
+        ):
+            raise ValueError(
+                f"target {spec.name!r}: reduce_i2=False refuses the package's "
+                f"default I(2) reduction for t-code {code_int}, but no "
+                "second-difference target transform is implemented; accept "
+                "the convention with reduce_i2=True, provide "
+                "TargetSpec(transform=...), or provide a tcode_map entry for "
+                "this code"
+            )
+        policy, transform = mapping[code_int]
         if spec.policy is not None:
             policy = spec.policy
     else:
