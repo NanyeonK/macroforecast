@@ -1,2663 +1,4600 @@
 {
- "symbols": [
-  {
-   "name": "AlignmentWindow",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.AlignmentWindow",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "Any",
-   "tier": "ADVANCED",
-   "canonical": "mf.tests.Any",
-   "kind": "_AnyMeta",
-   "in_docs": false
-  },
-  {
-   "name": "BaggingRegressor",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.BaggingRegressor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "BoogingRegressor",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.BoogingRegressor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "CombinationSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.CombinationSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "DEFAULT_RANDOM_SEED",
-   "tier": "EXPERIMENTAL",
-   "canonical": "mf.meta.DEFAULT_RANDOM_SEED",
-   "kind": "int",
-   "in_docs": false
-  },
-  {
-   "name": "DataBundle",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.DataBundle",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "DataSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.DataSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "EstimationWindow",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.EstimationWindow",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "EvaluationReport",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.EvaluationReport",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "FeatureSelectionResult",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.FeatureSelectionResult",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "FeatureSet",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.FeatureSet",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "FeatureSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.FeatureSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "FittedFeatureBuilder",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.FittedFeatureBuilder",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "FittedPreprocessor",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.FittedPreprocessor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "ForecastResult",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.ForecastResult",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "LGBAPlusRegressor",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.LGBAPlusRegressor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "LGBPlusRegressor",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.LGBPlusRegressor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "MODEL_ENSEMBLE_BASE_ESTIMATORS",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.MODEL_ENSEMBLE_BASE_ESTIMATORS",
-   "kind": "dict",
-   "in_docs": false
-  },
-  {
-   "name": "MODEL_ENSEMBLE_SPECS",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.MODEL_ENSEMBLE_SPECS",
-   "kind": "dict",
-   "in_docs": false
-  },
-  {
-   "name": "MetadataLevel",
-   "tier": "EXPERIMENTAL",
-   "canonical": "mf.meta.MetadataLevel",
-   "kind": "_LiteralGenericAlias",
-   "in_docs": false
-  },
-  {
-   "name": "ModelFit",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ModelFit",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "ModelParameter",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ModelParameter",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "ModelSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ModelSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "ParamDistribution",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.ParamDistribution",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "PreprocessSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.PreprocessSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "PreprocessedData",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.PreprocessedData",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "RandomSubspaceRegressor",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.RandomSubspaceRegressor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "RegimeDirection",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.RegimeDirection",
-   "kind": "_LiteralGenericAlias",
-   "in_docs": false
-  },
-  {
-   "name": "SamePeriodPolicy",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.SamePeriodPolicy",
-   "kind": "_LiteralGenericAlias",
-   "in_docs": false
-  },
-  {
-   "name": "SavedModel",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.SavedModel",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "SearchError",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.SearchError",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "SearchResult",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.SearchResult",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "SearchSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.SearchSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "Split",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.Split",
-   "kind": "GenericAlias",
-   "in_docs": false
-  },
-  {
-   "name": "StackingRegressor",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.StackingRegressor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "StageDefaultScope",
-   "tier": "EXPERIMENTAL",
-   "canonical": "mf.meta.StageDefaultScope",
-   "kind": "_LiteralGenericAlias",
-   "in_docs": false
-  },
-  {
-   "name": "StagePolicy",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.StagePolicy",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "SuperLearnerRegressor",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.SuperLearnerRegressor",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "TestWindow",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.TestWindow",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "ValWindow",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.ValWindow",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "ValidationSplitterSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.ValidationSplitterSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "VintagePanelSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.VintagePanelSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "VintageSource",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.VintageSource",
-   "kind": "_ProtocolMeta",
-   "in_docs": false
-  },
-  {
-   "name": "VintageUnavailableError",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.VintageUnavailableError",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "VolatilityFit",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.VolatilityFit",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "WindowSpec",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.WindowSpec",
-   "kind": "type",
-   "in_docs": false
-  },
-  {
-   "name": "adaptive_elastic_net",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.adaptive_elastic_net",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "adaptive_lasso",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.adaptive_lasso",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "adaptive_ma_rf_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.adaptive_ma_rf_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "aggregate_scores",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.aggregate_scores",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "albacore_components",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.albacore_components",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "albacore_ranks",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.albacore_ranks",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "align_frequency",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.align_frequency",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "align_reference_weights",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.align_reference_weights",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "alignment_drop_incomplete",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.alignment_drop_incomplete",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "alignment_keep_missing",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.alignment_keep_missing",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "analysis",
-   "tier": "submodule",
-   "canonical": "mf.analysis",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "annotations",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.annotations",
-   "kind": "_Feature",
-   "in_docs": false
-  },
-  {
-   "name": "ar",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ar",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "ar_bic",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ar_bic",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "arima",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.arima",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "as_panel",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.as_panel",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "assemblage_regression",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.assemblage_regression",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "asymmetric_trim_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.asymmetric_trim_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "attach_metadata",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.attach_metadata",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "auto_arima",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.auto_arima",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "availability_lag",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.availability_lag",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "average_target",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.average_target",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "axis_contribution",
-   "tier": "ADVANCED",
-   "canonical": "mf.axis_contribution",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "bagging",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.bagging",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "bayesian_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.bayesian_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "bayesian_search",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.bayesian_search",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "benchmark_comparison",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.benchmark_comparison",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "blocked_kfold",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.blocked_kfold",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "blocked_kfold_split",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.blocked_kfold_split",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "booging",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.booging",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "boruta_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.boruta_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "build_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.build_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "bvar_minnesota",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.bvar_minnesota",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "bvar_normal_inverse_wishart",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.bvar_normal_inverse_wishart",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "catboost",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.catboost",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "choice",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.choice",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "chow_lin_disaggregate",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.chow_lin_disaggregate",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combination_spec",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combination_spec",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.combine",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_bates_granger",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_bates_granger",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_best_n",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_best_n",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_constrained_ls",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_constrained_ls",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_dmspe",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_dmspe",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_eigenvector",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_eigenvector",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_granger_ramanathan",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_granger_ramanathan",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_inverse_mspe",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_inverse_mspe",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_linear_pool",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_linear_pool",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_log_pool",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_log_pool",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_mean",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_mean",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_median",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_median",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_regularized",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_regularized",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_trimmed_mean",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_trimmed_mean",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "combine_winsorized_mean",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.combine_winsorized_mean",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "component_aggregation",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.component_aggregation",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "compose_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.compose_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "configure",
-   "tier": "STABLE",
-   "canonical": "mf.meta.configure",
-   "kind": "function",
-   "in_docs": true
-  },
-  {
-   "name": "correlation_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.correlation_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "csr",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.csr",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "cumsum_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.cumsum_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_combination",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.custom_combination",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_dataset",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.custom_dataset",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.custom_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_model",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.custom_model",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_model_ensemble",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.custom_model_ensemble",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_preprocess",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.custom_preprocess",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_preprocess_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.custom_preprocess_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_search",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.custom_search",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_stage_policy",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.custom_stage_policy",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.custom_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "custom_vintages",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.custom_vintages",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "cv_path",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.cv_path",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "data",
-   "tier": "submodule",
-   "canonical": "mf.data",
-   "kind": "module",
-   "in_docs": true
-  },
-  {
-   "name": "data_analysis",
-   "tier": "submodule",
-   "canonical": "mf.data_analysis",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "decision_tree",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.decision_tree",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "define_regime",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.define_regime",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "density_hnn",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.density_hnn",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "describe_model",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.describe_model",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "describe_model_ensemble",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.describe_model_ensemble",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "dfm_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.dfm_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "dfm_mixed_mariano_murasawa",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.dfm_mixed_mariano_murasawa",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "dfm_unrestricted_midas",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.dfm_unrestricted_midas",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "diff_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.diff_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "direct_target",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.direct_target",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "egarch",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.egarch",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "elastic_net",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.elastic_net",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "error_decomposition",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.error_decomposition",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "estimation_expanding",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.estimation_expanding",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "estimation_fixed",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.estimation_fixed",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "estimation_rolling",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.estimation_rolling",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "ets",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ets",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "evaluate_report",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.evaluate_report",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "evaluation",
-   "tier": "submodule",
-   "canonical": "mf.evaluation",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "expanding",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.expanding",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "expanding_split",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.expanding_split",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "explicit_folds",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.explicit_folds",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "extra_trees",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.extra_trees",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "far",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.far",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "favar",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.favar",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "feature_analysis",
-   "tier": "submodule",
-   "canonical": "mf.feature_analysis",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "feature_diagnostic",
-   "tier": "submodule",
-   "canonical": "mf.feature_diagnostic",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "feature_engineering",
-   "tier": "submodule",
-   "canonical": "mf.feature_engineering",
-   "kind": "module",
-   "in_docs": true
-  },
-  {
-   "name": "feature_matrix",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.feature_matrix",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "feature_selection_requires_target",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.feature_selection_requires_target",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "feature_spec",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.feature_spec",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "filter_oos_period",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.filter_oos_period",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "filters",
-   "tier": "submodule",
-   "canonical": "mf.filters",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "fixed",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.fixed",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "forecast_analysis",
-   "tier": "submodule",
-   "canonical": "mf.forecast_analysis",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "forecast_diagnostic",
-   "tier": "submodule",
-   "canonical": "mf.forecast_diagnostic",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "forecasting",
-   "tier": "submodule",
-   "canonical": "mf.forecasting",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "forward_average_target",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.forward_average_target",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "fourier_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.fourier_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "fourier_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.fourier_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "fred_md_vintages",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.fred_md_vintages",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "fred_qd_vintages",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.fred_qd_vintages",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "frequency_hardening_issues",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.frequency_hardening_issues",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "from_cutoffs",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.from_cutoffs",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "fused_difference_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.fused_difference_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "garch11",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.garch11",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "genetic_search",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.genetic_search",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "genetic_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.genetic_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "get_config",
-   "tier": "EXPERIMENTAL",
-   "canonical": "mf.meta.get_config",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "get_model",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.get_model",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "get_model_ensemble",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.get_model_ensemble",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "get_option",
-   "tier": "EXPERIMENTAL",
-   "canonical": "mf.meta.get_option",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "gjr_garch",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.gjr_garch",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "glmboost",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.glmboost",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "gradient_boosting",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.gradient_boosting",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "grid",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.grid",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "group_lasso",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.group_lasso",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "group_pca",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.group_pca",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "group_pca_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.group_pca_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "gru",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.gru",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "hamilton_filter_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.hamilton_filter_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "hamilton_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.hamilton_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "hemisphere_nn",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.hemisphere_nn",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "hist_mean",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.hist_mean",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "holt_winters",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.holt_winters",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "hp_filter_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.hp_filter_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "huber",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.huber",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "import_module",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.import_module",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "infer_frequencies",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.infer_frequencies",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "interaction_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.interaction_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "interaction_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.interaction_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "interpretation",
-   "tier": "submodule",
-   "canonical": "mf.interpretation",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "jma",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.jma",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "kernel_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.kernel_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "knn",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.knn",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lag",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.lag",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lag_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.lag_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lags_then_pca",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.lags_then_pca",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lasso",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.lasso",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lasso_path_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.lasso_path_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lasso_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.lasso_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "last_block",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.last_block",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "last_block_split",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.last_block_split",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lgb_plus",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.lgb_plus",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lgba_plus",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.lgba_plus",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lightgbm",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.lightgbm",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "linear_svr",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.linear_svr",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "list_model_ensemble_bases",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.list_model_ensemble_bases",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "list_model_ensemble_specs",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.list_model_ensemble_specs",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "list_model_specs",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.list_model_specs",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "list_vintages",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.list_vintages",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_custom_csv",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.load_custom_csv",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_custom_parquet",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.load_custom_parquet",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_fit",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.load_fit",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_fred_md",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.load_fred_md",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_fred_md_sd",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.load_fred_md_sd",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_fred_qd",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.load_fred_qd",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_fred_qd_sd",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.load_fred_qd_sd",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "load_fred_sd",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.load_fred_sd",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "log_diff_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.log_diff_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "log_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.log_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "log_uniform",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.log_uniform",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "lstm",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.lstm",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "macro_random_forest",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.macro_random_forest",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "maf_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.maf_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "maf_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.maf_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "make_splitter",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.make_splitter",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "mars",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.mars",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "marx_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.marx_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "meta",
-   "tier": "submodule",
-   "canonical": "mf.meta",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "metadata",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.metadata",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "metrics",
-   "tier": "submodule",
-   "canonical": "mf.evaluation.metrics",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "midas_almon",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.midas_almon",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "midas_beta",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.midas_beta",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "midas_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.midas_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "mixed_frequency_lags",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.mixed_frequency_lags",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "model_ensemble",
-   "tier": "submodule",
-   "canonical": "mf.model_ensemble",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "model_ensemble_search_space",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.model_ensemble_search_space",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "model_search_space",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.model_search_space",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "model_selection",
-   "tier": "submodule",
-   "canonical": "mf.model_selection",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "models",
-   "tier": "submodule",
-   "canonical": "mf.models",
-   "kind": "module",
-   "in_docs": true
-  },
-  {
-   "name": "moving_average_changes",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.moving_average_changes",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "moving_average_ladder",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.moving_average_ladder",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "moving_average_pca_lags",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.moving_average_pca_lags",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "moving_average_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.moving_average_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "naive",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.naive",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "nn",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.nn",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "nonneg_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.nonneg_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "normalize_feature_selection_method",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.normalize_feature_selection_method",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "normalize_window_name",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.normalize_window_name",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "nu_svr",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.nu_svr",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "nystroem_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.nystroem_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "nystroem_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.nystroem_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "ols",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ols",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "output",
-   "tier": "submodule",
-   "canonical": "mf.output",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "panel_info",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.panel_info",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "partial_least_squares_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.partial_least_squares_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "partial_least_squares_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.partial_least_squares_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "path_targets",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.path_targets",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "pca_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.pca_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "pca_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.pca_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "pca_then_lags",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.pca_then_lags",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "pcr",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.pcr",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "pct_change_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.pct_change_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "pipeline",
-   "tier": "submodule",
-   "canonical": "mf.pipeline",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "pls",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.pls",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "polynomial_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.polynomial_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "polynomial_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.polynomial_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "poos",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.poos",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "poos_split",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.poos_split",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "predictor_screen",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.predictor_screen",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "preprocess_spec",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.preprocess_spec",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "preprocessing",
-   "tier": "submodule",
-   "canonical": "mf.preprocessing",
-   "kind": "module",
-   "in_docs": true
-  },
-  {
-   "name": "quantile_regression_forest",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.quantile_regression_forest",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "randint",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.randint",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_forest",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.random_forest",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_kfold",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.random_kfold",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_kfold_split",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.random_kfold_split",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_projection_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.random_projection_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_projection_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.random_projection_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_search",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.random_search",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_subspace",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.random_subspace",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_walk_drift",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.random_walk_drift",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "random_walk_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.random_walk_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "rank_aggregation",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.rank_aggregation",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "rank_space_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.rank_space_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "realized_garch",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.realized_garch",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "recursive_threefold",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.recursive_threefold",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "regime_scores",
-   "tier": "ADVANCED",
-   "canonical": "mf.evaluation.regime_scores",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "reporting",
-   "tier": "submodule",
-   "canonical": "mf.reporting",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "reprocess",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.reprocess",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "reset_config",
-   "tier": "EXPERIMENTAL",
-   "canonical": "mf.meta.reset_config",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "resolve_stage_policy",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.resolve_stage_policy",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "resolve_window",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.resolve_window",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "restricted_midas",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.restricted_midas",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "rfe_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.rfe_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "rolling_blocks",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.rolling_blocks",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "rolling_blocks_split",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.rolling_blocks_split",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "rolling_mean",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.rolling_mean",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "rolling_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.rolling_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "run",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.run",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "run_forecast",
-   "tier": "ADVANCED",
-   "canonical": "mf.forecasting.run_forecast",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "same_period_predictors",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.same_period_predictors",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "save_fit",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.save_fit",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "savitzky_golay_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.savitzky_golay_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "scale_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.scale_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "scale_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.scale_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "scaled_pca",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.scaled_pca",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "search_spec",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.search_spec",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "season_dummy",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.season_dummy",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "season_dummy_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.season_dummy_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "seasonal_lag",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.seasonal_lag",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "seasonal_lag_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.seasonal_lag_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "seasonal_naive",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.seasonal_naive",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "select_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.select_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "select_params",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.select_params",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "selection_frequency_table",
-   "tier": "ADVANCED",
-   "canonical": "mf.pipeline.selection_frequency_table",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "selection_history",
-   "tier": "ADVANCED",
-   "canonical": "mf.pipeline.selection_history",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "set_frequencies",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.set_frequencies",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "setar",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.setar",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "shrink_to_target_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.shrink_to_target_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "sliced_inverse_regression_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.sliced_inverse_regression_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "sliced_inverse_regression_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.sliced_inverse_regression_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "solve_fused_difference_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.solve_fused_difference_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "solve_mean_aligned_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.solve_mean_aligned_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "solve_nonnegative_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.solve_nonnegative_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "solve_simplex_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.solve_simplex_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "solve_target_shrinkage_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.solve_target_shrinkage_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "sparse_group_lasso",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.sparse_group_lasso",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "sparse_pca_chen_rohe_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.sparse_pca_chen_rohe_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "sparse_pca_chen_rohe_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.sparse_pca_chen_rohe_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "spec",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.spec",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "split_table",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.split_table",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "stability_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.stability_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "stacking",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.stacking",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "stage_index",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.stage_index",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "stage_panel",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.stage_panel",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "stage_policy",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.stage_policy",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "standardize_panel",
-   "tier": "ADVANCED",
-   "canonical": "mf.preprocessing.standardize_panel",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "star",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.star",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "stlf",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.stlf",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "subagging",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.subagging",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "super_learner",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_ensemble.super_learner",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "supervised_aggregation",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.supervised_aggregation",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "supervised_pca",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.supervised_pca",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "supervised_scaled_pca",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.supervised_scaled_pca",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "svr",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.svr",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "test_origins",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.test_origins",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "tests",
-   "tier": "submodule",
-   "canonical": "mf.evaluation.tests",
-   "kind": "module",
-   "in_docs": false
-  },
-  {
-   "name": "tgarch",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.tgarch",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "theta_method",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.theta_method",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "time_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.time_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "time_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.time_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "transform_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.transform_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "transform_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.transform_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "transformer",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.transformer",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "tvp_ridge",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.tvp_ridge",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "ucsv",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.ucsv",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "uniform",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.uniform",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "unrestricted_midas",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.unrestricted_midas",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "use_config",
-   "tier": "EXPERIMENTAL",
-   "canonical": "mf.meta.use_config",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "val_blocked_kfold",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.val_blocked_kfold",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "val_expanding",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.val_expanding",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "val_last_block",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.val_last_block",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "val_poos",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.val_poos",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "val_random_kfold",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.val_random_kfold",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "val_rolling_blocks",
-   "tier": "ADVANCED",
-   "canonical": "mf.window.val_rolling_blocks",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "validate_panel",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.validate_panel",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "validation_splitter",
-   "tier": "ADVANCED",
-   "canonical": "mf.model_selection.validation_splitter",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "var",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.var",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "variance_selection",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.variance_selection",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "varimax_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.varimax_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "varimax_step",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.varimax_step",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "wavelet_features",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.wavelet_features",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "weighted_aggregate",
-   "tier": "ADVANCED",
-   "canonical": "mf.feature_engineering.weighted_aggregate",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "window",
-   "tier": "submodule",
-   "canonical": "mf.window",
-   "kind": "module",
-   "in_docs": true
-  },
-  {
-   "name": "with_static_extras",
-   "tier": "ADVANCED",
-   "canonical": "mf.data.with_static_extras",
-   "kind": "function",
-   "in_docs": false
-  },
-  {
-   "name": "xgboost",
-   "tier": "ADVANCED",
-   "canonical": "mf.models.xgboost",
-   "kind": "function",
-   "in_docs": false
-  }
+ "schema": "macroforecast.api_inventory",
+ "schema_version": 3,
+ "package_version": "0.9.5",
+ "authorities": [
+  "macroforecast._LAZY_EXPORTS",
+  "macroforecast._LAZY_MODULES",
+  "<submodule>.__all__",
+  "object.__module__ (corroboration only)"
  ],
  "counts": {
-  "ADVANCED": 348,
-  "EXPERIMENTAL": 7,
-  "submodule": 23,
-  "STABLE": 1
+  "supported": 376,
+  "lazy_exports": 353,
+  "lazy_modules": 23,
+  "export_kinds": {
+   "lazy_export": 353,
+   "namespace": 23
+  },
+  "documented": 6,
+  "special": 1,
+  "non_api_globals": 3,
+  "public_dir": 379
+ },
+ "identities": {
+  "supported == lazy_exports + lazy_modules": true,
+  "export_kind rows == lazy_exports + lazy_modules": true,
+  "public_dir == supported + non_api_globals": true
+ },
+ "corroboration": {
+  "owner_all_exceptions": [],
+  "module_attr_exceptions": [
+   "MetadataLevel",
+   "RegimeDirection",
+   "SamePeriodPolicy",
+   "Split",
+   "StageDefaultScope"
+  ],
+  "module_attr_absent": [
+   "DEFAULT_RANDOM_SEED",
+   "MODEL_ENSEMBLE_BASE_ESTIMATORS",
+   "MODEL_ENSEMBLE_SPECS"
+  ]
+ },
+ "surfaces": {
+  "supported": [
+   {
+    "name": "AlignmentWindow",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.AlignmentWindow",
+    "owner": "window",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "BaggingRegressor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.BaggingRegressor",
+    "owner": "model_ensemble",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "BoogingRegressor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.BoogingRegressor",
+    "owner": "model_ensemble",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "CombinationSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.CombinationSpec",
+    "owner": "forecasting",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "DEFAULT_RANDOM_SEED",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.DEFAULT_RANDOM_SEED",
+    "owner": "meta",
+    "kind": "int",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "DataBundle",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.DataBundle",
+    "owner": "data",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "DataSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.DataSpec",
+    "owner": "data",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "EstimationWindow",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.EstimationWindow",
+    "owner": "window",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "EvaluationReport",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.evaluation.EvaluationReport",
+    "owner": "evaluation",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.evaluation.report",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "FeatureSelectionResult",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.FeatureSelectionResult",
+    "owner": "feature_engineering",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "FeatureSet",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.FeatureSet",
+    "owner": "feature_engineering",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "FeatureSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.FeatureSpec",
+    "owner": "feature_engineering",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "FittedFeatureBuilder",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.FittedFeatureBuilder",
+    "owner": "feature_engineering",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "FittedPreprocessor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.FittedPreprocessor",
+    "owner": "preprocessing",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ForecastResult",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.ForecastResult",
+    "owner": "forecasting",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "LGBAPlusRegressor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.LGBAPlusRegressor",
+    "owner": "models",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "LGBPlusRegressor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.LGBPlusRegressor",
+    "owner": "models",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "MODEL_ENSEMBLE_BASE_ESTIMATORS",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.MODEL_ENSEMBLE_BASE_ESTIMATORS",
+    "owner": "model_ensemble",
+    "kind": "dict",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "MODEL_ENSEMBLE_SPECS",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.MODEL_ENSEMBLE_SPECS",
+    "owner": "model_ensemble",
+    "kind": "dict",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "MetadataLevel",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.MetadataLevel",
+    "owner": "meta",
+    "kind": "typing_construct",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "typing",
+    "module_attr_agrees": false
+   },
+   {
+    "name": "ModelFit",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ModelFit",
+    "owner": "models",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ModelParameter",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ModelParameter",
+    "owner": "models",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ModelSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ModelSpec",
+    "owner": "models",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ParamDistribution",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.ParamDistribution",
+    "owner": "model_selection",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "PreprocessSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.PreprocessSpec",
+    "owner": "preprocessing",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "PreprocessedData",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.PreprocessedData",
+    "owner": "preprocessing",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "RandomSubspaceRegressor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.RandomSubspaceRegressor",
+    "owner": "model_ensemble",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "RegimeDirection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.RegimeDirection",
+    "owner": "data",
+    "kind": "typing_construct",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "typing",
+    "module_attr_agrees": false
+   },
+   {
+    "name": "SamePeriodPolicy",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.SamePeriodPolicy",
+    "owner": "data",
+    "kind": "typing_construct",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "typing",
+    "module_attr_agrees": false
+   },
+   {
+    "name": "SavedModel",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.SavedModel",
+    "owner": "models",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.persistence",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "SearchError",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.SearchError",
+    "owner": "model_selection",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "SearchResult",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.SearchResult",
+    "owner": "model_selection",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "SearchSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.SearchSpec",
+    "owner": "model_selection",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "Split",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.Split",
+    "owner": "window",
+    "kind": "GenericAlias",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "builtins",
+    "module_attr_agrees": false
+   },
+   {
+    "name": "StackingRegressor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.StackingRegressor",
+    "owner": "model_ensemble",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "StageDefaultScope",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.StageDefaultScope",
+    "owner": "meta",
+    "kind": "typing_construct",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "typing",
+    "module_attr_agrees": false
+   },
+   {
+    "name": "StagePolicy",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.StagePolicy",
+    "owner": "window",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.policy",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "SuperLearnerRegressor",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.SuperLearnerRegressor",
+    "owner": "model_ensemble",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "TestWindow",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.TestWindow",
+    "owner": "window",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ValWindow",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.ValWindow",
+    "owner": "window",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ValidationSplitterSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.ValidationSplitterSpec",
+    "owner": "model_selection",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "VintagePanelSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.VintagePanelSpec",
+    "owner": "data",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.vintage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "VintageSource",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.VintageSource",
+    "owner": "data",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.vintage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "VintageUnavailableError",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.VintageUnavailableError",
+    "owner": "data",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.errors",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "VolatilityFit",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.VolatilityFit",
+    "owner": "models",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.types",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "WindowSpec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.WindowSpec",
+    "owner": "window",
+    "kind": "type",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "adaptive_elastic_net",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.adaptive_elastic_net",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "adaptive_lasso",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.adaptive_lasso",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "adaptive_ma_rf_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.adaptive_ma_rf_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "aggregate_scores",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.evaluation.aggregate_scores",
+    "owner": "evaluation",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.evaluation.report",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "albacore_components",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.albacore_components",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "albacore_ranks",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.albacore_ranks",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "align_frequency",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.align_frequency",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.policies",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "align_reference_weights",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.align_reference_weights",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.aggregation",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "alignment_drop_incomplete",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.alignment_drop_incomplete",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "alignment_keep_missing",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.alignment_keep_missing",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "analysis",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.analysis",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "ar",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ar",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ar_bic",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ar_bic",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "arima",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.arima",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "as_panel",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.as_panel",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "assemblage_regression",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.assemblage_regression",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "asymmetric_trim_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.asymmetric_trim_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "attach_metadata",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.attach_metadata",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "auto_arima",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.auto_arima",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "availability_lag",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.availability_lag",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.policies",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "average_target",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.average_target",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.targets",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "axis_contribution",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.analysis.axis_contribution",
+    "owner": "analysis",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.analysis.contribution",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "bagging",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.bagging",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "bayesian_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.bayesian_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "bayesian_search",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.bayesian_search",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "benchmark_comparison",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.evaluation.benchmark_comparison",
+    "owner": "evaluation",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.evaluation.report",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "blocked_kfold",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.blocked_kfold",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "blocked_kfold_split",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.blocked_kfold_split",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "booging",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.booging",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "boruta_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.boruta_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "build_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.build_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.builder",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "bvar_minnesota",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.bvar_minnesota",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "bvar_normal_inverse_wishart",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.bvar_normal_inverse_wishart",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "catboost",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.catboost",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "choice",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.choice",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "chow_lin_disaggregate",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.chow_lin_disaggregate",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.policies",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combination_spec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combination_spec",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.combine",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_bates_granger",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_bates_granger",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_best_n",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_best_n",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_constrained_ls",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_constrained_ls",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_dmspe",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_dmspe",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_eigenvector",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_eigenvector",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_granger_ramanathan",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_granger_ramanathan",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_inverse_mspe",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_inverse_mspe",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_linear_pool",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_linear_pool",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_log_pool",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_log_pool",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_mean",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_mean",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_median",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_median",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_regularized",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_regularized",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_trimmed_mean",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_trimmed_mean",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "combine_winsorized_mean",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.combine_winsorized_mean",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "component_aggregation",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.component_aggregation",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "compose_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.compose_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "configure",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.configure",
+    "owner": "meta",
+    "kind": "function",
+    "in_docs": true,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.meta.config",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "correlation_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.correlation_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "csr",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.csr",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.model_averaging",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "cumsum_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.cumsum_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_combination",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.custom_combination",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.combination",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_dataset",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.custom_dataset",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.custom_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_model",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.custom_model",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_model_ensemble",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.custom_model_ensemble",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_preprocess",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.custom_preprocess",
+    "owner": "preprocessing",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.preprocess",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_preprocess_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.custom_preprocess_step",
+    "owner": "preprocessing",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_search",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.custom_search",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_stage_policy",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.custom_stage_policy",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.policy",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.custom_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "custom_vintages",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.custom_vintages",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.vintage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "cv_path",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.cv_path",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "data",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.data",
+    "owner": null,
+    "kind": "module",
+    "in_docs": true,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "data_analysis",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.data_analysis",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "decision_tree",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.decision_tree",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "define_regime",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.define_regime",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.policies",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "density_hnn",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.density_hnn",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.neural",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "describe_model",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.describe_model",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "describe_model_ensemble",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.describe_model_ensemble",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "dfm_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.dfm_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "dfm_mixed_mariano_murasawa",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.dfm_mixed_mariano_murasawa",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "dfm_unrestricted_midas",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.dfm_unrestricted_midas",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "diff_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.diff_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "direct_target",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.direct_target",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.targets",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "egarch",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.egarch",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.volatility",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "elastic_net",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.elastic_net",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "error_decomposition",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.evaluation.error_decomposition",
+    "owner": "evaluation",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.evaluation.report",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "estimation_expanding",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.estimation_expanding",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "estimation_fixed",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.estimation_fixed",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "estimation_rolling",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.estimation_rolling",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ets",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ets",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "evaluate_report",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.evaluation.evaluate_report",
+    "owner": "evaluation",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.evaluation.report",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "evaluation",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.evaluation",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "expanding",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.expanding",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "expanding_split",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.expanding_split",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "explicit_folds",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.explicit_folds",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.splitters",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "extra_trees",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.extra_trees",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "far",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.far",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "favar",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.favar",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "feature_analysis",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.feature_analysis",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "feature_diagnostic",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.feature_diagnostic",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "feature_engineering",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.feature_engineering",
+    "owner": null,
+    "kind": "module",
+    "in_docs": true,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "feature_matrix",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.feature_matrix",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.matrix",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "feature_selection_requires_target",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.feature_selection_requires_target",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "feature_spec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.feature_spec",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "filter_oos_period",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.evaluation.filter_oos_period",
+    "owner": "evaluation",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.evaluation.report",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "filters",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.filters",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "fixed",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.fixed",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "forecast_analysis",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.forecast_analysis",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "forecast_diagnostic",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.forecast_diagnostic",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "forecasting",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.forecasting",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "forward_average_target",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.forward_average_target",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.aggregation",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "fourier_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.fourier_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "fourier_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.fourier_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "fred_md_vintages",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.fred_md_vintages",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.vintage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "fred_qd_vintages",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.fred_qd_vintages",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.vintage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "frequency_hardening_issues",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.frequency_hardening_issues",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.policies",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "from_cutoffs",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.from_cutoffs",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "fused_difference_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.fused_difference_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "garch11",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.garch11",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.volatility",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "genetic_search",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.genetic_search",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "genetic_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.genetic_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "get_config",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.get_config",
+    "owner": "meta",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.meta.config",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "get_model",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.get_model",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "get_model_ensemble",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.get_model_ensemble",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "get_option",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.get_option",
+    "owner": "meta",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.meta.config",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "gjr_garch",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.gjr_garch",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.volatility",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "glmboost",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.glmboost",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "gradient_boosting",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.gradient_boosting",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "grid",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.grid",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "group_lasso",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.group_lasso",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "group_pca",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.group_pca",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "group_pca_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.group_pca_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "gru",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.gru",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.neural",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "hamilton_filter_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.hamilton_filter_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "hamilton_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.hamilton_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "hemisphere_nn",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.hemisphere_nn",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.neural",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "hist_mean",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.hist_mean",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "holt_winters",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.holt_winters",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "hp_filter_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.hp_filter_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "huber",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.huber",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "infer_frequencies",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.infer_frequencies",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.policies",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "interaction_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.interaction_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "interaction_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.interaction_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "interpretation",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.interpretation",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "jma",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.jma",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.model_averaging",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "kernel_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.kernel_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.nonparametric",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "knn",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.knn",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.nonparametric",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lag",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.lag",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lag_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.lag_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lags_then_pca",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.lags_then_pca",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lasso",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.lasso",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lasso_path_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.lasso_path_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lasso_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.lasso_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "last_block",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.last_block",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "last_block_split",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.last_block_split",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lgb_plus",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.lgb_plus",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lgba_plus",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.lgba_plus",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lightgbm",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.lightgbm",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "linear_svr",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.linear_svr",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.svm",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "list_model_ensemble_bases",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.list_model_ensemble_bases",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "list_model_ensemble_specs",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.list_model_ensemble_specs",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "list_model_specs",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.list_model_specs",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "list_vintages",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.list_vintages",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_custom_csv",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.load_custom_csv",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_custom_parquet",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.load_custom_parquet",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_fit",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.load_fit",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.persistence",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_fred_md",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.load_fred_md",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_fred_md_sd",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.load_fred_md_sd",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_fred_qd",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.load_fred_qd",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_fred_qd_sd",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.load_fred_qd_sd",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "load_fred_sd",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.load_fred_sd",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.loaders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "log_diff_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.log_diff_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "log_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.log_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "log_uniform",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.log_uniform",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "lstm",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.lstm",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.neural",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "macro_random_forest",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.macro_random_forest",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "maf_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.maf_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "maf_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.maf_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "make_splitter",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.make_splitter",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "mars",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.mars",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.spline",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "marx_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.marx_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "meta",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.meta",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "metadata",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.metadata",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "metrics",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.metrics",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "midas_almon",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.midas_almon",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "midas_beta",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.midas_beta",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "midas_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.midas_step",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "mixed_frequency_lags",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.mixed_frequency_lags",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "model_ensemble",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.model_ensemble",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "model_ensemble_search_space",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.model_ensemble_search_space",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "model_search_space",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.model_search_space",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "model_selection",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.model_selection",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "models",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.models",
+    "owner": null,
+    "kind": "module",
+    "in_docs": true,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "moving_average_changes",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.moving_average_changes",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.aggregation",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "moving_average_ladder",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.moving_average_ladder",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "moving_average_pca_lags",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.moving_average_pca_lags",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "moving_average_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.moving_average_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "naive",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.naive",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "nn",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.nn",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.neural",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "nonneg_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.nonneg_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "normalize_feature_selection_method",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.normalize_feature_selection_method",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "normalize_window_name",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.normalize_window_name",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "nu_svr",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.nu_svr",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.svm",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "nystroem_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.nystroem_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "nystroem_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.nystroem_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ols",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ols",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "output",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.output",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "panel_info",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.panel_info",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "partial_least_squares_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.partial_least_squares_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "partial_least_squares_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.partial_least_squares_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "path_targets",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.path_targets",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.targets",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "pca_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.pca_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "pca_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.pca_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "pca_then_lags",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.pca_then_lags",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "pcr",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.pcr",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "pct_change_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.pct_change_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "pipeline",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.pipeline",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "pls",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.pls",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "polynomial_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.polynomial_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "polynomial_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.polynomial_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "poos",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.poos",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "poos_split",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.poos_split",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "predictor_screen",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.predictor_screen",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "preprocess_spec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.preprocess_spec",
+    "owner": "preprocessing",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.specs",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "preprocessing",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.preprocessing",
+    "owner": null,
+    "kind": "module",
+    "in_docs": true,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "quantile_regression_forest",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.quantile_regression_forest",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "randint",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.randint",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_forest",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.random_forest",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_kfold",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.random_kfold",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_kfold_split",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.random_kfold_split",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_projection_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.random_projection_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_projection_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.random_projection_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_search",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.random_search",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_subspace",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.random_subspace",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_walk_drift",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.random_walk_drift",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "random_walk_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.random_walk_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "rank_aggregation",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.rank_aggregation",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "rank_space_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.rank_space_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.aggregation",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "realized_garch",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.realized_garch",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.volatility",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "recursive_threefold",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.recursive_threefold",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.splitters",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "regime_scores",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.evaluation.regime_scores",
+    "owner": "evaluation",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.evaluation.report",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "reporting",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.reporting",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "reprocess",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.reprocess",
+    "owner": "preprocessing",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.preprocess",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "reset_config",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.reset_config",
+    "owner": "meta",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.meta.config",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "resolve_stage_policy",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.resolve_stage_policy",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.policy",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "resolve_window",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.resolve_window",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "restricted_midas",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.restricted_midas",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "rfe_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.rfe_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "rolling_blocks",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.rolling_blocks",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "rolling_blocks_split",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.rolling_blocks_split",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "rolling_mean",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.rolling_mean",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "rolling_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.rolling_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "run",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.run",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.runner",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "run_forecast",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.forecasting.run_forecast",
+    "owner": "forecasting",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.forecasting.runner",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "same_period_predictors",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.same_period_predictors",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.policies",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "save_fit",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.save_fit",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.persistence",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "savitzky_golay_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.savitzky_golay_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "scale_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.scale_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "scale_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.scale_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "scaled_pca",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.scaled_pca",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "search_spec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.search_spec",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "season_dummy",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.season_dummy",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "season_dummy_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.season_dummy_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "seasonal_lag",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.seasonal_lag",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "seasonal_lag_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.seasonal_lag_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "seasonal_naive",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.seasonal_naive",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "select_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.select_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "select_params",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.select_params",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.search",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "selection_frequency_table",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.pipeline.selection_frequency_table",
+    "owner": "pipeline",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.pipeline.selection_history",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "selection_history",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.pipeline.selection_history",
+    "owner": "pipeline",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.pipeline.selection_history",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "set_frequencies",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.set_frequencies",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "setar",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.setar",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "shrink_to_target_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.shrink_to_target_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "sliced_inverse_regression_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.sliced_inverse_regression_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "sliced_inverse_regression_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.sliced_inverse_regression_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "solve_fused_difference_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.solve_fused_difference_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "solve_mean_aligned_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.solve_mean_aligned_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "solve_nonnegative_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.solve_nonnegative_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "solve_simplex_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.solve_simplex_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "solve_target_shrinkage_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.solve_target_shrinkage_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "sparse_group_lasso",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.sparse_group_lasso",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "sparse_pca_chen_rohe_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.sparse_pca_chen_rohe_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "sparse_pca_chen_rohe_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.sparse_pca_chen_rohe_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "spec",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.spec",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "split_table",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.split_table",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "stability_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.stability_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "stacking",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.stacking",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "stage_index",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.stage_index",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.policy",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "stage_panel",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.stage_panel",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.policy",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "stage_policy",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.stage_policy",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.policy",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "standardize_panel",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.preprocessing.standardize_panel",
+    "owner": "preprocessing",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.preprocessing.preprocess",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "star",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.star",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "stlf",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.stlf",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "subagging",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.subagging",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "super_learner",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_ensemble.super_learner",
+    "owner": "model_ensemble",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_ensemble.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "supervised_aggregation",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.supervised_aggregation",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.assemblage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "supervised_pca",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.supervised_pca",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "supervised_scaled_pca",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.supervised_scaled_pca",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.linear",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "svr",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.svr",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.svm",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "test_origins",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.test_origins",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "tests",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.tests",
+    "owner": null,
+    "kind": "module",
+    "in_docs": false,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "tgarch",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.tgarch",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.volatility",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "theta_method",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.theta_method",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "time_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.time_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "time_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.time_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "transform_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.transform_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "transform_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.transform_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "transformer",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.transformer",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.neural",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "tvp_ridge",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.tvp_ridge",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tvp",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "ucsv",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.ucsv",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.bayesian",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "uniform",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.uniform",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.builders",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "unrestricted_midas",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.unrestricted_midas",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "use_config",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.meta.use_config",
+    "owner": "meta",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.meta.config",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "val_blocked_kfold",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.val_blocked_kfold",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "val_expanding",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.val_expanding",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "val_last_block",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.val_last_block",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "val_poos",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.val_poos",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "val_random_kfold",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.val_random_kfold",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "val_rolling_blocks",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.window.val_rolling_blocks",
+    "owner": "window",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.window.core",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "validate_panel",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.validate_panel",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.panel",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "validation_splitter",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.model_selection.validation_splitter",
+    "owner": "model_selection",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.model_selection.splitters",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "var",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.var",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.timeseries",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "variance_selection",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.variance_selection",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.feature_selection",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "varimax_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.varimax_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "varimax_step",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.varimax_step",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.compose",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "wavelet_features",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.wavelet_features",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.transforms",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "weighted_aggregate",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.feature_engineering.weighted_aggregate",
+    "owner": "feature_engineering",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.feature_engineering.aggregation",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "window",
+    "surface": "supported",
+    "export_kind": "namespace",
+    "canonical": "mf.window",
+    "owner": null,
+    "kind": "module",
+    "in_docs": true,
+    "in_owner_all": null,
+    "declared_module": null,
+    "module_attr_agrees": null
+   },
+   {
+    "name": "with_static_extras",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.data.with_static_extras",
+    "owner": "data",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.data.vintage",
+    "module_attr_agrees": true
+   },
+   {
+    "name": "xgboost",
+    "surface": "supported",
+    "export_kind": "lazy_export",
+    "canonical": "mf.models.xgboost",
+    "owner": "models",
+    "kind": "function",
+    "in_docs": false,
+    "in_owner_all": true,
+    "declared_module": "macroforecast.models.tree",
+    "module_attr_agrees": true
+   }
+  ],
+  "special": [
+   {
+    "name": "__version__",
+    "surface": "special",
+    "canonical": "mf.__version__",
+    "kind": "str",
+    "value": "0.9.5",
+    "in_docs": true,
+    "reason": "Stable, documented, and set directly in the root module. It is absent from __all__ and, because the name is underscore-prefixed, invisible to a dir() scan that filters on a leading underscore."
+   }
+  ],
+  "non_api_globals": [
+   {
+    "name": "Any",
+    "surface": "non_api_global",
+    "canonical": "mf.Any",
+    "kind": "typing_construct",
+    "bound_in_root_globals": true,
+    "declared_module": "typing",
+    "reason": "Bound at macroforecast/__init__.py module scope by an import statement the lazy loader needs. Not exported, not documented, and not owned by any submodule."
+   },
+   {
+    "name": "annotations",
+    "surface": "non_api_global",
+    "canonical": "mf.annotations",
+    "kind": "object",
+    "bound_in_root_globals": true,
+    "declared_module": "__future__",
+    "reason": "Bound at macroforecast/__init__.py module scope by an import statement the lazy loader needs. Not exported, not documented, and not owned by any submodule."
+   },
+   {
+    "name": "import_module",
+    "surface": "non_api_global",
+    "canonical": "mf.import_module",
+    "kind": "function",
+    "bound_in_root_globals": true,
+    "declared_module": "importlib",
+    "reason": "Bound at macroforecast/__init__.py module scope by an import statement the lazy loader needs. Not exported, not documented, and not owned by any submodule."
+   }
+  ]
  }
 }
