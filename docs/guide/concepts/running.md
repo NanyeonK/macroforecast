@@ -31,7 +31,10 @@ The `forecast_policy` argument to `run` (and the policy resolved from a
   models, where step s forecasts the one-period object realized at t+s from
   information available at the origin, then average the h step forecasts. This is
   a direct multi-step design, not an iterated one; iterating a single model
-  forward instead is the separate `recursive` policy.
+  forward instead is the separate `recursive` policy. For target-only models,
+  gaps in unused predictors do not reduce the step-specific fit samples. If any
+  required step prediction is non-finite, the path forecast is reported as
+  missing with a `RuntimeWarning` rather than averaging the remaining steps.
 - **recursive** (`forecast_policy="recursive"`, code alias `"iterated"`): fit
   one one-step-ahead model, then roll it forward h times, feeding each step's
   own prediction back in as the next step's lagged input (the textbook

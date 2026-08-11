@@ -149,3 +149,50 @@ def test_a_nan_target_row_is_dropped_either_way() -> None:
     out = _slice_feature_set(fs, idx, drop_missing=True, target_only=True)
     assert len(out.y) == 3
     assert not out.y.isna().to_numpy().any()
+
+
+def _target_only_policy_predictions(
+    leading_nan: int,
+    policy: str,
+) -> pd.Series:
+    frame = _panel(leading_nan)
+    window = mf.window.spec(
+        estimation=mf.window.estimation_expanding(min_size=24),
+        val=mf.window.val_last_block(size=8),
+        test=mf.window.test_origins(
+            first_origin=frame.index[FIRST_ORIGIN],
+            last_origin=frame.index[FIRST_ORIGIN + 2],
+            horizon=1,
+        ),
+    )
+    result = mf.forecasting.run(
+        frame,
+        "hist_mean",
+        window=window,
+        target="y",
+        horizon=1,
+        forecast_policy=policy,
+        target_transform=(
+            "average_value" if policy == "direct_average" else "value"
+        ),
+        model_selection={"hist_mean": None},
+        save_models=False,
+    ).to_frame()
+    return result.set_index("origin")["prediction"].sort_index()
+
+
+def test_path_policy_preserves_target_only_sample_with_predictor_gaps() -> None:
+    """At h=1, direct and path use the same target-only estimation sample."""
+    frame = _panel(12)
+    direct = _target_only_policy_predictions(12, "direct_average")
+    path = _target_only_policy_predictions(12, "path_average")
+    assert not direct.empty
+    pd.testing.assert_series_equal(
+        path,
+        direct,
+        check_names=False,
+        rtol=0,
+        atol=1e-12,
+    )
+    expected = float(frame["y"].iloc[1 : FIRST_ORIGIN + 1].mean())
+    assert path.iloc[0] == pytest.approx(expected, rel=0, abs=1e-12)

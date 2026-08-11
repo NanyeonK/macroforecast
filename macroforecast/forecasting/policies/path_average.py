@@ -3,8 +3,10 @@ body moved verbatim from ``runner._fit_predict_path_average_origin``).
 """
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from macroforecast.forecasting.policies.base import (
@@ -18,6 +20,7 @@ from macroforecast.forecasting.selection_stage import (
     _allow_non_temporal_selection_splits,
     _availability_safe_selection_splits,
     _filter_xy_to_target_availability,
+    _is_target_only,
     _selection_for_model,
     _target_availability_window_fields,
 )
@@ -69,6 +72,7 @@ def forecast_path_average_origin(
         base_index=item.get("base_index"),
         horizon=horizon,
     )
+    target_only = _is_target_only(model_runs)
     records: list[dict[str, Any]] = []
 
     for model_run in model_runs:
@@ -94,22 +98,29 @@ def forecast_path_average_origin(
         for step, column in enumerate(step_columns, start=1):
             y_fit_step = y_fit[column].rename(str(column))
             y_selection_step = y_selection_base[column].rename(str(column))
-            X_fit_step, y_fit_aligned = _align_feature_xy(X_fit, y_fit_step)
+            X_fit_step, y_fit_aligned = _align_feature_xy(
+                X_fit,
+                y_fit_step,
+                target_only=target_only,
+            )
             X_selection_step, y_selection_aligned = _align_feature_xy(
                 X_selection_base,
                 y_selection_step,
+                target_only=target_only,
             )
             X_fit_step, y_fit_aligned = _filter_xy_to_target_availability(
                 X_fit_step,
                 y_fit_aligned,
                 item,
                 target_step=step,
+                target_only=target_only,
             )
             X_selection_step, y_selection_aligned = _filter_xy_to_target_availability(
                 X_selection_step,
                 y_selection_aligned,
                 item,
                 target_step=step,
+                target_only=target_only,
             )
             selection_splits = _availability_safe_selection_splits(
                 item,
@@ -169,6 +180,21 @@ def forecast_path_average_origin(
                 if actual_values.isna().any()
                 else float(actual_values.astype(float).mean())
             )
+            path_floats = path_values.astype(float)
+            finite = np.isfinite(path_floats.to_numpy())
+            if finite.all():
+                prediction_value = float(path_floats.mean())
+            else:
+                prediction_value = float("nan")
+                warnings.warn(
+                    "path_average produced non-finite step forecasts for model "
+                    f"{model_run.alias!r} at origin {origin_label} (horizon "
+                    f"{horizon}); steps "
+                    f"{[int(step) for step in path_floats.index[~finite]]} are "
+                    "not finite, so this origin's forecast is reported as missing",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
             records.append(
                 {
                     "date": target_date,
@@ -180,7 +206,7 @@ def forecast_path_average_origin(
                     "target": item.get("target_name"),
                     "model": model_run.alias,
                     "model_spec": model_spec.name,
-                    "prediction": float(path_values.astype(float).mean()),
+                    "prediction": prediction_value,
                     "variance_prediction": None,
                     "quantile_predictions": None,
                     "actual": actual_value,
