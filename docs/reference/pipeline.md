@@ -1556,6 +1556,21 @@ iterates its own dynamics is combined with ``direct`` or ``direct_average``:
 benchmark behavior, and ``"reroute"`` runs only the affected arm-target
 cells as ``recursive``.
 
+Every label the run is keyed by must be unique, and a repeat raises here rather
+than being deduplicated, because repeated input is a specification error and not a
+shorter way of saying the same thing:
+
+* **contenders** -- arm names and combination names share one name space, since both
+  are contenders in the same evaluation. A combination named after an arm would
+  otherwise be dropped silently and the arm scored under that label;
+* **horizons** -- compared after normalization to integers, so ``1`` and ``1.0`` are
+  one horizon;
+* **targets** -- compared on the resolved public name, so two ``TargetSpec`` values
+  differing only in transform or policy still collide. Every table is keyed by that
+  name, so sharing one would report two forecast objects as one.
+
+Valid input keeps its order: targets and horizons stay in the order given.
+
 #### Parameters
 
 | Name | Kind | Type | Default |

@@ -1229,14 +1229,58 @@ def _validate_eval_metrics(evaluation: "EvalSpec") -> None:
             get_metric(metric)
 
 
+def _repeated(values: Iterable[Any]) -> list[Any]:
+    """The values occurring more than once, each named once, in first-seen order.
+
+    Input order rather than sorted order: the caller reads the message against the
+    list they wrote, and a set's iteration order would not be stable to begin with.
+    """
+    seen: set[Any] = set()
+    repeated: list[Any] = []
+    for value in values:
+        if value in seen:
+            if value not in repeated:
+                repeated.append(value)
+        else:
+            seen.add(value)
+    return repeated
+
+
 def _validate_combinations(
     combinations: Sequence[CombinationContender],
     *,
     arm_names: Sequence[str],
 ) -> None:
-    """Fail fast on unsupported combination dispatch and typoed over= arms."""
+    """Fail fast on colliding contender names, unsupported dispatch, and typoed over=.
+
+    A combination is a contender exactly as an arm is, so the two share one name space.
+    Names are checked before dispatch because a contender that cannot be told apart from
+    another is ill-defined whatever method it uses, and because the run-time consequence
+    is silent rather than loud: ``evaluate.apply_combinations`` skips any combination
+    whose name is already among the contenders, so one named after an arm never appears
+    and the arm's own forecasts are reported under it; and two combinations sharing a
+    name both run, because that guard reads a snapshot taken before the loop.
+
+    Names are compared verbatim -- they are the ``contender`` key of the master frame.
+    """
 
     base_contenders = set(arm_names)
+
+    duplicate_names = _repeated(combo.name for combo in combinations)
+    if duplicate_names:
+        raise ValueError(
+            f"combination name(s) {duplicate_names} are not unique; each name appears "
+            "more than once in combinations=. Every combination is its own contender, "
+            "so two sharing a name would report two sets of forecasts under one label."
+        )
+    colliding = [combo.name for combo in combinations if combo.name in base_contenders]
+    if colliding:
+        raise ValueError(
+            f"combination name(s) {colliding} duplicate an arm contender name; names "
+            "must be unique across arms and combinations, which are contenders in the "
+            f"same evaluation. The arm contenders are {sorted(base_contenders)}."
+        )
+
     for combo in combinations:
         method = str(combo.method).lower()
         if method not in SUPPORTED_COMBINATION_METHODS:
@@ -1548,6 +1592,21 @@ def pipeline_spec(
     ``"error"`` (default) rejects the spec, ``"warn"`` preserves the old weak
     benchmark behavior, and ``"reroute"`` runs only the affected arm-target
     cells as ``recursive``.
+
+    Every label the run is keyed by must be unique, and a repeat raises here rather
+    than being deduplicated, because repeated input is a specification error and not a
+    shorter way of saying the same thing:
+
+    * **contenders** -- arm names and combination names share one name space, since both
+      are contenders in the same evaluation. A combination named after an arm would
+      otherwise be dropped silently and the arm scored under that label;
+    * **horizons** -- compared after normalization to integers, so ``1`` and ``1.0`` are
+      one horizon;
+    * **targets** -- compared on the resolved public name, so two ``TargetSpec`` values
+      differing only in transform or policy still collide. Every table is keyed by that
+      name, so sharing one would report two forecast objects as one.
+
+    Valid input keeps its order: targets and horizons stay in the order given.
     """
     arms = tuple(arms)
     if not arms:
@@ -1596,12 +1655,36 @@ def pipeline_spec(
     )
     if not horizon_tuple or any(h < 1 for h in horizon_tuple):
         raise ValueError("horizons must be a non-empty set of integers >= 1")
+    # Compared after normalization, so a horizon is caught however it was spelled:
+    # ``1`` and ``1.0`` are one horizon. Refused rather than deduplicated -- a horizon
+    # asked for twice is a spec the caller did not mean, and quietly running it once
+    # would hide that.
+    duplicate_horizons = _repeated(horizon_tuple)
+    if duplicate_horizons:
+        raise ValueError(
+            f"horizons must be unique; {duplicate_horizons} appear more than once in "
+            f"{list(horizon_tuple)} (compared after normalization to integers, so 1 "
+            "and 1.0 are the same horizon). Each horizon is a forecast cell and an "
+            "evaluation key."
+        )
 
     resolved = tuple(
         resolve_target(t, data=data, tcode_map=tcode_target_map) for t in targets
     )
     if not resolved:
         raise ValueError("at least one target is required")
+    # The public name, after resolution: two TargetSpecs can differ in transform or
+    # policy and still land on one name, and every table -- accuracy, significance, the
+    # master frame -- is keyed by that name alone. Two forecast objects under one label
+    # is not a narrower run; it is two runs conflated.
+    duplicate_targets = _repeated(target.name for target in resolved)
+    if duplicate_targets:
+        raise ValueError(
+            f"target names must be unique; {duplicate_targets} appear more than once "
+            "after resolution. Targets are keyed by name in every forecast and "
+            "evaluation table, so two declarations sharing one -- even with different "
+            "transform or policy -- would be reported as a single target."
+        )
 
     # AUTO allocator: split the core budget between cell workers and per-cell
     # model-internal threads from the (target x arm x horizon) cell count. The
