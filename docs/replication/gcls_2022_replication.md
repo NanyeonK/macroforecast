@@ -398,6 +398,55 @@ above rather than absorbed.
 
 ---
 
+> **[FINDING 2026-08-11] The h-step target for four of the five targets is not the
+> paper's object, and every number below is affected.** Recorded here rather than
+> after a re-run, because these tables are read as evidence.
+>
+> `TargetSpec(policy="direct_average")` resolves to `average_target`, which returns
+> `(y_{t+h} − y_t) / h` — the average *change of its input*, in a column literally
+> named `y_average_change_h{h}`. That is exactly the paper's Eq. 4 **when the input is
+> the log level**: `(log Y_{t+h} − log Y_t)/h = (1/h) Σ_{h'=1..h} Δlog Y_{t+h'}`,
+> verified at `corr = 1.000000`.
+>
+> But this harness feeds it `YOBJ__<col>`, which is the ONE-PERIOD object
+> (`corr(YOBJ__INDPRO, Δlog INDPRO) = 1.000000`; against the log level, −0.11). So the
+> realised target is the *second* difference of the log level, and it decorrelates from
+> the paper's object as the horizon grows:
+>
+> | h | 1 | 3 | 9 | 12 | 24 |
+> |---|---|---|---|---|---|
+> | corr(our target, Eq. 4 object) | 0.68 | 0.40 | 0.21 | — | **0.076** |
+> | median \|Δ rel-RMSPE\| | 0.026 | 0.030 | 0.062 | 0.058 | 0.067 |
+>
+> The two rows have the same shape, which is what put the defect on the suspect list.
+>
+> **The natural control confirms it.** T10YFFM is I(0) and uses `policy="direct"`, so it
+> never touches the averaging path. It is the one target whose beat-rate *exceeds* the
+> paper's, at four horizons out of five, while the four `direct_average` targets fall
+> short at all five:
+>
+> | h | 1 | 3 | 9 | 12 | 24 |
+> |---|---|---|---|---|---|
+> | `direct_average` (4 targets), mine − paper beat-rate | −11pp | −7pp | −18pp | −23pp | −16pp |
+> | `direct` (T10YFFM), mine − paper | **+11pp** | **+9pp** | **+22pp** | **+16pp** | −11pp |
+>
+> Affected and immune targets carry opposite signs.
+>
+> **The fix is one line in the harness, not in the package.** `YOBJ__<col>` should carry
+> the log level (for the `log_diff` kinds) or the level (for `diff`), keeping t-code 1 so
+> the official transform passes it through; `direct_average` then produces Eq. 4 exactly.
+> T10YFFM is unchanged. Filed upstream as `MF-005` for the API-clarity half: a policy
+> named `direct_average` reached through a function named `average_target` produces an
+> average *change*, and passing an already-differenced column is silently wrong rather
+> than an error.
+>
+> **What this does and does not invalidate.** The cell values below, and the beat-counts,
+> are computed against the wrong object for INDPRO / CPIAUCSL / HOUST / UNRATE and are
+> not the paper's Table A1 for those targets. What survives is the qualitative reading
+> that does not depend on the object's exact definition: the winning arm is
+> factor-based + CV-selected in all five targets, and the target difficulty ordering
+> reproduces. The re-run is not yet done, so nothing below has been corrected.
+
 **1b — Accuracy by model family** (median |Δ rel-RMSPE| vs paper, full sample, all
 five targets under the corrected `X_t`, all post-seed-fix).
 

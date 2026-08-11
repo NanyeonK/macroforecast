@@ -59,7 +59,7 @@ expected:
       sha256: "[FILL]"
 
 status:
-  overall: TABLE_A1_COMPLETE            # all 5 targets run under the corrected X_t
+  overall: TABLE_A1_DEFECT_FOUND        # cells complete, but see the 2026-08-11 target finding
   headline_replication: STRONG          # ML/factor beats AR reproduces
   protocol_fidelity: STRONG             # corrected X_t spec, seeded splitter
   table_cell_parity: PARTIAL            # 104/225 beat AR,BIC vs the paper's 128/225 (INDPRO)
@@ -75,6 +75,13 @@ status:
     CPIAUCSL: 0.0768
   median_abs_delta_all_contenders: 0.0479
   unresolved:
+    - "[BLOCKER 2026-08-11] direct_average targets are built from the one-period object,
+       so the realised h-step target is a second difference, not the paper Eq.4 average
+       growth. corr with the paper object: h=1 0.68 -> h=24 0.076. Affects INDPRO /
+       CPIAUCSL / HOUST / UNRATE; T10YFFM (policy=direct) is immune and is the one target
+       whose beat-rate exceeds the paper. Fix: YOBJ__<col> should carry the log level
+       (log_diff kinds) or the level (diff kinds). Re-run required before these numbers
+       mean anything for those four targets."
     - "Pre-fix tables still present; to be retired or moved to a labelled archive section"
     - "Overall parity did not improve under the corrected X_t (0.0473 -> 0.0479); the fix
        is justified by eq. (swardi2), not by parity, and the non-improvement is recorded
