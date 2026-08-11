@@ -148,6 +148,31 @@ def test_provenance_level_invalid_raises():
 # 3. content fingerprint: stable / sensitive to modification / subsample path
 # --------------------------------------------------------------------------- #
 
+def test_fingerprint_mapping_is_exactly_the_pre_change_shape():
+    """The stored identity is the whole mapping, not the digest string.
+
+    ``result_cell_identity`` serialises this dict into the canonical payload and
+    ``ResultStore.load`` compares the whole manifest mapping, so adding or dropping a
+    key misses every existing cache even when the digest is unchanged. Making the
+    fingerprint read the full content (F-005) had to leave this mapping alone for every
+    panel the old code already hashed in full -- which is what this pins, by value and
+    by key set, rather than by digest alone.
+    """
+    panel = pd.DataFrame(
+        {"x": [1.0, 2.0], "y": [3.0, 4.0]},
+        index=pd.date_range("2000-01-01", periods=2, freq="D", name="date"),
+    )
+
+    assert run_mod._panel_fingerprint(panel) == {
+        "algorithm": "sha256",
+        "method": "full_content",
+        "value": "902f2ee172cf19ab5d557d56dca7d6faad3dc85e46a328095c27a7b9e6c651e8",
+        "row_stride": 1,
+        "col_stride": 1,
+        "sampled_shape": [2, 2],
+    }
+
+
 def test_fingerprint_stable_across_identical_runs():
     fp1 = _panel_fingerprint(_bundle().panel)
     fp2 = _panel_fingerprint(_bundle().panel)
@@ -175,22 +200,61 @@ def test_fingerprint_matches_across_independent_pipeline_runs():
     )
 
 
-def test_fingerprint_subsample_path_is_deterministic_and_labeled(monkeypatch):
-    """Above the cell cap the fingerprint falls back to a deterministic strided
-    subsample (never the full content) and says so via ``method``."""
-    # The cap lives with the function it governs, and both moved to
-    # ``data.identity`` in A1. Patching the re-exported name on ``run_mod`` does
-    # not reach it: the function reads its OWN module global, so the patch has to
-    # land where the function is.
+def test_fingerprint_chunking_is_a_memory_bound_not_a_coverage_bound(monkeypatch):
+    """Large panels are streamed, not sampled, so the chunk size cannot move the digest.
+
+    This replaces a test that pinned the opposite: above a cell cap the digest used to
+    come from a strided subsample, which meant a cell the stride skipped could change
+    without the digest moving (F-005). The digest feeds result-cell identity, so that
+    was a stale-forecast path, not just a weaker hash.
+
+    The cap lives with the function it governs, and both moved to ``data.identity`` in
+    A1. Patching the re-exported name on ``run_mod`` does not reach it: the function
+    reads its OWN module global, so the patch has to land where the function is.
+    """
     from macroforecast.data import identity as identity_mod
 
-    monkeypatch.setattr(identity_mod, "_FINGERPRINT_FULL_CELL_CAP", 50)
-    frame = _bundle(n=96).panel  # 96 x 2 = 192 cells > the patched cap
-    fp1 = run_mod._panel_fingerprint(frame)
-    fp2 = run_mod._panel_fingerprint(frame)
-    assert fp1["method"] == "strided_subsample"
-    assert fp1["value"] == fp2["value"]
-    assert fp1["row_stride"] > 1 or fp1["col_stride"] > 1
+    frame = _bundle(n=96).panel  # 96 x 2 = 192 cells
+    unchunked = run_mod._panel_fingerprint(frame)
+
+    monkeypatch.setattr(identity_mod, "_FINGERPRINT_CHUNK_CELLS", 7)
+    chunked = run_mod._panel_fingerprint(frame)
+    again = run_mod._panel_fingerprint(frame)
+
+    assert chunked["method"] == "full_content"
+    assert chunked == unchunked, "chunk size must not change the digest or the mapping"
+    assert chunked == again
+    assert chunked["sampled_shape"] == [96, 2]
+    assert chunked["row_stride"] == 1 and chunked["col_stride"] == 1
+
+
+def test_fingerprint_sees_a_cell_the_old_stride_would_have_skipped(monkeypatch):
+    """The F-005 acceptance case, in the shape the audit reported it.
+
+    With the old cap patched to 50, a 100x10 panel sampled at row stride 4 and column
+    stride 5, so cell (0, 1) was never read and mutating it left the fingerprint
+    identical. Chunking is exercised here at the same small size to prove the streaming
+    path -- not just the small-panel path -- reads every cell.
+    """
+    from macroforecast.data import identity as identity_mod
+
+    monkeypatch.setattr(identity_mod, "_FINGERPRINT_CHUNK_CELLS", 7)
+    index = pd.date_range("1990-01-31", periods=100, freq="ME", name="date")
+    rng = np.random.default_rng(0)
+    base = pd.DataFrame(
+        rng.normal(size=(100, 10)), index=index, columns=[f"c{i}" for i in range(10)]
+    )
+    mutated = base.copy()
+    mutated.iloc[0, 1] = mutated.iloc[0, 1] + 1.0
+
+    assert (
+        run_mod._panel_fingerprint(base)["value"]
+        != run_mod._panel_fingerprint(mutated)["value"]
+    )
+    assert (
+        run_mod._panel_fingerprint(base)["value"]
+        == run_mod._panel_fingerprint(base.copy())["value"]
+    )
 
 
 # --------------------------------------------------------------------------- #

@@ -75,6 +75,24 @@ print(data_spec.target, data_spec.horizons)
 INDPRO (1, 3, 6, 12)
 ```
 
+## Real-valued panels
+
+A canonical panel is real-valued. Complex columns are rejected by both `as_panel`
+and `validate_panel`, including under `strict=False`: the forecasting, statistical, and
+model paths downstream are defined over real values, so a complex column has nowhere to
+go that keeps its meaning. Split the real and imaginary parts into separate columns if
+both matter.
+
+Before that rejection existed the loss happened quietly further in. Complex passed the
+numeric check, and the infinity check and the content fingerprint both cast to float, so
+two panels differing only in their imaginary values validated and then shared one content
+identity. The fingerprint no longer drops them — it hashes complex values in full, as a
+backstop for callers that reach it without going through a canonical panel — but that is
+a backstop and not a licence. The rejection above is the contract.
+
+`strict=False` still relaxes what it always relaxed: unparseable dates and non-numeric
+strings that a permissive load may coerce. It does not widen the value domain.
+
 ## Reference
 
 - [Data reference page](../../reference/data.md) — full function list and output contracts.

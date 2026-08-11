@@ -206,6 +206,15 @@ the enumerable vintage labels, reference calendar, and a bounded latest-vintage
 panel fingerprint. Stores created before this identity hardening will miss and
 recompute cells once, then reuse normally under the new digest.
 
+The content fingerprint covers every index value, column name, and cell, whatever
+the panel's size. It used to fall back to a strided subsample above a cell cap,
+which meant a cell the stride skipped could change while the digest stayed put —
+so a stale forecast could be served for changed data. Large panels are now streamed
+in row chunks instead: the bound is on memory, not on how much of the data is read,
+and the chunk size cannot move the digest. Panels that were already hashed in full
+keep their exact digest, so ordinary stores are not invalidated by this change; only
+the oversized panels whose digest was unsound recompute once.
+
 For custom code, reuse is opt-in. A custom model function, feature step,
 preprocessing step, metric, or loss must carry a stable `__mf_digest__` string to be
 stored. Without it, the cell is recomputed every run. If you edit the callable, do

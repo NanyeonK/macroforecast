@@ -127,6 +127,19 @@ def as_panel(
         sample = ", ".join(ts.strftime("%Y-%m-%d") for ts in duplicated[:3])
         raise ValueError(f"panel has duplicate dates: {sample}{_long_format_hint(panel)}")
 
+    # Before any cast. ``strict=False`` relaxes missing-value and parse coercion; it
+    # does not make complex data supported, so this rejection is unconditional (F-007).
+    complex_columns = [
+        str(column)
+        for column, dtype in panel.dtypes.items()
+        if pd.api.types.is_complex_dtype(dtype)
+    ]
+    if complex_columns:
+        raise TypeError(
+            "panel columns must be real-valued; the forecasting, statistical, and "
+            f"model paths are not defined over complex values: {complex_columns}. "
+            "Split the real and imaginary parts into separate columns if both matter."
+        )
     coercion_report = _numeric_coercion_report(panel)
     for column in panel.columns:
         panel[column] = pd.to_numeric(panel[column], errors="coerce")
@@ -190,6 +203,27 @@ def validate_panel(panel: pd.DataFrame) -> None:
     ]
     if non_numeric:
         raise TypeError(f"panel columns must be numeric: {non_numeric}")
+    # Complex passes ``is_numeric_dtype``, but the forecasting, statistical, and model
+    # paths downstream are defined over real values. Reject it here rather than taking
+    # the real part on the caller's behalf.
+    #
+    # Before this guard the loss happened quietly further in: ``_infinite_value_report``
+    # and the content fingerprint both cast to float, so two panels differing only in
+    # their imaginary values validated and then shared one identity (F-007). The
+    # fingerprint no longer discards them -- it hashes complex in full for callers that
+    # reach it without a canonical panel -- but that is a backstop behind this contract,
+    # not a reason to accept complex here.
+    complex_columns = [
+        str(column)
+        for column, dtype in panel.dtypes.items()
+        if pd.api.types.is_complex_dtype(dtype)
+    ]
+    if complex_columns:
+        raise TypeError(
+            "panel columns must be real-valued; the forecasting, statistical, and "
+            f"model paths are not defined over complex values: {complex_columns}. "
+            "Split the real and imaginary parts into separate columns if both matter."
+        )
     inf_report = _infinite_value_report(panel)
     if inf_report["inf_cells"]:
         raise ValueError(
@@ -463,7 +497,11 @@ def _long_format_hint(panel: pd.DataFrame) -> str:
 
 
 def _infinite_value_report(panel: pd.DataFrame) -> dict[str, Any]:
-    numeric = panel.select_dtypes("number")
+    # ``select_dtypes("number")`` includes complex, and the float cast below would drop
+    # the imaginary part. Complex is rejected upstream in both entry points (F-007), so
+    # excluding it here is defence in depth rather than a second policy: it keeps this
+    # report from silently describing a value it did not actually look at.
+    numeric = panel.select_dtypes("number").select_dtypes(exclude=["complex"])
     if numeric.empty:
         return {"inf_cells": 0, "examples": []}
     values = numeric.to_numpy(dtype=float, copy=False)
