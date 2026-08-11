@@ -14,6 +14,7 @@ from macroforecast.data.panel import (
     attach_metadata,
     validate_panel,
 )
+from macroforecast.data.panel import _normalize_frequency_label as _panel_normalize_frequency_label
 
 SamePeriodPolicy = Literal["allow", "lag", "drop", "forbid"]
 RegimeDirection = Literal["above", "below", "equal", "not_equal"]
@@ -153,6 +154,13 @@ def chow_lin_disaggregate(
     an AR(1) high-frequency residual covariance. The returned high-frequency
     series conserves the supplied low-frequency observations under
     ``aggregation='mean'`` or ``aggregation='sum'``.
+
+    Inputs that cannot support that estimate are refused rather than approximated: both
+    series need a ``DatetimeIndex``, at least two usable observations each after missing
+    values are dropped, and an identifiable design. This function never returns anything
+    other than a Chow-Lin result. If what you want is a low-frequency value repeated
+    deterministically across its high-frequency periods, that is a different policy and
+    it is spelled ``align_frequency(..., quarterly_to_monthly="step_forward")``.
     """
 
     y_low = pd.Series(low_frequency).dropna().astype(float)
@@ -171,14 +179,41 @@ def chow_lin_disaggregate(
         raise ValueError("rho_method must be 'fixed', 'min_chi_squared', or 'max_likelihood'")
     if rho is not None and not (-1.0 < float(rho) < 1.0):
         raise ValueError("rho must be in the open interval (-1, 1)")
-    if not isinstance(y_low.index, pd.DatetimeIndex) or not isinstance(x_high.index, pd.DatetimeIndex):
-        return y_low.reindex(x_high.index).bfill().ffill().rename(x_high.name)
+    # Three refusals that used to be three silent fallbacks. Each returned
+    # ``reindex().bfill().ffill()`` -- a repeat-the-nearest-value series -- from a
+    # function whose whole contract is a regression-distribution estimate. The caller
+    # got numbers, the docstring's conservation promise did not hold, and nothing
+    # anywhere said the method had not run (F-013).
+    if not isinstance(y_low.index, pd.DatetimeIndex):
+        raise TypeError(
+            "chow_lin_disaggregate requires a DatetimeIndex on low_frequency; got "
+            f"{type(y_low.index).__name__}"
+        )
+    if not isinstance(x_high.index, pd.DatetimeIndex):
+        raise TypeError(
+            "chow_lin_disaggregate requires a DatetimeIndex on indicator; got "
+            f"{type(x_high.index).__name__}"
+        )
     if len(y_low) < 2 or len(x_high) < 2:
-        return y_low.reindex(x_high.index).bfill().ffill().rename(x_high.name)
+        raise ValueError(
+            "chow_lin_disaggregate needs at least two usable low-frequency and two "
+            f"usable high-frequency observations after dropping missing values; got "
+            f"{len(y_low)} and {len(x_high)}. For deterministic repetition of a "
+            "low-frequency value across its high-frequency periods, use "
+            "align_frequency(..., quarterly_to_monthly='step_forward')."
+        )
 
     design = _chow_lin_design(y_low, x_high, aggregation=aggregation_value)
     if design is None:
-        return y_low.reindex(x_high.index).bfill().ffill().rename(x_high.name)
+        raise ValueError(
+            "chow_lin_disaggregate cannot identify a design from these inputs: fewer "
+            "than two low-frequency periods map onto the indicator's high-frequency "
+            "calendar with a finite value, and the regression needs at least two. "
+            "Check that the two series overlap over more than one period and that the "
+            "indicator is at the higher frequency. For deterministic repetition instead "
+            "of an estimate, use "
+            "align_frequency(..., quarterly_to_monthly='step_forward')."
+        )
     y_vector, x_matrix, conversion = design
     rho_value = (
         float(rho)
@@ -207,6 +242,13 @@ def infer_frequencies(data: PanelInput | pd.DataFrame) -> tuple[dict[str, str], 
 
     Metadata from ``set_frequencies`` / ``combine(..., frequency="native")`` is
     preferred, then FRED-SD series reports, then observed-date spacing.
+
+    Metadata labels are normalized through the same strict vocabulary
+    :mod:`macroforecast.data.panel` uses for the panel contract, so the supported
+    aliases resolve (``m``/``month``/``state_monthly`` to ``monthly``, ``q``/``quarter``
+    to ``quarterly``, ``a``/``yearly`` to ``annual``, and so on) and an unrecognized
+    label raises. A typo such as ``"montly"`` is refused here rather than passed through
+    to become a frequency nothing downstream can match.
     """
 
     panel: pd.DataFrame
@@ -273,6 +315,17 @@ def availability_lag(
     ``t``. This is the direct callable replacement for the old release-lag
     data policy module; release calendars can be expressed by passing a per-column
     lag mapping.
+
+    Every lag -- the scalar and each mapping value -- must be a non-negative Python or
+    NumPy integer. Floats are rejected even when integral-valued, as are strings and
+    booleans, because truncating or parsing them would shift the data by a different
+    amount than the caller asked for and record it as though they had asked. Accepted
+    NumPy integers are stored as plain ``int`` in metadata, so the record stays
+    JSON-serializable. Zero is a valid lag.
+
+    With ``drop_missing=True`` the shifted rows are dropped, and the result is checked
+    against the canonical panel contract before it is returned: a lag that removes every
+    row raises rather than yielding an empty panel that fails somewhere later.
     """
 
     bundle = _coerce_bundle(data)
@@ -284,6 +337,10 @@ def availability_lag(
         panel[column] = panel[column].shift(lag)
     if drop_missing:
         panel = panel.dropna(subset=list(selected))
+    # Shifting and dropping can empty the panel -- a two-row panel lagged by two keeps
+    # nothing -- and an empty frame used to be returned as a valid ``DataBundle`` that
+    # failed later, somewhere else (F-015).
+    validate_panel(panel)
     panel.attrs["macroforecast_metadata"] = attach_metadata(
         bundle.metadata,
         "data_availability_lag",
@@ -312,12 +369,20 @@ def same_period_predictors(
     selected predictors from the spec. ``forbid`` raises when selected
     same-period predictors are present. Targets are never shifted by this
     helper.
+
+    ``lag`` follows the same contract as :func:`availability_lag`: a non-negative Python
+    or NumPy integer, with floats, strings and booleans rejected rather than truncated
+    or parsed. Under ``policy="lag"`` with ``drop_missing=True``, the shifted-and-dropped
+    panel is checked against the canonical panel contract before the spec is returned, so
+    a lag that removes every row raises instead of producing an empty spec.
     """
 
     if not isinstance(data, DataSpec):
         raise TypeError("same_period_predictors() requires a DataSpec from mf.data.spec()")
-    if int(lag) < 0:
-        raise ValueError("lag must be non-negative")
+    # Same contract as ``availability_lag``: ``int(lag)`` used to truncate ``1.9`` to a
+    # one-period shift and parse ``"2"`` into two, so the predictors were moved by a
+    # different amount than the caller asked for (F-015).
+    lag_value = _lag_value(lag, label="lag")
     if policy not in {"allow", "lag", "drop", "forbid"}:
         raise ValueError("policy must be one of 'allow', 'lag', 'drop', or 'forbid'")
     panel = data.panel.copy()
@@ -332,7 +397,7 @@ def same_period_predictors(
         raise ValueError(f"same-period policy columns are not active predictors: {unknown}")
 
     final_predictors = predictors
-    action: dict[str, Any] = {"policy": policy, "columns": list(selected), "lag": int(lag)}
+    action: dict[str, Any] = {"policy": policy, "columns": list(selected), "lag": lag_value}
     if policy == "forbid" and selected:
         raise ValueError(
             "same-period predictors are present but policy='forbid': "
@@ -340,9 +405,12 @@ def same_period_predictors(
         )
     if policy == "lag":
         for column in selected:
-            panel[column] = panel[column].shift(int(lag))
+            panel[column] = panel[column].shift(lag_value)
         if drop_missing:
             panel = panel.dropna(subset=list(selected))
+        # The shift-and-drop can leave nothing behind, and an empty panel used to be
+        # wrapped in a DataSpec and returned as valid (F-015).
+        validate_panel(panel)
         action["drop_missing"] = bool(drop_missing)
     elif policy == "drop":
         panel = panel.drop(columns=list(selected))
@@ -370,7 +438,7 @@ def define_regime(
     threshold: float | None = None,
     direction: RegimeDirection = "above",
     dates: Iterable[str | pd.Timestamp] | None = None,
-    values: Sequence[bool | int | float] | pd.Series | None = None,
+    values: Sequence[bool | int | float | None] | pd.Series | None = None,
     append: bool = False,
     output_column: str | None = None,
 ) -> DataBundle:
@@ -379,6 +447,20 @@ def define_regime(
     Regimes can be built from a threshold rule, explicit regime dates, or an
     aligned vector/Series of values. The panel is unchanged unless
     ``append=True``.
+
+    **Missing inputs stay missing.** A period whose threshold column is ``NaN`` is not a
+    period known to be out of regime, so it is recorded as missing rather than ``False``.
+    The same holds for values: a ``Series`` is aligned on the panel index and rows it
+    does not cover stay missing, and a sequence's missing entries -- ``None``, ``NaN``,
+    ``pd.NA`` -- stay missing too. Every other value uses ordinary truthiness, so a
+    numeric source reads ``0`` as out of regime and anything else as in. Explicit
+    ``dates`` are fully observed, because membership is knowable for every row.
+
+    ``n_regime``, ``n_observations`` and the serialized ``series`` in metadata therefore
+    describe observed periods only.
+
+    ``append=True`` refuses an ``output_column`` that already exists in the panel rather
+    than overwriting it, so a target or predictor cannot be replaced by a regime flag.
     """
 
     if not name:
@@ -396,7 +478,15 @@ def define_regime(
     )
     out_col = output_column or f"{name}_regime"
     if append:
-        panel[out_col] = regime.astype(float)
+        # Appending used to assign straight into the panel, so a name that already
+        # existed was overwritten in place -- including a target or a predictor, with
+        # the original values gone and nothing recorded (F-014).
+        if out_col in panel.columns:
+            raise ValueError(
+                f"regime output column {out_col!r} already exists in the panel; "
+                "appending would overwrite it. Pass output_column=... with a free name."
+            )
+        panel[out_col] = pd.to_numeric(regime, errors="coerce").astype(float)
     regimes = dict(bundle.metadata.get("regimes", {}))
     regimes[name] = {
         "name": name,
@@ -405,9 +495,15 @@ def define_regime(
         "direction": direction,
         "source": _regime_source(column=column, dates=dates, values=values),
         "output_column": out_col if append else None,
-        "n_regime": int(regime.sum()),
-        "n_observations": int(regime.notna().sum()),
-        "series": {idx.strftime("%Y-%m-%d"): bool(value) for idx, value in regime.items() if pd.notna(value)},
+        # Counts and the serialized series describe OBSERVED regime values only: a
+        # period whose input was missing contributes to neither.
+        "n_regime": int(sum(bool(value) for value in regime if value is not pd.NA and pd.notna(value))),
+        "n_observations": int(sum(1 for value in regime if value is not pd.NA and pd.notna(value))),
+        "series": {
+            idx.strftime("%Y-%m-%d"): bool(value)
+            for idx, value in regime.items()
+            if value is not pd.NA and pd.notna(value)
+        },
     }
     meta = dict(bundle.metadata)
     meta["regimes"] = regimes
@@ -784,28 +880,12 @@ def _ar1_covariance(rho: float, size: int) -> np.ndarray:
     return np.power(float(rho), np.abs(np.subtract.outer(index, index)))
 
 
-def _normalize_frequency_label(value: Any) -> str:
-    key = str(value).strip().lower()
-    aliases = {
-        "m": "monthly",
-        "month": "monthly",
-        "monthly": "monthly",
-        "state_monthly": "monthly",
-        "q": "quarterly",
-        "quarter": "quarterly",
-        "quarterly": "quarterly",
-        "w": "weekly",
-        "week": "weekly",
-        "weekly": "weekly",
-        "a": "annual",
-        "annual": "annual",
-        "yearly": "annual",
-        "irregular": "irregular",
-        "unknown": "unknown",
-    }
-    if key not in aliases:
-        return key
-    return aliases[key]
+#: The frequency vocabulary belongs to ``data.panel``, which owns the panel contract
+#: and already refuses an unknown label. This module used to keep a second, permissive
+#: copy that returned any unrecognised string unchanged, so ``"montly"`` survived
+#: metadata inference and became a frequency label nothing downstream could match
+#: (F-016). Re-exported rather than reimplemented so the two cannot drift apart again.
+_normalize_frequency_label = _panel_normalize_frequency_label
 
 
 def _frequency_counts(frequencies: Mapping[str, str]) -> dict[str, int]:
@@ -823,22 +903,61 @@ def _resolve_columns(panel: pd.DataFrame, *, columns: Iterable[str] | None) -> t
     return selected
 
 
+def _lag_value(value: Any, *, label: str) -> int:
+    """One availability lag: a non-negative integral, non-boolean value.
+
+    ``int(value)`` took anything it could truncate or parse, so ``1.9`` became a one-
+    period lag and ``"2"`` became two -- a different information set than the caller
+    asked for, recorded as though they had asked for it (F-015). NumPy integers are
+    accepted because release-calendar arithmetic produces them, and are stored as plain
+    ``int`` so metadata stays JSON-serialisable. ``bool`` is named explicitly because it
+    is an ``int`` subclass, and ``np.bool_`` because numpy makes it a subclass of
+    neither ``bool`` nor ``np.integer``.
+    """
+    if isinstance(value, (bool, np.bool_)):
+        raise TypeError(f"{label} must be a non-negative integer, not a bool: {value!r}")
+    if not isinstance(value, (int, np.integer)):
+        raise TypeError(
+            f"{label} must be a non-negative integer; got {type(value).__name__} {value!r}"
+        )
+    lag = int(value)
+    if lag < 0:
+        raise ValueError(f"{label} must be non-negative; got {lag}")
+    return lag
+
+
 def _resolve_lag_map(columns: tuple[str, ...], lags: int | Mapping[str, int]) -> dict[str, int]:
     if isinstance(lags, Mapping):
-        lag_map: dict[str, int] = {}
         missing = [column for column in columns if column not in lags]
         if missing:
             raise ValueError(f"lags mapping is missing selected columns: {missing}")
-        for column in columns:
-            lag = int(lags[column])
-            if lag < 0:
-                raise ValueError("availability lags must be non-negative")
-            lag_map[column] = lag
-        return lag_map
-    lag = int(lags)
-    if lag < 0:
-        raise ValueError("availability lags must be non-negative")
+        return {
+            column: _lag_value(lags[column], label=f"availability lag for {column!r}")
+            for column in columns
+        }
+    lag = _lag_value(lags, label="availability lags")
     return {column: lag for column in columns}
+
+
+def _regime_flag(value: Any) -> Any:
+    """One regime observation: ``True``, ``False``, or missing.
+
+    Missing has to survive, because a period whose input was absent is not a period
+    known to be out of regime -- that was the defect (F-014). The check cannot be
+    ``isinstance(value, float) and pd.isna(value)``: ``np.float32("nan")`` is not a
+    Python ``float``, and ``bool(pd.NA)`` raises rather than returning anything, so both
+    would slip past a narrower test. Everything else keeps its ordinary truthiness,
+    which is what makes a numeric source read 0 as out-of-regime and 2 as in.
+    """
+    if value is None or value is pd.NA:
+        return pd.NA
+    try:
+        if pd.isna(value):
+            return pd.NA
+    except (TypeError, ValueError):
+        # Not a scalar pandas can test for missingness; fall through to truthiness.
+        pass
+    return bool(value)
 
 
 def _build_regime_series(
@@ -848,7 +967,7 @@ def _build_regime_series(
     threshold: float | None,
     direction: RegimeDirection,
     dates: Iterable[str | pd.Timestamp] | None,
-    values: Sequence[bool | int | float] | pd.Series | None,
+    values: Sequence[bool | int | float | None] | pd.Series | None,
 ) -> pd.Series:
     n_sources = sum(source is not None for source in (column, dates, values))
     if n_sources != 1:
@@ -861,31 +980,54 @@ def _build_regime_series(
         if column not in panel.columns:
             raise ValueError(f"regime column {column!r} is not in the panel")
         series = panel[column]
+        # A comparison against NaN is False in pandas, so a missing predictor used to
+        # land in the "not in regime" half rather than staying unobserved -- the regime
+        # then claimed to know something about a period where the input was absent
+        # (F-014). ``object`` dtype so the mask can hold True/False/NA together.
+        missing = series.isna()
         if direction == "above":
-            return (series > float(threshold)).rename("regime")
-        if direction == "below":
-            return (series < float(threshold)).rename("regime")
-        if direction == "equal":
-            return (series == float(threshold)).rename("regime")
-        return (series != float(threshold)).rename("regime")
+            flags = series > float(threshold)
+        elif direction == "below":
+            flags = series < float(threshold)
+        elif direction == "equal":
+            flags = series == float(threshold)
+        else:
+            flags = series != float(threshold)
+        return flags.astype(object).mask(missing, other=pd.NA).rename("regime")
     if dates is not None:
         regime_dates = pd.DatetimeIndex(pd.to_datetime(list(dates)))
         return pd.Series(panel.index.isin(regime_dates), index=panel.index, name="regime")
     if isinstance(values, pd.Series):
         aligned = values.reindex(panel.index)
-        return aligned.astype(bool).rename("regime")
+        # ``astype(bool)`` turned every unmatched row into True, because ``bool(nan)``
+        # is True. A row the caller did not supply is unobserved, not in-regime; an
+        # observed one keeps its ordinary truthiness, so a numeric series still reads 0
+        # as out-of-regime and anything else as in.
+        return pd.Series(
+            [_regime_flag(value) for value in aligned],
+            index=panel.index,
+            dtype=object,
+            name="regime",
+        )
     if values is None:
         raise ValueError("values source is missing")
     if len(values) != len(panel):
         raise ValueError("values length must match the panel length")
-    return pd.Series([bool(value) for value in values], index=panel.index, name="regime")
+    # Same trap one level down, and through the same rule, so the two value sources
+    # cannot come to disagree about what missing means.
+    return pd.Series(
+        [_regime_flag(value) for value in values],
+        index=panel.index,
+        dtype=object,
+        name="regime",
+    )
 
 
 def _regime_source(
     *,
     column: str | None,
     dates: Iterable[str | pd.Timestamp] | None,
-    values: Sequence[bool | int | float] | pd.Series | None,
+    values: Sequence[bool | int | float | None] | pd.Series | None,
 ) -> str:
     if column is not None:
         return "threshold"
