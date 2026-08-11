@@ -493,3 +493,151 @@ def test_get_metric_exposes_legacy_metric_names() -> None:
     assert mf.metrics.get_metric("negative_log_score") is mf.metrics.negative_log_score
     assert mf.metrics.get_metric("qlike") is mf.metrics.qlike
     assert mf.metrics.get_metric("success_ratio") is mf.metrics.success_ratio
+
+
+def test_drawdown_counts_the_pre_trade_zero_baseline() -> None:
+    """A path that is under water from the first observation has drawn down.
+
+    Measuring against ``cumsum().cummax()`` alone makes the first (negative)
+    point its own peak and reports zero.
+    """
+    returns = [-2.0, 1.0]
+
+    assert mf.metrics.drawdown_series(returns).tolist() == [-2.0, -1.0]
+    assert mf.metrics.max_drawdown(returns) == -2.0
+
+    # the existing positive-first fixture is unchanged by the baseline
+    unchanged = pd.Series([1.0, 1.0, -3.0, 1.0])
+    assert mf.metrics.drawdown_series(unchanged).tolist() == [0.0, 0.0, -3.0, -2.0]
+    assert mf.metrics.max_drawdown(unchanged) == -3.0
+
+
+def test_forecast_return_path_carries_the_corrected_drawdown() -> None:
+    """The table-attached column and the public series use one formula."""
+    panel = pd.DataFrame(
+        {
+            "model": ["candidate", "candidate", "bench", "bench"],
+            "target": ["y"] * 4,
+            "horizon": [1] * 4,
+            "date": [1, 2, 1, 2],
+            "actual": [1.0, 2.0, 1.0, 2.0],
+            "prediction": [1.5, 2.5, 1.0, 2.0],
+        }
+    )
+
+    returns = mf.metrics.forecast_returns(
+        panel, benchmark="bench", group_cols=("target", "horizon")
+    )
+
+    # the candidate is worse than the benchmark at every date, so the path is
+    # under water throughout and the drawdown must equal the cumulative return
+    assert returns["forecast_return"].tolist() == [-0.25, -0.25]
+    assert returns["cumulative_return"].tolist() == [-0.25, -0.5]
+    assert returns["drawdown"].tolist() == [-0.25, -0.5]
+
+    aggregate = mf.metrics.risk_adjusted_forecast_metrics(returns)
+    assert aggregate.iloc[0]["max_drawdown"] == -0.5
+
+
+def test_quantile_evaluation_associates_rows_by_position() -> None:
+    """Duplicate index labels must not turn one actual into a Series.
+
+    ``group.at[label, actual]`` returns every matching row when the label
+    repeats, which raised an ambiguous-truth error rather than scoring the row
+    the quantile dictionary belongs to.
+    """
+    duplicated = pd.DataFrame(
+        {
+            "model": ["a", "a"],
+            "actual": [1.0, 2.0],
+            "prediction": [1.1, 1.9],
+            "quantile_predictions": [
+                {0.1: 0.5, 0.9: 1.5},
+                {0.1: 1.5, 0.9: 2.5},
+            ],
+        },
+        index=[7, 7],
+    )
+
+    with_duplicates = mf.metrics.evaluate_forecasts(
+        duplicated, metrics=("pinball_loss",), by=("model",)
+    )
+    positional = mf.metrics.evaluate_forecasts(
+        duplicated.reset_index(drop=True), metrics=("pinball_loss",), by=("model",)
+    )
+
+    pd.testing.assert_frame_equal(with_duplicates, positional)
+    assert with_duplicates.loc[0, "quantile_n"] == 4
+
+
+def _missing_group_panel(target_values: list) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "model": ["cand", "cand", "bench", "bench"],
+            "target": target_values,
+            "date": [1, 2, 1, 2],
+            "actual": [1.0, 2.0, 1.0, 2.0],
+            "prediction": [1.1, 1.9, 1.4, 2.5],
+        }
+    )
+
+
+def test_relative_metric_matches_on_a_shared_missing_group_key() -> None:
+    """A missing group label is a key, not a reason to fail to match.
+
+    ``nan != nan``, so a candidate row grouped on a missing target never found
+    the benchmark row grouped on the same missing target.
+    """
+    missing = mf.metrics.evaluate_forecasts(
+        _missing_group_panel([np.nan] * 4),
+        metrics=("relative_mse",),
+        by=("model", "target"),
+        benchmark_model="bench",
+    )
+    labelled = mf.metrics.evaluate_forecasts(
+        _missing_group_panel(["g"] * 4),
+        metrics=("relative_mse",),
+        by=("model", "target"),
+        benchmark_model="bench",
+    )
+
+    def scores(frame: pd.DataFrame) -> list[tuple[str, float]]:
+        return sorted(
+            (row["model"], round(float(row["relative_mse"]), 12))
+            for row in frame.to_dict("records")
+        )
+
+    assert scores(missing) == scores(labelled)
+    assert dict(scores(missing))["cand"] != 1.0
+
+
+def test_missing_group_key_is_not_conflated_with_a_different_group() -> None:
+    """Matching missing-to-missing must not make every group match."""
+    with pytest.raises(ValueError, match="no matching benchmark forecast"):
+        mf.metrics.evaluate_forecasts(
+            _missing_group_panel(["a", "a", "b", "b"]),
+            metrics=("relative_mse",),
+            by=("model", "target"),
+            benchmark_model="bench",
+        )
+
+
+def test_forecast_returns_matches_on_a_shared_missing_group_key() -> None:
+    """The forecast-return benchmark matcher uses the same null-safe contract."""
+    returns = mf.metrics.forecast_returns(
+        _missing_group_panel([np.nan] * 4),
+        benchmark="bench",
+        group_cols=("target",),
+        support_cols=("date",),
+    )
+
+    assert len(returns) == 2
+    assert returns["forecast_return"].notna().all()
+
+    with pytest.raises(ValueError, match="no matching support"):
+        mf.metrics.forecast_returns(
+            _missing_group_panel(["a", "a", "b", "b"]),
+            benchmark="bench",
+            group_cols=("target",),
+            support_cols=("date",),
+        )

@@ -25,6 +25,22 @@ but they are not the same quantity. The `EvalSpec` default uses `"relative_mse"`
 to report the square-root version, add a post-processing step or use
 `mf.metrics.relative_rmse` directly.
 
+### MASE is not a table-level metric
+
+A forecast table carries realised and predicted values for the evaluation window,
+so it has no training sample to form MASE's in-sample seasonal-naive scale from.
+`evaluate_forecasts(metrics=("mase",))` therefore raises naming that reason, rather
+than returning a table with the metric quietly missing.
+
+Call it through the function, with the training sample in hand:
+
+```python
+mf.metrics.mase(y_true, y_pred, y_train, m=12)
+```
+
+For a scale-free comparison at table level, use `relative_mae` or `relative_mse`
+against an explicit benchmark model instead.
+
 ## Evaluation sample
 
 Per-contender metrics (RMSE, relative MSE, OOS-R2) are scored on each contender's
