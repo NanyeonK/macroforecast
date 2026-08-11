@@ -106,14 +106,22 @@ evaluation = mf.pipeline.EvalSpec(
 `pipeline_spec` is built. For `"gr"`, `hac_lags` is the paper-facing alias for the
 legacy `lag_truncate` option and takes precedence if both are supplied.
 
-The set-comparison tests (`"mcs"`, `"spa"`, `"rc"`, `"stepm"`) take the column
-names of their loss panel as keyword arguments, and the pipeline builds that
-panel. `loss`, `model`, `origin`, `target`, `horizon` -- and `benchmark` for
-`"spa"`/`"rc"`/`"stepm"` -- are therefore refused at `pipeline_spec` time with a
-pointer to the field that does own them (`EvalSpec.loss`, `EvalSpec.benchmark`),
-rather than being accepted and then overwritten when the test runs. Everything
-you genuinely control (`alpha`, `n_boot`, `block_length`, `bootstrap_method`,
-`statistic`, `studentize`, an explicit `random_state`) is unaffected.
+An option the evaluator supplies itself is refused at `pipeline_spec` time, with
+a pointer to what really owns it, rather than being accepted and then overwritten
+when the test runs:
+
+| tests | refused | owner |
+|---|---|---|
+| `"mcs"`, `"spa"`, `"rc"`, `"stepm"` | `loss`, `model`, `origin`, `target`, `horizon`; plus `benchmark` except for `"mcs"` | `EvalSpec.loss` / `EvalSpec.benchmark`, or the loss panel's own schema — the pipeline builds that panel |
+| `"dm"`, `"cw"`, `"gw"`, `"enc_t"` | `horizon` | the horizon of the cell being evaluated, from `pipeline_spec(horizons=...)` |
+| `"dm"` | `input_type` | the pipeline, which passes losses it has already computed |
+| `"pt"`, `"hm"`, `"ag"`, `"gr"` | `method` | the requested test name in `EvalSpec.tests` |
+| `"uspa"`, `"aspa"` | `statistic` | the requested test name in `EvalSpec.tests` |
+
+Everything you genuinely control is unaffected: `alpha`, `hac_lags`, `threshold`,
+`kernel`, `correction`, `small_sample`, `cw_adjustment`, `critical_value`,
+`instruments`, `"gr"`'s `lag_truncate`, and the bootstrap parameters (`n_boot`,
+`block_length`, `bootstrap_method`, `studentize`, an explicit `random_state`).
 
 ## When a test cannot be run
 
@@ -153,24 +161,30 @@ because a cell is what a reader scans at once looking for the winner.
   different questions.
 - `"romano_wolf"` resamples the contenders' loss differentials jointly, so it
   inherits their cross-sectional correlation instead of assuming the worst case
-  and is markedly less conservative. The only resampling input the pipeline
-  retains is one benchmark-minus-contender loss series per contender, and that
-  cannot reconstruct a long-form test's own statistic and null. Giacomini-White
-  is itself a loss-differential test, yet its statistic is conditional on
-  instruments the adjustment step never sees; Mincer-Zarnowitz and the
-  directional tests are not loss-differential statistics at all. Long-form rows
-  therefore keep `p_value_adj` as `NaN` and a single `RuntimeWarning` names the
-  tests left unadjusted, rather than reporting a step-down p-value for a
-  statistic that was never resampled. Use a closed-form method when the long-form
-  tests are the ones you need controlled.
+  and is markedly less conservative. **Each wide family is resampled from its own
+  series**: `dm_p_adj` from the raw loss differential `loss_b - loss_c`, and
+  `cw_p_adj` from the Clark-West improvement
+  `loss_b - loss_c + (f_b - f_c)^2` — the same series `clark_west_test` forms,
+  and the unadjusted difference when you set
+  `test_options={"cw": {"cw_adjustment": False}}`. So `dm_p_adj` and `cw_p_adj`
+  answer their own tests and generally differ, as their raw p-values do.
 
-  The wide `dm_p_adj`/`cw_p_adj` columns are produced by the same path as before.
-  Note that under `"romano_wolf"` both are resampled from that one retained loss
-  panel, so `cw_p_adj` is not derived from the Clark-West statistic itself and
-  can equal `dm_p_adj` even where the raw `dm_p` and `cw_p` differ by an order of
-  magnitude. Aligning that path is tracked as a separate open issue; prefer a
-  closed-form method, which adjusts each wide family from its own p-values, when
-  the Clark-West adjustment is the one you rely on.
+  Stated narrowly, this aligns the *inputs*: each family resamples the
+  observation-level series its own test is built on. The mean of that series is
+  not the test statistic — `dm_test` and `clark_west_test` studentize it with
+  their own HAC and reference rules, and Romano-Wolf re-studentizes it for the
+  step-down bootstrap. Nothing here claims the bootstrap reproduces either test's
+  reference distribution.
+
+  Long-form rows are the exception. The retained panels are
+  contender-vs-benchmark series and cannot reconstruct a long-form test's own
+  statistic and null: Giacomini-White is itself a loss-differential test, yet its
+  statistic is conditional on instruments the adjustment step never sees, and
+  Mincer-Zarnowitz and the directional tests are not loss-differential statistics
+  at all. Those rows therefore keep `p_value_adj` as `NaN` and a single
+  `RuntimeWarning` names the tests left unadjusted, rather than reporting a
+  step-down p-value for a statistic that was never resampled. Use a closed-form
+  method when the long-form tests are the ones you need controlled.
 
 A row whose p-value is `NaN` -- degraded, inconclusive, or a test like `"gr"` that
 reports a critical value instead -- is excluded from its family rather than

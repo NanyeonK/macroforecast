@@ -1014,7 +1014,17 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
     out: list[dict[str, Any]] = []
     dm_options = _eval_test_options(spec, "dm")
     cw_options = _eval_test_options(spec, "cw")
-    loss_diffs: dict[tuple[Any, Any], dict[str, pd.Series]] = {}
+    # Same default as ``clark_west_test``'s own signature: the Romano-Wolf panel
+    # below has to match whatever series the test actually forms.
+    cw_adjustment = bool(cw_options.get("cw_adjustment", True))
+    # (target, horizon) -> wide test name -> contender -> the test-specific
+    # OBSERVATION-LEVEL series underlying that test's statistic: DM's loss
+    # differential, Clark-West's adjusted improvement. Not the statistic itself --
+    # each test studentizes this series with its own HAC and reference rules, and
+    # ``romano_wolf_pvalues`` re-studentizes it for the step-down bootstrap.
+    # Keyed by test because Romano-Wolf resamples the SERIES, not the p-value, so
+    # handing CW the DM panel bootstraps a differential Clark-West never formed.
+    loss_diffs: dict[tuple[Any, Any], dict[str, dict[str, pd.Series]]] = {}
     for (target, horizon), group in master.groupby(["target", "horizon"], dropna=False):
         pivot_f = group.pivot_table(index="origin", columns="contender", values="prediction", aggfunc="mean")
         actual = group.groupby("origin")["actual"].first().reindex(pivot_f.index)
@@ -1055,13 +1065,38 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             loss_b = _loss_values(y, fb_vals, loss_fn)
             loss_c = _loss_values(y, fc_vals, loss_fn)
             # Kept for the multiple-testing pass below, which needs the family's
-            # differentials JOINTLY (Romano-Wolf resamples them together) and
-            # cannot recover them from the p-values alone. Oriented benchmark
+            # series JOINTLY (Romano-Wolf resamples them together) and cannot
+            # recover them from the p-values alone. Both are oriented benchmark
             # minus contender, so a positive mean means the contender is better.
-            loss_diffs.setdefault((target, horizon), {})[str(contender)] = pd.Series(
-                np.asarray(loss_b, dtype=float) - np.asarray(loss_c, dtype=float),
-                index=pd.Index(actual[common].index, name="origin"),
-            )
+            #
+            # One entry per WIDE TEST, built here because this is the only place
+            # both DM's and Clark-West's actual inputs are in hand. DM's series is
+            # the raw loss differential; Clark-West's adds the forecast-difference
+            # correction, exactly as ``clark_west_test`` forms its ``improvement``
+            # -- including honoring ``cw_adjustment=False``, which makes the two
+            # series identical because that is what the test itself then does.
+            #
+            # Each panel is retained only where its test actually RUNS for this
+            # contender, under the same conditions the branches below apply. A
+            # Clark-West blocked by a custom loss, or a contender that never
+            # declared nesting, would otherwise leave a series built from inputs
+            # the test itself rejected -- unused, and not meaningful if it were.
+            origin_index = pd.Index(actual[common].index, name="origin")
+            raw_diff = np.asarray(loss_b, dtype=float) - np.asarray(loss_c, dtype=float)
+            cw_runs = want_cw and not cw_blocked_by_custom_loss and contender in nested
+            if want_dm or cw_runs:
+                cell_panels = loss_diffs.setdefault((target, horizon), {})
+                if want_dm:
+                    cell_panels.setdefault("dm", {})[str(contender)] = pd.Series(
+                        raw_diff, index=origin_index
+                    )
+                if cw_runs:
+                    cw_diff = (
+                        raw_diff + (fb_vals - fc_vals) ** 2 if cw_adjustment else raw_diff
+                    )
+                    cell_panels.setdefault("cw", {})[str(contender)] = pd.Series(
+                        cw_diff, index=origin_index
+                    )
             row: dict[str, Any] = {"target": target, "horizon": horizon, "contender": contender}
             has_result = False
             degraded_reasons: list[str] = []
@@ -1355,7 +1390,7 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
 def _apply_multiple_testing(
     frame: pd.DataFrame,
     spec: PipelineSpec,
-    loss_diffs: Mapping[tuple[Any, Any], Mapping[str, pd.Series]],
+    loss_diffs: Mapping[tuple[Any, Any], Mapping[str, Mapping[str, pd.Series]]],
 ) -> pd.DataFrame:
     """Append ``<test>_p_adj`` / ``p_value_adj`` for ``EvalSpec.multiple_testing``.
 
@@ -1373,25 +1408,35 @@ def _apply_multiple_testing(
     no adjustment at all -- the one case where a caller who asked for
     multiplicity control got none and was not told.
 
-    ``romano_wolf`` is the exception for long-form rows, and the reason is what
-    this function has in hand -- not a claim about which tests use loss
-    differentials. ``loss_diffs`` retains one series per contender, benchmark
-    loss minus contender loss, and that is the only resampling input available
-    here. It cannot reconstruct a long-form test's OWN statistic and null:
-    Giacomini-White is itself a loss-differential test, but its statistic is a
-    conditional one built on instruments this function never sees, and
-    Mincer-Zarnowitz and the directional tests are not loss-differential
-    statistics at all. Producing a ``p_value_adj`` for any of them from the
-    retained series would report a step-down p-value for a statistic that was
-    never resampled, so those rows keep it NaN and one warning names them.
+    Under ``romano_wolf`` each wide family is resampled from ITS OWN series.
+    ``loss_diffs`` retains one panel per wide test: ``dm`` holds the raw loss
+    differential ``loss_b - loss_c``, and ``cw`` holds the Clark-West improvement
+    ``loss_b - loss_c + (f_b - f_c)**2`` -- the same series
+    :func:`~macroforecast.tests.clark_west_test` forms, and the unadjusted
+    difference when the caller sets ``cw_adjustment=False``. Previously one
+    DM-oriented map was reused for every wide family, so ``cw_p_adj`` was a
+    step-down adjustment of a statistic Clark-West never computed and came out
+    identical to ``dm_p_adj`` however far apart the raw p-values were.
 
-    The wide ``dm_p_adj``/``cw_p_adj`` path is PRESERVED here, not extended and
-    not corrected, and nothing in this docstring should be read as asserting it
-    is exact. Under ``romano_wolf`` both wide families are resampled from the
-    same retained loss panel, so ``cw_p_adj`` is not derived from the Clark-West
-    statistic itself. Whether that pre-existing path is statistically aligned
-    with each wide family's own statistic -- Clark-West in particular -- is a
-    separate, separately confirmed finding, deliberately out of scope here.
+    What this buys is stated narrowly, and it is an alignment of INPUTS. Each
+    family now resamples the observation-level series its own test is built on, so
+    the two no longer share an adjustment by construction. The mean of that series
+    is **not** the test statistic: :func:`~macroforecast.tests.dm_test` and
+    :func:`~macroforecast.tests.clark_west_test` studentize it with their own HAC
+    and reference rules, and :func:`~macroforecast.tests.romano_wolf_pvalues`
+    re-studentizes it for the step-down bootstrap. Nothing here claims the
+    bootstrap reproduces either test's reference distribution.
+
+    ``romano_wolf`` remains unavailable for long-form rows, and the reason is what
+    this function has in hand -- not a claim about which tests use loss
+    differentials. The retained panels are contender-vs-benchmark series; they
+    cannot reconstruct a long-form test's OWN statistic and null. Giacomini-White
+    is itself a loss-differential test, but its statistic is a conditional one
+    built on instruments this function never sees, and Mincer-Zarnowitz and the
+    directional tests are not loss-differential statistics at all. Producing a
+    ``p_value_adj`` for any of them would report a step-down p-value for a
+    statistic that was never resampled, so those rows keep it NaN and one warning
+    names them.
 
     Returns ``frame`` unchanged when no method is configured, so the default
     report stays byte-identical.
@@ -1417,12 +1462,11 @@ def _apply_multiple_testing(
         for test in wide_tests:
             raw = block[f"{test}_p"].to_numpy(dtype=float)
             if key == "romano_wolf":
-                # One panel per cell -- the benchmark-minus-contender loss
-                # series -- reused for every wide family, so `cw_p_adj` comes
-                # from the same resampling as `dm_p_adj` rather than from the
-                # Clark-West statistic. Preserved as-is here; aligning it is a
-                # separate finding (see this function's docstring).
-                cell = loss_diffs.get((target, horizon), {})
+                # The panel for THIS wide test: DM's raw loss differential,
+                # Clark-West's adjusted improvement. A wide test with no retained
+                # panel yields no members and is left NaN rather than adjusted
+                # from a series that is not its own.
+                cell = loss_diffs.get((target, horizon), {}).get(test, {})
                 names = block["contender"].astype(str).to_numpy()
                 # The family is exactly the contenders this test actually
                 # produced a p-value for. Romano-Wolf could compute one from the

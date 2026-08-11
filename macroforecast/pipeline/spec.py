@@ -355,36 +355,77 @@ _EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
 }
 
 
-#: Options the PIPELINE supplies for a set-comparison test, per test name.
-#: ``mcs_table`` builds the long loss panel it hands these callables, so the
-#: column-name keywords describe that panel's schema rather than anything the
-#: caller can choose, and ``loss``/``benchmark`` have public owners of their own.
-#: They are real keyword-only parameters, so the accepted-name check below passes
-#: them, and ``mcs_table`` then ``update()``s over them -- accepted at build time
-#: and discarded at run time. Refusing them here is the whole of F-026.
-_PIPELINE_OWNED_TEST_OPTIONS: Mapping[str, tuple[str, ...]] = {
-    "mcs": ("horizon", "loss", "model", "origin", "target"),
-    "spa": ("benchmark", "horizon", "loss", "model", "origin", "target"),
-    "rc": ("benchmark", "horizon", "loss", "model", "origin", "target"),
-    "stepm": ("benchmark", "horizon", "loss", "model", "origin", "target"),
-}
+#: Owner strings reused across tests. ``horizon`` deliberately has two of them:
+#: for a set-comparison test it is a COLUMN NAME in the loss panel the pipeline
+#: builds, and for a pairwise test it is the CELL'S OWN forecast horizon. One
+#: shared owner string would be wrong for one of the two, which is why the map
+#: below is keyed by (test, option) rather than by option alone.
+_OWNER_PANEL_SCHEMA = "the pipeline's internal loss-panel schema"
+_OWNER_CELL_HORIZON = (
+    "the horizon of the cell being evaluated, from pipeline_spec(horizons=...)"
+)
+_OWNER_TEST_NAME = "the requested test name itself, via EvalSpec.tests"
+_OWNER_PRECOMPUTED_LOSSES = (
+    "the pipeline, which passes per-observation losses it has already computed"
+)
 
-#: Where each pipeline-owned option is set instead. Naming the public owner is
-#: the difference between "you may not do that" and an actionable message.
-_PIPELINE_OWNED_OPTION_OWNERS: Mapping[str, str] = {
-    "loss": "EvalSpec.loss",
-    "benchmark": "EvalSpec.benchmark",
-    "model": "the pipeline's internal loss-panel schema",
-    "origin": "the pipeline's internal loss-panel schema",
-    "target": "the pipeline's internal loss-panel schema",
-    "horizon": "the pipeline's internal loss-panel schema",
+#: Every option the evaluator supplies itself, per test, mapped to where the
+#: caller sets it instead. These are all real keyword-only parameters of the
+#: underlying callables, so the accepted-name check below PASSES them; the
+#: evaluator then overrides them with ``{**options, ...}`` or ``update()``, so
+#: without this map they are accepted at build time and discarded at run time.
+#:
+#: Two families, one defect:
+#:   * set-comparison (``mcs``/``spa``/``rc``/``stepm``) -- ``mcs_table`` builds
+#:     the long loss panel these read, so the column-name keywords describe ITS
+#:     schema, and ``loss``/``benchmark`` have public owners (F-026, packet 14);
+#:   * pairwise and joint (``dm``/``cw``/``gw``/``enc_t``/``pt``/``hm``/``ag``/
+#:     ``gr``/``uspa``/``aspa``) -- ``significance_table`` supplies the cell's own
+#:     horizon, the input form of the losses it already computed, and the dispatch
+#:     key that IS the requested test name (F-046, this packet).
+#:
+#: Deliberately ABSENT, because the caller genuinely wins there: ``mz``'s and
+#: ``gr``'s ``hac_lags`` (``setdefault``), ``gr``'s ``lag_truncate`` precedence,
+#: ``cw_adjustment``, thresholds, alphas, kernels, corrections, and every
+#: bootstrap parameter.
+_PIPELINE_OWNED_TEST_OPTIONS: Mapping[str, Mapping[str, str]] = {
+    "mcs": {
+        "horizon": _OWNER_PANEL_SCHEMA, "loss": "EvalSpec.loss",
+        "model": _OWNER_PANEL_SCHEMA, "origin": _OWNER_PANEL_SCHEMA,
+        "target": _OWNER_PANEL_SCHEMA,
+    },
+    "spa": {
+        "benchmark": "EvalSpec.benchmark", "horizon": _OWNER_PANEL_SCHEMA,
+        "loss": "EvalSpec.loss", "model": _OWNER_PANEL_SCHEMA,
+        "origin": _OWNER_PANEL_SCHEMA, "target": _OWNER_PANEL_SCHEMA,
+    },
+    "rc": {
+        "benchmark": "EvalSpec.benchmark", "horizon": _OWNER_PANEL_SCHEMA,
+        "loss": "EvalSpec.loss", "model": _OWNER_PANEL_SCHEMA,
+        "origin": _OWNER_PANEL_SCHEMA, "target": _OWNER_PANEL_SCHEMA,
+    },
+    "stepm": {
+        "benchmark": "EvalSpec.benchmark", "horizon": _OWNER_PANEL_SCHEMA,
+        "loss": "EvalSpec.loss", "model": _OWNER_PANEL_SCHEMA,
+        "origin": _OWNER_PANEL_SCHEMA, "target": _OWNER_PANEL_SCHEMA,
+    },
+    "dm": {"horizon": _OWNER_CELL_HORIZON, "input_type": _OWNER_PRECOMPUTED_LOSSES},
+    "cw": {"horizon": _OWNER_CELL_HORIZON},
+    "gw": {"horizon": _OWNER_CELL_HORIZON},
+    "enc_t": {"horizon": _OWNER_CELL_HORIZON},
+    "pt": {"method": _OWNER_TEST_NAME},
+    "hm": {"method": _OWNER_TEST_NAME},
+    "ag": {"method": _OWNER_TEST_NAME},
+    "gr": {"method": _OWNER_TEST_NAME},
+    "uspa": {"statistic": _OWNER_TEST_NAME},
+    "aspa": {"statistic": _OWNER_TEST_NAME},
 }
 
 
 def _validate_pipeline_owned_test_options(
     test_name: str, options: Mapping[str, Any]
 ) -> None:
-    """Refuse ``test_options`` entries the pipeline sets itself at run time."""
+    """Refuse ``test_options`` entries the evaluator sets itself at run time."""
 
     owned = _PIPELINE_OWNED_TEST_OPTIONS.get(test_name)
     if not owned:
@@ -392,17 +433,14 @@ def _validate_pipeline_owned_test_options(
     conflicting = [name for name in owned if name in options]
     if not conflicting:
         return
-    owners = ", ".join(
-        f"{name!r} -> {_PIPELINE_OWNED_OPTION_OWNERS[name]}" for name in conflicting
-    )
+    owners = ", ".join(f"{name!r} -> {owned[name]}" for name in conflicting)
     honored = sorted(set(_accepted_eval_test_options(test_name)) - set(owned))
     raise ValueError(
         f"evaluation.test_options[{test_name!r}] sets pipeline-owned option(s) "
-        f"{conflicting}; the pipeline builds the loss panel it passes to "
-        f"{test_name!r} and supplies these itself, so a value here would be "
-        f"silently overwritten rather than honored. Set them at their owner "
-        f"instead ({owners}). Options that ARE honored for {test_name!r}: "
-        f"{honored}."
+        f"{conflicting}; the pipeline supplies these itself when it runs "
+        f"{test_name!r}, so a value here would be silently overwritten rather "
+        f"than honored. Set them at their owner instead ({owners}). Options "
+        f"that ARE honored for {test_name!r}: {honored}."
     )
 
 
@@ -746,15 +784,29 @@ class EvalSpec:
     test's underlying public callable. Option blocks are validated when
     :func:`pipeline_spec` is built: the key must appear in ``tests``, every
     option name must be accepted by that test's callable, and the option must
-    not be one the pipeline supplies itself. The set-comparison tests
-    (``"mcs"``, ``"spa"``, ``"rc"``, ``"stepm"``) take their loss panel's column
-    names as keywords, and the pipeline builds that panel, so ``loss``,
-    ``model``, ``origin``, ``target``, ``horizon`` -- and ``benchmark`` for
-    ``"spa"``/``"rc"``/``"stepm"`` -- are refused with a pointer to their public
-    owner (``EvalSpec.loss``, ``EvalSpec.benchmark``) rather than accepted and
-    then overwritten. Everything the caller genuinely controls -- ``alpha``,
-    ``n_boot``, ``block_length``, ``bootstrap_method``, ``statistic``,
-    ``studentize``, an explicit ``random_state`` -- stays valid.
+    not be one the evaluator supplies itself. The refused set is per test, and
+    each is reported with a pointer to its real owner rather than accepted and
+    then overwritten:
+
+    * set-comparison (``"mcs"``, ``"spa"``, ``"rc"``, ``"stepm"``) -- these take
+      their loss panel's column names as keywords and the pipeline builds that
+      panel, so ``loss``, ``model``, ``origin``, ``target``, ``horizon``, plus
+      ``benchmark`` for ``"spa"``/``"rc"``/``"stepm"``, belong to
+      ``EvalSpec.loss``/``EvalSpec.benchmark`` or to the internal schema;
+    * pairwise (``"dm"``, ``"cw"``, ``"gw"``, ``"enc_t"``) -- ``horizon`` is the
+      horizon of the cell being evaluated, from ``pipeline_spec(horizons=...)``,
+      and ``"dm"``'s ``input_type`` is fixed because the pipeline passes losses
+      it has already computed;
+    * dispatch-by-name (``"pt"``, ``"hm"``, ``"ag"``, ``"gr"`` via ``method``;
+      ``"uspa"``, ``"aspa"`` via ``statistic``) -- the requested test name in
+      ``tests`` already chooses it.
+
+    Everything the caller genuinely controls stays valid: ``alpha``,
+    ``hac_lags``, ``threshold``, ``kernel``, ``correction``, ``small_sample``,
+    ``cw_adjustment``, ``critical_value``, ``instruments``, ``"gr"``'s
+    ``lag_truncate``, and every bootstrap parameter (``n_boot``,
+    ``block_length``, ``bootstrap_method``, ``studentize``, an explicit
+    ``random_state``).
 
     Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
     ``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
