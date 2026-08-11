@@ -252,3 +252,112 @@ def test_recursive_custom_model_with_exogenous_features_warns_at_spec_build():
             evaluation=EvalSpec(benchmark="CUSTOM"),
             save_models=False,
         )
+
+
+# --------------------------------------------------------------------------- #
+# Uniqueness of the labels a run is keyed by: contender names, horizons, and
+# resolved target names. Each of these used to build cleanly and then go wrong
+# quietly -- a dropped contender, a repeated cell, two targets under one label.
+# --------------------------------------------------------------------------- #
+
+
+def _two_target_bundle(n: int = 72):
+    idx = pd.date_range("2000-01-31", periods=n, freq="ME", name="date")
+    x = np.linspace(0.0, 1.0, n)
+    frame = pd.DataFrame({"y": 1.0 + x, "z": 2.0 - x, "x1": x}, index=idx)
+    return mf.data.custom_dataset(frame, transform_codes={"y": 1, "z": 1, "x1": 1})
+
+
+def _master_frame():
+    dates = pd.to_datetime(["2010-01-31", "2010-02-28", "2010-03-31"])
+    actual = np.array([1.0, 1.1, 1.2])
+    return pd.concat(
+        [
+            pd.DataFrame(
+                {
+                    "arm": name, "model": name, "contender": name,
+                    "target": "y", "horizon": 1, "origin": np.arange(len(dates)),
+                    "date": dates, "prediction": actual + shift, "actual": actual,
+                }
+            )
+            for name, shift in (("AR", 0.0), ("OLS", 0.2))
+        ],
+        ignore_index=True,
+    )
+
+
+def test_combination_named_after_an_arm_raises_at_spec_build():
+    # Used to build, then hit apply_combinations' idempotence guard and vanish, so
+    # the ARM's own forecasts were scored under the combination's label.
+    with pytest.raises(
+        ValueError, match=r"combination name\(s\) \['AR'\] duplicate an arm contender name"
+    ):
+        _spec(combinations=[CombinationContender("AR", method="mean")])
+
+
+def test_duplicate_combination_names_raise_at_spec_build():
+    # Both used to run: the guard reads a snapshot taken before the loop, so two
+    # combinations sharing a name appended two sets of rows under one label.
+    with pytest.raises(ValueError, match=r"combination name\(s\) \['POOL'\] are not unique"):
+        _spec(
+            combinations=[
+                CombinationContender("POOL", method="mean"),
+                CombinationContender("POOL", method="median"),
+            ]
+        )
+
+
+def test_unique_combination_names_build_and_apply_combinations_stays_idempotent():
+    # Build-time config validation and run-time idempotence are separate contracts;
+    # tightening the first must not change the second.
+    from macroforecast.pipeline.evaluate import apply_combinations
+
+    spec = _spec(
+        combinations=[
+            CombinationContender("POOL", method="mean"),
+            CombinationContender("MEDIAN", method="median"),
+        ]
+    )
+    assert [c.name for c in spec.combinations] == ["POOL", "MEDIAN"]
+
+    once = apply_combinations(_master_frame(), spec)
+    assert set(once["contender"]) == {"AR", "OLS", "POOL", "MEDIAN"}
+
+    twice = apply_combinations(once, spec)
+    assert len(twice) == len(once)
+    assert twice["contender"].value_counts().to_dict() == once["contender"].value_counts().to_dict()
+
+
+def test_repeated_horizons_raise_after_normalization():
+    for horizons in ([1, 1], [1, 1.0]):
+        # 1 and 1.0 are one horizon: the check runs on the normalized integers, so it
+        # does not matter how the caller spelled it.
+        with pytest.raises(ValueError, match=r"horizons must be unique; \[1\]"):
+            _spec(horizons=horizons)
+
+
+def test_distinct_horizons_keep_the_order_they_were_given():
+    spec = _spec(horizons=[3, 1])
+    assert spec.horizons == (3, 1)
+
+
+def test_repeated_target_names_raise_however_they_are_declared():
+    bundle = _two_target_bundle()
+    duplicates = (
+        ["y", "y"],
+        # Different forecast objects, one public name -- every table is keyed by the
+        # name alone, so these would be reported as a single target.
+        [
+            TargetSpec("y", transform="level", policy="direct"),
+            TargetSpec("y", transform="change", policy="direct_average"),
+        ],
+        ["y", TargetSpec("y", transform="level", policy="direct")],
+    )
+    for targets in duplicates:
+        with pytest.raises(ValueError, match=r"target names must be unique; \['y'\]"):
+            _spec(data=bundle, targets=targets)
+
+
+def test_distinct_targets_keep_the_order_they_were_given():
+    spec = _spec(data=_two_target_bundle(), targets=["z", "y"])
+    assert [t.name for t in spec.targets] == ["z", "y"]

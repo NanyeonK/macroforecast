@@ -196,6 +196,16 @@ later = pipeline_spec(
 second = run_pipeline(later)
 ```
 
+Every contender added this way needs its own name. Arm names and combination
+names are one name space -- both are contenders in the same evaluation -- so
+`pipeline_spec` rejects a combination named after an arm, or two combinations
+named alike, at build time rather than at run time. It also rejects a repeated
+horizon (compared after normalization to integers, so `1` and `1.0` are one
+horizon) and two targets that resolve to the same public name, even when their
+transform or policy differs. None of these are deduplicated for you: a repeated
+label is a specification error, and the tables downstream are keyed by that
+label alone. Valid input keeps its order.
+
 The second run reuses the stored `(target, horizon, arm)` cells for `AR` and `RF`
 and computes only `GBM`. The shared `preprocessing_cache_dir` also reuses the
 prepared per-origin preprocessing base when the preprocessing spec is unchanged.
