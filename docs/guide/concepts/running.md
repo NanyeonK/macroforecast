@@ -245,6 +245,24 @@ store is intended for a single writer; inspect it with
 `mf.pipeline.result_store_summary(...)` and delete cells with
 `mf.pipeline.purge_result_store(...)`.
 
+Both purge helpers delete files, so they fail closed. Filters are validated before
+anything is enumerated or removed: a `before=` that cannot be parsed raises rather
+than acting as no cutoff at all, and a `digests=`/`aliases=` entry that is not a plain
+store entry name — empty, `.`, `..`, an absolute path, anything holding a path
+separator — raises rather than addressing a file outside the store. One bad entry in a
+list refuses the whole call, so a refused purge deletes nothing. A directory that
+resolves outside the store, such as a symlinked alias, is never followed.
+
+```python
+mf.pipeline.purge_result_store(store, before="2026-01-01")   # ok
+mf.pipeline.purge_result_store(store, before="last Tuesday") # ValueError, nothing deleted
+```
+
+Deletion itself stays best effort and idempotent — an entry that is already gone is
+not an error. The returned number counts **entries**, not files: it is how many stored
+cells (or model fits) had at least one of their files actually removed, so a filter
+that matches nothing returns 0.
+
 For custom models, prefer passing the digest through the constructor:
 
 ```python

@@ -249,9 +249,25 @@ Delete saved model fits matching the supplied filters and return a count.
 
 Pipeline model stores contain one alias directory per arm/model and one JSON
 sidecar per fitted origin/horizon. Each matching sidecar is deleted together
-with its recorded pickle path when that pickle lives under ``store``.
-``before`` filters by the sidecar file modification time because legacy model
-sidecars do not record a creation timestamp.
+with the pickle it owns. ``before`` filters by the sidecar file modification time
+because legacy model sidecars do not record a creation timestamp.
+
+Every filter is validated BEFORE anything is enumerated or removed, so a refused
+call deletes nothing: an unparseable ``before`` raises rather than acting as no
+cutoff, and an ``aliases`` entry that is not a plain alias directory name -- empty,
+``.``, ``..``, an absolute path, anything containing a separator -- raises rather
+than reaching outside ``store``. An alias directory that resolves outside the store
+(a symlink) is never followed, whether it was named or reached by enumerating them
+all; it is skipped, so such a call reports 0 rather than deleting anything.
+
+Only files inside the resolved store are removed. A sidecar whose recorded
+``model_path`` points outside is deleted, but the file it names is left alone --
+see :func:`_model_path_from_manifest` for how a generated pickle is identified
+without depending on the working directory the store was written from.
+
+Deletion is best effort and idempotent. The returned count is the number of stored
+FITS for which at least one file (the pickle or its sidecar) was actually removed
+-- not the number of files, and not the number of sidecars considered.
 
 #### Parameters
 
@@ -285,6 +301,21 @@ macroforecast.pipeline.purge_result_store(store: str | Path, *, before: str | da
 #### Description
 
 Delete result-store cells matching the supplied filters and return a count.
+
+Every filter is validated BEFORE anything is enumerated or removed, so a call that
+is going to be refused deletes nothing at all: an unparseable ``before`` raises
+rather than acting as no cutoff, and a ``digests`` entry that is not a plain cell
+name -- ``..``, an absolute path, anything containing a separator -- raises rather
+than addressing a file outside ``<store>/cells``. One bad entry in an otherwise
+valid list therefore refuses the whole call instead of deleting the entries before
+it.
+
+Deletion itself stays best effort and idempotent: a cell whose files have already
+gone, or which cannot be removed, is skipped quietly rather than raising. The
+returned count is the number of CELLS for which at least one file (the parquet
+payload or its manifest) was actually removed -- not the number of files, and not
+the number of candidates considered. A digest naming a cell that does not exist
+contributes 0.
 
 #### Parameters
 
