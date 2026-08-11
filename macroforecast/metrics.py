@@ -157,15 +157,33 @@ def seasonal_naive_mae(y_train: Any, *, m: int = 1) -> float:
     This is the scale-free denominator used by MASE (Hyndman & Koehler, 2006).
     ``m=1`` is the random-walk (no-change) scaling; ``m>1`` the seasonal-naive
     scaling. Returns NaN when the training series is shorter than ``m+1``.
+
+    Missing observations drop the ``(t, t-m)`` pairs they belong to; they do NOT
+    close the gap. Dropping them first would slide later observations into
+    earlier positions and manufacture pairs that are not ``m`` apart in the
+    original series -- ``[1, NaN, 3]`` at ``m=1`` has no valid pair at all and is
+    NaN, not ``|3 - 1| = 2``. NaN is likewise returned when every pair is
+    invalid, so an unusable scale never silently becomes a finite denominator.
     """
 
     if m < 1:
         raise ValueError("m must be >= 1")
-    train = pd.Series(y_train).dropna().astype(float).to_numpy()
-    if len(train) <= m:
+    # ``to_numpy(dtype=float, na_value=...)`` rather than ``astype(float)``: the
+    # cast rejects ``pd.NA`` outright, and since this function no longer drops
+    # missing values before converting (dropping them is exactly what invented
+    # false pairs), a nullable input would raise instead of being scored. This
+    # maps every pandas missing marker -- ``pd.NA``, ``None``, ``NaT``, and the
+    # nullable ``Int64``/``Float64`` extension dtypes -- onto ``float("nan")``
+    # while preserving length and order. Genuinely non-numeric input still
+    # raises rather than being coerced.
+    train = pd.Series(y_train).to_numpy(dtype=float, na_value=np.nan)
+    if train.size <= m:
         return float("nan")
     diffs = np.abs(train[m:] - train[:-m])
-    return float(np.mean(diffs)) if diffs.size else float("nan")
+    valid = np.isfinite(diffs)
+    if not valid.any():
+        return float("nan")
+    return float(np.mean(diffs[valid]))
 
 
 def mase(y_true: Any, y_pred: Any, y_train: Any, *, m: int = 1) -> float:
@@ -629,15 +647,33 @@ def omega_ratio(returns: Any, *, threshold: float = 0.0) -> float:
     return _safe_ratio(upside, downside)
 
 
+def _drawdown_from_cumulative(cumulative: pd.Series) -> pd.Series:
+    """Cumulative P&L minus a running peak that starts at the pre-trade zero.
+
+    The peak is floored at zero because the path begins before any P&L exists:
+    an investor who is under water from the first observation has drawn down,
+    and measuring against ``cummax()`` alone reports zero because the first
+    (negative) point is its own peak. ``[-2, 1]`` is ``[-2, -1]``, not
+    ``[0, 0]``. A path whose peak is already positive is unaffected.
+
+    Shared by :func:`drawdown_series` and the table-attached drawdown column so
+    the two cannot drift apart.
+    """
+
+    return cumulative - cumulative.cummax().clip(lower=0.0)
+
+
 def drawdown_series(returns: Any) -> pd.Series:
-    """Return cumulative forecast return minus its running peak."""
+    """Return cumulative forecast return minus its running peak.
+
+    The running peak includes the zero baseline that precedes the path, so a
+    strategy that never recovers its starting point still reports a drawdown.
+    """
 
     series = pd.Series(returns, dtype=float).dropna()
     if series.empty:
         return pd.Series(dtype=float, name="drawdown")
-    cumulative = series.cumsum()
-    drawdown = cumulative - cumulative.cummax()
-    return drawdown.rename("drawdown")
+    return _drawdown_from_cumulative(series.cumsum()).rename("drawdown")
 
 
 def max_drawdown(returns: Any) -> float:
@@ -835,7 +871,24 @@ def evaluate_forecasts(
     benchmark_model: str | None = None,
     model_column: str = "model",
 ) -> pd.DataFrame:
-    """Evaluate a forecasting runner output or forecast table."""
+    """Evaluate a forecasting runner output or forecast table.
+
+    Each requested metric is scored per group in ``by`` and returned as a column.
+    A metric that cannot be scored from this table raises rather than going
+    missing from the result, so a typo or an unavailable metric is never read as
+    a metric that happened to be empty.
+
+    Metrics whose table-level evaluation needs an extra column raise when that
+    column is absent: ``variance_prediction`` for the density metrics,
+    ``quantile_predictions`` for the interval metrics, ``previous_actual`` for
+    the direction metrics, and a benchmark model for the relative metrics.
+
+    ``mase`` has no table-level form at all and raises naming the reason: the
+    table carries realised and predicted values for the evaluation window only,
+    so the in-sample naive scale it divides by cannot be formed from it. Call
+    ``mase(y_true, y_pred, y_train, m=...)`` with the training sample in hand,
+    or score a table-level alternative such as ``"mae"`` or ``"relative_mae"``.
+    """
 
     frame = _forecast_frame(forecasts)
     if frame.empty:
@@ -944,7 +997,9 @@ def evaluate_forecasts(
                     continue
                 if metric_name in _DIRECTION_METRIC_NAMES:
                     continue
-                if metric_name in _QUANTILE_METRIC_NAMES:
+                if metric_name in _QUANTILE_DENSITY_METRIC_NAMES:
+                    # Computed once per group by ``_quantile_evaluation`` from the
+                    # quantile column, not from ``(actual, prediction)``.
                     continue
                 row[metric_name] = float(metric_fn(valid[actual], valid[prediction]))
         if previous_actual in group.columns:
@@ -1094,14 +1149,35 @@ _RELATIVE_METRIC_NAMES = {"relative_mse", "relative_mae", "mse_reduction", "r2_o
 _VARIANCE_METRIC_NAMES = {"gaussian_nll", "log_score", "negative_log_score", "crps"}
 _VOLATILITY_METRIC_NAMES = {"qlike"}
 _DIRECTION_METRIC_NAMES = {"theil_u2", "success_ratio"}
-_QUANTILE_METRIC_NAMES = {
-    "pinball_loss",
-    "coverage_rate",
-    "interval_width",
-    "interval_score",
-    "mase",
-    "seasonal_naive_mae",
-    "acf1",
+# Metrics whose table-level evaluation reads the ``quantile_predictions`` column.
+# This is the ONLY quantile family: it previously also carried ``mase``,
+# ``seasonal_naive_mae`` and ``acf1``, which made ``evaluate_forecasts`` demand a
+# quantile column for MASE and then skip it anyway. ``seasonal_naive_mae`` and
+# ``acf1`` are not registry entries at all, so they are rejected earlier as
+# unknown metrics; only MASE needs the declared contract below.
+_QUANTILE_DENSITY_METRIC_NAMES = frozenset(
+    {"pinball_loss", "coverage_rate", "interval_width", "interval_score"}
+)
+
+# Registry metrics that resolve but have no table-level definition, and why.
+# MASE is the only one: it is a registry entry, so ``get_metric`` hands back a
+# callable, but the forecast table carries realised and predicted values for the
+# evaluation window only and has no training sample to form the in-sample naive
+# scale from. Requesting it is an error naming the function-level API rather than
+# a metric that quietly goes missing from the result.
+#
+# ``seasonal_naive_mae`` and ``acf1`` are deliberately NOT here. They are not
+# registry entries, so ``_resolve_metrics`` already rejects them as unknown
+# metrics before this check runs; listing them would be unreachable, and adding
+# them to the registry to make it reachable would widen the public API for the
+# sake of a better error message.
+_TABLE_UNSUPPORTED_METRIC_REASONS: Mapping[str, str] = {
+    "mase": (
+        "MASE needs the in-sample training series to form its seasonal-naive scale, "
+        "and the forecast table has no training-sample column. Call "
+        "macroforecast.metrics.mase(y_true, y_pred, y_train, m=...) directly, or "
+        "score a table-level alternative such as 'mae' or 'relative_mae'"
+    ),
 }
 
 
@@ -1116,14 +1192,6 @@ def get_metric(metric: MetricLike) -> Callable[..., float]:
         raise ValueError(f"Unknown metric {metric!r}. Available metrics: {allowed}.")
     return _METRICS[key]
 
-
-# The true quantile/interval-distributional subset of ``_QUANTILE_METRIC_NAMES``
-# (which also carries ``mase``/``seasonal_naive_mae``/``acf1`` -- point-adjacent
-# metrics with a different input shape entirely, deliberately excluded here; see
-# ``evaluate_forecasts``'s ``continue``-without-computing handling of them).
-_QUANTILE_DENSITY_METRIC_NAMES = frozenset(
-    {"pinball_loss", "coverage_rate", "interval_width", "interval_score"}
-)
 
 # Every metric name whose table-level evaluation needs a distributional column
 # (``variance_prediction`` or ``quantile_predictions``) rather than plain
@@ -1245,6 +1313,43 @@ def _validate_group_columns(
     return values
 
 
+class _MissingGroupKey:
+    """Stand-in for a missing group value inside a benchmark lookup key.
+
+    A missing value cannot be its own dictionary key: ``nan != nan``, so a
+    candidate row grouped on NaN never finds the benchmark row grouped on the
+    same NaN, and whether it happens to match at all depends on the two NaNs
+    being the identical object. A dedicated singleton compares equal to itself
+    and to nothing else, so missing matches missing and can never be confused
+    with an ordinary user value -- including the strings or sentinels a user
+    might have chosen to mean "missing".
+    """
+
+    __slots__ = ()
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return "<missing group value>"
+
+
+_MISSING_GROUP_KEY = _MissingGroupKey()
+
+
+def _is_missing_scalar(value: Any) -> bool:
+    """True when ``value`` is a scalar null. Non-scalars are never missing."""
+
+    try:
+        result = pd.isna(value)
+    except (TypeError, ValueError):
+        return False
+    return bool(result) if isinstance(result, (bool, np.bool_)) else False
+
+
+def _group_key_value(value: Any) -> Any:
+    """Map a group value to its lookup-key form (see :class:`_MissingGroupKey`)."""
+
+    return _MISSING_GROUP_KEY if _is_missing_scalar(value) else value
+
+
 def _group_row(key: Any, group_keys: Sequence[str]) -> dict[str, Any]:
     if not group_keys:
         return {}
@@ -1288,6 +1393,7 @@ def _benchmark_lookup(
     out: dict[tuple[Any, ...], pd.DataFrame] = {}
     for key, group in bench.groupby(keys, dropna=False, sort=False):
         values = (key,) if len(keys) == 1 and not isinstance(key, tuple) else tuple(key)
+        values = tuple(_group_key_value(value) for value in values)
         out[values] = _support_indexed_frame(
             group,
             actual=actual,
@@ -1301,7 +1407,29 @@ def _benchmark_key(
     row: dict[str, Any], group_keys: Sequence[str], *, model_column: str
 ) -> tuple[Any, ...]:
     keys = [key for key in group_keys if key != model_column]
-    return tuple(row[key] for key in keys if key in row)
+    return tuple(_group_key_value(row[key]) for key in keys if key in row)
+
+
+def _null_safe_support_index(
+    frame: pd.DataFrame, support_columns: Sequence[str]
+) -> pd.DataFrame:
+    """``set_index`` on the support columns, with missing labels made joinable.
+
+    A missing support label is a key, not a defect: candidate and benchmark rows
+    that share it describe the same group and must align. Raw NaN cannot do that
+    (``nan != nan``), so the columns that actually carry nulls are mapped through
+    the same ``_MISSING_GROUP_KEY`` contract the benchmark lookup uses. Columns
+    without nulls are left untouched so an ordinary datetime support index keeps
+    its dtype.
+    """
+
+    out = frame
+    nullable = [column for column in support_columns if out[column].isna().any()]
+    if nullable:
+        out = out.copy()
+        for column in nullable:
+            out[column] = [_group_key_value(value) for value in out[column]]
+    return out.set_index(list(support_columns))
 
 
 def _series_for_relative_metric(
@@ -1313,9 +1441,10 @@ def _series_for_relative_metric(
 ) -> tuple[pd.Series, pd.Series]:
     columns = [actual, prediction]
     columns.extend(column for column in support_columns if column not in columns)
-    valid = group[columns].dropna()
+    # Drop rows whose VALUES are missing, not rows whose support KEY is missing.
+    valid = group[columns].dropna(subset=[actual, prediction])
     if support_columns:
-        indexed = valid.set_index(list(support_columns))
+        indexed = _null_safe_support_index(valid, support_columns)
         return indexed[actual], indexed[prediction]
     return valid[actual].reset_index(drop=True), valid[prediction].reset_index(
         drop=True
@@ -1332,11 +1461,8 @@ def _support_indexed_frame(
     columns = [actual, prediction]
     if support_columns:
         columns = [*support_columns, actual, prediction]
-        return (
-            frame[columns]
-            .dropna()
-            .set_index(list(support_columns))[[actual, prediction]]
-        )
+        valid = frame[columns].dropna(subset=[actual, prediction])
+        return _null_safe_support_index(valid, support_columns)[[actual, prediction]]
     return frame[columns].dropna().reset_index(drop=True)
 
 
@@ -1424,8 +1550,19 @@ def _validate_requested_metric_columns(
             f"previous_actual column {previous_actual!r} is required for requested "
             f"direction metric(s): {missing}"
         )
-    if requested & _QUANTILE_METRIC_NAMES and quantile_predictions not in frame.columns:
-        missing = sorted(requested & _QUANTILE_METRIC_NAMES)
+    unsupported = sorted(requested & set(_TABLE_UNSUPPORTED_METRIC_REASONS))
+    if unsupported:
+        reasons = "; ".join(
+            f"{name}: {_TABLE_UNSUPPORTED_METRIC_REASONS[name]}" for name in unsupported
+        )
+        raise ValueError(
+            f"metric(s) {unsupported} have no table-level evaluation. {reasons}."
+        )
+    if (
+        requested & _QUANTILE_DENSITY_METRIC_NAMES
+        and quantile_predictions not in frame.columns
+    ):
+        missing = sorted(requested & _QUANTILE_DENSITY_METRIC_NAMES)
         raise ValueError(
             f"quantile_predictions column {quantile_predictions!r} is required for requested "
             f"quantile/interval metric(s): {missing}"
@@ -1552,15 +1689,23 @@ def _quantile_evaluation(
     group: pd.DataFrame, *, actual: str, quantile_predictions: str
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
-    for row_id, (idx, value) in enumerate(group[quantile_predictions].dropna().items()):
+    # Positional, not label-based. ``group`` may carry duplicate index labels --
+    # a legitimate forecast table can repeat a date label across rows -- and
+    # ``group.at[label, actual]`` then returns every matching row as a Series,
+    # which turns the emptiness check into an ambiguous-truth error instead of
+    # scoring the row the quantile dictionary actually belongs to.
+    quantile_column = group[quantile_predictions]
+    actual_column = group[actual]
+    for row_id, position in enumerate(
+        np.flatnonzero(quantile_column.notna().to_numpy())
+    ):
+        value = quantile_column.iloc[position]
         if not isinstance(value, dict):
             raise ValueError(
                 f"{quantile_predictions!r} values must be dictionaries mapping quantile levels "
                 "to finite predictions"
             )
-        if idx not in group.index:
-            continue
-        observed = group.at[idx, actual]
+        observed = actual_column.iloc[position]
         if pd.isna(observed):
             continue
         for level, quantile_value in value.items():
@@ -1755,7 +1900,16 @@ def _matching_benchmark_rows(
         first = group.iloc[0]
         mask = pd.Series(True, index=benchmark.index)
         for column in groups:
-            mask &= benchmark[column] == first[column]
+            expected = first[column]
+            # Same contract as the ``evaluate_forecasts`` benchmark lookup: a
+            # missing group value matches a missing one, and never matches a
+            # present one. ``benchmark[column] == nan`` is False everywhere, so
+            # a plain equality here drops every benchmark row and reports the
+            # group as unmatched.
+            if _is_missing_scalar(expected):
+                mask &= benchmark[column].isna()
+            else:
+                mask &= benchmark[column] == expected
         benchmark = benchmark.loc[mask].copy()
     if benchmark.empty:
         key = {column: group.iloc[0][column] for column in groups}
@@ -1779,9 +1933,7 @@ def _attach_return_path_columns(
     for _key, group in iterator:
         part = group.copy()
         part["cumulative_return"] = part["forecast_return"].astype(float).cumsum()
-        part["drawdown"] = (
-            part["cumulative_return"] - part["cumulative_return"].cummax()
-        )
+        part["drawdown"] = _drawdown_from_cumulative(part["cumulative_return"])
         parts.append(part)
     return pd.concat(parts, ignore_index=True)
 

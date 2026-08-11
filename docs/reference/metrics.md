@@ -218,6 +218,9 @@ macroforecast.metrics.drawdown_series(returns: Any) -> pd.Series
 
 Return cumulative forecast return minus its running peak.
 
+The running peak includes the zero baseline that precedes the path, so a
+strategy that never recovers its starting point still reports a drawdown.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -287,6 +290,22 @@ macroforecast.metrics.evaluate_forecasts(forecasts: Any, *, by: Sequence[str] = 
 #### Description
 
 Evaluate a forecasting runner output or forecast table.
+
+Each requested metric is scored per group in ``by`` and returned as a column.
+A metric that cannot be scored from this table raises rather than going
+missing from the result, so a typo or an unavailable metric is never read as
+a metric that happened to be empty.
+
+Metrics whose table-level evaluation needs an extra column raise when that
+column is absent: ``variance_prediction`` for the density metrics,
+``quantile_predictions`` for the interval metrics, ``previous_actual`` for
+the direction metrics, and a benchmark model for the relative metrics.
+
+``mase`` has no table-level form at all and raises naming the reason: the
+table carries realised and predicted values for the evaluation window only,
+so the in-sample naive scale it divides by cannot be formed from it. Call
+``mase(y_true, y_pred, y_train, m=...)`` with the training sample in hand,
+or score a table-level alternative such as ``"mae"`` or ``"relative_mae"``.
 
 #### Parameters
 
