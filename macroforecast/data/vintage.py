@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, Protocol, Sequence, runtime_checkable
 
+import numpy as np
 import pandas as pd
 
 from .errors import VintageUnavailableError
@@ -49,12 +50,28 @@ class VintagePanelSpec:
             raise TypeError("reference_calendar must be a pandas DatetimeIndex")
         if self.reference_calendar.empty:
             raise ValueError("reference_calendar must not be empty")
+        if self.reference_calendar.hasnans:
+            raise ValueError("reference_calendar must not contain NaT")
         if not self.reference_calendar.is_monotonic_increasing:
             raise ValueError("reference_calendar must be monotonic increasing")
+        # Monotonic increasing permits repeats. A repeated origin is a repeated forecast
+        # row scored twice against one actual, so the calendar has to be STRICTLY
+        # increasing (F-011).
+        if not self.reference_calendar.is_unique:
+            duplicated = self.reference_calendar[self.reference_calendar.duplicated()].unique()
+            sample = ", ".join(str(value) for value in duplicated[:3])
+            raise ValueError(f"reference_calendar must not contain duplicate origins: {sample}")
         if self.actuals_vintage not in {"latest", "first_release"}:
             raise ValueError("actuals_vintage must be 'latest' or 'first_release'")
-        if int(self.first_release_max_vintages) < 1:
-            raise ValueError("first_release_max_vintages must be at least 1")
+        # Store what the validator returns, not what the caller passed. Validating
+        # ``np.int64(2)`` and leaving it on the field means a NumPy scalar survives into
+        # run metadata and provenance, where it is not JSON-serialisable -- and the
+        # runner no longer coerces it, precisely so a bad value cannot be laundered late.
+        object.__setattr__(
+            self,
+            "first_release_max_vintages",
+            _validate_probe_limit(self.first_release_max_vintages),
+        )
         if self.actuals_vintage == "first_release":
             keys = tuple(self.source.available_vintages())
             if not keys:
@@ -64,8 +81,27 @@ class VintagePanelSpec:
                     "vintage keys; callable custom_vintages sources without "
                     "explicit vintages cannot supply first-release actuals"
                 )
-            for key in keys:
-                _coerce_vintage_timestamp(key)
+            # First release walks forward from a bisect over these keys, so the order the
+            # source reports IS the search order. An unsorted or duplicated calendar
+            # silently returns the wrong release rather than failing, so it is rejected
+            # here, before the runner does any work with it.
+            timestamps = [_canonical_vintage_timestamp(key) for key in keys]
+            for previous, current, previous_key, current_key in zip(
+                timestamps, timestamps[1:], keys, keys[1:], strict=False
+            ):
+                if current == previous:
+                    raise ValueError(
+                        "actuals_vintage='first_release' requires distinct vintage "
+                        f"instants; keys {previous_key!r} and {current_key!r} are "
+                        f"duplicate instants, both denoting {current}"
+                    )
+                if current < previous:
+                    raise ValueError(
+                        "actuals_vintage='first_release' requires "
+                        "source.available_vintages() in increasing order; "
+                        f"{current_key!r} ({current}) follows {previous_key!r} "
+                        f"({previous})"
+                    )
 
 
 @dataclass
@@ -204,24 +240,37 @@ class _CustomVintageSource:
         return tuple(v.key for v in self.vintages)
 
     def resolve(self, origin_date: pd.Timestamp) -> DataBundle:
-        origin = pd.Timestamp(origin_date)
+        # The RAW origin is what user code sees. Canonicalising is for comparing against
+        # a known calendar, and a callable source has none: it receives the origin and
+        # its ``vintage_id`` derives the cache label from it, so rewriting a tz-aware
+        # origin to UTC-naive on the way in would silently change both the argument the
+        # caller's function is given and the identity its snapshot is stored under.
+        raw_origin = pd.Timestamp(origin_date)
         if self.source is not None:
-            key = origin if not self.vintages else self._resolved_key(origin)
+            key = (
+                raw_origin
+                if not self.vintages
+                # With an explicit calendar the KEY comes from a bisect, which needs
+                # canonical instants; the callable itself still gets the raw origin.
+                else self._resolved_key(_canonical_vintage_timestamp(raw_origin))
+            )
             vintage_label = self._vintage_label(key)
             cached = self._cache.get(vintage_label)
             if cached is not None:
                 return cached
-            bundle = self._coerce(self.source(origin), vintage_label=vintage_label)
+            bundle = self._coerce(self.source(raw_origin), vintage_label=vintage_label)
             self._cache[vintage_label] = bundle
             return bundle
 
-        resolved = self._resolved(origin)
+        resolved = self._resolved(_canonical_vintage_timestamp(raw_origin))
         vintage_label = self._vintage_label(resolved.key)
         cached = self._cache.get(vintage_label)
         if cached is not None:
             return cached
         if resolved.bundle is None:  # pragma: no cover - constructor invariant
-            raise VintageUnavailableError(f"no custom vintage is available at or before {origin.date()}")
+            raise VintageUnavailableError(
+                f"no custom vintage is available at or before {raw_origin.date()}"
+            )
         bundle = self._coerce(resolved.bundle, vintage_label=vintage_label)
         self._cache[vintage_label] = bundle
         return bundle
@@ -301,6 +350,19 @@ def custom_vintages(
     (default: ``str(resolved_key)``). If a callable reads from a
     non-deterministic source whose content can change for the same identifier,
     run the forecast with runner/pipeline preprocessing caching disabled.
+
+    For the mapping and grouped-wide forms the vintage calendar is known at
+    construction, so both invariants it needs are checked there: every key must denote a
+    distinct instant, and every key must produce a distinct ``vintage_id``. A collision
+    in either is refused rather than resolved, because the memoized snapshot would
+    otherwise be served for the wrong vintage.
+
+    A callable source has no enumerable calendar, so neither can be proven. There the
+    identifier is the caller's declaration of cache identity and the caller owns it: a
+    constant ``vintage_id`` such as ``lambda origin: "live"`` remains supported and
+    means "one snapshot, reused". Vintage keys are compared as UTC-naive instants, so a
+    mapping may mix naive and timezone-aware keys; the raw key is what
+    ``available_vintages()`` reports and what ``vintage_id`` receives.
     """
 
     if callable(source):
@@ -315,10 +377,12 @@ def custom_vintages(
     if isinstance(source, Mapping):
         vintages: list[_ResolvedVintage] = []
         for key, value in source.items():
-            timestamp = _coerce_vintage_timestamp(key)
+            timestamp = _canonical_vintage_timestamp(key)
             vintages.append(_ResolvedVintage(key=key, timestamp=timestamp, bundle=value))
+        vintages.sort(key=lambda v: v.timestamp)
+        _validate_known_vintage_calendar(vintages, vintage_id=vintage_id, form="mapping")
         return _CustomVintageSource(
-            vintages=tuple(sorted(vintages, key=lambda v: v.timestamp)),
+            vintages=tuple(vintages),
             vintage_id=vintage_id,
             dataset=dataset,
             frequency=frequency,
@@ -334,6 +398,17 @@ def custom_vintages(
             raise ValueError(f"vintage column {vintage_column!r} is not in the DataFrame")
         if date_column not in source.columns:
             raise ValueError(f"date column {date_column!r} is not in the DataFrame")
+        # ``groupby`` drops rows whose key is NaN/NaT without a word, so a snapshot
+        # would vanish from the calendar and the rows it held would silently not exist
+        # (F-011). Checked before the groupby, and in both strict modes: a missing
+        # vintage key is not a value to coerce, it is an unanswerable question about
+        # which snapshot the row belongs to.
+        missing_vintage_rows = int(source[vintage_column].isna().sum())
+        if missing_vintage_rows:
+            raise ValueError(
+                f"vintage column {vintage_column!r} has {missing_vintage_rows} missing "
+                "values; every row must name the vintage it belongs to"
+            )
         vintages_list: list[_ResolvedVintage] = []
         for key, group in source.groupby(vintage_column, sort=False):
             frame = group.drop(columns=[vintage_column]).copy()
@@ -349,12 +424,16 @@ def custom_vintages(
             vintages_list.append(
                 _ResolvedVintage(
                     key=key,
-                    timestamp=_coerce_vintage_timestamp(key),
+                    timestamp=_canonical_vintage_timestamp(key),
                     bundle=bundle,
                 )
             )
+        vintages_list.sort(key=lambda v: v.timestamp)
+        _validate_known_vintage_calendar(
+            vintages_list, vintage_id=vintage_id, form="grouped-wide"
+        )
         return _CustomVintageSource(
-            vintages=tuple(sorted(vintages_list, key=lambda v: v.timestamp)),
+            vintages=tuple(vintages_list),
             vintage_id=vintage_id,
             dataset=dataset,
             frequency=frequency,
@@ -427,6 +506,30 @@ def with_static_extras(
     return _StaticExtrasVintageSource(source=source, extra=extra_bundle, join=join)
 
 
+def _validate_probe_limit(value: Any) -> int:
+    """``first_release_max_vintages`` is a positive integral, non-boolean count.
+
+    It used to survive construction as anything ``int()`` could truncate and be coerced
+    later, so ``1.9`` became a two-vintage probe budget of 1 without anyone saying so
+    (F-011). numpy integers are accepted because ``np.arange``/``len`` arithmetic
+    produces them; floats are not, even when integral-valued, and ``bool`` is named
+    because it is an ``int`` subclass.
+    """
+    if isinstance(value, (bool, np.bool_)):
+        raise TypeError(
+            f"first_release_max_vintages must be a positive integer, not a bool: {value!r}"
+        )
+    if not isinstance(value, (int, np.integer)):
+        raise TypeError(
+            "first_release_max_vintages must be a positive integer; got "
+            f"{type(value).__name__} {value!r}"
+        )
+    limit = int(value)
+    if limit < 1:
+        raise ValueError(f"first_release_max_vintages must be at least 1; got {limit}")
+    return limit
+
+
 def _vintage_label_timestamp(label: str) -> pd.Timestamp:
     return pd.Period(label, freq="M").start_time
 
@@ -443,6 +546,72 @@ def _coerce_vintage_timestamp(value: Any) -> pd.Timestamp:
             f"custom_vintages vintage key {value!r} cannot be parsed as a timestamp"
         )
     return timestamp
+
+
+def _canonical_vintage_timestamp(value: Any) -> pd.Timestamp:
+    """The instant a vintage key denotes, as a UTC-naive timestamp.
+
+    Ordering and comparison go through this and nothing else. A mapping may mix naive
+    and timezone-aware keys -- ``"2020-01-01"`` beside
+    ``pd.Timestamp("2020-01-01", tz="UTC")`` -- and comparing those two directly is a
+    raw pandas ``TypeError`` about tz-aware and tz-naive operands, which used to reach
+    the caller straight out of ``bisect_right`` (F-011). Converting aware keys to UTC
+    and dropping the offset puts every key on one line; naive keys are already there and
+    are left alone.
+
+    This governs ORDER, not identity. The raw key is what
+    ``available_vintages()`` reports and what ``vintage_id`` receives, so canonicalising
+    here never rewrites a public label.
+    """
+    timestamp = _coerce_vintage_timestamp(value)
+    if timestamp.tz is not None:
+        timestamp = timestamp.tz_convert("UTC").tz_localize(None)
+    return timestamp
+
+
+def _validate_known_vintage_calendar(
+    vintages: "Sequence[_ResolvedVintage]",
+    *,
+    vintage_id: Callable[[Any], Any] | None,
+    form: str,
+) -> None:
+    """Every known vintage must denote a distinct instant and a distinct label.
+
+    Two separate invariants, both checked before any snapshot can be resolved or cached.
+
+    *Distinct instants*, because resolution is a bisect over these timestamps: two keys
+    that canonicalise to the same instant leave no way to say which snapshot an origin
+    selects. Raw keys that differ are not enough -- ``"2020-01-01"`` and
+    ``pd.Timestamp("2020-01-01", tz="UTC")`` are the same instant.
+
+    *Distinct labels*, because the resolved-snapshot cache is keyed by the label. With
+    ``vintage_id=lambda _: "same"`` over two different snapshots, resolving the earlier
+    origin populated the cache and the later origin was served that earlier content
+    (F-010). Rejecting at construction is the only place this can be caught: by the time
+    a caller sees a wrong panel there is nothing left to distinguish it from a right one.
+    """
+    seen_instants: dict[pd.Timestamp, Any] = {}
+    seen_labels: dict[str, Any] = {}
+    for vintage in vintages:
+        previous = seen_instants.get(vintage.timestamp)
+        if previous is not None:
+            raise ValueError(
+                f"custom_vintages {form} keys {previous!r} and {vintage.key!r} denote "
+                f"the same instant {vintage.timestamp}; a vintage source cannot choose "
+                "between two snapshots for one point in time"
+            )
+        seen_instants[vintage.timestamp] = vintage.key
+
+        label = str(vintage_id(vintage.key)) if vintage_id else str(vintage.key)
+        collided = seen_labels.get(label)
+        if collided is not None:
+            raise ValueError(
+                f"custom_vintages {form} keys {collided!r} and {vintage.key!r} both "
+                f"produce the vintage identifier {label!r}. Resolved snapshots are "
+                "memoized by that identifier, so the second key would be served the "
+                "first key's panel. Make vintage_id return a distinct string per key."
+            )
+        seen_labels[label] = vintage.key
 
 
 def _coerce_static_extra(value: DataBundle | pd.DataFrame) -> DataBundle:

@@ -136,6 +136,50 @@ rows strictly before the forecast origin before joining, so a full-span calendar
 dummy panel does not create post-origin rows. Only use this wrapper for
 deterministic columns or columns genuinely known in advance at the origin.
 
+## What a known vintage calendar has to satisfy
+
+The mapping and grouped-wide forms of `custom_vintages` know their whole calendar at
+construction, so both invariants resolution depends on are checked there rather than
+discovered later.
+
+**Distinct instants.** Resolution is a bisect over vintage timestamps, so two keys that
+denote the same point in time leave no way to say which snapshot an origin selects. Raw
+keys differing is not enough — `"2020-01-01"` and `pd.Timestamp("2020-01-01", tz="UTC")`
+are the same instant and are refused as a pair.
+
+**Distinct identifiers.** Resolved snapshots are memoized by the string `vintage_id`
+returns. Two keys sharing one identifier means the second is served the first's panel, so
+a collision is refused at construction with both keys named.
+
+Vintage keys are compared as UTC-naive instants: timezone-aware keys are converted to UTC
+and made naive, naive keys are left alone. A mapping may therefore mix the two. This
+governs ordering and comparison only — `available_vintages()` reports the raw keys you
+passed, and `vintage_id` receives them unchanged.
+
+A grouped-wide frame must name a vintage on every row. `groupby` drops rows with a
+missing key silently, which would remove a snapshot from the calendar and the rows it
+held from the data, so missing keys are refused in both strict modes.
+
+**A callable source is different, on purpose.** It has no enumerable calendar, so neither
+invariant can be proven. There the identifier is your declaration of cache identity and
+you own it: a constant `vintage_id=lambda origin: "live"` is supported and means "one
+snapshot, reused".
+
+## Calendars for first-release actuals
+
+`reference_calendar` must be non-empty, free of `NaT`, and strictly increasing — a
+repeated origin is one forecast row scored twice against one actual.
+
+With `actuals_vintage="first_release"`, the search walks forward from a bisect over
+`source.available_vintages()`, so the order that method reports **is** the search order.
+An unsorted calendar returns a later release and calls it the first one, so the order is
+required to be increasing and free of canonical duplicates, and both are checked before
+the runner does any work.
+
+`first_release_max_vintages` is how many vintages forward the search probes. It must be a
+positive integer — Python or numpy — and is not coerced: `1.9` is refused rather than
+truncated to a budget of 1.
+
 ## Latest vs first-release actuals
 
 `actuals_vintage="latest"` scores every forecast against the latest snapshot

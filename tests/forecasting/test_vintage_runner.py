@@ -676,3 +676,95 @@ def test_vintage_cache_keys_separate_vintage_ids_and_reuse_same_id() -> None:
     assert len(cache) > after_first
     vintage_tags = {key[-1] for key in cache if isinstance(key, tuple) and "vintage" in key}
     assert {"v4", "v5", "v6", "v4_other", "v5_other", "v6_other"}.issubset(vintage_tags)
+
+
+# --------------------------------------------------------------------------- #
+# Controller round 2: the first-release bisect query must be canonical too
+# --------------------------------------------------------------------------- #
+
+def test_first_release_actual_lookup_accepts_a_timezone_aware_query() -> None:
+    """The available timestamps are canonical UTC-naive; the query has to be as well.
+
+    Canonicalising the source side left the query side raw, so a tz-aware ``date``
+    still met naive instants inside ``bisect_right`` and raised pandas's
+    tz-aware/tz-naive ``TypeError`` — from a search the caller never wrote. Only the
+    SEARCH is canonicalised here: the panel lookup and the cache key keep the raw date.
+    """
+    import pandas as pd
+    import pytest
+
+    import macroforecast as mf
+    from macroforecast.data.vintage import VintagePanelSpec
+    from macroforecast.forecasting.runner import _VintageActualResolver
+
+    index = pd.DatetimeIndex(["2020-01-31", "2020-02-29"], name="date")
+    snapshots = {
+        "2020-02-01": pd.DataFrame({"y": [1.0, float("nan")]}, index=index),
+        "2020-03-01": pd.DataFrame({"y": [1.0, 2.0]}, index=index),
+    }
+    spec = VintagePanelSpec(
+        source=mf.data.custom_vintages(snapshots),
+        reference_calendar=index,
+        actuals_vintage="first_release",
+    )
+    resolver = _VintageActualResolver(spec, index)
+
+    aware_date = pd.Timestamp("2020-02-29", tz="UTC")
+    try:
+        actual = resolver.actual_value("y", aware_date)
+    except TypeError as exc:  # pragma: no cover - this is the regression
+        pytest.fail(f"tz-aware query leaked a raw comparison error: {exc}")
+
+    assert actual is not None
+
+
+def test_first_release_probe_passes_the_raw_key_to_resolve() -> None:
+    """``resolve`` is the public protocol, so it gets the key the source published.
+
+    Canonicalisation earns its place on the bisect ORDER and on the bisect QUERY, where
+    two instants are compared. It has no business at this call: a source that publishes
+    a timezone-aware key through ``available_vintages()`` and is then handed back a
+    UTC-naive rewrite of it cannot recognise its own calendar entry. Each source
+    canonicalises internally for its own comparisons; the boundary stays raw.
+    """
+    from datetime import timedelta, timezone
+
+    import pandas as pd
+
+    import macroforecast as mf
+    from macroforecast.data.vintage import VintagePanelSpec
+    from macroforecast.forecasting.runner import _VintageActualResolver
+
+    offset = timezone(timedelta(hours=-5))
+    aware_key = pd.Timestamp("2020-01-31 19:00", tz=offset)
+    index = pd.DatetimeIndex(["2020-01-31", "2020-02-29"], name="date")
+    seen: list[object] = []
+
+    class _RecordingSource:
+        def available_vintages(self):
+            return (aware_key,)
+
+        def resolve(self, origin_date):
+            seen.append(origin_date)
+            return mf.data.DataBundle(
+                mf.data.as_panel(pd.DataFrame({"y": [1.0, 2.0]}, index=index)),
+                {"vintage": "recorded"},
+            )
+
+    spec = VintagePanelSpec(
+        source=_RecordingSource(),
+        reference_calendar=index,
+        actuals_vintage="first_release",
+    )
+    resolver = _VintageActualResolver(spec, index)
+    seen.clear()  # initialisation resolves once for the base panel
+
+    # A date the vintage is at-or-after, so the forward probe actually fires: the
+    # canonical instant of the aware key is 2020-02-01, and first release searches
+    # forward from the queried date.
+    resolver.actual_value("y", pd.Timestamp("2020-01-31"))
+
+    assert seen, "the probe must have called resolve"
+    probed = pd.Timestamp(seen[0])
+    assert probed == aware_key
+    assert probed.tz is not None, "the probe rewrote the source's own aware key"
