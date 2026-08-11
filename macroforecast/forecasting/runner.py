@@ -21,6 +21,7 @@ from macroforecast.data import (
     panel_info,
     validate_panel,
 )
+from macroforecast.data.vintage import _canonical_vintage_timestamp
 from macroforecast.feature_engineering import FeatureSet, FeatureSpec, FittedFeatureBuilder
 from macroforecast.meta import get_config
 from macroforecast.meta.config import _get_pipeline_arm_alias, _get_pipeline_random_seed
@@ -2083,10 +2084,19 @@ class _VintageActualResolver:
         self._policy = data.actuals_vintage
         self._cache: dict[tuple[str, str, pd.Timestamp], _VintageActualValue] = {}
         self._available_keys = tuple(data.source.available_vintages())
+        # Through the shared canonical path, not raw pd.Timestamp. A source whose
+        # keys mix naive and timezone-aware timestamps used to fail inside
+        # bisect_right with pandas comparing tz-aware to tz-naive -- an error about
+        # operands, raised from a search the caller never wrote (F-011). The probe
+        # origins below use the same canonical values, so bisect position and resolve
+        # argument cannot disagree.
         self._available_timestamps = tuple(
-            pd.Timestamp(value) for value in self._available_keys
+            _canonical_vintage_timestamp(value) for value in self._available_keys
         )
-        self._first_release_max_vintages = int(data.first_release_max_vintages)
+        # Already validated as a positive integer by VintagePanelSpec; no int()
+        # here, because a coercion at this point would be the last chance to notice a
+        # value that should never have arrived.
+        self._first_release_max_vintages = data.first_release_max_vintages
         self._first_release_found: dict[tuple[str, pd.Timestamp], Any] = {}
         self._first_release_not_found: set[tuple[str, pd.Timestamp]] = set()
         latest_bundle = _vintage_latest_actual_bundle(data, reference_index)
@@ -2129,9 +2139,22 @@ class _VintageActualResolver:
         cached = self._cache.get(key)
         if cached is not None:
             return cached
-        pos = bisect_right(self._available_timestamps, pd.Timestamp(date))
+        # ``self._available_timestamps`` are canonical UTC-naive instants, so the
+        # query has to be one as well. A tz-aware ``date`` compared against them raised
+        # pandas's tz-aware/tz-naive TypeError from inside ``bisect_right`` -- the same
+        # leak the source-side canonicalisation closed, still open on the query side.
+        # Only the SEARCH is canonicalised: the panel lookup and the cache key below
+        # keep the raw date, because those address rows the caller asked for by the
+        # label they used.
+        pos = bisect_right(self._available_timestamps, _canonical_vintage_timestamp(date))
         stop = min(len(self._available_keys), pos + self._first_release_max_vintages)
         for probe_pos in range(pos, stop):
+            # The RAW key, not the canonical instant. ``resolve`` is the public
+            # VintageSource protocol and the key is what the source itself published
+            # through ``available_vintages()``; handing back a rewritten UTC-naive
+            # version would change what a generic source observes. Canonical form is
+            # for ordering and for the query above -- each source canonicalises
+            # internally for its own comparisons.
             bundle = self._data.source.resolve(pd.Timestamp(self._available_keys[probe_pos]))
             vintage_id = _bundle_vintage_id(bundle)
             validate_panel(bundle.panel)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
@@ -7,6 +9,7 @@ import pytest
 
 import macroforecast as mf
 from macroforecast.data import vintage as vintage_mod
+from macroforecast.data.vintage import VintagePanelSpec
 
 
 def _bundle(label: str) -> mf.data.DataBundle:
@@ -341,3 +344,278 @@ def test_static_extra_label_refuses_a_partial_fingerprint() -> None:
             {"algorithm": "sha256", "method": "strided_subsample", "value": "deadbeef"},
             pd.Timestamp("2020-01-31"),
         )
+
+
+# --------------------------------------------------------------------------- #
+# F-010: a known vintage calendar must have unique labels
+# --------------------------------------------------------------------------- #
+
+def _snapshot(value: float) -> pd.DataFrame:
+    return pd.DataFrame(
+        {"y": [value, value]},
+        index=pd.DatetimeIndex(["2020-01-31", "2020-02-29"], name="date"),
+    )
+
+
+def _mapping_pair() -> dict[str, pd.DataFrame]:
+    return {"2020-01-01": _snapshot(1.0), "2020-02-01": _snapshot(2.0)}
+
+
+def _long_pair() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "v": ["2020-01-01", "2020-01-01", "2020-02-01", "2020-02-01"],
+            "date": ["2020-01-31", "2020-02-29"] * 2,
+            "y": [1.0, 1.0, 2.0, 2.0],
+        }
+    )
+
+
+def test_mapping_vintage_id_collision_rejects_at_construction() -> None:
+    """Two snapshots, one identifier: the cache cannot tell them apart.
+
+    Resolved snapshots are memoized by the identifier, so with
+    ``vintage_id=lambda _: "same"`` resolving the January origin populated the cache and
+    the February origin was handed January's panel — a wrong point-in-time snapshot with
+    nothing in the result to show for it. Construction is the only place this is still
+    distinguishable.
+    """
+    with pytest.raises(ValueError, match="distinct string"):
+        mf.data.custom_vintages(_mapping_pair(), vintage_id=lambda _: "same")
+
+
+def test_grouped_wide_vintage_id_collision_rejects_at_construction() -> None:
+    """Same invariant on the long-frame form."""
+    with pytest.raises(ValueError, match="distinct string"):
+        mf.data.custom_vintages(
+            _long_pair(), vintage_column="v", date_column="date", vintage_id=lambda _: "same"
+        )
+
+
+def test_distinct_vintage_ids_still_resolve() -> None:
+    source = mf.data.custom_vintages(
+        _mapping_pair(), vintage_id=lambda key: pd.Timestamp(key).strftime("%Y%m")
+    )
+
+    assert source.resolve(pd.Timestamp("2020-02-15")).metadata["vintage"] == "202002"
+
+
+def test_callable_only_constant_vintage_id_is_still_supported() -> None:
+    """The boundary the fix deliberately does not cross.
+
+    A callable source has no enumerable calendar, so uniqueness cannot be proven. There
+    the identifier is the caller's declaration of cache identity: a constant one means
+    "one snapshot, reused", and that is a supported thing to say.
+    """
+    calls = {"n": 0}
+
+    def live(origin):
+        calls["n"] += 1
+        return _snapshot(float(calls["n"]))
+
+    source = mf.data.custom_vintages(live, vintage_id=lambda origin: "live")
+    source.resolve(pd.Timestamp("2020-01-15"))
+    source.resolve(pd.Timestamp("2020-02-15"))
+
+    assert calls["n"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# F-011: calendars and keys canonical enough for bisect
+# --------------------------------------------------------------------------- #
+
+def _good_calendar() -> pd.DatetimeIndex:
+    return pd.DatetimeIndex(["2020-01-31", "2020-02-29"], name="date")
+
+
+def test_reference_calendar_rejects_duplicate_origins() -> None:
+    """``is_monotonic_increasing`` permits repeats; a repeated origin is one forecast
+    row scored twice against one actual."""
+    with pytest.raises(ValueError, match="duplicate origins"):
+        VintagePanelSpec(
+            source=mf.data.custom_vintages(_mapping_pair()),
+            reference_calendar=pd.DatetimeIndex(["2020-01-31", "2020-01-31"]),
+        )
+
+
+def test_reference_calendar_rejects_nat() -> None:
+    with pytest.raises(ValueError, match="NaT"):
+        VintagePanelSpec(
+            source=mf.data.custom_vintages(_mapping_pair()),
+            reference_calendar=pd.DatetimeIndex(["2020-01-31", pd.NaT]),
+        )
+
+
+@pytest.mark.parametrize("limit", [1.0, 1.9, True, "2", 0, -1])
+def test_first_release_max_vintages_rejects_non_integral_or_non_positive(limit) -> None:
+    """It used to survive construction and be truncated later, so ``1.9`` became a probe
+    budget of 1 without anyone saying so."""
+    with pytest.raises((TypeError, ValueError)):
+        VintagePanelSpec(
+            source=mf.data.custom_vintages(_mapping_pair()),
+            reference_calendar=_good_calendar(),
+            first_release_max_vintages=limit,
+        )
+
+
+@pytest.mark.parametrize("limit", [2, np.int64(2)])
+def test_first_release_max_vintages_accepts_integer_scalars(limit) -> None:
+    spec = VintagePanelSpec(
+        source=mf.data.custom_vintages(_mapping_pair()),
+        reference_calendar=_good_calendar(),
+        first_release_max_vintages=limit,
+    )
+
+    assert spec.first_release_max_vintages == 2
+
+
+class _ExternalVintageSource:
+    """A source whose ``available_vintages()`` order is the caller's, not ours."""
+
+    def __init__(self, keys) -> None:
+        self._keys = tuple(keys)
+
+    def available_vintages(self):
+        return self._keys
+
+    def resolve(self, origin_date):
+        return mf.data.DataBundle(mf.data.as_panel(_snapshot(1.0)), {"vintage": "x"})
+
+
+def test_first_release_rejects_an_unsorted_available_calendar() -> None:
+    """First release walks forward from a bisect, so the reported order IS the search
+    order. Unsorted, it returns a later release and calls it the first one."""
+    with pytest.raises(ValueError, match="increasing order"):
+        VintagePanelSpec(
+            source=_ExternalVintageSource(["2020-02-01", "2020-01-01"]),
+            reference_calendar=_good_calendar(),
+            actuals_vintage="first_release",
+        )
+
+
+def test_first_release_rejects_canonical_duplicate_keys() -> None:
+    """Different raw keys, same instant: bisect cannot choose between them."""
+    with pytest.raises(ValueError, match="distinct vintage"):
+        VintagePanelSpec(
+            source=_ExternalVintageSource(["2020-01-01", pd.Timestamp("2020-01-01", tz="UTC")]),
+            reference_calendar=_good_calendar(),
+            actuals_vintage="first_release",
+        )
+
+
+def test_first_release_accepts_a_sorted_unique_calendar() -> None:
+    spec = VintagePanelSpec(
+        source=_ExternalVintageSource(["2020-01-01", "2020-02-01"]),
+        reference_calendar=_good_calendar(),
+        actuals_vintage="first_release",
+    )
+
+    assert spec.actuals_vintage == "first_release"
+
+
+def test_mixed_naive_and_aware_keys_order_and_resolve() -> None:
+    """Comparing a naive key to an aware one is a raw pandas ``TypeError`` about
+    operands, and it used to come out of ``bisect_right`` — from a search the caller
+    never wrote. Canonical UTC-naive instants put both on one line."""
+    source = mf.data.custom_vintages(
+        {"2020-01-01": _snapshot(1.0), pd.Timestamp("2020-02-01", tz="UTC"): _snapshot(2.0)}
+    )
+
+    resolved = source.resolve(pd.Timestamp("2020-02-15"))
+
+    assert resolved.panel["y"].iloc[0] == 2.0
+
+
+def test_mixed_key_source_reports_the_raw_keys() -> None:
+    """Canonicalisation governs ordering, not public labels."""
+    aware = pd.Timestamp("2020-02-01", tz="UTC")
+    source = mf.data.custom_vintages({"2020-01-01": _snapshot(1.0), aware: _snapshot(2.0)})
+
+    keys = list(source.available_vintages())
+
+    assert keys[0] == "2020-01-01"
+    assert keys[1] == aware and keys[1].tz is not None
+
+
+def test_timezone_equivalent_duplicate_instants_reject() -> None:
+    with pytest.raises(ValueError, match="same instant"):
+        mf.data.custom_vintages(
+            {"2020-01-01": _snapshot(1.0), pd.Timestamp("2020-01-01", tz="UTC"): _snapshot(2.0)}
+        )
+
+
+@pytest.mark.parametrize("strict", [True, False])
+def test_long_frame_rejects_missing_vintage_keys(strict: bool) -> None:
+    """``groupby`` drops NaN keys silently, so the snapshot and its rows vanished.
+
+    Refused in both strict modes: a missing vintage key is not a value to coerce, it is
+    an unanswerable question about which snapshot the row belongs to.
+    """
+    frame = pd.DataFrame(
+        {
+            "v": ["2020-01-01", None, "2020-02-01"],
+            "date": ["2020-01-31", "2020-02-29", "2020-02-29"],
+            "y": [1.0, 9.0, 2.0],
+        }
+    )
+
+    with pytest.raises(ValueError, match="missing values"):
+        mf.data.custom_vintages(frame, vintage_column="v", date_column="date", strict=strict)
+
+
+# --------------------------------------------------------------------------- #
+# Controller round 2: the canonical path must not reach user code or metadata
+# --------------------------------------------------------------------------- #
+
+def test_callable_source_receives_the_origin_it_was_given() -> None:
+    """Canonicalising is for comparing against a calendar, and a callable has none.
+
+    Making every origin UTC-naive on the way in changed the argument the caller's own
+    function received, and changed what ``vintage_id`` derived the cache label from — a
+    regression introduced by the F-011 canonicalisation, not by the defect it fixed.
+    """
+    seen: list[pd.Timestamp] = []
+
+    def live(origin):
+        seen.append(pd.Timestamp(origin))
+        return _snapshot(1.0)
+
+    aware_origin = pd.Timestamp("2020-02-15", tz="UTC")
+    source = mf.data.custom_vintages(live, vintage_id=lambda _: "aware-live")
+    source.resolve(aware_origin)
+
+    assert seen == [aware_origin]
+    assert seen[0].tz is not None
+
+
+def test_callable_source_vintage_id_receives_the_raw_origin() -> None:
+    """The label is derived from what the caller passed, so it must not be rewritten."""
+    labels: list[object] = []
+
+    def live(origin):
+        return _snapshot(1.0)
+
+    def label(origin):
+        labels.append(origin)
+        return "live"
+
+    aware_origin = pd.Timestamp("2020-02-15", tz="UTC")
+    mf.data.custom_vintages(live, vintage_id=label).resolve(aware_origin)
+
+    assert labels == [aware_origin]
+
+
+def test_probe_limit_is_stored_as_a_plain_int() -> None:
+    """Validating a numpy scalar and keeping it is not the same as accepting it.
+
+    The runner deliberately no longer coerces this value, so whatever the field holds
+    reaches run metadata and provenance — where a ``np.int64`` is not JSON-serialisable.
+    """
+    spec = VintagePanelSpec(
+        source=mf.data.custom_vintages(_mapping_pair()),
+        reference_calendar=_good_calendar(),
+        first_release_max_vintages=np.int64(2),
+    )
+
+    assert type(spec.first_release_max_vintages) is int
+    assert json.loads(json.dumps({"limit": spec.first_release_max_vintages})) == {"limit": 2}

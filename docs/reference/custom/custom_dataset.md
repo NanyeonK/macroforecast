@@ -172,6 +172,19 @@ snapshots are memoized by the stable identifier produced by ``vintage_id``
 non-deterministic source whose content can change for the same identifier,
 run the forecast with runner/pipeline preprocessing caching disabled.
 
+For the mapping and grouped-wide forms the vintage calendar is known at
+construction, so both invariants it needs are checked there: every key must denote a
+distinct instant, and every key must produce a distinct ``vintage_id``. A collision
+in either is refused rather than resolved, because the memoized snapshot would
+otherwise be served for the wrong vintage.
+
+A callable source has no enumerable calendar, so neither can be proven. There the
+identifier is the caller's declaration of cache identity and the caller owns it: a
+constant ``vintage_id`` such as ``lambda origin: "live"`` remains supported and
+means "one snapshot, reused". Vintage keys are compared as UTC-naive instants, so a
+mapping may mix naive and timezone-aware keys; the raw key is what
+``available_vintages()`` reports and what ``vintage_id`` receives.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
