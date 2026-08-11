@@ -46,10 +46,14 @@ def choice(values: Iterable[Any]) -> ParamDistribution:
 def fixed(
     params: dict[str, Any] | None = None,
     *,
-    random_state: int | None = None,
+    random_state: int | None = 0,
     score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
-    """Evaluate one fixed parameter set without tuning."""
+    """Evaluate one fixed parameter set without tuning.
+
+    ``random_state`` is carried for consistency with the stochastic builders. A
+    fixed search enumerates one candidate and never draws from the generator.
+    """
 
     return SearchSpec(
         method="fixed",
@@ -64,14 +68,18 @@ def search_spec(
     *,
     preset: str | None = None,
     method: str | None = None,
-    random_state: int | None = None,
+    random_state: int | None = 0,
     n_iter: int | None = None,
     population_size: int | None = None,
     generations: int | None = None,
     mutation_rate: float | None = None,
     score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
-    """Build a SearchSpec from a registered model's owned search space."""
+    """Build a SearchSpec from a registered model's owned search space.
+
+    ``random_state`` defaults to 0 so repeated searches reproduce. Pass
+    ``random_state=None`` to draw a fresh sample on every call.
+    """
 
     model_spec = _get_model_or_ensemble(model, preset=preset)
     return _search_from_model(
@@ -106,10 +114,14 @@ def random_search(
     param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any],
     *,
     n_iter: int = 20,
-    random_state: int | None = None,
+    random_state: int | None = 0,
     score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
-    """Seeded random search over parameter distributions."""
+    """Seeded random search over parameter distributions.
+
+    ``random_state`` defaults to 0 so repeated searches reproduce. Pass
+    ``random_state=None`` to draw a fresh sample on every call.
+    """
 
     return SearchSpec(
         method="random",
@@ -144,10 +156,14 @@ def bayesian_search(
     param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any],
     *,
     n_iter: int = 20,
-    random_state: int | None = None,
+    random_state: int | None = 0,
     score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
-    """Sequential Gaussian-process Bayesian search request."""
+    """Sequential Gaussian-process Bayesian search request.
+
+    ``random_state`` defaults to 0 so repeated searches reproduce. Pass
+    ``random_state=None`` to draw a fresh sample on every call.
+    """
 
     spec = random_search(
         param_distributions,
@@ -166,10 +182,14 @@ def genetic_search(
     population_size: int = 12,
     generations: int = 4,
     mutation_rate: float = 0.2,
-    random_state: int | None = None,
+    random_state: int | None = 0,
     score_aggregation: ScoreAggregation = "mean_split",
 ) -> SearchSpec:
-    """Lightweight genetic-style stochastic search over parameter distributions."""
+    """Lightweight genetic-style stochastic search over parameter distributions.
+
+    ``random_state`` defaults to 0 so repeated searches reproduce. Pass
+    ``random_state=None`` to draw a fresh sample on every call.
+    """
 
     if population_size < 2:
         raise ValueError("population_size must be at least 2")
@@ -198,12 +218,17 @@ def custom_search(
     param_grid: dict[str, Iterable[Any] | Any] | None = None,
     param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None,
     n_iter: int = 20,
-    random_state: int | None = None,
+    random_state: int | None = 0,
     metadata: dict[str, Any] | None = None,
     score_aggregation: ScoreAggregation = "mean_split",
     **params: Any,
 ) -> SearchSpec:
-    """Build a user-supplied parameter-search request."""
+    """Build a user-supplied parameter-search request.
+
+    ``random_state`` defaults to 0 so repeated searches reproduce, including the
+    generator handed to ``func``. Pass ``random_state=None`` to draw a fresh
+    sample on every call.
+    """
 
     if not name:
         raise ValueError("custom search name must be non-empty")
