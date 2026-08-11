@@ -5,35 +5,6 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
-- `pipeline/evaluate.py`, `pipeline/evaluation_inputs.py` (new), `pipeline/run.py`,
-  `pipeline/rescore.py` (**one deliberate public behaviour change**): evaluation
-  no longer reads data.
-
-  `evaluate()` called `load_fred_series()` to turn a named subsample mask
-  (`nber_recession`, `nber_expansion`) into a boolean state series, so scoring
-  one **fixed** forecast table depended on the network, the FRED cache and the
-  filesystem. Named masks are now resolved before evaluation, by
-  `resolve_evaluation_inputs(master, spec)` in the new
-  `pipeline/evaluation_inputs.py`, and passed in as data.
-
-  **Breaking for one call shape.** A direct `evaluate(master, spec)` whose
-  `EvalSpec.subsamples` names an indicator now raises, and names the resolver,
-  instead of fetching:
-
-  ```python
-  results = evaluate(master, spec, inputs=resolve_evaluation_inputs(master, spec))
-  ```
-
-  `run_pipeline` and `rescore` do this themselves and are unchanged for callers.
-  So are user-supplied `Series`/mapping masks, plain date windows, and
-  evaluations without subsamples -- those never loaded anything.
-
-  Everything else is byte-identical, checked against the pre-refactor evaluator
-  rather than assumed: same tables, same mask provenance, same strict
-  alignment/coverage errors word for word. One incidental improvement --
-  recession and expansion read one FRED series per frequency and differ only in
-  polarity, so an evaluation using both now loads once instead of twice.
-
 - `interpretation/core.py`, `tests/interpretation/` (**one fix, plus the audit
   #446 asked for**): the interpretation subsystem had no correctness oracles,
   and the `custom_interpretation` contract was a one-line docstring.
