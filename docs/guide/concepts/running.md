@@ -245,6 +245,40 @@ store is intended for a single writer; inspect it with
 `mf.pipeline.result_store_summary(...)` and delete cells with
 `mf.pipeline.purge_result_store(...)`.
 
+That rule covers **every** callable identity reaches, not only the ones named above: a
+`SearchSpec`'s `custom_func`, anything callable inside its `custom_params`, and a
+callable passed through `Arm(params=...)`. A function's name is not its identity — edit
+the body, keep the name, and the old forecasts would otherwise still be served — so the
+marker itself is part of the digest. Two functions sharing a module and qualname with
+different markers are different cells; the same marker with the same configuration is
+the same cell.
+
+Values are identified by their contents. Plain NumPy arrays record dtype, shape and a
+hash of every byte (a repr would elide the middle of a large array, so two arrays
+differing only there used to collide); sets and frozensets record their elements in a
+canonical order that does not depend on the hash seed, and keep their container type;
+`bytes` and `bytearray` record an unambiguous encoding.
+
+Two narrowings are worth knowing because they make a cell uncacheable rather than wrong:
+
+- **Only a plain `numpy.ndarray` is identified, not its subclasses.** A subclass carries
+  meaning the base array's buffer does not — a masked array's mask decides which elements
+  exist at all, and is invisible to dtype, shape and bytes. Rather than guess which
+  attributes of an unknown subclass matter, a subclass is recomputed.
+- **Mapping keys must be strings.** Only a `str` has text that is both unambiguous and
+  the same in every process: an arbitrary object falls back to a repr carrying its
+  address, and an `int` key is indistinguishable from the string of the same digits. A
+  mapping with any non-string key is recomputed, so use string keys in `params` and in
+  any nested configuration.
+
+Anything identity cannot record faithfully makes the cell uncacheable rather than
+guessing. That covers an unsupported object type, a `to_dict()` that raises, a mapping
+whose keys collide when written down, and a self-referential structure. The cell is
+recomputed and `run_pipeline()` warns with the field path, for example
+`arm.model_selection.custom_params.scorer is a custom callable without __mf_digest__`.
+Nothing is ever identified by `repr()`, which used to be the fallback and made two
+different values with matching reprs share a cell.
+
 Both purge helpers delete files, so they fail closed. Filters are validated before
 anything is enumerated or removed: a `before=` that cannot be parsed raises rather
 than acting as no cutoff at all, and a `digests=`/`aliases=` entry that is not a plain

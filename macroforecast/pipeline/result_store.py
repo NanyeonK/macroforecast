@@ -20,7 +20,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -182,18 +182,20 @@ def result_cell_identity(
             "arm": {
                 "name": arm.name,
                 "model": _model_identity(arm.model, params=arm.params),
-                "params": _json_ready(arm.params),
+                "params": _json_ready(arm.params, path="arm.params"),
                 "preset": _model_preset(arm.model),
                 "features": _feature_identity(effective_features),
                 "preprocessing": _preprocessing_identity(plan.preprocess.spec),
-                "model_selection": _object_identity(arm.model_selection),
+                "model_selection": _object_identity(
+                    arm.model_selection, path="arm.model_selection"
+                ),
                 "model_selection_metric": arm.model_selection_metric,
                 # The RESOLVED policies, not the raw fields they came from. A raw
                 # ``None`` says only "the caller did not choose", and what it means
                 # depends on package config at run time; two runs that resolve to the
                 # same policy are the same fit whichever spelling asked for it.
                 "stage_policies": compile_stage_policies(spec, arm, plan=plan).to_dict(),
-                "window": _object_identity(plan.window),
+                "window": _object_identity(plan.window, path="arm.window"),
             },
             "evaluation_callables": _evaluation_callable_identity(spec),
         }
@@ -549,17 +551,22 @@ def _model_identity(model: Any, *, params: Mapping[str, Any] | None) -> dict[str
     from macroforecast.models import ModelSpec
     from macroforecast.models.specs import MODEL_SPECS, get_model
 
+    # Every branch routes its ``to_dict()`` through ``_json_ready``. The registry ones
+    # used to embed it verbatim, so a params value the JSON encoder cannot take -- a
+    # callback, an array -- reached ``json.dumps`` in ``result_cell_identity`` and raised
+    # TypeError out of the whole run. Identity is allowed to say "I cannot identify this
+    # cell"; it is not allowed to end the run over it.
     if isinstance(model, str):
         spec = get_model(model, params=params)
-        return {"kind": "registry", "spec": spec.to_dict()}
+        return {"kind": "registry", "spec": _model_spec_identity(spec)}
     if isinstance(model, ModelSpec):
         spec = model.with_params(**dict(params or {})) if params else model
         registered = MODEL_SPECS.get(spec.name)
         if registered is not None and registered.fit_func is spec.fit_func:
-            return {"kind": "registry", "spec": spec.to_dict()}
+            return {"kind": "registry", "spec": _model_spec_identity(spec)}
         return {
             "kind": "custom",
-            "spec": _json_ready(spec.to_dict()),
+            "spec": _model_spec_identity(spec),
             "mf_digest": _callable_digest(spec, spec.fit_func, path=f"model {spec.name!r}"),
         }
     if callable(model):
@@ -569,11 +576,23 @@ def _model_identity(model: Any, *, params: Mapping[str, Any] | None) -> dict[str
             return {
                 "kind": "custom_callable",
                 "name": _callable_name(model),
-                "params": _json_ready(params),
+                "params": _json_ready(params, path="arm.params"),
                 "mf_digest": _callable_digest(model, path=f"model callable {_callable_name(model)!r}"),
             }
-        return {"kind": "registry", "spec": spec.to_dict()}
-    return {"kind": type(model).__name__, "repr": repr(model), "params": _json_ready(params)}
+        return {"kind": "registry", "spec": _model_spec_identity(spec)}
+    # Neither a registry name, a ModelSpec, nor a callable: there is nothing here that
+    # identifies the fit. ``repr`` used to stand in, which made two such models share a
+    # digest whenever their reprs matched (the default one carries an address, so it
+    # also never matched itself across runs).
+    raise _UndigestibleCell(
+        f"model {type(model).__name__} is neither a registry name, a ModelSpec, nor a "
+        "callable, so the result store cannot identify it; recomputing instead"
+    )
+
+
+def _model_spec_identity(spec: Any) -> Any:
+    """One model spec's canonical identity, params included."""
+    return _json_ready(_to_dict_or_undigestible(spec, path="arm.model"), path="arm.model")
 
 
 def _model_preset(model: Any) -> Any:
@@ -684,7 +703,7 @@ def _feature_identity(features: Any) -> Any:
     if features is None:
         return None
     return {
-        "spec": _object_identity(features),
+        "spec": _object_identity(features, path="arm.features"),
         "custom_callable_digests": _custom_feature_digests(features),
     }
 
@@ -693,7 +712,7 @@ def _preprocessing_identity(preprocessing: Any) -> Any:
     if preprocessing is None:
         return None
     return {
-        "spec": _object_identity(preprocessing),
+        "spec": _object_identity(preprocessing, path="arm.preprocessing"),
         "custom_callable_digests": _custom_preprocessing_digests(preprocessing),
     }
 
@@ -791,36 +810,58 @@ def _is_registered_metric_callable(func: Callable[..., Any]) -> bool:
     return any(func is registered for registered in _METRICS.values())
 
 
-def _object_identity(value: Any) -> Any:
-    _assert_safe_generic_callables(value)
+def _object_identity(value: Any, *, path: str = "value") -> Any:
+    """Canonical identity for one spec object.
+
+    A ``to_dict()`` is preferred where the object publishes one, because that is the
+    form its own module calls canonical. A :class:`~macroforecast.model_selection.SearchSpec`
+    is the exception and is walked field by field instead: its ``to_dict()`` renders a
+    custom search function by NAME, which is a public-export choice this module must not
+    change and must not trust for identity -- two different functions sharing a qualname
+    would otherwise share a cell digest.
+    """
     if value is None:
         return None
-    if hasattr(value, "to_dict"):
-        try:
-            return _json_ready(value.to_dict())
-        except Exception as exc:
-            return {"repr": repr(value), "to_dict_error": f"{type(exc).__name__}: {exc}"}
-    return _json_ready(value)
+    if not _is_search_spec(value) and hasattr(value, "to_dict"):
+        payload = _to_dict_or_undigestible(value, path=path)
+        return _json_ready(payload, path=path)
+    return _json_ready(value, path=path)
 
 
-def _assert_safe_generic_callables(value: Any, *, path: str = "value") -> None:
-    if value is None or isinstance(value, (str, bytes, int, float, bool)):
-        return
-    if _is_search_spec(value):
-        splitter = getattr(value, "validation_splitter", None)
-        if callable(splitter):
-            _callable_digest(splitter, path=f"{path}.validation_splitter")
-        return
-    if callable(value):
-        _callable_digest(value, path=path)
-        return
-    if isinstance(value, Mapping):
-        for key, item in value.items():
-            _assert_safe_generic_callables(item, path=f"{path}.{key}")
-        return
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        for idx, item in enumerate(value):
-            _assert_safe_generic_callables(item, path=f"{path}[{idx}]")
+def _to_dict_or_undigestible(value: Any, *, path: str) -> Any:
+    """``value.to_dict()``, or an undigestible cell naming where it failed.
+
+    The previous fallback recorded ``repr(value)`` plus the error text, which put a
+    generic repr into the digest: two objects whose ``to_dict()`` failed the same way
+    became the same cell.
+    """
+    try:
+        return value.to_dict()
+    except Exception as exc:
+        raise _UndigestibleCell(
+            f"{path}: {type(value).__name__}.to_dict() raised "
+            f"{type(exc).__name__}: {exc}, so this value cannot be identified; "
+            "recomputing instead"
+        ) from exc
+
+
+def _search_spec_identity(value: Any, *, path: str, seen: frozenset[int]) -> dict[str, Any]:
+    """A search spec's identity, taken from its FIELDS rather than its export.
+
+    ``SearchSpec.to_dict()`` is the public JSON export and renders ``custom_func`` as a
+    module/qualname string. That is right for an export a human reads and wrong for a
+    cache key, and the two must not be conflated: repairing identity by changing the
+    export would alter a documented public format. So the pipeline boundary reads the
+    dataclass itself, which sends ``custom_func``, ``custom_params``, ``metadata``, the
+    grids and the splitter through the ordinary rules -- meaning every callable among
+    them has to carry ``__mf_digest__``, and that marker lands in the digest.
+    """
+    return {
+        str(field.name): _json_ready(
+            getattr(value, field.name), path=f"{path}.{field.name}", seen=seen
+        )
+        for field in sorted(_dc.fields(value), key=lambda item: item.name)
+    }
 
 
 def _is_search_spec(value: Any) -> bool:
@@ -829,6 +870,14 @@ def _is_search_spec(value: Any) -> bool:
     except ImportError:
         return False
     return isinstance(value, SearchSpec)
+
+
+def _is_model_spec(value: Any) -> bool:
+    try:
+        from macroforecast.models import ModelSpec
+    except ImportError:
+        return False
+    return isinstance(value, ModelSpec)
 
 
 def _callable_digest(*candidates: Any, path: str) -> str:
@@ -841,43 +890,218 @@ def _callable_digest(*candidates: Any, path: str) -> str:
     )
 
 
+def _callable_identity(value: Any, *, path: str) -> dict[str, Any]:
+    """Name AND stable marker for a callable reached anywhere in an identity payload.
+
+    The name alone is not an identity -- editing a function body leaves it unchanged --
+    so the marker is required here rather than merely checked elsewhere, and it is
+    recorded so that changing it changes the digest.
+    """
+    return {"callable": _callable_name(value), "mf_digest": _callable_digest(value, path=path)}
+
+
 def _callable_name(func: Any) -> str:
-    module = getattr(func, "__module__", "")
-    qualname = getattr(func, "__qualname__", getattr(func, "__name__", repr(func)))
+    """A textual name for a callable that is the same in every process.
+
+    A function carries ``__qualname__``; a callable OBJECT usually does not, and falling
+    back to ``repr`` put its memory address into the name -- so two instances of one
+    functor read as different callables and the same instance read differently on the
+    next run. The instance's TYPE is the stable answer for those.
+
+    The name is not the identity on its own -- ``__mf_digest__`` is, and
+    :func:`_callable_identity` records both -- but it has to be stable, or a digest
+    containing it cannot be either.
+    """
+    qualname = getattr(func, "__qualname__", None) or getattr(func, "__name__", None)
+    if qualname is None:
+        cls = type(func)
+        module = getattr(cls, "__module__", "")
+        qualname = getattr(cls, "__qualname__", None) or cls.__name__
+    else:
+        module = getattr(func, "__module__", "")
     return f"{module}.{qualname}" if module else str(qualname)
 
 
-def _json_ready(value: Any) -> Any:
+def _ndarray_identity(value: "np.ndarray", *, path: str, seen: frozenset[int]) -> dict[str, Any]:
+    """Full content, plus the dtype and shape that give the content its meaning.
+
+    A repr will not do: NumPy truncates it above a thousand elements, so two arrays
+    differing only in the elided middle printed identically and shared a cell digest.
+    The hash reads every byte, and dtype/shape are carried alongside because the same
+    bytes mean different things at a different dtype or shape.
+
+    A buffer containing pointers says nothing about what they point at, so any dtype that
+    holds objects ANYWHERE recurses over semantic elements instead of being hashed. The
+    test is ``dtype.hasobject`` rather than ``dtype == object``: a structured dtype with
+    one object field is not equal to ``object`` but still stores a pointer, and hashing
+    that buffer compared addresses -- two arrays with equal elements differed because
+    their Python objects were allocated separately. The full dtype string is carried
+    either way, so two structured layouts with the same elements stay distinguishable,
+    and an element that cannot be identified makes the cell uncacheable rather than
+    silently hashing an address.
+    """
+    if value.dtype.hasobject:
+        return {
+            "__ndarray__": {
+                "dtype": str(value.dtype),
+                "shape": [int(size) for size in value.shape],
+                "items": _json_ready(value.tolist(), path=f"{path}.tolist()", seen=seen),
+            }
+        }
+    contiguous = np.ascontiguousarray(value)
+    return {
+        "__ndarray__": {
+            "dtype": str(value.dtype),
+            "shape": [int(size) for size in value.shape],
+            "sha256": hashlib.sha256(contiguous.tobytes()).hexdigest(),
+        }
+    }
+
+
+def _set_identity(value: "set[Any] | frozenset[Any]", *, path: str, seen: frozenset[int]) -> dict[str, Any]:
+    """Canonical order, and the container type kept.
+
+    ``repr`` of a set follows hash iteration order, which for strings varies with
+    ``PYTHONHASHSEED`` -- so an arm carrying a set-valued parameter could never match its
+    own cell from a previous process. Elements are serialized first and then ordered by
+    their canonical JSON text, because the elements themselves need not be orderable.
+    """
+    items = [
+        _json_ready(item, path=f"{path}{{{index}}}", seen=seen)
+        for index, item in enumerate(value)
+    ]
+    return {
+        "__set__": {
+            "type": type(value).__name__,
+            "items": sorted(items, key=lambda item: json.dumps(item, sort_keys=True)),
+        }
+    }
+
+
+def _json_ready(value: Any, *, path: str = "value", seen: frozenset[int] = frozenset()) -> Any:
+    """Canonical, deterministic identity for one value, or refusal.
+
+    Everything this returns is JSON-serializable and depends only on the value, never on
+    a repr, an address, or hash iteration order. What cannot be identified that way
+    raises :class:`_UndigestibleCell` naming ``path``, so
+    :func:`result_cell_identity` returns ``digest=None`` with an actionable reason and
+    the cell is recomputed -- rather than minting a digest that two different values
+    could share.
+
+    ``path`` accumulates as the traversal descends so the reason points at the field.
+    ``seen`` carries the containers currently being serialized, so a self-referential
+    structure is refused instead of recursing until the interpreter gives out.
+    """
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     if isinstance(value, Path):
         return str(value)
+    if isinstance(value, (bytes, bytearray)):
+        # Base64 rather than a repr, and the type kept: b"a" and bytearray(b"a") are
+        # different objects to anything that consumes them.
+        return {
+            "__bytes__": {
+                "type": type(value).__name__,
+                "base64": base64.b64encode(bytes(value)).decode("ascii"),
+            }
+        }
     if isinstance(value, np.generic):
-        return value.item()
+        # ``.item()`` may yield something still unsupported (a complex, say), so it goes
+        # back through the rules rather than being returned unchecked.
+        return _json_ready(value.item(), path=path, seen=seen)
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
-    if isinstance(value, Mapping):
-        return {str(key): _json_ready(value[key]) for key in sorted(value, key=str)}
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return [_json_ready(item) for item in value]
-    if _dc.is_dataclass(value):
-        return _json_ready(_dc.asdict(cast(Any, value)))
-    if hasattr(value, "to_dict"):
-        try:
-            return _json_ready(value.to_dict())
-        except Exception:
-            return repr(value)
+
+    marker = id(value)
+    if marker in seen:
+        raise _UndigestibleCell(
+            f"{path} closes a reference cycle (a self-referential structure), which "
+            "has no finite canonical form; recomputing instead"
+        )
+    descended = seen | {marker}
+
+    if type(value) is np.ndarray:
+        return _ndarray_identity(value, path=path, seen=descended)
+    if isinstance(value, np.ndarray):
+        # A subclass carries meaning the base array's buffer does not. A masked array is
+        # the clear case: its mask decides which elements exist at all, and hashing the
+        # data view alone gave two arrays that behave differently everywhere the same
+        # cell. Rather than guess which attributes of an unknown subclass matter, only
+        # the exact type is identified and the rest are recomputed.
+        raise _UndigestibleCell(
+            f"{path} is a {type(value).__name__}, a numpy.ndarray subclass whose "
+            "identity is not carried by the base array's dtype, shape and buffer alone "
+            "(a masked array's mask, for instance, is invisible to them). Only a plain "
+            "numpy.ndarray is identified; recomputing instead."
+        )
+    if isinstance(value, (set, frozenset)):
+        return _set_identity(value, path=path, seen=descended)
+
+    # A ModelSpec is callable, but it is not an anonymous piece of code: the registry
+    # already identifies its fit function by name plus the backend versions recorded
+    # elsewhere in the payload. _model_identity owns that registry-versus-custom rule,
+    # so a nested spec asks it rather than being forced to carry a marker a registered
+    # model has no reason to have.
+    if _is_model_spec(value):
+        return _model_identity(value, params=None)
+    # Everything else callable is identified AS CODE, before any structural view of it.
+    # A callable object that also exposes to_dict() or dataclass fields would otherwise
+    # be serialized by that structure and never asked for __mf_digest__ -- the same
+    # bypass this module closes for a plain function, wearing a different hat. Structure
+    # cannot stand in for a body: two functors can carry identical fields and compute
+    # entirely different things.
     if callable(value):
-        return {"callable": _callable_name(value), "mf_digest": getattr(value, "__mf_digest__", None)}
-    return value if _json_scalar(value) else repr(value)
+        return _callable_identity(value, path=path)
 
-
-def _json_scalar(value: Any) -> bool:
-    try:
-        json.dumps(value)
-    except TypeError:
-        return False
-    return True
+    if isinstance(value, Mapping):
+        # Keys are checked BEFORE anything is rendered, so a mapping with one bad key is
+        # refused whole rather than half-serialized.
+        for key in value:
+            if not isinstance(key, str):
+                raise _UndigestibleCell(
+                    f"{path} has a key of type {type(key).__name__}, and identity "
+                    "records a mapping by its keys' text. Only a str has text that is "
+                    "both unambiguous and the same in every process: an arbitrary "
+                    "object falls back to a repr carrying its address, and an int key "
+                    "is indistinguishable from the string of the same digits. Use "
+                    "string keys; recomputing instead."
+                )
+        rendered: dict[str, Any] = {}
+        for key in sorted(value):
+            if key in rendered:
+                # Unreachable for a dict, whose keys are unique by construction; kept
+                # for a Mapping implementation that yields a key twice, because silently
+                # keeping the last would make two different configurations look alike.
+                raise _UndigestibleCell(
+                    f"{path} yields the key {key!r} more than once, so it has no "
+                    "unambiguous canonical form; recomputing instead"
+                )
+            rendered[key] = _json_ready(value[key], path=f"{path}.{key}", seen=descended)
+        return rendered
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return [
+            _json_ready(item, path=f"{path}[{index}]", seen=descended)
+            for index, item in enumerate(value)
+        ]
+    if _is_search_spec(value):
+        return _search_spec_identity(value, path=path, seen=descended)
+    if _dc.is_dataclass(value) and not isinstance(value, type):
+        return {
+            str(field.name): _json_ready(
+                getattr(value, field.name), path=f"{path}.{field.name}", seen=descended
+            )
+            for field in sorted(_dc.fields(value), key=lambda item: item.name)
+        }
+    if hasattr(value, "to_dict"):
+        payload = _to_dict_or_undigestible(value, path=path)
+        return _json_ready(payload, path=path, seen=descended)
+    raise _UndigestibleCell(
+        f"{path} is a {type(value).__name__}, which the result store cannot identify "
+        "deterministically; recomputing instead. Supported values are JSON scalars, "
+        "paths, timestamps, bytes, NumPy scalars, plain numpy.ndarray (not its "
+        "subclasses), sets, string-keyed mappings, sequences, dataclasses, objects "
+        "exposing to_dict(), and callables carrying __mf_digest__."
+    )
 
 
 def _parse_datetime(value: str | datetime | None) -> datetime | None:
