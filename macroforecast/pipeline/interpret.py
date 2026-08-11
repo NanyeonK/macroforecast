@@ -30,20 +30,11 @@ def _panel(data: Any) -> pd.DataFrame:
     return panel
 
 
-def _align_features(features: Any, target_name: str) -> Any:
+def _align_features(features: Any, target_name: str, *, arm_name: str = "") -> Any:
     """Re-target an arm's feature spec to ``target_name`` (mirrors run_arms)."""
-    if features is None:
-        return None
-    same = getattr(features, "target", None) == target_name and not getattr(features, "targets", ())
-    if same:
-        return features
-    try:
-        kwargs: dict[str, Any] = {"target": target_name}
-        if getattr(features, "targets", None):
-            kwargs["targets"] = ()
-        return _dc.replace(features, **kwargs)
-    except Exception:
-        return features
+    from macroforecast.forecasting.task import retarget_features
+
+    return retarget_features(features, target_name, arm_name=arm_name)
 
 
 def _resolve_which_fit(spec: Any, which_fit: str) -> str:
@@ -64,35 +55,61 @@ def _arm_models(arm: Arm) -> list[Any]:
     return [model]
 
 
-def _fit_on_panel(panel: pd.DataFrame, spec: Any, arm: Arm, target: Any) -> list[tuple[str, Any, pd.DataFrame]]:
-    """Build features on ``panel`` and fit the arm's model(s); return (label, fit, X)."""
+def _model_label(model: Any) -> str:
+    """Return the stable result label available before a model is fitted."""
+    return str(model if isinstance(model, str) else getattr(model, "name", "model"))
+
+
+@_dc.dataclass(frozen=True)
+class _PanelFit:
+    """One model's fit outcome on a panel."""
+
+    label: str
+    fitted: Any | None = None
+    X: pd.DataFrame | None = None
+    error: str | None = None
+
+
+def _fit_on_panel(panel: pd.DataFrame, spec: Any, arm: Arm, target: Any) -> list[_PanelFit]:
+    """Build features and return one explicit fit outcome per requested model."""
     from macroforecast.feature_engineering import feature_spec as _feature_spec
     from macroforecast.models.specs import get_model
 
-    features = _align_features(
-        arm.features or _feature_spec(target=target.name, predictors="all", lags=1, target_lags=(0, 1)),
-        target.name,
-    )
-    builder = features.fit(panel)
-    fset = builder.transform(panel)
-    X = fset.X.copy()
-    y_raw = fset.y
-    if isinstance(y_raw, pd.DataFrame):
-        y_raw = y_raw.iloc[:, 0]
-    y = pd.Series(y_raw, index=getattr(y_raw, "index", X.index)).reindex(X.index)
-    mask = y.notna() & X.notna().all(axis=1)
-    X, y = X.loc[mask], y.loc[mask]
+    models = _arm_models(arm)
+    try:
+        features = _align_features(
+            arm.features or _feature_spec(
+                target=target.name,
+                predictors="all",
+                lags=1,
+                target_lags=(0, 1),
+            ),
+            target.name,
+            arm_name=arm.name,
+        )
+        builder = features.fit(panel)
+        fset = builder.transform(panel)
+        X = fset.X.copy()
+        y_raw = fset.y
+        if isinstance(y_raw, pd.DataFrame):
+            y_raw = y_raw.iloc[:, 0]
+        y = pd.Series(y_raw, index=getattr(y_raw, "index", X.index)).reindex(X.index)
+        mask = y.notna() & X.notna().all(axis=1)
+        X, y = X.loc[mask], y.loc[mask]
+    except Exception as exc:  # noqa: BLE001 - retained as a per-model error outcome
+        return [_PanelFit(label=_model_label(model), error=str(exc)) for model in models]
     if X.empty:
-        return []
-    fits: list[tuple[str, Any, pd.DataFrame]] = []
-    for m in _arm_models(arm):
+        message = f"no complete observations available for target {target.name!r}"
+        return [_PanelFit(label=_model_label(model), error=message) for model in models]
+    fits: list[_PanelFit] = []
+    for model in models:
+        label = _model_label(model)
         try:
-            spec_obj = get_model(m) if isinstance(m, str) else m
+            spec_obj = get_model(model) if isinstance(model, str) else model
             fitted = spec_obj(X, y, **dict(arm.params or {}))
-            label = m if isinstance(m, str) else getattr(m, "name", "model")
-            fits.append((str(label), fitted, X))
-        except Exception:
-            continue
+            fits.append(_PanelFit(label=label, fitted=fitted, X=X))
+        except Exception as exc:  # noqa: BLE001 - retained as a per-model error outcome
+            fits.append(_PanelFit(label=label, error=str(exc)))
     return fits
 
 
@@ -170,8 +187,9 @@ def interpret_pipeline(
 
     ``methods`` overrides each arm's ``InterpretSpec.methods`` when given. Returns a
     nested dict ``{arm: {model[:target]: {method: table}}}`` stored on
-    ``report.interpretation``. One arm failing to fit degrades to an error frame
-    and never aborts the others.
+    ``report.interpretation``. Feature construction or model fitting failures
+    produce per-method error frames under the same model key as successful fits
+    and never abort the other arms or targets.
     """
     spec = report.spec
     if spec is None:
@@ -182,6 +200,7 @@ def interpret_pipeline(
     selected = set(arms) if arms else None
 
     out: dict[str, Any] = {}
+    multiple_targets = len(spec.targets) > 1
     for arm in spec.arms:
         if selected is not None and arm.name not in selected:
             continue
@@ -200,23 +219,48 @@ def interpret_pipeline(
                 if resolved_fit == "origin_mean" and origin_panels:
                     # collect per-origin fits keyed by model label
                     per_model: dict[str, list[tuple[Any, pd.DataFrame]]] = {}
+                    fit_errors: dict[str, str] = {}
                     for sub in origin_panels:
-                        for label, fitted, X in _fit_on_panel(sub, spec, arm, target):
-                            per_model.setdefault(label, []).append((fitted, X))
+                        for outcome in _fit_on_panel(sub, spec, arm, target):
+                            if outcome.error is not None:
+                                fit_errors.setdefault(outcome.label, outcome.error)
+                            elif outcome.fitted is not None and outcome.X is not None:
+                                per_model.setdefault(outcome.label, []).append(
+                                    (outcome.fitted, outcome.X)
+                                )
                     items = [
-                        (label, fits_list) for label, fits_list in per_model.items()
+                        (label, per_model.get(label, []), fit_errors.get(label))
+                        for label in dict.fromkeys((*per_model, *fit_errors))
                     ]
                 else:
                     items = [
-                        (label, [(fitted, X)])
-                        for label, fitted, X in _fit_on_panel(panel, spec, arm, target)
+                        (
+                            outcome.label,
+                            [(outcome.fitted, outcome.X)]
+                            if outcome.fitted is not None and outcome.X is not None
+                            else [],
+                            outcome.error,
+                        )
+                        for outcome in _fit_on_panel(panel, spec, arm, target)
                     ]
             except Exception as exc:  # noqa: BLE001 - one arm/target must not abort the rest
-                key = arm.name if len(spec.targets) == 1 else f"{arm.name}:{target.name}"
-                arm_out[key] = {m: pd.DataFrame({"error": [str(exc)]}) for m in arm_methods}
+                for model in _arm_models(arm):
+                    label = _model_label(model)
+                    key = label if not multiple_targets else f"{label}:{target.name}"
+                    arm_out[key] = {
+                        method: pd.DataFrame({"error": [str(exc)]})
+                        for method in arm_methods
+                    }
                 continue
 
-            for label, fits_list in items:
+            for label, fits_list, fit_error in items:
+                key = label if not multiple_targets else f"{label}:{target.name}"
+                if fit_error is not None:
+                    arm_out[key] = {
+                        method: pd.DataFrame({"error": [fit_error]})
+                        for method in arm_methods
+                    }
+                    continue
                 by_method: dict[str, Any] = {}
                 for method in arm_methods:
                     try:
@@ -225,7 +269,6 @@ def interpret_pipeline(
                         by_method[method] = _aggregate(tables)
                     except Exception as exc:  # noqa: BLE001
                         by_method[method] = pd.DataFrame({"error": [str(exc)]})
-                key = label if len(spec.targets) == 1 else f"{label}:{target.name}"
                 arm_out[key] = by_method
         if arm_out:
             out[arm.name] = arm_out

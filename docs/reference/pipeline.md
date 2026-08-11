@@ -503,8 +503,9 @@ Interpret the interpretable arms of a completed pipeline run.
 
 ``methods`` overrides each arm's ``InterpretSpec.methods`` when given. Returns a
 nested dict ``{arm: {model[:target]: {method: table}}}`` stored on
-``report.interpretation``. One arm failing to fit degrades to an error frame
-and never aborts the others.
+``report.interpretation``. Feature construction or model fitting failures
+produce per-method error frames under the same model key as successful fits
+and never abort the other arms or targets.
 
 #### Parameters
 
