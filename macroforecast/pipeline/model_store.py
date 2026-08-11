@@ -7,7 +7,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from macroforecast.pipeline.result_store import _parse_datetime, _unlink_quietly
+from macroforecast.pipeline.result_store import (
+    _resolved_within,
+    _unlink_quietly,
+    _validated_purge_cutoff,
+    _validated_store_component,
+)
 
 
 def purge_model_store(
@@ -20,14 +25,34 @@ def purge_model_store(
 
     Pipeline model stores contain one alias directory per arm/model and one JSON
     sidecar per fitted origin/horizon. Each matching sidecar is deleted together
-    with its recorded pickle path when that pickle lives under ``store``.
-    ``before`` filters by the sidecar file modification time because legacy model
-    sidecars do not record a creation timestamp.
+    with the pickle it owns. ``before`` filters by the sidecar file modification time
+    because legacy model sidecars do not record a creation timestamp.
+
+    Every filter is validated BEFORE anything is enumerated or removed, so a refused
+    call deletes nothing: an unparseable ``before`` raises rather than acting as no
+    cutoff, and an ``aliases`` entry that is not a plain alias directory name -- empty,
+    ``.``, ``..``, an absolute path, anything containing a separator -- raises rather
+    than reaching outside ``store``. An alias directory that resolves outside the store
+    (a symlink) is never followed, whether it was named or reached by enumerating them
+    all; it is skipped, so such a call reports 0 rather than deleting anything.
+
+    Only files inside the resolved store are removed. A sidecar whose recorded
+    ``model_path`` points outside is deleted, but the file it names is left alone --
+    see :func:`_model_path_from_manifest` for how a generated pickle is identified
+    without depending on the working directory the store was written from.
+
+    Deletion is best effort and idempotent. The returned count is the number of stored
+    FITS for which at least one file (the pickle or its sidecar) was actually removed
+    -- not the number of files, and not the number of sidecars considered.
     """
 
     root = Path(store)
-    alias_filter = {str(alias) for alias in aliases} if aliases is not None else None
-    before_dt = _parse_datetime(before) if before is not None else None
+    before_dt = _validated_purge_cutoff(before, label="before")
+    alias_filter = (
+        {_validated_store_component(alias, label="aliases") for alias in aliases}
+        if aliases is not None
+        else None
+    )
     deleted = 0
 
     for metadata_path in _model_metadata_paths(root, alias_filter):
@@ -35,22 +60,36 @@ def purge_model_store(
             continue
         manifest = _read_manifest(metadata_path)
         model_path = _model_path_from_manifest(root, metadata_path, manifest)
-        if model_path is not None:
-            _unlink_quietly(model_path)
-        _unlink_quietly(metadata_path)
-        deleted += 1
+        # Both are attempted, and the fit counts when either actually went away.
+        model_removed = False if model_path is None else _unlink_quietly(model_path)
+        metadata_removed = _unlink_quietly(metadata_path)
+        if model_removed or metadata_removed:
+            deleted += 1
         _remove_empty_parent(metadata_path.parent, root)
     return deleted
 
 
 def _model_metadata_paths(root: Path, aliases: set[str] | None) -> list[Path]:
+    """Sidecars under each in-store alias directory, in a deterministic order.
+
+    Directories are walked one at a time rather than through ``root.glob("*/*.json")``
+    so each can be containment-checked first: a glob follows a symlinked child, which
+    would let a link inside the store enumerate -- and therefore delete -- sidecars
+    that live somewhere else entirely.
+    """
     if aliases is not None:
-        return [
-            path
-            for alias in sorted(aliases)
-            for path in sorted((root / alias).glob("*.json"))
-        ]
-    return sorted(root.glob("*/*.json"))
+        directories = [root / alias for alias in sorted(aliases)]
+    else:
+        try:
+            directories = sorted(path for path in root.glob("*") if path.is_dir())
+        except OSError:
+            return []
+    paths: list[Path] = []
+    for directory in directories:
+        if _resolved_within(directory, root) is None:
+            continue
+        paths.extend(sorted(directory.glob("*.json")))
+    return paths
 
 
 def _path_mtime_before(path: Path, before: datetime) -> bool:
@@ -74,22 +113,55 @@ def _model_path_from_manifest(
     metadata_path: Path,
     manifest: dict[str, Any],
 ) -> Path | None:
+    """The in-store pickle this sidecar owns, or ``None`` when there is none to remove.
+
+    The writer settles this. ``forecasting/policies/base.py::_store_model_fit`` builds
+    ``<store>/<alias>/<stem>.pkl`` and ``<store>/<alias>/<stem>.json`` and hands both to
+    :func:`macroforecast.models.save_fit`, so a generated pickle is ALWAYS the sidecar's
+    same-stem sibling. That sibling is also the only spelling that does not depend on
+    where the store was written from: ``save_fit`` records ``model_path`` verbatim, so a
+    store created with a relative ``model_store=`` records a relative path, and resolving
+    it in a later process would silently address that process's working directory
+    instead -- deleting nothing, or something else, and leaving the pickle orphaned.
+
+    So a relative record is not resolved. It is only used to confirm it still names the
+    sibling; a hand-edited one that names anything else is refused rather than quietly
+    redirected onto the sibling. An absolute record is honoured when it resolves inside
+    the store, and refused when it does not -- a store may legitimately be purged
+    through a different absolute prefix, but nothing outside it is ever this function's
+    to delete.
+    """
+    sibling = metadata_path.with_suffix(".pkl")
     raw = manifest.get("model_path")
     if raw is None:
-        candidate = metadata_path.with_suffix(".pkl")
-    else:
-        candidate = Path(str(raw))
-    try:
-        candidate.resolve().relative_to(root.resolve())
-    except (OSError, ValueError):
-        return None
-    return candidate
+        # ``save_fit`` records None when the fit could not be pickled (the sidecar is
+        # written either way), and legacy sidecars may carry no field at all. The
+        # sibling is the only candidate; it simply may not exist, which is a no-op.
+        return _resolved_within(sibling, root)
+    candidate = Path(str(raw))
+    if not candidate.is_absolute():
+        if candidate.name != sibling.name:
+            return None
+        return _resolved_within(sibling, root)
+    return _resolved_within(candidate, root)
 
 
 def _remove_empty_parent(path: Path, root: Path) -> None:
+    """Drop an alias directory once its last sidecar is gone.
+
+    Restricted to a DIRECT child of the resolved store. The store root itself has to
+    survive a purge -- an empty alias made ``root / ""`` the store root and reached
+    ``rmdir(root)`` -- and a deeper directory is not something this store created.
+    ``rmdir`` refuses a non-empty directory, so an alias that still holds files stays.
+    """
+    resolved = _resolved_within(path, root)
+    if resolved is None:
+        return
     try:
-        path.relative_to(root)
-    except ValueError:
+        resolved_root = root.resolve()
+    except OSError:
+        return
+    if resolved.parent != resolved_root:
         return
     try:
         path.rmdir()

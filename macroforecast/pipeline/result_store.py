@@ -366,6 +366,74 @@ def result_store_summary(store: str | Path) -> pd.DataFrame:
     )
 
 
+def _validated_purge_cutoff(value: str | datetime | None, *, label: str) -> datetime | None:
+    """Parse a purge cutoff, refusing an unparseable one before anything is removed.
+
+    :func:`_parse_datetime` is deliberately tolerant -- it returns ``None`` for a value
+    it cannot read, which is right for the read and provenance paths that use it, where
+    an unknown timestamp simply means "cannot compare". A DELETE cannot read it that
+    way: a ``before`` that silently becomes "no cutoff" removes every entry the caller
+    was trying to spare. So the tolerance stays where it belongs and the purge boundary
+    validates on top of it.
+    """
+    if value is None:
+        return None
+    parsed = _parse_datetime(value)
+    if parsed is None:
+        raise ValueError(
+            f"{label}={value!r} is not a parseable datetime, so this purge is refused "
+            "before anything is enumerated or deleted -- an unreadable cutoff would "
+            "otherwise act as no cutoff at all and delete every entry. Pass a datetime "
+            "or an ISO-8601 string."
+        )
+    return parsed
+
+
+def _validated_store_component(value: Any, *, label: str) -> str:
+    """One filesystem NAME, refused if it can address anything but a direct child.
+
+    Both stores address entries by a single generated component -- a digest filename, a
+    sanitized arm alias -- so a filter is only ever a name. Anything that can traverse
+    (``..``), re-root (an absolute path), or nest (a separator) is refused rather than
+    normalized, because a purge that silently reinterprets what the caller named is the
+    failure this guard exists to prevent.
+    """
+    text = str(value)
+    if (
+        not text
+        or text in {".", ".."}
+        or "/" in text
+        or "\\" in text
+        or "\x00" in text
+        or os.path.isabs(text)
+        or Path(text).name != text
+    ):
+        raise ValueError(
+            f"{label} entry {value!r} is not a plain store entry name. Purge filters "
+            "address one generated entry each and must not be able to reach outside "
+            "the store, so an empty name, '.', '..', a path separator, or an absolute "
+            "path is refused."
+        )
+    return text
+
+
+def _resolved_within(path: Path, root: Path) -> Path | None:
+    """*path* fully resolved, or ``None`` when it does not stay inside *root*.
+
+    Resolution follows symlinks on purpose: a name check alone is not a containment
+    boundary, because a link named like an ordinary child can point anywhere. The
+    caller treats ``None`` as "not ours to delete".
+    """
+    try:
+        resolved = path.resolve()
+        resolved_root = root.resolve()
+    except OSError:
+        return None
+    if resolved != resolved_root and resolved_root not in resolved.parents:
+        return None
+    return resolved
+
+
 def purge_result_store(
     store: str | Path,
     *,
@@ -373,11 +441,37 @@ def purge_result_store(
     version: str | None = None,
     digests: Sequence[str] | None = None,
 ) -> int:
-    """Delete result-store cells matching the supplied filters and return a count."""
+    """Delete result-store cells matching the supplied filters and return a count.
+
+    Every filter is validated BEFORE anything is enumerated or removed, so a call that
+    is going to be refused deletes nothing at all: an unparseable ``before`` raises
+    rather than acting as no cutoff, and a ``digests`` entry that is not a plain cell
+    name -- ``..``, an absolute path, anything containing a separator -- raises rather
+    than addressing a file outside ``<store>/cells``. One bad entry in an otherwise
+    valid list therefore refuses the whole call instead of deleting the entries before
+    it.
+
+    Deletion itself stays best effort and idempotent: a cell whose files have already
+    gone, or which cannot be removed, is skipped quietly rather than raising. The
+    returned count is the number of CELLS for which at least one file (the parquet
+    payload or its manifest) was actually removed -- not the number of files, and not
+    the number of candidates considered. A digest naming a cell that does not exist
+    contributes 0.
+    """
 
     root = Path(store) / "cells"
-    digest_filter = {str(d) for d in digests} if digests is not None else None
-    before_dt = _parse_datetime(before) if before is not None else None
+    before_dt = _validated_purge_cutoff(before, label="before")
+    digest_filter = (
+        {_validated_store_component(digest, label="digests") for digest in digests}
+        if digests is not None
+        else None
+    )
+    if _resolved_within(root, Path(store)) is None:
+        raise ValueError(
+            f"{root!s} does not resolve inside {Path(store)!s}; refusing to purge "
+            "through a link that leaves the requested result store."
+        )
+
     deleted = 0
     candidates = sorted(root.glob("*.json"))
     if digest_filter is not None:
@@ -399,9 +493,11 @@ def purge_result_store(
             created = _parse_datetime(manifest.get("created_at"))
             if created is None or created >= before_dt:
                 continue
-        _unlink_quietly(root / f"{digest}.parquet")
-        _unlink_quietly(manifest_path)
-        deleted += 1
+        # Both are attempted, and the cell counts when either actually went away.
+        payload_removed = _unlink_quietly(root / f"{digest}.parquet")
+        manifest_removed = _unlink_quietly(manifest_path)
+        if payload_removed or manifest_removed:
+            deleted += 1
     return deleted
 
 
@@ -799,11 +895,18 @@ def _parse_datetime(value: str | datetime | None) -> datetime | None:
     return dt.astimezone(timezone.utc)
 
 
-def _unlink_quietly(path: str | Path) -> None:
+def _unlink_quietly(path: str | Path) -> bool:
+    """Remove *path* if it is there; return whether it actually went away.
+
+    The write paths call this to clean up a temp file and ignore the answer -- a
+    cleanup that fails is not worth raising over. The purge helpers read it, so their
+    counts describe deletions that happened rather than deletions attempted.
+    """
     try:
         Path(path).unlink()
     except OSError:
-        pass
+        return False
+    return True
 
 
 __all__ = ["ResultStore", "purge_result_store", "result_store_summary"]
