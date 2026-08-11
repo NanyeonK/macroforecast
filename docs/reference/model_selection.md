@@ -227,12 +227,19 @@ Qualified name: `macroforecast.model_selection.types.SearchSpec`
 #### Signature
 
 ```python
-macroforecast.model_selection.SearchSpec(method: str, param_grid: dict[str, tuple[Any, ...]] = <factory>, param_distributions: dict[str, ParamDistribution] = <factory>, n_iter: int = 20, random_state: int | None = None, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, custom_func: Callable[..., Any] | None = None, custom_params: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>, criterion: str | None = None, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None, score_aggregation: ScoreAggregation = "mean_split") -> None
+macroforecast.model_selection.SearchSpec(method: str, param_grid: dict[str, tuple[Any, ...]] = <factory>, param_distributions: dict[str, ParamDistribution] = <factory>, n_iter: int = 20, random_state: int | None = 0, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, custom_func: Callable[..., Any] | None = None, custom_params: dict[str, Any] = <factory>, metadata: dict[str, Any] = <factory>, criterion: str | None = None, validation_splitter: ValidationSplitterSpec | Callable[..., Any] | str | None = None, score_aggregation: ScoreAggregation = "mean_split") -> None
 ```
 
 #### Description
 
 Parameter-search specification consumed by ``select_params``.
+
+``random_state`` defaults to 0, so the stochastic methods -- ``random``,
+``genetic``, ``bayesian`` and ``custom`` -- return the same selection on
+repeated calls. Set it to ``None`` to seed from OS entropy instead. The
+``grid``, ``cv_path``, ``fixed`` and ``information_criterion`` methods
+enumerate their candidates and never read the generator, so the value is
+carried but inert for them.
 
 #### Parameters
 
@@ -242,7 +249,7 @@ Parameter-search specification consumed by ``select_params``.
 | `param_grid` | positional or keyword | `dict[str, tuple[Any, ...]]` | `<factory>` |
 | `param_distributions` | positional or keyword | `dict[str, ParamDistribution]` | `<factory>` |
 | `n_iter` | positional or keyword | `int` | `20` |
-| `random_state` | positional or keyword | `int \| None` | `None` |
+| `random_state` | positional or keyword | `int \| None` | `0` |
 | `population_size` | positional or keyword | `int` | `12` |
 | `generations` | positional or keyword | `int` | `4` |
 | `mutation_rate` | positional or keyword | `float` | `0.2` |
@@ -273,7 +280,7 @@ import macroforecast as mf
 | `param_grid` | `dict[str, tuple[Any, ...]]` | `default_factory` |
 | `param_distributions` | `dict[str, ParamDistribution]` | `default_factory` |
 | `n_iter` | `int` | `20` |
-| `random_state` | `int \| None` | `None` |
+| `random_state` | `int \| None` | `0` |
 | `population_size` | `int` | `12` |
 | `generations` | `int` | `4` |
 | `mutation_rate` | `float` | `0.2` |
@@ -347,12 +354,15 @@ Qualified name: `macroforecast.model_selection.builders.bayesian_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.bayesian_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
+macroforecast.model_selection.bayesian_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = 0, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
 
 Sequential Gaussian-process Bayesian search request.
+
+``random_state`` defaults to 0 so repeated searches reproduce. Pass
+``random_state=None`` to draw a fresh sample on every call.
 
 #### Parameters
 
@@ -360,7 +370,7 @@ Sequential Gaussian-process Bayesian search request.
 | --- | --- | --- | --- |
 | `param_distributions` | positional or keyword | `dict[str, ParamDistribution \| Iterable[Any] \| Any]` | `required` |
 | `n_iter` | keyword only | `int` | `20` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
@@ -412,12 +422,16 @@ Qualified name: `macroforecast.model_selection.builders.custom_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.custom_search(name: str, func: Callable[..., Any], *, param_grid: dict[str, Iterable[Any] | Any] | None = None, param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None, n_iter: int = 20, random_state: int | None = None, metadata: dict[str, Any] | None = None, score_aggregation: ScoreAggregation = "mean_split", **params: Any) -> SearchSpec
+macroforecast.model_selection.custom_search(name: str, func: Callable[..., Any], *, param_grid: dict[str, Iterable[Any] | Any] | None = None, param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any] | None = None, n_iter: int = 20, random_state: int | None = 0, metadata: dict[str, Any] | None = None, score_aggregation: ScoreAggregation = "mean_split", **params: Any) -> SearchSpec
 ```
 
 #### Description
 
 Build a user-supplied parameter-search request.
+
+``random_state`` defaults to 0 so repeated searches reproduce, including the
+generator handed to ``func``. Pass ``random_state=None`` to draw a fresh
+sample on every call.
 
 #### Parameters
 
@@ -428,7 +442,7 @@ Build a user-supplied parameter-search request.
 | `param_grid` | keyword only | `dict[str, Iterable[Any] \| Any] \| None` | `None` |
 | `param_distributions` | keyword only | `dict[str, ParamDistribution \| Iterable[Any] \| Any] \| None` | `None` |
 | `n_iter` | keyword only | `int` | `20` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `metadata` | keyword only | `dict[str, Any] \| None` | `None` |
 | `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 | `params` | var keyword | `Any` | `required` |
@@ -516,19 +530,22 @@ Qualified name: `macroforecast.model_selection.builders.fixed`
 #### Signature
 
 ```python
-macroforecast.model_selection.fixed(params: dict[str, Any] | None = None, *, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
+macroforecast.model_selection.fixed(params: dict[str, Any] | None = None, *, random_state: int | None = 0, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
 
 Evaluate one fixed parameter set without tuning.
 
+``random_state`` is carried for consistency with the stochastic builders. A
+fixed search enumerates one candidate and never draws from the generator.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
 | --- | --- | --- | --- |
 | `params` | positional or keyword | `dict[str, Any] \| None` | `None` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
@@ -549,12 +566,15 @@ Qualified name: `macroforecast.model_selection.builders.genetic_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.genetic_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
+macroforecast.model_selection.genetic_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, population_size: int = 12, generations: int = 4, mutation_rate: float = 0.2, random_state: int | None = 0, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
 
 Lightweight genetic-style stochastic search over parameter distributions.
+
+``random_state`` defaults to 0 so repeated searches reproduce. Pass
+``random_state=None`` to draw a fresh sample on every call.
 
 #### Parameters
 
@@ -564,7 +584,7 @@ Lightweight genetic-style stochastic search over parameter distributions.
 | `population_size` | keyword only | `int` | `12` |
 | `generations` | keyword only | `int` | `4` |
 | `mutation_rate` | keyword only | `float` | `0.2` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
@@ -650,12 +670,15 @@ Qualified name: `macroforecast.model_selection.builders.random_search`
 #### Signature
 
 ```python
-macroforecast.model_selection.random_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
+macroforecast.model_selection.random_search(param_distributions: dict[str, ParamDistribution | Iterable[Any] | Any], *, n_iter: int = 20, random_state: int | None = 0, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
 
 Seeded random search over parameter distributions.
+
+``random_state`` defaults to 0 so repeated searches reproduce. Pass
+``random_state=None`` to draw a fresh sample on every call.
 
 #### Parameters
 
@@ -663,7 +686,7 @@ Seeded random search over parameter distributions.
 | --- | --- | --- | --- |
 | `param_distributions` | positional or keyword | `dict[str, ParamDistribution \| Iterable[Any] \| Any]` | `required` |
 | `n_iter` | keyword only | `int` | `20` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `score_aggregation` | keyword only | `ScoreAggregation` | `"mean_split"` |
 
 #### Returns
@@ -755,6 +778,13 @@ This function evaluates parameter candidates. Validation timing can be
 supplied either as a window spec or as explicit integer-position splits
 produced by ``macroforecast.window``.
 
+Stochastic search reproduces by default because ``SearchSpec.random_state``
+defaults to 0. The ``random_state`` argument here is an override for the
+``method=`` route, where ``None`` means "not overriding" rather than "seed
+from entropy", and passing it alongside ``search=`` is an error. To opt into
+a fresh draw, build the spec with an explicit ``None``, as in
+``search=random_search(distributions, random_state=None)``.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -796,12 +826,15 @@ Qualified name: `macroforecast.model_selection.builders.search_spec`
 #### Signature
 
 ```python
-macroforecast.model_selection.search_spec(model: str | Callable[..., Any] | ModelSpec, *, preset: str | None = None, method: str | None = None, random_state: int | None = None, n_iter: int | None = None, population_size: int | None = None, generations: int | None = None, mutation_rate: float | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
+macroforecast.model_selection.search_spec(model: str | Callable[..., Any] | ModelSpec, *, preset: str | None = None, method: str | None = None, random_state: int | None = 0, n_iter: int | None = None, population_size: int | None = None, generations: int | None = None, mutation_rate: float | None = None, score_aggregation: ScoreAggregation = "mean_split") -> SearchSpec
 ```
 
 #### Description
 
 Build a SearchSpec from a registered model's owned search space.
+
+``random_state`` defaults to 0 so repeated searches reproduce. Pass
+``random_state=None`` to draw a fresh sample on every call.
 
 #### Parameters
 
@@ -810,7 +843,7 @@ Build a SearchSpec from a registered model's owned search space.
 | `model` | positional or keyword | `str \| Callable[..., Any] \| ModelSpec` | `required` |
 | `preset` | keyword only | `str \| None` | `None` |
 | `method` | keyword only | `str \| None` | `None` |
-| `random_state` | keyword only | `int \| None` | `None` |
+| `random_state` | keyword only | `int \| None` | `0` |
 | `n_iter` | keyword only | `int \| None` | `None` |
 | `population_size` | keyword only | `int \| None` | `None` |
 | `generations` | keyword only | `int \| None` | `None` |
