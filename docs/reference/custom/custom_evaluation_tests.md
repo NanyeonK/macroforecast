@@ -93,8 +93,17 @@ diagnostics (Phase 1 density pipeline) -- they populate
 like every other test name, are opt-in only (absent from the default).
 ``test_options`` maps a requested test name to keyword options for that
 test's underlying public callable. Option blocks are validated when
-:func:`pipeline_spec` is built: the key must appear in ``tests`` and every
-option name must be accepted by that test's callable.
+:func:`pipeline_spec` is built: the key must appear in ``tests``, every
+option name must be accepted by that test's callable, and the option must
+not be one the pipeline supplies itself. The set-comparison tests
+(``"mcs"``, ``"spa"``, ``"rc"``, ``"stepm"``) take their loss panel's column
+names as keywords, and the pipeline builds that panel, so ``loss``,
+``model``, ``origin``, ``target``, ``horizon`` -- and ``benchmark`` for
+``"spa"``/``"rc"``/``"stepm"`` -- are refused with a pointer to their public
+owner (``EvalSpec.loss``, ``EvalSpec.benchmark``) rather than accepted and
+then overwritten. Everything the caller genuinely controls -- ``alpha``,
+``n_boot``, ``block_length``, ``bootstrap_method``, ``statistic``,
+``studentize``, an explicit ``random_state`` -- stays valid.
 
 Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
 ``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
@@ -108,9 +117,15 @@ actionable ``ValueError`` :func:`macroforecast.metrics.evaluate_forecasts`
 already raises. Absent from the defaults, so a default-EvalSpec run never
 computes them.
 
-``calibration_alpha`` is the significance level for the calibration tests
-above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
-checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
+``calibration_alpha`` is the significance level of the ``"berkowitz"`` and
+``"pit_autocorr"`` tests -- the level at which their null of a correctly
+specified predictive density is rejected. It does **not** govern
+``"coverage"``: that test checks an interval against ITS OWN nominal level,
+which ``calibration_table`` derives from the widest symmetric quantile pair
+present in ``quantile_predictions`` (a 5%/95% pair is a 90% interval, so
+``alpha=0.10``), because the nominal coverage of an interval is a property
+of the interval rather than a reporting choice. ``calibration_alpha`` also
+does not affect ``mcs_alpha``.
 
 ``subsamples`` optionally maps names to :class:`SubsampleWindow` values.
 These are evaluation-window splits of an already-produced POOS forecast

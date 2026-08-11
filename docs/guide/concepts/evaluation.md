@@ -73,7 +73,10 @@ The pipeline runs statistical forecast comparison tests across all contenders:
   in `report.significance` with `horizon="joint"`.
 - **Model Confidence Set (MCS)**: identifies the set of models that cannot be
   statistically distinguished from the best model at a given significance level
-  (`mcs_alpha`). Uses the iterative elimination algorithm by default.
+  (`mcs_alpha`). The elimination is the iterative Hansen-Lunde-Nason one, and it
+  is the only one implemented: `mcs_method` is reserved, accepts `"iterative"`
+  alone, and the resolved value is recorded in
+  `report.provenance["spec_echo"]["evaluation"]["mcs_method"]`.
 - **Full-set benchmark tests**: `"spa"`, `"rc"`, and `"stepm"` compare the full
   contender set against the benchmark and land in `report.mcs` alongside MCS.
   They require the `arch` extra (`pip install "macroforecast[arch]"`) and carry
@@ -102,6 +105,86 @@ evaluation = mf.pipeline.EvalSpec(
 `hac_lags` must be an integer greater than or equal to zero and is validated when
 `pipeline_spec` is built. For `"gr"`, `hac_lags` is the paper-facing alias for the
 legacy `lag_truncate` option and takes precedence if both are supplied.
+
+The set-comparison tests (`"mcs"`, `"spa"`, `"rc"`, `"stepm"`) take the column
+names of their loss panel as keyword arguments, and the pipeline builds that
+panel. `loss`, `model`, `origin`, `target`, `horizon` -- and `benchmark` for
+`"spa"`/`"rc"`/`"stepm"` -- are therefore refused at `pipeline_spec` time with a
+pointer to the field that does own them (`EvalSpec.loss`, `EvalSpec.benchmark`),
+rather than being accepted and then overwritten when the test runs. Everything
+you genuinely control (`alpha`, `n_boot`, `block_length`, `bootstrap_method`,
+`statistic`, `studentize`, an explicit `random_state`) is unaffected.
+
+## When a test cannot be run
+
+A pairwise test needs at least **8** origins where the contender, the benchmark,
+and the realised target are all observed; a joint multi-horizon test (`"uspa"` /
+`"aspa"`) needs at least **4** such origins on each of at least **two** horizons,
+and then at least 4 origins common to all of them once aligned. These minimums
+are not adjustable: a Diebold-Mariano statistic on five origins is not a weaker
+result, it is a number with no sampling distribution behind it.
+
+A cell that misses a minimum is **reported, not dropped**. It appears in
+`report.significance` with `status="degraded"`, `n_obs` set to the sample that was
+actually available, `statistic`/`p_value` left `NaN`, and a `reason` naming the
+requirement and the evidence:
+
+```
+insufficient joint sample: only 1 horizon(s) reached the 4 common origins a
+horizon needs, and a joint test needs at least 2 such horizons (observed common
+origins -- h=1: 9, h=2: 3); not computed.
+```
+
+`evaluate()` also emits a `RuntimeWarning` counting the degraded rows. Before
+this, such cells vanished silently, so a missing row in a results table was
+indistinguishable from a test that ran and found nothing.
+
+## Multiple testing
+
+Comparing N contenders against one benchmark is N tests. `EvalSpec(
+multiple_testing=...)` controls the family-wise error rate or false discovery
+rate across the contenders **within one cell**; cells are adjusted independently,
+because a cell is what a reader scans at once looking for the winner.
+
+- `"bonferroni"` / `"holm"` / `"bh"` are closed-form. Wide DM/CW columns gain
+  `dm_p_adj` / `cw_p_adj`; long-form rows (`"gw"`, `"mz"`, the directional
+  tests) gain `p_value_adj`, grouped by `(target, horizon, test)` so that one
+  test's contenders form the family -- not a pool of statistics answering
+  different questions.
+- `"romano_wolf"` resamples the contenders' loss differentials jointly, so it
+  inherits their cross-sectional correlation instead of assuming the worst case
+  and is markedly less conservative. The only resampling input the pipeline
+  retains is one benchmark-minus-contender loss series per contender, and that
+  cannot reconstruct a long-form test's own statistic and null. Giacomini-White
+  is itself a loss-differential test, yet its statistic is conditional on
+  instruments the adjustment step never sees; Mincer-Zarnowitz and the
+  directional tests are not loss-differential statistics at all. Long-form rows
+  therefore keep `p_value_adj` as `NaN` and a single `RuntimeWarning` names the
+  tests left unadjusted, rather than reporting a step-down p-value for a
+  statistic that was never resampled. Use a closed-form method when the long-form
+  tests are the ones you need controlled.
+
+  The wide `dm_p_adj`/`cw_p_adj` columns are produced by the same path as before.
+  Note that under `"romano_wolf"` both are resampled from that one retained loss
+  panel, so `cw_p_adj` is not derived from the Clark-West statistic itself and
+  can equal `dm_p_adj` even where the raw `dm_p` and `cw_p` differ by an order of
+  magnitude. Aligning that path is tracked as a separate open issue; prefer a
+  closed-form method, which adjusts each wide family from its own p-values, when
+  the Clark-West adjustment is the one you rely on.
+
+A row whose p-value is `NaN` -- degraded, inconclusive, or a test like `"gr"` that
+reports a critical value instead -- is excluded from its family rather than
+counted in it.
+
+## Calibration tests
+
+`calibration_alpha` is the significance level of the `"berkowitz"` and
+`"pit_autocorr"` tests. It does **not** govern `"coverage"`: that test checks an
+interval against its own nominal level, derived from the widest symmetric
+quantile pair in `quantile_predictions` (a 5%/95% pair is a 90% interval, so
+`alpha=0.10`), because the nominal coverage of an interval is a property of the
+interval rather than a reporting choice. `calibration_alpha` does not affect
+`mcs_alpha` either.
 
 ## Choosing the benchmark
 

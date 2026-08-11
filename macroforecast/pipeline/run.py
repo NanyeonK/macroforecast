@@ -1832,6 +1832,12 @@ def _spec_echo(
         "metrics": [_metric_name(m) for m in spec.evaluation.metrics],
         "tests": list(spec.evaluation.tests),
         "mcs_alpha": spec.evaluation.mcs_alpha,
+        # The RESOLVED elimination, not the field as typed. ``pipeline_spec``
+        # accepts only the iterative Hansen-Lunde-Nason method, so this always
+        # reads "iterative" today -- which is the point: a referee reading the
+        # provenance should not have to know the package default to know which
+        # elimination produced the set.
+        "mcs_method": str(spec.evaluation.mcs_method).strip().lower(),
     }
     if subsamples is not None:
         evaluation["subsamples"] = dict(subsamples)

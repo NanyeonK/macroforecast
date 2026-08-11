@@ -34,6 +34,7 @@ run the CURRENT-DEFAULT-BEHAVIOR commit's own ``evaluate(master, spec)`` on that
 pinned master and write its accuracy/significance/mcs -- never regenerate the
 "before" side from the code under test, that would defeat the point of the test.
 """
+import warnings
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -746,12 +747,249 @@ def test_multiple_testing_accepts_a_known_method_and_refuses_an_unknown_one():
         _spec(evaluation=EvalSpec(benchmark="AR", multiple_testing="sidak"))
 
 
-def test_mcs_method_is_not_echoed_as_applied_provenance():
+def test_mcs_method_resolves_to_iterative_and_is_echoed_as_applied_provenance():
+    """The elimination that actually ran is visible in provenance.
+
+    This used to assert the OPPOSITE -- that ``mcs_method`` was absent from the
+    echo -- which pinned the defect rather than a contract: any value was
+    accepted, nothing read it, and provenance stayed silent about which MCS a
+    reader was looking at. Now one value is accepted and it is reported.
+    """
     from macroforecast.pipeline.run import _spec_echo
 
-    echo = _spec_echo(_spec(evaluation=EvalSpec(benchmark="AR", mcs_method="stationary")))
+    echo = _spec_echo(_spec(evaluation=EvalSpec(benchmark="AR", tests=("mcs",))))
 
-    assert "mcs_method" not in echo["evaluation"]
+    assert echo["evaluation"]["mcs_method"] == "iterative"
+
+
+def test_unimplemented_mcs_method_raises_at_spec_build_time():
+    with pytest.raises(ValueError, match=r"mcs_method must be 'iterative'"):
+        _spec(evaluation=EvalSpec(benchmark="AR", tests=("mcs",), mcs_method="stationary"))
+
+
+# --------------------------------------------------------------------------- #
+# F-026: the set-comparison callables take their loss panel's column names as
+# keywords, and the pipeline builds that panel. Those keywords passed the
+# accepted-name check (they are real parameters) and were then overwritten.
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize("option", ["loss", "model", "origin", "target", "horizon"])
+def test_pipeline_owned_mcs_options_raise_at_spec_build_time(option):
+    with pytest.raises(ValueError, match=r"pipeline-owned option"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR", tests=("mcs",), test_options={"mcs": {option: "x"}},
+            )
+        )
+
+
+@pytest.mark.parametrize("test_name", ["spa", "rc", "stepm"])
+def test_set_comparison_tests_also_refuse_a_pipeline_owned_benchmark(test_name):
+    pytest.importorskip("arch")
+    with pytest.raises(ValueError, match=r"pipeline-owned option"):
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=(test_name,),
+                test_options={test_name: {"benchmark": "OLS"}},
+            )
+        )
+
+
+def test_pipeline_owned_message_names_the_public_owner_and_the_honored_options():
+    with pytest.raises(ValueError) as excinfo:
+        _spec(
+            evaluation=EvalSpec(
+                benchmark="AR",
+                tests=("mcs",),
+                test_options={"mcs": {"loss": "absolute_error"}},
+            )
+        )
+    message = str(excinfo.value)
+    assert "EvalSpec.loss" in message
+    # An error that only forbids is half an error; it has to say where the
+    # option lives and what the caller may still set.
+    assert "'alpha'" in message and "'n_boot'" in message
+
+
+def test_honored_set_comparison_options_still_build_unchanged():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR",
+            tests=("mcs",),
+            test_options={
+                "mcs": {"alpha": 0.2, "n_boot": 17, "block_length": 3, "random_state": 9},
+            },
+        )
+    )
+
+    assert spec.evaluation.test_options["mcs"] == {
+        "alpha": 0.2, "n_boot": 17, "block_length": 3, "random_state": 9,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# F-025: the sample minimums stay; a cell that misses one leaves a row saying so.
+# --------------------------------------------------------------------------- #
+
+def test_pairwise_cell_below_the_minimum_is_reported_not_dropped():
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "cw")))
+
+    with pytest.warns(RuntimeWarning, match="degraded"):
+        sig = evaluate(_dated_master(7), spec)["significance"]
+
+    assert list(sig["test"]) == ["dm", "cw"]
+    assert set(sig["status"]) == {"degraded"}
+    assert set(sig["n_obs"]) == {7}
+    assert sig["p_value"].isna().all() and sig["statistic"].isna().all()
+    reason = sig["reason"].iloc[0]
+    assert "7 origin(s)" in reason and "8 required" in reason
+
+
+def test_below_minimum_rows_cover_only_the_tests_that_cell_would_have_run():
+    """A contender that never declared nesting is owed no Clark-West row.
+
+    The insufficient-sample rows mirror the same eligibility the computing loop
+    applies, so they promise exactly what was owed -- not every requested test.
+    """
+    master = _dated_master(7)
+    master.loc[master["contender"] == "OLS", "contender"] = "UNDECLARED"
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "cw")))
+
+    sig = evaluate(master, spec)["significance"]
+
+    assert list(sig["test"]) == ["dm"]
+
+
+def test_at_the_minimum_the_cell_is_computed_and_the_output_shape_is_unchanged():
+    spec = _spec(evaluation=EvalSpec(benchmark="AR", tests=("dm", "cw")))
+
+    sig = evaluate(_dated_master(8), spec)["significance"]
+
+    # Still the historical WIDE shape: no `test`, no `status`, no `reason`.
+    assert list(sig.columns) == [
+        "target", "horizon", "contender", "dm_stat", "dm_p", "cw_stat", "cw_p",
+    ]
+
+
+def test_joint_cell_without_two_qualifying_horizons_is_reported_not_dropped():
+    spec = _spec(horizons=[1, 2], evaluation=EvalSpec(benchmark="AR", tests=("uspa", "aspa")))
+    short = _multi_horizon_master().loc[lambda x: x["origin"] < 3].copy()
+
+    with pytest.warns(RuntimeWarning, match="degraded"):
+        sig = evaluate(short, spec)["significance"]
+
+    assert set(sig["horizon"]) == {"joint"}
+    assert set(sig["test"]) == {"uspa", "aspa"}
+    assert set(sig["status"]) == {"degraded"}
+    reason = sig["reason"].iloc[0]
+    # The evidence, per horizon, is what makes the shortfall fixable.
+    assert "4 common origins" in reason and "h=1: 3, h=2: 3" in reason
+
+
+def test_joint_cell_whose_horizons_qualify_but_do_not_align_says_so():
+    """The other joint shortfall: each horizon clears 4, their intersection does not."""
+    spec = _spec(horizons=[1, 2], evaluation=EvalSpec(benchmark="AR", tests=("uspa",)))
+    master = _multi_horizon_master().loc[lambda x: x["origin"] < 6].copy()
+    master = master.loc[~((master["horizon"] == 2) & (master["origin"] < 2))]
+    master = master.loc[~((master["horizon"] == 1) & (master["origin"] >= 4))]
+
+    sig = evaluate(master, spec)["significance"]
+    joint = sig.loc[sig["horizon"] == "joint"]
+
+    assert set(joint["status"]) == {"degraded"}
+    assert set(joint["n_obs"]) == {2}
+    assert "common to all 2 horizon(s) after alignment" in joint["reason"].iloc[0]
+
+
+# --------------------------------------------------------------------------- #
+# F-027: long-form tests get the multiplicity control that was requested.
+# --------------------------------------------------------------------------- #
+
+def test_long_form_only_request_is_adjusted_with_a_hand_oracle():
+    spec = _spec(
+        evaluation=EvalSpec(benchmark="AR", tests=("gw",), multiple_testing="bonferroni")
+    )
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+
+    # One (target, horizon, test) family of two contenders -> p * 2, clipped.
+    assert set(sig["test"]) == {"gw"}
+    expected = np.minimum(sig["p_value"].to_numpy(float) * 2.0, 1.0)
+    np.testing.assert_allclose(sig["p_value_adj"].to_numpy(float), expected)
+
+
+def test_wide_and_long_families_are_adjusted_independently():
+    from macroforecast.tests import adjust_pvalues
+
+    spec = _spec(
+        evaluation=EvalSpec(benchmark="AR", tests=("dm", "gw"), multiple_testing="holm")
+    )
+
+    sig = evaluate(_golden_master(), spec)["significance"]
+    wide = sig.loc[sig["test"].isna()]
+    gw = sig.loc[sig["test"] == "gw"]
+
+    assert not wide.empty and not gw.empty
+    # Each family is adjusted over its own p-values. Pooling the four into one
+    # family would give RIDGE's gw 4*0.017.. instead of 2*0.018.., so this
+    # assertion is what separates "grouped by (target, horizon, test)" from
+    # "grouped by (target, horizon)".
+    np.testing.assert_allclose(
+        gw["p_value_adj"].to_numpy(float),
+        adjust_pvalues(gw["p_value"].to_numpy(float), method="holm"),
+    )
+    np.testing.assert_allclose(
+        wide["dm_p_adj"].to_numpy(float),
+        adjust_pvalues(wide["dm_p"].to_numpy(float), method="holm"),
+    )
+    # A wide row has no long-form p-value, so it gets no long-form adjustment.
+    assert wide["p_value_adj"].isna().all()
+
+
+def test_romano_wolf_leaves_long_form_rows_nan_and_warns_once():
+    spec = _spec(
+        evaluation=EvalSpec(
+            benchmark="AR", tests=("dm", "gw"), multiple_testing="romano_wolf"
+        )
+    )
+
+    with pytest.warns(RuntimeWarning, match=r"romano_wolf") as caught:
+        sig = evaluate(_golden_master(), spec)["significance"]
+
+    named = [w for w in caught if "romano_wolf" in str(w.message)]
+    assert len(named) == 1
+    assert "'gw'" in str(named[0].message)
+    gw = sig.loc[sig["test"] == "gw"]
+    assert not gw.empty and gw["p_value_adj"].isna().all()
+    # The wide DM family is still adjusted -- it has the loss differentials
+    # Romano-Wolf resamples, which is exactly why the long-form rows do not.
+    assert sig.loc[sig["test"].isna(), "dm_p_adj"].notna().all()
+
+
+def test_romano_wolf_does_not_warn_about_a_test_with_no_p_value_to_adjust():
+    """``gr`` reports a critical value, never a p-value; it is not being denied one."""
+    spec = _spec(
+        evaluation=EvalSpec(benchmark="AR", tests=("gr",), multiple_testing="romano_wolf")
+    )
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        evaluate(_golden_master(), spec)
+
+    assert not [w for w in caught if "romano_wolf" in str(w.message)]
+
+
+# --------------------------------------------------------------------------- #
+# F-028: coverage takes its nominal level from the interval it is checking.
+# --------------------------------------------------------------------------- #
+
+def test_calibration_alpha_docstring_does_not_claim_to_govern_coverage():
+    doc = " ".join((EvalSpec.__doc__ or "").split())
+
+    assert "does **not** govern" in doc
+    assert "widest symmetric quantile pair" in doc
+    assert "does not affect ``mcs_alpha``" in doc
 
 
 def test_encompassing_rows_without_reference_values_are_inconclusive():
