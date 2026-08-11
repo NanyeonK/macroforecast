@@ -342,6 +342,13 @@ lose rows because date parsing failed, nor should string cells such as
 files use real missing-value markers that are already parsed upstream; this
 guard is mainly for custom CSV/Parquet inputs and ad hoc DataFrames.
 
+With no ``date=`` and no ``DatetimeIndex``, the first column is taken as the
+dates -- but only if it is date-like. A numeric first column, including numbers
+written as strings, is refused in both strict modes rather than parsed as
+nanoseconds from the Unix epoch, which would consume an ordinary predictor into
+the index and return a valid-looking panel built on a misreading. Name the column
+with ``date=`` to settle it; that path is the caller's authority and is unchanged.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -562,6 +569,16 @@ macroforecast.data.set_frequencies(data: PanelInput, frequency_by_column: Mappin
 
 Attach a column-level frequency contract to a panel or bundle.
 
+``metadata["frequency"]`` describes the OUTPUT panel: it is the single output
+frequency when the columns agree and ``"mixed"`` when they do not. Mixed native
+frequencies with a homogeneous ``output_frequency_by_column`` are therefore an
+ordinary case, and the overall label is the homogeneous output one.
+
+An explicit ``frequency`` is checked against that derivation, not substituted for
+it. ``None`` and ``"unknown"`` ask for the derived label; any other value,
+including ``"mixed"``, must agree with the columns or the call is refused, so the
+overall label and the per-column counts cannot contradict each other.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -597,6 +614,16 @@ macroforecast.data.spec(data: PanelInput, *, metadata: Mapping[str, Any] | None 
 #### Description
 
 Build a run-level data specification from a canonical panel.
+
+Inputs are normalized exactly rather than coerced. ``predictors`` is either the
+literal ``"all"`` or an iterable of column names -- a list, tuple, numpy array or
+pandas Index all work, and a bare string that is not ``"all"`` is a typo rather
+than an iterable of one-character names. Targets and explicit predictors must be
+non-empty strings. ``horizons`` must be positive integral, non-boolean values;
+Python and numpy integers are accepted, floats are not, even when integral-valued.
+
+Duplicate targets, predictors, or horizons are rejected rather than absorbed. The
+order the caller wrote is preserved for valid input.
 
 #### Parameters
 

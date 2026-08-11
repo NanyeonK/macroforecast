@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date as date_type
 from calendar import monthrange
@@ -69,6 +69,13 @@ def as_panel(
     ``"missing"`` become ``NaN`` without the caller noticing. Official FRED
     files use real missing-value markers that are already parsed upstream; this
     guard is mainly for custom CSV/Parquet inputs and ad hoc DataFrames.
+
+    With no ``date=`` and no ``DatetimeIndex``, the first column is taken as the
+    dates -- but only if it is date-like. A numeric first column, including numbers
+    written as strings, is refused in both strict modes rather than parsed as
+    nanoseconds from the Unix epoch, which would consume an ordinary predictor into
+    the index and return a valid-looking panel built on a misreading. Name the column
+    with ``date=`` to settle it; that path is the caller's authority and is unchanged.
     """
 
     if not isinstance(frame, pd.DataFrame):
@@ -94,6 +101,7 @@ def as_panel(
         if not len(panel.columns):
             raise ValueError("panel must have a DatetimeIndex or a date column")
         first_column = panel.columns[0]
+        _reject_numeric_date_inference(panel[first_column], column=first_column)
         date_source = str(first_column)
         panel[first_column] = pd.to_datetime(panel[first_column], errors="coerce")
         invalid_date_rows = int(panel[first_column].isna().sum())
@@ -340,7 +348,18 @@ def set_frequencies(
     frequency: str | None = None,
     metadata: Mapping[str, Any] | None = None,
 ) -> DataBundle:
-    """Attach a column-level frequency contract to a panel or bundle."""
+    """Attach a column-level frequency contract to a panel or bundle.
+
+    ``metadata["frequency"]`` describes the OUTPUT panel: it is the single output
+    frequency when the columns agree and ``"mixed"`` when they do not. Mixed native
+    frequencies with a homogeneous ``output_frequency_by_column`` are therefore an
+    ordinary case, and the overall label is the homogeneous output one.
+
+    An explicit ``frequency`` is checked against that derivation, not substituted for
+    it. ``None`` and ``"unknown"`` ask for the derived label; any other value,
+    including ``"mixed"``, must agree with the columns or the call is refused, so the
+    overall label and the per-column counts cannot contradict each other.
+    """
 
     bundle = _coerce_bundle(data, metadata=metadata)
     panel = bundle.panel.copy()
@@ -361,7 +380,7 @@ def set_frequencies(
             label="output_frequency_by_column",
         )
     )
-    frequency_label = _resolve_frequency_label(native, frequency=frequency)
+    frequency_label = _resolve_frequency_label(output, frequency=frequency)
     updated = dict(bundle.metadata)
     updated.update(
         {
@@ -387,7 +406,18 @@ def spec(
     end: str | None = None,
     predictors: Literal["all"] | Iterable[str] = "all",
 ) -> DataSpec:
-    """Build a run-level data specification from a canonical panel."""
+    """Build a run-level data specification from a canonical panel.
+
+    Inputs are normalized exactly rather than coerced. ``predictors`` is either the
+    literal ``"all"`` or an iterable of column names -- a list, tuple, numpy array or
+    pandas Index all work, and a bare string that is not ``"all"`` is a typo rather
+    than an iterable of one-character names. Targets and explicit predictors must be
+    non-empty strings. ``horizons`` must be positive integral, non-boolean values;
+    Python and numpy integers are accepted, floats are not, even when integral-valued.
+
+    Duplicate targets, predictors, or horizons are rejected rather than absorbed. The
+    order the caller wrote is preserved for valid input.
+    """
 
     bundle = _coerce_bundle(data, metadata=metadata)
     panel = bundle.panel
@@ -404,13 +434,23 @@ def spec(
         raise ValueError("end must be greater than or equal to start")
 
     predictor_values: PredictorSelection
-    if predictors == "all":
+    # Test the sentinel only after confirming a string. ``predictors == "all"`` against a
+    # numpy array or a pandas Index returns an array, and ``if`` on it raises pandas's
+    # ambiguous-truth error -- so two perfectly ordinary predictor collections could not
+    # be passed at all (F-008).
+    if isinstance(predictors, str):
+        if predictors != "all":
+            raise ValueError(
+                "predictors must be 'all' or an iterable of column names; a bare string "
+                f"is not an iterable of names here: {predictors!r}"
+            )
         # ``predictors='all'`` means all non-target columns. Recording the
         # expanded tuple prevents a later model stage from accidentally using
         # the target column as its own predictor when it consumes metadata.
         predictor_values = tuple(str(column) for column in panel.columns if str(column) not in set(target_values))
     else:
-        predictor_values = tuple(dict.fromkeys(str(value) for value in predictors))
+        predictor_values = tuple(_column_name(value, label="predictors") for value in predictors)
+        _reject_duplicates(predictor_values, label="predictors")
         overlap = sorted(set(predictor_values).intersection(target_values))
         if overlap:
             raise ValueError(f"predictors must not include target columns: {overlap}")
@@ -455,6 +495,69 @@ def spec(
         end=end_iso,
         predictors=predictor_values,
     )
+
+
+def _reject_numeric_date_inference(column_values: pd.Series, *, column: Any) -> None:
+    """Refuse to read a numeric first column as dates when no ``date=`` was given.
+
+    Without an explicit ``date=`` the first column is the date candidate. ``x=[1, 2, 3]``
+    then parses as three timestamps 1--3 ns after the Unix epoch, and ``x`` disappears
+    from the predictors -- a valid-looking canonical panel built from a silent
+    misreading, in both strict modes (F-006).
+
+    Inference stays available for the ordinary case it was written for: a first column
+    of date strings or datetime values. What it may not do is guess about a column whose
+    contents are numbers, including numbers written as strings, because there is no
+    reading of those that is obviously a date. The caller settles it with ``date=`` or a
+    ``DatetimeIndex``; ``strict=False`` does not, because this is structural ambiguity
+    and not a coercion the caller asked to tolerate.
+    """
+    if pd.api.types.is_datetime64_any_dtype(column_values):
+        return
+    numeric_dtype = pd.api.types.is_numeric_dtype(column_values)
+    if not numeric_dtype:
+        present = column_values.dropna()
+        if present.empty:
+            return
+        # Numbers written as strings read as numbers too: "1", "20200101".
+        if pd.to_numeric(present, errors="coerce").notna().all():
+            numeric_dtype = True
+    if not numeric_dtype:
+        return
+    raise TypeError(
+        f"first column {str(column)!r} is numeric, so it cannot be inferred as the date "
+        "column: numbers would parse as nanoseconds from the Unix epoch and the column "
+        "would leave the panel. Pass a DatetimeIndex, or name the date column explicitly "
+        "with date=..."
+    )
+
+
+def _column_name(value: Any, *, label: str) -> str:
+    """One column name from user input: a non-empty string and nothing else.
+
+    ``str(value)`` used to accept anything, so a stray ``None`` or ``0`` became the
+    column name ``"None"`` or ``"0"`` and only failed later as a missing column, if at
+    all (F-008).
+    """
+    if not isinstance(value, str) or not value:
+        raise TypeError(f"{label} must be non-empty column-name strings; got {value!r}")
+    return value
+
+
+def _reject_duplicates(values: Sequence[Any], *, label: str) -> None:
+    """Duplicates are a mistake in the caller's input, not something to quietly absorb.
+
+    Silently de-duplicating hides a typo; silently keeping them makes the recorded spec
+    disagree with itself about how many columns or horizons there are.
+    """
+    seen: set[Any] = set()
+    duplicates: list[Any] = []
+    for value in values:
+        if value in seen and value not in duplicates:
+            duplicates.append(value)
+        seen.add(value)
+    if duplicates:
+        raise ValueError(f"{label} must not contain duplicates: {duplicates}")
 
 
 def _numeric_coercion_report(panel: pd.DataFrame) -> dict[str, Any]:
@@ -596,17 +699,35 @@ def _normalize_frequency_label(value: Any) -> str:
     return aliases[key]
 
 
-def _resolve_frequency_label(native: Mapping[str, str], *, frequency: str | None) -> str:
-    if frequency is not None:
-        if str(frequency).strip().lower() == "mixed":
-            return "mixed"
-        explicit = _normalize_frequency_label(frequency)
-        if explicit == "unknown":
-            unique = set(native.values())
-            return unique.pop() if len(unique) == 1 else "mixed"
-        return explicit
-    unique = set(native.values())
-    return unique.pop() if len(unique) == 1 else "mixed"
+def _resolve_frequency_label(output: Mapping[str, str], *, frequency: str | None) -> str:
+    """The overall label for a panel, derived from its OUTPUT column frequencies.
+
+    ``metadata['frequency']`` describes the panel a consumer receives, so it is derived
+    from the output map rather than the native one: a quarterly series aligned to
+    monthly output is monthly in the panel, whatever it was at source. Mixed native
+    frequencies with a homogeneous output map are therefore an ordinary, valid case.
+
+    An explicit label is checked against that derivation instead of replacing it. It
+    used to replace it, so ``frequency='monthly'`` over a mixed map wrote overall
+    ``monthly`` beside per-column counts that said otherwise, and the same metadata
+    contradicted itself (F-009). ``None`` and ``'unknown'`` ask for the derived label;
+    anything else, including ``'mixed'``, has to agree with it.
+    """
+    unique = set(output.values())
+    derived = unique.pop() if len(unique) == 1 else "mixed"
+    if frequency is None:
+        return derived
+    raw = str(frequency).strip().lower()
+    explicit = "mixed" if raw == "mixed" else _normalize_frequency_label(frequency)
+    if explicit == "unknown":
+        return derived
+    if explicit != derived:
+        raise ValueError(
+            f"frequency={frequency!r} contradicts the output column frequencies, which "
+            f"are {derived!r}. Pass frequency=None to derive it, or correct "
+            "output_frequency_by_column / frequency_by_column so the two agree."
+        )
+    return derived
 
 
 def _normalize_targets(*, target: str | None, targets: Iterable[str] | None) -> tuple[str | None, tuple[str, ...]]:
@@ -616,9 +737,15 @@ def _normalize_targets(*, target: str | None, targets: Iterable[str] | None) -> 
         if not isinstance(target, str) or not target:
             raise ValueError("target is required")
         return target, (target,)
-    values = tuple(str(value) for value in targets)
+    if isinstance(targets, str):
+        raise TypeError(
+            "targets must be an iterable of column names, not a single string; "
+            f"pass target={targets!r} for one column"
+        )
+    values = tuple(_column_name(value, label="targets") for value in targets)
     if not values:
         raise ValueError("targets must not be empty")
+    _reject_duplicates(values, label="targets")
     return None, values
 
 
@@ -630,15 +757,72 @@ def _normalize_horizons(values: Iterable[int] | int | None, *, metadata: Mapping
         if frequency == "quarterly":
             return (1, 2, 4, 8)
         return (1,)
-    if isinstance(values, int):
-        horizons: tuple[int, ...] = (values,)
+    # ``bool`` is a subclass of ``int``, so it has to be excluded before the scalar
+    # branch or ``horizons=True`` becomes horizon 1. A string is iterable, so it has to
+    # be excluded before the iterable branch or ``'24'`` becomes horizons (2, 4).
+    if isinstance(values, (str, bytes)):
+        raise TypeError(f"horizons must be positive integers, not a string: {values!r}")
+    # ``np.bool_`` is neither ``bool`` nor ``np.integer``, so without this it would fall
+    # through to the iterable branch and fail as "not iterable" -- a true statement about
+    # the implementation and a useless one about the argument.
+    if isinstance(values, (bool, np.bool_)):
+        raise TypeError(f"horizons must be positive integers, not a bool: {values!r}")
+    if isinstance(values, (int, np.integer)):
+        horizons: tuple[int, ...] = (_horizon_value(values),)
+    elif isinstance(values, np.ndarray) and values.ndim == 0:
+        # Neither a scalar this accepts nor something it can iterate. Named separately
+        # so the caller is told how to unwrap it -- but NOT told to coerce it. For
+        # np.array(1.9) an int(...) hint would recreate the silent 1.9 -> 1
+        # truncation this function exists to prevent, so the advice is to extract the
+        # value and pass it only if it is already a positive integer.
+        raise TypeError(
+            "horizons must be a positive integer or an iterable of positive integers; "
+            f"got a 0-dimensional array {values!r}. Extract it with .item() and pass "
+            "the result only if it is already a positive integer; otherwise supply a "
+            "validated positive integer."
+        )
     else:
-        horizons = tuple(int(value) for value in values)
+        try:
+            candidates = list(values)
+        except TypeError:
+            # A float, a 0-d array, or anything else that is neither an integer nor a
+            # sequence of them. ``from None`` because the caller needs to hear about
+            # ``horizons``, not about iteration protocol.
+            raise TypeError(
+                "horizons must be a positive integer or an iterable of positive "
+                f"integers; got {type(values).__name__} {values!r}"
+            ) from None
+        horizons = tuple(_horizon_value(value) for value in candidates)
     if not horizons:
         raise ValueError("horizons must not be empty")
-    if any(horizon <= 0 for horizon in horizons):
-        raise ValueError("horizons must be positive integers")
+    _reject_duplicates(horizons, label="horizons")
     return horizons
+
+
+def _horizon_value(value: Any) -> int:
+    """One horizon: a positive integral, non-boolean value.
+
+    ``int(value)`` used to take anything it could truncate, so ``1.9`` silently became
+    horizon 1 -- a forecast at a different horizon than the caller asked for, recorded
+    as though they had asked for it. numpy integer scalars are accepted because
+    ``np.arange``/``.unique()`` produce them and they are integers in every sense that
+    matters here; Python floats are not, even when integral-valued, because accepting
+    ``1.0`` and rejecting ``1.9`` would make the rule depend on the value rather than
+    on the type.
+
+    ``np.bool_`` is a bool here, not an integer. numpy does not make it a subclass of
+    either ``bool`` or ``np.integer``, so it has to be named to be caught.
+    """
+    if isinstance(value, (bool, np.bool_)):
+        raise TypeError(f"horizons must be positive integers, not a bool: {value!r}")
+    if not isinstance(value, (int, np.integer)):
+        raise TypeError(
+            f"horizons must be positive integers; got {type(value).__name__} {value!r}"
+        )
+    horizon = int(value)
+    if horizon <= 0:
+        raise ValueError(f"horizons must be positive integers; got {horizon}")
+    return horizon
 
 
 def _normalize_date(value: str | None, *, end_of_period: bool) -> str | None:

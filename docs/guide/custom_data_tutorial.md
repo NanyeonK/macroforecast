@@ -26,6 +26,11 @@ the output shown is genuine, not illustrative.
 
 ## 1. A small synthetic panel
 
+Name the date column with `date=`, as below. Without it, and without a
+`DatetimeIndex`, the first column is inferred as the dates — and that inference is
+refused for a numeric first column rather than guessed at, so a spreadsheet whose first
+column is an integer period key has to say which column holds the dates.
+
 The demo panel has one target (`demand_index`) and two predictors
 (`orders_idx`, `sentiment_idx`) that the target is built from with a one-month
 lag, so a model that can see the predictors has a genuine edge over a model
