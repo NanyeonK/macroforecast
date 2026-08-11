@@ -121,6 +121,17 @@ _PAIRWISE_LONG_TESTS = frozenset({"gw", "enc_new", "enc_t", "pt", "hm", "ag", "g
 _NESTED_QUADRATIC_TESTS = frozenset({"cw", "enc_new", "enc_t"})
 _SET_COMPARISON_TESTS = frozenset({"spa", "rc", "stepm"})
 _MULTI_HORIZON_TESTS = frozenset({"uspa", "aspa"})
+#: Minimum common origins a pairwise contender-vs-benchmark test is run on, and
+#: minimum aligned origins (over at least two horizons) for a joint multi-horizon
+#: test. These are unchanged -- a Diebold-Mariano statistic on five origins is not
+#: a weaker result, it is a number with no sampling distribution behind it. What
+#: changed is that falling short is now REPORTED rather than dropped: the cell
+#: leaves a row saying what was asked, what sample was available, and why nothing
+#: was computed, so a missing row in a results table can no longer be mistaken for
+#: a test that ran and found nothing.
+_MIN_PAIRWISE_ORIGINS = 8
+_MIN_JOINT_ORIGINS = 4
+_MIN_JOINT_HORIZONS = 2
 _SUBSAMPLE_DATE_COLUMN = "date"
 _SUBSAMPLE_PROVENANCE_ATTR = "macroforecast_subsample_provenance"
 
@@ -524,6 +535,66 @@ def _result_row(
         "status": status,
         "reason": reason,
     }
+
+
+def _not_computed_row(
+    *,
+    target: Any,
+    horizon: Any,
+    contender: str,
+    test: str,
+    n_obs: int | None,
+    reason: str,
+) -> dict[str, Any]:
+    """A significance row for a test that was requested and could not be run.
+
+    Same long-form shape as a computed row, with the statistic and p-value left
+    NaN: ``status``/``reason`` say what happened, and no number is invented. It
+    carries a ``test`` column even where the computed output would have been wide
+    (DM/CW), because the row's whole job is to name the test that did not run.
+    """
+    return {
+        "target": target,
+        "horizon": horizon,
+        "contender": contender,
+        "test": test,
+        "statistic": np.nan,
+        "p_value": np.nan,
+        "reject": None,
+        "n_obs": n_obs,
+        "status": "degraded",
+        "reason": reason,
+    }
+
+
+def _pairwise_tests_for_cell(
+    contender: str,
+    *,
+    want_dm: bool,
+    want_cw: bool,
+    requested_long: Sequence[str],
+    custom_loss_blocked: set[str],
+    nested: set[str],
+) -> list[str]:
+    """The pairwise tests this contender's cell WOULD have run, in report order.
+
+    Mirrors the eligibility the main loop applies test by test, so an
+    insufficient-sample cell reports exactly the tests it owed the caller --
+    no Clark-West row for a contender that never declared nesting, and no row
+    for a test a custom loss already ruled out with its own warning.
+    """
+    tests: list[str] = []
+    if want_dm:
+        tests.append("dm")
+    if want_cw and contender in nested:
+        tests.append("cw")
+    for name in requested_long:
+        if name in custom_loss_blocked:
+            continue
+        if name in {"enc_new", "enc_t"} and contender not in nested:
+            continue
+        tests.append(name)
+    return tests
 
 
 def _loss_values(
@@ -955,7 +1026,28 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                 continue
             fc = pivot_f[contender]
             common = actual.notna() & fb.notna() & fc.notna()
-            if int(common.sum()) < 8:
+            n_common = int(common.sum())
+            if n_common < _MIN_PAIRWISE_ORIGINS:
+                pairwise_reason = (
+                    f"insufficient paired sample: {n_common} origin(s) where the "
+                    f"contender, the benchmark {bench!r} and the realised target are "
+                    f"all observed, below the {_MIN_PAIRWISE_ORIGINS} required for a "
+                    "pairwise forecast-comparison test; not computed."
+                )
+                out.extend(
+                    _not_computed_row(
+                        target=target, horizon=horizon, contender=str(contender),
+                        test=test_name, n_obs=n_common, reason=pairwise_reason,
+                    )
+                    for test_name in _pairwise_tests_for_cell(
+                        str(contender),
+                        want_dm=want_dm,
+                        want_cw=want_cw and not cw_blocked_by_custom_loss,
+                        requested_long=requested_long,
+                        custom_loss_blocked=custom_loss_blocked,
+                        nested=nested,
+                    )
+                )
                 continue
             y = actual[common].to_numpy(float)
             fb_vals = fb[common].to_numpy(float)
@@ -1172,17 +1264,23 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
             ]
             for contender in contenders:
                 horizon_diffs: dict[Any, pd.Series] = {}
+                # What each horizon actually offered, kept whether or not it
+                # cleared the bar: the reason below has to name the evidence, and
+                # "3 origins at h=1, 3 at h=2" is what makes the failure fixable.
+                observed: dict[Any, int] = {}
                 for horizon, group in target_group.groupby("horizon", dropna=False):
                     pivot_f = group.pivot_table(
                         index="origin", columns="contender", values="prediction", aggfunc="mean"
                     )
                     if bench not in pivot_f.columns or contender not in pivot_f.columns:
+                        observed[horizon] = 0
                         continue
                     actual = group.groupby("origin")["actual"].first().reindex(pivot_f.index)
                     fb = pivot_f[bench]
                     fc = pivot_f[contender]
                     common = actual.notna() & fb.notna() & fc.notna()
-                    if int(common.sum()) < 4:
+                    observed[horizon] = int(common.sum())
+                    if int(common.sum()) < _MIN_JOINT_ORIGINS:
                         continue
                     y = actual[common].to_numpy(float)
                     loss_b = _loss_values(y, fb[common].to_numpy(float), loss_fn)
@@ -1192,10 +1290,42 @@ def significance_table(master: pd.DataFrame, spec: PipelineSpec) -> pd.DataFrame
                         index=actual[common].index,
                         name=horizon,
                     )
-                if len(horizon_diffs) < 2:
-                    continue
-                diff_panel = pd.concat(horizon_diffs.values(), axis=1).dropna(axis=0, how="any")
-                if diff_panel.shape[0] < 4 or diff_panel.shape[1] < 2:
+                per_horizon = ", ".join(
+                    f"h={key}: {count}"
+                    for key, count in sorted(observed.items(), key=lambda kv: str(kv[0]))
+                ) or "no horizons present"
+                shortfall: str | None = None
+                if len(horizon_diffs) < _MIN_JOINT_HORIZONS:
+                    shortfall = (
+                        f"only {len(horizon_diffs)} horizon(s) reached the "
+                        f"{_MIN_JOINT_ORIGINS} common origins a horizon needs, and a "
+                        f"joint test needs at least {_MIN_JOINT_HORIZONS} such "
+                        f"horizons (observed common origins -- {per_horizon})"
+                    )
+                    n_aligned = None
+                else:
+                    diff_panel = pd.concat(
+                        horizon_diffs.values(), axis=1
+                    ).dropna(axis=0, how="any")
+                    n_aligned = int(diff_panel.shape[0])
+                    if diff_panel.shape[0] < _MIN_JOINT_ORIGINS or diff_panel.shape[1] < _MIN_JOINT_HORIZONS:
+                        # Each horizon cleared the bar on its own, but the joint
+                        # test needs ONE sample of origins shared by all of them.
+                        shortfall = (
+                            f"{n_aligned} origin(s) common to all "
+                            f"{int(diff_panel.shape[1])} horizon(s) after alignment, "
+                            f"below the {_MIN_JOINT_ORIGINS} required (per-horizon "
+                            f"common origins -- {per_horizon})"
+                        )
+                if shortfall is not None:
+                    out.extend(
+                        _not_computed_row(
+                            target=target, horizon="joint", contender=str(contender),
+                            test=test_name, n_obs=n_aligned,
+                            reason=f"insufficient joint sample: {shortfall}; not computed.",
+                        )
+                        for test_name in requested_joint
+                    )
                     continue
                 for test_name in requested_joint:
                     res = multi_horizon_spa_test(
@@ -1227,12 +1357,41 @@ def _apply_multiple_testing(
     spec: PipelineSpec,
     loss_diffs: Mapping[tuple[Any, Any], Mapping[str, pd.Series]],
 ) -> pd.DataFrame:
-    """Append ``<test>_p_adj`` columns for ``EvalSpec.multiple_testing``.
+    """Append ``<test>_p_adj`` / ``p_value_adj`` for ``EvalSpec.multiple_testing``.
 
     The family is the set of CONTENDERS within one ``(target, horizon)`` cell:
     that is what a reader compares at once when they scan a column of a results
     table looking for the winner, so that is the family an adjustment has to
     control. Cells are adjusted independently of one another.
+
+    Long-form rows carry their test name in a ``test`` column and share one
+    ``p_value`` column, so their family is ``(target, horizon, test)`` -- one
+    test's contenders, not a pool of Giacomini-White and Pesaran-Timmermann
+    p-values that answer different questions. They land in ``p_value_adj``.
+    Before this, ``multiple_testing`` looked only for wide ``<test>_p`` columns,
+    so a request for long-form-only tests (``tests=("gw",)``) silently produced
+    no adjustment at all -- the one case where a caller who asked for
+    multiplicity control got none and was not told.
+
+    ``romano_wolf`` is the exception for long-form rows, and the reason is what
+    this function has in hand -- not a claim about which tests use loss
+    differentials. ``loss_diffs`` retains one series per contender, benchmark
+    loss minus contender loss, and that is the only resampling input available
+    here. It cannot reconstruct a long-form test's OWN statistic and null:
+    Giacomini-White is itself a loss-differential test, but its statistic is a
+    conditional one built on instruments this function never sees, and
+    Mincer-Zarnowitz and the directional tests are not loss-differential
+    statistics at all. Producing a ``p_value_adj`` for any of them from the
+    retained series would report a step-down p-value for a statistic that was
+    never resampled, so those rows keep it NaN and one warning names them.
+
+    The wide ``dm_p_adj``/``cw_p_adj`` path is PRESERVED here, not extended and
+    not corrected, and nothing in this docstring should be read as asserting it
+    is exact. Under ``romano_wolf`` both wide families are resampled from the
+    same retained loss panel, so ``cw_p_adj`` is not derived from the Clark-West
+    statistic itself. Whether that pre-existing path is statistically aligned
+    with each wide family's own statistic -- Clark-West in particular -- is a
+    separate, separately confirmed finding, deliberately out of scope here.
 
     Returns ``frame`` unchanged when no method is configured, so the default
     report stays byte-identical.
@@ -1245,7 +1404,8 @@ def _apply_multiple_testing(
 
     key = str(method).strip().lower()
     wide_tests = [c[: -len("_p")] for c in frame.columns if c.endswith("_p") and c != "p_value"]
-    if not wide_tests:
+    long_form = {"test", "p_value"} <= set(frame.columns)
+    if not wide_tests and not long_form:
         return frame
 
     for test in wide_tests:
@@ -1257,6 +1417,11 @@ def _apply_multiple_testing(
         for test in wide_tests:
             raw = block[f"{test}_p"].to_numpy(dtype=float)
             if key == "romano_wolf":
+                # One panel per cell -- the benchmark-minus-contender loss
+                # series -- reused for every wide family, so `cw_p_adj` comes
+                # from the same resampling as `dm_p_adj` rather than from the
+                # Clark-West statistic. Preserved as-is here; aligning it is a
+                # separate finding (see this function's docstring).
                 cell = loss_diffs.get((target, horizon), {})
                 names = block["contender"].astype(str).to_numpy()
                 # The family is exactly the contenders this test actually
@@ -1282,7 +1447,51 @@ def _apply_multiple_testing(
             else:
                 adjusted = adjust_pvalues(raw, method=key)
             frame.loc[idx, f"{test}_p_adj"] = adjusted
+    if long_form:
+        _adjust_long_form(frame, key=key)
     return frame
+
+
+def _adjust_long_form(frame: pd.DataFrame, *, key: str) -> None:
+    """Fill ``p_value_adj`` for long-form rows, in place, or say why it is empty."""
+
+    from macroforecast.tests import adjust_pvalues
+
+    frame["p_value_adj"] = np.nan
+    rows = frame.loc[frame["test"].notna()]
+    if rows.empty:
+        return
+    if key == "romano_wolf":
+        # Named only where there was something to adjust: a test whose p-value is
+        # NaN everywhere (``gr`` reports a critical value instead) is not being
+        # denied an adjustment, so warning about it would be noise.
+        unadjusted = sorted(
+            {
+                str(name)
+                for name, block in rows.groupby("test", dropna=True)
+                if np.isfinite(pd.to_numeric(block["p_value"], errors="coerce")).any()
+            }
+        )
+        if unadjusted:
+            warnings.warn(
+                "multiple_testing='romano_wolf' can only resample the "
+                "benchmark-minus-contender loss series the pipeline retains, "
+                "which cannot reconstruct the test-specific statistic and null "
+                f"of long-form test(s) {unadjusted}, so their p_value_adj is NOT "
+                "computed and is left NaN rather than reported for a statistic "
+                "that was never resampled. The existing wide dm_p_adj/cw_p_adj "
+                "path is unaffected. Use 'holm', 'bonferroni', or 'bh' to adjust "
+                "these long-form tests.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        return
+    for _, block in rows.groupby(["target", "horizon", "test"], dropna=False):
+        raw = pd.to_numeric(block["p_value"], errors="coerce").to_numpy(dtype=float)
+        # ``adjust_pvalues`` carries NaN through and excludes it from N, so a
+        # degraded or inconclusive row neither receives an adjustment nor
+        # inflates the family every other contender is charged against.
+        frame.loc[block.index, "p_value_adj"] = adjust_pvalues(raw, method=key)
 
 
 

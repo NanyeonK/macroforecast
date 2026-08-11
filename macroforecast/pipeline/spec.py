@@ -355,6 +355,57 @@ _EVAL_TEST_OPTION_TARGETS: Mapping[str, tuple[str, str]] = {
 }
 
 
+#: Options the PIPELINE supplies for a set-comparison test, per test name.
+#: ``mcs_table`` builds the long loss panel it hands these callables, so the
+#: column-name keywords describe that panel's schema rather than anything the
+#: caller can choose, and ``loss``/``benchmark`` have public owners of their own.
+#: They are real keyword-only parameters, so the accepted-name check below passes
+#: them, and ``mcs_table`` then ``update()``s over them -- accepted at build time
+#: and discarded at run time. Refusing them here is the whole of F-026.
+_PIPELINE_OWNED_TEST_OPTIONS: Mapping[str, tuple[str, ...]] = {
+    "mcs": ("horizon", "loss", "model", "origin", "target"),
+    "spa": ("benchmark", "horizon", "loss", "model", "origin", "target"),
+    "rc": ("benchmark", "horizon", "loss", "model", "origin", "target"),
+    "stepm": ("benchmark", "horizon", "loss", "model", "origin", "target"),
+}
+
+#: Where each pipeline-owned option is set instead. Naming the public owner is
+#: the difference between "you may not do that" and an actionable message.
+_PIPELINE_OWNED_OPTION_OWNERS: Mapping[str, str] = {
+    "loss": "EvalSpec.loss",
+    "benchmark": "EvalSpec.benchmark",
+    "model": "the pipeline's internal loss-panel schema",
+    "origin": "the pipeline's internal loss-panel schema",
+    "target": "the pipeline's internal loss-panel schema",
+    "horizon": "the pipeline's internal loss-panel schema",
+}
+
+
+def _validate_pipeline_owned_test_options(
+    test_name: str, options: Mapping[str, Any]
+) -> None:
+    """Refuse ``test_options`` entries the pipeline sets itself at run time."""
+
+    owned = _PIPELINE_OWNED_TEST_OPTIONS.get(test_name)
+    if not owned:
+        return
+    conflicting = [name for name in owned if name in options]
+    if not conflicting:
+        return
+    owners = ", ".join(
+        f"{name!r} -> {_PIPELINE_OWNED_OPTION_OWNERS[name]}" for name in conflicting
+    )
+    honored = sorted(set(_accepted_eval_test_options(test_name)) - set(owned))
+    raise ValueError(
+        f"evaluation.test_options[{test_name!r}] sets pipeline-owned option(s) "
+        f"{conflicting}; the pipeline builds the loss panel it passes to "
+        f"{test_name!r} and supplies these itself, so a value here would be "
+        f"silently overwritten rather than honored. Set them at their owner "
+        f"instead ({owners}). Options that ARE honored for {test_name!r}: "
+        f"{honored}."
+    )
+
+
 def _accepted_eval_test_options(test_name: str) -> frozenset[str]:
     """Keyword option names accepted by the public callable backing a pipeline test."""
 
@@ -388,6 +439,10 @@ def _validate_eval_test_options(evaluation: "EvalSpec") -> None:
             f"{sorted(requested)}"
         )
     for test_name, options in evaluation.test_options.items():
+        # Before the accepted-name check, which would pass these: they are real
+        # keyword-only parameters of the underlying callable. Their problem is
+        # ownership, not spelling, so they get the message that says so.
+        _validate_pipeline_owned_test_options(str(test_name), options)
         accepted = _accepted_eval_test_options(str(test_name))
         unknown = set(options) - accepted
         if unknown:
@@ -422,6 +477,11 @@ def _validate_bool_option(value: Any, *, label: str) -> None:
 
 _DEFAULT_EVAL_BY = ("target", "horizon")
 _DEFAULT_PRIMARY_AXIS = "contender"
+#: The only MCS elimination the pipeline implements. ``mcs_table`` calls
+#: :func:`macroforecast.tests.model_confidence_set`, which is the iterative
+#: Hansen-Lunde-Nason elimination; nothing reads ``EvalSpec.mcs_method`` to
+#: dispatch anything else, so any other value was accepted and then ignored.
+_SUPPORTED_MCS_METHOD = "iterative"
 _NAMED_SUBSAMPLE_MASKS = frozenset({"nber_recession", "nber_expansion"})
 SubsampleMaskInput: TypeAlias = str | pd.Series | Mapping[Any, Any] | Sequence[tuple[Any, Any]] | None
 
@@ -436,6 +496,15 @@ def _validate_unimplemented_eval_fields(evaluation: "EvalSpec") -> None:
     if str(evaluation.primary_axis) != _DEFAULT_PRIMARY_AXIS:
         raise ValueError(
             "evaluation.primary_axis is not implemented; use test_options / file an issue"
+        )
+    if str(evaluation.mcs_method).strip().lower() != _SUPPORTED_MCS_METHOD:
+        raise ValueError(
+            f"evaluation.mcs_method must be {_SUPPORTED_MCS_METHOD!r}; got "
+            f"{evaluation.mcs_method!r}. The pipeline's Model Confidence Set is "
+            "macroforecast.tests.model_confidence_set, the iterative "
+            "Hansen-Lunde-Nason elimination, and no other elimination is "
+            "implemented -- so any other value was previously accepted and then "
+            "ignored. The field is kept, and reserved, for when a second one is."
         )
     if evaluation.multiple_testing is not None:
         from macroforecast.tests import MULTIPLE_TESTING_METHODS
@@ -675,8 +744,17 @@ class EvalSpec:
     like every other test name, are opt-in only (absent from the default).
     ``test_options`` maps a requested test name to keyword options for that
     test's underlying public callable. Option blocks are validated when
-    :func:`pipeline_spec` is built: the key must appear in ``tests`` and every
-    option name must be accepted by that test's callable.
+    :func:`pipeline_spec` is built: the key must appear in ``tests``, every
+    option name must be accepted by that test's callable, and the option must
+    not be one the pipeline supplies itself. The set-comparison tests
+    (``"mcs"``, ``"spa"``, ``"rc"``, ``"stepm"``) take their loss panel's column
+    names as keywords, and the pipeline builds that panel, so ``loss``,
+    ``model``, ``origin``, ``target``, ``horizon`` -- and ``benchmark`` for
+    ``"spa"``/``"rc"``/``"stepm"`` -- are refused with a pointer to their public
+    owner (``EvalSpec.loss``, ``EvalSpec.benchmark``) rather than accepted and
+    then overwritten. Everything the caller genuinely controls -- ``alpha``,
+    ``n_boot``, ``block_length``, ``bootstrap_method``, ``statistic``,
+    ``studentize``, an explicit ``random_state`` -- stays valid.
 
     Density/interval accuracy metrics -- ``"crps"``, ``"gaussian_nll"``,
     ``"log_score"``, ``"negative_log_score"``, ``"qlike"``, ``"pinball_loss"``,
@@ -690,9 +768,15 @@ class EvalSpec:
     already raises. Absent from the defaults, so a default-EvalSpec run never
     computes them.
 
-    ``calibration_alpha`` is the significance level for the calibration tests
-    above (Berkowitz LR test, PIT autocorrelation, and the nominal coverage
-    checked by the ``"coverage"`` test); it does not affect ``mcs_alpha``.
+    ``calibration_alpha`` is the significance level of the ``"berkowitz"`` and
+    ``"pit_autocorr"`` tests -- the level at which their null of a correctly
+    specified predictive density is rejected. It does **not** govern
+    ``"coverage"``: that test checks an interval against ITS OWN nominal level,
+    which ``calibration_table`` derives from the widest symmetric quantile pair
+    present in ``quantile_predictions`` (a 5%/95% pair is a 90% interval, so
+    ``alpha=0.10``), because the nominal coverage of an interval is a property
+    of the interval rather than a reporting choice. ``calibration_alpha`` also
+    does not affect ``mcs_alpha``.
 
     ``subsamples`` optionally maps names to :class:`SubsampleWindow` values.
     These are evaluation-window splits of an already-produced POOS forecast
@@ -715,6 +799,11 @@ class EvalSpec:
     primary_axis: str = "contender"
     cw_for_nested: bool = True
     mcs_alpha: float = 0.10
+    #: Reserved. Only ``"iterative"`` is supported; any other value raises
+    #: ValueError at pipeline_spec time. The MCS callable is the iterative
+    #: Hansen-Lunde-Nason elimination, and the resolved value appears in
+    #: applied provenance (``report.provenance["spec_echo"]["evaluation"]``)
+    #: so a reader can see which elimination produced the set.
     mcs_method: str = "iterative"
     multiple_testing: str | None = None
     subsamples: Mapping[str, SubsampleWindow] | None = None
