@@ -11,8 +11,8 @@ Guide context: [../guide/concepts/running.md](../guide/concepts/running.md).
 | Symbol | Kind | Summary |
 | --- | --- | --- |
 | `ForecastResult` | class | Forecast runner output. |
-| `LEAN_FORECAST_COLUMNS` | data | Built-in immutable sequence. |
-| `SELECTION_HISTORY_COLUMNS` | data | Built-in immutable sequence. |
+| `LEAN_FORECAST_COLUMNS` | data | A `tuple` of 13 values of str. |
+| `SELECTION_HISTORY_COLUMNS` | data | A `tuple` of 14 values of str. |
 | `load_checkpoint_frame` | function | Load all persisted lean records as a single frame (empty if none/missing). |
 | `load_selection_history_frame` | function | Load optional selection-history JSONL sidecars from one checkpoint dir. |
 | `CombinationSpec` | class | Forecast-combination request consumed by ``forecasting.run``. |

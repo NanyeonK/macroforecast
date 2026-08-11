@@ -10,7 +10,7 @@ Guide context: [../guide/concepts/features.md](../guide/concepts/features.md).
 
 | Symbol | Kind | Summary |
 | --- | --- | --- |
-| `FeatureInput` | data | Represent a PEP 604 union type |
+| `FeatureInput` | type alias | Type alias for `macroforecast.preprocessing.types.PreprocessedData \| macroforecast.data.panel.DataSpec \| macroforecast.data.panel.DataBundle \| tuple[pandas.DataFrame, Mapping[str, typing.Any]] \| pandas.DataFrame`. |
 | `FeatureSpec` | class | Reusable feature-building callable for forecasting runners. |
 | `FeatureSet` | class | Predictor matrix, target matrix, and feature-engineering metadata. |
 | `FeatureSelectionResult` | class | Fitted column-selection result shared by direct and runner-safe APIs. |
@@ -104,10 +104,10 @@ Guide context: [../guide/concepts/features.md](../guide/concepts/features.md).
 
 ### `FeatureInput`
 
-Kind: `data`
+Kind: `type alias`
 
 ```python
-FeatureInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.DataFrame
+FeatureInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, Mapping[str, typing.Any]] | pandas.DataFrame
 ```
 
 ## Callable And Class Reference

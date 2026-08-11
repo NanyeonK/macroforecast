@@ -29,7 +29,7 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `LGBPlusRegressor` | [`macroforecast.models`](models.md) | class |
 | `MODEL_ENSEMBLE_BASE_ESTIMATORS` | [`macroforecast.model_ensemble`](model_ensemble.md) | data |
 | `MODEL_ENSEMBLE_SPECS` | [`macroforecast.model_ensemble`](model_ensemble.md) | data |
-| `MetadataLevel` | [`macroforecast.meta`](meta.md) | callable |
+| `MetadataLevel` | [`macroforecast.meta`](meta.md) | type alias |
 | `ModelFit` | [`macroforecast.models`](models.md) | class |
 | `ModelParameter` | [`macroforecast.models`](models.md) | class |
 | `ModelSpec` | [`macroforecast.models`](models.md) | class |
@@ -37,15 +37,15 @@ The top-level package uses lazy exports. Attribute access imports the owning sem
 | `PreprocessSpec` | [`macroforecast.preprocessing`](preprocessing.md) | class |
 | `PreprocessedData` | [`macroforecast.preprocessing`](preprocessing.md) | class |
 | `RandomSubspaceRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
-| `RegimeDirection` | [`macroforecast.data`](data.md) | callable |
-| `SamePeriodPolicy` | [`macroforecast.data`](data.md) | callable |
+| `RegimeDirection` | [`macroforecast.data`](data.md) | type alias |
+| `SamePeriodPolicy` | [`macroforecast.data`](data.md) | type alias |
 | `SavedModel` | [`macroforecast.models`](models.md) | class |
 | `SearchError` | [`macroforecast.model_selection`](model_selection.md) | class |
 | `SearchResult` | [`macroforecast.model_selection`](model_selection.md) | class |
 | `SearchSpec` | [`macroforecast.model_selection`](model_selection.md) | class |
-| `Split` | [`macroforecast.window`](window.md) | callable |
+| `Split` | [`macroforecast.window`](window.md) | type alias |
 | `StackingRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
-| `StageDefaultScope` | [`macroforecast.meta`](meta.md) | callable |
+| `StageDefaultScope` | [`macroforecast.meta`](meta.md) | type alias |
 | `StagePolicy` | [`macroforecast.window`](window.md) | class |
 | `SuperLearnerRegressor` | [`macroforecast.model_ensemble`](model_ensemble.md) | class |
 | `TestWindow` | [`macroforecast.window`](window.md) | class |

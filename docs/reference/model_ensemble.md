@@ -12,8 +12,8 @@ Guide context: [../guide/concepts/models_and_arms.md](../guide/concepts/models_a
 | --- | --- | --- |
 | `BaggingRegressor` | class | Bootstrap or block-bootstrap ensemble over supported base estimators. |
 | `BoogingRegressor` | class | Bagging of intentionally overfit stochastic gradient boosting models. |
-| `MODEL_ENSEMBLE_BASE_ESTIMATORS` | data | dict() -> new empty dictionary |
-| `MODEL_ENSEMBLE_SPECS` | data | dict() -> new empty dictionary |
+| `MODEL_ENSEMBLE_BASE_ESTIMATORS` | data | A `dict` of 10 values of str. |
+| `MODEL_ENSEMBLE_SPECS` | data | A `dict` of 6 values of str. |
 | `RandomSubspaceRegressor` | class | Fit base models on randomly selected feature subsets and average them. |
 | `StackingRegressor` | class | Out-of-fold stacking over supported base estimators. |
 | `SuperLearnerRegressor` | class | Convex-weight Super Learner over supported base estimators. |

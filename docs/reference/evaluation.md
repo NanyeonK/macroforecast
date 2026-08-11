@@ -10,9 +10,9 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 
 | Symbol | Kind | Summary |
 | --- | --- | --- |
-| `BENCHMARK_METRICS` | data | Built-in immutable sequence. |
-| `DEFAULT_METRICS` | data | Built-in immutable sequence. |
-| `DEFAULT_SCORE_BY` | data | Built-in immutable sequence. |
+| `BENCHMARK_METRICS` | data | A `tuple` of 6 values of str. |
+| `DEFAULT_METRICS` | data | A `tuple` of 3 values of str. |
+| `DEFAULT_SCORE_BY` | data | A `tuple` of 2 values of str. |
 | `EvaluationReport` | class | Container returned by :func:`evaluate_report`. |
 | `aggregate_scores` | function | Evaluate the same forecasts over multiple explicit groupings. |
 | `benchmark_comparison` | function | Evaluate candidate models relative to one benchmark model. |

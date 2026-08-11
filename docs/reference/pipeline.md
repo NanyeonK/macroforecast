@@ -10,7 +10,7 @@ Guide context: [../guide/index.md](../guide/index.md).
 
 | Symbol | Kind | Summary |
 | --- | --- | --- |
-| `TCODE_TARGET_MAP` | data | dict() -> new empty dictionary |
+| `TCODE_TARGET_MAP` | data | A `dict` of 7 values of int. |
 | `auto_parallelism` | function | Return ``(cell_workers, model_threads)`` saturating ``cores``. |
 | `rescore` | function | Re-score a saved pipeline run from its checkpoint directory alone. |
 | `result_store_summary` | function | Summarise result-store manifests, one row per readable cell manifest. |
@@ -29,7 +29,7 @@ Guide context: [../guide/index.md](../guide/index.md).
 | `apply_combinations` | function | Append cross-arm combination contenders to the master forecast frame. |
 | `Arm` | class | A target-agnostic configuration: preprocessing + features + a single model. |
 | `CombinationContender` | class | A forecast combination that becomes an additional contender. |
-| `DIRECT_POLICY_GUARD_MODELS` | data | frozenset() -> empty frozenset object |
+| `DIRECT_POLICY_GUARD_MODELS` | data | A `frozenset` of 16 values of str. |
 | `EvalSpec` | class | Automatic evaluation and significance-testing configuration. |
 | `InterpretSpec` | class | ML interpretation request for an arm (deferred, multi-method). |
 | `PipelineSpec` | class | Validated, frozen configuration produced by :func:`pipeline_spec`. |

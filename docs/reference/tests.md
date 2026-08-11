@@ -10,7 +10,7 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 
 | Symbol | Kind | Summary |
 | --- | --- | --- |
-| `MULTIPLE_TESTING_METHODS` | data | Built-in immutable sequence. |
+| `MULTIPLE_TESTING_METHODS` | data | A `tuple` of 4 values of str. |
 | `adjust_pvalues` | function | Family-wise / false-discovery adjustment of a family of p-values. |
 | `romano_wolf_pvalues` | function | Romano-Wolf (2005) step-down adjusted p-values across contenders. |
 | `TestResult` | class | Forecast comparison test result. |
