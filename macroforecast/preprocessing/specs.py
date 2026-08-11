@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -61,8 +60,6 @@ _REPROCESS_OPTIONS = {
     "custom_steps",
     "warn_metadata",
 }
-
-_FIT_WINDOW_CUSTOM_WARNED: set[int] = set()
 
 
 @dataclass(frozen=True)
@@ -914,20 +911,6 @@ def _reject_unrestricted_fit_window_steps(steps: tuple[dict[str, Any], ...]) -> 
         "custom_preprocess_step(name, fit_func=..., transform_func=...)\n"
         "  - or use policy='origin_available', where the sample is already "
         "restricted to observable rows."
-    )
-
-
-def _warn_fit_window_custom_steps(spec: PreprocessSpec) -> None:
-    key = id(spec)
-    if key in _FIT_WINDOW_CUSTOM_WARNED:
-        return
-    _FIT_WINDOW_CUSTOM_WARNED.add(key)
-    warnings.warn(
-        "custom preprocessing steps with policy='fit_window' are re-executed on "
-        "each apply window and must be row-local/stateless; data-dependent "
-        "statistics inside custom steps can leak post-origin rows.",
-        UserWarning,
-        stacklevel=3,
     )
 
 
