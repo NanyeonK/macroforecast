@@ -70,6 +70,15 @@ inputs -- only `recursive` does that.
 The t-code to policy mapping is documented in the
 [Pipeline reference](../../reference/pipeline.md).
 
+T-codes 3 and 6 describe second-difference series, but the forecast engine's
+target transforms stop at `change` and `log_growth`. By default,
+`resolve_target` therefore follows the package convention of forecasting the
+corresponding first-difference object. Set `reduce_i2=False` on either
+`TargetSpec` or `resolve_target` to refuse that substitution. Resolution then
+raises an actionable error unless the target supplies an explicit `transform`
+or `tcode_map` supplies an entry for the active code. A false value on either
+surface wins; it cannot be overridden by a true value on the other surface.
+
 Recursive custom models need extra care with exogenous predictors. A custom
 supervised model with non-target features under `forecast_policy="recursive"`
 must only use predictors that are genuinely available at each recursive step

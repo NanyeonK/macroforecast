@@ -1353,9 +1353,10 @@ A forecast target and how its forecast object is defined.
 be left as ``None`` so FRED transformation-code metadata chooses the
 conventional forecast object. For example, a FRED-MD growth-rate target
 resolves to a direct-average growth forecast rather than a raw level
-forecast. ``annualize`` affects reporting scale only, while ``reduce_i2``
-keeps the package's convention for I(2) series by forecasting the
-first-difference object.
+forecast. ``annualize`` affects reporting scale only. ``reduce_i2=True``
+accepts the package convention for t-codes 3 and 6, which forecasts the
+first-difference object. Setting it to ``False`` refuses that convention
+and raises when no explicit target object or t-code mapping replaces it.
 
 Returns
 TargetSpec
@@ -1662,8 +1663,11 @@ Resolve a target to its (forecast_policy, target_transform).
 
 Explicit ``TargetSpec.transform``/``policy`` win; otherwise the t-code (passed
 or read from ``data`` metadata) is mapped through ``tcode_map`` (defaults to
-:data:`TCODE_TARGET_MAP`). Raises if neither an explicit transform nor a
-t-code is available.
+:data:`TCODE_TARGET_MAP`). ``reduce_i2=False`` on either the function or the
+target refuses the package's default first-difference convention for t-codes
+3 and 6. In that case the caller must supply an explicit transform or an
+explicit ``tcode_map`` entry for the active code. Raises if neither an
+explicit transform nor a t-code is available.
 
 #### Parameters
 

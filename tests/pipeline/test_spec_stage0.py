@@ -53,6 +53,92 @@ def test_tcode_map_override():
     assert (rt.policy, rt.transform) == ("direct", "level")
 
 
+@pytest.mark.parametrize("tcode", [3, 6])
+@pytest.mark.parametrize(
+    "kwarg,field",
+    [(False, True), (True, False), (False, False)],
+)
+def test_reduce_i2_false_refuses_default_i2_mapping(tcode, kwarg, field):
+    with pytest.raises(ValueError, match=r"reduce_i2=False.*t-code"):
+        resolve_target(
+            TargetSpec("x", reduce_i2=field),
+            tcode=tcode,
+            reduce_i2=kwarg,
+        )
+
+
+@pytest.mark.parametrize("tcode", [1, 2, 4, 5, 7])
+def test_reduce_i2_false_does_not_affect_non_i2_codes(tcode):
+    rt = resolve_target(
+        TargetSpec("x", reduce_i2=False),
+        tcode=tcode,
+        reduce_i2=False,
+    )
+    assert (rt.policy, rt.transform) == TCODE_TARGET_MAP[tcode]
+
+
+@pytest.mark.parametrize("tcode", [3, 6])
+def test_explicit_transform_outranks_reduce_i2_refusal(tcode):
+    rt = resolve_target(
+        TargetSpec(
+            "x",
+            transform="level",
+            policy="direct",
+            reduce_i2=False,
+        ),
+        tcode=tcode,
+        reduce_i2=False,
+    )
+    assert (rt.policy, rt.transform) == ("direct", "level")
+
+
+@pytest.mark.parametrize("tcode", [3, 6])
+def test_explicit_active_tcode_mapping_outranks_reduce_i2_refusal(tcode):
+    rt = resolve_target(
+        "x",
+        tcode=tcode,
+        tcode_map={str(tcode): ("direct", "level")},
+        reduce_i2=False,
+    )
+    assert (rt.policy, rt.transform) == ("direct", "level")
+
+
+@pytest.mark.parametrize("tcode,other", [(3, 6), (6, 3), (3, 5), (6, 5)])
+def test_unrelated_tcode_mapping_does_not_grant_i2_consent(tcode, other):
+    with pytest.raises(ValueError, match="reduce_i2=False"):
+        resolve_target(
+            "x",
+            tcode=tcode,
+            tcode_map={other: ("direct", "level")},
+            reduce_i2=False,
+        )
+
+
+@pytest.mark.parametrize("tcode", [3, 6])
+def test_policy_only_does_not_replace_default_i2_transform(tcode):
+    with pytest.raises(ValueError, match="reduce_i2=False"):
+        resolve_target(
+            TargetSpec("x", policy="direct", reduce_i2=False),
+            tcode=tcode,
+        )
+
+
+def test_reduce_i2_refusal_uses_inferred_tcode():
+    frame = pd.DataFrame(
+        {"y": np.arange(60.0)},
+        index=pd.date_range("2000-01-31", periods=60, freq="ME", name="date"),
+    )
+    bundle = mf.data.custom_dataset(frame, transform_codes={"y": 6})
+    with pytest.raises(ValueError, match=r"reduce_i2=False.*t-code 6"):
+        resolve_target(TargetSpec("y", reduce_i2=False), data=bundle)
+
+
+def test_reduce_i2_false_preserves_neighboring_resolution_error():
+    with pytest.raises(ValueError) as exc_info:
+        resolve_target("x", tcode=99, reduce_i2=False)
+    assert "reduce_i2" not in str(exc_info.value)
+
+
 def test_contender_names_is_exactly_the_arm():
     # An Arm is exactly ONE model; a contender IS an arm (no arm:model labels).
     assert contender_names(Arm("AR", model="ar")) == ["AR"]
