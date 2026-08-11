@@ -322,3 +322,63 @@ def test_forecasts_and_accuracy_byte_identical_to_pre_change_golden(table):
         _normalize_datetime_resolution(golden),
         atol=1e-12,
     )
+
+
+# --------------------------------------------------------------------------- #
+# 7. the leakage audit reports the EFFECTIVE preprocessing policy
+# --------------------------------------------------------------------------- #
+# The audit exists to state a run's leakage posture. Reading the raw per-arm field
+# made it report ``None`` for a run that actually fit on the whole panel, because an
+# arm that sets nothing inherits the spec's policy and an unset spec policy resolves
+# against the package default.
+
+
+def _audit_policies(**over):
+    feats = mf.feature_engineering.feature_spec(
+        target="y", predictors=["x1"], lags=1, target_lags=(0, 1)
+    )
+    spec = _spec(arms=[Arm("AR", model="ar", features=feats)], combinations=(), **over)
+    _provenance, leakage = run_mod._audit(spec)
+    return leakage["preprocessing_policies"]
+
+
+def test_leakage_audit_reports_a_spec_level_preprocessing_policy():
+    policies = _audit_policies(
+        preprocessing=mf.preprocess_spec(standardize=True),
+        preprocessing_policy=mf.window.stage_policy(scope="full_panel"),
+    )
+    assert policies["AR"]["scope"] == "full_panel"
+
+
+def test_leakage_audit_reports_an_arm_level_preprocessing_override():
+    feats = mf.feature_engineering.feature_spec(
+        target="y", predictors=["x1"], lags=1, target_lags=(0, 1)
+    )
+    spec = _spec(
+        arms=[
+            Arm(
+                "AR",
+                model="ar",
+                features=feats,
+                preprocessing=mf.preprocess_spec(standardize=True),
+                preprocessing_policy="origin_available",
+            )
+        ],
+        combinations=(),
+        preprocessing=mf.preprocess_spec(standardize=False),
+        preprocessing_policy=mf.window.stage_policy(scope="full_panel"),
+    )
+    _provenance, leakage = run_mod._audit(spec)
+    assert leakage["preprocessing_policies"]["AR"]["scope"] == "origin_available"
+
+
+def test_leakage_audit_reports_the_global_default_when_nothing_is_declared():
+    """The case the raw field got wrong: the audit said ``None``, the run said full panel."""
+    with mf.meta.use_config(default_preprocessing_scope="full_panel"):
+        policies = _audit_policies(preprocessing=mf.preprocess_spec(standardize=True))
+    assert policies["AR"]["scope"] == "full_panel"
+
+
+def test_leakage_audit_reports_no_policy_for_an_arm_without_preprocessing():
+    """An unpreprocessed arm has no timing rule, and must not be given a fictitious one."""
+    assert _audit_policies()["AR"] is None

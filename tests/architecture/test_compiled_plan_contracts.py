@@ -147,3 +147,77 @@ def test_an_arm_without_overrides_inherits_both_spec_level_values(panel):
         spec.preprocessing_policy, default_scope=str(get_config()["default_preprocessing_scope"])
     )
     assert resolved is not None and resolved.to_dict() == expected.to_dict()
+
+
+def test_the_compiled_stage_policies_are_the_ones_the_runner_resolves(panel):
+    """The compilation must equal what ``run()`` actually fit under.
+
+    ``compile_stage_policies`` mirrors ``forecasting/runner.py``'s own resolution, and
+    the digest and the leakage audit both believe it. Restating a rule is exactly how
+    the four copies this module was written about drifted apart, so this compares the
+    compiled answer against the runner's OWN record of what it resolved
+    (``ForecastResult.metadata["stage_policies"]``) rather than against a second copy
+    of the rule. A non-default config is used deliberately: with every default in
+    force, a compilation that ignored the arm entirely would still match.
+    """
+    import macroforecast as mf
+    from macroforecast.pipeline.plan import compile_arm_plan, compile_stage_policies
+    from macroforecast.pipeline.spec import Arm, EvalSpec, TargetSpec, pipeline_spec
+
+    features = mf.feature_engineering.feature_spec(
+        target="y", predictors=["x1"], lags=(1,), target_lags=(0, 1)
+    )
+    spec = pipeline_spec(
+        data=mf.data.custom_dataset(panel, transform_codes={"y": 1, "x1": 1, "x2": 1}),
+        targets=[TargetSpec(name="y", transform="level")],
+        horizons=[1],
+        window=mf.window.spec(
+            estimation=mf.window.estimation_expanding(min_size=48),
+            test=mf.window.test_origins(horizon=1, step=12),
+        ),
+        arms=[
+            Arm(
+                "compiled",
+                model="ols",
+                features=features,
+                preprocessing=mf.preprocess_spec(standardize="zscore"),
+            )
+        ],
+        evaluation=EvalSpec(benchmark="compiled", metrics=("rmse",)),
+        save_models=False,
+    )
+    arm = spec.arms[0]
+    plan = compile_arm_plan(spec, arm)
+
+    # All three off their defaults (origin_available / fit_window / fit_window), and a
+    # combination the runner accepts: a full-panel feature stage requires a full-panel
+    # preprocessing stage, which it refuses outright otherwise.
+    with mf.meta.use_config(
+        default_preprocessing_scope="full_panel",
+        default_feature_scope="full_panel",
+        default_selection_scope="origin_available",
+    ):
+        result = mf.forecasting.run(
+            spec.data,
+            arm.model,
+            window=plan.window,
+            preprocessing=plan.preprocess.spec,
+            preprocessing_policy=plan.preprocess.policy_input,
+            features=arm.features,
+            feature_policy=arm.feature_policy,
+            target="y",
+            horizon=1,
+            forecast_policy="direct",
+            target_transform="level",
+            save_models=False,
+        )
+        compiled = compile_stage_policies(spec, arm, plan=plan).to_dict()
+
+    assert result.metadata["stage_policies"] == compiled, (
+        "the compiled stage policies must be the ones the runner resolved"
+    )
+    assert [compiled[key]["scope"] for key in ("preprocessing", "feature_engineering", "model_selection")] == [
+        "full_panel",
+        "full_panel",
+        "origin_available",
+    ], "and the config under test must actually be non-default, or this proves nothing"

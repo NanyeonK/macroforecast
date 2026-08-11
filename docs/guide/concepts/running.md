@@ -200,11 +200,33 @@ The second run reuses the stored `(target, horizon, arm)` cells for `AR` and `RF
 and computes only `GBM`. The shared `preprocessing_cache_dir` also reuses the
 prepared per-origin preprocessing base when the preprocessing spec is unchanged.
 Result-store identities include the data content fingerprint, the effective
-selection seed, arm/model/features/preprocessing choices, and the backend package
-versions that own the arm's numerical fit. Vintage-aware specs additionally hash
-the enumerable vintage labels, reference calendar, and a bounded latest-vintage
-panel fingerprint. Stores created before this identity hardening will miss and
-recompute cells once, then reuse normally under the new digest.
+selection seed, arm/model/features/preprocessing choices, the effective stage
+policies, and the backend package versions that own the arm's numerical fit.
+Vintage-aware specs additionally hash the enumerable vintage labels, reference
+calendar, and a bounded latest-vintage panel fingerprint. Stores created before
+this identity hardening will miss and recompute cells once, then reuse normally
+under the new digest.
+
+The stage policies recorded are the RESOLVED ones — what the run actually fits
+under, not the fields you did or did not set. A policy you leave unset is not "no
+policy": the runner resolves it against `default_preprocessing_scope`,
+`default_feature_scope`, and `default_selection_scope`, so the same spec fits
+differently after `mf.meta.configure(...)` changes one of them. `origin_available`
+and `full_panel` are the leak-aware and the whole-panel fit, so a digest that
+could not tell them apart would serve one run's forecasts to the other. Changing
+a default therefore misses the cells it can reach; setting a policy explicitly
+pins them against that default moving. An arm that fits no preprocessing has no
+preprocessing policy, and the identity says so rather than inventing a scope.
+`PipelineReport.leakage_audit["preprocessing_policies"]` reports the same resolved
+policy per arm, as a `StagePolicy` mapping (or `None` for an arm with no
+preprocessing).
+
+If the content fingerprint cannot be computed at all, the cell is not cacheable.
+The failure is recorded in provenance rather than raised — collecting provenance
+must never end a run — but the descriptor carries no content, so it cannot
+identify a panel and every panel that failed the same way would otherwise share
+one digest. Such a cell is recomputed, and `run_pipeline()` warns for it like any
+other undigestible cell.
 
 The content fingerprint covers every index value, column name, and cell, whatever
 the panel's size. It used to fall back to a strided subsample above a cell cap,
