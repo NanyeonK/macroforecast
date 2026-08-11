@@ -93,11 +93,15 @@ def test_a_finished_target_holds_nothing(bundle_and_index, monkeypatch):
     # "did sharing happen at all" guard has to be sampled in flight.
     sizes: list[tuple[str, int]] = []
 
-    def recording_execute(spec, cell, *, preprocessing_cache=None):
+    # ``**kwargs`` forwards whatever else the caller threads through (the cell's
+    # pre-resolved tasks, today) so this probe measures the cache and nothing else:
+    # spelling the full signature out here would make an unrelated argument added to
+    # ``_execute_cell`` fail this test as a per-cell TypeError.
+    def recording_execute(spec, cell, *, preprocessing_cache=None, **kwargs):
         name = spec.targets[cell.target_idx].name
         if preprocessing_cache is not None:
             handed.append((name, preprocessing_cache))
-        out = original(spec, cell, preprocessing_cache=preprocessing_cache)
+        out = original(spec, cell, preprocessing_cache=preprocessing_cache, **kwargs)
         if preprocessing_cache is not None:
             sizes.append((name, len(preprocessing_cache)))
         return out

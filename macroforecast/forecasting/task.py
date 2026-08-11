@@ -16,14 +16,21 @@ exactly the kind of divergence a single resolver removes by construction.
 Both identity call sites already passed the overridden target, so there was no cache
 bug to fix -- verified before this change, not assumed.
 
+The runner now accepts the task object itself (`run(..., task=...)` / `tasks=...`), so
+the pipeline resolves a cell ONCE and hands the same object to execution, checkpoint
+identity, result-store identity and the provenance echo. The loose keywords remain the
+public surface and are still accepted alone; supplying both is refused rather than
+silently reconciled (see `runner.run`).
+
 What is NOT unified here: `forecasting/policy_config.py` still re-derives transform,
-horizon and target mode per policy when `forecasting.run()` is entered directly. That
-is the larger half of A2 and needs the runner to accept a task object rather than
-loose keywords.
+horizon and target mode per policy from the resolved keywords. That is a separate step
+-- the runner normalizes a task back into those keywords at its entry, which is what
+makes this refactor behavior-preserving.
 """
 from __future__ import annotations
 
 import dataclasses as _dc
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -111,23 +118,128 @@ def retarget_features(features: Any, target_name: str, *, arm_name: str = "") ->
         ) from exc
 
 
+def resolve_forecast_tasks(
+    spec: Any,
+    arm: Any,
+    target: Any,
+    horizons: Iterable[int],
+) -> tuple[ResolvedForecastTask, ...]:
+    """Resolve one (target, arm) cell's tasks, resolving the design exactly ONCE.
+
+    The policy override and the feature retarget are horizon-INDEPENDENT: they answer
+    "which series, under which policy, from which features", and a horizon-group cell
+    asks that question once and then forecasts several steps ahead. So they are
+    computed once here and only the horizon is stamped per task -- which is what makes
+    "resolve once" a structural property rather than a convention each caller has to
+    remember. Every task shares one ``features`` OBJECT, exactly as the multi-horizon
+    runner already shared one ``features`` argument across its per-horizon calls.
+
+    Every consumer -- execution, result-store identity, checkpoint identity,
+    provenance -- should take its answer from these tasks rather than repeating the
+    resolution.
+
+    Raises :class:`FeatureRetargetError` when the arm's feature spec cannot be aligned
+    to *target*, before any horizon is stamped: a cell that cannot be resolved has no
+    tasks at all, rather than some horizons resolved and some not.
+    """
+    values = tuple(int(horizon) for horizon in horizons)
+    if not values:
+        raise ValueError("a forecast cell must request at least one horizon")
+    resolved_target = effective_target(spec, arm, target)
+    # Retargeting is keyed on the target's NAME, and the policy override replaces only
+    # ``policy``, so ``target`` and ``resolved_target`` always name the same series.
+    features = retarget_features(arm.features, target.name, arm_name=arm.name)
+    return tuple(
+        ResolvedForecastTask(
+            target=resolved_target,
+            horizon=horizon,
+            features=features,
+            arm_name=arm.name,
+            model=arm.model,
+        )
+        for horizon in values
+    )
+
+
 def resolve_forecast_task(
     spec: Any,
     arm: Any,
     target: Any,
     horizon: int,
 ) -> ResolvedForecastTask:
-    """Resolve one cell's task, once.
+    """Resolve one single-horizon cell's task, once.
 
-    Every consumer -- execution, result-store identity, checkpoint identity,
-    provenance -- should call this rather than repeating the policy override and the
-    feature retarget.
+    A thin single-horizon spelling of :func:`resolve_forecast_tasks` -- one code path,
+    so the two cannot drift.
     """
-    resolved_target = effective_target(spec, arm, target)
-    return ResolvedForecastTask(
-        target=resolved_target,
-        horizon=int(horizon),
-        features=retarget_features(arm.features, target.name, arm_name=arm.name),
-        arm_name=arm.name,
-        model=arm.model,
-    )
+    return resolve_forecast_tasks(spec, arm, target, (horizon,))[0]
+
+
+def _same(left: Any, right: Any) -> bool:
+    """Structural equality that never raises on an exotic user object."""
+    if left is right:
+        return True
+    try:
+        return bool(left == right)
+    except Exception:
+        return False
+
+
+# The fields a task sequence describes ONE of: a sequence spanning two of any of them
+# is not a cell, and the horizon-group execution path would quietly forecast the first
+# task's design for all of them. ``horizon`` is deliberately absent -- it is the one
+# dimension a sequence exists to vary.
+#
+# The target is compared through its derived scalars rather than as an OBJECT: two
+# equivalent targets that are not ``==`` (a structural stand-in without dataclass
+# equality) describe the same forecast, and refusing them would reject a correct caller
+# for a reason unrelated to forecasting.
+_SHARED_TASK_FIELDS = (
+    "target_name",
+    "forecast_policy",
+    "target_transform",
+    "arm_name",
+    "model",
+    "features",
+)
+
+
+def validate_task_sequence(
+    tasks: Sequence[ResolvedForecastTask],
+) -> tuple[ResolvedForecastTask, tuple[int, ...]]:
+    """Return ``(shared_task, horizons)`` for a sequence describing one cell.
+
+    Refuses a MIXED sequence -- two targets, arms, models, forecast policies,
+    transforms or feature specs -- because the consumer of a sequence (the grouped
+    multi-horizon runner call) applies one design to every horizon, so a mixed
+    sequence would silently forecast the first task's design under the others' labels.
+
+    Every requested horizon is retained, in the order given: this function must never
+    collapse a horizon group. Positivity and uniqueness are left to the runner's own
+    horizon validation so the task and loose-keyword paths refuse identically.
+    """
+    items = tuple(tasks)
+    if not items:
+        raise ValueError("a forecast task sequence must contain at least one task")
+    shared = items[0]
+    for other in items[1:]:
+        for field_name in _SHARED_TASK_FIELDS:
+            if not _same(getattr(shared, field_name), getattr(other, field_name)):
+                raise ValueError(
+                    "a forecast task sequence must describe ONE cell; got tasks "
+                    f"disagreeing on {field_name!r} "
+                    f"(h{shared.horizon} vs h{other.horizon}). Run one sequence per "
+                    "(target, arm) cell."
+                )
+    return shared, tuple(task.horizon for task in items)
+
+
+__all__ = [
+    "FeatureRetargetError",
+    "ResolvedForecastTask",
+    "effective_target",
+    "resolve_forecast_task",
+    "resolve_forecast_tasks",
+    "retarget_features",
+    "validate_task_sequence",
+]

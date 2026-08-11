@@ -19,10 +19,13 @@ import dataclasses as _dc
 from collections.abc import Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Mapping, NamedTuple
+from typing import TYPE_CHECKING, Any, Mapping, NamedTuple
 
 import numpy as np
 import pandas as pd
+
+if TYPE_CHECKING:  # imported for typing only, matching the function-local runtime import
+    from macroforecast.forecasting.task import ResolvedForecastTask
 
 from macroforecast.pipeline.spec import (
     Arm,
@@ -81,9 +84,35 @@ def _effective_target_for_arm(
     arm: Arm,
     target: ResolvedTarget,
 ) -> ResolvedTarget:
+    """This arm's target after the spec's per-(arm, target) policy override.
+
+    Production reaches the override through ``_cell_tasks`` -- the target it resolves
+    is carried on every task. This thin delegate remains because
+    ``pipeline/rescore.py`` imports it to rebuild one cell's identity from a spec
+    alone, with no execution and therefore no task to share.
+    """
     from macroforecast.forecasting.task import effective_target
 
     return effective_target(spec, arm, target)
+
+
+def _cell_tasks(
+    spec: PipelineSpec,
+    arm: Arm,
+    target: ResolvedTarget,
+    horizons: Sequence[int],
+) -> "tuple[ResolvedForecastTask, ...]":
+    """Resolve one cell's tasks: the single resolution point for the whole pipeline.
+
+    The policy override and the feature retarget happen here, ONCE per cell, and the
+    returned tasks are then handed to ``run()``, to the checkpoint cell manifests, to
+    the result-store identity and to the provenance cell echo. Before this, each of
+    those re-derived the answer for itself and two of the copies disagreed about what a
+    failed retarget means.
+    """
+    from macroforecast.forecasting.task import resolve_forecast_tasks
+
+    return resolve_forecast_tasks(spec, arm, target, horizons)
 
 
 def _arm_tag_columns(arm: Arm) -> dict[str, Any]:
@@ -122,6 +151,7 @@ def _run_one_arm_target(
     preprocessing_cache=None,
     preprocessing_store=None,
     horizons: "Sequence[int] | None" = None,
+    tasks: "Sequence[ResolvedForecastTask] | None" = None,
 ) -> pd.DataFrame:
     """Execute one cell: a single arm applied to a single resolved target.
 
@@ -130,20 +160,30 @@ def _run_one_arm_target(
     ``preprocessing_cache`` across horizons). When ``horizons`` is given, only
     those horizons are computed -- the parallel path passes a single horizon per
     cell so independent processes each execute just their cell.
+
+    ``tasks`` is this cell's already-resolved
+    :class:`~macroforecast.forecasting.task.ResolvedForecastTask` tuple. It is resolved
+    here when the caller did not supply it, and the SAME objects then drive execution,
+    the checkpoint cell manifests and (through them) the result-store digest and the
+    provenance cell echo -- so no consumer re-derives which forecast this is.
     """
     from macroforecast.forecasting import run
 
-    run_horizons = list(spec.horizons if horizons is None else horizons)
-    effective_target = _effective_target_for_arm(spec, arm, target)
-
-    # A multi-target pipeline runs each arm for every target, but an arm's feature
-    # spec carries a single target; align it (and its transform) to this target.
-    # Shared with the cache-identity path (A2), so the two cannot drift: before this
-    # the same retarget was written twice, and the copies disagreed about what a
-    # failure means -- this one raised, result_store swallowed it.
-    from macroforecast.forecasting.task import retarget_features
-
-    features = retarget_features(arm.features, target.name, arm_name=arm.name)
+    run_horizons = [int(value) for value in (spec.horizons if horizons is None else horizons)]
+    if tasks is None:
+        cell_tasks = _cell_tasks(spec, arm, target, run_horizons)
+    else:
+        cell_tasks = tuple(tasks)
+        # The horizons a cell runs now live on the tasks, so a caller passing both must
+        # not be able to disagree with itself: ``run()`` would take the tasks' horizons
+        # and the checkpoint manifests would be written for those, leaving ``horizons``
+        # silently ignored.
+        if [task.horizon for task in cell_tasks] != run_horizons:
+            raise ValueError(
+                f"cell tasks cover horizons {[task.horizon for task in cell_tasks]} but "
+                f"horizons={run_horizons} was requested"
+            )
+    effective_target = cell_tasks[0].target
 
     # One compiled answer for the arm's overrides, shared with the store namespace
     # and the result-store digest so the three cannot disagree about which window
@@ -156,15 +196,14 @@ def _run_one_arm_target(
         window=plan.window,
         preprocessing=plan.preprocess.spec,
         preprocessing_policy=plan.preprocess.policy_input,
-        features=features,
         feature_policy=arm.feature_policy,
         params=arm.params,
         model_selection=arm.model_selection,
         model_selection_metric=arm.model_selection_metric,
-        target=effective_target.name,
-        horizons=run_horizons,
-        forecast_policy=effective_target.policy,
-        target_transform=effective_target.transform,
+        # target / features / horizons / forecast_policy / target_transform all come
+        # from the tasks -- passing them loosely alongside would be the second
+        # resolution this refactor removes.
+        tasks=cell_tasks,
         save_models=spec.save_models,
         model_store=spec.model_store,
         preprocessing_cache=preprocessing_cache,
@@ -176,8 +215,7 @@ def _run_one_arm_target(
         spec,
         arm,
         target,
-        effective_target,
-        horizons=run_horizons,
+        tasks=cell_tasks,
     )
     frame = result.to_frame().copy()
     if "vintage_boundary_audit" in result.metadata:
@@ -201,31 +239,38 @@ def _write_checkpoint_cell_manifests(
     spec: PipelineSpec,
     arm: Arm,
     path_target: ResolvedTarget,
-    effective_target: ResolvedTarget,
     *,
-    horizons: Sequence[int],
+    tasks: "Sequence[ResolvedForecastTask]",
 ) -> None:
+    """Write one manifest per horizon from the cell's already-resolved tasks.
+
+    ``path_target`` is the SPEC's target, which names the checkpoint directory; the
+    effective (policy-overridden) target and the digestible features come from the
+    tasks, so the manifest's digest and echo describe exactly the forecast that ran.
+    """
     if spec.checkpoint_dir is None:
         return
     data_identity = _data_identity(spec.data)
-    for horizon in horizons:
-        manifest_path = _cell_checkpoint_manifest_path(spec, arm, path_target, int(horizon))
+    for task in tasks:
+        horizon = int(task.horizon)
+        manifest_path = _cell_checkpoint_manifest_path(spec, arm, path_target, horizon)
         if manifest_path is None:
             continue
         identity = result_cell_identity(
             spec,
             arm,
-            effective_target,
-            horizon=int(horizon),
+            task.target,
+            horizon=horizon,
             data_identity=data_identity,
+            task=task,
         )
         payload = {
             "schema": "macroforecast_checkpoint_cell_manifest",
             "version": 1,
             "target": path_target.name,
-            "effective_target": effective_target.name,
+            "effective_target": task.target_name,
             "arm": arm.name,
-            "horizon": int(horizon),
+            "horizon": horizon,
             "digest": identity.digest,
             "cell_echo": identity.cell_echo,
             "data_fingerprint": identity.data_fingerprint,
@@ -405,7 +450,11 @@ def _effective_preprocessing_policy(spec: PipelineSpec, arm: Arm):
 
 
 def _execute_cell(
-    spec: PipelineSpec, cell: _Cell, *, preprocessing_cache=None
+    spec: PipelineSpec,
+    cell: _Cell,
+    *,
+    preprocessing_cache=None,
+    tasks: "Sequence[ResolvedForecastTask] | None" = None,
 ) -> pd.DataFrame:
     """Run ONE cell as a single (multi- or single-horizon) ``run()`` call.
 
@@ -425,6 +474,13 @@ def _execute_cell(
     origin_pos)``; two runs sharing one ``preprocessing_cache_dir`` but using
     different scopes (e.g. one ``origin_available``, one ``fit_window``) for the
     same spec would otherwise silently serve one run's fit to the other.
+
+    ``tasks`` is this cell's already-resolved task tuple, as ``_run_cells`` resolved it
+    once for the whole cell (store preflight AND execution) and, on the parallel path,
+    shipped in the worker payload. It is passed straight through: when it is ``None``
+    -- a direct caller with only a spec, or a cell whose feature spec cannot be
+    retargeted -- ``_run_one_arm_target`` resolves it, and an unretargetable cell then
+    raises there, inside the per-cell error handling that turns it into one failed cell.
     """
     arm = spec.arms[cell.arm_idx]
     target = spec.targets[cell.target_idx]
@@ -448,6 +504,7 @@ def _execute_cell(
             preprocessing_cache=preprocessing_cache,
             preprocessing_store=store,
             horizons=list(cell.horizons),
+            tasks=tasks,
         )
 
 
@@ -496,24 +553,35 @@ def _spec_with_worker_data(spec: PipelineSpec, data_token: str) -> PipelineSpec:
 
 
 def _parallel_cell_worker(
-    args: "tuple[PipelineSpec, _Cell, str]",
+    args: "tuple[PipelineSpec, _Cell, str, tuple[ResolvedForecastTask, ...] | None]",
 ) -> "tuple[_Cell, pd.DataFrame | None, str | None]":
     """Module-level worker: execute ONE cell (its single ``run()``) in a subprocess,
     returning any error text.
 
     Worker initialization caps nested BLAS/OpenMP threads and installs the shared
-    data payload once per process. Task payloads carry only a data-less spec plus
-    the cell identity. Returns ``(cell, frame, error)`` where exactly one of
-    ``frame``/``error`` is set, so the parent isolates per-cell failures.
+    data payload once per process. Task payloads carry only a data-less spec, the cell
+    identity and that cell's already-resolved tasks -- the parent resolved them once,
+    for the store preflight and for execution alike, so the worker CONSUMES them rather
+    than resolving the same cell a second time in a second process. They are ordinary
+    frozen dataclasses over spec-owned objects, so anything that makes the spec
+    picklable (checked up front by ``_validate_parallel_picklable``) makes them
+    picklable too.
+
+    ``None`` tasks means the parent could not resolve this cell; execution then re-runs
+    the same resolution here and raises, which the ``except`` below turns into this
+    cell's error -- the per-cell failure semantics an unretargetable cell has always had.
+
+    Returns ``(cell, frame, error)`` where exactly one of ``frame``/``error`` is set, so
+    the parent isolates per-cell failures.
     """
-    spec_without_data, cell, data_token = args
+    spec_without_data, cell, data_token, tasks = args
     try:
         spec = _spec_with_worker_data(spec_without_data, data_token)
         # No in-memory cache across processes (preprocessing_cache=None); each cell
         # recomputes its own preprocessing unless spec.preprocessing_cache_dir is set,
         # in which case _execute_cell builds an on-disk PreprocessorStore the workers
         # share so each per-(spec, target, origin) fit is computed once overall.
-        return cell, _execute_cell(spec, cell, preprocessing_cache=None), None
+        return cell, _execute_cell(spec, cell, preprocessing_cache=None, tasks=tasks), None
     except Exception as exc:
         # Sanctioned broad boundary: per-cell isolation must match the serial
         # path exactly (which also catches Exception) -- a custom model raising
@@ -603,8 +671,14 @@ def _collect_parallel_cells(
     result_identities: "Mapping[_Cell, ResultCellIdentity | None]",
     results: "dict[_Cell, pd.DataFrame]",
     failed: "list[dict[str, Any]]",
+    cell_tasks: "Mapping[_Cell, tuple[ResolvedForecastTask, ...] | None]",
 ) -> str | None:
-    """Collect submitted parallel cells, returning an executor-level error if any."""
+    """Collect submitted parallel cells, returning an executor-level error if any.
+
+    ``cell_tasks`` holds the parent's single resolution per cell; each payload carries
+    its own cell's tasks so the worker executes the very tasks the store preflight
+    digested, instead of resolving the cell again.
+    """
 
     from concurrent.futures import TimeoutError as FutureTimeoutError
     from concurrent.futures import as_completed
@@ -613,7 +687,10 @@ def _collect_parallel_cells(
     future_to_cell: dict[Any, _Cell] = {}
     try:
         for cell in dispatch:
-            future = executor.submit(_parallel_cell_worker, (spec_payload, cell, data_token))
+            future = executor.submit(
+                _parallel_cell_worker,
+                (spec_payload, cell, data_token, cell_tasks.get(cell)),
+            )
             future_to_cell[future] = cell
     except BrokenProcessPool as exc:
         error_text = _parallel_executor_error(exc)
@@ -850,11 +927,50 @@ def _empty_result_store_metadata(spec: PipelineSpec) -> dict[str, Any] | None:
     }
 
 
+def _cell_tasks_or_none(
+    spec: PipelineSpec,
+    cell: _Cell,
+) -> "tuple[ResolvedForecastTask, ...] | None":
+    """This cell's tasks, or ``None`` when the cell cannot be resolved at all.
+
+    THE single resolution point of a run: ``_run_cells`` calls this once per cell and
+    every later consumer -- store preflight, serial execution, the parallel payload --
+    reads the result out of its mapping.
+
+    A cell whose feature spec cannot be retargeted must stay a PER-CELL failure: the
+    store reports it as undigestible (with the retarget message as the reason) and the
+    run then records the cell's error and continues with the rest of the set. Letting
+    the ``FeatureRetargetError`` escape here would abort the whole run, because this
+    resolution happens for every cell up front, outside the per-cell error handling.
+    """
+    from macroforecast.forecasting.task import FeatureRetargetError
+
+    try:
+        return _cell_tasks(
+            spec, spec.arms[cell.arm_idx], spec.targets[cell.target_idx], cell.horizons
+        )
+    except FeatureRetargetError:
+        # Deliberately dropped here, and deliberately NOT cached as a failure: the
+        # store re-runs the same retarget without a task and turns the identical
+        # failure into the undigestible reason, and execution re-runs it once more and
+        # raises inside the per-cell error handling. Both paths need the exception
+        # itself, in their own place, to keep the messages they have always produced.
+        return None
+
+
 def _result_store_identity(
     spec: PipelineSpec,
     cell: _Cell,
     data_identity: Mapping[str, Any],
+    tasks: "Sequence[ResolvedForecastTask] | None" = None,
 ) -> ResultCellIdentity:
+    """This cell's store identity, computed from the cell's already-resolved *tasks*.
+
+    ``tasks`` is what ``_run_cells`` resolved once for this cell. ``None`` covers both
+    "unresolvable cell" and "caller had only a spec": either way the identity falls
+    back to the spec-only derivation inside :func:`result_cell_identity`, which is the
+    behavior this function had before tasks existed and yields the same digest.
+    """
     arm = spec.arms[cell.arm_idx]
     target = spec.targets[cell.target_idx]
     if len(cell.horizons) != 1:
@@ -864,12 +980,14 @@ def _result_store_identity(
             data_fingerprint=data_identity.get("fingerprint"),
             reason="result_store requires one horizon per cell",
         )
+    task = tasks[0] if tasks else None
     return result_cell_identity(
         spec,
         arm,
-        _effective_target_for_arm(spec, arm, target),
+        task.target if task is not None else _effective_target_for_arm(spec, arm, target),
         horizon=int(cell.horizons[0]),
         data_identity=data_identity,
+        task=task,
     )
 
 
@@ -889,11 +1007,12 @@ def _result_store_load(
     store: ResultStore | None,
     data_identity: Mapping[str, Any] | None,
     metadata: dict[str, Any] | None,
+    tasks: "Sequence[ResolvedForecastTask] | None" = None,
 ) -> "tuple[pd.DataFrame | None, ResultCellIdentity | None]":
     if store is None or data_identity is None or metadata is None:
         return None, None
     arm = spec.arms[cell.arm_idx]
-    identity = _result_store_identity(spec, cell, data_identity)
+    identity = _result_store_identity(spec, cell, data_identity, tasks)
     if identity.digest is None:
         metadata["n_undigestible"] += 1
         import warnings as _warnings
@@ -1104,6 +1223,20 @@ def _run_cells(
         result_identities: dict[_Cell, ResultCellIdentity | None] = {}
         failed: list[dict[str, Any]] = []
 
+        # ONE resolution per cell for the whole run. Every consumer below -- the store
+        # preflight's digest, serial execution, and the parallel worker payload --
+        # reads this mapping instead of resolving the cell for itself. Resolving here
+        # rather than lazily is what makes "once" true for BOTH store states: with a
+        # store, preflight and execution used to retarget every successful cell twice
+        # and hand the two consumers two different feature objects; without one, this
+        # is the same single resolution execution always did, merely hoisted.
+        #
+        # ``None`` marks a cell that cannot be resolved; it is not an error here (see
+        # _cell_tasks_or_none) and stays a per-cell failure downstream.
+        cell_tasks: dict[_Cell, tuple[ResolvedForecastTask, ...] | None] = {
+            cell: _cell_tasks_or_none(spec, cell) for cell in cells
+        }
+
         for cell in cells:
             frame, identity = _result_store_load(
                 spec,
@@ -1111,6 +1244,7 @@ def _run_cells(
                 result_store,
                 result_store_data_identity,
                 result_store_metadata,
+                cell_tasks[cell],
             )
             result_identities[cell] = identity
             if frame is not None:
@@ -1153,6 +1287,7 @@ def _run_cells(
                         result_identities,
                         results,
                         failed,
+                        cell_tasks,
                     )
                 finally:
                     _shutdown_parallel_executor(
@@ -1223,7 +1358,12 @@ def _run_cells(
                     cache if (arm.preprocessing is None and arm.window is None) else None
                 )
                 try:
-                    frame = _execute_cell(spec, cell, preprocessing_cache=arm_cache)
+                    frame = _execute_cell(
+                        spec,
+                        cell,
+                        preprocessing_cache=arm_cache,
+                        tasks=cell_tasks[cell],
+                    )
                     _result_store_note_computed(
                         result_store,
                         result_store_metadata,
