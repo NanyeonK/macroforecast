@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import dataclasses as _dc
 import json
 
@@ -832,3 +833,506 @@ def test_result_store_refuses_the_legacy_unavailable_fingerprint_marker(tmp_path
     )
     assert identity.digest is None
     assert "legacy failure" in str(identity.reason)
+
+
+# --------------------------------------------------------------------------- #
+# Callable and generic value identity (F-020 / F-021)
+# --------------------------------------------------------------------------- #
+# A digest is a claim that two runs are the same run. Everything below is a way that
+# claim used to be made on evidence that could not support it: a callable recorded by
+# name (edit the body, keep the name, get the old forecasts), a NumPy array recorded by
+# its TRUNCATED repr, a set recorded in hash-iteration order (so it never matched itself
+# across processes), and anything else at all recorded as ``repr()``.
+#
+# The rule now is: identify it fully, or refuse to identify it. Refusing means
+# ``digest=None`` and a reason naming the field -- the cell is recomputed, which is
+# always safe -- rather than a digest two different configurations could share.
+
+
+def _identity_for(tmp_path, **arm_kw):
+    spec = _spec(tmp_path, arms=[Arm("A", model=_recording_model(), features=_features(), **arm_kw)])
+    return result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+
+
+def _search_identity(tmp_path, **search_kw):
+    return _identity_for(tmp_path, model_selection=mf.model_selection.SearchSpec(**search_kw))
+
+
+def _custom_search_pair():
+    """Two DIFFERENT functions that share one module/qualname."""
+
+    def first(*args, **kwargs):
+        return None
+
+    def second(*args, **kwargs):
+        return None
+
+    second.__name__ = second.__qualname__ = first.__qualname__
+    return first, second
+
+
+def test_a_custom_search_function_without_a_marker_makes_the_cell_uncacheable(tmp_path):
+    """``SearchSpec.to_dict()`` records it by name, which is not an identity.
+
+    The name is right for the public JSON export and wrong for a cache key, so the
+    pipeline reads the dataclass fields instead of that export -- and the ordinary
+    callable rule then applies.
+    """
+    search, _other = _custom_search_pair()
+
+    identity = _search_identity(tmp_path, method="custom", custom_func=search)
+
+    assert identity.digest is None
+    assert "custom_func" in str(identity.reason)
+    assert "__mf_digest__" in str(identity.reason)
+
+
+def test_two_custom_search_functions_sharing_a_qualname_get_different_digests(tmp_path):
+    """The marker is IN the identity, not merely checked for presence."""
+    first, second = _custom_search_pair()
+    first.__mf_digest__ = "search-v1"
+    second.__mf_digest__ = "search-v2"
+
+    one = _search_identity(tmp_path, method="custom", custom_func=first)
+    two = _search_identity(tmp_path, method="custom", custom_func=second)
+
+    assert one.digest is not None
+    assert one.digest != two.digest
+
+    second.__mf_digest__ = "search-v1"
+    same = _search_identity(tmp_path, method="custom", custom_func=second)
+    assert same.digest == one.digest, "same marker and same configuration must be stable"
+
+
+def test_a_callable_nested_in_the_search_configuration_needs_a_marker_too(tmp_path):
+    search, _other = _custom_search_pair()
+    search.__mf_digest__ = "search-v1"
+
+    def scorer(*args, **kwargs):
+        return 0.0
+
+    bare = _search_identity(
+        tmp_path, method="custom", custom_func=search, custom_params={"scorer": scorer}
+    )
+    assert bare.digest is None
+    assert "custom_params.scorer" in str(bare.reason)
+
+    scorer.__mf_digest__ = "scorer-v1"
+    first = _search_identity(
+        tmp_path, method="custom", custom_func=search, custom_params={"scorer": scorer}
+    )
+    scorer.__mf_digest__ = "scorer-v2"
+    second = _search_identity(
+        tmp_path, method="custom", custom_func=search, custom_params={"scorer": scorer}
+    )
+    assert first.digest is not None
+    assert first.digest != second.digest
+
+
+def test_a_callable_in_arm_params_needs_a_marker_and_the_marker_moves_the_digest(tmp_path):
+    def callback(*args, **kwargs):
+        return None
+
+    assert _identity_for(tmp_path, params={"cb": callback}).digest is None
+
+    callback.__mf_digest__ = "cb-v1"
+    first = _identity_for(tmp_path, params={"cb": callback}).digest
+    callback.__mf_digest__ = "cb-v2"
+    second = _identity_for(tmp_path, params={"cb": callback}).digest
+
+    assert first is not None
+    assert first != second
+
+
+def test_two_arrays_with_the_same_truncated_repr_do_not_share_a_digest(tmp_path):
+    """NumPy elides the middle of a large array; the digest must not.
+
+    ``np.arange(2000.0)`` and the same array with one changed element in the elided
+    region print identically, so a repr-based identity served one run's forecasts for
+    the other.
+    """
+    left = np.arange(2000.0)
+    right = left.copy()
+    right[1000] = -12345.0
+    assert repr(left) == repr(right), "the premise: their reprs are identical"
+
+    first = _identity_for(tmp_path, params={"w": left})
+    second = _identity_for(tmp_path, params={"w": right})
+
+    assert first.digest is not None
+    assert first.digest != second.digest
+
+
+def test_array_identity_follows_content_dtype_and_shape(tmp_path):
+    base = np.arange(12.0)
+
+    reference = _identity_for(tmp_path, params={"w": base}).digest
+    assert _identity_for(tmp_path, params={"w": base.copy()}).digest == reference
+    assert _identity_for(tmp_path, params={"w": base.astype(np.float32)}).digest != reference
+    assert _identity_for(tmp_path, params={"w": base.reshape(3, 4)}).digest != reference
+
+
+def test_set_identity_does_not_depend_on_construction_order(tmp_path):
+    """And, by construction, not on the hash seed either.
+
+    The elements are serialized first and then ordered by their canonical JSON text, so
+    the answer cannot depend on the iteration order the interpreter happens to give.
+    """
+    letters = ["alpha", "beta", "gamma", "delta", "epsilon"]
+
+    first = _identity_for(tmp_path, params={"c": set(letters)}).digest
+    second = _identity_for(tmp_path, params={"c": set(reversed(letters))}).digest
+
+    assert first is not None
+    assert first == second
+
+
+def test_the_serializer_keeps_the_container_type_of_a_set(tmp_path):
+    """A set and a frozenset are different objects to whatever consumes them.
+
+    Note this is asserted at the serializer, not through ``Arm.params``: ``spec.py``'s
+    ``_freeze_value`` turns a caller's set into a frozenset before identity ever sees
+    it, so through an arm the downstream type genuinely cannot differ.
+    """
+    from macroforecast.pipeline.result_store import _json_ready
+
+    assert _json_ready({"a", "b"}) != _json_ready(frozenset({"a", "b"}))
+    assert _json_ready({"a", "b"})["__set__"]["type"] == "set"
+    assert _json_ready(frozenset({"a", "b"}))["__set__"]["type"] == "frozenset"
+
+
+def test_bytes_identity_is_deterministic_and_type_aware(tmp_path):
+    plain = _identity_for(tmp_path, params={"b": b"ab"}).digest
+    mutable = _identity_for(tmp_path, params={"b": bytearray(b"ab")}).digest
+    changed = _identity_for(tmp_path, params={"b": b"ac"}).digest
+
+    assert plain is not None
+    assert plain != mutable
+    assert plain != changed
+
+
+def test_two_unsupported_objects_sharing_a_repr_get_no_digest_rather_than_one(tmp_path):
+    """The failure mode a repr fallback produces, stated as a test."""
+
+    class Opaque:
+        def __repr__(self):
+            return "<same repr>"
+
+    first = _identity_for(tmp_path, params={"o": Opaque()})
+    second = _identity_for(tmp_path, params={"o": Opaque()})
+
+    assert first.digest is None and second.digest is None
+    assert "Opaque" in str(first.reason)
+
+
+def test_a_raising_to_dict_makes_the_cell_uncacheable_with_a_path(tmp_path):
+    class Exploding:
+        def to_dict(self):
+            raise RuntimeError("nope")
+
+    identity = _identity_for(tmp_path, params={"e": Exploding()})
+
+    assert identity.digest is None
+    assert "to_dict()" in str(identity.reason)
+    assert "nope" in str(identity.reason)
+
+
+def test_mapping_keys_whose_string_forms_collide_get_no_digest(tmp_path):
+    """Two keys, one written form: the mapping has no unambiguous canonical shape."""
+
+    class Key:
+        def __init__(self, tag):
+            self.tag = tag
+
+        def __str__(self):
+            return "same"
+
+        def __hash__(self):
+            return hash(self.tag)
+
+        def __eq__(self, other):
+            return isinstance(other, Key) and other.tag == self.tag
+
+    identity = _identity_for(tmp_path, params={"m": {Key("a"): 1, Key("b"): 2}})
+
+    assert identity.digest is None
+    assert "same" in str(identity.reason)
+
+
+def test_a_self_referential_container_is_refused_rather_than_recursed(tmp_path):
+    """Reached through the search configuration, which the spec layer does not freeze."""
+    search, _other = _custom_search_pair()
+    search.__mf_digest__ = "search-v1"
+    cyclic: dict = {}
+    cyclic["self"] = cyclic
+
+    identity = _search_identity(
+        tmp_path, method="custom", custom_func=search, custom_params={"c": cyclic}
+    )
+
+    assert identity.digest is None
+    assert "self-referential" in str(identity.reason)
+
+
+def test_a_numpy_scalar_that_is_not_json_ready_is_refused_not_emitted(tmp_path):
+    """``.item()`` on a complex gives a Python complex, which no JSON encoder takes.
+
+    Returning it unchecked put a value into the payload that ``json.dumps`` would then
+    reject, ending the run; it goes back through the rules instead.
+    """
+    assert _identity_for(tmp_path, params={"z": np.complex128(1 + 2j)}).digest is None
+    assert _identity_for(tmp_path, params={"z": np.float64(1.5)}).digest is not None
+
+
+def test_an_unserializable_param_does_not_crash_the_run(tmp_path):
+    """The registry model branch embedded ``ModelSpec.to_dict()`` verbatim.
+
+    Any params value the JSON encoder could not take therefore reached ``json.dumps``
+    inside ``result_cell_identity`` and raised TypeError out of the whole run. Identity
+    may decline to identify a cell; it may not end the run.
+    """
+
+    def callback(*args, **kwargs):
+        return None
+
+    callback.__mf_digest__ = "cb-v1"
+
+    identity = _identity_for(tmp_path, params={"cb": callback})
+    assert identity.digest is not None
+
+    identity = _identity_for(tmp_path, params={"cb": object()})
+    assert identity.digest is None
+
+
+def test_an_ordinary_spec_still_produces_a_digest(tmp_path):
+    """The floor: hardening identity must not make a plain configuration uncacheable."""
+    identity = _identity_for(tmp_path)
+
+    assert identity.digest is not None
+    assert identity.reason is None
+
+
+# --------------------------------------------------------------------------- #
+# Code is identified as code, whatever else it also looks like
+# --------------------------------------------------------------------------- #
+# A callable OBJECT can also expose ``to_dict()`` or be a dataclass. Serializing it
+# through that structure meant it was never asked for ``__mf_digest__`` -- the same
+# bypass F-020 closes for a plain function, wearing a different hat. Structure cannot
+# stand in for a body: two functors can carry identical fields and compute entirely
+# different things.
+
+
+class _CallableWithDict:
+    """Callable whose public export must not stand in for its identity."""
+
+    def __init__(self, marker=None):
+        if marker is not None:
+            self.__mf_digest__ = marker
+
+    def __call__(self, *args, **kwargs):
+        return []
+
+    def to_dict(self):
+        return {"kind": "same-for-every-instance"}
+
+
+@dataclasses.dataclass
+class _CallableDataclass:
+    """Callable that is ALSO a dataclass, the other structural bypass."""
+
+    setting: int = 1
+
+    def __call__(self, *args, **kwargs):
+        return []
+
+
+def test_a_callable_object_cannot_bypass_the_marker_through_to_dict(tmp_path):
+    identity = _identity_for(tmp_path, params={"payload": _CallableWithDict()})
+
+    assert identity.digest is None
+    assert "payload" in str(identity.reason)
+    assert "__mf_digest__" in str(identity.reason)
+
+
+def test_a_callable_dataclass_cannot_bypass_the_marker_through_its_fields(tmp_path):
+    identity = _identity_for(tmp_path, params={"payload": _CallableDataclass()})
+
+    assert identity.digest is None
+    assert "payload" in str(identity.reason)
+
+
+def test_two_instances_of_one_callable_object_agree_and_the_marker_separates_them(tmp_path):
+    """Separate instances, same marker: one cell. Different marker: different cells.
+
+    This is what the address-bearing name fallback used to break -- two instances of one
+    functor produced different names and therefore different digests, so a store could
+    never hit.
+    """
+    first = _identity_for(tmp_path, params={"payload": _CallableWithDict("object-v1")})
+    repeat = _identity_for(tmp_path, params={"payload": _CallableWithDict("object-v1")})
+    second = _identity_for(tmp_path, params={"payload": _CallableWithDict("object-v2")})
+
+    assert first.digest is not None
+    assert repeat.digest == first.digest
+    assert second.digest != first.digest
+
+
+def test_a_callable_objects_recorded_name_does_not_carry_its_address(tmp_path):
+    from macroforecast.pipeline.result_store import _callable_name
+
+    name = _callable_name(_CallableWithDict("object-v1"))
+
+    assert "0x" not in name
+    assert name == _callable_name(_CallableWithDict("object-v2"))
+    assert name.endswith("_CallableWithDict")
+
+
+def test_a_callable_objects_marker_is_recorded_not_merely_checked(tmp_path):
+    identity = _identity_for(tmp_path, params={"payload": _CallableWithDict("object-v1")})
+
+    assert "object-v1" in json.dumps(identity.cell_echo, sort_keys=True)
+
+
+# --------------------------------------------------------------------------- #
+# ...but a ModelSpec is not anonymous code
+# --------------------------------------------------------------------------- #
+# ``ModelSpec`` is callable too, so "callable means marker required" would have made a
+# nested registry model uncacheable -- a regression, since the registry already
+# identifies its fit function by name and the payload already records the backend
+# versions. ``_model_identity`` owns that registry-versus-custom rule; a nested spec
+# asks it rather than getting a second one.
+
+
+def test_a_nested_registry_model_spec_stays_cacheable(tmp_path):
+    identity = _identity_for(tmp_path, params={"base": mf.models.get_model("ridge")})
+
+    assert identity.digest is not None
+
+
+def test_a_nested_custom_model_spec_without_a_marker_is_still_refused(tmp_path):
+    def unmarked_fit(X, y):
+        return _ConstantFit(0.0)
+
+    custom = mf.models.custom_model("nested_custom", unmarked_fit)
+
+    assert _identity_for(tmp_path, params={"base": custom}).digest is None
+
+    marked = mf.models.custom_model("nested_custom", unmarked_fit, mf_digest="nested-v1")
+    assert _identity_for(tmp_path, params={"base": marked}).digest is not None
+
+
+# --------------------------------------------------------------------------- #
+# Only what can be identified completely is identified
+# --------------------------------------------------------------------------- #
+# Two more ways a digest was minted on evidence that could not support it. Both are the
+# same mistake as the repr fallback: accepting a partial view of a value and treating it
+# as the whole thing.
+
+
+def test_a_masked_array_does_not_share_a_digest_with_a_differently_masked_one(tmp_path):
+    """The mask decides which elements exist, and the data buffer cannot see it.
+
+    ``isinstance(value, np.ndarray)`` accepted subclasses and hashed only the base
+    array's dtype, shape and bytes, so these two -- which behave differently everywhere
+    -- were one cell.
+    """
+    first = np.ma.array([1.0, 2.0], mask=[False, True])
+    second = np.ma.array([1.0, 2.0], mask=[True, False])
+
+    left = _identity_for(tmp_path, params={"payload": first})
+    right = _identity_for(tmp_path, params={"payload": second})
+
+    assert left.digest is None or right.digest is None or left.digest != right.digest
+
+
+def test_an_ndarray_subclass_is_refused_by_name(tmp_path):
+    """Refused rather than guessed at: which attributes of an unknown subclass matter
+    is not something this module can know."""
+    identity = _identity_for(tmp_path, params={"payload": np.ma.array([1.0], mask=[True])})
+
+    assert identity.digest is None
+    assert "MaskedArray" in str(identity.reason)
+    assert "subclass" in str(identity.reason)
+
+
+def test_a_plain_ndarray_is_still_identified(tmp_path):
+    """The floor for the narrowing above: ordinary arrays keep working."""
+    identity = _identity_for(tmp_path, params={"payload": np.arange(4.0)})
+
+    assert identity.digest is not None
+
+
+def test_a_mapping_with_a_non_string_key_is_refused(tmp_path):
+    """``str(key)`` on an arbitrary object is a repr carrying its address.
+
+    That is the one fallback F-021 exists to remove, and it had survived on the key side
+    of a mapping.
+    """
+    identity = _identity_for(tmp_path, params={"payload": {object(): "value"}})
+
+    assert identity.digest is None
+    assert "key" in str(identity.reason)
+    assert "0x" not in str(identity.reason), "the reason must not carry an address either"
+
+
+def test_an_int_keyed_mapping_is_refused_rather_than_coerced(tmp_path):
+    """``1`` and ``"1"`` would otherwise both render as ``"1"``.
+
+    Refusing every non-string key covers that collision by construction, instead of
+    detecting it after the fact.
+    """
+    identity = _identity_for(tmp_path, params={"payload": {1: "integer", "1": "string"}})
+
+    assert identity.digest is None
+    assert "key" in str(identity.reason)
+
+    assert _identity_for(tmp_path, params={"payload": {1: "integer"}}).digest is None
+
+
+def test_a_string_keyed_mapping_is_still_identified(tmp_path):
+    """The floor for the narrowing above: ordinary params keep working."""
+    identity = _identity_for(tmp_path, params={"payload": {"alpha": 1, "beta": [2, 3]}})
+
+    assert identity.digest is not None
+
+
+def test_mapping_key_order_does_not_move_the_digest(tmp_path):
+    first = _identity_for(tmp_path, params={"payload": {"alpha": 1, "beta": 2}})
+    second = _identity_for(tmp_path, params={"payload": {"beta": 2, "alpha": 1}})
+
+    assert first.digest is not None
+    assert first.digest == second.digest
+
+
+def test_a_structured_dtype_holding_objects_is_identified_by_its_elements(tmp_path):
+    """A buffer of pointers says nothing about what they point at.
+
+    ``dtype == object`` is False for a structured dtype that merely CONTAINS an object
+    field, so such an array was byte-hashed -- comparing addresses. These two arrays hold
+    equal elements in separately allocated lists; they are one configuration and must be
+    one cell. The dtype string is still carried, so a different structured layout with
+    the same elements remains a different cell.
+    """
+    dtype = [("a", "i4"), ("b", "O")]
+    first = np.array([(1, [1, 2])], dtype=dtype)
+    second = np.array([(1, [1, 2])], dtype=dtype)
+    assert not (first.dtype == object), "the trap: a structured dtype is not == object"
+    assert first.dtype.hasobject, "...but it still stores a pointer"
+
+    left = _identity_for(tmp_path, params={"payload": first})
+    right = _identity_for(tmp_path, params={"payload": second})
+
+    assert left.digest is not None
+    assert left.digest == right.digest
+
+    changed = _identity_for(tmp_path, params={"payload": np.array([(1, [1, 3])], dtype=dtype)})
+    assert changed.digest != left.digest
+
+    relabelled = np.array([(1, [1, 2])], dtype=[("a", "i4"), ("c", "O")])
+    assert _identity_for(tmp_path, params={"payload": relabelled}).digest != left.digest
