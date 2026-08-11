@@ -93,6 +93,29 @@ a backstop and not a licence. The rejection above is the contract.
 `strict=False` still relaxes what it always relaxed: unparseable dates and non-numeric
 strings that a permissive load may coerce. It does not widen the value domain.
 
+## Date column inference
+
+With no `date=` argument and no `DatetimeIndex`, `as_panel` takes the first column as
+the dates. It does that only when the column is date-like. A numeric first column —
+including numbers written as strings — is refused in both strict modes, because
+parsing it would place the rows nanoseconds after the Unix epoch and consume an
+ordinary predictor into the index, returning a valid-looking panel built on a
+misreading. Pass a `DatetimeIndex`, or name the column with `date=`; the explicit path
+is the caller's authority and is unchanged.
+
+## Overall frequency describes the output panel
+
+`metadata['frequency']` is the frequency of the panel a consumer receives, so
+`set_frequencies` derives it from the output column map: the single output frequency
+when the columns agree, `mixed` when they do not. Mixed *native* frequencies with a
+homogeneous output map are an ordinary case — a quarterly series aligned to monthly
+output is monthly in the panel — and the overall label is then `monthly`.
+
+An explicit `frequency=` is checked against that derivation rather than substituted for
+it. `None` and `'unknown'` ask for the derived label; anything else, including
+`'mixed'`, must agree with the columns or the call is refused. Without that check the
+overall label and the per-column counts could disagree inside one metadata dict.
+
 ## Reference
 
 - [Data reference page](../../reference/data.md) — full function list and output contracts.
