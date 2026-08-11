@@ -194,7 +194,10 @@ def result_cell_identity(
                 # ``None`` says only "the caller did not choose", and what it means
                 # depends on package config at run time; two runs that resolve to the
                 # same policy are the same fit whichever spelling asked for it.
-                "stage_policies": compile_stage_policies(spec, arm, plan=plan).to_dict(),
+                "stage_policies": _stage_policies_identity(
+                    compile_stage_policies(spec, arm, plan=plan),
+                    path="arm.stage_policies",
+                ),
                 "window": _object_identity(plan.window, path="arm.window"),
             },
             "evaluation_callables": _evaluation_callable_identity(spec),
@@ -588,6 +591,68 @@ def _model_identity(model: Any, *, params: Mapping[str, Any] | None) -> dict[str
         f"model {type(model).__name__} is neither a registry name, a ModelSpec, nor a "
         "callable, so the result store cannot identify it; recomputing instead"
     )
+
+
+def _stage_policies_identity(policies: Any, *, path: str) -> dict[str, Any]:
+    """The three resolved stage policies, identified rather than exported.
+
+    Same three slots and same per-policy shape as
+    :meth:`~macroforecast.pipeline.plan.CompiledStagePolicies.to_dict`, which the runner
+    metadata and the leakage audit publish unchanged -- only the callable entries are
+    replaced, and only here. Every slot is covered even where the current runner wiring
+    cannot produce a custom policy for it, so a future wiring change cannot quietly
+    reintroduce the bypass.
+    """
+    return {
+        slot: (
+            None if policy is None else _stage_policy_identity(policy, path=f"{path}.{slot}")
+        )
+        for slot, policy in (
+            ("preprocessing", policies.preprocessing),
+            ("feature_engineering", policies.feature_engineering),
+            ("model_selection", policies.model_selection),
+        )
+    }
+
+
+def _stage_policy_identity(policy: Any, *, path: str) -> dict[str, Any]:
+    """One resolved ``StagePolicy``, with its callables identified by marker.
+
+    Built from the policy's own ``to_dict()`` so that everything the public export
+    already canonicalises -- the normalized scope and update (including an integer or a
+    ``DateOffset`` cadence), the reference bounds, ``apply_to`` -- keeps the exact
+    representation it had, and an ordinary policy's digest does not move. Two entries are
+    then replaced:
+
+    * ``selector``, which the export renders as a module/qualname string. A name is not
+      an identity: edit the selector's body and the name is unchanged, so a stale cell
+      would be served. It must carry ``__mf_digest__``, and the marker is recorded.
+    * ``metadata``, which the export walks with its own serializer and which renders a
+      callable by name too. It goes through this module's serializer instead, so a
+      callable anywhere inside obeys the same rule.
+
+    A policy with no selector and ordinary metadata therefore serializes byte-identically
+    to its export, which is what keeps existing stores hitting.
+
+    What the export produces is nevertheless run through this module's serializer rather
+    than embedded verbatim: ``to_dict()`` passes a value it does not recognise straight
+    through, and a raw object reaching ``json.dumps`` would end the run instead of making
+    the cell uncacheable. For everything an ordinary policy carries -- strings, integers,
+    ``None``, the ISO-formatted reference bounds, the ``apply_to`` list -- that pass is
+    the identity function, so the representation is unchanged.
+    """
+    exported = dict(_to_dict_or_undigestible(policy, path=path))
+    # Dropped before the pass and rebuilt from the policy itself below: the exported copy
+    # has already flattened any callable inside it to a name.
+    exported.pop("metadata", None)
+    payload = _json_ready(exported, path=path)
+    payload["metadata"] = _json_ready(
+        getattr(policy, "metadata", None), path=f"{path}.metadata"
+    )
+    selector = getattr(policy, "selector", None)
+    if callable(selector):
+        payload["selector"] = _callable_identity(selector, path=f"{path}.selector")
+    return payload
 
 
 def _model_spec_identity(spec: Any) -> Any:

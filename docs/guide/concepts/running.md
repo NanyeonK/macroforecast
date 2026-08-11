@@ -246,8 +246,14 @@ store is intended for a single writer; inspect it with
 `mf.pipeline.purge_result_store(...)`.
 
 That rule covers **every** callable identity reaches, not only the ones named above: a
-`SearchSpec`'s `custom_func`, anything callable inside its `custom_params`, and a
-callable passed through `Arm(params=...)`. A function's name is not its identity — edit
+`SearchSpec`'s `custom_func`, anything callable inside its `custom_params`, a callable
+passed through `Arm(params=...)`, and — because the resolved stage policies are part of
+the digest — a `custom_stage_policy(...)` selector and any callable inside a
+`StagePolicy`'s `metadata`. The selector's marker is what separates two selectors that
+share a module and qualname; without one, the cell is recomputed and the warning names
+the stage, for example
+`arm.stage_policies.feature_engineering.selector`. `StagePolicy.to_dict()` itself is
+unchanged: it stays the readable export and still records a selector by name. A function's name is not its identity — edit
 the body, keep the name, and the old forecasts would otherwise still be served — so the
 marker itself is part of the digest. Two functions sharing a module and qualname with
 different markers are different cells; the same marker with the same configuration is
