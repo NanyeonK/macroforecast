@@ -2131,13 +2131,21 @@ def run_pipeline(spec: PipelineSpec):
     captured error text.
     """
     from macroforecast.pipeline.evaluate import evaluate
+    from macroforecast.pipeline.evaluation_inputs import resolve_evaluation_inputs
     from macroforecast.pipeline.spec import PipelineReport
 
     with _pipeline_seed_context(spec):
         master, failed_cells, empty_cells, result_store_metadata = _run_cells(spec)
         evaluation_error = None
         try:
-            results = evaluate(master, spec)
+            # Named subsample masks are loaded HERE, once, and handed to a
+            # pure-frame evaluator (see pipeline/evaluation_inputs.py). Inside
+            # the same try as evaluate(): a FRED failure is an evaluation
+            # failure, and the master frame still has to survive into a partial
+            # report rather than take hours of POOS compute down with it.
+            results = evaluate(
+                master, spec, inputs=resolve_evaluation_inputs(master, spec)
+            )
         except Exception as exc:
             # Sanctioned broad boundary: whatever the evaluation layer raises, the
             # computed master forecast frame must survive into the partial report

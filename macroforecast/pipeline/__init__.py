@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .interpret import interpret_pipeline
 from .evaluate import apply_combinations, evaluate, evaluate_cross_policy
+from .evaluation_inputs import ResolvedEvaluationInputs, resolve_evaluation_inputs
 from .parallelism import auto_parallelism
 from .rescore import rescore
 from .model_store import purge_model_store
@@ -43,6 +44,8 @@ __all__ = [
     "PipelineReport",
     "evaluate",
     "evaluate_cross_policy",
+    "resolve_evaluation_inputs",
+    "ResolvedEvaluationInputs",
     "apply_combinations",
     "Arm",
     "CombinationContender",

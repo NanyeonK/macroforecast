@@ -5,12 +5,11 @@ import hashlib
 import json
 import warnings
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 import pandas as pd
 
-from macroforecast.data import load_fred_series
 from macroforecast.pipeline.spec import (
     CALIBRATION_EVAL_TESTS,
     CombinationContender,
@@ -18,6 +17,14 @@ from macroforecast.pipeline.spec import (
     SubsampleWindow,
     contender_names,
 )
+
+if TYPE_CHECKING:
+    # Type-only, and deliberately so: ``evaluation_inputs`` is the module that
+    # loads FRED series, and importing it at runtime would put a data loader back
+    # in this module's import graph -- the exact coupling this file is kept free
+    # of. ``from __future__ import annotations`` makes the annotation a string,
+    # so nothing here needs the module to exist at run time.
+    from macroforecast.pipeline.evaluation_inputs import ResolvedEvaluationInputs
 
 # The (target, horizon) grouping keys every evaluation table requires. When the
 # master forecast frame is EMPTY (zero rows, hence no columns) or otherwise lacks
@@ -116,10 +123,6 @@ _SET_COMPARISON_TESTS = frozenset({"spa", "rc", "stepm"})
 _MULTI_HORIZON_TESTS = frozenset({"uspa", "aspa"})
 _SUBSAMPLE_DATE_COLUMN = "date"
 _SUBSAMPLE_PROVENANCE_ATTR = "macroforecast_subsample_provenance"
-_NAMED_SUBSAMPLE_MASKS = {
-    "nber_recession": {"monthly": "USREC", "quarterly": "USRECQ", "invert": False},
-    "nber_expansion": {"monthly": "USREC", "quarterly": "USRECQ", "invert": True},
-}
 
 
 def _eval_metrics(spec: PipelineSpec) -> tuple[str | Callable[..., float], ...]:
@@ -252,38 +255,23 @@ def _user_mask_series(mask: tuple[tuple[str, bool], ...]) -> pd.Series:
     )
 
 
-def _named_mask_series(mask_name: str, target_dates: pd.DatetimeIndex) -> tuple[pd.Series, dict[str, Any]]:
-    registry = _NAMED_SUBSAMPLE_MASKS[mask_name]
-    frequency = _target_mask_frequency(target_dates)
-    series_id = str(registry[frequency])
-    bundle = load_fred_series(series_id, frequency=frequency)
-    raw = pd.to_numeric(bundle.panel[series_id], errors="coerce")
-    observed = raw.dropna()
-    invalid = observed[~observed.isin([0, 1])]
-    if not invalid.empty:
-        first = pd.Timestamp(invalid.index[0]).strftime("%Y-%m-%d")
-        raise ValueError(
-            f"EvalSpec.subsamples mask {mask_name!r} loaded FRED series "
-            f"{series_id!r} with non-0/1 value at {first}"
-        )
-
-    state = pd.Series(pd.NA, index=raw.index, dtype="boolean")
-    state.loc[raw == 1] = True
-    state.loc[raw == 0] = False
-    if bool(registry["invert"]):
-        state = ~state
-
-    artifact = dict(bundle.metadata.get("artifact", {}) or {})
-    summary = {
-        **_series_summary(state),
-        "series_id": series_id,
-        "frequency": frequency,
-        "source_url": artifact.get("source_url"),
-        "cache_path": artifact.get("local_path"),
-        "raw_sha256": artifact.get("file_sha256"),
-        "cache_hit": artifact.get("cache_hit"),
-    }
-    return state, summary
+def _unresolved_named_mask_error(
+    name: str, mask_name: str, resolved_source: str | None
+) -> ValueError:
+    """The error a named mask gets when its data was not resolved beforehand."""
+    problem = (
+        "no resolved mask was passed for it"
+        if resolved_source is None
+        else f"the resolved mask passed for it is {resolved_source!r}"
+    )
+    return ValueError(
+        f"EvalSpec.subsamples[{name!r}].mask={mask_name!r} names an indicator "
+        f"whose data must be resolved before evaluation, and {problem}. "
+        "evaluate() scores a forecast frame and does not load data: "
+        "run_pipeline() and rescore() resolve named masks for you, and a direct "
+        "evaluate() call needs inputs=resolve_evaluation_inputs(master, spec) "
+        "from macroforecast.pipeline."
+    )
 
 
 def _resolve_subsample_state_mask(
@@ -292,10 +280,22 @@ def _resolve_subsample_state_mask(
     mask_spec: Any,
     target_dates: pd.DatetimeIndex,
     resolved_masks: dict[str, dict[str, Any]],
+    inputs: ResolvedEvaluationInputs | None,
 ) -> pd.Series:
     if isinstance(mask_spec, str):
-        state, summary = _named_mask_series(mask_spec, target_dates)
-        resolved_masks[name] = {"mask_source": mask_spec, "mask_summary": summary}
+        resolved = None if inputs is None else inputs.subsample_masks.get(name)
+        # Checking the source, not just presence: inputs resolved for a
+        # different spec would otherwise apply one indicator's dates while the
+        # report published the other one's name.
+        if resolved is None or resolved.mask_source != mask_spec:
+            raise _unresolved_named_mask_error(
+                name, mask_spec, None if resolved is None else resolved.mask_source
+            )
+        state = resolved.state
+        resolved_masks[name] = {
+            "mask_source": resolved.mask_source,
+            "mask_summary": dict(resolved.mask_summary),
+        }
     else:
         user_mask = cast("tuple[tuple[str, bool], ...]", mask_spec)
         state = _user_mask_series(user_mask)
@@ -390,6 +390,7 @@ def _subsample_mask(
     name: str,
     window: SubsampleWindow,
     resolved_masks: dict[str, dict[str, Any]],
+    inputs: ResolvedEvaluationInputs | None,
 ) -> pd.Series:
     if _SUBSAMPLE_DATE_COLUMN not in master.columns:
         raise ValueError(
@@ -416,6 +417,7 @@ def _subsample_mask(
             mask_spec=window.mask,
             target_dates=target_dates,
             resolved_masks=resolved_masks,
+            inputs=inputs,
         )
         row_state = dates.map(state)
         if row_state.isna().any():
@@ -428,13 +430,17 @@ def _subsample_mask(
     return mask
 
 
-def _subsample_frames(master: pd.DataFrame, spec: PipelineSpec) -> list[tuple[str, pd.DataFrame]] | None:
+def _subsample_frames(
+    master: pd.DataFrame,
+    spec: PipelineSpec,
+    inputs: ResolvedEvaluationInputs | None,
+) -> list[tuple[str, pd.DataFrame]] | None:
     subsamples = _eval_subsamples(spec)
     if subsamples is None:
         return None
     resolved_masks: dict[str, dict[str, Any]] = {}
     frames = [
-        (name, master.loc[_subsample_mask(master, name, window, resolved_masks)].copy())
+        (name, master.loc[_subsample_mask(master, name, window, resolved_masks, inputs)].copy())
         for name, window in subsamples.items()
     ]
     master.attrs[_SUBSAMPLE_PROVENANCE_ATTR] = subsample_provenance(spec, resolved_masks)
@@ -1759,7 +1765,12 @@ def evaluate_cross_policy(
     return acc[ordered]
 
 
-def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame]:
+def evaluate(
+    master: pd.DataFrame,
+    spec: PipelineSpec,
+    *,
+    inputs: ResolvedEvaluationInputs | None = None,
+) -> dict[str, pd.DataFrame]:
     """Run the full evaluation: combinations -> accuracy + significance + MCS
     + density + calibration.
 
@@ -1767,10 +1778,20 @@ def evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame
     (see ``density_table``/``calibration_table``); a default ``EvalSpec`` never
     computes them (empty frames), so ``forecasts``/``accuracy``/``significance``/
     ``mcs`` stay byte-identical to before these two keys existed.
+
+    ``inputs`` carries the evaluation inputs that have to be *loaded* rather than
+    computed -- today, the state series behind a named subsample mask such as
+    ``"nber_recession"``. This function never loads them itself, so scoring one
+    fixed frame is deterministic and works offline: ``run_pipeline`` and
+    ``rescore`` call
+    :func:`~macroforecast.pipeline.resolve_evaluation_inputs` and pass the result
+    here, and a direct call whose ``EvalSpec.subsamples`` names an indicator must
+    do the same or it raises. Everything else -- user-supplied masks, plain date
+    windows, no subsamples at all -- needs no ``inputs`` and is unaffected.
     """
     _warn_failed_cells(master)
     full = apply_combinations(master, spec)
-    subsample_frames = _subsample_frames(full, spec)
+    subsample_frames = _subsample_frames(full, spec, inputs)
     if subsample_frames is not None:
         accuracy_parts: list[pd.DataFrame] = []
         significance_parts: list[pd.DataFrame] = []

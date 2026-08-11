@@ -24,6 +24,8 @@ Guide context: [../guide/index.md](../guide/index.md).
 | `PipelineReport` | class | Standard pipeline output (mutable: interpretation is filled in later). |
 | `evaluate` | function | Run the full evaluation: combinations -> accuracy + significance + MCS |
 | `evaluate_cross_policy` | function | Score every ``(arm, forecast_policy)`` contender against ONE benchmark fixed |
+| `resolve_evaluation_inputs` | function | Load the named subsample masks *spec* asks for, against *master*'s target dates. |
+| `ResolvedEvaluationInputs` | class | Every input one ``evaluate()`` call needs that it cannot compute itself. |
 | `apply_combinations` | function | Append cross-arm combination contenders to the master forecast frame. |
 | `Arm` | class | A target-agnostic configuration: preprocessing + features + a single model. |
 | `CombinationContender` | class | A forecast combination that becomes an additional contender. |
@@ -570,7 +572,7 @@ Qualified name: `macroforecast.pipeline.evaluate.evaluate`
 #### Signature
 
 ```python
-macroforecast.pipeline.evaluate(master: pd.DataFrame, spec: PipelineSpec) -> dict[str, pd.DataFrame]
+macroforecast.pipeline.evaluate(master: pd.DataFrame, spec: PipelineSpec, *, inputs: ResolvedEvaluationInputs | None = None) -> dict[str, pd.DataFrame]
 ```
 
 #### Description
@@ -583,12 +585,23 @@ Run the full evaluation: combinations -> accuracy + significance + MCS
 computes them (empty frames), so ``forecasts``/``accuracy``/``significance``/
 ``mcs`` stay byte-identical to before these two keys existed.
 
+``inputs`` carries the evaluation inputs that have to be *loaded* rather than
+computed -- today, the state series behind a named subsample mask such as
+``"nber_recession"``. This function never loads them itself, so scoring one
+fixed frame is deterministic and works offline: ``run_pipeline`` and
+``rescore`` call
+:func:`~macroforecast.pipeline.resolve_evaluation_inputs` and pass the result
+here, and a direct call whose ``EvalSpec.subsamples`` names an indicator must
+do the same or it raises. Everything else -- user-supplied masks, plain date
+windows, no subsamples at all -- needs no ``inputs`` and is unaffected.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
 | --- | --- | --- | --- |
 | `master` | positional or keyword | `pd.DataFrame` | `required` |
 | `spec` | positional or keyword | `PipelineSpec` | `required` |
+| `inputs` | keyword only | `ResolvedEvaluationInputs \| None` | `None` |
 
 #### Returns
 
@@ -671,6 +684,88 @@ import macroforecast as mf
 # Call with the signature above:
 # mf.pipeline.evaluate_cross_policy(...)
 ```
+### resolve_evaluation_inputs
+
+Qualified name: `macroforecast.pipeline.evaluation_inputs.resolve_evaluation_inputs`
+
+#### Signature
+
+```python
+macroforecast.pipeline.resolve_evaluation_inputs(master: pd.DataFrame, spec: PipelineSpec) -> ResolvedEvaluationInputs
+```
+
+#### Description
+
+Load the named subsample masks *spec* asks for, against *master*'s target dates.
+
+Call this once per evaluation operation and hand the result to
+``evaluate(master, spec, inputs=...)``; ``run_pipeline`` and ``rescore``
+already do. Every distinct FRED series is fetched at most once, so an
+``EvalSpec`` with both ``"nber_recession"`` and ``"nber_expansion"`` costs
+one load rather than two.
+
+Returns an empty :class:`ResolvedEvaluationInputs` when there is nothing to
+load, which is every evaluation that does not name an indicator.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `master` | positional or keyword | `pd.DataFrame` | `required` |
+| `spec` | positional or keyword | `PipelineSpec` | `required` |
+
+#### Returns
+
+`ResolvedEvaluationInputs`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Call with the signature above:
+# mf.pipeline.resolve_evaluation_inputs(...)
+```
+### ResolvedEvaluationInputs
+
+Qualified name: `macroforecast.pipeline.evaluation_inputs.ResolvedEvaluationInputs`
+
+#### Signature
+
+```python
+macroforecast.pipeline.ResolvedEvaluationInputs(subsample_masks: Mapping[str, ResolvedSubsampleMask] = <factory>) -> None
+```
+
+#### Description
+
+Every input one ``evaluate()`` call needs that it cannot compute itself.
+
+Empty -- the default -- is the common case: user-supplied masks, plain date
+windows, and evaluations without subsamples need nothing loaded, and an
+``evaluate()`` call for those is offline with or without this object.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `subsample_masks` | positional or keyword | `Mapping[str, ResolvedSubsampleMask]` | `<factory>` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.pipeline.ResolvedEvaluationInputs(...)
+```
+
+#### Dataclass Fields
+
+| Field | Type | Default |
+| --- | --- | --- |
+| `subsample_masks` | `Mapping[str, ResolvedSubsampleMask]` | `default_factory` |
 ### apply_combinations
 
 Qualified name: `macroforecast.pipeline.evaluate.apply_combinations`

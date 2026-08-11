@@ -8,13 +8,27 @@ import pandas as pd
 import pytest
 
 import macroforecast as mf
-from macroforecast.pipeline import EvalSpec, SubsampleWindow, evaluate
+from macroforecast.pipeline import (
+    EvalSpec,
+    SubsampleWindow,
+    evaluate,
+    resolve_evaluation_inputs,
+)
 
-eval_mod = importlib.import_module("macroforecast.pipeline.evaluate")
+inputs_mod = importlib.import_module("macroforecast.pipeline.evaluation_inputs")
 
 
 def _spec(evaluation: EvalSpec) -> SimpleNamespace:
     return SimpleNamespace(evaluation=evaluation, combinations=(), arms=(), seed=42)
+
+
+def _evaluate(master: pd.DataFrame, spec: SimpleNamespace) -> dict[str, pd.DataFrame]:
+    """The two-step a caller of ``evaluate()`` does: resolve inputs, then score.
+
+    ``evaluate()`` loads nothing, so a named mask has to be resolved first; the
+    resolver is a no-op for every other kind of subsample.
+    """
+    return evaluate(master, spec, inputs=resolve_evaluation_inputs(master, spec))
 
 
 def _master(dates: pd.DatetimeIndex) -> pd.DataFrame:
@@ -80,7 +94,7 @@ def test_user_mask_splits_rows_by_intersection_and_reaches_all_eval_tables() -> 
         subsamples={"state": window},
     )
 
-    res = evaluate(_master(dates), _spec(evaluation))
+    res = _evaluate(_master(dates), _spec(evaluation))
 
     expected_dates = [
         date
@@ -131,14 +145,16 @@ def test_subsample_mask_construction_validation(mask, message: str) -> None:
 
 def test_named_nber_masks_fetch_and_expansion_is_complement(monkeypatch) -> None:
     dates = pd.date_range("2020-01-01", periods=72, freq="MS")
+    calls: list[str] = []
 
     def fake_load_fred_series(series_id: str, *, frequency=None, **_kwargs):
+        calls.append(series_id)
         assert series_id == "USREC"
         assert frequency == "monthly"
         values = [1 if idx < 36 else 0 for idx in range(len(dates))]
         return _fake_fred_bundle(series_id, dates, values)
 
-    monkeypatch.setattr(eval_mod, "load_fred_series", fake_load_fred_series)
+    monkeypatch.setattr(inputs_mod, "load_fred_series", fake_load_fred_series)
     evaluation = EvalSpec(
         benchmark="AR",
         metrics=("rmse",),
@@ -149,7 +165,7 @@ def test_named_nber_masks_fetch_and_expansion_is_complement(monkeypatch) -> None
         },
     )
 
-    res = evaluate(_master(dates), _spec(evaluation))
+    res = _evaluate(_master(dates), _spec(evaluation))
 
     counts = {
         name: int(
@@ -164,6 +180,8 @@ def test_named_nber_masks_fetch_and_expansion_is_complement(monkeypatch) -> None
         for name in ("recession", "expansion")
     }
     assert counts == {"recession": 36, "expansion": 36}
+    # Recession and expansion are one series read two ways, so they cost one load.
+    assert calls == ["USREC"]
     provenance = res["forecasts"].attrs["macroforecast_subsample_provenance"]
     assert provenance["recession"]["mask_source"] == "nber_recession"
     assert provenance["recession"]["mask_summary"]["series_id"] == "USREC"
@@ -177,7 +195,7 @@ def test_mask_anchor_mismatch_and_partial_coverage_are_strict() -> None:
         index=pd.date_range("2020-01-31", periods=12, freq="ME"),
     )
     with pytest.raises(ValueError, match="month-end.*month-start.*Reindex"):
-        evaluate(
+        _evaluate(
             _master(target_dates),
             _spec(
                 EvalSpec(
@@ -191,7 +209,7 @@ def test_mask_anchor_mismatch_and_partial_coverage_are_strict() -> None:
 
     partial = pd.Series([True] * 11, index=target_dates[:11])
     with pytest.raises(ValueError, match="missing 1 forecast target date"):
-        evaluate(
+        _evaluate(
             _master(target_dates),
             _spec(
                 EvalSpec(
@@ -213,7 +231,7 @@ def test_quarter_start_targets_select_usrecq(monkeypatch) -> None:
         assert frequency == "quarterly"
         return _fake_fred_bundle(series_id, dates, [1] * len(dates))
 
-    monkeypatch.setattr(eval_mod, "load_fred_series", fake_load_fred_series)
+    monkeypatch.setattr(inputs_mod, "load_fred_series", fake_load_fred_series)
     evaluation = EvalSpec(
         benchmark="AR",
         metrics=("rmse",),
@@ -221,7 +239,7 @@ def test_quarter_start_targets_select_usrecq(monkeypatch) -> None:
         subsamples={"recession": SubsampleWindow(mask="nber_recession")},
     )
 
-    res = evaluate(_master(dates), _spec(evaluation))
+    res = _evaluate(_master(dates), _spec(evaluation))
 
     assert calls == ["USRECQ"]
     row = res["accuracy"].loc[
