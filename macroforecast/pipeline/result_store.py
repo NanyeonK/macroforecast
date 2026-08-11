@@ -10,6 +10,7 @@ from macroforecast.pipeline.plan import compile_arm_plan, compile_stage_policies
 
 import dataclasses as _dc
 import base64
+import datetime as _dt
 import hashlib
 import importlib.metadata as _metadata
 import json
@@ -24,6 +25,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
+from pandas.tseries.offsets import DateOffset
 
 from macroforecast.pipeline.spec import Arm, PipelineSpec, ResolvedTarget, is_vintage_aware
 
@@ -649,6 +651,12 @@ def _stage_policy_identity(policy: Any, *, path: str) -> dict[str, Any]:
     payload["metadata"] = _json_ready(
         getattr(policy, "metadata", None), path=f"{path}.metadata"
     )
+    update = getattr(policy, "update", None)
+    if isinstance(update, DateOffset):
+        # The export renders this as ``freqstr``, which does not identify it -- see
+        # ``_dateoffset_identity``. A string or integer cadence is left exactly as the
+        # export wrote it, so only DateOffset-backed policies change.
+        payload["update"] = _json_ready(update, path=f"{path}.update")
     selector = getattr(policy, "selector", None)
     if callable(selector):
         payload["selector"] = _callable_identity(selector, path=f"{path}.selector")
@@ -965,6 +973,17 @@ def _callable_identity(value: Any, *, path: str) -> dict[str, Any]:
     return {"callable": _callable_name(value), "mf_digest": _callable_digest(value, path=path)}
 
 
+def _type_name(value: Any) -> str:
+    """A value's concrete type, module-qualified.
+
+    Two values can agree on every field this module records and still be different
+    things -- a ``datetime.timedelta`` and a ``pandas.Timedelta`` of one second, say --
+    so where the fields alone do not separate them, the type does.
+    """
+    cls = type(value)
+    return f"{cls.__module__}.{cls.__qualname__}"
+
+
 def _callable_name(func: Any) -> str:
     """A textual name for a callable that is the same in every process.
 
@@ -1023,6 +1042,61 @@ def _ndarray_identity(value: "np.ndarray", *, path: str, seen: frozenset[int]) -
     }
 
 
+def _busdaycalendar_identity(value: "np.busdaycalendar") -> dict[str, Any]:
+    """A business-day calendar by what it MEANS: its week mask and its holidays.
+
+    ``numpy.busdaycalendar`` has no readable form of its own -- its repr is an address --
+    and it is the only place a custom business offset's real calendar lives. It is not
+    redundant with the offset's ``kwds``: constructing ``CustomBusinessDay(calendar=...)``
+    leaves ``kwds["weekmask"]`` reporting the DEFAULT ``'Mon Tue Wed Thu Fri'`` while the
+    calendar holds the mask that actually applies, so identifying the offset by kwds alone
+    would make two different calendars look alike.
+
+    Holidays are rendered as ISO day strings rather than hashed, because they are few,
+    they are the readable part of what makes two calendars differ, and a hash would hide
+    them from the provenance echo.
+    """
+    return {
+        "__busdaycalendar__": {
+            "weekmask": [bool(flag) for flag in value.weekmask],
+            "holidays": [str(day) for day in value.holidays],
+        }
+    }
+
+
+def _dateoffset_identity(value: "DateOffset", *, path: str, seen: frozenset[int]) -> dict[str, Any]:
+    """A pandas offset by its semantics, not by the label it prints.
+
+    ``freqstr`` is what the public export records and it is not an identity: every
+    ``CustomBusinessDay`` reports ``"C"`` whatever holidays or week mask it carries, so
+    two policies whose refit cadence genuinely differs shared one cell digest. The
+    concrete type, the multiplier, ``normalize`` and the full constructor state
+    (``kwds``) are what actually decide when the offset lands.
+
+    ``kwds`` goes through the ordinary rules, so a calendar inside it is serialized
+    semantically and anything this module cannot identify -- a nested value of an unknown
+    type -- makes the cell uncacheable with its field path rather than being guessed at.
+    """
+    try:
+        multiplier = int(value.n)
+        normalize = bool(value.normalize)
+        keywords = dict(value.kwds)
+    except Exception as exc:
+        raise _UndigestibleCell(
+            f"{path}: {type(value).__name__} did not expose its offset state "
+            f"({type(exc).__name__}: {exc}), so its cadence cannot be identified; "
+            "recomputing instead"
+        ) from exc
+    return {
+        "__dateoffset__": {
+            "type": f"{type(value).__module__}.{type(value).__qualname__}",
+            "n": multiplier,
+            "normalize": normalize,
+            "kwds": _json_ready(keywords, path=f"{path}.kwds", seen=seen),
+        }
+    }
+
+
 def _set_identity(value: "set[Any] | frozenset[Any]", *, path: str, seen: frozenset[int]) -> dict[str, Any]:
     """Canonical order, and the container type kept.
 
@@ -1076,6 +1150,35 @@ def _json_ready(value: Any, *, path: str = "value", seen: frozenset[int] = froze
         return _json_ready(value.item(), path=path, seen=seen)
     if isinstance(value, pd.Timestamp):
         return value.isoformat()
+    if isinstance(value, _dt.timedelta):
+        # Nanoseconds, exactly: ``pd.Timedelta`` carries them and subclasses
+        # ``timedelta``, whose own fields stop at microseconds, so reading days/seconds/
+        # microseconds off it would silently drop the finest resolution it can express.
+        # The concrete type is recorded alongside, because a duration of one second is
+        # not the same VALUE as a pandas duration of one second -- they differ in what
+        # they do downstream, and the count alone cannot tell them apart.
+        nanoseconds = getattr(value, "value", None)
+        if nanoseconds is None:
+            nanoseconds = (
+                (value.days * 86_400 + value.seconds) * 1_000_000_000
+                + value.microseconds * 1_000
+            )
+        return {
+            "__timedelta__": {"type": _type_name(value), "ns": int(nanoseconds)}
+        }
+    if isinstance(value, (_dt.datetime, _dt.date, _dt.time)):
+        # After the Timestamp branch on purpose: a Timestamp IS a datetime, and it keeps
+        # its long-standing bare-ISO rendering so existing digests do not move. These are
+        # tagged because a bare ISO string would be indistinguishable from a str that
+        # happens to spell a date.
+        moment: dict[str, Any] = {"type": _type_name(value), "iso": value.isoformat()}
+        fold = getattr(value, "fold", None)
+        if fold is not None:
+            # ``isoformat`` does not carry fold, so the two sides of a repeated
+            # wall-clock hour would otherwise be one value. ``date`` has no fold, which
+            # is why this is conditional rather than assumed.
+            moment["fold"] = int(fold)
+        return {"__datetime__": moment}
 
     marker = id(value)
     if marker in seen:
@@ -1101,6 +1204,10 @@ def _json_ready(value: Any, *, path: str = "value", seen: frozenset[int] = froze
         )
     if isinstance(value, (set, frozenset)):
         return _set_identity(value, path=path, seen=descended)
+    if isinstance(value, np.busdaycalendar):
+        return _busdaycalendar_identity(value)
+    if isinstance(value, DateOffset):
+        return _dateoffset_identity(value, path=path, seen=descended)
 
     # A ModelSpec is callable, but it is not an anonymous piece of code: the registry
     # already identifies its fit function by name plus the backend versions recorded
@@ -1163,8 +1270,9 @@ def _json_ready(value: Any, *, path: str = "value", seen: frozenset[int] = froze
     raise _UndigestibleCell(
         f"{path} is a {type(value).__name__}, which the result store cannot identify "
         "deterministically; recomputing instead. Supported values are JSON scalars, "
-        "paths, timestamps, bytes, NumPy scalars, plain numpy.ndarray (not its "
-        "subclasses), sets, string-keyed mappings, sequences, dataclasses, objects "
+        "paths, timestamps, dates, times, timedeltas, bytes, NumPy scalars, plain "
+        "numpy.ndarray (not its subclasses), pandas date offsets and business-day "
+        "calendars, sets, string-keyed mappings, sequences, dataclasses, objects "
         "exposing to_dict(), and callables carrying __mf_digest__."
     )
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import dataclasses as _dc
+import datetime
 import json
 
 import numpy as np
@@ -1458,10 +1459,19 @@ def test_an_ordinary_policy_serializes_exactly_as_it_exports(tmp_path):
         mf.window.stage_policy(
             "fixed_reference", update=3, reference_start=pd.Timestamp("2000-01-31")
         ),
-        mf.window.stage_policy("fit_window", update=pd.tseries.offsets.MonthEnd(2)),
         mf.window.stage_policy("fit_window", metadata={"pair": (1, 2)}),
     ):
         assert _stage_policy_identity(policy, path="p") == policy.to_dict()
+
+    # A DateOffset cadence is the one entry that deliberately no longer matches the
+    # export: the export records ``freqstr``, which does not identify the offset (see
+    # the DateOffset tests below). Stated here rather than quietly dropped, because this
+    # loop is the floor that keeps ordinary digests from moving.
+    offset_policy = mf.window.stage_policy(
+        "fit_window", update=pd.tseries.offsets.MonthEnd(2)
+    )
+    assert _stage_policy_identity(offset_policy, path="p") != offset_policy.to_dict()
+    assert offset_policy.to_dict()["update"] == "2ME"
 
 
 def test_the_public_stage_policy_export_is_untouched(tmp_path):
@@ -1527,3 +1537,250 @@ def test_an_unsupported_value_in_a_stage_policy_does_not_crash_the_run(tmp_path)
 
     assert identity.digest is None
     assert "reference_start" in str(identity.reason)
+
+
+# --------------------------------------------------------------------------- #
+# A pandas offset is identified by its semantics, not by its label (F-045)
+# --------------------------------------------------------------------------- #
+# ``freqstr`` is what the readable export records, and it is not an identity: EVERY
+# ``CustomBusinessDay`` reports ``"C"`` whatever holidays or week mask it carries. Since
+# the update cadence decides when a stage is refit, two policies that refit on different
+# days shared one cell.
+
+
+def _offset_policy_identity(tmp_path, offset):
+    return _identity_for(
+        tmp_path, feature_policy=mf.window.stage_policy("fit_window", update=offset)
+    )
+
+
+def test_custom_business_days_with_different_holidays_are_different_cells(tmp_path):
+    from pandas.tseries.offsets import CustomBusinessDay
+
+    first = _offset_policy_identity(tmp_path, CustomBusinessDay(holidays=["2020-01-01"]))
+    same = _offset_policy_identity(tmp_path, CustomBusinessDay(holidays=["2020-01-01"]))
+    other = _offset_policy_identity(tmp_path, CustomBusinessDay(holidays=["2020-07-04"]))
+
+    assert first.digest is not None
+    assert same.digest == first.digest, "equal offsets, separately constructed, are one cell"
+    assert other.digest != first.digest
+
+
+def test_the_week_mask_and_multiplier_of_a_business_offset_are_part_of_identity(tmp_path):
+    from pandas.tseries.offsets import CustomBusinessDay
+
+    reference = _offset_policy_identity(tmp_path, CustomBusinessDay(holidays=["2020-01-01"]))
+    weekmask = _offset_policy_identity(
+        tmp_path, CustomBusinessDay(weekmask="Mon Tue Wed Thu", holidays=["2020-01-01"])
+    )
+    multiplier = _offset_policy_identity(
+        tmp_path, CustomBusinessDay(n=2, holidays=["2020-01-01"])
+    )
+
+    assert weekmask.digest not in {None, reference.digest}
+    assert multiplier.digest not in {None, reference.digest}
+
+
+def test_an_explicitly_passed_calendar_is_what_identity_reads(tmp_path):
+    """The reason the calendar object is serialized rather than trusted to ``kwds``.
+
+    Constructing ``CustomBusinessDay(calendar=...)`` leaves ``kwds["weekmask"]``
+    reporting the DEFAULT ``'Mon Tue Wed Thu Fri'`` while the calendar holds the mask that
+    actually applies — so identifying the offset from kwds alone would make two different
+    calendars look alike.
+    """
+    from pandas.tseries.offsets import CustomBusinessDay
+
+    narrow = np.busdaycalendar(weekmask="Mon Tue Wed")
+    wide = np.busdaycalendar(weekmask="Mon Tue Wed Thu")
+    assert CustomBusinessDay(calendar=narrow).kwds["weekmask"] == "Mon Tue Wed Thu Fri"
+
+    first = _offset_policy_identity(tmp_path, CustomBusinessDay(calendar=narrow))
+    second = _offset_policy_identity(tmp_path, CustomBusinessDay(calendar=wide))
+
+    assert first.digest is not None
+    assert first.digest != second.digest
+
+
+def test_standard_offsets_separate_by_class_and_multiplier(tmp_path):
+    from pandas.tseries.offsets import BusinessMonthEnd, MonthEnd
+
+    reference = _offset_policy_identity(tmp_path, MonthEnd(2))
+
+    assert reference.digest is not None
+    assert _offset_policy_identity(tmp_path, MonthEnd(2)).digest == reference.digest
+    assert _offset_policy_identity(tmp_path, MonthEnd(3)).digest != reference.digest
+    assert _offset_policy_identity(tmp_path, BusinessMonthEnd(2)).digest != reference.digest
+
+
+def test_business_hour_windows_separate(tmp_path):
+    from pandas.tseries.offsets import BusinessHour
+
+    first = _offset_policy_identity(tmp_path, BusinessHour(start="09:00", end="17:00"))
+    second = _offset_policy_identity(tmp_path, BusinessHour(start="10:00", end="17:00"))
+
+    assert first.digest is not None
+    assert first.digest != second.digest
+
+
+def test_the_offset_identity_is_readable_and_carries_no_address(tmp_path):
+    """A ``busdaycalendar``'s only self-description is its address, so it gets one."""
+    from pandas.tseries.offsets import CustomBusinessDay
+    from macroforecast.pipeline.result_store import _json_ready
+
+    encoded = json.dumps(
+        _json_ready(CustomBusinessDay(holidays=["2020-01-01"]), path="p"), sort_keys=True
+    )
+
+    assert "0x" not in encoded
+    assert "2020-01-01" in encoded
+    assert "CustomBusinessDay" in encoded
+
+
+def test_unsupported_offset_state_fails_closed_with_a_field_path(tmp_path):
+    from pandas.tseries.offsets import DateOffset
+    from macroforecast.pipeline.result_store import _UndigestibleCell, _json_ready
+
+    class Opaque:
+        pass
+
+    class OpaqueStateOffset(DateOffset):
+        @property
+        def kwds(self):
+            return {"gadget": Opaque()}
+
+    with pytest.raises(_UndigestibleCell, match=r"update\.kwds\.gadget"):
+        _json_ready(OpaqueStateOffset(), path="policy.update")
+
+
+def test_an_offset_that_cannot_report_its_state_fails_closed(tmp_path):
+    """Identity may decline to identify a cell; it may not end the run."""
+    from pandas.tseries.offsets import DateOffset
+    from macroforecast.pipeline.result_store import _UndigestibleCell, _json_ready
+
+    class BrokenOffset(DateOffset):
+        @property
+        def kwds(self):
+            raise RuntimeError("no state here")
+
+    with pytest.raises(_UndigestibleCell, match="did not expose its offset state"):
+        _json_ready(BrokenOffset(), path="policy.update")
+
+
+def test_the_public_export_still_records_the_offset_by_label(tmp_path):
+    """The stricter representation is private; the readable export is untouched."""
+    from pandas.tseries.offsets import CustomBusinessDay
+
+    first = mf.window.stage_policy(
+        "fit_window", update=CustomBusinessDay(holidays=["2020-01-01"])
+    )
+    second = mf.window.stage_policy(
+        "fit_window", update=CustomBusinessDay(holidays=["2020-07-04"])
+    )
+
+    assert first.to_dict()["update"] == "C"
+    assert second.to_dict()["update"] == "C"
+    assert first.to_dict() == second.to_dict(), "the export cannot tell them apart"
+
+
+def test_a_date_offset_in_policy_metadata_is_now_identifiable(tmp_path):
+    """A side effect worth having: the packet-11 metadata gap closes with the same helper.
+
+    A ``DateOffset`` inside ``StagePolicy.metadata`` used to make the cell uncacheable,
+    because the serializer had no branch for it. It now carries full semantics, so such a
+    policy is cacheable and two different cadences are different cells.
+    """
+    from pandas.tseries.offsets import MonthEnd
+
+    first = _identity_for(
+        tmp_path,
+        feature_policy=mf.window.stage_policy(
+            "fit_window", metadata={"cadence": MonthEnd(2)}
+        ),
+    )
+    second = _identity_for(
+        tmp_path,
+        feature_policy=mf.window.stage_policy(
+            "fit_window", metadata={"cadence": MonthEnd(3)}
+        ),
+    )
+
+    assert first.digest is not None
+    assert first.digest != second.digest
+
+
+def test_the_datetime_family_is_identified_exactly(tmp_path):
+    """The leaves offset state is built from, each with its own unambiguous form."""
+    from macroforecast.pipeline.result_store import _json_ready
+
+    assert _json_ready(datetime.time(9, 0)) != _json_ready(datetime.time(10, 0))
+    assert _json_ready(datetime.date(2020, 1, 1)) != _json_ready(
+        datetime.datetime(2020, 1, 1)
+    ), "a date and a midnight datetime are different values"
+    assert _json_ready(datetime.timedelta(seconds=1)) != _json_ready(
+        datetime.timedelta(seconds=2)
+    )
+    assert _json_ready(pd.Timedelta("1ns")) != _json_ready(pd.Timedelta("2ns")), (
+        "nanoseconds survive: timedelta's own fields stop at microseconds"
+    )
+    assert _json_ready(datetime.timedelta(seconds=1)) != _json_ready(
+        pd.Timedelta(seconds=1)
+    ), "same duration, different types: the count alone cannot separate them"
+    assert _json_ready(pd.Timestamp("2020-01-01")) == "2020-01-01T00:00:00", (
+        "Timestamp keeps its long-standing bare-ISO rendering, so digests do not move"
+    )
+
+
+def test_the_two_sides_of_a_repeated_wall_clock_hour_are_different_values(tmp_path):
+    """``fold`` distinguishes them and ``isoformat()`` does not carry it.
+
+    A datetime with ``fold=1`` names the second occurrence of an ambiguous local time --
+    genuinely different state, and identical text. Recording the ISO string alone made
+    them one value.
+    """
+    from macroforecast.pipeline.result_store import _json_ready
+
+    first = datetime.datetime(2020, 11, 1, 1, 30, fold=0)
+    second = datetime.datetime(2020, 11, 1, 1, 30, fold=1)
+    assert first.isoformat() == second.isoformat(), "the premise: the text is identical"
+
+    assert _json_ready(first) != _json_ready(second)
+    assert _json_ready(datetime.time(1, 30, fold=0)) != _json_ready(
+        datetime.time(1, 30, fold=1)
+    )
+
+
+def test_a_date_is_not_given_a_fold_it_does_not_have(tmp_path):
+    """``date`` has no ``fold``, so the field is conditional rather than assumed."""
+    from macroforecast.pipeline.result_store import _json_ready
+
+    assert not hasattr(datetime.date(2020, 1, 1), "fold")
+    assert "fold" not in _json_ready(datetime.date(2020, 1, 1))["__datetime__"]
+    assert "fold" in _json_ready(datetime.datetime(2020, 1, 1))["__datetime__"]
+
+
+def test_the_datetime_leaves_record_their_concrete_type(tmp_path):
+    from macroforecast.pipeline.result_store import _json_ready
+
+    assert (
+        _json_ready(datetime.timedelta(seconds=1))["__timedelta__"]["type"]
+        == "datetime.timedelta"
+    )
+    assert (
+        _json_ready(pd.Timedelta(seconds=1))["__timedelta__"]["type"]
+        == "pandas.Timedelta"
+    )
+    assert (
+        _json_ready(datetime.date(2020, 1, 1))["__datetime__"]["type"] == "datetime.date"
+    )
+
+
+def test_pandas_timestamp_keeps_its_legacy_rendering(tmp_path):
+    """It is a ``datetime``, so it must stay ahead of the tagged branch.
+
+    Its bare ISO string predates this series; tagging it would move every digest that
+    carries a timestamp.
+    """
+    from macroforecast.pipeline.result_store import _json_ready
+
+    assert _json_ready(pd.Timestamp("2020-01-01")) == "2020-01-01T00:00:00"

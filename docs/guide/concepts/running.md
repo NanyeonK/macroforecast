@@ -253,7 +253,22 @@ the digest — a `custom_stage_policy(...)` selector and any callable inside a
 share a module and qualname; without one, the cell is recomputed and the warning names
 the stage, for example
 `arm.stage_policies.feature_engineering.selector`. `StagePolicy.to_dict()` itself is
-unchanged: it stays the readable export and still records a selector by name. A function's name is not its identity — edit
+unchanged: it stays the readable export and still records a selector by name.
+
+A stage policy's `update` cadence is identified the same way — by what it means rather
+than by what it prints. A pandas `DateOffset` exports as its `freqstr`, and that label is
+not an identity: **every** `CustomBusinessDay` prints `"C"` whatever holidays or week mask
+it carries, so two policies that refit on different days used to share a cell. Identity
+records the offset's concrete type, its multiplier, `normalize`, and its full constructor
+state, including any `numpy.busdaycalendar` rendered as its week mask and holiday dates —
+never as the address its repr would print. An offset whose state cannot be read, or which
+holds a value this store cannot identify, makes the cell uncacheable with the field path
+rather than being guessed at.
+
+Two consequences. Cells whose stage policy uses a `DateOffset` cadence **miss once** and
+are recomputed, because preserving their old digest would preserve the collision; every
+other policy keeps its digest. And a `DateOffset` inside a policy's `metadata` is now
+identifiable too, where it previously made the cell uncacheable. A function's name is not its identity — edit
 the body, keep the name, and the old forecasts would otherwise still be served — so the
 marker itself is part of the digest. Two functions sharing a module and qualname with
 different markers are different cells; the same marker with the same configuration is
