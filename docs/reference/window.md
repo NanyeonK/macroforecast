@@ -12,7 +12,7 @@ Guide context: [../guide/concepts/windows.md](../guide/concepts/windows.md).
 | --- | --- | --- |
 | `AlignmentWindow` | class | Feature/target alignment rule before model fitting. |
 | `EstimationWindow` | class | Pre-test estimation-sample rule applied at each test origin. |
-| `Split` | callable | Built-in immutable sequence. |
+| `Split` | type alias | Type alias for `tuple[numpy.ndarray, numpy.ndarray]`. |
 | `StagePolicy` | class | Fit/apply timing rule for one forecasting-run stage. |
 | `TestWindow` | class | Final test-origin and horizon rule. |
 | `ValWindow` | class | Validation rule used for model and hyperparameter selection. |
@@ -52,6 +52,16 @@ Guide context: [../guide/concepts/windows.md](../guide/concepts/windows.md).
 | `val_poos` | function | Validation rule with one-step pseudo-out-of-sample tail splits. |
 | `val_random_kfold` | function | Validation rule with randomly assigned iid-style folds. |
 | `val_rolling_blocks` | function | Validation rule with consecutive validation blocks over the sample tail. |
+
+## Data And Module Values
+
+### `Split`
+
+Kind: `type alias`
+
+```python
+Split = tuple[numpy.ndarray, numpy.ndarray]
+```
 
 ## Callable And Class Reference
 
@@ -161,43 +171,6 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
-### Split
-
-Qualified name: `builtins.tuple`
-
-#### Signature
-
-```python
-macroforecast.window.Split(*args, **kwargs)
-```
-
-#### Description
-
-Built-in immutable sequence.
-
-If no argument is given, the constructor returns an empty tuple.
-If iterable is specified the tuple is initialized from iterable's items.
-
-If the argument is a tuple, the return value is the same object.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.window.Split(...)
-```
 ### StagePolicy
 
 Qualified name: `macroforecast.window.policy.StagePolicy`

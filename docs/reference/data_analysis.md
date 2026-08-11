@@ -8,8 +8,8 @@ One-panel summaries and before/after preprocessing diagnostics.
 
 | Symbol | Kind | Summary |
 | --- | --- | --- |
-| `DEFAULT_DISTRIBUTION_METRICS` | data | Built-in immutable sequence. |
-| `DEFAULT_SUMMARY_METRICS` | data | Built-in immutable sequence. |
+| `DEFAULT_DISTRIBUTION_METRICS` | data | A `tuple` of 6 values of str. |
+| `DEFAULT_SUMMARY_METRICS` | data | A `tuple` of 6 values of str. |
 | `DataAnalysisReport` | class | Container returned by :func:`analyze_data`. |
 | `DataSummaryReport` | class | Container returned by :func:`summarize_data`. |
 | `changed_cell_count` | function | Return the number of changed common-index/common-column cells. |

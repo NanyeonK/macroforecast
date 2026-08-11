@@ -19,8 +19,9 @@ Usage::
     # CI drift gate (non-zero exit if any committed page is stale):
     python tools/gen_model_overview.py --check docs/guide
 
-This is a standalone script (like ``tools/gen_standalone_docs.py``) and does not
-import the ``tools.docgen`` package.
+This is a standalone script -- it does not import the ``tools.docgen`` package and is
+run directly. ``tools.docgen`` owns the generated API reference under
+``docs/reference/``; this generator owns the model overview page under ``docs/guide/``.
 """
 from __future__ import annotations
 

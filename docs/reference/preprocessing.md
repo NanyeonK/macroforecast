@@ -14,7 +14,7 @@ Guide context: [../guide/concepts/preprocessing.md](../guide/concepts/preprocess
 | `plan` | function | Return a dry-run summary of preprocessing choices and metadata provenance. |
 | `report` | function | Return a compact preprocessing report from a processed object. |
 | `PreprocessedData` | class | Cleaned macroforecast panel plus metadata and data-spec choices. |
-| `PreprocessInput` | data | Represent a PEP 604 union type |
+| `PreprocessInput` | type alias | Type alias for `macroforecast.preprocessing.types.PreprocessedData \| macroforecast.data.panel.DataSpec \| macroforecast.data.panel.DataBundle \| tuple[pandas.DataFrame, Mapping[str, typing.Any]] \| pandas.DataFrame`. |
 | `PreprocessSpec` | class | Reusable preprocessing callable for window-local forecasting runners. |
 | `FittedPreprocessor` | class | Preprocessing spec fitted on a training window. |
 | `preprocess_spec` | function | Create a reusable preprocessing specification. |
@@ -27,8 +27,8 @@ Guide context: [../guide/concepts/preprocessing.md](../guide/concepts/preprocess
 | `impute_missing` | function | Fill missing panel values with the selected imputation method. |
 | `standardize_panel` | function | Standardize numeric columns with fitted parameters. |
 | `handle_frame_edges` | function | Handle remaining unbalanced panel edges. |
-| `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | data | dict() -> new empty dictionary |
-| `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | data | dict() -> new empty dictionary |
+| `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES` | data | A `dict` of 13 values of str. |
+| `FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES` | data | A `dict` of 15 values of str. |
 | `iqr_outlier_clean` | function | Flag or replace outliers with a per-column IQR rule. |
 | `zscore_outlier_clean` | function | Flag or replace outliers with a per-column z-score rule. |
 | `winsorize_clean` | function | Clip numeric columns to quantile bounds. |
@@ -54,10 +54,10 @@ Guide context: [../guide/concepts/preprocessing.md](../guide/concepts/preprocess
 
 ### `PreprocessInput`
 
-Kind: `data`
+Kind: `type alias`
 
 ```python
-PreprocessInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, collections.abc.Mapping[str, typing.Any]] | pandas.DataFrame
+PreprocessInput = macroforecast.preprocessing.types.PreprocessedData | macroforecast.data.panel.DataSpec | macroforecast.data.panel.DataBundle | tuple[pandas.DataFrame, Mapping[str, typing.Any]] | pandas.DataFrame
 ```
 ### `FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES`
 

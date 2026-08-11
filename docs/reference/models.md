@@ -13,7 +13,7 @@ Guide context: [../guide/model_overview.md](../guide/model_overview.md).
 | `GARCHEstimator` | class | GARCH/EGARCH wrapper around the optional `arch` package. |
 | `LGBAPlusRegressor` | class | Alternating LGB^A+ estimator. |
 | `LGBPlusRegressor` | class | Competition-based LGB+ estimator. |
-| `MODEL_SPECS` | data | dict() -> new empty dictionary |
+| `MODEL_SPECS` | data | A `dict` of 84 values of str. |
 | `MacroRandomForestRegressor` | class | Adapter for the vendored MacroRandomForest reference implementation. |
 | `MARSRegressor` | class | Package-native multivariate adaptive regression splines estimator. |
 | `ModelFit` | class | Fitted model wrapper returned by macroforecast model callables. |

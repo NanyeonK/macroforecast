@@ -12,8 +12,8 @@ Guide context: [../guide/concepts/data.md](../guide/concepts/data.md).
 | --- | --- | --- |
 | `DataBundle` | class | Canonical data payload: a pandas panel plus explicit metadata. |
 | `DataSpec` | class | Panel plus target, horizon, sample, and predictor choices for a run. |
-| `RegimeDirection` | callable | No public docstring is available. |
-| `SamePeriodPolicy` | callable | No public docstring is available. |
+| `RegimeDirection` | type alias | Type alias for `Literal['above', 'below', 'equal', 'not_equal']`. |
+| `SamePeriodPolicy` | type alias | Type alias for `Literal['allow', 'lag', 'drop', 'forbid']`. |
 | `VintagePanelSpec` | class | Run-level wrapper for a point-in-time vintage source. |
 | `VintageSource` | class | A lazily-resolved source of point-in-time data, one bundle per real-time origin. |
 | `VintageUnavailableError` | class | Raised when no point-in-time vintage is available for an origin. |
@@ -46,6 +46,23 @@ Guide context: [../guide/concepts/data.md](../guide/concepts/data.md).
 | `fred_qd_vintages` | function | Return a FRED-QD point-in-time source resolved by origin date. |
 | `with_static_extras` | function | Join non-revised extra columns observable before each origin. |
 | `same_period_predictors` | function | Apply a same-period predictor policy to a run-level data spec. |
+
+## Data And Module Values
+
+### `RegimeDirection`
+
+Kind: `type alias`
+
+```python
+RegimeDirection = Literal['above', 'below', 'equal', 'not_equal']
+```
+### `SamePeriodPolicy`
+
+Kind: `type alias`
+
+```python
+SamePeriodPolicy = Literal['allow', 'lag', 'drop', 'forbid']
+```
 
 ## Callable And Class Reference
 
@@ -151,70 +168,6 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `attach` | `attach(self, stage: str, values: Mapping[str, Any]) -> DataSpec` | No public docstring is available. |
-### RegimeDirection
-
-Qualified name: `typing.Literal`
-
-#### Signature
-
-```python
-macroforecast.data.RegimeDirection(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.data.RegimeDirection(...)
-```
-### SamePeriodPolicy
-
-Qualified name: `typing.Literal`
-
-#### Signature
-
-```python
-macroforecast.data.SamePeriodPolicy(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.data.SamePeriodPolicy(...)
-```
 ### VintagePanelSpec
 
 Qualified name: `macroforecast.data.vintage.VintagePanelSpec`

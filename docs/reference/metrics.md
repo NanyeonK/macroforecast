@@ -10,8 +10,8 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 
 | Symbol | Kind | Summary |
 | --- | --- | --- |
-| `MetricLike` | data | Represent a PEP 604 union type |
-| `DENSITY_METRIC_NAMES` | data | frozenset() -> empty frozenset object |
+| `MetricLike` | type alias | Type alias for `str \| Callable[..., float]`. |
+| `DENSITY_METRIC_NAMES` | data | A `frozenset` of 9 values of str. |
 | `bias` | function | Mean forecast residual, computed as ``actual - prediction``. |
 | `compute_point_loss` | function | Return observation-level forecast loss where lower is better. |
 | `coverage_rate` | function | Share of observations covered by lower/upper forecasts. |
@@ -55,10 +55,10 @@ Guide context: [../guide/concepts/evaluation.md](../guide/concepts/evaluation.md
 
 ### `MetricLike`
 
-Kind: `data`
+Kind: `type alias`
 
 ```python
-MetricLike = str | collections.abc.Callable[..., float]
+MetricLike = str | Callable[..., float]
 ```
 ### `DENSITY_METRIC_NAMES`
 

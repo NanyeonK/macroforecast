@@ -10,7 +10,9 @@ import inspect
 import re
 import shutil
 import tempfile
-from collections.abc import Callable, Mapping
+import types
+import typing
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -330,12 +332,23 @@ def _module(page: ModulePage) -> ModuleType:
 
 
 def _public_names(module: ModuleType) -> tuple[str, ...]:
-    names = _source_declared_all(module)
-    if names is None:
-        names = getattr(module, "__all__", None)
-    if names is None:
-        names = [name for name in dir(module) if not name.startswith("_")]
-    return tuple(str(name) for name in names)
+    """The module's public names, preferring what the source declares.
+
+    Three sources in order: the ``__all__`` parsed out of the source, the ``__all__``
+    the imported module actually exposes, and finally every non-underscore attribute.
+    Each returns on its own branch rather than reassigning one variable through
+    ``tuple | None`` and then ``list`` -- which was both a type error and the reason the
+    precedence took a second read to follow.
+    """
+    declared = _source_declared_all(module)
+    if declared is not None:
+        return tuple(str(name) for name in declared)
+
+    runtime_all = getattr(module, "__all__", None)
+    if runtime_all is not None:
+        return tuple(str(name) for name in runtime_all)
+
+    return tuple(str(name) for name in dir(module) if not name.startswith("_"))
 
 
 def _source_declared_all(module: ModuleType) -> tuple[str, ...] | None:
@@ -477,7 +490,108 @@ def _qualname(obj: Any) -> str:
     return str(obj)
 
 
+#: Built-in container types whose values carry the type's own docstring. CPython
+#: rewrites that prose between releases -- ``frozenset.__doc__`` went from
+#: "frozenset() -> empty frozenset object" to "Build an immutable unordered collection
+#: of unique elements." in 3.13 -- so inheriting it makes a generated page depend on the
+#: interpreter that rendered it rather than on the value being documented.
+_BUILTIN_VALUE_TYPES: tuple[type, ...] = (set, frozenset, tuple, list, dict, bytes, bytearray)
+
+
+def _is_type_alias(obj: Any) -> bool:
+    """Is ``obj`` a public type alias rather than something to call?
+
+    ``Split = tuple[int, ...]`` is a ``types.GenericAlias``; ``NJobs = int | None`` is a
+    ``types.UnionType``. Neither is a constructor, but the interpreter disagrees with
+    itself about that across versions: ``Split`` answers ``inspect.isclass`` on 3.10,
+    ``callable`` on 3.12, and reports a different ``inspect.signature`` again on 3.14,
+    while ``NJobs`` moves between callable and data. Deciding it here, from the object's
+    structure, stops the classification from being a property of the interpreter.
+
+    Written as a structural test rather than a list of the aliases that happen to drift
+    today, so a new one is covered when it is added.
+    """
+    if isinstance(obj, (types.GenericAlias, types.UnionType)):
+        return True
+    # ``typing.Union[...]``, ``Optional[...]``, ``Literal[...]`` and friends: parameterised
+    # typing constructs expose an origin and are not classes in their own right.
+    if typing.get_origin(obj) is not None and not inspect.isclass(obj):
+        return True
+    return isinstance(obj, typing.TypeVar) or type(obj).__name__ == "NewType"
+
+
+def _alias_text(obj: Any) -> str:
+    """The alias's target, written the same way on every interpreter.
+
+    ``repr`` is not stable enough to use directly: ``typing.Union[int, X]`` prints as
+    ``typing.Union[int, X]`` on 3.12 and as ``int | X`` on 3.14, and a bare
+    ``typing.Union`` origin prints as neither. Rebuilding the text from
+    ``get_origin``/``get_args`` gives one canonical spelling -- unions always in the PEP
+    604 form -- decided here rather than by the running interpreter.
+    """
+    origin = typing.get_origin(obj)
+    args = typing.get_args(obj)
+    if origin is None or not args:
+        # A leaf. A class writes as its qualified name rather than as
+        # ``<class numpy.ndarray>``; ``NoneType`` writes as ``None``, which is how it
+        # is spelled in annotations. Anything else -- a ``Literal`` member, say -- keeps
+        # its repr so ``auto`` does not silently lose its quotes.
+        if obj is type(None):
+            return "None"
+        if obj is Ellipsis:
+            # ``Callable[..., float]`` is how the annotation is written and read; its
+            # runtime object reprs as ``Ellipsis``, which is the object's name rather
+            # than the notation.
+            return "..."
+        if inspect.isclass(obj):
+            module = getattr(obj, "__module__", "")
+            name = _name(obj)
+            qualified = f"{module}.{name}" if module and module != "builtins" else name
+            # Through the same normalisation the annotation renderer already applies:
+            # ``DataFrame.__module__`` is "pandas.core.frame" under pandas 2 and "pandas"
+            # under pandas 3, so a raw ``__module__`` would make the page depend on the
+            # installed dependency version instead of on the source.
+            return _clean_annotation_text(qualified)
+        return _clean_annotation_text(repr(obj))
+    if origin in (typing.Union, types.UnionType):
+        return " | ".join(_alias_text(arg) for arg in args)
+    rendered = ", ".join(_alias_text(arg) for arg in args)
+    return f"{_clean_annotation_text(_name(origin))}[{rendered}]"
+
+
+def _alias_summary(obj: Any) -> str:
+    """A type alias describes itself: say what it aliases.
+
+    Its ``__doc__`` belongs to whatever built-in implements the alias machinery
+    (``"Represent a PEP 604 union type"`` on 3.12, ``"Represent a union type"`` on 3.14),
+    which is prose about the interpreter, not about this package's API.
+    """
+    return f"Type alias for `{_alias_text(obj)}`."
+
+
+def _builtin_value_summary(obj: Any) -> str:
+    """Describe a built-in container VALUE by what it holds.
+
+    Truthful and stable: the count and element types come from the value, and the
+    interpreter's prose for the container type is not consulted at all.
+    """
+    kind = type(obj).__name__
+    try:
+        size = len(obj)
+    except TypeError:  # pragma: no cover - defensive; every type here is sized
+        return f"A `{kind}` value."
+    if size == 0:
+        return f"An empty `{kind}`."
+    element_types = sorted({type(item).__name__ for item in obj})
+    of = " of " + "/".join(element_types) if element_types else ""
+    return f"A `{kind}` of {size} value{'s' if size != 1 else ''}{of}."
+
+
 def _summary(obj: Any) -> str:
+    if _is_type_alias(obj):
+        return _alias_summary(obj)
+    if isinstance(obj, _BUILTIN_VALUE_TYPES):
+        return _builtin_value_summary(obj)
     doc = inspect.getdoc(obj) or ""
     for line in doc.splitlines():
         line = line.strip()
@@ -487,6 +601,12 @@ def _summary(obj: Any) -> str:
 
 
 def _doc_body(obj: Any) -> str:
+    # Same reason as ``_summary``: neither an alias nor a built-in container value has a
+    # docstring of its own to show, only the interpreter's.
+    if _is_type_alias(obj):
+        return _alias_summary(obj)
+    if isinstance(obj, _BUILTIN_VALUE_TYPES):
+        return _builtin_value_summary(obj)
     doc = inspect.getdoc(obj) or ""
     if not doc:
         return "No public docstring is available."
@@ -503,6 +623,10 @@ def _cell(value: Any) -> str:
 
 
 def _object_kind(obj: Any) -> str:
+    # Before ``isclass``/``callable``, because a parameterised alias answers those
+    # differently on different interpreters (D-001).
+    if _is_type_alias(obj):
+        return "type alias"
     if inspect.isclass(obj):
         return "class"
     if inspect.isfunction(obj):
@@ -667,16 +791,28 @@ def _render_reference_verification() -> str:
     symbol_count = 0
     callable_count = 0
     class_count = 0
+    type_alias_count = 0
     data_count = 0
     for page in MODULE_PAGES:
         module = _module(page)
         for name in _public_names(module):
             obj = getattr(module, name)
             symbol_count += 1
-            if inspect.isclass(obj):
+            # Through ``_object_kind``, not a second copy of the same test. The copy was
+            # why this page still drifted after the pages it counts had stopped: on 3.10
+            # ``Split`` counted as a class and on 3.14 ``NJobs`` counted as data, so the
+            # totals moved even though every entry was already rendered identically.
+            #
+            # Aliases get their own bucket rather than the ``else`` branch. Giving them a
+            # correct label on their own page and then counting them as data here would
+            # leave the table saying something the pages contradict.
+            kind = _object_kind(obj)
+            if kind == "class":
                 class_count += 1
-            elif callable(obj):
+            elif kind in ("function", "callable"):
                 callable_count += 1
+            elif kind == "type alias":
+                type_alias_count += 1
             else:
                 data_count += 1
     model_count = len(mf.models.MODEL_SPECS)
@@ -695,6 +831,7 @@ def _render_reference_verification() -> str:
         f"| Public symbols across module pages | {symbol_count} |",
         f"| Callable/function symbols | {callable_count} |",
         f"| Class symbols | {class_count} |",
+        f"| Type alias symbols | {type_alias_count} |",
         f"| Data/module symbols | {data_count} |",
         f"| Registered model specs | {model_count} |",
         "",
@@ -766,12 +903,23 @@ def _render_module_page(page: ModulePage) -> str:
     names = _public_names(module)
     objects = [(name, getattr(module, name)) for name in names]
     model_names = set(mf.models.MODEL_SPECS) if page.name == "models" else set()
+    # A type alias is decided before ``callable``/``isclass`` are consulted, because
+    # those are what disagree between interpreters (D-001). Routing it here also keeps it
+    # out of ``_render_object_entry``, so no signature is taken for it -- and
+    # ``inspect.signature(tuple[int, ...])`` is the other half of the drift:
+    # ``Split(*args, **kwargs)`` on 3.12 against ``Split(iterable=(), /)`` on 3.14.
     callables = [
         (name, obj)
         for name, obj in objects
-        if (callable(obj) or inspect.isclass(obj)) and name not in model_names
+        if not _is_type_alias(obj)
+        and (callable(obj) or inspect.isclass(obj))
+        and name not in model_names
     ]
-    data_items = [(name, obj) for name, obj in objects if not callable(obj) and not inspect.isclass(obj)]
+    data_items = [
+        (name, obj)
+        for name, obj in objects
+        if _is_type_alias(obj) or not (callable(obj) or inspect.isclass(obj))
+    ]
 
     lines = [
         f"# macroforecast.{page.name}",
@@ -892,7 +1040,9 @@ def _extra(value: Any) -> str:
 
 
 def _render_data_entry(name: str, obj: Any) -> str:
-    text = _stable_repr(obj)
+    # Aliases go through the canonical spelling too, or the code block reintroduces the
+    # interpreter's own repr that ``_alias_text`` exists to replace.
+    text = _alias_text(obj) if _is_type_alias(obj) else _stable_repr(obj)
     if len(text) > 240:
         text = text[:237] + "..."
     return "\n".join([

@@ -10,8 +10,8 @@ Artifact manifests, output bundles, provenance collection, and table/record buil
 | --- | --- | --- |
 | `ArtifactManifest` | class | Manifest returned by ``write_artifacts``. |
 | `ArtifactRecord` | class | One written artifact in a manifest. |
-| `ArtifactLayout` | callable | No public docstring is available. |
-| `CompressionFormat` | callable | No public docstring is available. |
+| `ArtifactLayout` | type alias | Type alias for `Literal['flat', 'grouped']`. |
+| `CompressionFormat` | type alias | Type alias for `Literal['none', 'gzip', 'zip']`. |
 | `OutputBundle` | class | Named output objects produced before artifact writing. |
 | `anatomy_tables` | function | Return anatomy sidecar tables for output bundling or artifact writing. |
 | `artifact_index` | function | Return an index table for a manifest, output bundle, or artifact mapping. |
@@ -31,6 +31,23 @@ Artifact manifests, output bundles, provenance collection, and table/record buil
 | `select_outputs` | function | Select named outputs from a bundle or mapping. |
 | `test_table` | function | Return a flat table from one or more forecast test results. |
 | `write_artifacts` | function | Write forecast/package artifacts and a reproducibility manifest. |
+
+## Data And Module Values
+
+### `ArtifactLayout`
+
+Kind: `type alias`
+
+```python
+ArtifactLayout = Literal['flat', 'grouped']
+```
+### `CompressionFormat`
+
+Kind: `type alias`
+
+```python
+CompressionFormat = Literal['none', 'gzip', 'zip']
+```
 
 ## Callable And Class Reference
 
@@ -142,70 +159,6 @@ import macroforecast as mf
 | Method | Signature | Summary |
 | --- | --- | --- |
 | `to_dict` | `to_dict(self) -> dict[str, Any]` | No public docstring is available. |
-### ArtifactLayout
-
-Qualified name: `typing.Literal`
-
-#### Signature
-
-```python
-macroforecast.output.ArtifactLayout(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.output.ArtifactLayout(...)
-```
-### CompressionFormat
-
-Qualified name: `typing.Literal`
-
-#### Signature
-
-```python
-macroforecast.output.CompressionFormat(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.output.CompressionFormat(...)
-```
 ### OutputBundle
 
 Qualified name: `macroforecast.output.core.OutputBundle`

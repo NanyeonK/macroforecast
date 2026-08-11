@@ -14,10 +14,10 @@ Package-wide defaults such as random seed, worker count, metadata level, and con
 | `get_option` | function | Return one setting from the current package-wide execution defaults. |
 | `resolve_n_jobs` | function | Return the configured worker count, resolving ``'auto'`` to the CPU count. |
 | `MetaConfig` | class | dict() -> new empty dictionary |
-| `MetadataLevel` | callable | No public docstring is available. |
-| `NJobs` | callable | No public docstring is available. |
-| `OnError` | callable | No public docstring is available. |
-| `StageDefaultScope` | callable | No public docstring is available. |
+| `MetadataLevel` | type alias | Type alias for `Literal['minimal', 'standard', 'full']`. |
+| `NJobs` | type alias | Type alias for `int \| Literal['auto']`. |
+| `OnError` | type alias | Type alias for `Literal['raise', 'continue']`. |
+| `StageDefaultScope` | type alias | Type alias for `Literal['full_panel', 'origin_available', 'fit_window']`. |
 | `reset_config` | function | Reset package-wide execution defaults to their initial values. |
 | `use_config` | function | Temporarily update package-wide execution defaults inside a context. |
 
@@ -29,6 +29,34 @@ Kind: `data`
 
 ```python
 DEFAULT_RANDOM_SEED = 42
+```
+### `MetadataLevel`
+
+Kind: `type alias`
+
+```python
+MetadataLevel = Literal['minimal', 'standard', 'full']
+```
+### `NJobs`
+
+Kind: `type alias`
+
+```python
+NJobs = int | Literal['auto']
+```
+### `OnError`
+
+Kind: `type alias`
+
+```python
+OnError = Literal['raise', 'continue']
+```
+### `StageDefaultScope`
+
+Kind: `type alias`
+
+```python
+StageDefaultScope = Literal['full_panel', 'origin_available', 'fit_window']
 ```
 
 ## Callable And Class Reference
@@ -187,134 +215,6 @@ See the description and object-specific contract.
 import macroforecast as mf
 # Construct with the signature above:
 # mf.meta.MetaConfig(...)
-```
-### MetadataLevel
-
-Qualified name: `typing.Literal`
-
-#### Signature
-
-```python
-macroforecast.meta.MetadataLevel(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.meta.MetadataLevel(...)
-```
-### NJobs
-
-Qualified name: `typing.Union`
-
-#### Signature
-
-```python
-macroforecast.meta.NJobs(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.meta.NJobs(...)
-```
-### OnError
-
-Qualified name: `typing.Literal`
-
-#### Signature
-
-```python
-macroforecast.meta.OnError(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.meta.OnError(...)
-```
-### StageDefaultScope
-
-Qualified name: `typing.Literal`
-
-#### Signature
-
-```python
-macroforecast.meta.StageDefaultScope(*args, **kwargs)
-```
-
-#### Description
-
-No public docstring is available.
-
-#### Parameters
-
-| Name | Kind | Type | Default |
-| --- | --- | --- | --- |
-| `args` | var positional | `unspecified` | `required` |
-| `kwargs` | var keyword | `unspecified` | `required` |
-
-#### Returns
-
-See the description and object-specific contract.
-
-#### Minimal Use
-
-```python
-import macroforecast as mf
-# Call with the signature above:
-# mf.meta.StageDefaultScope(...)
 ```
 ### reset_config
 
