@@ -35,6 +35,15 @@ has one: `feature_engineering` -> `model_selection` -> `model_ensemble` ->
 defect -- those four are peers by design, and the edge that closes the loop is
 function-local. `docs/architecture.md` records the decision; what keeps it
 harmless is checked here, by importing each of the four on its own.
+
+It also says nothing about a cycle *inside* one package, because every such
+import is same-package rather than same-layer. `forecasting` had one --
+`runner` -> `policies` -> `policies.recursive` -> `runner`, closed by
+`recursive` reaching back for `runner._test_feature_builder` -- which survived
+because the reverse import sat at the bottom of `recursive.py` and so happened
+to find a half-initialised `runner` with that name already bound. That is a
+cycle held open by statement order, and the last section of this file now
+checks the `forecasting` module graph directly so it cannot be reintroduced.
 """
 
 from __future__ import annotations
@@ -42,6 +51,7 @@ from __future__ import annotations
 import ast
 import subprocess
 import sys
+from graphlib import CycleError, TopologicalSorter
 from pathlib import Path
 
 import pytest
@@ -347,4 +357,204 @@ def test_an_upward_relative_import_is_caught_end_to_end():
     assert upper > lower, (
         "the fixture assumes pipeline sits above data; if the layer map changed, "
         "this test needs a different pair rather than deleting"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Module-level cycles inside one package
+# ---------------------------------------------------------------------------
+
+#: Checked at module granularity because it is the package being decomposed:
+#: policy strategies and stage helpers are being lifted out of ``runner.py`` a
+#: piece at a time, and a half-moved piece is exactly what leaves a module
+#: importing the module it was moved out of.
+CYCLE_FREE_PACKAGE = "forecasting"
+
+#: Imported one at a time in a fresh interpreter. These three were the members
+#: of the cycle, so they are the ones whose independence is worth pinning.
+INDEPENDENTLY_IMPORTABLE = (
+    "macroforecast.forecasting.runner",
+    "macroforecast.forecasting.policies",
+    "macroforecast.forecasting.policies.recursive",
+)
+
+
+def _module_name(path: Path) -> str:
+    """``forecasting/policies/recursive.py`` -> its dotted module name."""
+    parts = list(path.relative_to(ROOT).with_suffix("").parts)
+    if parts and parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(["macroforecast", *parts])
+
+
+def _without_type_checking(tree: ast.Module) -> ast.Module:
+    """The same tree with ``if TYPE_CHECKING:`` bodies dropped.
+
+    An annotation-only import does not execute, so it cannot close a cycle at
+    run time. Counting one would make this file report a cycle that does not
+    exist -- and the usual fix for a real cycle is to move an import *into* such
+    a block, which would then look like no fix at all.
+    """
+
+    class _Pruner(ast.NodeTransformer):
+        def visit_If(self, node: ast.If):
+            test = node.test
+            guarded = (isinstance(test, ast.Name) and test.id == "TYPE_CHECKING") or (
+                isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+            )
+            if guarded:
+                # ``else:`` still runs, so it is kept.
+                return [self.visit(stmt) for stmt in node.orelse]
+            return self.generic_visit(node)
+
+    return ast.fix_missing_locations(_Pruner().visit(tree))
+
+
+def _imported_modules(path: Path, known: set[str]) -> set[str]:
+    """Every module in ``known`` that ``path`` imports at run time.
+
+    ``from a.b import c`` is recorded as reaching both ``a.b`` and ``a.b.c``,
+    because the name may be a submodule rather than an attribute and only the
+    filter against ``known`` can tell. Relative imports are resolved against the
+    importing module's own package, so a future ``from . import base`` counts
+    the same as the absolute spelling.
+    """
+    tree = _without_type_checking(ast.parse(path.read_text(encoding="utf-8")))
+    here = _module_name(path)
+    package = here if path.name == "__init__.py" else here.rsplit(".", 1)[0]
+
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                found.add(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                parts = package.split(".")
+                if node.level > 1:
+                    parts = parts[: -(node.level - 1)]
+                prefix = ".".join(parts)
+                module = f"{prefix}.{node.module}" if node.module else prefix
+            elif node.module:
+                module = node.module
+            else:  # pragma: no cover -- ``import`` with no module and no level
+                continue
+            found.add(module)
+            for alias in node.names:
+                found.add(f"{module}.{alias.name}")
+    return {name for name in found if name in known and name != here}
+
+
+def _package_module_graph(package: str) -> dict[str, set[str]]:
+    """module -> the modules it imports, restricted to ``package``."""
+    files = sorted(
+        p
+        for p in (ROOT / package).rglob("*.py")
+        if "__pycache__" not in p.parts and "_vendor" not in p.parts
+    )
+    known = {_module_name(p) for p in files}
+    return {_module_name(p): _imported_modules(p, known) for p in files}
+
+
+def _a_cycle_in(graph: dict[str, set[str]]) -> list[str] | None:
+    """One import cycle's members, or ``None`` if the graph is acyclic."""
+    try:
+        TopologicalSorter(graph).prepare()
+    except CycleError as exc:
+        return list(exc.args[1])
+    return None
+
+
+def test_no_module_level_import_cycle_inside_forecasting() -> None:
+    """A module in a cycle cannot be read, tested or imported by itself.
+
+    ``runner`` -> ``policies`` -> ``policies.recursive`` -> ``runner`` was real
+    until 2026-08-11 and is what this catches. Nothing else in the suite would:
+    the edges are same-package, so ``_violations()`` is silent by design, and
+    the cycle imported fine, because the reverse import was written at the
+    bottom of ``recursive.py`` where the half-built ``runner`` module already
+    had the one name it wanted.
+    """
+    cycle = _a_cycle_in(_package_module_graph(CYCLE_FREE_PACKAGE))
+    assert cycle is None, (
+        f"macroforecast.{CYCLE_FREE_PACKAGE} has a module-level import cycle: "
+        + " -> ".join(cycle or [])
+        + "\nMove the shared code down into the module both sides can import "
+        "(as _test_feature_builder was moved to feature_stage.py) rather than "
+        "importing it back from the module it was moved out of."
+    )
+
+
+def test_the_cycle_check_would_still_see_the_edge_that_was_removed() -> None:
+    """Otherwise the check above could pass by reading nothing at all.
+
+    A cycle test that silently stops finding imports -- a moved package, a
+    spelling it does not resolve -- keeps passing forever and looks like a
+    guarantee. So: the real forward edges must be visible, and putting the one
+    deleted reverse edge back must bring the cycle back.
+    """
+    graph = _package_module_graph(CYCLE_FREE_PACKAGE)
+    runner = "macroforecast.forecasting.runner"
+    policies = "macroforecast.forecasting.policies"
+    recursive = "macroforecast.forecasting.policies.recursive"
+
+    missing = [m for m in (runner, policies, recursive) if m not in graph]
+    assert not missing, f"the graph did not reach these modules at all: {missing}"
+    assert policies in graph[runner], "runner -> policies is no longer seen"
+    assert recursive in graph[policies], "policies -> policies.recursive is no longer seen"
+
+    graph[recursive] = graph[recursive] | {runner}
+    assert _a_cycle_in(graph) is not None, (
+        "restoring policies.recursive -> runner did not produce a cycle, so this "
+        "file is no longer able to detect the one it is here to prevent"
+    )
+
+
+def test_type_checking_only_imports_are_not_counted_as_runtime_edges() -> None:
+    """The documented escape hatch has to actually work.
+
+    A cycle broken by demoting an import to ``TYPE_CHECKING`` must read as
+    broken here, or the fix would fail the test that asked for it.
+    """
+    source = (
+        "from typing import TYPE_CHECKING\n"
+        "if TYPE_CHECKING:\n"
+        "    from macroforecast.forecasting.runner import run\n"
+        "else:\n"
+        "    from macroforecast.forecasting.types import ForecastResult\n"
+    )
+    tree = _without_type_checking(ast.parse(source))
+    reached = {
+        node.module
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.module
+    }
+    assert "macroforecast.forecasting.runner" not in reached, (
+        "an annotation-only import was counted as a runtime edge"
+    )
+    assert "macroforecast.forecasting.types" in reached, (
+        "the else-branch import is real and must still be counted"
+    )
+
+
+@pytest.mark.parametrize("module", INDEPENDENTLY_IMPORTABLE)
+def test_each_cycle_member_imports_on_its_own(module: str) -> None:
+    """A fresh interpreter, each module first rather than reached via another.
+
+    This is the property the cycle put at risk rather than the cycle itself:
+    while it existed these still imported, but only because ``recursive`` asked
+    for the one ``runner`` attribute that was already bound by the time it ran.
+    Any later change to what ``recursive`` needs, or to where in ``runner`` it
+    is defined, turns that into an ImportError -- and the failure would surface
+    in whichever module a reader happened to import first, not at the edit.
+    """
+    result = subprocess.run(
+        [sys.executable, "-c", f"import {module}"],
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, (
+        f"{module} does not import on its own:\n{result.stderr}"
     )

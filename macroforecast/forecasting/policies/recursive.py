@@ -8,6 +8,7 @@ from typing import Any, cast
 import numpy as np
 import pandas as pd
 
+from macroforecast.forecasting.feature_stage import _test_feature_builder
 from macroforecast.forecasting.policies.base import (
     _OriginRunConfig,
     _fit_one_model_at_origin,
@@ -168,14 +169,6 @@ def forecast_recursive_origin(
             }
         )
     return records
-
-
-# Bottom import for the same circularity reason as policies.base:
-# _test_feature_builder is feature-window plumbing shared with the runner
-# orchestration and still lives there.
-from macroforecast.forecasting.runner import (  # noqa: E402
-    _test_feature_builder,
-)
 
 
 # ---------------------------------------------------------------------------

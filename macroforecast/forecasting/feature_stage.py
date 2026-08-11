@@ -49,6 +49,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
+from dataclasses import replace
 from typing import Any
 
 from macroforecast.feature_engineering import FeatureSpec, FittedFeatureBuilder
@@ -247,6 +248,32 @@ def _fitted_feature_builder_for_origin(
     return fitted
 
 
+def _test_feature_builder(builder: Any) -> Any:
+    """The same fitted builder, but never dropping rows when it transforms.
+
+    Every caller uses this to transform at an EXPLICIT ``index=`` -- the fit,
+    selection and test labels the origin asked for, or the single next label of
+    a recursive roll-forward. A builder whose spec has ``drop_missing=True``
+    would silently return fewer rows than requested when a predictor is missing
+    at one of them, and a label dropped there is a forecast that never appears
+    rather than a forecast that is wrong, so the row must survive and be handled
+    downstream (``_slice_feature_set``/``_drop_all_nan_fit_columns``) instead.
+
+    Only the transform is relaxed, never the fit: the builder is already fitted
+    when it gets here, so ``replace`` copies it with a ``drop_missing=False``
+    spec and the fitted state is untouched. It is a no-op -- the same object --
+    when the spec already has ``drop_missing`` disabled.
+
+    Lives here rather than in ``runner`` because it is feature-builder plumbing,
+    and both the runner's own per-origin path and ``policies.recursive``'s
+    roll-forward need it; homing it in this module is what keeps the policy
+    strategies from having to import the runner back.
+    """
+    if not getattr(builder.spec, "drop_missing", True):
+        return builder
+    return replace(builder, spec=replace(builder.spec, drop_missing=False))
+
+
 __all__ = [
     "_feature_cache_key",
     "_feature_store_key",
@@ -254,4 +281,5 @@ __all__ = [
     "_feature_content_digest",
     "_feature_fit_sample_bounds",
     "_fitted_feature_builder_for_origin",
+    "_test_feature_builder",
 ]

@@ -96,6 +96,7 @@ from macroforecast.forecasting.preprocessing_stage import (
 from macroforecast.forecasting.feature_stage import (
     _feature_cache_key,  # noqa: F401  (re-export)
     _fitted_feature_builder_for_origin,
+    _test_feature_builder,
 )
 from macroforecast.forecasting.selection_stage import (
     _SELECTION_DEGRADED_KEY,  # noqa: F401  (re-export)
@@ -2322,12 +2323,6 @@ def _fit_predict_origin(
     return _dispatch_policy(item, cfg)
 
 
-def _test_feature_builder(builder: Any) -> Any:
-    if not getattr(builder.spec, "drop_missing", True):
-        return builder
-    return replace(builder, spec=replace(builder.spec, drop_missing=False))
-
-
 def _combined_feature_labels(*indexes: Iterable[Any]) -> pd.Index:
     labels = pd.Index([])
     for index in indexes:
@@ -2935,11 +2930,18 @@ __all__ = ["run"]
 
 
 # ---------------------------------------------------------------------------
-# Policy strategies (Phase 3 of the runner decomposition). Imported at the
-# BOTTOM of the module on purpose: the policy bodies consume stage helpers
-# still defined above in this module (they move out in Phase 4), so importing
-# the package any earlier would be circular. Private ``_fit_predict_*`` names
-# are re-exported so existing imports and monkeypatch targets keep working.
+# Policy strategies (Phase 3 of the runner decomposition). Private
+# ``_fit_predict_*`` names are re-exported so existing imports and monkeypatch
+# targets keep working.
+#
+# These imports no longer HAVE to be at the bottom: the policy bodies take
+# their stage helpers from the stage modules directly and none of them imports
+# ``runner`` back, so the runner -> policies -> policies.recursive -> runner
+# cycle this placement used to work around is gone (the last edge was
+# ``_test_feature_builder``, now homed in ``feature_stage``). They stay here
+# with the other bottom re-exports because moving a block this size is a
+# separate change; ``tests/architecture/test_import_boundaries.py`` is what
+# keeps the cycle from coming back, not the placement.
 from macroforecast.forecasting.policies import (  # noqa: E402
     POLICY_FORECASTERS,  # noqa: F401  (re-export)
     dispatch as _dispatch_policy,
