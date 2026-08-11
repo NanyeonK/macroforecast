@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from macroforecast.data import DataBundle
+from macroforecast.feature_engineering.shared import TargetTransform
 from macroforecast.model_selection import SearchSpec
 from macroforecast.models import ModelSpec
 from macroforecast.window import StagePolicy
@@ -51,6 +52,7 @@ def forecast_panel_origin(
     save_models: bool,
     model_store: str | Path,
     forecast_policy: ForecastPolicy,
+    target_transform: TargetTransform,
 ) -> list[dict[str, Any]]:
     if fit_panel.empty or test_panel.empty:
         return []
@@ -103,7 +105,16 @@ def forecast_panel_origin(
                 index=test_panel.index,
             )
         else:
-            pred = _prediction_series(fit.predict(test_panel), index=test_panel.index)
+            pred = _prediction_series(
+                fit.predict(
+                    _panel_predict_input(
+                        test_panel,
+                        target=target,
+                        metadata=metadata,
+                    )
+                ),
+                index=test_panel.index,
+            )
         y_test = test_panel[target] if target in test_panel.columns else pd.Series(dtype=float)
         for date, value in pred.items():
             step_horizon = _panel_prediction_horizon(
@@ -131,7 +142,7 @@ def forecast_panel_origin(
                     "origin_pos": row.get("origin_pos"),
                     "horizon": step_horizon,
                     "forecast_policy": forecast_policy,
-                    "target_transform": "level",
+                    "target_transform": target_transform,
                     "target": target,
                     "model": model_run.alias,
                     "model_spec": model_spec.name,
@@ -162,6 +173,22 @@ def forecast_panel_origin(
 # the model spec, the prediction input without the leaking test target, panel
 # selection validation, and the origin-distance horizon label (#423).
 # ---------------------------------------------------------------------------
+
+
+def _panel_predict_input(
+    test_panel: pd.DataFrame,
+    *,
+    target: str,
+    metadata: Mapping[str, Any],
+) -> pd.DataFrame:
+    """Return the generic panel prediction window with its target masked."""
+
+    if target not in test_panel.columns:
+        return test_panel
+    masked = test_panel.copy()
+    masked[target] = np.nan
+    masked.attrs["macroforecast_metadata"] = dict(metadata)
+    return masked
 
 
 def _panel_fit_params(

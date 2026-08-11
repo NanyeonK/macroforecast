@@ -858,6 +858,11 @@ passed. Passing both a task and a DISAGREEING loose keyword is refused rather
 than reconciled: there is no defensible winner, and the caller who passed the
 loser would never find out.
 
+Panel-input models forecast the canonical target in its own units and therefore
+accept only target transforms that normalize to ``"level"`` or ``"value"``.
+Other transforms raise instead of labelling an untransformed panel forecast as
+a change, growth rate, or average.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -941,6 +946,11 @@ The loose keywords remain the public surface and are unchanged when no task is
 passed. Passing both a task and a DISAGREEING loose keyword is refused rather
 than reconciled: there is no defensible winner, and the caller who passed the
 loser would never find out.
+
+Panel-input models forecast the canonical target in its own units and therefore
+accept only target transforms that normalize to ``"level"`` or ``"value"``.
+Other transforms raise instead of labelling an untransformed panel forecast as
+a change, growth rate, or average.
 
 #### Parameters
 
