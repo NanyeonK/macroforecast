@@ -5,7 +5,7 @@
 This page records what the package's layering is *for*, so a change that breaks
 it is a decision rather than an accident. It is enforced by
 `tests/architecture/test_import_boundaries.py`, which reads import statements
-and fails on any new upward one.
+and fails on any upward one.
 
 ## The layers
 
@@ -13,7 +13,7 @@ A lower layer never imports a higher one.
 
 | layer | packages | may import |
 |---|---|---|
-| 0 | `data`, `window`, `metrics`, `filters`, `meta`, `tests` | nothing else in the package |
+| 0 | `data`, `window`, `metrics`, `filters`, `meta`, `tests`, `analysis` | nothing else in the package |
 | 1 | `preprocessing`, `feature_engineering`, `models`, `model_selection`, `model_ensemble`, `data_analysis` | layer 0 |
 | 2 | `forecasting`, `interpretation`, `feature_analysis`, `feature_diagnostic` | layers 0-1 |
 | 3 | `pipeline`, `forecast_analysis`, `forecast_diagnostic` | layers 0-2 |
@@ -42,17 +42,50 @@ A single upward import ends both quietly — the package still imports, the test
 still pass, and the coupling is only discovered when someone tries to use the
 lower layer alone.
 
-## Two known exceptions
+## No known exceptions
 
-Both are function-local, so neither creates an import cycle, and both are listed
-in `KNOWN_EXCEPTIONS` so the ratchet applies to everything else. A test also
-fails if one is *fixed* without being removed from the list, so the list cannot
-drift into fiction.
+`KNOWN_EXCEPTIONS` is empty: no module imports a layer above its own. Two entries
+sat there until 2026-08-09, and both were resolved by moving the function down
+rather than by tolerating the import.
 
-| where | what | status |
-|---|---|---|
-| `data/vintage.py` | imports `pipeline.run._panel_fingerprint` | a layer-0 module reaching into a layer-3 **private** function. The fingerprinting belongs lower; moving it is behaviour-preserving and left for its own change. |
-| `pipeline/run.py` | imports `output.collect_provenance` | genuinely a question of whether `output` sits above `pipeline` or beside it. Recorded so the answer is decided rather than accreted. |
+| the old upward import | resolved by |
+|---|---|
+| `data/vintage.py` reaching `pipeline.run._panel_fingerprint`, a layer-0 module calling a layer-3 **private** function | the fingerprint now lives in `data/identity.py`, since it is a property of the data rather than of a study |
+| `pipeline/run.py` reaching `output.collect_provenance` | the probe now lives in `meta/provenance.py`, since reading git and the environment is not artifact writing |
+
+Neither move changed behaviour: the digest is byte-identical, and
+`output.collect_provenance` re-exports the same object, so the public name is
+unchanged.
+
+Keep the list empty. An entry added back is a layering violation the project has
+decided to live with, which needs a reason recorded here rather than a tuple in a
+test. A test also fails if a listed exception is *fixed* without being removed
+from the list, so the list cannot drift into fiction.
+
+## Same-layer cycles are outside the contract
+
+The contract is directional — a lower layer never imports a higher one — and it
+has never promised an *acyclic* graph. Imports between packages at the same
+level are allowed on purpose: `feature_engineering`, `model_selection`,
+`model_ensemble` and `models` sit together in layer 1 precisely because they are
+peers rather than a stack.
+
+Layer 1 therefore contains a loop, and it is accepted rather than outstanding:
+`feature_engineering` -> `model_selection` -> `model_ensemble` -> `models` ->
+`feature_engineering`. Every edge except the one that closes it is module-level;
+the closing edge, `feature_engineering/_sparse_ic.py` reaching
+`model_selection`, is function-local, so each of the four still imports on its
+own in a fresh interpreter. That last property is the one users actually have,
+and `test_import_boundaries.py` holds it directly rather than by inspection: a
+module-level cycle would leave one package raising when imported first while
+`import macroforecast` — which loads them in an order that happens to work —
+still looked fine.
+
+So, precisely: an upward import is enforced and fails the suite; a same-layer
+import is permitted, and the loop above is a recorded decision, not a defect to
+be fixed under this heading. What is *not* claimed anywhere is an acyclic
+package graph. Making layer 1 acyclic would be a change to `_sparse_ic.py` and
+its peers — runtime work with its own risk — not a documentation change.
 
 ## The two-stage forecasting structure
 

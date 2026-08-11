@@ -535,7 +535,7 @@
 <p>This page records what the package’s layering is <em>for</em>, so a change that breaks
 it is a decision rather than an accident. It is enforced by
 <code class="docutils literal notranslate"><span class="pre">tests/architecture/test_import_boundaries.py</span></code>, which reads import statements
-and fails on any new upward one.</p>
+and fails on any upward one.</p>
 <section id="the-layers">
 <h2>The layers<a class="headerlink" href="#the-layers" title="Link to this heading">#</a></h2>
 <p>A lower layer never imports a higher one.</p>
@@ -548,7 +548,7 @@ and fails on any new upward one.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>0</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">window</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">filters</span></code>, <code class="docutils literal notranslate"><span class="pre">meta</span></code>, <code class="docutils literal notranslate"><span class="pre">tests</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">window</span></code>, <code class="docutils literal notranslate"><span class="pre">metrics</span></code>, <code class="docutils literal notranslate"><span class="pre">filters</span></code>, <code class="docutils literal notranslate"><span class="pre">meta</span></code>, <code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">analysis</span></code></p></td>
 <td><p>nothing else in the package</p></td>
 </tr>
 <tr class="row-odd"><td><p>1</p></td>
@@ -593,31 +593,57 @@ answering that question would mean understanding cell scheduling too.</p>
 still pass, and the coupling is only discovered when someone tries to use the
 lower layer alone.</p>
 </section>
-<section id="two-known-exceptions">
-<h2>Two known exceptions<a class="headerlink" href="#two-known-exceptions" title="Link to this heading">#</a></h2>
-<p>Both are function-local, so neither creates an import cycle, and both are listed
-in <code class="docutils literal notranslate"><span class="pre">KNOWN_EXCEPTIONS</span></code> so the ratchet applies to everything else. A test also
-fails if one is <em>fixed</em> without being removed from the list, so the list cannot
-drift into fiction.</p>
+<section id="no-known-exceptions">
+<h2>No known exceptions<a class="headerlink" href="#no-known-exceptions" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">KNOWN_EXCEPTIONS</span></code> is empty: no module imports a layer above its own. Two entries
+sat there until 2026-08-09, and both were resolved by moving the function down
+rather than by tolerating the import.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>where</p></th>
-<th class="head"><p>what</p></th>
-<th class="head"><p>status</p></th>
+<tr class="row-odd"><th class="head"><p>the old upward import</p></th>
+<th class="head"><p>resolved by</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data/vintage.py</span></code></p></td>
-<td><p>imports <code class="docutils literal notranslate"><span class="pre">pipeline.run._panel_fingerprint</span></code></p></td>
-<td><p>a layer-0 module reaching into a layer-3 <strong>private</strong> function. The fingerprinting belongs lower; moving it is behaviour-preserving and left for its own change.</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data/vintage.py</span></code> reaching <code class="docutils literal notranslate"><span class="pre">pipeline.run._panel_fingerprint</span></code>, a layer-0 module calling a layer-3 <strong>private</strong> function</p></td>
+<td><p>the fingerprint now lives in <code class="docutils literal notranslate"><span class="pre">data/identity.py</span></code>, since it is a property of the data rather than of a study</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pipeline/run.py</span></code></p></td>
-<td><p>imports <code class="docutils literal notranslate"><span class="pre">output.collect_provenance</span></code></p></td>
-<td><p>genuinely a question of whether <code class="docutils literal notranslate"><span class="pre">output</span></code> sits above <code class="docutils literal notranslate"><span class="pre">pipeline</span></code> or beside it. Recorded so the answer is decided rather than accreted.</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pipeline/run.py</span></code> reaching <code class="docutils literal notranslate"><span class="pre">output.collect_provenance</span></code></p></td>
+<td><p>the probe now lives in <code class="docutils literal notranslate"><span class="pre">meta/provenance.py</span></code>, since reading git and the environment is not artifact writing</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p>Neither move changed behaviour: the digest is byte-identical, and
+<code class="docutils literal notranslate"><span class="pre">output.collect_provenance</span></code> re-exports the same object, so the public name is
+unchanged.</p>
+<p>Keep the list empty. An entry added back is a layering violation the project has
+decided to live with, which needs a reason recorded here rather than a tuple in a
+test. A test also fails if a listed exception is <em>fixed</em> without being removed
+from the list, so the list cannot drift into fiction.</p>
+</section>
+<section id="same-layer-cycles-are-outside-the-contract">
+<h2>Same-layer cycles are outside the contract<a class="headerlink" href="#same-layer-cycles-are-outside-the-contract" title="Link to this heading">#</a></h2>
+<p>The contract is directional — a lower layer never imports a higher one — and it
+has never promised an <em>acyclic</em> graph. Imports between packages at the same
+level are allowed on purpose: <code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code>, <code class="docutils literal notranslate"><span class="pre">model_selection</span></code>,
+<code class="docutils literal notranslate"><span class="pre">model_ensemble</span></code> and <code class="docutils literal notranslate"><span class="pre">models</span></code> sit together in layer 1 precisely because they are
+peers rather than a stack.</p>
+<p>Layer 1 therefore contains a loop, and it is accepted rather than outstanding:
+<code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">model_selection</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">model_ensemble</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">models</span></code> -&gt;
+<code class="docutils literal notranslate"><span class="pre">feature_engineering</span></code>. Every edge except the one that closes it is module-level;
+the closing edge, <code class="docutils literal notranslate"><span class="pre">feature_engineering/_sparse_ic.py</span></code> reaching
+<code class="docutils literal notranslate"><span class="pre">model_selection</span></code>, is function-local, so each of the four still imports on its
+own in a fresh interpreter. That last property is the one users actually have,
+and <code class="docutils literal notranslate"><span class="pre">test_import_boundaries.py</span></code> holds it directly rather than by inspection: a
+module-level cycle would leave one package raising when imported first while
+<code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">macroforecast</span></code> — which loads them in an order that happens to work —
+still looked fine.</p>
+<p>So, precisely: an upward import is enforced and fails the suite; a same-layer
+import is permitted, and the loop above is a recorded decision, not a defect to
+be fixed under this heading. What is <em>not</em> claimed anywhere is an acyclic
+package graph. Making layer 1 acyclic would be a change to <code class="docutils literal notranslate"><span class="pre">_sparse_ic.py</span></code> and
+its peers — runtime work with its own risk — not a documentation change.</p>
 </section>
 <section id="the-two-stage-forecasting-structure">
 <h2>The two-stage forecasting structure<a class="headerlink" href="#the-two-stage-forecasting-structure" title="Link to this heading">#</a></h2>
@@ -775,7 +801,8 @@ identically — with the loader replaced by a function that raises.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-layers">The layers</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-it-matters">Why it matters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-known-exceptions">Two known exceptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#no-known-exceptions">No known exceptions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#same-layer-cycles-are-outside-the-contract">Same-layer cycles are outside the contract</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-two-stage-forecasting-structure">The two-stage forecasting structure</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#where-a-forecast-task-is-resolved">Where a forecast task is resolved</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluation-does-not-read-data">Evaluation does not read data</a></li>
