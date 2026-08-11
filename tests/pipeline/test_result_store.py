@@ -1336,3 +1336,194 @@ def test_a_structured_dtype_holding_objects_is_identified_by_its_elements(tmp_pa
 
     relabelled = np.array([(1, [1, 2])], dtype=[("a", "i4"), ("c", "O")])
     assert _identity_for(tmp_path, params={"payload": relabelled}).digest != left.digest
+
+
+# --------------------------------------------------------------------------- #
+# Resolved stage policies are identified, not exported (F-044)
+# --------------------------------------------------------------------------- #
+# ``StagePolicy.to_dict()`` is a readable export and renders a custom selector, and any
+# callable in ``metadata``, as a module/qualname string. Packet 08 put the resolved
+# policies into the digest by way of that export, so a selector needed no
+# ``__mf_digest__`` and two selectors sharing a qualname were one cell -- the bypass this
+# module already closes for models, features, preprocessing and search callables.
+#
+# The export is unchanged. Only the result-store boundary is stricter, and only for the
+# callable entries: an ordinary policy still serializes byte-identically to its export,
+# which is what keeps existing stores hitting.
+
+
+def _selector(marker=None):
+    """A selector whose qualname is fixed, so only the marker can distinguish two."""
+
+    def implementation(*args, **kwargs):
+        return []
+
+    implementation.__module__ = "tests.stage_policy"
+    implementation.__name__ = implementation.__qualname__ = "same_name"
+    if marker is not None:
+        implementation.__mf_digest__ = marker
+    return implementation
+
+
+def _feature_policy_identity(tmp_path, policy):
+    return _identity_for(tmp_path, feature_policy=policy)
+
+
+def _preprocessing_policy_identity(tmp_path, policy):
+    spec = _spec(
+        tmp_path,
+        arms=[Arm("A", model=_recording_model(), features=_features())],
+        preprocessing=mf.preprocess_spec(standardize="zscore"),
+        preprocessing_policy=policy,
+    )
+    return result_cell_identity(
+        spec,
+        spec.arms[0],
+        spec.targets[0],
+        horizon=1,
+        data_identity=_data_identity(spec.data),
+    )
+
+
+@pytest.mark.parametrize(
+    ("slot", "identity_for"),
+    [
+        ("feature_engineering", _feature_policy_identity),
+        ("preprocessing", _preprocessing_policy_identity),
+    ],
+)
+def test_a_markerless_stage_selector_makes_the_cell_uncacheable(tmp_path, slot, identity_for):
+    identity = identity_for(tmp_path, mf.window.custom_stage_policy(_selector()))
+
+    assert identity.digest is None
+    assert "stage_policies" in str(identity.reason)
+    assert slot in str(identity.reason)
+    assert "selector" in str(identity.reason)
+
+
+@pytest.mark.parametrize(
+    "identity_for", [_feature_policy_identity, _preprocessing_policy_identity]
+)
+def test_the_stage_selector_marker_is_the_identity(tmp_path, identity_for):
+    """Same qualname, different markers: different cells. Same marker: one cell."""
+    first = identity_for(tmp_path, mf.window.custom_stage_policy(_selector("selector-v1")))
+    repeat = identity_for(tmp_path, mf.window.custom_stage_policy(_selector("selector-v1")))
+    second = identity_for(tmp_path, mf.window.custom_stage_policy(_selector("selector-v2")))
+
+    assert first.digest is not None
+    assert repeat.digest == first.digest
+    assert second.digest != first.digest
+    assert "selector-v1" in json.dumps(first.cell_echo, sort_keys=True)
+
+
+def test_a_callable_in_stage_policy_metadata_obeys_the_same_rule(tmp_path):
+    bare = _feature_policy_identity(
+        tmp_path,
+        mf.window.custom_stage_policy(
+            _selector("selector-v1"), metadata={"callback": _selector()}
+        ),
+    )
+    assert bare.digest is None
+    assert "metadata" in str(bare.reason)
+    assert "callback" in str(bare.reason)
+
+    first = _feature_policy_identity(
+        tmp_path,
+        mf.window.custom_stage_policy(
+            _selector("selector-v1"), metadata={"callback": _selector("metadata-v1")}
+        ),
+    )
+    second = _feature_policy_identity(
+        tmp_path,
+        mf.window.custom_stage_policy(
+            _selector("selector-v1"), metadata={"callback": _selector("metadata-v2")}
+        ),
+    )
+    assert first.digest is not None
+    assert first.digest != second.digest
+
+
+def test_an_ordinary_policy_serializes_exactly_as_it_exports(tmp_path):
+    """The floor that keeps existing stores hitting, stated directly.
+
+    Everything the public export already canonicalises — normalized scope and update
+    (including an integer or ``DateOffset`` cadence), reference bounds, ``apply_to``,
+    ordinary metadata — must come through with the identical representation.
+    """
+    from macroforecast.pipeline.result_store import _stage_policy_identity
+
+    for policy in (
+        mf.window.stage_policy("fit_window"),
+        mf.window.stage_policy("full_panel", metadata={"label": "ordinary", "n": 3}),
+        mf.window.stage_policy(
+            "fixed_reference", update=3, reference_start=pd.Timestamp("2000-01-31")
+        ),
+        mf.window.stage_policy("fit_window", update=pd.tseries.offsets.MonthEnd(2)),
+        mf.window.stage_policy("fit_window", metadata={"pair": (1, 2)}),
+    ):
+        assert _stage_policy_identity(policy, path="p") == policy.to_dict()
+
+
+def test_the_public_stage_policy_export_is_untouched(tmp_path):
+    """The marker belongs to the cache key, not to the readable export."""
+    selector = _selector("selector-v1")
+    exported = mf.window.custom_stage_policy(selector).to_dict()
+
+    assert exported["selector"] == "tests.stage_policy.same_name"
+    assert "selector-v1" not in str(exported)
+
+
+def test_every_stage_slot_is_covered_including_one_the_runner_cannot_reach(tmp_path):
+    """``run.py`` never passes a model-selection policy today.
+
+    Covering the slot anyway is the point: a future wiring change must not silently
+    reintroduce the bypass in the one place nobody was looking.
+    """
+    from macroforecast.pipeline.plan import CompiledStagePolicies
+    from macroforecast.pipeline.result_store import (
+        _UndigestibleCell,
+        _stage_policies_identity,
+    )
+
+    ordinary = mf.window.stage_policy("fit_window")
+    for slot in ("preprocessing", "feature_engineering", "model_selection"):
+        policies = CompiledStagePolicies(
+            **{
+                "preprocessing": ordinary,
+                "feature_engineering": ordinary,
+                "model_selection": ordinary,
+                slot: mf.window.custom_stage_policy(_selector()),
+            }
+        )
+        with pytest.raises(_UndigestibleCell, match=f"{slot}.selector"):
+            _stage_policies_identity(policies, path="arm.stage_policies")
+
+
+def test_the_strict_identity_keeps_the_compiled_slot_shape(tmp_path):
+    """Same three slots as the runner metadata and the leakage audit publish."""
+    from macroforecast.pipeline.plan import CompiledStagePolicies
+    from macroforecast.pipeline.result_store import _stage_policies_identity
+
+    policies = CompiledStagePolicies(
+        preprocessing=None,
+        feature_engineering=mf.window.stage_policy("fit_window"),
+        model_selection=mf.window.stage_policy("fit_window"),
+    )
+
+    assert _stage_policies_identity(policies, path="p") == policies.to_dict()
+
+
+def test_an_unsupported_value_in_a_stage_policy_does_not_crash_the_run(tmp_path):
+    """``StagePolicy.to_dict()`` passes a value it does not recognise straight through.
+
+    Embedding that export verbatim put a raw object into the identity payload, and
+    ``json.dumps`` then raised out of the whole run. Identity may decline to identify a
+    cell; it may not end the run — so the exported payload is serialized like any other
+    value, and an unsupported field is named in the reason.
+    """
+    policy = mf.window.stage_policy("fixed_reference", reference_start=object())
+
+    identity = _identity_for(tmp_path, feature_policy=policy)
+
+    assert identity.digest is None
+    assert "reference_start" in str(identity.reason)
