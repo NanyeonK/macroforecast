@@ -477,6 +477,26 @@ def _extra_vintage_label(
     fingerprint: Mapping[str, Any],
     origin: pd.Timestamp,
 ) -> str:
+    """The vintage/cache ID for one origin of a static-extras source.
+
+    The label form is unchanged. It does not need to change: the VintageSource
+    contract is that a stable ID moves if and only if the content moves, and F-012 is
+    fixed at the source -- the digest inside the label now reads the whole extras panel,
+    so a cell the old sampling skipped changes the ID. Reshaping the label instead would
+    have migrated every unchanged extras panel to a new ID for nothing.
+
+    The guard below is the part that is new, and it changes no valid label.
+    """
+    method = str(fingerprint.get("method", ""))
+    if method != "full_content":
+        # A cache key must not be built on a digest that admits it did not read
+        # everything. Unreachable today (``panel_fingerprint`` has one method), and
+        # kept so that reintroducing a partial one is a failure rather than a silent
+        # weakening of every static-extra vintage ID.
+        raise ValueError(
+            "static-extra vintage labels require a full-content panel fingerprint; "
+            f"got method={method!r}"
+        )
     origin_label = pd.Timestamp(origin).strftime("%Y-%m-%d")
     return f"{base_id}|static_extra_sha256={fingerprint.get('value')}|origin={origin_label}"
 

@@ -232,3 +232,55 @@ def test_set_frequencies_rejects_incomplete_frequency_map() -> None:
 
     with pytest.raises(ValueError, match="must include every panel column"):
         mf.data.set_frequencies(panel, {"x": "monthly"})
+
+
+# --------------------------------------------------------------------------- #
+# F-007: complex panels are rejected before anything casts them to float
+# --------------------------------------------------------------------------- #
+
+def _complex_frame() -> pd.DataFrame:
+    index = pd.date_range("2000-01-31", periods=6, freq="ME", name="date")
+    return pd.DataFrame(
+        {"real": np.arange(6, dtype=float), "cplx": np.arange(6) + 1j * np.arange(6)},
+        index=index,
+    )
+
+
+def test_as_panel_rejects_complex_columns() -> None:
+    """Complex passes ``is_numeric_dtype`` but is not real-valued forecasting data.
+
+    Before this, ``as_panel`` accepted it and the float cast downstream dropped the
+    imaginary part, so two panels differing only in their imaginary values shared one
+    content fingerprint and pandas said nothing louder than a ``ComplexWarning``.
+    """
+    with pytest.raises(TypeError, match="real-valued"):
+        mf.data.as_panel(_complex_frame())
+
+
+def test_as_panel_still_rejects_complex_when_not_strict() -> None:
+    """``strict=False`` relaxes coercion, not the value domain.
+
+    Missing dates and unparseable strings are ordinary input mess that a permissive
+    load may absorb. Complex data is a different kind of thing: nothing downstream can
+    represent it, so accepting it would only move the loss somewhere quieter.
+    """
+    with pytest.raises(TypeError, match="real-valued"):
+        mf.data.as_panel(_complex_frame(), strict=False)
+
+
+def test_validate_panel_rejects_complex_columns() -> None:
+    """The direct call is guarded too, not just the ``as_panel`` path."""
+    with pytest.raises(TypeError, match="real-valued"):
+        mf.data.validate_panel(_complex_frame())
+
+
+def test_custom_dataset_rejects_complex_columns() -> None:
+    """The contract propagates to a downstream custom-data entry point."""
+    with pytest.raises(TypeError, match="real-valued"):
+        mf.data.custom_dataset(_complex_frame().reset_index())
+
+
+def test_complex_rejection_names_the_offending_columns() -> None:
+    """A caller has to be able to find which column to split."""
+    with pytest.raises(TypeError, match="cplx"):
+        mf.data.validate_panel(_complex_frame())

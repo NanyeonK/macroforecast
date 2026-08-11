@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import pandas.testing as pdt
 import pytest
@@ -249,3 +250,94 @@ def test_with_static_extras_truncate_rows_at_each_origin() -> None:
     assert pd.isna(first.panel.loc[pd.Timestamp("2000-02-29"), "z"])
     assert second.panel.loc[pd.Timestamp("2000-02-29"), "z"] == 200.0
     assert pd.isna(second.panel.loc[pd.Timestamp("2000-03-31"), "z"])
+
+
+# --------------------------------------------------------------------------- #
+# F-012: static-extra vintage IDs inherit the full-content panel identity
+# --------------------------------------------------------------------------- #
+
+def _extras_pair() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Two large extras differing only at the cell the old stride skipped."""
+    index = pd.date_range("1990-01-31", periods=100, freq="ME", name="date")
+    rng = np.random.default_rng(7)
+    base = pd.DataFrame(
+        rng.normal(size=(100, 10)), index=index, columns=[f"e{i}" for i in range(10)]
+    )
+    mutated = base.copy()
+    mutated.iloc[0, 1] = mutated.iloc[0, 1] + 1.0
+    return base, mutated
+
+
+def test_static_extra_fingerprints_differ_at_a_formerly_unsampled_cell(monkeypatch) -> None:
+    """The identity a static-extras source is cached on must see the whole panel.
+
+    Under the old sampled digest this pair produced one fingerprint, so a resolved
+    bundle built from the first extra could be served for the second (F-012). The chunk
+    size is patched small so the streaming path -- not the small-panel path -- is what
+    is being checked.
+    """
+    from macroforecast.data import identity as identity_mod
+
+    monkeypatch.setattr(identity_mod, "_FINGERPRINT_CHUNK_CELLS", 7)
+    base, mutated = _extras_pair()
+
+    assert (
+        identity_mod.panel_fingerprint(base)["value"]
+        != identity_mod.panel_fingerprint(mutated)["value"]
+    )
+
+
+def test_static_extra_vintage_ids_differ_at_a_formerly_unsampled_cell(monkeypatch) -> None:
+    """And that difference has to reach the vintage/cache label, not stop at the dict."""
+    from macroforecast.data import identity as identity_mod
+    from macroforecast.data.vintage import _extra_vintage_label
+
+    monkeypatch.setattr(identity_mod, "_FINGERPRINT_CHUNK_CELLS", 7)
+    base, mutated = _extras_pair()
+    origin = pd.Timestamp("2020-01-31")
+
+    label_base = _extra_vintage_label(
+        "base-2020-01-01", identity_mod.panel_fingerprint(base), origin
+    )
+    label_mutated = _extra_vintage_label(
+        "base-2020-01-01", identity_mod.panel_fingerprint(mutated), origin
+    )
+
+    assert label_base != label_mutated
+
+
+def test_static_extra_label_form_is_unchanged_and_carries_the_full_digest() -> None:
+    """F-012 is fixed inside the digest, so the label form must NOT move.
+
+    A ``VintageSource``'s stable ID is supposed to change if and only if the content
+    changes. Reshaping the label would have given every unchanged extras panel a new ID
+    and missed its cached resolved bundle for nothing, so the fix stays where the defect
+    was: the digest now reads the whole panel, and the label keeps saying ``sha256=``.
+    """
+    from macroforecast.data import identity as identity_mod
+    from macroforecast.data.vintage import _extra_vintage_label
+
+    base, _ = _extras_pair()
+    fingerprint = identity_mod.panel_fingerprint(base)
+    label = _extra_vintage_label("base-2020-01-01", fingerprint, pd.Timestamp("2020-01-31"))
+
+    assert "|static_extra_sha256=" in label
+    assert fingerprint["value"] in label
+    assert label.endswith("|origin=2020-01-31")
+
+
+def test_static_extra_label_refuses_a_partial_fingerprint() -> None:
+    """Enforced rather than documented: a cache key cannot rest on a partial digest.
+
+    Unreachable today -- ``panel_fingerprint`` has one method -- and kept so that
+    reintroducing a sampled one fails loudly instead of quietly weakening every
+    static-extra vintage ID again.
+    """
+    from macroforecast.data.vintage import _extra_vintage_label
+
+    with pytest.raises(ValueError, match="full-content"):
+        _extra_vintage_label(
+            "base-2020-01-01",
+            {"algorithm": "sha256", "method": "strided_subsample", "value": "deadbeef"},
+            pd.Timestamp("2020-01-31"),
+        )

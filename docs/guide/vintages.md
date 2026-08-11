@@ -126,12 +126,15 @@ source = mf.data.with_static_extras(
 )
 ```
 
-The static panel's SHA-256 fingerprint is included in each resolved vintage ID.
-Changing the extras therefore changes cache identity and provenance. Static
-extras are truncated to rows strictly before the forecast origin before joining,
-so a full-span calendar dummy panel does not create post-origin rows. Only use
-this wrapper for deterministic columns or columns genuinely known in advance at
-the origin.
+The static panel's full-content SHA-256 fingerprint is included in each resolved
+vintage ID. Changing the extras therefore changes cache identity and provenance —
+including a change in a single cell of a large extras panel, which an earlier sampled
+digest could miss. The ID form itself is unchanged, on purpose: a vintage ID is
+supposed to move when the content moves and not otherwise, so hardening the digest
+must not re-key extras panels that did not change. Static extras are truncated to
+rows strictly before the forecast origin before joining, so a full-span calendar
+dummy panel does not create post-origin rows. Only use this wrapper for
+deterministic columns or columns genuinely known in advance at the origin.
 
 ## Latest vs first-release actuals
 
