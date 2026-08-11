@@ -56,8 +56,8 @@ while ``docs/api_tiers.md`` described ``interpretation`` and ``reporting`` as
 the experimental subsystems, neither of which had a single row. The same
 revision used "submodule" as a tier when it is an export kind, not a promise.
 
-Tiers live in ``docs/api_tiers.md``, which is a proposal a human argues with.
-This file is the evidence that proposal is argued from.
+Tiers live in ``docs/api_tiers.md``, which is the adopted policy a human owns.
+This file is the evidence that policy is decided from.
 
 Usage
 -----
