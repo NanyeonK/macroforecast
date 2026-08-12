@@ -355,12 +355,16 @@ Qualified name: `macroforecast.interpretation.anatomy.anatomy_from_forecast_resu
 #### Signature
 
 ```python
-macroforecast.interpretation.anatomy_from_forecast_result(result: Any, X: Any, y: Any, models: str | Callable[..., Any] | ModelSpec | Sequence[str | Callable[..., Any] | ModelSpec] | Mapping[str, str | Callable[..., Any] | ModelSpec], *, window: WindowSpec | str | None, attach: bool = True, sidecar_name: str = "anatomy", params: Mapping[str, Any] | None = None, model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None, target_name: str | None = None, train_source: str = "fit", losses: Sequence[str] = ('rmse',), n_iterations: int = 32, n_jobs: int = 1, background_data_subsample: float = 1.0, save_path: str | Path | None = None) -> Any
+macroforecast.interpretation.anatomy_from_forecast_result(result: Any, X: Any, y: Any, models: str | Callable[..., Any] | ModelSpec | Sequence[str | Callable[..., Any] | ModelSpec] | Mapping[str, str | Callable[..., Any] | ModelSpec], *, window: WindowSpec | str | None, attach: bool = True, sidecar_name: str = "anatomy", params: Mapping[str, Any] | None = None, model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None, target_name: str | None = None, train_source: str = "fit", losses: str | Sequence[str] = ('rmse',), n_iterations: int = 32, n_jobs: int = 1, background_data_subsample: float = 1.0, save_path: str | Path | None = None) -> Any
 ```
 
 #### Description
 
 Build anatomy outputs from a forecast result plus explicit X/y inputs.
+
+``losses`` accepts either a scalar ``str`` naming one loss or a sequence of
+such names; it is forwarded to :func:`anatomy_pipeline`, which validates it
+before precompute.
 
 #### Parameters
 
@@ -377,7 +381,7 @@ Build anatomy outputs from a forecast result plus explicit X/y inputs.
 | `model_groups` | keyword only | `Mapping[str, Sequence[str] \| Mapping[str, float]] \| None` | `None` |
 | `target_name` | keyword only | `str \| None` | `None` |
 | `train_source` | keyword only | `str` | `"fit"` |
-| `losses` | keyword only | `Sequence[str]` | `("rmse",)` |
+| `losses` | keyword only | `str \| Sequence[str]` | `("rmse",)` |
 | `n_iterations` | keyword only | `int` | `32` |
 | `n_jobs` | keyword only | `int` | `1` |
 | `background_data_subsample` | keyword only | `float` | `1.0` |
@@ -464,12 +468,15 @@ Qualified name: `macroforecast.interpretation.anatomy.anatomy_pipeline`
 #### Signature
 
 ```python
-macroforecast.interpretation.anatomy_pipeline(X: Any, y: Any, models: str | Callable[..., Any] | ModelSpec | Sequence[str | Callable[..., Any] | ModelSpec] | Mapping[str, str | Callable[..., Any] | ModelSpec], *, window: WindowSpec | str | None = None, params: Mapping[str, Any] | None = None, model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None, target_name: str | None = None, train_source: str = "fit", losses: Sequence[str] = ('rmse',), n_iterations: int = 32, n_jobs: int = 1, background_data_subsample: float = 1.0, save_path: str | Path | None = None) -> AnatomyPipelineResult
+macroforecast.interpretation.anatomy_pipeline(X: Any, y: Any, models: str | Callable[..., Any] | ModelSpec | Sequence[str | Callable[..., Any] | ModelSpec] | Mapping[str, str | Callable[..., Any] | ModelSpec], *, window: WindowSpec | str | None = None, params: Mapping[str, Any] | None = None, model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None, target_name: str | None = None, train_source: str = "fit", losses: str | Sequence[str] = ('rmse',), n_iterations: int = 32, n_jobs: int = 1, background_data_subsample: float = 1.0, save_path: str | Path | None = None) -> AnatomyPipelineResult
 ```
 
 #### Description
 
 Run the complete ``anatomy`` provider, precompute, and summary path.
+
+``losses`` accepts either a scalar ``str`` naming one loss or a sequence of
+such names, and is validated before the expensive precompute step runs.
 
 #### Parameters
 
@@ -483,7 +490,7 @@ Run the complete ``anatomy`` provider, precompute, and summary path.
 | `model_groups` | keyword only | `Mapping[str, Sequence[str] \| Mapping[str, float]] \| None` | `None` |
 | `target_name` | keyword only | `str \| None` | `None` |
 | `train_source` | keyword only | `str` | `"fit"` |
-| `losses` | keyword only | `Sequence[str]` | `("rmse",)` |
+| `losses` | keyword only | `str \| Sequence[str]` | `("rmse",)` |
 | `n_iterations` | keyword only | `int` | `32` |
 | `n_jobs` | keyword only | `int` | `1` |
 | `background_data_subsample` | keyword only | `float` | `1.0` |

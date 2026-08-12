@@ -379,6 +379,41 @@ def precompute_oshapley(
     return precompute_anatomy(X, y, models, **kwargs)
 
 
+def _normalize_losses(losses: str | Sequence[str]) -> tuple[str, ...]:
+    """Read the ``losses`` argument as loss *names*, refusing anything else.
+
+    A scalar ``str`` names exactly one loss, matching how every other
+    named-item argument in macroforecast is spelled; it is never iterated
+    character by character. Any other iterable is taken member-wise and
+    unchanged, so empty and duplicate requests keep their meaning. ``bytes``
+    and ``bytearray`` are refused rather than decoded, and a non-string member
+    is refused naming its position rather than silently coerced into a loss
+    name that was never asked for.
+    """
+
+    if isinstance(losses, (bytes, bytearray)):
+        raise TypeError(
+            "losses must be a str or a sequence of str; got "
+            f"{type(losses).__name__}. Pass a decoded str such as 'rmse'."
+        )
+    if isinstance(losses, str):
+        return (losses,)
+    try:
+        members = list(losses)
+    except TypeError:
+        raise TypeError(
+            "losses must be a str or a sequence of str; got "
+            f"{type(losses).__name__}."
+        ) from None
+    for position, loss in enumerate(members):
+        if not isinstance(loss, str):
+            raise TypeError(
+                f"losses[{position}] must be a str naming one loss; got "
+                f"{type(loss).__name__}."
+            )
+    return tuple(members)
+
+
 def anatomy_pipeline(
     X: Any,
     y: Any,
@@ -393,13 +428,17 @@ def anatomy_pipeline(
     model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None,
     target_name: str | None = None,
     train_source: str = "fit",
-    losses: Sequence[str] = ("rmse",),
+    losses: str | Sequence[str] = ("rmse",),
     n_iterations: int = 32,
     n_jobs: int = 1,
     background_data_subsample: float = 1.0,
     save_path: str | Path | None = None,
 ) -> AnatomyPipelineResult:
-    """Run the complete ``anatomy`` provider, precompute, and summary path."""
+    """Run the complete ``anatomy`` provider, precompute, and summary path.
+
+    ``losses`` accepts either a scalar ``str`` naming one loss or a sequence of
+    such names, and is validated before the expensive precompute step runs.
+    """
 
     from macroforecast.interpretation.core import (
         anatomy_explain,
@@ -407,6 +446,7 @@ def anatomy_pipeline(
         pbsv,
     )
 
+    loss_names = _normalize_losses(losses)
     anatomy_obj = precompute_anatomy(
         X,
         y,
@@ -429,8 +469,8 @@ def anatomy_pipeline(
     }
     variable_importance = oshapley_vi(anatomy_obj, model_groups=model_groups)
     performance_values = {
-        str(loss): pbsv(anatomy_obj, model_groups=model_groups, loss=str(loss))
-        for loss in losses
+        loss: pbsv(anatomy_obj, model_groups=model_groups, loss=loss)
+        for loss in loss_names
     }
     return AnatomyPipelineResult(
         anatomy=anatomy_obj,
@@ -441,7 +481,7 @@ def anatomy_pipeline(
             "kind": "anatomy_pipeline",
             "window": resolve_window(window).to_dict(),
             "models": list(_resolve_model_mapping(models)),
-            "losses": [str(loss) for loss in losses],
+            "losses": list(loss_names),
             "train_source": str(train_source),
             "target_name": str(target_name or pd.Series(y).name or "target"),
             "n_iterations": int(n_iterations),
@@ -483,13 +523,18 @@ def anatomy_from_forecast_result(
     model_groups: Mapping[str, Sequence[str] | Mapping[str, float]] | None = None,
     target_name: str | None = None,
     train_source: str = "fit",
-    losses: Sequence[str] = ("rmse",),
+    losses: str | Sequence[str] = ("rmse",),
     n_iterations: int = 32,
     n_jobs: int = 1,
     background_data_subsample: float = 1.0,
     save_path: str | Path | None = None,
 ) -> Any:
-    """Build anatomy outputs from a forecast result plus explicit X/y inputs."""
+    """Build anatomy outputs from a forecast result plus explicit X/y inputs.
+
+    ``losses`` accepts either a scalar ``str`` naming one loss or a sequence of
+    such names; it is forwarded to :func:`anatomy_pipeline`, which validates it
+    before precompute.
+    """
 
     if window is None:
         raise ValueError(
