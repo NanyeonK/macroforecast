@@ -5,6 +5,7 @@ through (Phase 3 of the runner decomposition; bodies moved verbatim from
 """
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -472,24 +473,29 @@ def _with_derived_random_state(
 # ---------------------------------------------------------------------------
 
 
-def _prediction_series(prediction: Any, *, index: pd.Index) -> pd.Series:
+def _prediction_series(
+    prediction: Any,
+    *,
+    index: pd.Index,
+    label: str = "model prediction",
+) -> pd.Series:
     if isinstance(prediction, pd.Series):
         return _aligned_or_positional_series(
             prediction,
             index=index,
-            label="model prediction",
+            label=label,
         )
     if isinstance(prediction, pd.DataFrame):
         if prediction.shape[1] != 1:
-            raise ValueError("model prediction DataFrame must have exactly one column")
+            raise ValueError(f"{label} DataFrame must have exactly one column")
         return _aligned_or_positional_series(
             prediction.iloc[:, 0],
             index=index,
-            label="model prediction",
+            label=label,
         )
     values = np.asarray(prediction).reshape(-1)
     if len(values) != len(index):
-        raise ValueError("model prediction length does not match X_test")
+        raise ValueError(f"{label} length does not match X_test")
     return pd.Series(values, index=index)
 
 
@@ -526,21 +532,57 @@ def _variance_series(
     X_test: pd.DataFrame | None = None,
     index: pd.Index,
 ) -> pd.Series | None:
-    if not hasattr(fit, "predict_variance"):
+    """Return variance using the fit's explicit conditional or horizon protocol.
+
+    A first parameter named ``horizon`` selects ordered horizon output. Every other
+    introspectable or opaque callable retains the primary conditional-X protocol.
+    Conditional pandas output owns its labels; horizon output is positional by design.
+    """
+
+    method = getattr(fit, "predict_variance", None)
+    if method is None:
         return None
-    prediction = None
-    if X_test is not None:
-        try:
-            prediction = fit.predict_variance(X_test)
-        except TypeError:
-            prediction = None
-    try:
-        if prediction is None:
-            prediction = fit.predict_variance(horizon=len(index))
-    except TypeError:
-        prediction = fit.predict_variance(len(index))
+    horizon_only, positional_only = _variance_horizon_protocol(method)
+    if X_test is not None and not horizon_only:
+        prediction = method(X_test)
+        series = _prediction_series(
+            prediction,
+            index=index,
+            label="variance prediction",
+        )
+        return pd.Series(
+            series.to_numpy(dtype=float),
+            index=index,
+            name="variance_prediction",
+        )
+    prediction = (
+        method(len(index))
+        if positional_only or not horizon_only
+        else method(horizon=len(index))
+    )
     values = _positional_prediction_values(prediction, expected_len=len(index))
     return pd.Series(values, index=index, name="variance_prediction")
+
+
+def _variance_horizon_protocol(method: Callable[..., Any]) -> tuple[bool, bool]:
+    """Identify the documented ``predict_variance(horizon=...)`` call form."""
+
+    try:
+        parameters = inspect.signature(method).parameters.values()
+    except (TypeError, ValueError):
+        return False, False
+    parameter = next(
+        (
+            candidate
+            for candidate in parameters
+            if candidate.kind
+            in {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
+        ),
+        None,
+    )
+    if parameter is None or parameter.name != "horizon":
+        return False, False
+    return True, parameter.kind is inspect.Parameter.POSITIONAL_ONLY
 
 
 def _quantile_frame(

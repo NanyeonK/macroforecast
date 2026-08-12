@@ -59,7 +59,13 @@ def forecast_recursive_origin(
         if transform == "level"
         else _target_level_at(recursive_panel, target, origin_label)
     )
-    actual_level = _target_level_at(pd.DataFrame(item.get("actual_panel", recursive_panel)), target, target_label)
+    # The roll-forward does not consume the target-date actual. Preserve strict panel
+    # shape/date validation, but allow a present unobserved value to be reported null.
+    actual_level = _optional_target_level_at(
+        pd.DataFrame(item.get("actual_panel", recursive_panel)),
+        target,
+        target_label,
+    )
     records: list[dict[str, Any]] = []
 
     for model_run in model_runs:
@@ -132,10 +138,16 @@ def forecast_recursive_origin(
             current_level,
             transform=transform,
         )
-        actual_value = _recursive_output_value(
-            origin_level,
-            actual_level,
-            transform=transform,
+        actual_value = (
+            None
+            if actual_level is None
+            else float(
+                _recursive_output_value(
+                    origin_level,
+                    actual_level,
+                    transform=transform,
+                )
+            )
         )
         records.append(
             {
@@ -151,7 +163,7 @@ def forecast_recursive_origin(
                 "prediction": float(final_prediction),
                 "variance_prediction": None,
                 "quantile_predictions": None,
-                "actual": float(actual_value),
+                "actual": actual_value,
                 "params": {
                     **dict(fit_params),
                     "recursive": {
@@ -177,13 +189,26 @@ def forecast_recursive_origin(
 
 
 def _target_level_at(panel: pd.DataFrame, target: str, label: Any) -> float:
+    level = _optional_target_level_at(panel, target, label)
+    if level is None:
+        raise ValueError(f"recursive target {target!r} is missing at {label!r}")
+    return level
+
+
+def _optional_target_level_at(
+    panel: pd.DataFrame,
+    target: str,
+    label: Any,
+) -> float | None:
+    """Return an observed level, allowing only a present value to be missing."""
+
     if target not in panel.columns:
         raise ValueError(f"recursive target {target!r} is not present in the panel")
     if label not in panel.index:
         raise ValueError(f"recursive target date {label!r} is not present in the panel")
     value = panel.loc[label, target]
     if pd.isna(value):
-        raise ValueError(f"recursive target {target!r} is missing at {label!r}")
+        return None
     return float(value)
 
 

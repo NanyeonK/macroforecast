@@ -44,6 +44,10 @@ The `forecast_policy` argument to `run` (and the policy resolved from a
   [`future_feature_policy`](../../reference/forecasting.md) for how exogenous
   (non-target) predictors are rolled forward under this policy.
 
+  An unobserved target-date actual does not prevent that roll-forward: the forecast and
+  metadata are emitted with `actual` missing. A missing target column or date remains a
+  panel error, as does a missing origin level needed to construct change or growth.
+
 At horizon 1, `direct_average` and `path_average` are the same forecast by
 construction (averaging over a single step is that step), so the two policies
 produce identical predictions there. They diverge only for h greater than 1,
@@ -94,6 +98,13 @@ must only use predictors that are genuinely available at each recursive step
 (for example, lagged values). `pipeline_spec()` warns when it can see a custom
 supervised model, a recursive target policy, and exogenous features in the same
 arm.
+
+Custom density fits may expose either `predict_variance(X)` or
+`predict_variance(horizon=...)`. The first parameter name `horizon` selects the ordered
+horizon form; other callables receive the test feature matrix. Conditional pandas
+output must use the test index (or a default positional index), while horizon output is
+positional by definition. Errors inside either implementation propagate rather than
+silently switching protocols.
 
 ## Parallel custom code
 

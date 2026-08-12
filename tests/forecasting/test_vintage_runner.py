@@ -435,6 +435,35 @@ def test_vintage_first_release_missing_forever_warns_and_records_count() -> None
     assert summary["not_found"] == [{"target": "A", "date": missing_date.isoformat()}]
 
 
+def test_vintage_recursive_missing_first_release_actual_still_forecasts() -> None:
+    missing_date = pd.Timestamp("2000-06-30")
+    reference, bundles = _publication_lag_bundles(missing_forever={missing_date})
+    spec = mf.data.VintagePanelSpec(
+        _SyntheticVintageSource(bundles),
+        reference,
+        actuals_vintage="first_release",
+    )
+
+    with pytest.warns(UserWarning, match="first-release actuals were not found"):
+        result = mf.forecasting.run(
+            spec,
+            _constant_model(),
+            window=_window(reference, last_origin=reference[4]),
+            target="A",
+            features=_features(),
+            forecast_policy="recursive",
+            save_models=False,
+        )
+
+    table = result.to_frame()
+    assert len(table) == 1
+    assert table.loc[0, "date"] == missing_date
+    assert table.loc[0, "prediction"] == 1.0
+    assert pd.isna(table.loc[0, "actual"])
+    summary = result.metadata["vintage_source"]["first_release_actuals"]
+    assert summary["not_found_count"] == 1
+
+
 def test_vintage_change_target_transform_warns_about_revision_footgun() -> None:
     reference, bundles = _oracle_bundles()
     spec = mf.data.VintagePanelSpec(_SyntheticVintageSource(bundles), reference)
