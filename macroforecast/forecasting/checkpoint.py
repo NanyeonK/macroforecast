@@ -129,6 +129,28 @@ sidecar is parsed into a LOCAL buffer and accepted only once every nonblank line
 has decoded to a JSON object, so one truncated mid-write contributes nothing
 rather than its surviving prefix.
 
+The sidecar's JSON boundary is STRICT on the way out and LENIENT on the way in
+(F-062), and that asymmetry is deliberate. Writing normalizes a non-finite
+numeric leaf to ``null`` and encodes with ``allow_nan=False``, because the bare
+``NaN``/``Infinity`` tokens ``json.dumps`` emits by default are ECMAScript
+literals that every strict RFC 8259 parser rejects. Reading still accepts those
+tokens and maps them to missing, because sidecars already on disk are full of
+them and refusing them would invalidate a legacy directory over a defect that
+only ever lived in the writer.
+
+That writer FAILS CLOSED, and the runner's call order is what makes that the safe
+choice. Both live call sites write the sidecar BEFORE the origin's parquet, with
+no ``try`` between the two calls, so a structural encoding failure propagates
+before ``append_origin_records`` runs. The origin therefore never gains an
+``origin_<pos>.parquet``, :func:`completed_origin_positions` never counts it, and
+re-running the same configuration recomputes that origin and writes both artifacts
+again. Degrading an unencodable record to force the write would do the opposite:
+it lets the parquet be written, which marks the origin completed and FREEZES the
+degraded sidecar, because a completed origin is skipped and never rewrites one.
+Raising costs one recomputed origin; degrading costs that history permanently. So
+an unencodable record cleans up its temp file, leaves any previous final sidecar
+exactly as it was, and re-raises.
+
 *How do I get the data back?* has two different answers, one per artifact, and
 each message carries its own. A damaged ``origin_<pos>.parquet`` is healed by
 re-running the same configuration against the same ``checkpoint_path``, because
@@ -166,6 +188,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 # The lean schema: keys that identify a forecast cell plus the sufficient
@@ -735,6 +758,187 @@ def append_origin_records(
     tmp_path.replace(final_path)
 
 
+#: Returned by :func:`_unboxed_numeric` for a value it cannot narrow, so that a
+#: legitimate ``None`` is never confused with "nothing to do here".
+_NOT_UNBOXED = object()
+
+
+def _unboxed_numeric(value: Any) -> Any:
+    """One-step unboxing for numpy scalars and single-element numpy arrays.
+
+    Returns :data:`_NOT_UNBOXED` for anything it cannot narrow, which leaves that
+    value rendered exactly as it is rendered today.
+
+    ``.item()`` is not trustworthy on its own. ``np.longdouble.item()`` returns
+    another ``np.longdouble`` wherever ``longdouble`` is wider than ``float64``, so
+    it is a FIXED POINT, and following it is what made the pre-F-062 writer die with
+    ``RecursionError`` on a longdouble leaf, a FINITE one included. One unboxing is
+    therefore followed by an explicit narrowing rather than by re-entry.
+
+    That narrowing covers the REAL numpy scalar types only, ``np.floating`` and
+    ``np.integer``. A value still numpy-typed after one ``.item()`` and neither of
+    those is reported as :data:`_NOT_UNBOXED` and keeps its pre-F-062 path unchanged
+    -- ``np.clongdouble`` most of all, which is the same fixed point as
+    ``np.longdouble`` and so still reaches that ``RecursionError``. Extending this
+    to complex types is deliberately out of scope.
+    """
+    if isinstance(value, np.ndarray):
+        if value.size != 1:
+            # Wider arrays keep falling through to ``_json_default``'s ``str()``.
+            return _NOT_UNBOXED
+        value = value.item()
+    if not isinstance(value, np.generic):
+        return value if isinstance(value, (bool, int, float)) else _NOT_UNBOXED
+    unboxed = value.item()
+    if not isinstance(unboxed, np.generic):
+        return unboxed
+    if isinstance(unboxed, np.floating):
+        # The ``longdouble`` case. ``float()`` is lossy above ``float64``, and is
+        # also the only real number JSON has, so the precision goes either way.
+        return float(unboxed)
+    if isinstance(unboxed, np.integer):
+        return int(unboxed)
+    return _NOT_UNBOXED
+
+
+def _json_constant_spelling(number: float) -> str:
+    """The token ``json`` itself writes for a non-finite float."""
+    if math.isnan(number):
+        return "NaN"
+    return "Infinity" if number > 0 else "-Infinity"
+
+
+def _json_boundary_key(key: Any) -> Any:
+    """Keep a mapping key encodable without disturbing one that already encoded.
+
+    ``json`` renders a non-finite float KEY as a quoted string --
+    ``{float("nan"): 1}`` encodes to ``{"NaN": 1}``, which is valid RFC 8259 --
+    but it routes that spelling through the same ``allow_nan`` switch as a
+    non-finite VALUE. Flipping the switch without handling keys would therefore
+    start REFUSING a line that was standards-clean all along, so the key is
+    rewritten to that exact spelling here and the switch never sees it.
+
+    Only a non-finite :class:`float` key is rewritten -- which covers
+    ``np.float64``, a genuine ``float`` subclass ``json`` already accepted as a key.
+    Every other key reaches the encoder UNTOUCHED, so ``np.int64`` and
+    ``np.float32`` keys still raise the ``TypeError`` they always raised: a key rule
+    is also an ACCEPTANCE rule, and F-062 changes what this writer emits, not what
+    it admits.
+    """
+    if isinstance(key, float) and not math.isfinite(key):
+        return _json_constant_spelling(key)
+    return key
+
+
+def _json_boundary_mapping(
+    mapping: Mapping[Any, Any],
+    active: frozenset[int],
+) -> dict[Any, Any]:
+    """Normalize one mapping, REFUSING any key collision the rewrite creates.
+
+    A plain dict comprehension over :func:`_json_boundary_key` silently drops a
+    value here: ``{float("nan"): 1, "NaN": 2}`` collapses to ``{"NaN": 2}``, and two
+    distinct ``float("nan")`` keys collide the same way since ``nan != nan`` keeps
+    both in the source mapping. Both are refused -- writing a record that is not the
+    one the runner produced is the failure this boundary exists to end, and ``json``
+    rejected the mixed-key mapping outright before F-062 anyway, so overwriting
+    would also be a regression.
+    """
+    out: dict[Any, Any] = {}
+    for key, item in mapping.items():
+        boundary_key = _json_boundary_key(key)
+        if boundary_key in out:
+            raise ValueError(
+                f"a {CHECKPOINT_SELECTION_ARTIFACT} record has two mapping keys "
+                f"that both encode to {boundary_key!r}, so writing it would "
+                "silently drop one of their values. No sidecar was written and "
+                "this origin was not completed. Re-running recomputes it."
+            )
+        out[boundary_key] = _json_boundary_value(item, _active=active)
+    return out
+
+
+def _cycle_free(container: Any, active: frozenset[int]) -> frozenset[int]:
+    """Extend the current path, refusing a container that already sits on it."""
+    if id(container) in active:
+        raise ValueError(
+            f"a {CHECKPOINT_SELECTION_ARTIFACT} record contains a circular "
+            f"reference through a {type(container).__name__}; RFC 8259 JSON has "
+            "no way to express one, so no sidecar was written and this origin "
+            "was not completed. Re-running recomputes it."
+        )
+    return active | {id(container)}
+
+
+def _json_boundary_value(
+    value: Any,
+    *,
+    _active: frozenset[int] = frozenset(),
+) -> Any:
+    """Normalize one selection-record value for strict (``allow_nan=False``) JSON.
+
+    Non-finite numeric leaves become ``None``/JSON ``null`` at any depth, which is
+    the convention the output and reporting writers already apply to the same
+    problem. This helper is deliberately LOCAL and narrow rather than a reuse of
+    ``output.core._json_ready``: ``output`` imports ``forecasting``, so importing
+    it back here would invert that dependency.
+
+    It changes as little as it can: a leaf it does not recognise is returned
+    UNTOUCHED, for ``_json_default`` to render as it always did. Rendering is
+    therefore preserved for the flat records the runner ships and for the cases
+    pinned by test -- numpy scalars, single-element arrays, the ``str()`` spelling
+    of a multi-element array, the ISO spelling of a ``pd.Timestamp``. It is NOT
+    preserved universally, and one divergence is deliberate: ``json`` treats only a
+    real ``dict`` as an object, so a nested non-``dict`` ``Mapping`` used to fall
+    through to ``_json_default``'s ``str()``, whereas the traversal below rebuilds
+    it as a JSON object (and neutralizes the non-finite leaves inside it, instead of
+    freezing them in a repr). Traversing mappings is the hardening; the changed
+    rendering is its cost, not an accident.
+
+    A cycle RAISES, via :func:`_cycle_free` -- JSON cannot express a back-reference,
+    and the alternatives are recursing until ``RecursionError`` or quietly writing a
+    record that is not the one the runner produced. ``_active`` holds the ids on the
+    CURRENT PATH only, so the same object appearing twice as a sibling is encoded
+    twice, which is not a cycle.
+    """
+    if value is None or isinstance(value, (str, bool)):
+        return value
+    if isinstance(value, float):
+        # ``np.float64`` subclasses ``float``, so it is caught here as well.
+        return value if math.isfinite(value) else None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, pd.Timestamp):
+        # The spelling ``_json_default`` already gives it, so this is not a new
+        # rendering; it just avoids a needless trip through the ``default`` hook.
+        return value.isoformat()
+    if isinstance(value, Mapping):
+        return _json_boundary_mapping(value, _cycle_free(value, _active))
+    if isinstance(value, (list, tuple)):
+        active = _cycle_free(value, _active)
+        return [_json_boundary_value(item, _active=active) for item in value]
+    unboxed = _unboxed_numeric(value)
+    if unboxed is not _NOT_UNBOXED:
+        return _json_boundary_value(unboxed, _active=_active)
+    return value
+
+
+def _encoded_selection_line(record: Mapping[str, Any]) -> str:
+    """One sidecar line, encoded strictly -- or an exception and no line at all.
+
+    There is deliberately NO "write something rather than nothing" fallback: an
+    unencodable record raises and no line is produced. The module docstring carries
+    the full argument for why raising is safe here and coercing would not be.
+    """
+    return json.dumps(
+        _json_boundary_value(record),
+        sort_keys=True,
+        ensure_ascii=True,
+        allow_nan=False,
+        default=_json_default,
+    )
+
+
 def append_origin_selection_records(
     checkpoint_path: str | Path,
     origin_pos: Any,
@@ -745,6 +949,27 @@ def append_origin_selection_records(
     The sidecar is newline-delimited JSON next to ``origin_<pos>.parquet``. It is
     intentionally independent of the lean forecast parquet schema, so enabling
     selection history does not perturb checkpoint/rescore forecast loading.
+
+    Every line is RFC 8259 JSON (F-062). A non-finite numeric leaf is normalized
+    to ``null`` before encoding rather than written as one of the bare
+    ``NaN``/``Infinity`` tokens ``json.dumps`` emits by default, because those are
+    ECMAScript literals a strict third-party parser rejects outright.
+    :func:`load_selection_history_frame` still READS those tokens, so sidecars
+    written before this stay loadable; see :data:`_SELECTION_JSON_DECODER`.
+
+    Records from the shipped runner are FLAT and string-keyed, so the reachable
+    non-finite leaf is one of a record's own scalar fields; the recursion through
+    nested mappings, lists and tuples is hardening against caller-supplied records,
+    not a claim that a nested one has been seen on disk. Note that traversing
+    mappings does change one rendering: a non-``dict`` ``Mapping`` becomes a JSON
+    object where it used to stringify (see :func:`_json_boundary_value`).
+
+    This FAILS CLOSED. A record the strict encoder refuses -- mixed-type keys, a key
+    collision, a cycle, an object no ``default`` hook renders -- is not coerced into
+    one it accepts: the temporary file is removed, any previous final sidecar is
+    left byte-for-byte as it was, and the exception propagates, so a run with
+    ``selection_history=True`` raises where nothing raised before. The module
+    docstring explains why that is the safe choice given the runner's call order.
     """
     directory = Path(checkpoint_path)
     directory.mkdir(parents=True, exist_ok=True)
@@ -757,15 +982,18 @@ def append_origin_selection_records(
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             for record in records:
-                payload = json.dumps(
-                    dict(record),
-                    sort_keys=True,
-                    ensure_ascii=True,
-                    default=_json_default,
-                )
-                handle.write(payload + "\n")
+                handle.write(_encoded_selection_line(record) + "\n")
         Path(tmp_name).replace(final_path)
-    except OSError:
+    except BaseException:
+        # Cleanup ONLY, and immediately re-raised. The temp file is created INSIDE
+        # the checkpoint directory, and the pre-F-062 ``except OSError`` skipped
+        # cleanup for every non-OSError, so such a failure left a stray dotfile
+        # behind for good. That leak does not corrupt resume accounting -- the
+        # name is dot-prefixed, so it matches neither the ``origin_*.parquet`` nor
+        # the ``origin_*_selection.jsonl`` scan -- but nothing ever removes it
+        # either, so it accumulates in a directory the user is told is ours.
+        # Nothing is suppressed: a KeyboardInterrupt or a cancellation still
+        # propagates untouched, and the previous final file is never replaced.
         Path(tmp_name).unlink(missing_ok=True)
         raise
 
@@ -874,6 +1102,28 @@ def _sidecar_non_object_message(path: Path, line: int, value: Any) -> str:
     )
 
 
+def _legacy_json_constant(name: str) -> None:
+    """Normalize a legacy bare ``NaN``/``Infinity``/``-Infinity`` to missing.
+
+    LOAD-BEARING cross-version compatibility, not a nicety. Every sidecar written
+    before F-062 holds these bare tokens, so dropping this hook would turn every
+    pre-F-062 checkpoint into a :class:`CheckpointCorruptionError` -- a silent wipe
+    for a defect that only ever lived in the WRITER -- and it cannot be removed
+    without reconsidering :data:`CHECKPOINT_IDENTITY_VERSION`.
+
+    ``None`` rather than the float the token spells, so a legacy bare ``NaN`` and
+    a post-F-062 ``null`` reach the frame as the same missing value.
+    """
+    return None
+
+
+#: One reusable decoder, module-level so a sidecar with many lines does not pay
+#: to rebuild it per line. ``parse_constant`` fires ONLY for the three non-finite
+#: tokens: ``null``/``true``/``false`` have not routed through it since Python
+#: 3.1, so ordinary values are untouched by this leniency.
+_SELECTION_JSON_DECODER = json.JSONDecoder(parse_constant=_legacy_json_constant)
+
+
 def _read_selection_sidecar(path: Path) -> list[dict[str, Any]]:
     """Parse one sidecar into a LOCAL buffer, accepted only if every line is.
 
@@ -895,7 +1145,7 @@ def _read_selection_sidecar(path: Path) -> list[dict[str, Any]]:
         if not text:
             continue
         try:
-            decoded = json.loads(text)
+            decoded = _SELECTION_JSON_DECODER.decode(text)
         except json.JSONDecodeError as exc:
             raise CheckpointCorruptionError(
                 _sidecar_invalid_json_message(path, number),

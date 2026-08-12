@@ -5,6 +5,103 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/checkpoint.py`
+  (**selection-history sidecars were not valid JSON, so no strict parser could read
+  them**): F-062.
+
+  **The defect.** `append_origin_selection_records()` encoded each record with
+  `json.dumps` and its default `allow_nan=True`, which writes a non-finite float as
+  a bare `NaN`, `Infinity` or `-Infinity` token. Those are ECMAScript literals, not
+  JSON -- RFC 8259 has no non-finite number -- so R's `jsonlite`, Go's
+  `encoding/json`, `jq` and every other strict parser reject the whole line. Python
+  read its own files back without complaint, which is why this survived: the sidecar
+  is the documented hand-off format for selection history, and it was unreadable to
+  everything except the process that wrote it.
+
+  **What is actually reachable.** Records arrive FLAT and string-keyed, because
+  `runner._flatten_scalar_history_items` descends mappings only and keeps only
+  already-scalar entries, so a list-valued param never reaches the writer. What can
+  still arrive non-finite is one of a record's own scalar fields: `value`, from a
+  fit-params entry that is a non-finite `float` (a user-supplied hyperparameter, or
+  a custom scalar whose `.item()` returns one), or `score`, read from a fitted
+  step's `scores` mapping. One such leaf breaks the line. No shipped model or policy
+  is known to produce one; the recursive walk below is hardening of a boundary that
+  accepts caller-supplied records, not evidence of a corrupted record on disk.
+
+  **Writing is strict.** Records are normalized and then encoded with
+  `allow_nan=False`, so a bare token cannot be emitted even by accident.
+  Normalization recurses through mappings, lists and tuples and maps a non-finite
+  numeric leaf to `null` at any depth -- Python `float`, `np.float16/32/64`,
+  `np.longdouble` and single-element numpy arrays alike. The helper is local rather
+  than a reuse of `output.core._json_ready` because `output` imports `forecasting`.
+  Formatting is unchanged (`sort_keys=True`, `ensure_ascii=True`, one JSON object
+  per line), and records are neither reordered nor deduplicated.
+
+  Rendering is preserved for the shipped flat records and for the cases pinned by
+  test: numpy scalars, single-element arrays, the `str()` spelling of a
+  multi-element array, the ISO spelling of a `pd.Timestamp`. It is NOT preserved
+  universally. `json` treats only a real `dict` as an object, so a nested
+  non-`dict` `Mapping` used to fall through to `_json_default`'s `str()` and is now
+  traversed and rebuilt as a JSON object, with its non-finite leaves neutralized
+  rather than frozen in a repr. Traversing mappings is the hardening; that changed
+  rendering is its cost, not an accident.
+
+  Two inputs did not terminate before. `np.longdouble.item()` returns another
+  `np.longdouble` wherever `longdouble` is wider than `float64`, so `_json_default`
+  returned it, `json` handed the identical object straight back, and the writer died
+  with `RecursionError` -- on a FINITE longdouble too. Unboxing is now single-step
+  with an explicit narrowing. A container that reaches itself is refused with a
+  `ValueError` that names it, rather than recursing until the interpreter gives up.
+  That narrowing covers real numpy scalars only: `np.clongdouble` is the same fixed
+  point, is deliberately not covered here, and keeps its pre-F-062 behaviour
+  including that `RecursionError`.
+
+  **Mapping keys.** `json` renders `{float("nan"): 1}` as `{"NaN": 1}` -- a quoted
+  string key, valid RFC 8259 all along -- but routes that spelling through the same
+  `allow_nan` switch as a value, so flipping the switch alone would have started
+  refusing a standards-clean line. Such a key is rewritten to that exact spelling
+  first, and only such a key: a key rule is also an ACCEPTANCE rule, so `np.int64`
+  and `np.float32` keys still raise the `TypeError` they always raised instead of
+  being unboxed into newly-accepted JSON. Because the rewrite can make two keys
+  collide -- `{float("nan"): 1, "NaN": 2}`, or two separate `float("nan")` keys,
+  which both survive in a dict since `nan != nan` -- the mapping is rebuilt with a
+  collision check that RAISES. A dict comprehension would have kept the last value
+  and silently dropped the other, and `json` refused that mapping outright
+  beforehand, so overwriting would have been a regression too.
+
+  **A refused record fails the write.** If strict encoding cannot represent a record
+  (mixed-type keys defeating `sort_keys`, a key collision, a cycle, an object no
+  `default` hook renders), it is not coerced: the temporary file is removed, any
+  previous final sidecar is left byte-for-byte as it was, and the exception
+  propagates. That is safe only because the runner writes the sidecar BEFORE the
+  origin's `origin_<pos>.parquet`, with no `try` between the two calls, so the
+  failure lands while the origin is still incomplete and re-running recomputes it.
+  Coercing would let the parquet follow and freeze the coerced line behind a
+  completed origin that every later run skips. So a run with `selection_history=True`
+  that meets such a record now raises where nothing raised before, with the loss
+  bounded to the origins after the failure. Cleanup also widened from
+  `except OSError` to `BaseException`, solely to unlink and re-raise: a non-`OSError`
+  failure no longer leaks a temp dotfile, whose dot-prefixed name never matched the
+  `origin_*.parquet` or `origin_*_selection.jsonl` scans but was never removed
+  either, and a `KeyboardInterrupt` still propagates untouched.
+
+  **Reading stays lenient.** Sidecars already on disk are full of bare `NaN`, so
+  `load_selection_history_frame()` still accepts those tokens and maps them to
+  missing, through one module-level `json.JSONDecoder(parse_constant=...)`. This is
+  load-bearing cross-version compatibility: dropping it would turn every pre-F-062
+  checkpoint into a `CheckpointCorruptionError`, a silent wipe for a defect that
+  only ever lived in the writer, and it cannot be removed without reconsidering
+  `CHECKPOINT_IDENTITY_VERSION`. F-060/F-061 semantics are intact underneath -- a
+  sidecar is accepted whole or not at all, a malformed line still raises with its
+  `JSONDecodeError` chained as `__cause__`, orphan sidecars are still skipped, and a
+  legacy sidecar is still no reason to refuse a resume.
+
+  **Unchanged.** `CHECKPOINT_IDENTITY_VERSION` stays `2`,
+  `write_checkpoint_identity()` and identity canonicalization are behaviourally
+  unchanged, the forecast parquet path is untouched, and `runner.py` is not
+  modified. This covers the SIDECAR writer only: the `run_identity.json` manifest is
+  written by a separate path that is not made strict here.
+
 - `forecasting/checkpoint.py`, `forecasting/runner.py`, `pipeline/rescore.py`,
   `pipeline/selection_history.py`
   (**a corrupt checkpoint file was silently skipped, so loading and rescoring
@@ -87,14 +184,18 @@ full per-version honesty-pass history embedded in repo documentation.
   origin coverage, and notes that `load_checkpoint_frame()` and `pipeline.rescore()`
   refuse the directory until the file is dealt with.
 
-  **Not this change.** The checkpoint JSON writers are untouched: manifest and
-  sidecar writing, their temp-file-then-`replace` atomicity, and their non-finite
-  handling (`json.dumps` emitting bare `NaN`/`Infinity`) are byte-for-byte as
-  before, and the new reader still accepts those literals because it uses
-  `json.loads` with its default constant handling. `CHECKPOINT_IDENTITY_VERSION`,
-  the append writers, `completed_origin_positions()` and `final_origin_files()` are
-  behaviourally unchanged. Nothing here changes what is written, only what happens
-  when what was written can no longer be read.
+  **Not this change.** The checkpoint JSON writers were untouched by F-060/F-061:
+  manifest and sidecar writing, their temp-file-then-`replace` atomicity, and their
+  non-finite handling were byte-for-byte as before, and the new reader accepted the
+  bare `NaN`/`Infinity` literals they emitted. `CHECKPOINT_IDENTITY_VERSION`, the
+  append writers, `completed_origin_positions()` and `final_origin_files()` are
+  behaviourally unchanged. Nothing in F-060/F-061 changes what is written, only what
+  happens when what was written can no longer be read.
+
+  The sidecar WRITER is changed separately by F-062 above, which makes its output
+  strict RFC 8259. That reader leniency is consequently no longer incidental: it is
+  now an explicit `json.JSONDecoder(parse_constant=...)` and is load-bearing, since
+  it is what keeps sidecars written before F-062 readable at all.
 
 - `forecasting/checkpoint.py`, `forecasting/runner.py`
   (**checkpointed quantile levels were rounded to whole percents, silently merging
