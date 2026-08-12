@@ -129,10 +129,11 @@ macroforecast.forecasting.load_checkpoint_frame(checkpoint_path: str | Path) -> 
 
 Load all persisted lean records as a single frame (empty if none/missing).
 
-Origin files may carry different wide ``q_<pct>`` quantile columns (a
-point-only or pre-density-pipeline origin has none); ``pd.concat`` unions
-them, filling gaps with NaN, so this needs no cross-file coordination. When
-any ``q_<pct>`` column is present, a ``quantile_predictions`` mapping column
+Origin files may carry different wide quantile columns, and may use either
+grammar (a point-only or pre-density-pipeline origin has none, and a
+pre-F-059 origin has legacy ``q_<pct>`` ones); ``pd.concat`` unions them,
+filling gaps with NaN, so this needs no cross-file coordination. When
+any wide quantile column is present, a ``quantile_predictions`` mapping column
 is additionally synthesized (the wide columns are kept alongside it, not
 dropped) so this frame's quantile representation matches the rich
 (non-checkpointed) forecast table's -- one ``{level_str: value}`` dict per

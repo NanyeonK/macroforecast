@@ -17,8 +17,7 @@ exposing ``predict_variance`` (see ``forecasting/policies/base.py``), so it is
 now a FIXED lean column (like ``prediction``/``actual``) -- ``None`` when the
 model does not emit it, same as before this change added it. Quantile
 predictions are a ``{level: value}`` mapping, not a scalar, so they are
-expanded into WIDE ``q_<pct>`` columns (e.g. ``q_05``, ``q_50``, ``q_95`` for
-levels ``0.05``/``0.5``/``0.95``) rather than added to the fixed schema: the
+expanded into WIDE per-level columns rather than added to the fixed schema: the
 set of levels is a per-model hyperparameter (``quantile_levels``), not known
 ahead of time, so the wide columns are derived empirically per origin from
 whatever the record's ``quantile_predictions`` mapping actually carries (see
@@ -27,12 +26,37 @@ sets across origin files via ``pd.concat`` (pandas fills the gaps with NaN), so
 this needs no cross-origin coordination and degrades gracefully when an old
 checkpoint (written before this column existed) sits alongside new ones.
 
+Quantile columns
+----------------
+A wide column is named ``qx1_`` plus the 16 hex digits of the level's IEEE-754
+binary64 image (``struct.pack(">d", level).hex()``), e.g. ``0.05`` becomes
+``qx1_3fa999999999999a``. The name therefore DETERMINES the level exactly: the
+decode is the true inverse, so a resumed origin's mapping carries the very
+``str(level)`` keys the live run produced.
+
+The first version of this schema instead wrote ``q_<pct>`` for
+``round(level * 100)``, which was neither injective nor lossless: ``0.024`` and
+``0.025`` both became ``q_02`` (the second write overwriting the first),
+``0.975`` and ``0.976`` both became ``q_98``, ``1/3`` came back as ``0.33``, and
+every level at or above ``0.995`` became ``q_100``, which the two-digit reader
+could not parse at all. Those files stay READABLE: a legacy ``q_01``..``q_99``
+column still decodes, at the only value it can, its integer-percent grid point.
+Both endpoints of that grid stay unread. ``q_100`` (every level at or above
+``0.995``) and ``q_00`` (every level below ``0.005``) each name an endpoint that
+is not a valid level -- ``1.0`` and ``0.0`` are outside the open interval a
+quantile lives in -- and the true level that produced either is unrecoverable,
+so reporting the endpoint would invent a quantile nobody requested. ``q_00`` is
+the one the old reader did fabricate, decoding it to ``0.0``; it is now dropped
+like ``q_100``. Within a row the exact family wins wholesale -- any valid
+``qx1_`` value means the legacy columns beside it are ignored rather than mixed
+in at a rounded level.
+
 Format
 ------
 ``checkpoint_path`` is treated as a DIRECTORY. Each completed origin writes one
 parquet file ``origin_<pos>.parquet`` containing only that origin's lean records
 (scalar columns only -- no dict/struct columns; quantile predictions are
-pre-expanded into wide scalar ``q_<pct>`` columns, see above). One-file-per-
+pre-expanded into wide scalar ``qx1_<hex>`` columns, see above). One-file-per-
 origin makes each write atomic at the file level (a crash mid-write corrupts at
 most one origin's file, which is simply ignored on resume), and resume is the
 trivial act of listing the directory.
@@ -64,6 +88,15 @@ present                      complete, digests differ                    refuse,
 present                      complete, digests match                     resume the readable origins
 ===========================  ==========================================  ===========================================
 
+The version is part of that gate. It was incremented to 2 when the quantile
+column grammar changed (see "Quantile columns"), because a version-1 directory's
+origin files may hold rounded, collapsed levels: resuming into one would put
+those rows and this run's exact-level rows in a single forecast table, which is
+precisely the mixed representation ``runner._merge_checkpoint_records`` exists
+to prevent. A version-1 manifest beside final origin files therefore refuses,
+under the ordinary "wrong schema/version" row above; a version-1 manifest with
+no origin files to describe is just a stale manifest and is replaced as before.
+
 Refusing is not the same as invalidating. A refused directory is untouched, and
 :func:`load_checkpoint_frame` / :func:`load_selection_history_frame` (and hence
 ``pipeline.rescore``) keep reading legacy checkpoints exactly as before. What a
@@ -76,8 +109,10 @@ fresh ``checkpoint_path`` or their own removal of the old one.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
+import struct
 import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -138,57 +173,142 @@ def _origin_selection_filename(origin_pos: Any) -> str:
     return f"origin_{int(origin_pos)}_selection.jsonl"
 
 
+#: ``qx1_`` = quantile, heX encoding, grammar version 1. Fixed 20-character
+#: names, disjoint from the legacy ``q_<pct>`` family by construction.
+_QUANTILE_COLUMN_PREFIX = "qx1_"
+
+_WIDE_QUANTILE_COLUMN_RE = re.compile(r"^qx1_([0-9a-f]{16})$")
+#: What the first version of this schema wrote. Read-only; never written again.
+_LEGACY_WIDE_QUANTILE_COLUMN_RE = re.compile(r"^q_(\d{2})$")
+
+
+def _validated_quantile_level(value: Any) -> float | None:
+    """The level as a plain float, or ``None`` when it cannot be a level.
+
+    A quantile level is finite and strictly inside ``(0, 1)``. Anything else --
+    a nonnumeric string, a non-finite float, ``0.0``, ``1.0``, a probability
+    outside the unit interval -- is not encodable and is simply dropped by the
+    callers, the same silent-skip the encoder has always applied to unusable
+    entries. (A numeric string is NOT rejected here: ``float`` accepts it, and
+    accepting it is deliberate, since a mapping keyed by ``str(level)`` is
+    exactly what the runner contract passes around.) The old encoder reached
+    ``round(inf * 100)`` for a non-finite level and raised an ``OverflowError``
+    its caller did not catch; validating here closes that.
+    """
+    try:
+        level = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(level) or not 0.0 < level < 1.0:
+        return None
+    return level
+
+
 def _quantile_column_name(level: float) -> str:
-    """Wide checkpoint column name for a quantile level (``0.05`` -> ``q_05``)."""
-    return f"q_{round(float(level) * 100):02d}"
+    """Wide checkpoint column name for a quantile level.
+
+    ``0.05`` -> ``qx1_3fa999999999999a``: the prefix plus the 16 hex digits of
+    the level's IEEE-754 binary64 image. Injective and exactly invertible, so
+    distinct levels never share a column and no level is rounded on the way to
+    disk (see the module docstring's "Quantile columns").
+    """
+    return _QUANTILE_COLUMN_PREFIX + struct.pack(">d", float(level)).hex()
 
 
 def _quantile_wide_columns(record: Mapping[str, Any]) -> dict[str, float]:
     """Expand a record's ``quantile_predictions`` mapping into wide, scalar
-    ``q_<pct>`` columns (parquet needs scalar columns; see module docstring).
-    Absent, ``None``, or non-mapping values expand to no columns at all.
+    ``qx1_<hex>`` columns (parquet needs scalar columns; see module docstring).
+    Absent, ``None``, or non-mapping values expand to no columns at all, as do
+    unusable levels and unusable predictions.
     """
     value = record.get("quantile_predictions")
     if not isinstance(value, Mapping):
         return {}
     out: dict[str, float] = {}
     for level, prediction in value.items():
+        validated = _validated_quantile_level(level)
+        if validated is None:
+            continue
         try:
-            out[_quantile_column_name(float(level))] = float(prediction)
+            out[_quantile_column_name(validated)] = float(prediction)
         except (TypeError, ValueError):
             continue
     return out
 
 
-_WIDE_QUANTILE_COLUMN_RE = re.compile(r"^q_(\d{2})$")
+def _level_from_quantile_column(name: str) -> float | None:
+    """Exact level a ``qx1_<hex>`` column encodes, or ``None`` if it is not one.
+
+    Also ``None`` for a well-formed name whose payload does not decode to a
+    usable level (a corrupt or hand-edited file), so a damaged column is ignored
+    rather than allowed to inject a nonsense level into the mapping.
+    """
+    match = _WIDE_QUANTILE_COLUMN_RE.match(name)
+    if match is None:
+        return None
+    return _validated_quantile_level(struct.unpack(">d", bytes.fromhex(match.group(1)))[0])
+
+
+def _legacy_level_from_quantile_column(name: str) -> float | None:
+    """Level recoverable from a legacy ``q_<pct>`` column, or ``None``.
+
+    Only the integer-percent grid point, which is all the old encoder retained.
+    ``q_100`` -- what it emitted for every level at or above ``0.995`` -- is
+    deliberately NOT read: the level that produced it is unrecoverable, and
+    reporting ``1.0`` would be inventing a quantile that was never requested.
+    ``q_00`` is likewise unread, ``0.0`` being outside the valid range.
+    """
+    match = _LEGACY_WIDE_QUANTILE_COLUMN_RE.match(name)
+    if match is None:
+        return None
+    return _validated_quantile_level(int(match.group(1)) / 100.0)
+
+
+def _is_wide_quantile_column(name: str) -> bool:
+    """Whether a column name belongs to either wide-quantile family."""
+    return (
+        _WIDE_QUANTILE_COLUMN_RE.match(name) is not None
+        or _LEGACY_WIDE_QUANTILE_COLUMN_RE.match(name) is not None
+    )
 
 
 def _quantile_dict_from_wide(record: Mapping[str, Any]) -> dict[str, float] | None:
     """Reconstruct a ``{level_str: value}`` mapping from a lean record's wide
-    ``q_<pct>`` columns -- the inverse of :func:`_quantile_wide_columns`.
+    quantile columns -- the inverse of :func:`_quantile_wide_columns`.
 
     Matches the exact string-keyed format ``forecasting/policies/direct.py``
     writes onto the rich (non-lean) forecast table (``str(level)`` for a Python
     float, e.g. ``"0.05"``/``"0.5"``/``"0.95"``), so a resumed-from-checkpoint
     origin's ``quantile_predictions`` merges back into the SAME representation
     a freshly-computed origin's does (see
-    ``forecasting/runner.py::_merge_checkpoint_records``). Returns ``None`` (not
-    ``{}``) when the record carries no non-null ``q_<pct>`` column, matching the
-    rich table's ``None``-for-absent convention.
+    ``forecasting/runner.py::_merge_checkpoint_records``). The hex payload is an
+    on-disk detail and never appears in the returned mapping.
+
+    Precedence is per row and wholesale: if the row carries any usable
+    ``qx1_<hex>`` value, ONLY that family is decoded, because a legacy column
+    beside it can at best repeat one of those levels at a rounded value.
+    Otherwise the legacy ``q_<pct>`` columns are decoded. Returns ``None`` (not
+    ``{}``) when neither family yields anything, matching the rich table's
+    ``None``-for-absent convention.
     """
-    out: dict[str, float] = {}
+    exact: dict[str, float] = {}
+    legacy: dict[str, float] = {}
     for key, value in record.items():
         if value is None or (isinstance(value, float) and pd.isna(value)):
             continue
-        match = _WIDE_QUANTILE_COLUMN_RE.match(str(key))
-        if match is None:
+        name = str(key)
+        level = _level_from_quantile_column(name)
+        target = exact
+        if level is None:
+            level = _legacy_level_from_quantile_column(name)
+            target = legacy
+        if level is None:
             continue
-        level = int(match.group(1)) / 100.0
         try:
-            out[str(level)] = float(value)
+            target[str(level)] = float(value)
         except (TypeError, ValueError):
             continue
-    return out or None
+    return exact or legacy or None
 
 
 def lean_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -197,7 +317,7 @@ def lean_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     Missing keys in :data:`LEAN_FORECAST_COLUMNS` are filled with ``None`` so
     that fixed part of the parquet schema is stable across origins and
     execution paths. ``quantile_predictions`` (when present and non-empty) is
-    additionally expanded into wide ``q_<pct>`` columns -- see
+    additionally expanded into wide ``qx1_<hex>`` columns -- see
     :func:`_quantile_wide_columns` and the module docstring.
     """
     out: list[dict[str, Any]] = []
@@ -258,7 +378,7 @@ def final_origin_files(checkpoint_path: str | Path) -> list[Path]:
 #: Per-``h<h>`` manifest naming the run that owns the directory's origin files.
 CHECKPOINT_IDENTITY_FILENAME = "run_identity.json"
 CHECKPOINT_IDENTITY_SCHEMA = "macroforecast_checkpoint_run_identity"
-CHECKPOINT_IDENTITY_VERSION = 1
+CHECKPOINT_IDENTITY_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -493,7 +613,7 @@ def append_origin_records(
     treated as completed and not recomputed on resume.
 
     Columns are the fixed :data:`LEAN_FORECAST_COLUMNS` schema plus, when any of
-    these records carries quantile predictions, the wide ``q_<pct>`` columns
+    these records carries quantile predictions, the wide ``qx1_<hex>`` columns
     those particular records need (sorted, for a deterministic column order).
     Every origin's file need not carry the same wide columns -- a point-only
     origin (or a run whose model does not emit quantiles) simply omits them,
@@ -582,10 +702,11 @@ def load_selection_history_frame(checkpoint_path: str | Path) -> pd.DataFrame:
 def load_checkpoint_frame(checkpoint_path: str | Path) -> pd.DataFrame:
     """Load all persisted lean records as a single frame (empty if none/missing).
 
-    Origin files may carry different wide ``q_<pct>`` quantile columns (a
-    point-only or pre-density-pipeline origin has none); ``pd.concat`` unions
-    them, filling gaps with NaN, so this needs no cross-file coordination. When
-    any ``q_<pct>`` column is present, a ``quantile_predictions`` mapping column
+    Origin files may carry different wide quantile columns, and may use either
+    grammar (a point-only or pre-density-pipeline origin has none, and a
+    pre-F-059 origin has legacy ``q_<pct>`` ones); ``pd.concat`` unions them,
+    filling gaps with NaN, so this needs no cross-file coordination. When
+    any wide quantile column is present, a ``quantile_predictions`` mapping column
     is additionally synthesized (the wide columns are kept alongside it, not
     dropped) so this frame's quantile representation matches the rich
     (non-checkpointed) forecast table's -- one ``{level_str: value}`` dict per
@@ -608,7 +729,7 @@ def load_checkpoint_frame(checkpoint_path: str | Path) -> pd.DataFrame:
     if not frames:
         return empty
     result = pd.concat(frames, ignore_index=True)
-    has_wide_quantiles = any(_WIDE_QUANTILE_COLUMN_RE.match(str(c)) for c in result.columns)
+    has_wide_quantiles = any(_is_wide_quantile_column(str(c)) for c in result.columns)
     if has_wide_quantiles and "quantile_predictions" not in result.columns:
         result["quantile_predictions"] = [
             _quantile_dict_from_wide(row) for row in result.to_dict(orient="records")

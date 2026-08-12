@@ -7,7 +7,7 @@ disk, and ``pipeline/rescore.py`` (which reconstructs its ENTIRE master frame
 from the checkpoint) was therefore ALWAYS point-only regardless of what the
 live run emitted. These tests cover the extended schema: ``variance_prediction``
 is now a fixed lean column (a plain float); quantile predictions are stored as
-wide ``q_<pct>`` columns (parquet needs scalar columns) and reconstructed back
+wide per-level columns (parquet needs scalar columns) and reconstructed back
 into the SAME ``{level: value}`` mapping representation on load. OLD
 checkpoints (written before this column existed) must still load fine and
 behave as point-only.
@@ -123,9 +123,16 @@ def test_checkpoint_roundtrip_preserves_quantile_predictions(tmp_path: Path) -> 
     assert files
     for path in files:
         frame = pd.read_parquet(path)
-        # wide scalar columns, not a dict column, on disk.
-        assert {"q_10", "q_50", "q_90"} <= set(frame.columns)
-        for column in ("q_10", "q_50", "q_90"):
+        # wide scalar columns, not a dict column, on disk. The name is
+        # ``qx1_`` plus the level's IEEE-754 hex image (F-059), so it is exactly
+        # invertible rather than rounded to an integer percent.
+        expected = {
+            'qx1_3fb999999999999a',  # 0.1
+            'qx1_3fe0000000000000',  # 0.5
+            'qx1_3feccccccccccccd',  # 0.9
+        }
+        assert expected <= set(frame.columns)
+        for column in expected:
             assert frame[column].dropna().map(np.isfinite).all()
 
     loaded = ckpt.load_checkpoint_frame(hdir)
@@ -149,7 +156,7 @@ def test_checkpoint_roundtrip_preserves_quantile_predictions(tmp_path: Path) -> 
 
 def test_checkpoint_files_stay_scalar_only_with_quantile_wide_columns(tmp_path: Path) -> None:
     """The module's own contract (scalar-only parquet columns) must hold even
-    once wide q_<pct> columns are added."""
+    once wide per-level quantile columns are added."""
     cell = tmp_path / "cell"
     mf.forecasting.run(
         _panel(), "quantile_regression_forest", window=_window(), features=_features(),
@@ -224,7 +231,7 @@ def test_resume_preserves_quantile_predictions_for_checkpoint_loaded_origin(
 
 # --------------------------------------------------------------------------- #
 # 3. old-schema compat: a checkpoint directory written before this change
-#    (no variance_prediction / q_<pct> columns) must still load fine and
+#    (no variance_prediction / wide quantile columns) must still load fine and
 #    behave as point-only downstream.
 # --------------------------------------------------------------------------- #
 
