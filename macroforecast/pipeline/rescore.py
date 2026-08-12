@@ -8,6 +8,13 @@ the glue: a pipeline run spans MANY cells (one ``<target>__<arm>/h<h>/`` directo
 per (target, arm, horizon)), so re-scoring a full run requires hand-walking that
 directory tree and re-assembling a master frame before ``evaluate()`` can run.
 ``rescore()`` is that glue -- the "~3 lines" convenience the docstring promises.
+
+Because the checkpoint IS the data source here, this module is on the STRICT side
+of the split described in ``forecasting/checkpoint.py``: an unreadable
+``origin_*.parquet`` raises ``CheckpointCorruptionError`` instead of being skipped.
+There is nothing to recompute with on this path, so skipping would score a run as
+though the missing origin had never happened. The tolerant behaviour belongs to
+the RESUME gate, which answers a different question and can recompute.
 """
 from __future__ import annotations
 
@@ -94,6 +101,19 @@ def rescore(checkpoint_dir: str | Path, spec: "Any", *, allow_stale: bool = Fals
         instead of a silently-empty report.
         Also raised when manifest-bearing checkpoint cells do not match the
         current spec identity and ``allow_stale`` is false.
+    CheckpointCorruptionError
+        If an ``origin_*.parquet`` under any cell this spec describes cannot be
+        read. ``rescore`` reassembles its master frame from the checkpoint alone,
+        so an unreadable origin cannot be recomputed and skipping it would return
+        accuracy, significance and density results computed as though that origin
+        had never run. Nothing is returned instead, the directory is not modified,
+        and the exception names the exact file (``.path``) and the first offending
+        one in sorted order. It subclasses ``ValueError``, so callers already
+        catching that keep working. A matching RESUME behaves differently on
+        purpose -- it recomputes the damaged origin in place -- which is the
+        strict-read versus tolerant-resume split documented in
+        ``forecasting/checkpoint.py`` and in the "Corrupt checkpoint files"
+        section of the running guide.
     """
     from macroforecast.pipeline.evaluate import evaluate
     from macroforecast.pipeline.evaluation_inputs import resolve_evaluation_inputs

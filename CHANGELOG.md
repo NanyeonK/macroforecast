@@ -5,6 +5,97 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/checkpoint.py`, `forecasting/runner.py`, `pipeline/rescore.py`,
+  `pipeline/selection_history.py`
+  (**a corrupt checkpoint file was silently skipped, so loading and rescoring
+  returned a partial result that looked complete**): F-060 and F-061.
+
+  **The defect.** `load_checkpoint_frame()` wrapped each `pd.read_parquet` in a bare
+  `except: continue`. Two origins on disk with the second damaged returned a
+  one-origin frame with nothing to say so, and every metric computed from it scored
+  as though that origin had never run. `pipeline.rescore()` rebuilds its entire
+  master frame from that loader, so accuracy, significance, MCS and density results
+  inherited the shortfall directly. `load_selection_history_frame()` had the same
+  shape of bug one level down: it appended each JSONL line to the shared result as
+  the line parsed, so a sidecar truncated mid-write contributed its surviving prefix
+  and `selection_frequency_table()` reported a frequency over fewer origins than it
+  claimed, again silently.
+
+  **The new behaviour.** Both loaders now fail closed with
+  `CheckpointCorruptionError`, exported from `macroforecast.forecasting` and a
+  subclass of `ValueError` so callers already catching that keep working. It carries
+  `.path` (the exact file), `.artifact` (`"checkpoint origin file"` or
+  `"selection-history sidecar"`) and `.line` (the offending 1-based sidecar line, or
+  `None` for a whole-file failure such as an unreadable parquet or a sidecar that is
+  not decodable UTF-8). The first offending file in sorted filename order is
+  reported rather than every one of them, so which file is named is deterministic.
+  The reader's own exception is chained as `__cause__` and deliberately not quoted
+  into the message, because pyarrow's wording is version-dependent. The single
+  exception to that chaining is a sidecar line that decoded cleanly but is not a
+  JSON object: nothing failed underneath it, so `__cause__` is `None` by design.
+
+  **Whole-sidecar atomicity.** A sidecar is parsed into a local buffer and accepted
+  only once every nonblank line has decoded to a JSON *object*; a bare scalar or
+  array is rejected, since it carries no field names and used to become a nameless
+  row. Nothing that decoded before the offending line is kept, and a healthy sidecar
+  read earlier in the same call contributes nothing either, so the refusal is whole
+  across files as well as within one. Orphan sidecars, those with no matching
+  `origin_<pos>.parquet`, are still skipped *before* they are opened, so an orphan
+  that is also damaged cannot fail an otherwise healthy load. Blank lines, missing
+  directories, empty directories, zero-row origin marker files, non-matching
+  filenames and crashed-write `.tmp` files all behave exactly as before.
+
+  **Public propagation.** `pipeline.rescore()`, `pipeline.selection_history()` and
+  `pipeline.selection_frequency_table()` inherit the refusal, including when handed
+  a `PipelineReport` rather than a path: a report carries provenance, not a cached
+  history frame, so those calls re-read the sidecars from disk every time.
+
+  **No mutation, and the exact recovery, which differs by artifact.** A failed load
+  never modifies, renames, removes or quarantines anything in the checkpoint
+  directory; the bytes on disk after the exception are the bytes that were there
+  before it. What it takes to get the data back is artifact-specific, and each
+  message says which. A damaged `origin_<pos>.parquet` is repaired by re-running the
+  same configuration against the same `checkpoint_path`: an unreadable origin file
+  does not count as a completed origin, so that origin is recomputed and the file is
+  overwritten in place. Moving or removing that parquet first, or pointing
+  `checkpoint_path` / `checkpoint_dir` at a fresh directory, work as well. A damaged
+  `origin_<pos>_selection.jsonl` is NOT repaired by a plain re-run. Its parquet is
+  read independently, so a healthy parquet keeps that origin completed however
+  damaged the sidecar is, the run skips that origin, and a skipped origin writes no
+  sidecar. Reconstructing that history means moving or removing BOTH the sidecar and
+  its matching `origin_<pos>.parquet` and re-running the same configuration with
+  `selection_history=True`, or using a fresh checkpoint directory. Removing the
+  sidecar alone is allowed, but it loses that origin's selection history rather than
+  rebuilding it.
+
+  **Resume is deliberately unchanged.** `completed_origin_positions()` still ignores
+  an unreadable origin file, because the question it answers is "which origins may I
+  skip?" and a damaged file is not a skippable origin. That is what makes a matching
+  resume self-heal, and `final_origin_files()` still counts the damaged file as a
+  user artifact for the identity gate. Neither behaviour moved.
+
+  **The runner's own merge, and what its warning does and does not claim.** The one
+  read that stays tolerant is the merge a finished run performs to assemble the
+  frame it returns; raising there would discard a completed run's whole result over
+  a single file. The damaged file is excluded and named in one `UserWarning`
+  instead. That warning does not assert the file was out of the run's origin set,
+  because the merge cannot establish that. Origins the run computed or recomputed
+  are held in memory and are unaffected, but an origin a *previous* run completed is
+  served from disk, and one damaged between the resume gate's read and the merge is
+  simply dropped, leaving the returned frame short that origin. The warning states
+  both possibilities, names the paths, tells the user to check the returned frame's
+  origin coverage, and notes that `load_checkpoint_frame()` and `pipeline.rescore()`
+  refuse the directory until the file is dealt with.
+
+  **Not this change.** The checkpoint JSON writers are untouched: manifest and
+  sidecar writing, their temp-file-then-`replace` atomicity, and their non-finite
+  handling (`json.dumps` emitting bare `NaN`/`Infinity`) are byte-for-byte as
+  before, and the new reader still accepts those literals because it uses
+  `json.loads` with its default constant handling. `CHECKPOINT_IDENTITY_VERSION`,
+  the append writers, `completed_origin_positions()` and `final_origin_files()` are
+  behaviourally unchanged. Nothing here changes what is written, only what happens
+  when what was written can no longer be read.
+
 - `forecasting/checkpoint.py`, `forecasting/runner.py`
   (**checkpointed quantile levels were rounded to whole percents, silently merging
   distinct levels**): a behaviour fix, not a cosmetic one, because the rounded levels
@@ -55,7 +146,7 @@ full per-version honesty-pass history embedded in repo documentation.
   version-1 directory would put its rounded, possibly collapsed levels in one forecast
   table with this run's exact ones, so a version-1 manifest sitting beside final
   `origin_*.parquet` files now fails closed under the existing "wrong schema/version"
-  rule: nothing is deleted, renamed, or adopted, and the files stay readable. A
+  rule: nothing is deleted, renamed, or adopted, and the intact files stay readable. A
   version-1 manifest with no origin files to describe is still just a stale manifest and
   is replaced as before. No other resume rule changed.
 

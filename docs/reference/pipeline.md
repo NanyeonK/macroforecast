@@ -183,6 +183,19 @@ ValueError
     instead of a silently-empty report.
     Also raised when manifest-bearing checkpoint cells do not match the
     current spec identity and ``allow_stale`` is false.
+CheckpointCorruptionError
+    If an ``origin_*.parquet`` under any cell this spec describes cannot be
+    read. ``rescore`` reassembles its master frame from the checkpoint alone,
+    so an unreadable origin cannot be recomputed and skipping it would return
+    accuracy, significance and density results computed as though that origin
+    had never run. Nothing is returned instead, the directory is not modified,
+    and the exception names the exact file (``.path``) and the first offending
+    one in sorted order. It subclasses ``ValueError``, so callers already
+    catching that keep working. A matching RESUME behaves differently on
+    purpose -- it recomputes the damaged origin in place -- which is the
+    strict-read versus tolerant-resume split documented in
+    ``forecasting/checkpoint.py`` and in the "Corrupt checkpoint files"
+    section of the running guide.
 
 #### Parameters
 
@@ -451,6 +464,13 @@ a bare checkpoint path, non-null sidecar labels are authoritative; a uniquely
 parsed directory name fills only missing labels, while an ambiguous legacy
 directory leaves missing identity unknown rather than guessing.
 
+Raises
+CheckpointCorruptionError
+    If a sidecar belonging to the resolved checkpoint cannot be read, or holds
+    a nonblank line that is not a JSON object. Each sidecar is accepted whole
+    or not at all, so no partial history is returned; the exception names the
+    file and the offending line. A ``ValueError`` subclass.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -481,6 +501,11 @@ macroforecast.pipeline.selection_frequency_table(history: Any, *, by: Sequence[s
 #### Description
 
 Summarize selection frequencies over distinct checkpoint origins.
+
+Built on :func:`selection_history`, so it inherits that function's disk read
+and its refusal: a corrupt sidecar raises ``CheckpointCorruptionError``
+rather than being summarised around, which would report a frequency computed
+over fewer origins than it claims.
 
 #### Parameters
 

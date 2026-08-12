@@ -13,6 +13,7 @@ Guide context: [../guide/concepts/running.md](../guide/concepts/running.md).
 | `ForecastResult` | class | Forecast runner output. |
 | `LEAN_FORECAST_COLUMNS` | data | A `tuple` of 13 values of str. |
 | `SELECTION_HISTORY_COLUMNS` | data | A `tuple` of 14 values of str. |
+| `CheckpointCorruptionError` | class | A checkpoint artifact could not be read, so nothing was returned. |
 | `load_checkpoint_frame` | function | Load all persisted lean records as a single frame (empty if none/missing). |
 | `load_selection_history_frame` | function | Load optional selection-history JSONL sidecars from one checkpoint dir. |
 | `CombinationSpec` | class | Forecast-combination request consumed by ``forecasting.run``. |
@@ -115,6 +116,69 @@ import macroforecast as mf
 | `with_dual` | `with_dual(self, model: Any \| None, X_train: Any, y_train: Any, X_test: Any \| None = None, *, sidecar_name: str = "dual", **kwargs: Any) -> "'ForecastResult'"` | Build and attach a dual interpretation sidecar. |
 | `with_oshapley` | `with_oshapley(self, X: Any, y: Any, models: Any, *, window: Any, sidecar_name: str = "oshapley", **kwargs: Any) -> "'ForecastResult'"` | Build and attach an oShapley/PBSV forecast-accuracy sidecar. |
 | `with_sidecar` | `with_sidecar(self, name: str, value: Any) -> "'ForecastResult'"` | Return a copy with a named runtime sidecar attached. |
+### CheckpointCorruptionError
+
+Qualified name: `macroforecast.forecasting.checkpoint.CheckpointCorruptionError`
+
+#### Signature
+
+```python
+macroforecast.forecasting.CheckpointCorruptionError(message: str, *, path: Path, artifact: str, line: int | None = None) -> None
+```
+
+#### Description
+
+A checkpoint artifact could not be read, so nothing was returned.
+
+Raised by :func:`load_checkpoint_frame`, :func:`load_selection_history_frame`,
+and everything built on them (``pipeline.rescore``,
+``pipeline.selection_history``, ``pipeline.selection_frequency_table``) when a
+file belonging to the checkpoint cannot be parsed. Reading is all-or-nothing
+on those paths: a reader has no way to recompute, so skipping the unreadable
+artifact would hand back a silently short result (see the module docstring's
+"Reading a checkpoint").
+
+It subclasses ``ValueError``, which is what these loaders' callers already
+catch, and carries the three things a handler needs:
+
+``path``
+    The :class:`~pathlib.Path` of the artifact that failed.
+``artifact``
+    Which kind of artifact it is: ``"checkpoint origin file"`` or
+    ``"selection-history sidecar"``.
+``line``
+    The 1-based line number for a sidecar line this reader rejected, and
+    ``None`` for a whole-file failure: an unreadable parquet, or a sidecar
+    that could not be opened or decoded as UTF-8 at all.
+
+Where something underneath raised -- an unreadable parquet, an unreadable or
+non-UTF-8 sidecar, a line that is not valid JSON -- that exception is chained
+as ``__cause__``, and its text is deliberately kept out of this message
+because it is pyarrow- and version-dependent. Exactly one case has no
+``__cause__``, by design: a sidecar line that decoded cleanly but is not a
+JSON object. Nothing failed underneath it, this reader rejected a well-formed
+value, and manufacturing a cause would misreport where the fault is.
+
+#### Parameters
+
+| Name | Kind | Type | Default |
+| --- | --- | --- | --- |
+| `message` | positional or keyword | `str` | `required` |
+| `path` | keyword only | `Path` | `required` |
+| `artifact` | keyword only | `str` | `required` |
+| `line` | keyword only | `int \| None` | `None` |
+
+#### Returns
+
+`None`
+
+#### Minimal Use
+
+```python
+import macroforecast as mf
+# Construct with the signature above:
+# mf.forecasting.CheckpointCorruptionError(...)
+```
 ### load_checkpoint_frame
 
 Qualified name: `macroforecast.forecasting.checkpoint.load_checkpoint_frame`
@@ -140,6 +204,16 @@ dropped) so this frame's quantile representation matches the rich
 row -- and every downstream consumer (``evaluate()``'s density stage,
 ``rescore()``) can use the SAME dict-based dispatch regardless of whether
 the forecasts came from a live run or a checkpoint.
+
+Fails closed: an ``origin_<pos>.parquet`` that cannot be read raises
+:class:`CheckpointCorruptionError` naming that file, rather than returning
+the origins that did read. Nothing can be recomputed on this path, so a
+shortened frame would be silent partial data -- see the module docstring's
+"Reading a checkpoint". The frame is never shortened, the directory is never
+modified, and the file reported is the first offending one in sorted filename
+order. The message names the recovery this artifact actually has: re-running
+the same configuration against the same ``checkpoint_path`` recomputes the
+damaged origin and overwrites the file in place.
 
 #### Parameters
 
@@ -171,6 +245,22 @@ macroforecast.forecasting.load_selection_history_frame(checkpoint_path: str | Pa
 #### Description
 
 Load optional selection-history JSONL sidecars from one checkpoint dir.
+
+Fails closed on a corrupt sidecar with :class:`CheckpointCorruptionError`,
+naming the file and the offending line, rather than returning the rows that
+happened to decode. Each sidecar is all-or-nothing, and the first offending
+one in sorted filename order stops the load; see the module docstring's
+"Reading a checkpoint". A sidecar with no ``origin_<pos>.parquet`` beside it
+is an orphan and is skipped BEFORE it is opened, exactly as before, so an
+orphan that is also corrupt cannot fail an otherwise healthy load. Blank
+lines are ignored, also as before.
+
+The recovery this artifact has is NOT the one a damaged origin parquet has,
+and the message says so: a healthy ``origin_<pos>.parquet`` keeps its origin
+completed however damaged the sidecar is, so a plain re-run skips that origin
+and rewrites no sidecar. Reconstructing the history takes moving or removing
+BOTH files and re-running with selection history enabled, or a fresh
+directory; removing the sidecar alone loses that origin's history instead.
 
 #### Parameters
 
