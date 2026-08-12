@@ -863,6 +863,11 @@ accept only target transforms that normalize to ``"level"`` or ``"value"``.
 Other transforms raise instead of labelling an untransformed panel forecast as
 a change, growth rate, or average.
 
+Panel-input models do not implement parameter tuning. If a model has a default
+search space, ``model_selection=None`` therefore raises before fitting; pass an
+explicit ``{alias: None}`` mapping to opt out, or pin every searched parameter
+through ``params=``.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -951,6 +956,11 @@ Panel-input models forecast the canonical target in its own units and therefore
 accept only target transforms that normalize to ``"level"`` or ``"value"``.
 Other transforms raise instead of labelling an untransformed panel forecast as
 a change, growth rate, or average.
+
+Panel-input models do not implement parameter tuning. If a model has a default
+search space, ``model_selection=None`` therefore raises before fitting; pass an
+explicit ``{alias: None}`` mapping to opt out, or pin every searched parameter
+through ``params=``.
 
 #### Parameters
 

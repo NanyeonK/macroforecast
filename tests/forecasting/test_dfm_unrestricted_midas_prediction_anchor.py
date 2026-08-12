@@ -55,6 +55,7 @@ def test_dfm_unrestricted_midas_prediction_anchor_no_longer_nans(policy) -> None
     report = mf.forecasting.run(
         _monthly_panel(), "dfm_unrestricted_midas", window=_window(), features=None,
         target="Y", horizons=[2], forecast_policy=policy,
+        model_selection={"dfm_unrestricted_midas": None},
     )
     fc = report.to_frame()
 
@@ -66,6 +67,7 @@ def test_dfm_unrestricted_midas_recursive_uses_panel_path() -> None:
     report = mf.forecasting.run(
         _monthly_panel(), "dfm_unrestricted_midas", window=_window(), features=None,
         target="Y", horizons=[2], forecast_policy="recursive",
+        model_selection={"dfm_unrestricted_midas": None},
     )
     fc = report.to_frame()
 

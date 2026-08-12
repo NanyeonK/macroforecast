@@ -185,6 +185,15 @@ Pipeline model persistence is opt-in. `pipeline_spec(...)` defaults to
 need fitted-model pickles. Large projected stores warn before execution. Remove
 old model fits with `mf.pipeline.purge_model_store(...)`. The lower-level
 `mf.forecasting.run(...)` keeps its historical `save_models=True` default.
+Lowercase ASCII aliases keep their readable historical directory names. Aliases or
+other path components that would be lossy, case-ambiguous, reserved, or too long gain a
+deterministic digest suffix so distinct raw identities do not collapse to the same
+filesystem component. This protection is component-level; it does not turn the fitted
+model store into a content-addressed cache. Existing directories remain readable and
+purgeable, but a new write for a previously sanitized unsafe alias goes to a separate
+digested directory. `purge_model_store(aliases=...)` accepts on-disk directory
+components and never encodes a raw alias; passing the raw unsafe alias generally matches
+nothing and returns zero.
 
 ## Incremental horse races
 

@@ -104,6 +104,7 @@ def test_var_direct_runner_does_not_use_future_target_values() -> None:
             target="y0",
             horizons=[horizon],
             forecast_policy="direct",
+            model_selection={"var": None},
             save_models=False,
         ).to_frame()
 

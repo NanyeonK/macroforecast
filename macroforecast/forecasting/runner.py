@@ -328,6 +328,11 @@ def run(
     accept only target transforms that normalize to ``"level"`` or ``"value"``.
     Other transforms raise instead of labelling an untransformed panel forecast as
     a change, growth rate, or average.
+
+    Panel-input models do not implement parameter tuning. If a model has a default
+    search space, ``model_selection=None`` therefore raises before fitting; pass an
+    explicit ``{alias: None}`` mapping to opt out, or pin every searched parameter
+    through ``params=``.
     """
 
     target, features, horizon, horizons, forecast_policy, target_transform = _apply_task(
@@ -493,6 +498,8 @@ def run(
             raise ValueError(
                 "panel-input models consume the panel directly; pass features=None"
             )
+        for model_run in model_runs:
+            _validate_panel_selection(selection, model_run)
         panel_target = _panel_runner_target(target, model_runs)
         # preprocessing_store is intentionally not forwarded here: panel-input
         # models bypass _prepare_origin_panel, so there is no per-origin
@@ -1315,6 +1322,8 @@ def _run_vintage_aware(
             raise ValueError(
                 "panel-input models consume the panel directly; pass features=None"
             )
+        for model_run in model_runs:
+            _validate_panel_selection(selection, model_run)
         panel_target = _panel_runner_target(target, model_runs)
         return _run_vintage_panel_models(
             data,
@@ -2996,6 +3005,7 @@ from macroforecast.forecasting.policies.base import (  # noqa: E402
     _quantile_frame,  # noqa: F401  (re-export)
     _safe_path_part,  # noqa: F401  (re-export)
     _store_model_fit,  # noqa: F401  (re-export)
+    _store_path_part,  # noqa: F401  (re-export)
     _variance_series,  # noqa: F401  (re-export)
 )
 from macroforecast.forecasting.policies.direct import (  # noqa: E402

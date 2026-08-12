@@ -28,6 +28,7 @@ from macroforecast.forecasting.model_resolution import (
     _actual_model_params,
 )
 from macroforecast.forecasting.policies.base import (
+    _effective_selection_after_pinning,
     _prediction_series,
     _store_model_fit,
     _with_derived_random_state,
@@ -235,15 +236,31 @@ def _validate_panel_selection(
     selected, use_model_default_selection = _selection_for_model(selection, model_run)
     if selected is not None:
         raise ValueError(
-            "panel-input forecasting does not tune model parameters yet; pass "
-            f"model_selection={{'{model_run.alias}': None}} or model_selection=None"
+            "panel-input forecasting does not tune model parameters yet and cannot "
+            f"apply a SearchSpec for {model_run.alias!r}; pass "
+            f"model_selection={{'{model_run.alias}': None}} to opt out explicitly, "
+            "or pin every searched parameter through params=."
         )
     if isinstance(selection, Mapping) and (
         model_run.alias in selection or model_run.spec.name in selection
     ):
         return
-    if use_model_default_selection and model_run.spec.search_spaces:
+    effective = _effective_selection_after_pinning(
+        model_run.spec,
+        selected,
+        use_model_default_selection=use_model_default_selection,
+    )
+    if not effective.should_select:
         return
+    preset = model_run.spec.preset or model_run.spec.default_preset
+    searched_keys = sorted(effective.model_spec.search_space())
+    raise ValueError(
+        "panel-input forecasting does not tune model parameters yet, but "
+        f"model_selection=None requests the default {preset!r} search for "
+        f"{model_run.alias!r} over {searched_keys!r}. Pass "
+        f"model_selection={{'{model_run.alias}': None}} to opt out explicitly, "
+        "or pin every searched parameter through params=."
+    )
 
 
 
