@@ -24,6 +24,7 @@ from macroforecast.forecasting.types import ForecastResult
 from macroforecast.forecasting.checkpoint import (
     LEAN_FORECAST_COLUMNS,
     SELECTION_HISTORY_COLUMNS,
+    CheckpointCorruptionError,
     load_checkpoint_frame,
     load_selection_history_frame,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "ForecastResult",
     "LEAN_FORECAST_COLUMNS",
     "SELECTION_HISTORY_COLUMNS",
+    "CheckpointCorruptionError",
     "load_checkpoint_frame",
     "load_selection_history_frame",
     "CombinationSpec",

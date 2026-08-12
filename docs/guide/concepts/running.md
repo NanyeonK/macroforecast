@@ -483,7 +483,10 @@ other case raises `ValueError` and leaves the directory untouched:
 | present | complete, digest matches | resumed |
 
 Refusing is not invalidating. Nothing is deleted, renamed, or quarantined, and the
-files stay readable by `load_checkpoint_frame()` and `rescore()` exactly as before.
+files that are intact stay readable by `load_checkpoint_frame()` and `rescore()`
+exactly as before. Intact is the operative word: a refused directory holding a
+damaged file now raises rather than quietly reading around it, which is the
+subject of the next section.
 What a directory with no manifest cannot do is be resumed *into*, because nothing on
 disk says which configuration produced it and adopting it would mean writing the
 current identity beside forecasts that may belong to another run. Point
@@ -499,6 +502,72 @@ Inside `run_pipeline()`, a refused cell fails on its own and is reported on
 `PipelineReport.failed_cells`; the other cells still run, and the refused cell's
 `cell_manifest.json` is left as it was, since the pipeline writes that only after a
 cell's `run()` returns.
+
+### Corrupt checkpoint files
+
+A checkpoint directory is read for two different questions, and the same damaged
+file gets opposite answers because the two questions want opposite answers.
+
+*Which origins may I skip?* is what the resume gate asks. An origin file that
+cannot be read is not a skippable origin, so it is ignored and the runner
+recomputes that origin and overwrites the damaged file. A matching resume
+therefore **self-heals**: re-running the same configuration against the same
+`checkpoint_path` is the ordinary repair for a damaged origin, and this behaviour
+is unchanged.
+
+*Give me the forecasts* is what `load_checkpoint_frame()`,
+`load_selection_history_frame()`, `rescore()`, `selection_history()` and
+`selection_frequency_table()` ask. No recomputation is available to a reader —
+the checkpoint *is* the data source — so these **fail closed** with
+`mf.forecasting.CheckpointCorruptionError` rather than hand back a table that is
+silently short an origin and metrics that score as though it never ran. The
+error subclasses `ValueError`, so existing handlers still catch it, and it
+carries `.path` (the exact file), `.artifact` (`"checkpoint origin file"` or
+`"selection-history sidecar"`) and `.line` (the offending 1-based sidecar line,
+or `None` for a whole-file failure). The first offending file in sorted filename
+order is reported rather than every one of them, nothing in the directory is
+modified, and the underlying reader's error is chained as `__cause__` rather than
+quoted into the message.
+
+A selection-history sidecar is accepted whole or not at all. It is parsed into a
+local buffer and kept only once every nonblank line has decoded to a JSON object,
+so a sidecar truncated mid-write contributes nothing rather than its surviving
+prefix. Orphan sidecars — those with no `origin_<pos>.parquet` beside them — are
+still skipped before they are opened, so an orphan that is also damaged cannot
+fail an otherwise healthy load, and blank lines are still ignored.
+
+One read is deliberately tolerant: the merge a finished run performs to assemble
+the frame it returns. Raising there would throw away a completed run's whole
+result over a single file, so the damaged file is excluded and named in a
+`UserWarning` instead. Read that warning carefully rather than treating it as
+cosmetic. Origins the run computed or recomputed are held in memory and are
+unaffected, but an origin a *previous* run completed is served from disk, and one
+damaged after the resume gate read it is simply dropped — so if a named file is
+one of those, the returned frame is short that origin. The merge cannot tell the
+two cases apart, which is why it warns instead of claiming the file was
+irrelevant. Check the returned frame's origin coverage before trusting it.
+
+Recovery is not the same in every case. It depends on which artifact is
+damaged, because the two are discovered differently.
+
+A damaged **`origin_<pos>.parquet`** is repaired by re-running the same
+configuration against the same `checkpoint_path` / `checkpoint_dir`. An
+unreadable origin file does not count as a completed origin, so that origin is
+recomputed and the file is overwritten in place. Moving or removing the named
+parquet first and then re-running works too, and so does pointing
+`checkpoint_path` / `checkpoint_dir` at a fresh directory to recompute from
+scratch.
+
+A damaged **`origin_<pos>_selection.jsonl`** is *not* repaired that way. Its
+forecast parquet is read independently, so a healthy parquet keeps that origin
+completed however damaged the sidecar is; the run skips the origin, and a skipped
+origin writes no sidecar. To reconstruct that history, move or remove **both** the
+named sidecar and its matching `origin_<pos>.parquet`, then re-run the same
+configuration with `selection_history=True`. A fresh checkpoint directory works
+as well. Moving only the sidecar leaves that origin's selection history *absent*
+rather than reconstructed, so it is not a full recovery; removing it alone is a
+reasonable choice when those rows are not wanted, but it deliberately loses that
+origin's selection history.
 
 Selection-history logging is opt-in on checkpointed pipeline runs:
 

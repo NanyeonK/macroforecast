@@ -53,9 +53,9 @@ from macroforecast.forecasting.task import (
 from macroforecast.forecasting.checkpoint import (
     LEAN_FORECAST_COLUMNS,
     CheckpointRunIdentity,
+    _load_checkpoint_frame_tolerant,
     append_origin_records,
     append_origin_selection_records,
-    load_checkpoint_frame,
     resolve_checkpoint_resume,
 )
 from macroforecast.forecasting.model_resolution import (
@@ -3586,14 +3586,51 @@ def _merge_checkpoint_records(
     ``variance_prediction`` is one of :data:`LEAN_FORECAST_COLUMNS` (a plain
     float), so it survives this merge with no extra handling. Quantile
     predictions are stored on disk as wide ``qx1_<hex>`` columns;
-    ``load_checkpoint_frame`` already reconstructs a ``quantile_predictions``
-    mapping column from them (see ``forecasting/checkpoint.py``), matching the
-    SAME ``{level_str: value}`` representation a freshly-computed origin's
-    ``quantile_predictions`` carries, so a resumed run's forecast table never
-    mixes two different quantile representations across rows.
+    ``_load_checkpoint_frame_tolerant`` already reconstructs a
+    ``quantile_predictions`` mapping column from them (see
+    ``forecasting/checkpoint.py``), matching the SAME ``{level_str: value}``
+    representation a freshly-computed origin's ``quantile_predictions`` carries,
+    so a resumed run's forecast table never mixes two different quantile
+    representations across rows.
+
+    This is the ONE read that does not fail closed on a corrupt origin file,
+    because raising here would discard an otherwise finished run's entire result
+    over a single file. The damaged file is excluded and named in one warning
+    instead.
+
+    That tolerance is not a claim that the excluded file was irrelevant, and the
+    warning must not make one. Origins this run computed are already in
+    ``records``, and origins it recomputed have overwritten their own files, so
+    those are safe. An origin a PREVIOUS run completed is supplied by this read
+    alone, and the resume gate read the directory before the run started: a file
+    intact then and damaged now is dropped here, leaving the returned frame short
+    that origin with only the warning to say so. The warning therefore names the
+    paths and states both possibilities. The public readers
+    (``load_checkpoint_frame``, ``pipeline.rescore``) still refuse the directory
+    outright.
     """
     in_memory_keys = {_checkpoint_record_key(record) for record in records}
-    frame = load_checkpoint_frame(checkpoint_path)
+    frame, unreadable = _load_checkpoint_frame_tolerant(checkpoint_path)
+    if unreadable:
+        warnings.warn(
+            "checkpoint origin file(s) could not be read while assembling this "
+            "run's forecast table, and were excluded from it: "
+            + ", ".join(repr(str(path)) for path in sorted(unreadable))
+            + ". Origins this run computed or recomputed are held in memory and "
+            "are unaffected. An origin a PREVIOUS run completed is served from "
+            "disk instead, so if any file named here is one of those, this frame "
+            "is SHORT that origin and every metric computed from it scores as "
+            "though the origin never ran. Check the returned frame's origin "
+            "coverage before trusting it. Every file named here is a checkpoint "
+            "origin file, so re-run the same configuration against the same "
+            "checkpoint_path to repair them: an unreadable origin file does not "
+            "count as a completed origin, so it is recomputed and overwritten in "
+            "place. Moving or removing the named file(s) first and then re-running "
+            "works too. load_checkpoint_frame() and pipeline.rescore() refuse this "
+            "directory until then.",
+            UserWarning,
+            stacklevel=2,
+        )
     if frame.empty:
         return records
     merged = list(records)

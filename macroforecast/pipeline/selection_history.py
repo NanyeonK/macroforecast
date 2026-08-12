@@ -1,4 +1,14 @@
-"""Selection-history loading and aggregation for checkpointed pipeline runs."""
+"""Selection-history loading and aggregation for checkpointed pipeline runs.
+
+Both public entry points read the per-origin ``origin_<pos>_selection.jsonl``
+sidecars from disk on every call, including when handed a ``PipelineReport`` --
+a report carries provenance, not a cached history frame. They are therefore on
+the STRICT side of the checkpoint read split (see ``forecasting/checkpoint.py``):
+a sidecar that cannot be read, or that holds a line which is not a JSON object,
+raises ``CheckpointCorruptionError`` rather than contributing the rows that
+happened to decode, because a partial sidecar undercounts a selection frequency
+without saying so.
+"""
 from __future__ import annotations
 
 import dataclasses as _dc
@@ -29,6 +39,14 @@ def selection_history(report_or_store: Any) -> pd.DataFrame:
     a bare checkpoint path, non-null sidecar labels are authoritative; a uniquely
     parsed directory name fills only missing labels, while an ambiguous legacy
     directory leaves missing identity unknown rather than guessing.
+
+    Raises
+    ------
+    CheckpointCorruptionError
+        If a sidecar belonging to the resolved checkpoint cannot be read, or holds
+        a nonblank line that is not a JSON object. Each sidecar is accepted whole
+        or not at all, so no partial history is returned; the exception names the
+        file and the offending line. A ``ValueError`` subclass.
     """
     if isinstance(report_or_store, pd.DataFrame):
         return _normalize_history_frame(report_or_store)
@@ -63,7 +81,13 @@ def selection_frequency_table(
     *,
     by: Sequence[str] = ("arm", "horizon", "kind", "name"),
 ) -> pd.DataFrame:
-    """Summarize selection frequencies over distinct checkpoint origins."""
+    """Summarize selection frequencies over distinct checkpoint origins.
+
+    Built on :func:`selection_history`, so it inherits that function's disk read
+    and its refusal: a corrupt sidecar raises ``CheckpointCorruptionError``
+    rather than being summarised around, which would report a frequency computed
+    over fewer origins than it claims.
+    """
     frame = selection_history(history)
     group_cols = [str(column) for column in by]
     missing = [column for column in group_cols if column not in frame.columns]

@@ -99,12 +99,59 @@ no origin files to describe is just a stale manifest and is replaced as before.
 
 Refusing is not the same as invalidating. A refused directory is untouched, and
 :func:`load_checkpoint_frame` / :func:`load_selection_history_frame` (and hence
-``pipeline.rescore``) keep reading legacy checkpoints exactly as before. What a
-legacy checkpoint cannot do is be RESUMED INTO, because nothing on disk records
-the configuration that produced it. Adopting it would mean writing this run's
-identity next to artifacts whose identity is unknowable, which is the false
+``pipeline.rescore``) keep reading HEALTHY legacy checkpoints exactly as before.
+What changed for those readers is corruption, not age, and is described next.
+What a legacy checkpoint cannot do is be RESUMED INTO, because nothing on disk
+records the configuration that produced it. Adopting it would mean writing this
+run's identity next to artifacts whose identity is unknowable, which is the false
 blessing the gate exists to prevent; recovery is the user's ordinary choice of a
 fresh ``checkpoint_path`` or their own removal of the old one.
+
+Reading a checkpoint
+--------------------
+A checkpoint directory is read for two different questions, and they want
+opposite answers about the same damaged file (F-060/F-061).
+
+*Which origins may I skip?* is :func:`completed_origin_positions`, asked by the
+resume gate. An unreadable origin file is not a skippable origin, so it is
+ignored, and the runner recomputes that origin and overwrites the damaged file.
+That is why a matching resume SELF-HEALS, and it is deliberately unchanged.
+
+*Give me the forecasts* is :func:`load_checkpoint_frame` and
+:func:`load_selection_history_frame`. No recomputation is available to a reader --
+the checkpoint IS the data source -- so these fail closed with
+:class:`CheckpointCorruptionError` rather than return a frame that is silently
+short an origin. They fail fast on the first offending artifact in sorted
+filename order rather than enumerating every corruption, they never modify the
+directory, and the reader's own (pyarrow- and version-dependent) error is chained
+as ``__cause__`` rather than quoted into a message users would match on. A
+sidecar is parsed into a LOCAL buffer and accepted only once every nonblank line
+has decoded to a JSON object, so one truncated mid-write contributes nothing
+rather than its surviving prefix.
+
+*How do I get the data back?* has two different answers, one per artifact, and
+each message carries its own. A damaged ``origin_<pos>.parquet`` is healed by
+re-running the same configuration against the same ``checkpoint_path``, because
+the resume gate does not count it as completed; moving or removing it first, or
+using a fresh directory, work as well. A damaged
+``origin_<pos>_selection.jsonl`` is NOT healed that way. Its parquet is read
+independently, so a healthy parquet keeps that origin completed however damaged
+the sidecar is, the runner skips the origin, and a skipped origin writes no
+sidecar. Reconstructing that history means moving or removing BOTH the sidecar
+and its matching parquet and re-running with selection history enabled, or using
+a fresh directory. Removing the sidecar alone is allowed, but it leaves that
+origin's selection history absent rather than reconstructed.
+
+The one caller that wants neither answer is ``runner._merge_checkpoint_records``,
+which assembles the frame a finished run returns. Raising there would discard a
+completed run's entire result over one file, so it alone reads through
+:func:`_load_checkpoint_frame_tolerant` and warns once, naming what it excluded.
+That tolerance is NOT a claim that what it excluded was irrelevant. Origins this
+run computed or recomputed are already in memory and are unaffected, but an origin
+a PREVIOUS run completed is supplied by that read alone, and the resume gate read
+the directory before the run started, so a file intact then and damaged now is
+dropped and the returned frame is short that origin. The warning states both and
+names the paths; the public readers still refuse the directory outright.
 """
 from __future__ import annotations
 
@@ -163,6 +210,62 @@ SELECTION_HISTORY_COLUMNS: tuple[str, ...] = (
     "score",
     "source",
 )
+
+
+#: Stable ``CheckpointCorruptionError.artifact`` value for a per-origin
+#: ``origin_<pos>.parquet`` forecast file.
+CHECKPOINT_ORIGIN_ARTIFACT = "checkpoint origin file"
+
+#: Stable ``CheckpointCorruptionError.artifact`` value for a per-origin
+#: ``origin_<pos>_selection.jsonl`` selection-history sidecar.
+CHECKPOINT_SELECTION_ARTIFACT = "selection-history sidecar"
+
+
+class CheckpointCorruptionError(ValueError):
+    """A checkpoint artifact could not be read, so nothing was returned.
+
+    Raised by :func:`load_checkpoint_frame`, :func:`load_selection_history_frame`,
+    and everything built on them (``pipeline.rescore``,
+    ``pipeline.selection_history``, ``pipeline.selection_frequency_table``) when a
+    file belonging to the checkpoint cannot be parsed. Reading is all-or-nothing
+    on those paths: a reader has no way to recompute, so skipping the unreadable
+    artifact would hand back a silently short result (see the module docstring's
+    "Reading a checkpoint").
+
+    It subclasses ``ValueError``, which is what these loaders' callers already
+    catch, and carries the three things a handler needs:
+
+    ``path``
+        The :class:`~pathlib.Path` of the artifact that failed.
+    ``artifact``
+        Which kind of artifact it is: ``"checkpoint origin file"`` or
+        ``"selection-history sidecar"``.
+    ``line``
+        The 1-based line number for a sidecar line this reader rejected, and
+        ``None`` for a whole-file failure: an unreadable parquet, or a sidecar
+        that could not be opened or decoded as UTF-8 at all.
+
+    Where something underneath raised -- an unreadable parquet, an unreadable or
+    non-UTF-8 sidecar, a line that is not valid JSON -- that exception is chained
+    as ``__cause__``, and its text is deliberately kept out of this message
+    because it is pyarrow- and version-dependent. Exactly one case has no
+    ``__cause__``, by design: a sidecar line that decoded cleanly but is not a
+    JSON object. Nothing failed underneath it, this reader rejected a well-formed
+    value, and manufacturing a cause would misreport where the fault is.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        path: Path,
+        artifact: str,
+        line: int | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.path = path
+        self.artifact = artifact
+        self.line = line
 
 
 def _origin_filename(origin_pos: Any) -> str:
@@ -514,8 +617,8 @@ def _refusal(directory: Path, n_origins: int, detail: str) -> str:
         "under a configuration this run cannot show to be the same one. Nothing was "
         "written, removed, or renamed: point checkpoint_path at a fresh directory to "
         "compute this configuration from scratch, or move/remove the existing "
-        "directory yourself if its forecasts are no longer wanted. The existing "
-        "files remain readable by load_checkpoint_frame() and pipeline.rescore()."
+        "directory yourself if its forecasts are no longer wanted. Files that are "
+        "intact remain readable by load_checkpoint_frame() and pipeline.rescore()."
     )
 
 
@@ -667,8 +770,172 @@ def append_origin_selection_records(
         raise
 
 
+def _json_type_name(value: Any) -> str:
+    """The JSON spelling of a decoded value's type, for an actionable message."""
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, (int, float)):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, list):
+        return "array"
+    return type(value).__name__
+
+
+#: The one sentence every corruption message shares. Recovery does NOT follow
+#: from it: the two artifacts recover differently, so each has its own tail.
+_NO_MUTATION = "The checkpoint directory was not modified, renamed, or removed."
+
+
+def _origin_recovery() -> str:
+    """Recovery tail for a damaged ``origin_<pos>.parquet``: a re-run heals it.
+
+    :func:`completed_origin_positions` does not count an unreadable origin file
+    as a completed origin, so re-running the same configuration against the same
+    ``checkpoint_path`` recomputes that origin and overwrites the file in place.
+    """
+    return (
+        f"{_NO_MUTATION} Recover by re-running the same configuration against the "
+        "same checkpoint_path: an unreadable origin file does not count as a "
+        "completed origin, so that origin is recomputed and this file is "
+        "overwritten in place. Moving or removing this file first and then "
+        "re-running works too, as does pointing checkpoint_path at a fresh "
+        "directory to recompute from scratch."
+    )
+
+
+def _sidecar_recovery(path: Path) -> str:
+    """Recovery tail for a damaged sidecar, which a plain re-run does NOT heal.
+
+    The ``origin_<pos>.parquet`` beside a sidecar is read on its own, so a healthy
+    parquet keeps its origin in :func:`completed_origin_positions` no matter what
+    state the sidecar is in. The runner then skips that origin, and a skipped
+    origin writes no sidecar, so the damaged bytes survive the re-run untouched.
+    Both artifacts have to go before the origin is recomputed and the sidecar
+    written again.
+    """
+    match = _ORIGIN_SELECTION_FILE_RE.match(path.name)
+    partner = "" if match is None else f" {_origin_filename(int(match.group(1)))!r}"
+    return (
+        f"{_NO_MUTATION} A plain re-run does NOT heal this file while the "
+        "origin_<pos>.parquet beside it still reads: that origin still counts as "
+        "completed, so the run skips it, and a skipped origin writes no sidecar. "
+        "To reconstruct this history, move or remove BOTH this sidecar and its "
+        f"matching origin file{partner}, then re-run the same configuration with "
+        "selection history enabled; pointing checkpoint_path at a fresh directory "
+        "works as well. Moving only the sidecar leaves this origin's selection "
+        "history ABSENT rather than reconstructed, so it is a repair only if those "
+        "rows are not wanted."
+    )
+
+
+def _origin_corruption_message(path: Path) -> str:
+    return (
+        f"{CHECKPOINT_ORIGIN_ARTIFACT} {str(path)!r} could not be read, so "
+        "load_checkpoint_frame() returned nothing rather than a partial frame. "
+        "Skipping it would return a forecast table silently short by one origin, "
+        "and every metric computed from that table would score as though the "
+        f"origin had never run. {_origin_recovery()} The reader's own "
+        "error is chained as this exception's __cause__."
+    )
+
+
+def _sidecar_unreadable_message(path: Path) -> str:
+    return (
+        f"{CHECKPOINT_SELECTION_ARTIFACT} {str(path)!r} could not be read, so "
+        "load_selection_history_frame() returned nothing rather than a partial "
+        f"frame. {_sidecar_recovery(path)} The reader's own error is chained "
+        "as this exception's __cause__."
+    )
+
+
+def _sidecar_invalid_json_message(path: Path, line: int) -> str:
+    return (
+        f"{CHECKPOINT_SELECTION_ARTIFACT} {str(path)!r} is not valid JSON on line "
+        f"{line}, so load_selection_history_frame() returned nothing rather than a "
+        "partial frame. A sidecar is accepted whole or not at all, so the records "
+        f"before line {line} were discarded too: keeping them would undercount a "
+        f"selection frequency without saying so. {_sidecar_recovery(path)} The "
+        "decoder's own error is chained as this exception's __cause__."
+    )
+
+
+def _sidecar_non_object_message(path: Path, line: int, value: Any) -> str:
+    return (
+        f"{CHECKPOINT_SELECTION_ARTIFACT} {str(path)!r} decoded to a JSON "
+        f"{_json_type_name(value)} rather than an object on line {line}, so "
+        "load_selection_history_frame() returned nothing rather than a partial "
+        "frame. Every nonblank sidecar line must be a JSON object holding one "
+        "selection record; a bare scalar or array carries no field names and "
+        f"would become a nameless row. {_sidecar_recovery(path)}"
+    )
+
+
+def _read_selection_sidecar(path: Path) -> list[dict[str, Any]]:
+    """Parse one sidecar into a LOCAL buffer, accepted only if every line is.
+
+    The buffer is the whole point (F-061). Appending each decoded line straight
+    into the shared result let a sidecar truncated mid-write contribute its
+    surviving prefix, silently undercounting a selection frequency.
+    """
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CheckpointCorruptionError(
+            _sidecar_unreadable_message(path),
+            path=path,
+            artifact=CHECKPOINT_SELECTION_ARTIFACT,
+        ) from exc
+    buffered: list[dict[str, Any]] = []
+    for number, line in enumerate(lines, start=1):
+        text = line.strip()
+        if not text:
+            continue
+        try:
+            decoded = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise CheckpointCorruptionError(
+                _sidecar_invalid_json_message(path, number),
+                path=path,
+                artifact=CHECKPOINT_SELECTION_ARTIFACT,
+                line=number,
+            ) from exc
+        if not isinstance(decoded, Mapping):
+            # Deliberately unchained: the decode SUCCEEDED, so there is no
+            # underlying error to point at. This reader rejected a well-formed
+            # value, and __cause__ stays None to say exactly that.
+            raise CheckpointCorruptionError(
+                _sidecar_non_object_message(path, number, decoded),
+                path=path,
+                artifact=CHECKPOINT_SELECTION_ARTIFACT,
+                line=number,
+            )
+        buffered.append(dict(decoded))
+    return buffered
+
+
 def load_selection_history_frame(checkpoint_path: str | Path) -> pd.DataFrame:
-    """Load optional selection-history JSONL sidecars from one checkpoint dir."""
+    """Load optional selection-history JSONL sidecars from one checkpoint dir.
+
+    Fails closed on a corrupt sidecar with :class:`CheckpointCorruptionError`,
+    naming the file and the offending line, rather than returning the rows that
+    happened to decode. Each sidecar is all-or-nothing, and the first offending
+    one in sorted filename order stops the load; see the module docstring's
+    "Reading a checkpoint". A sidecar with no ``origin_<pos>.parquet`` beside it
+    is an orphan and is skipped BEFORE it is opened, exactly as before, so an
+    orphan that is also corrupt cannot fail an otherwise healthy load. Blank
+    lines are ignored, also as before.
+
+    The recovery this artifact has is NOT the one a damaged origin parquet has,
+    and the message says so: a healthy ``origin_<pos>.parquet`` keeps its origin
+    completed however damaged the sidecar is, so a plain re-run skips that origin
+    and rewrites no sidecar. Reconstructing the history takes moving or removing
+    BOTH files and re-running with selection history enabled, or a fresh
+    directory; removing the sidecar alone loses that origin's history instead.
+    """
     directory = Path(checkpoint_path)
     empty = pd.DataFrame(columns=list(SELECTION_HISTORY_COLUMNS))
     if not directory.exists():
@@ -679,17 +946,10 @@ def load_selection_history_frame(checkpoint_path: str | Path) -> pd.DataFrame:
         if match is None:
             continue
         forecast_path = directory / _origin_filename(int(match.group(1)))
+        # Orphan test first, and deliberately before the sidecar is opened.
         if not forecast_path.exists():
             continue
-        try:
-            with path.open("r", encoding="utf-8") as handle:
-                for line in handle:
-                    text = line.strip()
-                    if not text:
-                        continue
-                    records.append(json.loads(text))
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-            continue
+        records.extend(_read_selection_sidecar(path))
     if not records:
         return empty
     frame = pd.DataFrame.from_records(records)
@@ -697,6 +957,49 @@ def load_selection_history_frame(checkpoint_path: str | Path) -> pd.DataFrame:
         if column not in frame.columns:
             frame[column] = pd.NA
     return frame
+
+
+def _read_origin_frames(
+    directory: Path,
+    *,
+    strict: bool,
+) -> tuple[list[pd.DataFrame], list[Path]]:
+    """Read every final origin file, in sorted filename order.
+
+    ``strict`` is the F-060 policy switch, and the only difference between the
+    public loader and the runner's own merge read. When strict, the first
+    unreadable file raises and nothing is returned; otherwise it is collected
+    into the second element so the caller can report what it excluded.
+    """
+    frames: list[pd.DataFrame] = []
+    skipped: list[Path] = []
+    for path in sorted(directory.glob("origin_*.parquet")):
+        if _ORIGIN_FILE_RE.match(path.name) is None:
+            continue
+        try:
+            frames.append(pd.read_parquet(path))
+        except Exception as exc:
+            if strict:
+                raise CheckpointCorruptionError(
+                    _origin_corruption_message(path),
+                    path=path,
+                    artifact=CHECKPOINT_ORIGIN_ARTIFACT,
+                ) from exc
+            skipped.append(path)
+    return frames, skipped
+
+
+def _assemble_checkpoint_frame(frames: list[pd.DataFrame]) -> pd.DataFrame:
+    """Union the per-origin frames and restore the quantile mapping column."""
+    if not frames:
+        return pd.DataFrame(columns=list(LEAN_FORECAST_COLUMNS))
+    result = pd.concat(frames, ignore_index=True)
+    has_wide_quantiles = any(_is_wide_quantile_column(str(c)) for c in result.columns)
+    if has_wide_quantiles and "quantile_predictions" not in result.columns:
+        result["quantile_predictions"] = [
+            _quantile_dict_from_wide(row) for row in result.to_dict(orient="records")
+        ]
+    return result
 
 
 def load_checkpoint_frame(checkpoint_path: str | Path) -> pd.DataFrame:
@@ -713,28 +1016,50 @@ def load_checkpoint_frame(checkpoint_path: str | Path) -> pd.DataFrame:
     row -- and every downstream consumer (``evaluate()``'s density stage,
     ``rescore()``) can use the SAME dict-based dispatch regardless of whether
     the forecasts came from a live run or a checkpoint.
+
+    Fails closed: an ``origin_<pos>.parquet`` that cannot be read raises
+    :class:`CheckpointCorruptionError` naming that file, rather than returning
+    the origins that did read. Nothing can be recomputed on this path, so a
+    shortened frame would be silent partial data -- see the module docstring's
+    "Reading a checkpoint". The frame is never shortened, the directory is never
+    modified, and the file reported is the first offending one in sorted filename
+    order. The message names the recovery this artifact actually has: re-running
+    the same configuration against the same ``checkpoint_path`` recomputes the
+    damaged origin and overwrites the file in place.
     """
     directory = Path(checkpoint_path)
-    empty = pd.DataFrame(columns=list(LEAN_FORECAST_COLUMNS))
     if not directory.exists():
-        return empty
-    frames: list[pd.DataFrame] = []
-    for path in sorted(directory.glob("origin_*.parquet")):
-        if _ORIGIN_FILE_RE.match(path.name) is None:
-            continue
-        try:
-            frames.append(pd.read_parquet(path))
-        except Exception:
-            continue
-    if not frames:
-        return empty
-    result = pd.concat(frames, ignore_index=True)
-    has_wide_quantiles = any(_is_wide_quantile_column(str(c)) for c in result.columns)
-    if has_wide_quantiles and "quantile_predictions" not in result.columns:
-        result["quantile_predictions"] = [
-            _quantile_dict_from_wide(row) for row in result.to_dict(orient="records")
-        ]
-    return result
+        return pd.DataFrame(columns=list(LEAN_FORECAST_COLUMNS))
+    frames, _ = _read_origin_frames(directory, strict=True)
+    return _assemble_checkpoint_frame(frames)
+
+
+def _load_checkpoint_frame_tolerant(
+    checkpoint_path: str | Path,
+) -> tuple[pd.DataFrame, list[Path]]:
+    """``load_checkpoint_frame`` for the ONE caller that must stay completable.
+
+    ``runner._merge_checkpoint_records`` assembles the frame a finished run
+    returns. Raising there would discard a completed run's entire result over a
+    single file, so this reader skips what it cannot read and reports it, and the
+    runner turns that report into one warning.
+
+    What this reader CANNOT establish is that a skipped file lies outside the run's
+    origin set. Origins the run computed are already in its in-memory records, and
+    origins it recomputed have already overwritten their own files, so those are
+    safe. An origin a PREVIOUS run completed is contributed by this read alone, and
+    the resume gate read the directory earlier: a file that was intact then and is
+    damaged now is silently missing from the merged frame. A skip may therefore
+    mean a stray file from a wider earlier run, or it may mean the returned frame
+    is short a previously completed origin, and nothing available here tells the
+    two apart. The runner's warning states both and names the paths. Public reads
+    stay fail-closed through :func:`load_checkpoint_frame`.
+    """
+    directory = Path(checkpoint_path)
+    if not directory.exists():
+        return pd.DataFrame(columns=list(LEAN_FORECAST_COLUMNS)), []
+    frames, skipped = _read_origin_frames(directory, strict=False)
+    return _assemble_checkpoint_frame(frames), skipped
 
 
 def _json_default(value: Any) -> Any:
