@@ -467,7 +467,7 @@ def forecast_scale_view(
                     "prediction": _float_or_none(row.get("prediction")),
                     "actual": _float_or_none(row.get("actual")),
                     "residual": _residual_value(row.get("prediction"), row.get("actual")),
-                    "back_transform_available": row_transform == "level",
+                    "back_transform_available": _is_raw_value_transform(row_transform),
                 }
             )
         if view in {"back_transformed_only", "both_overlay"}:
@@ -1827,6 +1827,17 @@ def _residual_value(prediction: Any, actual: Any) -> float | None:
     return float(obs - pred)
 
 
+# Exact membership keeps path averages such as ``average_value`` on their existing
+# non-invertible branch: only these two labels already contain the raw future value.
+_RAW_VALUE_TRANSFORMS = frozenset({"level", "value"})
+
+
+def _is_raw_value_transform(transform: Any) -> bool:
+    """Return whether a transform already represents the raw future value."""
+
+    return str(transform).lower() in _RAW_VALUE_TRANSFORMS
+
+
 def _back_transformed_values(
     row: pd.Series,
     transform: str,
@@ -1839,7 +1850,7 @@ def _back_transformed_values(
     transform_key = str(transform).lower()
     prediction = _float_or_none(row.get("prediction"))
     actual = _float_or_none(row.get("actual"))
-    if transform_key == "level":
+    if _is_raw_value_transform(transform_key):
         return prediction, actual, True
     if levels is None:
         return None, None, False
