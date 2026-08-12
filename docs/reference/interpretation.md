@@ -560,6 +560,28 @@ macroforecast.interpretation.anatomy_provider(X: Any, y: Any, models: str | Call
 
 Build an ``AnatomyModelProvider`` from aligned macroforecast X/y data.
 
+``params`` is either one parameter set shared by every model or one set per
+model, and which of the two is meant is decided by the *keys*: if any
+top-level key names a model alias, the mapping is read as per-model routing;
+otherwise the whole mapping is shared and reaches every model unchanged.
+
+Under per-model routing every key must be an alias and every value a mapping
+of that model's keyword arguments. A key that is not an alias -- a misspelled
+alias, or a flat hyperparameter mixed in with routed entries -- raises
+``ValueError`` before any model is fitted, rather than being dropped. Aliases
+the caller omits are fitted with no extra parameters.
+
+Alias-first is deliberate, and matters only in the unavoidable case where a
+shared hyperparameter carries the same name as a model alias. That request is
+ambiguous and cannot be resolved from the value, so the alias always wins.
+The collision is reported only when it is detectable: when the colliding
+value is not a ``Mapping``, or when non-alias keys are mixed in. If every key
+is an alias and every value is a ``Mapping``, shared and routed intent are
+indistinguishable, and the mapping is routed per model without warning. To
+express the shared nested-parameter intent, rename the alias or the
+parameter. Each model receives its own shallow copy of its parameters, and
+the caller's mapping is never mutated.
+
 #### Parameters
 
 | Name | Kind | Type | Default |

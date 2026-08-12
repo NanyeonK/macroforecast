@@ -5,6 +5,60 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `interpretation/anatomy.py`
+  (**`params` routing was chosen by value type, so a shared parameter with a
+  dict value was silently dropped and a misspelled alias disabled the
+  parameters it named**): F-067.
+
+  **The defect.** `_resolve_model_params` decided between "one shared
+  parameter set" and "one set per model" by asking whether *every* top-level
+  value was a `Mapping`. That question is about the values, not about what the
+  caller asked for, and it rewrote three distinct requests. The
+  counterexample: `params={"init": {"a": 1}}` is one shared parameter named
+  `init` that happens to take a dict, but every value was a `Mapping`, so it
+  was read as per-model routing; no key matched a model alias, every model was
+  fitted with `{}`, and `init` vanished with no warning. Symmetrically,
+  `{"m1": {...}, "typo": {...}}` dropped `typo` in silence, and
+  `{"m1": {"a": 1}, "alpha": 0.5}` was classified as *shared* because `0.5` is
+  not a `Mapping`, so every model -- `m2` included -- was fitted with a keyword
+  argument literally named `m1`.
+
+  **The disambiguation rule.** Per-model routing is now detected by
+  intersection with the known model aliases: routing applies when at least one
+  top-level key is an alias, and otherwise the mapping is shared. Value types
+  play no part in the decision.
+
+  **Unknown-only keys are shared, not dropped.** A key set disjoint from the
+  aliases is a flat shared parameter set and is broadcast to every model
+  unchanged, whatever its values look like, so nested and all-mapping shared
+  parameters survive.
+
+  **Mixed routing fails closed.** Once routing is detected, every top-level key
+  that is not an alias raises `ValueError` (`not model aliases`), every alias
+  value must be a `Mapping` (`must be a mapping`), and every parameter name
+  must be a string (`strings`). The provider therefore refuses before any model
+  is fitted instead of running with parameters the caller did not request.
+  Aliases the caller omitted receive `{}`.
+
+  **Copies, no mutation.** Each alias receives its own shallow `dict`, so no
+  two models share a parameter mapping and a later fit cannot edit another
+  model's parameters. The caller's mapping is only read; nested values are not
+  rebuilt and keep the caller's object identity.
+
+  **The tradeoff.** Alias-first is not free. If a shared hyperparameter happens
+  to carry the same name as a model alias, that request is genuinely ambiguous
+  and no inspection of the value can settle it. The alias always wins, but the
+  collision is reported only when it is *detectable*. When the colliding value
+  is not a `Mapping`, or when non-alias keys are mixed in, the request is
+  refused and the error names the alias-first rule so the caller can see why a
+  valid-looking shared parameter was rejected. When every key is an alias and
+  every value is a `Mapping` -- `params={"init": {"a": 1}}` against a model
+  aliased `init` -- shared and routed intent are indistinguishable, and the
+  mapping is routed per model with no warning. This fix does not remove that
+  residual silent case; expressing the shared nested-parameter intent requires
+  renaming the alias or the parameter. What it does remove is the value-type
+  guess that rewrote unambiguous requests.
+
 - `interpretation/core.py`
   (**a weighted `model_groups` mapping was accepted and then silently ignored,
   so every group was combined with equal weights**): F-072.

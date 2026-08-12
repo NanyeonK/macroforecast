@@ -247,7 +247,30 @@ def anatomy_provider(
     target_name: str | None = None,
     train_source: str = "fit",
 ) -> Any:
-    """Build an ``AnatomyModelProvider`` from aligned macroforecast X/y data."""
+    """Build an ``AnatomyModelProvider`` from aligned macroforecast X/y data.
+
+    ``params`` is either one parameter set shared by every model or one set per
+    model, and which of the two is meant is decided by the *keys*: if any
+    top-level key names a model alias, the mapping is read as per-model routing;
+    otherwise the whole mapping is shared and reaches every model unchanged.
+
+    Under per-model routing every key must be an alias and every value a mapping
+    of that model's keyword arguments. A key that is not an alias -- a misspelled
+    alias, or a flat hyperparameter mixed in with routed entries -- raises
+    ``ValueError`` before any model is fitted, rather than being dropped. Aliases
+    the caller omits are fitted with no extra parameters.
+
+    Alias-first is deliberate, and matters only in the unavoidable case where a
+    shared hyperparameter carries the same name as a model alias. That request is
+    ambiguous and cannot be resolved from the value, so the alias always wins.
+    The collision is reported only when it is detectable: when the colliding
+    value is not a ``Mapping``, or when non-alias keys are mixed in. If every key
+    is an alias and every value is a ``Mapping``, shared and routed intent are
+    indistinguishable, and the mapping is routed per model without warning. To
+    express the shared nested-parameter intent, rename the alias or the
+    parameter. Each model receives its own shallow copy of its parameters, and
+    the caller's mapping is never mutated.
+    """
 
     anatomy_mod = _optional_anatomy()
     X_aligned, y_aligned = _aligned_xy(X, y)
@@ -601,16 +624,94 @@ def _resolve_model_mapping(
     return resolved
 
 
+def _require_string_param_names(
+    values: Mapping[Any, Any],
+    *,
+    owner: str | None,
+) -> None:
+    """Reject parameter names that cannot be passed as ``**kwargs``."""
+
+    bad = [key for key in values if not isinstance(key, str)]
+    if not bad:
+        return
+    where = "params" if owner is None else f"params[{owner!r}]"
+    raise ValueError(
+        f"{where} parameter names must be strings, got "
+        f"{sorted(repr(key) for key in bad)}; parameter names are forwarded to "
+        "the model fit as keyword arguments."
+    )
+
+
 def _resolve_model_params(
     specs: Mapping[str, ModelSpec],
     params: Mapping[str, Any] | None,
 ) -> dict[str, dict[str, Any]]:
+    """Route ``params`` to each model alias, fail-closed.
+
+    ``params`` is read in one of two ways, and the reading is chosen by asking
+    whether any top-level key names a known model alias -- never by inspecting
+    the types of the values:
+
+    * **Per-model routing**, when at least one top-level key is an alias. Every
+      key must then be an alias and every value a mapping of that model's
+      keyword arguments. Aliases the caller omitted are fitted with ``{}``.
+    * **Shared parameters**, when no top-level key is an alias. The whole
+      mapping is one parameter set broadcast to every model unchanged.
+
+    Choosing by value type instead silently rewrote the request.
+    ``params={"init": {"a": 1}}`` is a single shared parameter that happens to
+    take a dict value, but every value was a ``Mapping``, so it was read as
+    per-model routing, matched no alias, and every model was fitted with ``{}``
+    -- the parameter vanished without a word.
+
+    Alias-first is deliberate. If a shared hyperparameter happens to carry the
+    same name as a model alias, the request is genuinely ambiguous and no
+    inspection of the value can settle it. The alias always wins, but the
+    collision is reported only when it is detectable: when the colliding value
+    is not a ``Mapping``, or when non-alias keys are mixed in, the request is
+    refused rather than guessed. When every key is an alias and every value is a
+    ``Mapping``, shared and routed intent are indistinguishable, so the mapping
+    is routed per model without warning -- the irreducible residual cost of
+    alias-first. A caller who meant a shared nested parameter renames the alias
+    (or the parameter).
+
+    Each alias receives its own shallow ``dict``, so no two models share a
+    parameter mapping. The caller's mapping is never mutated, and nested values
+    keep the caller's own object identity.
+    """
+
     if not params:
         return {alias: {} for alias in specs}
+
     values = dict(params)
-    if all(isinstance(value, Mapping) for value in values.values()):
-        return {alias: dict(values.get(alias, {})) for alias in specs}
-    return {alias: dict(values) for alias in specs}
+    aliases = set(specs)
+    routed = aliases.intersection(values)
+
+    if not routed:
+        _require_string_param_names(values, owner=None)
+        return {alias: dict(values) for alias in specs}
+
+    unknown = [key for key in values if key not in aliases]
+    if unknown:
+        raise ValueError(
+            f"params keys {sorted(repr(key) for key in unknown)} are not model "
+            f"aliases; the known aliases are {sorted(repr(key) for key in aliases)}. "
+            "A params mapping that names any model alias is read as per-model "
+            "routing, so every one of its keys must be an alias."
+        )
+
+    for alias, value in values.items():
+        if not isinstance(value, Mapping):
+            raise ValueError(
+                f"params[{alias!r}] must be a mapping of keyword arguments for "
+                f"model alias {alias!r}, got {type(value).__name__}. A top-level "
+                "key matching a model alias always selects per-model routing "
+                "(alias-first), so a shared hyperparameter cannot carry the same "
+                "name as a model alias; rename one of them."
+            )
+        _require_string_param_names(value, owner=alias)
+
+    return {alias: dict(values.get(alias, {})) for alias in specs}
 
 
 def _model_feature_names(model: Any) -> tuple[str, ...]:
