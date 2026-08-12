@@ -99,6 +99,7 @@ def test_var_single_horizon_labels_and_dates_correctly() -> None:
         features=None,
         target="Y",
         horizons=[2],
+        model_selection={"var": None},
         save_models=False,
     )
     fc = report.to_frame().dropna(subset=["prediction"])
@@ -142,6 +143,7 @@ def test_var_multi_horizon_no_duplicate_keys_and_correct_offsets() -> None:
         features=None,
         target="Y",
         horizons=[1, 3],
+        model_selection={"var": None},
         save_models=False,
     )
     fc = report.to_frame().dropna(subset=["prediction"])

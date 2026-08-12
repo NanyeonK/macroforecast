@@ -70,6 +70,23 @@ comparison_arms = model_arms(
 )
 ```
 
+Panel-input models such as `"var"` consume the panel directly and do not implement
+parameter tuning. Built-in panel models may nevertheless declare default search spaces,
+so leaving `model_selection=None` would request a search that the panel runner cannot
+perform. Opt out explicitly on the arm, or pin every searched parameter:
+
+```python
+panel_arm = Arm(
+    name="VAR",
+    model="var",
+    features=None,
+    model_selection={"var": None},
+)
+```
+
+An explicit non-null `SearchSpec` for a panel-input model raises before fitting. Panel
+models without a search space and fully pinned panel models run without an opt-out.
+
 ## Executed walkthrough
 
 Each arm exposes its name, model, and benchmark flag, and `model_arms` expands a

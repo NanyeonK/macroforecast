@@ -234,7 +234,15 @@ def test_panel_routing_intact():
         spec = pipeline_spec(
             data=bundle, targets=[TargetSpec(name="Y", transform="level", policy=policy)],
             horizons=[2], window=win,
-            arms=[Arm(name="M", model="var", features=None, is_benchmark=True)],
+            arms=[
+                Arm(
+                    name="M",
+                    model="var",
+                    features=None,
+                    model_selection={"var": None},
+                    is_benchmark=True,
+                )
+            ],
             evaluation=EvalSpec(benchmark="M", metrics=("rmse",)), n_jobs=1,
         )
         f = run_pipeline(spec).forecasts

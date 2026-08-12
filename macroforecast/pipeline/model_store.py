@@ -23,10 +23,11 @@ def purge_model_store(
 ) -> int:
     """Delete saved model fits matching the supplied filters and return a count.
 
-    Pipeline model stores contain one alias directory per arm/model and one JSON
-    sidecar per fitted origin/horizon. Each matching sidecar is deleted together
-    with the pickle it owns. ``before`` filters by the sidecar file modification time
-    because legacy model sidecars do not record a creation timestamp.
+    Pipeline model stores contain one directory per resolved model alias and one JSON
+    sidecar per fitted origin/horizon. Multiple arms may share a model alias and thus a
+    directory. Each matching sidecar is deleted together with the pickle it owns.
+    ``before`` filters by the sidecar file modification time because legacy model
+    sidecars do not record a creation timestamp.
 
     Every filter is validated BEFORE anything is enumerated or removed, so a refused
     call deletes nothing: an unparseable ``before`` raises rather than acting as no
@@ -35,6 +36,12 @@ def purge_model_store(
     than reaching outside ``store``. An alias directory that resolves outside the store
     (a symlink) is never followed, whether it was named or reached by enumerating them
     all; it is skipped, so such a call reports 0 rather than deleting anything.
+
+    ``aliases=`` names on-disk alias directory components, not arbitrary raw model
+    aliases. Lowercase ASCII aliases normally match their directory names; aliases that
+    require collision-resistant encoding can be discovered from the saved sidecar's raw
+    ``alias`` field and its parent directory. Filters are validated but never normalized
+    or encoded; a raw unsafe alias generally matches no encoded directory and returns 0.
 
     Only files inside the resolved store are removed. A sidecar whose recorded
     ``model_path`` points outside is deleted, but the file it names is left alone --

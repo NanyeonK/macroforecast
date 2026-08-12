@@ -90,6 +90,8 @@ def test_panel_input_model_with_no_features_does_not_warn(recwarn) -> None:
     mf.forecasting.run(
         bundle, "var", window=win, features=None, target="y",
         horizons=[3], forecast_policy="direct_average",
+        model_selection={"var": None},
+        save_models=False,
     )
 
     assert not _default_feature_spec_warnings(recwarn)

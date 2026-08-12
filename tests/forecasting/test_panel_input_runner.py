@@ -32,6 +32,7 @@ def test_var_family_runs_through_runner(model):
     report = mf.forecasting.run(
         _bundle(), model, window=win, features=None, target="Y",
         horizons=[6], forecast_policy="direct_average",
+        model_selection={model: None},
     )
     fc = report.to_frame().dropna(subset=["prediction"])
     assert not fc.empty  # produced forecasts, did not crash on the DataBundle

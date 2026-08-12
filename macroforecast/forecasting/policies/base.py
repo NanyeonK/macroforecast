@@ -5,6 +5,7 @@ through (Phase 3 of the runner decomposition; bodies moved verbatim from
 """
 from __future__ import annotations
 
+import hashlib
 import inspect
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
@@ -626,7 +627,7 @@ def _store_model_fit(
     params: Mapping[str, Any],
     selection_metadata: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
-    model_dir = Path(root) / _safe_path_part(alias)
+    model_dir = Path(root) / _store_path_part(alias, kind="alias")
     model_dir.mkdir(parents=True, exist_ok=True)
     stem = _model_store_stem(row)
     pickle_path = model_dir / f"{stem}.pkl"
@@ -651,12 +652,20 @@ def _model_store_stem(row: Mapping[str, Any]) -> str:
     origin_pos = row.get("origin_pos", "unknown")
     horizon = row.get("horizon", "unknown")
     origin = row.get("origin")
-    if isinstance(origin, pd.Timestamp):
+    if (
+        isinstance(origin, pd.Timestamp)
+        and origin.tz is None
+        and origin == origin.normalize()
+    ):
         origin_label = origin.strftime("%Y%m%d")
     else:
-        origin_label = str(origin).replace(" ", "_").replace(":", "-")
+        origin_label = _store_path_part(origin, kind="origin")
     target_key = row.get("target_key")
-    suffix = "" if target_key is None else f"_{_safe_path_part(target_key)}"
+    suffix = (
+        ""
+        if target_key is None
+        else f"_{_store_path_part(target_key, kind='target_key')}"
+    )
     return f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}{suffix}"
 
 
@@ -690,6 +699,51 @@ def _safe_path_part(value: Any) -> str:
     keep = [char if char.isalnum() or char in {"-", "_", "."} else "_" for char in text]
     out = "".join(keep).strip("._")
     return out or "model"
+
+
+_STORE_DIGEST_SEPARATOR = "__h"
+_STORE_DIGEST_LENGTH = 12
+_STORE_STABLE_MAX_LENGTH = 64
+_STORE_PREFIX_MAX_LENGTH = 48
+_WINDOWS_RESERVED_NAMES = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{number}" for number in range(1, 10)}
+    | {f"LPT{number}" for number in range(1, 10)}
+)
+
+
+def _store_path_part(value: Any, *, kind: str) -> str:
+    """Return a readable component with a digest only when raw identity is lossy.
+
+    The 48-bit suffix prevents accidental user-key collisions; it is not a security
+    boundary. Lowercase ASCII components that already round-trip through the historical
+    sanitizer retain their exact paths.
+    """
+
+    text = str(value)
+    safe = _safe_path_part(value)
+    reserved_name = text.split(".", 1)[0].upper() in _WINDOWS_RESERVED_NAMES
+    stable = (
+        1 <= len(text) <= _STORE_STABLE_MAX_LENGTH
+        and text.isascii()
+        and text == safe
+        and text == text.lower()
+        and _STORE_DIGEST_SEPARATOR not in text
+        and not reserved_name
+    )
+    if stable:
+        return safe
+    payload = b"\x1f".join(
+        (
+            b"macroforecast/model-store/v1",
+            kind.encode("utf-8", "strict"),
+            type(value).__name__.encode("utf-8", "strict"),
+            text.encode("utf-8", "surrogatepass"),
+        )
+    )
+    digest = hashlib.sha256(payload).hexdigest()[:_STORE_DIGEST_LENGTH]
+    prefix = safe[:_STORE_PREFIX_MAX_LENGTH].rstrip("._") or "model"
+    return f"{prefix}{_STORE_DIGEST_SEPARATOR}{digest}"
 
 
 
