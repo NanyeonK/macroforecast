@@ -292,9 +292,18 @@ the panel's size. It used to fall back to a strided subsample above a cell cap,
 which meant a cell the stride skipped could change while the digest stayed put —
 so a stale forecast could be served for changed data. Large panels are now streamed
 in row chunks instead: the bound is on memory, not on how much of the data is read,
-and the chunk size cannot move the digest. Panels that were already hashed in full
-keep their exact digest, so ordinary stores are not invalidated by this change; only
-the oversized panels whose digest was unsound recompute once.
+and the chunk size cannot move the digest. As far as that sampling-to-full-content
+change goes, panels the old code already hashed in full keep their exact digest, so
+ordinary stores were not invalidated by it; only the oversized panels whose digest was
+unsound recomputed once. That statement is about the sampling change alone and says
+nothing about the resolution change described next.
+
+Date index values are read at a fixed nanosecond resolution rather than at whatever
+resolution the index happens to be stored at, so one panel keeps one digest across a
+pandas upgrade. Digests written from a nanosecond index, which is what pandas 2
+builds by default, are unchanged. Entries written from a non-nanosecond index — the
+microseconds pandas 3 builds by default, or any resolution you constructed
+explicitly on any version — miss once and recompute, then reuse normally.
 
 For custom code, reuse is opt-in. A custom model function, feature step,
 preprocessing step, metric, or loss must carry a stable `__mf_digest__` string to be

@@ -5,6 +5,67 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `data/identity.py`, `pipeline/result_store.py`, `docs/guide/concepts/running.md`
+  (**two content identities depended on the pandas build that read them**): both are
+  behaviour fixes, not cosmetics, because both strings feed cache digests.
+
+  **Datetime index resolution.** `panel_fingerprint` fed `DatetimeIndex.asi8` straight
+  into the hash, and that reports the raw integers at whichever resolution the index is
+  stored at. pandas 2 builds a new index at nanoseconds and pandas 3 at microseconds, so
+  one panel fingerprinted to two different values across an upgrade -- and, worse, two
+  indexes holding *different* instants at different resolutions hash the same whenever
+  their stored integers coincide, which is a stale-forecast path rather than a missed
+  cache. Datetime index values are now converted to nanoseconds before being read as
+  integers. The returned mapping is unchanged and gains no resolution key. Dates outside
+  the nanosecond range have no int64 form to compare, so they are spelled as ISO text
+  instead of as resolution-dependent integers, and what that text says depends on
+  whether the index is aware. An AWARE index is read in UTC first, so it is written as
+  a UTC instant (`3000-01-01T00:00:00+00:00`) and one moment keeps one fingerprint
+  whether it is filed under UTC or Asia/Seoul, which is what the in-range path already
+  gives for free because `.asi8` counts from the epoch and cannot see a display zone. A
+  NAIVE index is left naive rather than localised, so it is written as its wall clock
+  with no offset (`3000-01-01T00:00:00`) and never matches an aware index, even one
+  whose wall clock reads alike. That is stricter than the in-range path, where a naive
+  index and a UTC one do collide because both spell the same integers, and strictness
+  is the direction that can cost a reuse but cannot serve one panel's forecasts for
+  another. Either way the text does not depend on the resolution the index is stored
+  at, so a panel still agrees with itself across pandas versions. `Period` and
+  `Timedelta` indexes keep their existing encoding, which is sound here only because a
+  canonical panel's index must be a `DatetimeIndex`.
+
+  **Public class paths.** `_type_name` recorded `type(value).__module__`, so
+  `pandas.Timedelta` wrote `pandas._libs.tslibs.timedeltas.Timedelta` on pandas 2 and
+  `pandas.Timedelta` on pandas 3. A class is now named `<root package>.<qualname>` only
+  when that root package exports the same class object under that name, and keeps its
+  full module path otherwise. Nothing private reaches a digest for a class its package
+  publishes, and nothing collapses: two same-named classes in different private
+  submodules stay distinguishable, and `datetime.timedelta` remains a different value
+  from `pandas.Timedelta`.
+
+  **Cache impact.** Entries written from a non-nanosecond `DatetimeIndex` carry the
+  digest those raw integers produced, and that is not a pandas-3 store only -- pandas 3
+  builds such an index by default, but any pandas writes one when the index was
+  constructed at another resolution, so entries from any version may be affected.
+  Entries recording a class whose recorded module was a private submodule while its
+  root package re-exported the very same class object carry that private path; the
+  normalisation applies to any such exact re-export, with `pandas.Timedelta` on
+  pandas 2 as the case actually observed here. Both kinds now normalise to the
+  historical nanosecond and public-path forms, so such entries miss once and are
+  recomputed. That is the intended cost, because the alternative is keeping a digest
+  that disagrees with itself across versions and that can compare equal for different
+  data.
+
+- `tests/pipeline/test_direct_policy_guard.py` (**a guard test was testing the wrong
+  thing**): `var` reads a panel, and panel-input forecasting refuses an unpinned default
+  search space under `model_selection=None`, so the `direct_average` reroute test was
+  failing its cell before it could observe any reroute. Production selection logic is
+  unchanged -- the accepted contract stands, and panel arms still require an explicit
+  `model_selection={'var': None}` opt-out or pinned parameters. The test now passes that
+  opt-out so it observes the policy reroute only, and a new test pins the contract
+  itself: the implicit default is reported as a failed cell naming the call that fixes
+  it, under `run_pipeline`'s existing fail-open-cell behaviour, and the explicit opt-out
+  runs.
+
 - `forecasting/runner.py`, `forecasting/checkpoint.py`, `docs/guide/concepts/running.md`
   (**a checkpoint directory may now only be resumed by the run that filled it**):
   `checkpoint_path` is a path, and a path said nothing about configuration.

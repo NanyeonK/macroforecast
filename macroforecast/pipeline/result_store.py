@@ -16,6 +16,7 @@ import importlib.metadata as _metadata
 import json
 import os
 import pickle
+import sys
 import tempfile
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -980,14 +981,52 @@ def _callable_identity(value: Any, *, path: str) -> dict[str, Any]:
 
 
 def _type_name(value: Any) -> str:
-    """A value's concrete type, module-qualified.
+    """A value's concrete type, named by its stable PUBLIC path where it has one.
 
     Two values can agree on every field this module records and still be different
     things -- a ``datetime.timedelta`` and a ``pandas.Timedelta`` of one second, say --
-    so where the fields alone do not separate them, the type does.
+    so where the fields alone do not separate them, the type does. That is why the name
+    is here, and it is also why the name has to mean the same thing everywhere: it goes
+    into a cache digest, so a library that MOVES a class without changing it moves every
+    digest carrying one. ``pandas.Timedelta`` did exactly that, reporting
+    ``pandas._libs.tslibs.timedeltas`` as its module on pandas 2 and ``pandas`` on
+    pandas 3, which silently split one cell in two across an upgrade.
+
+    The repair is narrow on purpose. A class is renamed to ``<root package>.<qualname>``
+    only when that root package exports THE SAME CLASS OBJECT under that qualname, so
+    the shortened name provably still refers to this class and nothing else. Anything
+    else -- a class its package does not re-export, a nested qualname, a root that was
+    never imported -- keeps its full module path.
+
+    Two properties follow, and both matter more than the shortening does. Nothing
+    private leaks into a digest for a class its package publishes. And nothing
+    collapses: an identity test cannot be satisfied by two different classes, so two
+    same-named classes in different private submodules stay distinguishable rather than
+    both becoming the root name. A bare class name would give up exactly that, which is
+    why the package prefix is kept rather than dropped.
     """
     cls = type(value)
-    return f"{cls.__module__}.{cls.__qualname__}"
+    module = getattr(cls, "__module__", "") or ""
+    qualname = getattr(cls, "__qualname__", None) or cls.__name__
+    full = f"{module}.{qualname}" if module else str(qualname)
+    root = module.split(".", 1)[0]
+    if not root or root == module:
+        # Already the root path (``datetime.timedelta``, and ``pandas.Timedelta`` as
+        # pandas 3 reports it): there is nothing to shorten, and the answer is the
+        # same one the check below would reach.
+        return full
+    root_module = sys.modules.get(root)
+    if root_module is None:
+        # Not imported, so there is nothing to ask. The class exists, so its own
+        # submodule is; the root package simply may not be a package at all.
+        return full
+    try:
+        exported = getattr(root_module, qualname, None)
+    except Exception:
+        # A module-level ``__getattr__`` is free to raise. A type name is never worth
+        # ending a run over when the full path is right here.
+        return full
+    return f"{root}.{qualname}" if exported is cls else full
 
 
 def _callable_name(func: Any) -> str:

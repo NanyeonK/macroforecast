@@ -55,14 +55,37 @@ def _toy_inputs():
     return bundle, win
 
 
-def _spec(model_name, policy, *, arm_name=None, on_unsupported_direct="error"):
+def _spec(
+    model_name,
+    policy,
+    *,
+    arm_name=None,
+    on_unsupported_direct="error",
+    model_selection=None,
+):
+    """A one-arm spec for the guard tests.
+
+    ``model_selection`` defaults to ``None``, which is exactly what ``Arm`` already
+    defaults to, so every existing caller builds the identical spec it did before. It is
+    threaded through for the panel-input arms, which must opt out of the default search
+    space explicitly (see ``test_panel_arm_needs_an_explicit_search_opt_out``) before
+    they can run at all -- and that is a selection question, not the policy question
+    these tests are about.
+    """
     bundle, win = _toy_inputs()
     return pipeline_spec(
         data=bundle,
         targets=[TargetSpec(name="Y", policy=policy, transform="level")],
         horizons=[1],
         window=win,
-        arms=[Arm(name=arm_name or model_name.upper(), model=model_name, is_benchmark=True)],
+        arms=[
+            Arm(
+                name=arm_name or model_name.upper(),
+                model=model_name,
+                is_benchmark=True,
+                model_selection=model_selection,
+            )
+        ],
         evaluation=EvalSpec(benchmark=arm_name or model_name.upper(), metrics=("rmse",)),
         on_unsupported_direct=on_unsupported_direct,
     )
@@ -209,9 +232,60 @@ def test_reroute_mode_labels_rows_recursive():
 
 
 def test_var_direct_average_reroute_labels_rows_recursive():
+    """What the reroute does to the ROWS, with the selection question taken off the table.
+
+    ``var`` reads a panel, and panel-input forecasting refuses an unpinned default search
+    space (#571), so the arm must opt out of selection before it produces any rows at
+    all. That opt-out is passed here so the assertions below are about the policy
+    reroute and nothing else; the selection contract itself is pinned separately by
+    ``test_panel_arm_needs_an_explicit_search_opt_out``.
+    """
     with pytest.warns(UserWarning, match="Rerouting"):
-        spec = _spec("var", "direct_average", on_unsupported_direct="reroute")
+        spec = _spec(
+            "var",
+            "direct_average",
+            on_unsupported_direct="reroute",
+            model_selection={"var": None},
+        )
     out = run_pipeline(spec).forecasts
     assert not out.empty
     assert set(out["forecast_policy"]) == {"recursive"}
     assert spec.policy_overrides == {("VAR", "Y"): "recursive"}
+
+
+def test_panel_arm_needs_an_explicit_search_opt_out():
+    """The accepted #571 contract, at the level a user meets it.
+
+    A panel-input arm left on ``model_selection=None`` does not quietly run with some
+    default search: the cell fails, and ``run_pipeline`` keeps its fail-open-cell
+    behaviour, so the run completes and reports the failure with the exact call that
+    fixes it rather than raising out of the pipeline. Passing that opt-out then runs.
+
+    This is what the reroute test above stopped covering once it started opting out, and
+    it is pinned by ``run_pipeline`` rather than by the validator directly so that a
+    change which turned the message into a silent empty cell would be caught here.
+    """
+    with pytest.warns(UserWarning, match="Rerouting"):
+        implicit = _spec("var", "direct_average", on_unsupported_direct="reroute")
+    with pytest.warns(RuntimeWarning, match="does not tune model parameters yet"):
+        report = run_pipeline(implicit)
+
+    assert report.forecasts.empty, "the cell failed, so it contributes no rows"
+    assert len(report.failed_cells) == 1
+    failure = report.failed_cells[0]
+    assert failure["target"] == "Y"
+    assert failure["arm"] == "VAR"
+    assert "does not tune model parameters yet" in failure["error"]
+    assert "model_selection={'var': None}" in failure["error"], (
+        "the reported error must name the call that fixes it"
+    )
+
+    with pytest.warns(UserWarning, match="Rerouting"):
+        explicit = _spec(
+            "var",
+            "direct_average",
+            on_unsupported_direct="reroute",
+            model_selection={"var": None},
+        )
+    out = run_pipeline(explicit).forecasts
+    assert not out.empty, "the explicit opt-out runs the same arm"

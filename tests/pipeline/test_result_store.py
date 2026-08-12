@@ -1775,6 +1775,98 @@ def test_the_datetime_leaves_record_their_concrete_type(tmp_path):
     )
 
 
+def test_a_public_class_is_named_by_its_public_path_on_every_pandas():
+    """The recorded type must not depend on where the library keeps the class.
+
+    ``pandas.Timedelta`` is re-exported from ``pandas`` on every supported version, but
+    reports ``pandas._libs.tslibs.timedeltas`` as its own module on pandas 2 and
+    ``pandas`` on pandas 3. Recording ``type(value).__module__`` therefore wrote two
+    different strings into the same cache digest depending on which pandas read the
+    cell, so an upgrade silently missed every cached cell carrying a pandas duration.
+    """
+    from macroforecast.pipeline.result_store import _type_name
+
+    assert _type_name(pd.Timedelta(seconds=1)) == "pandas.Timedelta"
+    assert "_libs" not in _type_name(pd.Timedelta(seconds=1)), (
+        "a private submodule path is an implementation detail and must not reach a digest"
+    )
+    assert pd.Timedelta is getattr(pd, "Timedelta", None), (
+        "the premise: the shortened name is only used because pandas exports this class"
+    )
+
+
+def test_a_class_its_package_does_not_export_keeps_its_full_path():
+    """Shortening is earned, not assumed, so nothing collapses.
+
+    Two classes with the same ``__qualname__`` in different private submodules would
+    become one name under a scheme that shortened by name alone, and they would then
+    share a cell digest. The root package has to publish the very same class object.
+    """
+    from macroforecast.pipeline.result_store import _type_name
+
+    class Hidden(datetime.timedelta):
+        pass
+
+    name = _type_name(Hidden(seconds=1))
+    assert name.endswith(".Hidden")
+    assert name == f"{Hidden.__module__}.{Hidden.__qualname__}", (
+        "a class its root package does not export keeps the module it actually lives in"
+    )
+
+
+def test_shortening_requires_the_same_class_object_not_a_matching_name(monkeypatch):
+    """The check is identity, so a same-named impostor cannot capture the short path.
+
+    This is what stops the repair from becoming the collapse it replaces: a package that
+    publishes SOME other class under the same name has not published this one, and the
+    private path is then the only name that still says which class was recorded.
+    """
+    import sys
+    import types
+
+    from macroforecast.pipeline.result_store import _type_name
+
+    root = types.ModuleType("mf_fake_pkg")
+    private = types.ModuleType("mf_fake_pkg.private")
+
+    class Widget:
+        pass
+
+    class Impostor:
+        pass
+
+    Widget.__module__ = "mf_fake_pkg.private"
+    Widget.__qualname__ = "Widget"
+    Impostor.__qualname__ = "Widget"
+    private.Widget = Widget
+    root.Widget = Impostor
+    monkeypatch.setitem(sys.modules, "mf_fake_pkg", root)
+    monkeypatch.setitem(sys.modules, "mf_fake_pkg.private", private)
+
+    assert _type_name(Widget()) == "mf_fake_pkg.private.Widget", (
+        "the root publishes a different class under this name, so the short path would "
+        "name the wrong thing"
+    )
+
+    root.Widget = Widget
+    assert _type_name(Widget()) == "mf_fake_pkg.Widget", (
+        "and once it really is the same class object, the public path is used"
+    )
+
+
+def test_pandas_and_stdlib_durations_stay_different_values():
+    """The shortened pandas name must not become the stdlib one."""
+    from macroforecast.pipeline.result_store import _json_ready
+
+    assert _json_ready(pd.Timedelta(seconds=1)) != _json_ready(
+        datetime.timedelta(seconds=1)
+    )
+    assert (
+        _json_ready(pd.Timedelta(seconds=1))["__timedelta__"]["ns"]
+        == _json_ready(datetime.timedelta(seconds=1))["__timedelta__"]["ns"]
+    ), "the premise: only the recorded type separates them"
+
+
 def test_pandas_timestamp_keeps_its_legacy_rendering(tmp_path):
     """It is a ``datetime``, so it must stay ahead of the tagged branch.
 
