@@ -5,6 +5,59 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `interpretation/core.py`
+  (**a weighted `model_groups` mapping was accepted and then silently ignored,
+  so every group was combined with equal weights**): F-072.
+
+  **The defect.** `anatomy_explain` forwarded `model_groups` straight to the
+  pinned backend as `anatomy.AnatomyModelCombination`. That backend
+  (`anatomy==0.1.6`) branches on `type(comb_set == list)`, which evaluates
+  `comb_set == list` to `False` and then takes `type(False)` -- a truthy `bool`
+  -- so the equal-weight branch is taken for a mapping too and `weights`
+  becomes `np.repeat(1.0, len(comb_set))`. Asking for
+  `{"combo": {"m1": 1.0, "m2": 0.0}}` on a two-model object did not return
+  `m1`; it returned `(m1 + m2) / 2`, the plain mean, for every forecast date.
+  Nothing warned, and the returned table summed to a number the caller had not
+  asked for.
+
+  **Why the ordering matters.** The backend averages the precomputed model
+  tensor `_Y` across models and only then applies the output transformer. For a
+  nonlinear loss the two orders are different numbers:
+  `rmse(y, 0.75 * f1 + 0.25 * f2)` is not `0.75 * rmse(y, f1) + 0.25 *
+  rmse(y, f2)`. A PBSV decomposition of a weighted combination has to explain
+  the loss of the combined forecast, so the weights belong on the raw model
+  output, before the transformer, not on per-model explanations afterwards.
+
+  **The boundary now.** A group given as a sequence still goes to the backend
+  untouched, and `model_groups=None` still delegates to
+  `anatomy_obj.explain()` with nothing intervening. A group given as a mapping
+  is validated and computed on the macroforecast side: each group is handled
+  independently from a private copy of `_Y` whose rows for THAT group are
+  scaled by `len(members) * v / sum(v)`, where `v = w / max(|w|)` is the
+  scale-normalized weight vector and the factor is algebraically equal to
+  `len(members) * w / sum(w)` while never summing the raw weights, so the
+  backend's equal-weight average
+  reproduces the requested weighted average and the transformer still sees one
+  combined forecast. Groups keep their insertion order, `explanation_subset`
+  and the `long`/`wide` shapes carry the same numbers, and the recorded
+  `model_groups` metadata is the request as given. The backend object, its
+  `_Y` tensor, its `_model_names` and the global NumPy RNG are not touched:
+  the scaling happens on a copy, never on the pinned object and never once
+  across all groups.
+
+  **What is now refused.** `ValueError` for an empty group (`{}` or `[]`), a
+  bare string where a sequence of model names was meant, a nonnumeric or
+  boolean weight, a `nan`/`inf` weight, weights that sum to zero, a member name
+  that is not in the precomputed object, an empty `explanation_subset`, and a
+  weighted request against an object that does not expose the precomputed
+  `_Y`/`_model_names` attributes. Validation of every group runs before any
+  group is explained, so a malformed request cannot return a partial table.
+
+  **Not this change.** The `anatomy` pin is unchanged and the backend is not
+  forked, patched or monkeypatched; this is a caller-side compatibility layer
+  against the version that is pinned. Equal-weight sequence groups produce
+  exactly the numbers they produced before.
+
 - `forecasting/types.py`
   (**`ForecastResult.to_dict()` returned payloads `json` could not encode, and
   others that encoded but had silently lost or corrupted data**): F-063.
