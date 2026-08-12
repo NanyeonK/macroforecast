@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from bisect import bisect_right
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, fields, is_dataclass, replace
 from pathlib import Path
 from typing import Any, cast
+import copy
+import hashlib
 import warnings
 
 import numpy as np
@@ -20,6 +22,7 @@ from macroforecast.data import (
     panel_info,
     validate_panel,
 )
+from macroforecast.data.identity import panel_fingerprint
 from macroforecast.data.vintage import _canonical_vintage_timestamp
 from macroforecast.feature_engineering import FeatureSet, FeatureSpec, FittedFeatureBuilder
 from macroforecast.meta import get_config
@@ -49,10 +52,11 @@ from macroforecast.forecasting.task import (
 )
 from macroforecast.forecasting.checkpoint import (
     LEAN_FORECAST_COLUMNS,
+    CheckpointRunIdentity,
     append_origin_records,
     append_origin_selection_records,
-    completed_origin_positions,
     load_checkpoint_frame,
+    resolve_checkpoint_resume,
 )
 from macroforecast.forecasting.model_resolution import (
     _ModelRun,
@@ -636,7 +640,36 @@ def run(
     completed_positions: set[int] = set()
     skip_computation = False
     if checkpoint_path is not None:
-        completed_positions = completed_origin_positions(checkpoint_path)
+        # The resume GATE, before any origin file is read or written: this either
+        # returns the origins that provably belong to this run, or refuses and
+        # leaves the directory untouched (F-058). It runs regardless of
+        # ``skip_computation`` below, because a recomputed-but-not-rewritten
+        # origin still loses to the on-disk row at merge time.
+        panel_identity, panel_opaque = _panel_content_identity(
+            panel,
+            read_by_custom_code=_metadata_is_read_by_custom_code(
+                store_identity, features=features, preprocessing=preprocessing
+            ),
+        )
+        completed_positions = resolve_checkpoint_resume(
+            checkpoint_path,
+            _checkpoint_run_identity(
+                store_identity=store_identity,
+                model_runs=model_runs,
+                horizon=horizon_values[0],
+                selection=selection,
+                selection_metric=selection_metric,
+                maximize_selection=maximize_selection,
+                selection_random_state=config["random_seed"],
+                model_random_seed=model_random_seed,
+                model_random_alias=model_random_alias,
+                selection_history=selection_history,
+                save_models=save_models,
+                model_store=model_store,
+                data_identity=panel_identity,
+                extra_opaque_fields=panel_opaque,
+            ),
+        )
 
         def _stage_is_independent(policy: StagePolicy | None, fitted_once: bool) -> bool:
             if fitted_once:
@@ -1075,6 +1108,668 @@ def _store_identity_for_run(
     )
 
 
+# --------------------------------------------------------------------------- #
+# Checkpoint resume identity (F-058)
+# --------------------------------------------------------------------------- #
+# A checkpoint directory is addressed by PATH, so nothing about the path says
+# which configuration filled it. The gate below gives each ``h<h>`` directory a
+# manifest of the run that owns it, and ``checkpoint.resolve_checkpoint_resume``
+# refuses to resume into a directory whose manifest cannot be shown to describe
+# THIS run. It lives here rather than in ``pipeline`` for two reasons: the
+# pipeline writes its ``cell_manifest.json`` only AFTER ``run()`` returns, which
+# is too late to protect a resume decision; and a gate in the runner protects the
+# public ``run()`` and ``run_pipeline()`` alike without ``forecasting`` importing
+# ``pipeline`` (which the layering forbids).
+
+_CHECKPOINT_IDENTITY_NAMESPACE = "macroforecast/forecasting/checkpoint-run-identity/v1"
+
+
+def _safe_attr(value: Any, name: str) -> Any:
+    """``getattr`` that survives a property raising, for identity descriptors."""
+
+    try:
+        return getattr(value, name, None)
+    except Exception:  # pragma: no cover - defensive; a descriptor must not raise
+        return None
+
+
+#: The two ``metadata["artifact"]`` fields that record WHEN and HOW a file
+#: arrived rather than WHAT it contains. Every public loader in
+#: ``macroforecast.data.loaders`` stamps them via ``_file_artifact``:
+#: ``downloaded_at`` is ``datetime.now(timezone.utc)`` at load time, and
+#: ``cache_hit`` says whether the bytes came from the local cache. Neither can
+#: change a forecast on its own, and both change between two loads of the same
+#: file -- so hashing them makes ordinary resume fail across two loader calls or
+#: two processes. Everything else the artifact carries (``file_sha256``,
+#: ``file_size_bytes``, ``file_format``, ``dataset``, ``version_mode``,
+#: ``vintage``, ``source_url``, ``local_path``, ``manifest_version``) is content
+#: or source and stays in the identity.
+_LOADER_PROVENANCE_FIELDS: tuple[str, ...] = ("downloaded_at", "cache_hit")
+
+
+def _identity_has_custom_marker(value: Any) -> bool:
+    """Whether a CANONICALIZED identity component contains user code.
+
+    ``_identity_ready`` renders an object carrying a stable ``__mf_digest__`` as
+    ``{"__custom__": {...}}``, so this is the post-canonicalization question "did
+    the caller put their own callable in here?". Only that marker is looked for:
+    an opaque callable renders as ``{"__opaque__": ...}``, which has already made
+    the identity incomplete and the checkpoint unresumable, so it needs no second
+    treatment here. Recursion covers nested containers because a custom step sits
+    inside a feature spec's step list, and ``__mapping__`` entries are lists.
+
+    This is HALF the question, not all of it. Canonicalization flattens a callable
+    ``@dataclass`` instance to ``{"__dataclass__": ...}`` before it ever looks for
+    a marker, so that shape is invisible here and is caught instead by
+    ``_spec_contains_custom_callable`` on the raw spec.
+    """
+
+    if isinstance(value, Mapping):
+        if "__custom__" in value:
+            return True
+        return any(_identity_has_custom_marker(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_identity_has_custom_marker(item) for item in value)
+    return False
+
+
+def _identity_callable_owner(value: Any) -> str:
+    """The module that OWNS a callable, for the package-vs-caller question.
+
+    ``__module__`` is the right answer for a function or a class, which carry
+    their own. It is not reliable for a callable INSTANCE: the attribute is
+    inherited from the type when it exists at all, and some callables
+    (``functools.partial``) have none. ``type(value).__module__`` always exists
+    and always names where the class was written, so it is the fallback.
+    """
+
+    module = getattr(value, "__module__", None)
+    if not isinstance(module, str):
+        module = getattr(type(value), "__module__", "")
+    return module if isinstance(module, str) else ""
+
+
+def _is_package_callable(value: Any) -> bool:
+    """Whether a callable is macroforecast's own rather than the caller's."""
+
+    owner = _identity_callable_owner(value)
+    return owner == "macroforecast" or owner.startswith("macroforecast.")
+
+
+def _spec_contains_custom_callable(
+    value: Any, *, active: frozenset[int] = frozenset()
+) -> bool:
+    """Whether a RAW ``features``/``preprocessing`` spec carries caller code.
+
+    The canonical scan above cannot answer this alone. ``_identity_ready`` tests
+    ``is_dataclass`` BEFORE it looks for ``__mf_digest__``, so a callable
+    ``@dataclass`` instance -- a legal ``custom_step`` / ``custom_preprocess_step``
+    argument -- canonicalises as ``{"__dataclass__": ...}`` and carries no
+    ``__custom__`` marker, even though ``_invoke_custom_step`` will call it with
+    ``metadata=``. Reading that step as built-in would normalise loader
+    provenance out from under a callable that branches on ``downloaded_at``,
+    which is exactly the silent stale reuse this gate exists to stop. So the raw
+    spec objects are scanned too and the two answers are OR-ed.
+
+    Caller code is decided by OWNERSHIP, not by shape: a callable whose module is
+    not macroforecast's came from outside the package, whatever it looks like.
+    The check runs BEFORE the dataclass recursion, so a callable dataclass is
+    caught as caller code instead of being walked as a record; package-owned
+    dataclasses (``FeatureSpec``, ``PreprocessSpec``) fall through to that
+    recursion, which is how the caller callables they hold in ``steps`` are
+    found. Being wrong in the conservative direction here forces the caller to
+    select a fresh checkpoint path -- a ``functools.partial`` around a built-in
+    reads as caller code -- and being wrong the other way costs a wrong number.
+
+    The walk is bounded. Only mapping VALUES, the four sequence/set shapes and
+    dataclass fields are followed, never an arbitrary ``__dict__`` or attribute,
+    so it cannot wander off a spec into the objects a spec merely references; and
+    ``active`` carries the object ids on the current path, so a spec holding a
+    cycle (a step list that contains itself) terminates instead of recursing
+    forever. Fields are read through ``_safe_attr`` because a property must not
+    be able to fail a run from inside an identity helper.
+    """
+
+    if callable(value) and not _is_package_callable(value):
+        return True
+
+    object_id = id(value)
+    if object_id in active:
+        return False
+    nested_active = active | {object_id}
+
+    if isinstance(value, Mapping):
+        return any(
+            _spec_contains_custom_callable(item, active=nested_active)
+            for item in value.values()
+        )
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return any(
+            _spec_contains_custom_callable(item, active=nested_active) for item in value
+        )
+    if is_dataclass(value) and not isinstance(value, type):
+        return any(
+            _spec_contains_custom_callable(
+                _safe_attr(value, field.name), active=nested_active
+            )
+            for field in fields(value)
+        )
+    return False
+
+
+def _metadata_is_read_by_custom_code(
+    store_identity: _StoreIdentity,
+    *,
+    features: Any,
+    preprocessing: Any,
+) -> bool:
+    """Whether this run can hand the panel metadata payload to user code.
+
+    Asked of the two surfaces that receive the payload and of nothing else: a
+    custom feature step's ``func``/``fit_func``/``transform_func`` and a custom
+    preprocessing step's are called with ``metadata=`` (see
+    ``preprocessing/specs.py`` and ``_FittedFeatureStep``). A custom MODEL or a
+    custom selection metric is handed a feature matrix and a score, never the
+    metadata, so neither may widen the identity: doing so would refuse resumes
+    over a timestamp that provably cannot reach them.
+
+    Two scans, because neither alone sees every callable. The ALREADY
+    canonicalized components answer it wherever the caller's object left a
+    ``__custom__`` marker; the RAW spec objects answer it for the shapes
+    canonicalization flattens first, a callable ``@dataclass`` instance being the
+    one that matters (see ``_spec_contains_custom_callable``). Either scan
+    saying yes is yes.
+
+    The answer decides one thing only -- whether loader provenance is normalised
+    out of the recorded metadata (see ``_identity_metadata_payload``). It is
+    computed ONCE per run at the gate and threaded down, rather than re-derived
+    inside each identity helper, so the ordinary panel, the vintage origin
+    snapshots and the vintage actuals base panel cannot drift onto different
+    policies. ``features`` and ``preprocessing`` are required keywords rather
+    than defaulted ones so that a new call site cannot quietly fall back to the
+    marker scan alone.
+    """
+
+    components = store_identity.components
+    if any(
+        _identity_has_custom_marker(components.get(surface))
+        for surface in ("features", "preprocessing")
+    ):
+        return True
+    return any(
+        _spec_contains_custom_callable(spec) for spec in (features, preprocessing)
+    )
+
+
+def _identity_metadata_payload(metadata: Any, *, read_by_custom_code: bool) -> Any:
+    """The metadata payload as the IDENTITY should see it.
+
+    Two policies, because the payload has two kinds of consumer.
+
+    Built-in feature and preprocessing steps do not read
+    ``macroforecast_metadata``; the runner re-attaches it to each slice, and the
+    numbers come out of the panel's values. For those runs, ``downloaded_at`` and
+    ``cache_hit`` are pure loader provenance: they differ between two
+    ``load_fred_md()`` calls over byte-identical bytes, so keeping them in the
+    digest would make ordinary resume -- reload the data, restart the run --
+    impossible across two calls or two processes, which is a false refusal on the
+    most common workflow there is.
+
+    A run with a CUSTOM feature or preprocessing step is the other case. That step
+    is handed the whole payload and may branch on any field in it, including these
+    two; a step keyed on ``cache_hit`` is odd but legal, and one keyed on
+    ``downloaded_at`` is how a user stamps a vintage. Filtering the fields out of
+    the identity while still passing them to the step would restore exactly the
+    silent stale reuse this gate exists to stop -- the output can move while the
+    digest does not. So for those runs nothing is filtered and the raw payload is
+    identified, which does mean a loader-backed run with a metadata-reading custom
+    step is not resumable across two loader calls. That is the safe direction:
+    a refusal costs recomputation, a false match costs a wrong number.
+
+    The filtered payload is a COPY. The caller's dict is the live
+    ``panel.attrs["macroforecast_metadata"]`` that the runner goes on to hand to
+    the run, so removing a key in place would change what user code and the
+    DataBundle see. ``deepcopy`` is attempted first and falls back to copying only
+    the two mappings actually rewritten: a payload may hold an arbitrary user
+    object whose ``__deepcopy__`` raises, and an identity helper must not be the
+    thing that fails a run. Both branches leave the input untouched.
+    """
+
+    if read_by_custom_code or not isinstance(metadata, Mapping):
+        return metadata
+    artifact = metadata.get("artifact")
+    if not isinstance(artifact, Mapping):
+        return metadata
+    if not any(field in artifact for field in _LOADER_PROVENANCE_FIELDS):
+        return metadata
+    try:
+        normalized = copy.deepcopy(dict(metadata))
+    except Exception:  # pragma: no cover - user objects with a hostile __deepcopy__
+        normalized = dict(metadata)
+    normalized_artifact = dict(normalized.get("artifact", artifact))
+    for field in _LOADER_PROVENANCE_FIELDS:
+        normalized_artifact.pop(field, None)
+    normalized["artifact"] = normalized_artifact
+    return normalized
+
+
+def _panel_metadata_payload(
+    panel: Any, *, read_by_custom_code: bool
+) -> tuple[Any, bool]:
+    """The ``macroforecast_metadata`` payload user code is actually handed.
+
+    ``panel_fingerprint`` covers index, columns and values and deliberately does
+    NOT cover ``panel.attrs``, but the runner does not treat that payload as
+    decoration: it is re-attached to every per-origin fit/test slice and passed as
+    the ``metadata=`` argument of each feature step's ``func`` / ``fit_func`` /
+    ``transform_func``, so a custom step may legitimately read a field from it and
+    return different columns for it. Two inputs with identical values and
+    different metadata are therefore two different runs.
+
+    The payload is returned RAW rather than stringified. The caller hands it to
+    ``_new_store_identity``, whose canonicalizer renders what it can represent and
+    records what it cannot as an opaque field -- which makes the identity
+    incomplete, and the checkpoint unresumable, instead of collapsing two distinct
+    values onto one ``str()``. The bool is False only when the payload could not
+    be read at all.
+
+    The single exception to "raw" is loader provenance, and only when no custom
+    step can read it: ``_identity_metadata_payload`` explains why
+    ``artifact.downloaded_at`` and ``artifact.cache_hit`` are normalised out on
+    that path and kept on the other. ``read_by_custom_code`` is decided once per
+    run by ``_metadata_is_read_by_custom_code`` and passed in, never re-derived
+    here.
+    """
+
+    try:
+        raw = panel.attrs.get("macroforecast_metadata", {})
+        payload = dict(raw) if isinstance(raw, Mapping) else raw
+    except Exception as exc:  # pragma: no cover - attrs is a plain dict in practice
+        return {"__unreadable__": type(exc).__name__}, False
+    return _identity_metadata_payload(payload, read_by_custom_code=read_by_custom_code), True
+
+
+def _panel_content_identity(
+    panel: Any, *, read_by_custom_code: bool
+) -> tuple[dict[str, Any], tuple[str, ...]]:
+    """Content identity of an ordinary input panel, plus any opaque field paths.
+
+    Two halves, because the runner reads two things off the input. The canonical
+    full-panel fingerprint (``data.identity.panel_fingerprint``) is the same one
+    result-cell identity uses, so "the data changed" means the same thing in both
+    places; and the ``macroforecast_metadata`` payload, which that fingerprint
+    does not see and which feature steps consume (see
+    ``_panel_metadata_payload``). Fingerprinting values alone let a metadata-only
+    edit that demonstrably moves the forecasts pass as the same run.
+
+    A panel that cannot be fingerprinted is reported as opaque rather than as a
+    fingerprint over the error text: an identity that every failing panel shares
+    is worse than no identity at all, because it compares EQUAL.
+    """
+
+    identity: dict[str, Any] = {"kind": "panel"}
+    opaque: list[str] = []
+    try:
+        identity["fingerprint"] = panel_fingerprint(panel)
+    except Exception as exc:
+        identity["fingerprint"] = {"method": "undigestible", "reason": type(exc).__name__}
+        opaque.append("run.data.fingerprint")
+    metadata, readable = _panel_metadata_payload(
+        panel, read_by_custom_code=read_by_custom_code
+    )
+    identity["metadata"] = metadata
+    if not readable:
+        opaque.append("run.data.metadata")
+    return identity, tuple(opaque)
+
+
+def _vintage_origin_input_identity(
+    data: VintagePanelSpec,
+    *,
+    reference_index: pd.DatetimeIndex,
+    origin_items: Sequence[Mapping[str, Any]],
+    read_by_custom_code: bool,
+) -> tuple[list[list[Any]], set[str]]:
+    """Point-in-time input identity: one row per EXECUTION origin.
+
+    A vintage run's fit input at origin *k* is the work panel of whichever bundle
+    ``source.resolve()`` returns for that origin, so that panel -- not the latest
+    one -- is what a resumed origin's forecast was computed from. Each row records
+    all three things that panel carries into the run: its content fingerprint, the
+    ``vintage_id`` the runner writes into the forecast table, and the whole
+    ``macroforecast_metadata`` payload ``_vintage_work_panel`` puts on
+    ``panel.attrs`` -- which is ``dict(bundle.metadata)``, is handed to every
+    feature step as ``metadata=``, and which ``panel_fingerprint`` (index,
+    columns, values) does not see. ``vintage_id`` is one field of that payload and
+    is kept separately because it is written to the output; recording only it
+    would leave a bundle whose other metadata was revised comparing equal while
+    the forecasts for its origins move.
+
+    Rows are ``[origin_pos, vintage_id, fingerprint, metadata]``. ``origin_pos``
+    indexes ``reference_calendar``, which the identity already carries, so the
+    origin timestamp is not repeated. The raw ``vintage_id`` and metadata objects
+    are kept rather than stringified: the caller hands the whole block to
+    ``_new_store_identity``, which canonicalises them and reports anything it
+    cannot represent as an opaque field -- a ``str()`` here would instead silently
+    collapse two distinct values.
+
+    A bundle that cannot be resolved, validated, or fingerprinted makes the
+    identity INCOMPLETE rather than contributing a shared error marker, because
+    two different broken bundles must never compare equal.
+    """
+
+    rows: list[list[Any]] = []
+    opaque: set[str] = set()
+    for item in origin_items:
+        row = item["row"]
+        origin_pos = int(row["origin_pos"])
+        try:
+            bundle = data.source.resolve(pd.Timestamp(row["origin"]))
+            vintage_id = _bundle_vintage_id(bundle)
+            work_panel = _vintage_work_panel(bundle, reference_index)
+            fingerprint = panel_fingerprint(work_panel)
+        except Exception as exc:
+            opaque.add("run.data.origin_inputs")
+            rows.append([origin_pos, {"__unresolved__": type(exc).__name__}, None, None])
+            continue
+        metadata, readable = _panel_metadata_payload(
+            work_panel, read_by_custom_code=read_by_custom_code
+        )
+        if not readable:
+            opaque.add("run.data.origin_inputs")
+        rows.append([origin_pos, vintage_id, fingerprint["value"], metadata])
+    return rows, opaque
+
+
+def _vintage_actuals_identity(
+    resolver: "_VintageActualResolver",
+    *,
+    reference_index: pd.DatetimeIndex,
+    origin_items: Sequence[Mapping[str, Any]],
+    horizon: int,
+    target_name: str | None,
+    read_by_custom_code: bool,
+) -> tuple[dict[str, Any], set[str]]:
+    """Identity of the realised values a resumed origin's rows would carry.
+
+    Under ``actuals_vintage='latest'`` every actual comes from the single latest
+    work panel, so that panel's fingerprint plus its vintage id is the complete
+    answer. Under ``'first_release'`` it is not: ``panel_for_dates`` starts from
+    that same panel but overwrites the target at each requested date with the
+    value from the FIRST bundle that published it, so the identity additionally
+    records the resolved ``(value, vintage_id)`` for every target date any origin
+    can ask about. That pair is exactly what the run consumes, which is why it is
+    a sound stand-in for fingerprinting every probed bundle: a revision that does
+    not move the first release cannot move the forecast rows either, and one that
+    does move it changes this block.
+
+    The base panel's ``macroforecast_metadata`` is recorded for the same reason
+    its values are: under BOTH policies ``panel_for_dates`` returns that panel (or
+    a ``copy()`` of it, which carries ``attrs`` across), the runner preprocesses it
+    and calls ``transform(actual_prepared.panel, metadata=actual_metadata)``, so a
+    feature step reading a metadata field changes the realised value written to the
+    ``actual`` column.
+
+    The metadata of the bundles PROBED for a first release is deliberately not
+    recorded. Only two things reach the run from a probe -- ``bundle.panel.loc[date,
+    target]`` and ``metadata["vintage"]`` -- and both are already in the
+    ``(value, vintage_id)`` rows below. Fingerprinting the rest of those bundles'
+    metadata would refuse resumes over edits that provably cannot move a single
+    output cell, which is the mirror-image failure of the one this block fixes.
+
+    Resolving here also warms ``_VintageActualResolver``'s own per-``(target,
+    date)`` cache, so the origin loop pays for these lookups once, not twice.
+    """
+
+    identity: dict[str, Any] = {
+        "policy": resolver._policy,
+        "base_vintage_id": resolver._latest_vintage_id,
+    }
+    opaque: set[str] = set()
+    try:
+        identity["base_panel_fingerprint"] = panel_fingerprint(resolver.base_panel)["value"]
+    except Exception:
+        identity["base_panel_fingerprint"] = None
+        opaque.add("run.data.actuals.base_panel_fingerprint")
+    base_metadata, base_readable = _panel_metadata_payload(
+        resolver.base_panel, read_by_custom_code=read_by_custom_code
+    )
+    identity["base_panel_metadata"] = base_metadata
+    if not base_readable:
+        opaque.add("run.data.actuals.base_panel_metadata")
+
+    if resolver._policy != "first_release":
+        return identity, opaque
+
+    if target_name is None:
+        # The origin loop rejects this run outright; say so in the identity
+        # rather than claim complete knowledge of actuals we cannot name.
+        opaque.add("run.data.actuals.values")
+        identity["values"] = None
+        return identity, opaque
+
+    dates: set[pd.Timestamp] = set()
+    for item in origin_items:
+        dates.update(
+            pd.Timestamp(value)
+            for value in _vintage_actual_dates_for_item(item, reference_index, horizon)
+        )
+
+    identity["target"] = target_name
+    rows: list[list[Any]] = []
+    for date in sorted(dates):
+        try:
+            actual = resolver.actual_value(target_name, date)
+        except Exception as exc:
+            opaque.add("run.data.actuals.values")
+            rows.append([date.isoformat(), {"__unresolved__": type(exc).__name__}, None])
+            continue
+        rows.append([date.isoformat(), actual.value, actual.vintage_id])
+    identity["values"] = rows
+    return identity, opaque
+
+
+def _vintage_content_identity(
+    data: VintagePanelSpec,
+    *,
+    reference_index: pd.DatetimeIndex,
+    origin_items: Sequence[Mapping[str, Any]],
+    horizon: int,
+    target_name: str | None,
+    actual_resolver: "_VintageActualResolver",
+    read_by_custom_code: bool,
+) -> tuple[dict[str, Any], tuple[str, ...]]:
+    """Content identity of a vintage input, plus any opaque field paths.
+
+    A vintage run has no single input panel. Its inputs are the SOURCE and the
+    particular bundles this run resolves out of it, so the descriptor pairs a
+    spec identity -- the source's own vintage labels, or a stable
+    ``__mf_digest__`` marker it publishes -- with the content of every bundle the
+    run can actually read: the point-in-time work panel at each execution origin,
+    and the values behind each origin's actuals. A source that can offer neither
+    labels nor a marker is marked opaque and is therefore unresumable once origin
+    files exist, which is the honest answer: two different opaque sources would
+    otherwise compare equal.
+
+    Fingerprinting only the latest bundle -- which is what this did first -- is
+    NOT sufficient and must not be described as complete. Available labels and
+    the latest bundle can be byte-identical while an intermediate vintage that
+    some origin resolves has been revised, and the forecasts for those origins
+    then change while the digest does not: precisely the silent reuse F-058
+    exists to stop.
+
+    This costs one extra ``resolve``/fingerprint pass over the origins before the
+    run starts. That is deliberate: a cheap digest that cannot see a revision is
+    worse than no resume at all, because it answers "same run" with confidence it
+    has not earned.
+    """
+
+    source = data.source
+    opaque: set[str] = set()
+    marker = _safe_attr(source, "__mf_digest__")
+    try:
+        labels = tuple(source.available_vintages())
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        labels = ()
+    if not labels and marker is None:
+        opaque.add("run.data.source")
+
+    origin_rows, origin_opaque = _vintage_origin_input_identity(
+        data,
+        reference_index=reference_index,
+        origin_items=origin_items,
+        read_by_custom_code=read_by_custom_code,
+    )
+    opaque |= origin_opaque
+
+    actuals, actual_opaque = _vintage_actuals_identity(
+        actual_resolver,
+        reference_index=reference_index,
+        origin_items=origin_items,
+        horizon=horizon,
+        target_name=target_name,
+        read_by_custom_code=read_by_custom_code,
+    )
+    opaque |= actual_opaque
+
+    return (
+        {
+            "kind": "vintage",
+            "source": {
+                "type": f"{type(source).__module__}.{type(source).__qualname__}",
+                "kind": _safe_attr(source, "kind"),
+                "dataset": _safe_attr(source, "dataset"),
+                "frequency": _safe_attr(source, "frequency"),
+                "mf_digest": marker,
+                "available_vintages": [str(label) for label in labels],
+            },
+            "reference_calendar": [
+                pd.Timestamp(value).isoformat() for value in data.reference_calendar
+            ],
+            "actuals_vintage": data.actuals_vintage,
+            "first_release_max_vintages": data.first_release_max_vintages,
+            "origin_inputs": {
+                "columns": ["origin_pos", "vintage_id", "panel_fingerprint", "metadata"],
+                "rows": origin_rows,
+            },
+            "actuals": actuals,
+        },
+        tuple(sorted(opaque)),
+    )
+
+
+def _model_store_identity(model_store: str | Path) -> str:
+    """The model store as a path, not as the string the caller happened to type.
+
+    ``_store_model_fit`` writes to ``Path(root) / <alias>``, so a relative
+    ``"trained_model"`` denotes a DIFFERENT directory under a different working
+    directory. Storing the raw string made those two runs compare equal, and a
+    resume from the second cwd would skip the fits and silently leave the newly
+    denoted store empty -- ``save_models=True`` that saves no models.
+
+    Normalisation is ``resolve()`` and deliberately NOT ``expanduser()``:
+    ``Path("~/store")`` is not expanded on the write path either, so expanding it
+    here would map ``"~/store"`` from two different cwds onto one identity while
+    the runs wrote to two different ``<cwd>/~/store`` directories -- swapping this
+    unsoundness for another. ``resolve()`` also follows symlinks, which matches
+    where the bytes actually land.
+    """
+
+    return str(Path(model_store).resolve())
+
+
+def _checkpoint_run_identity(
+    *,
+    store_identity: _StoreIdentity,
+    model_runs: Sequence[_ModelRun],
+    horizon: int,
+    selection: Any,
+    selection_metric: Any,
+    maximize_selection: bool,
+    selection_random_state: Any,
+    model_random_seed: Any,
+    model_random_alias: str | None,
+    selection_history: bool,
+    save_models: bool,
+    model_store: str | Path,
+    data_identity: Mapping[str, Any],
+    extra_opaque_fields: Sequence[str] = (),
+) -> CheckpointRunIdentity:
+    """Everything that can change what a checkpointed origin CONTAINS.
+
+    Built on the same canonicalizer the model store uses (F-057), so an opaque
+    custom object is detected once, the same way, for both. ``store_identity``
+    already carries arm / target / transform / forecast + future policy / window /
+    features / preprocessing / stage policies; what it does not carry, and a
+    resumed origin plainly depends on, is added here: the horizon (origin
+    positions are horizon-independent, so only this separates two horizons that
+    share a directory), the resolved model implementation and effective
+    parameters, the selection search / metric / direction, the effective random
+    seeds, the input content, whether selection history is written beside each
+    origin, and -- when saving is enabled -- where fitted models are stored.
+
+    ``store_identity``'s own opaque fields are re-unioned rather than
+    re-detected: its components arrive already canonicalized, so an opaque value
+    is by then an ordinary ``{"__opaque__": ...}`` mapping that a second pass
+    would happily accept as complete.
+
+    Deliberately absent: ``combination``. Combination rows are derived from the
+    forecast table AFTER the checkpoint merge and are never written to disk, so
+    adding or dropping one recomputes it in full and cannot make a stored origin
+    wrong. Evaluation-only choices are absent for the same reason -- they do not
+    reach ``run()`` at all.
+    """
+
+    identity = _new_store_identity(
+        run=dict(store_identity.components),
+        horizon=int(horizon),
+        models=[
+            {
+                "alias": model_run.alias,
+                "spec": model_run.spec.to_metadata(),
+                "implementation": model_run.spec.fit_func,
+            }
+            for model_run in model_runs
+        ],
+        selection={
+            "search": selection,
+            "metric": selection_metric,
+            "maximize": bool(maximize_selection),
+        },
+        seeds={
+            "selection_random_state": selection_random_state,
+            "model_random_seed": model_random_seed,
+            "model_random_alias": model_random_alias,
+        },
+        selection_history=bool(selection_history),
+        model_saving={
+            "save_models": bool(save_models),
+            # The store path only changes what a run does when saving is on;
+            # including it unconditionally would refuse resumes over a setting
+            # that wrote nothing.
+            "model_store": _model_store_identity(model_store) if save_models else None,
+        },
+        data=dict(data_identity),
+    )
+    opaque_fields = tuple(
+        sorted(
+            set(identity.opaque_fields)
+            | set(store_identity.opaque_fields)
+            | set(extra_opaque_fields)
+        )
+    )
+    components = dict(identity.components)
+    canonical = _canonical_identity_text(
+        {"namespace": _CHECKPOINT_IDENTITY_NAMESPACE, "components": components}
+    )
+    return CheckpointRunIdentity(
+        digest=hashlib.sha256(canonical.encode("utf-8", "surrogatepass")).hexdigest(),
+        complete=bool(identity.complete) and not opaque_fields,
+        opaque_fields=opaque_fields,
+        components=components,
+    )
+
+
 def _run_feature_set(
     data: FeatureSet,
     *,
@@ -1497,7 +2192,41 @@ def _run_vintage_aware(
     completed_positions: set[int] = set()
     skip_computation = False
     if checkpoint_path is not None:
-        completed_positions = completed_origin_positions(checkpoint_path)
+        # Same gate as the feature-matrix route. The input identity has to cover
+        # every bundle this run can read -- the point-in-time panel at each
+        # ``origin_items`` entry and the values behind each origin's actuals --
+        # because the latest bundle alone can be byte-identical while an
+        # intermediate vintage some origin resolves has been revised.
+        vintage_identity, vintage_opaque = _vintage_content_identity(
+            data,
+            reference_index=reference_index,
+            origin_items=origin_items,
+            horizon=horizon,
+            target_name=_feature_target_name(features),
+            actual_resolver=actual_resolver,
+            read_by_custom_code=_metadata_is_read_by_custom_code(
+                store_identity, features=features, preprocessing=preprocessing
+            ),
+        )
+        completed_positions = resolve_checkpoint_resume(
+            checkpoint_path,
+            _checkpoint_run_identity(
+                store_identity=store_identity,
+                model_runs=model_runs,
+                horizon=horizon,
+                selection=selection,
+                selection_metric=selection_metric,
+                maximize_selection=maximize_selection,
+                selection_random_state=config["random_seed"],
+                model_random_seed=_get_pipeline_random_seed(),
+                model_random_alias=_get_pipeline_arm_alias(),
+                selection_history=selection_history,
+                save_models=save_models,
+                model_store=model_store,
+                data_identity=vintage_identity,
+                extra_opaque_fields=vintage_opaque,
+            ),
+        )
 
         def _stage_is_independent(policy: StagePolicy | None) -> bool:
             if policy is None:
@@ -3122,6 +3851,7 @@ from macroforecast.forecasting.policies.base import (  # noqa: E402
     _OriginRunConfig,
     _StoreIdentity,
     _aligned_or_positional_series,  # noqa: F401  (re-export)
+    _canonical_identity_text,
     _fit_one_model_at_origin,  # noqa: F401  (re-export)
     _forecast_target_dates,  # noqa: F401  (re-export)
     _is_default_position_index,  # noqa: F401  (re-export)

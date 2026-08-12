@@ -5,6 +5,56 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/runner.py`, `forecasting/checkpoint.py`, `docs/guide/concepts/running.md`
+  (**a checkpoint directory may now only be resumed by the run that filled it**):
+  `checkpoint_path` is a path, and a path said nothing about configuration.
+  Handing the same one to a run with a different regularisation strength, window,
+  panel, seed or horizon made the existing per-origin parquet files *this* run's
+  answer: the origins were skipped and the stale rows were merged into the
+  returned frame. `run_pipeline()` could not protect the decision either, because
+  it writes `cell_manifest.json` only after `run()` returns -- and then overwrote
+  the old manifest with the new identity, erasing the evidence.
+
+  **`run_identity.json`.** Each `h<h>` directory now carries a manifest, written
+  before the first `origin_*.parquet` file, recording everything that can change
+  what a stored origin contains: the resolved model and effective parameters, the
+  target and transform, forecast and future-feature policies, horizon, window,
+  features, preprocessing and stage policies, the selection search, metric and
+  direction, the effective seeds, the input data, and the resolved model-store
+  path when `save_models=True`. Resume proceeds only when that identity is
+  complete on both sides and matches.
+
+  **Fail-closed, and it touches nothing.** A directory that cannot be shown to
+  belong to this run raises `ValueError` naming what differs. Nothing is deleted,
+  renamed, adopted or quarantined, and the files stay readable by
+  `load_checkpoint_frame()` and `rescore()`. An identity that cannot be
+  represented canonically -- a custom model or metric passed as a bare callable --
+  counts as "cannot be shown", not as a match; give it a stable digest
+  (`mf.models.custom_model(..., mf_digest="my-model-v1")`) to make it resumable.
+
+  **Compatibility break.** A checkpoint directory written before this release has
+  origin files and no manifest, so it cannot be resumed *into*: there is nothing
+  on disk saying which configuration produced it, and adopting it would mean
+  writing the current identity beside forecasts that may belong to another run.
+  Such directories still rescore and still load. Point `checkpoint_path` at a
+  fresh directory to continue, or move the old one aside. A directory with a
+  stale, unreadable or incomplete manifest and *no* origin files is simply
+  replaced and the run starts fresh.
+
+  **Loader provenance is normalised, except where user code can read it.** Every
+  loader stamps `artifact.downloaded_at` and `artifact.cache_hit`, which differ
+  between two calls over one unchanged file. Identifying them would have made
+  "reload the data, restart the run" refuse, so for runs whose features and
+  preprocessing are built-in they are omitted from the identity while the rest of
+  the artifact (`file_sha256`, size, format, dataset, version mode, vintage,
+  paths) still binds. A **custom** feature or preprocessing step is handed the
+  whole payload and may branch on those fields, so for those runs nothing is
+  filtered -- which does mean such a run will not resume across two loader calls.
+  That is the safe direction: a refusal costs recomputation, a false match costs
+  a wrong number. Custom models and metrics never see the payload and do not
+  trigger it. `docs/guide/concepts/running.md` documents the contract and the
+  recovery.
+
 - `interpretation/core.py`, `tests/interpretation/` (**one fix, plus the audit
   #446 asked for**): the interpretation subsystem had no correctness oracles,
   and the `custom_interpretation` contract was a one-line docstring.
