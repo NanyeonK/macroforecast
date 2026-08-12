@@ -517,6 +517,13 @@ Explain a precomputed ``anatomy.Anatomy`` object.
 This is a thin backend wrapper around the Python ``anatomy`` package from
 Borup et al., *The Anatomy of Out-of-Sample Forecasting Accuracy*.
 
+``model_groups`` maps a group name to either a sequence of model names,
+which the backend combines with equal weights, or a mapping of model name
+to a finite numeric weight. A weighted group is combined on the precomputed
+model output BEFORE the output transformer runs, which is what a nonlinear
+loss such as RMSE distinguishes; the pinned backend cannot do this itself
+(F-072). ``model_groups=None`` delegates to the backend untouched.
+
 #### Parameters
 
 | Name | Kind | Type | Default |

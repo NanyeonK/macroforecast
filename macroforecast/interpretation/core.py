@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import combinations
 from importlib import import_module
@@ -982,6 +983,13 @@ def anatomy_explain(
 
     This is a thin backend wrapper around the Python ``anatomy`` package from
     Borup et al., *The Anatomy of Out-of-Sample Forecasting Accuracy*.
+
+    ``model_groups`` maps a group name to either a sequence of model names,
+    which the backend combines with equal weights, or a mapping of model name
+    to a finite numeric weight. A weighted group is combined on the precomputed
+    model output BEFORE the output transformer runs, which is what a nonlinear
+    loss such as RMSE distinguishes; the pinned backend cannot do this itself
+    (F-072). ``model_groups=None`` delegates to the backend untouched.
     """
 
     anatomy_mod = _optional_anatomy()
@@ -993,10 +1001,8 @@ def anatomy_explain(
     if not hasattr(anatomy_obj, "explain"):
         raise TypeError("anatomy must be a precomputed anatomy.Anatomy object or path")
 
-    groups_obj = (
-        None
-        if model_groups is None
-        else anatomy_mod.AnatomyModelCombination(groups=dict(model_groups))
+    normalized = (
+        None if model_groups is None else _normalize_anatomy_model_groups(model_groups)
     )
     transformer_obj = _resolve_anatomy_transformer(
         anatomy_mod,
@@ -1004,11 +1010,73 @@ def anatomy_explain(
         metric=metric,
     )
     subset = None if explanation_subset is None else pd.Index(explanation_subset)
-    wide = anatomy_obj.explain(
-        model_sets=groups_obj,
-        transformer=transformer_obj,
-        explanation_subset=subset,
-    )
+    if subset is not None and len(subset) == 0:
+        raise ValueError("explanation_subset is empty, so there is nothing to explain")
+    if subset is not None:
+        # A non-empty subset that matches no forecast date is selected by the
+        # backend as an all-False mask and only surfaces much later as an opaque
+        # AssertionError. Refuse it here, before any dispatch branch below, so
+        # model_groups=None, all-sequence, weighted and mixed groups all fail the
+        # same clear way. If the object does not expose its test index we leave
+        # the decision to the backend rather than inventing an error.
+        _test_index = getattr(getattr(anatomy_obj, "_xy_test", None), "index", None)
+        if isinstance(_test_index, pd.Index) and not bool(
+            _test_index.isin(subset).any()
+        ):
+            raise ValueError(
+                "explanation_subset selects no forecast dates from the anatomy "
+                "object, so there is nothing to explain"
+            )
+    if normalized is not None:
+        # Every explicit group is checked here, weighted or not, so no group is
+        # ever explained off a request that names a model the object lacks.
+        _check_anatomy_group_members(normalized, _anatomy_model_names(anatomy_obj))
+    if normalized is None:
+        wide = anatomy_obj.explain(
+            model_sets=None,
+            transformer=transformer_obj,
+            explanation_subset=subset,
+        )
+    elif all(weights is None for _, weights in normalized.values()):
+        wide = anatomy_obj.explain(
+            model_sets=anatomy_mod.AnatomyModelCombination(
+                groups={
+                    group: list(members)
+                    for group, (members, _weights) in normalized.items()
+                }
+            ),
+            transformer=transformer_obj,
+            explanation_subset=subset,
+        )
+    else:
+        source, available = _anatomy_model_tensor(anatomy_obj)
+        frames: list[pd.DataFrame] = []
+        for group, (members, weights) in normalized.items():
+            if weights is None:
+                frames.append(
+                    anatomy_obj.explain(
+                        model_sets=anatomy_mod.AnatomyModelCombination(
+                            groups={group: list(members)}
+                        ),
+                        transformer=transformer_obj,
+                        explanation_subset=subset,
+                    )
+                )
+            else:
+                frames.append(
+                    _anatomy_weighted_group_frame(
+                        anatomy_mod,
+                        anatomy_obj,
+                        source,
+                        available,
+                        group=group,
+                        members=members,
+                        weights=weights,
+                        transformer=transformer_obj,
+                        subset=subset,
+                    )
+                )
+        wide = frames[0] if len(frames) == 1 else pd.concat(frames, axis=0)
     if str(output).lower() == "wide":
         table = wide.copy()
     elif str(output).lower() == "long":
@@ -4034,6 +4102,200 @@ def _optional_anatomy() -> Any:
             "anatomy backend. Install with `pip install anatomy` or "
             "`pip install 'macroforecast[interpretation]'`."
         ) from exc
+
+
+def _normalize_anatomy_model_groups(
+    model_groups: Mapping[str, Sequence[str] | Mapping[str, float]],
+) -> dict[str, tuple[list[str], np.ndarray | None]]:
+    """Validate ``model_groups`` and split each group into members and weights.
+
+    A ``None`` weight vector marks a plain sequence group, which the pinned
+    ``anatomy`` backend already combines with equal weights. Numeric mappings
+    are normalized here because that backend ignores the requested numbers.
+    """
+
+    if not isinstance(model_groups, Mapping):
+        raise ValueError(
+            "model_groups must be a mapping of group name to a sequence of "
+            "model names or to a mapping of model name to weight"
+        )
+    if not model_groups:
+        raise ValueError("model_groups is empty")
+    return {
+        str(group): _normalize_anatomy_model_group(str(group), spec)
+        for group, spec in model_groups.items()
+    }
+
+
+def _normalize_anatomy_model_group(
+    group: str,
+    spec: Sequence[str] | Mapping[str, float],
+) -> tuple[list[str], np.ndarray | None]:
+    """Validate one group specification into member names and weights."""
+
+    if isinstance(spec, Mapping):
+        if not spec:
+            raise ValueError(f"model group {group!r} is empty")
+        members = [str(model) for model in spec]
+        weights = np.asarray(
+            [
+                _anatomy_model_group_weight(group, str(model), weight)
+                for model, weight in spec.items()
+            ],
+            dtype=float,
+        )
+        # Normalize by the largest absolute weight BEFORE summing. Every value
+        # is finite here, but a direct sum of a legitimate near-overflow
+        # request such as {1e308, 1e308} is ``inf``, which then poisons the
+        # combination factors. Dividing by ``max(|w|)`` bounds every scaled
+        # weight to ``[-1, 1]``, so an ordinary finite-weight sum cannot
+        # overflow, and it is exact scale invariance: a small-scale request
+        # such as {1e-20, 3e-20} remains the same legitimate 1:3 combination
+        # and does not underflow.
+        scale = float(np.max(np.abs(weights)))
+        if scale == 0.0:
+            # Every weight is zero, so there is no nonzero value to scale by.
+            raise ValueError(
+                f"weights for model group {group!r} sum to zero, so the "
+                "combination is undefined"
+            )
+        weights = weights / scale
+        # Only an exactly zero scaled sum is undefined, including exact
+        # cancellation such as {1.0, -1.0}. Negative weights that do not cancel
+        # stay supported.
+        if float(weights.sum()) == 0.0:
+            raise ValueError(
+                f"weights for model group {group!r} sum to zero, so the "
+                "combination is undefined"
+            )
+        return members, weights
+    if isinstance(spec, (str, bytes)) or not isinstance(spec, Iterable):
+        raise ValueError(
+            f"model group {group!r} must be a sequence of model names or a "
+            "mapping of model name to weight"
+        )
+    members = list(spec)
+    if not members:
+        raise ValueError(f"model group {group!r} is empty")
+    if any(not isinstance(model, str) for model in members):
+        raise ValueError(
+            f"model group {group!r} must be a sequence of model names when it "
+            "carries no weights"
+        )
+    return [str(model) for model in members], None
+
+
+def _anatomy_model_group_weight(group: str, model: str, weight: Any) -> float:
+    """Coerce one requested model weight to a finite float."""
+
+    if isinstance(weight, (bool, np.bool_)) or not isinstance(
+        weight, (int, float, np.integer, np.floating)
+    ):
+        raise ValueError(
+            f"weight for model {model!r} in model group {group!r} must be a "
+            f"numeric value, got {weight!r}"
+        )
+    value = float(weight)
+    if not np.isfinite(value):
+        raise ValueError(
+            f"weight for model {model!r} in model group {group!r} must be "
+            f"finite, got {weight!r}"
+        )
+    return value
+
+
+def _anatomy_model_names(anatomy_obj: Any) -> list[str] | None:
+    """Return the model names an anatomy object carries, if it exposes them."""
+
+    names = getattr(anatomy_obj, "_model_names", None)
+    if names is None:
+        return None
+    return [str(model) for model in names]
+
+
+def _check_anatomy_group_members(
+    normalized: Mapping[str, tuple[list[str], np.ndarray | None]],
+    available: Sequence[str] | None,
+) -> None:
+    """Reject any explicit group naming a model the object does not carry.
+
+    This runs for sequence groups and weight mappings alike, before any group
+    is explained, so a malformed request never produces a partial table. An
+    object that does not expose its model names is left to the backend.
+    """
+
+    if available is None:
+        return
+    known = set(available)
+    for group, (members, _weights) in normalized.items():
+        missing = [model for model in members if model not in known]
+        if missing:
+            raise ValueError(
+                f"model group {group!r} names models that are not available in "
+                f"the precomputed anatomy object: {sorted(missing)}"
+            )
+
+
+def _anatomy_model_tensor(anatomy_obj: Any) -> tuple[np.ndarray, list[str]]:
+    """Read the precomputed model tensor backing the weighted groups.
+
+    Member availability is validated earlier for every explicit group, so this
+    only has to surface a missing or malformed tensor before any group is
+    explained.
+    """
+
+    tensor = getattr(anatomy_obj, "_Y", None)
+    names = getattr(anatomy_obj, "_model_names", None)
+    if tensor is None or names is None:
+        raise ValueError(
+            "weighted model groups need a precomputed anatomy object exposing "
+            "'_Y' and '_model_names'; call .precompute() first"
+        )
+    source = np.asarray(tensor, dtype=float)
+    if source.ndim < 2:
+        raise ValueError(
+            "the precomputed anatomy tensor '_Y' must have a leading model axis"
+        )
+    return source, [str(model) for model in names]
+
+
+def _anatomy_weighted_group_frame(
+    anatomy_mod: Any,
+    anatomy_obj: Any,
+    source: np.ndarray,
+    available: Sequence[str],
+    *,
+    group: str,
+    members: Sequence[str],
+    weights: np.ndarray,
+    transformer: Any | None,
+    subset: pd.Index | None,
+) -> pd.DataFrame:
+    """Explain one weighted group off a private scaled copy of ``_Y``.
+
+    The pinned backend averages the selected model tensors with equal weights
+    and only then applies the output transformer. ``weights`` arrives already
+    scale-normalized as ``v = w / max(|w|)``, so scaling this group's rows of a
+    private copy by ``len(members) * v / sum(v)`` -- algebraically the same
+    factor as ``len(members) * w / sum(w)``, but computed without ever summing
+    the original weights -- turns that equal-weight average into the requested
+    weighted average, so the transformer still sees one combined forecast. The
+    backend object, its tensor and the global RNG are left untouched.
+    """
+
+    positions = [list(available).index(model) for model in members]
+    factors = len(members) * np.asarray(weights, dtype=float) / float(weights.sum())
+    scaled = source.copy()
+    scaled[positions] = source[positions] * factors.reshape(
+        (-1,) + (1,) * (source.ndim - 1)
+    )
+    clone = copy.copy(anatomy_obj)
+    clone._Y = scaled
+    return clone.explain(
+        model_sets=anatomy_mod.AnatomyModelCombination(groups={group: list(members)}),
+        transformer=transformer,
+        explanation_subset=subset,
+    )
 
 
 def _resolve_anatomy_transformer(
