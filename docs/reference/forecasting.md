@@ -868,6 +868,16 @@ search space, ``model_selection=None`` therefore raises before fitting; pass an
 explicit ``{alias: None}`` mapping to opt out, or pin every searched parameter
 through ``params=``.
 
+When ``save_models=True``, each fitted-model filename carries a versioned digest of
+its effective run configuration, model implementation, parameters, origin, horizon,
+target key, and vintage identifier. The JSON sidecar records the canonical identity
+components. This separates fits that share a model alias but differ in arm, target,
+policy, implementation, or effective parameters. The digest does not include the
+training-data bytes and is not a content-addressed cache key. Custom configuration
+or model values that cannot be represented canonically emit a warning; define a
+stable ``__mf_digest__`` marker on such values when their identity must distinguish
+stored fits.
+
 #### Parameters
 
 | Name | Kind | Type | Default |
@@ -961,6 +971,16 @@ Panel-input models do not implement parameter tuning. If a model has a default
 search space, ``model_selection=None`` therefore raises before fitting; pass an
 explicit ``{alias: None}`` mapping to opt out, or pin every searched parameter
 through ``params=``.
+
+When ``save_models=True``, each fitted-model filename carries a versioned digest of
+its effective run configuration, model implementation, parameters, origin, horizon,
+target key, and vintage identifier. The JSON sidecar records the canonical identity
+components. This separates fits that share a model alias but differ in arm, target,
+policy, implementation, or effective parameters. The digest does not include the
+training-data bytes and is not a content-addressed cache key. Custom configuration
+or model values that cannot be represented canonically emit a warning; define a
+stable ``__mf_digest__`` marker on such values when their identity must distinguish
+stored fits.
 
 #### Parameters
 
