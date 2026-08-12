@@ -5,6 +5,176 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/types.py`
+  (**`ForecastResult.to_dict()` returned payloads `json` could not encode, and
+  others that encoded but had silently lost or corrupted data**): F-063.
+
+  **The defect.** `_json_ready()` was a best-effort coercion, so `to_dict()`
+  promised a JSON-ready payload and delivered three different kinds of wrong.
+  Values with no JSON form passed through untouched and raised `TypeError` later,
+  inside `json.dumps` -- after the caller had already been handed the dict:
+  `datetime.datetime`, `date`, `time`, `pd.Timedelta`, a Python `timedelta`, a
+  day-resolution `np.datetime64`, and any non-string `Series.name`, which was
+  copied out raw while the index beside it was converted. `np.longdouble` did not
+  get that far. `.item()` returns another `np.longdouble` wherever `longdouble` is
+  wider than `float64`, so the helper followed a fixed point into `RecursionError`
+  -- on FINITE values too -- as did a container cycle and an object whose
+  `to_dict()` returns itself.
+
+  **Values that encoded but were wrong.** `np.datetime64` at nanosecond resolution
+  became its epoch integer, `949276800000000000`, and the same instant at another
+  unit became a different integer, so the JSON silently depended on the dtype's
+  unit; `np.timedelta64` did the same. Worse, two mapping keys that normalize to
+  one string (`{1: "int", "1": "str"}`) collapsed to a single entry, and a
+  DataFrame with column labels `[1, "1"]` lost a column. Both encoded cleanly and
+  were simply not the object the caller passed.
+
+  **The boundary now.** `to_dict()` returns something
+  `json.dumps(..., allow_nan=False)` accepts for every supported value, or it
+  raises: `TypeError` for a leaf with no JSON form (complex included, `np.complex128`
+  and `np.clongdouble` with it), `ValueError` for a reference cycle or a normalized
+  key collision. Every message carries a `$`-rooted path, because the value that
+  needs fixing is usually several levels into `metadata`. Datetime-like values
+  become ISO strings and missing ones `null`; timedelta-like values become ISO 8601
+  durations in `pd.Timedelta.isoformat()`'s spelling, so one duration arriving as
+  `np.timedelta64`, `pd.Timedelta` or `datetime.timedelta` produces one string.
+  Finite numpy reals become JSON numbers, `np.longdouble` included and narrowed
+  through `float()`, which is lossy above `float64` because JSON has no wider real.
+  Losing the VALUE is refused rather than accepted: see below.
+  `to_json()` encodes with `allow_nan=False` and finishes serializing BEFORE it
+  opens `path`, so a payload the encoder refuses leaves an existing file
+  byte-for-byte as it was and never creates a missing one.
+
+  **Arrays follow their scalars.** An array is normalized by handing `.tolist()`
+  back to the traversal, and for `datetime64`/`timedelta64` that is the wrong
+  detour: `.tolist()` unboxes per element with the same unit-dependent rule that
+  broke the scalars. At `ms` and `us` it dropped the sub-second digits; at `ns` it
+  abandoned dates entirely and yielded the raw epoch integer, so
+  `np.array(["2000-01-31"], dtype="datetime64[ns]")` encoded as
+  `[949276800000000000]` while the identical scalar encoded as ISO. Those two
+  dtype kinds are now walked element-wise, at any dimensionality, with a
+  zero-dimensional array unwrapped in place rather than turned into a one-element
+  list. A masked entry arrives as `np.ma.masked` and still reads as `null`; masked
+  temporal arrays had the epoch-integer defect on their visible entries too and get
+  the fix. Every other dtype -- object, structured, masked-numeric -- keeps the
+  spelling it had.
+
+  **The forecast table's own columns.** `to_dict()` normalized `self.forecasts`
+  with `to_dict(orient="records")`, which lets PANDAS resolve duplicate labels: it
+  keeps the last, drops the rest, and says so in a `UserWarning` that a caller
+  filtering warnings never sees. A table with columns `["x", "x"]` therefore
+  exported `[{"x": 2}]`, a column of forecasts gone. The collision check that
+  already guarded nested DataFrames now runs on the forecast table before that
+  call, so both an exact duplicate and a normalized collision are refused instead.
+
+  **Sidecar schemas fail where they are attached.** `_sidecar_metadata()` stored
+  `metadata_schema` verbatim, so a schema with no JSON form surfaced in some later
+  `to_json()`, long after the attachment site was gone. It is normalized in
+  `with_sidecar()` now, and an invalid one raises there with the sidecar named in
+  the path.
+
+  **A finite real with no float64 image is refused, not written out as null or as
+  zero.** This package represents reals as native Python floats -- IEEE 754
+  binary64 -- because that is what `json` emits and what consumers of these
+  artifacts parse back. RFC 8259's own number grammar is wider than that and fixes
+  no precision, so the constraint is this package's representation and
+  interoperability policy, not the format's syntax. A wider numpy float therefore
+  narrows through `float()`, and outside binary64's range that call costs the
+  VALUE rather than the precision -- at BOTH ends. Above the range a FINITE
+  `np.longdouble` -- `np.longdouble("1e400")` is finite wherever `longdouble` is
+  80-bit extended or 128-bit -- narrows to `inf`, and the non-finite rule then
+  spelled it `null`, which is also what a genuine NaN spells. Below the smallest
+  binary64 subnormal, `np.longdouble("1e-4000")` is equally finite and nonzero and
+  narrows to `0.0`, with `-1e-4000` narrowing to `-0.0`; nothing downstream
+  rejected a zero, so it was written out as a measured value. The underflow is the
+  worse of the two, because `null` at least reads as missingness to a careful
+  consumer whereas `0.0` reads as a measurement that was really taken and really
+  was zero. Both reached the reader through `to_dict()`, `to_json()` and
+  `output.write_artifacts` alike, and both raise a path-aware `TypeError` now.
+  Genuinely non-finite reals still become `null` at every width, a true zero is
+  still `0.0`, and a finite `longdouble` with a finite nonzero image still narrows
+  to a number, losing only the precision binary64 has no room for.
+
+  **pandas no longer narrows a column before that guard can run.** The refusal
+  above lives in the traversal, and a frame's cells did not arrive through the
+  traversal. `DataFrame.to_dict` materializes its own Python objects first, and
+  for a `float128` column that conversion applies `float()` itself:
+  `orient="list"` handed back a Python `inf` where the column held a finite
+  `np.longdouble("1e400")`, and `0.0` where it held `np.longdouble("1e-4000")`. By
+  the time `_json_ready` saw the cell the evidence that it had ever been finite
+  was gone, so the guard could not fire and a finite measurement was written out
+  as `null`. This is exactly why a `Series` in `metadata` was already refused while
+  the same value inside a FRAME was not -- `Series.to_list` preserves the dtype and
+  `DataFrame.to_dict` does not. Which `orient` corrupts is a pandas-version detail
+  (`orient="records"` preserves `float128` on some versions and narrows it on
+  others), so both affected paths are repaired rather than only the one that
+  happens to fail on a given machine. Frames are now gathered column-wise through
+  `Series.to_list`, positionally, and rows are assembled from those columns, so
+  nested frame `data` and the top-level `forecasts` table both reach the traversal
+  at their own dtype. Healthy output is unchanged, the column-collision guards
+  still run before any row is built, and every path is the same. One INTERNAL
+  difference is worth recording: a missing value in a nullable extension column
+  (`Int64`) now reaches the traversal as `pd.NA` where `to_dict` used to
+  pre-convert it to `None`. Both normalize to `null`, so no payload and no
+  artifact on disk moves.
+
+  **A `set` keeps the sorted list `write_artifacts` was already writing for it.**
+  `to_dict()` was never the only normalization a payload made. `write_artifacts`
+  runs it through `output.core._json_ready` on the way to the file, and that second
+  pass turned a `set` into `sorted(...)`, so a set in `metadata` wrote a JSON array
+  and the two-phase arrangement worked. Making this boundary strict took the set
+  out at the first phase, before the second could normalize it, and broke a public
+  behavior that had nothing wrong with it. `set` is normalized to that same sorted
+  list here, in this module's own traversal, since `output` imports `forecasting`
+  and cannot be imported back to get it. `frozenset` joins it and is a WIDENING
+  rather than a restoration: the second pass tested `isinstance(value, set)`, which
+  a `frozenset` is not, so one used to reach `json.dumps` unconverted and raise
+  there. Members are converted before they are sorted, so a set of `pd.Timestamp`
+  sorts as ISO strings. A set whose converted members have no single order
+  (`{1, "a"}`) has no deterministic JSON array to become, and is refused with its
+  path instead of being made to depend on the interpreter's hash seed -- it raised
+  before too, as a bare `'<' not supported` from inside the write, naming nothing.
+
+  **A nested `ForecastResult` keeps the outer traversal's state.** A result inside
+  another one's `metadata` reached the generic `to_dict` protocol branch, which
+  calls `value.to_dict()` -- a FRESH walk, with the path reset to `$` and the cycle
+  set emptied. Two things followed. A result reachable from its own `metadata`
+  never met the cycle check and recursed to `RecursionError` instead of the
+  documented `ValueError`. And a failure inside a nested result reported a path
+  rooted at that result rather than at the caller's; for an unencodable leaf it was
+  worse than a wrong path, because the inner `TypeError` was swallowed by that
+  branch's own `except TypeError` and re-raised as "a ForecastResult cannot be
+  expressed", blaming the container for the value. `to_dict()` and the traversal
+  now share one body that takes the path and the cycle set as arguments, so a cycle
+  raises `ValueError` with the path that closes it and a nested failure carries the
+  full outer path. The same result appearing twice as a SIBLING is still not a
+  cycle and still encodes twice. Public signatures are unchanged.
+
+  **Unchanged.** The JSON object KEY rule is still `str(label)`, so a `pd.Timestamp`
+  column label keeps its `str` spelling rather than switching to ISO. Consistency is
+  enforced by TRAVERSAL -- every side of a Series or DataFrame is visited,
+  `Series.name` included -- not by re-spelling output that already worked. The
+  helper stays local rather than reusing `output.core._json_ready`, because `output`
+  imports `forecasting` and the reverse import would invert that dependency. Callers
+  who were relying on `to_dict()` returning a dict containing unencodable objects
+  now get an exception at that call instead of at `json.dumps`.
+
+  **What changed for a payload that was already CORRECT.** One thing, and it is a
+  Python type rather than a JSON spelling. The spelling changes above -- temporal
+  scalars at sub-second units, and temporal arrays -- were values that encoded and
+  were WRONG, and are documented as such. Among values that encoded and were right,
+  a TUPLE-valued `Series.name` is the single change: it used to be copied out raw,
+  is recursively sanitized like every other leaf now, and so leaves `to_dict()` as
+  a `list` where it left as a `tuple`. `json` writes a tuple and a list as the same
+  array, so no `to_json()` text and no artifact on disk moves. A caller who
+  type-checks that field in the `to_dict()` payload, or uses it as a dict key --
+  a `list` is unhashable, where the `tuple` was not -- does see a different Python
+  object. Everything else correct keeps its exact structure and spelling, and a
+  50-value differential corpus against c30b48eb measured it: of the 35 values the
+  base could encode under `allow_nan=False`, 32 produce byte-identical JSON, 3
+  changed text (the two temporal-scalar fixes and the temporal-array fix), and none
+  became refused.
+
 - `forecasting/checkpoint.py`
   (**selection-history sidecars were not valid JSON, so no strict parser could read
   them**): F-062.
