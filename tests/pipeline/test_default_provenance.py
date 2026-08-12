@@ -33,6 +33,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.errors import OutOfBoundsDatetime
 
 import macroforecast as mf
 import macroforecast.pipeline.run as run_mod
@@ -157,6 +158,16 @@ def test_fingerprint_mapping_is_exactly_the_pre_change_shape():
     fingerprint read the full content (F-005) had to leave this mapping alone for every
     panel the old code already hashed in full -- which is what this pins, by value and
     by key set, rather than by digest alone.
+
+    The pinned ``value`` literal moved with the datetime-resolution fix, and moved
+    TOWARDS the historical answer rather than away from it. ``pd.date_range`` builds
+    microseconds on pandas 3, so the previous literal was whatever those raw integers
+    hashed to under the installed pandas, which is exactly the version-dependence the
+    fix removes. The literal here is now the canonical nanosecond digest -- the one
+    pandas-2 runs have always written -- and it is the same on both versions, so
+    stores whose cells were written from a nanosecond index, which is what a pandas-2
+    caller gets by default, keep those cells. A store written from a non-nanosecond
+    index -- including one a pandas-2 caller supplied explicitly -- misses once.
     """
     panel = pd.DataFrame(
         {"x": [1.0, 2.0], "y": [3.0, 4.0]},
@@ -166,11 +177,229 @@ def test_fingerprint_mapping_is_exactly_the_pre_change_shape():
     assert run_mod._panel_fingerprint(panel) == {
         "algorithm": "sha256",
         "method": "full_content",
-        "value": "902f2ee172cf19ab5d557d56dca7d6faad3dc85e46a328095c27a7b9e6c651e8",
+        "value": "c96b13df430ba8e9a8a9b1ab4688b6cca79cc594f8c5458cb44682571397b1d9",
         "row_stride": 1,
         "col_stride": 1,
         "sampled_shape": [2, 2],
     }
+
+
+def _dated_panel(unit, days=("2000-01-01", "2000-01-02")):
+    """A two-row panel whose index is stored at *unit*, built without pandas defaults.
+
+    ``pd.date_range`` picks the resolution the installed pandas prefers, which is the
+    thing under test here, so the dtype is stated explicitly instead.
+    """
+    index = pd.DatetimeIndex(
+        np.array(list(days), dtype=f"datetime64[{unit}]"), name="date"
+    )
+    return pd.DataFrame({"x": [1.0, 2.0], "y": [3.0, 4.0]}, index=index)
+
+
+@pytest.mark.parametrize("unit", ["s", "ms", "us", "ns"])
+def test_fingerprint_is_the_same_at_every_datetime_resolution(unit):
+    """The digest identifies the INSTANTS, not the resolution they are stored at.
+
+    pandas 2 builds a new DatetimeIndex at nanoseconds and pandas 3 at microseconds,
+    and ``.asi8`` reports the raw stored integers, so feeding it directly gave one
+    panel two digests depending on which pandas read it -- and the digest is part of
+    result-cell identity, so the same data missed its own cache across an upgrade.
+    """
+    assert (
+        run_mod._panel_fingerprint(_dated_panel(unit))["value"]
+        == "c96b13df430ba8e9a8a9b1ab4688b6cca79cc594f8c5458cb44682571397b1d9"
+    ), "every resolution must agree with the digest pandas-2 runs already stored"
+
+
+def test_equal_raw_index_integers_at_different_resolutions_do_not_collide():
+    """The other half of the defect, and the dangerous half.
+
+    Two indexes can hold the SAME ``.asi8`` integers and mean entirely different
+    instants, because one counts seconds and the other milliseconds. Hashing the raw
+    integers made those two panels one cell, so a forecast computed for 2000 could be
+    served for 1970.
+    """
+    seconds = _dated_panel("s")
+    millis = pd.DataFrame(
+        {"x": [1.0, 2.0], "y": [3.0, 4.0]},
+        index=pd.DatetimeIndex(
+            np.array(seconds.index.asi8, dtype="datetime64[ms]"), name="date"
+        ),
+    )
+
+    assert list(seconds.index.asi8) == list(millis.index.asi8), "the premise"
+    assert seconds.index[0] != millis.index[0], "and yet they are different instants"
+    assert (
+        run_mod._panel_fingerprint(seconds)["value"]
+        != run_mod._panel_fingerprint(millis)["value"]
+    )
+
+
+def test_fingerprint_still_moves_when_a_single_dated_cell_moves():
+    """Canonicalising the index must not have cost the values any sensitivity."""
+    base = _dated_panel("us")
+    moved = base.copy()
+    moved.iloc[1, 1] = moved.iloc[1, 1] + 1e-9
+
+    assert (
+        run_mod._panel_fingerprint(base)["value"]
+        != run_mod._panel_fingerprint(moved)["value"]
+    )
+    assert (
+        run_mod._panel_fingerprint(base)["value"]
+        != run_mod._panel_fingerprint(_dated_panel("us", ("2000-01-01", "2000-01-03")))[
+            "value"
+        ]
+    ), "and moving a date must still move the digest"
+
+
+def test_dates_outside_the_nanosecond_range_are_identified_not_guessed():
+    """Out of int64-ns range there is no integer form, so the instants are named.
+
+    The digest must not quietly fall back to the resolution-dependent integers this
+    change exists to stop trusting. It stays a full-content fingerprint that agrees
+    across resolutions and still separates different instants; what changes is only
+    how the index is spelled into the hash.
+    """
+    far = pd.DatetimeIndex(
+        np.array(["3000-01-01", "3000-01-02"], dtype="datetime64[s]"), name="date"
+    )
+    with pytest.raises(OutOfBoundsDatetime):
+        far.as_unit("ns")  # the premise: no nanosecond representation exists
+
+    frame = pd.DataFrame({"x": [1.0, 2.0], "y": [3.0, 4.0]}, index=far)
+    same = pd.DataFrame({"x": [1.0, 2.0], "y": [3.0, 4.0]}, index=far.as_unit("us"))
+    other = pd.DataFrame(
+        {"x": [1.0, 2.0], "y": [3.0, 4.0]},
+        index=pd.DatetimeIndex(
+            np.array(["3000-01-01", "3000-01-03"], dtype="datetime64[s]"), name="date"
+        ),
+    )
+
+    assert run_mod._panel_fingerprint(frame)["method"] == "full_content"
+    assert (
+        run_mod._panel_fingerprint(frame)["value"]
+        == run_mod._panel_fingerprint(same)["value"]
+    ), "seconds and microseconds describe the same moments"
+    assert (
+        run_mod._panel_fingerprint(frame)["value"]
+        != run_mod._panel_fingerprint(other)["value"]
+    )
+    assert (
+        run_mod._panel_fingerprint(frame)["value"]
+        != run_mod._panel_fingerprint(_dated_panel("s"))["value"]
+    ), "and it cannot alias an in-range panel"
+
+
+def _far_frame(index):
+    """A one-column panel dated outside the nanosecond range, on *index*."""
+    return pd.DataFrame({"x": [1.0, 2.0]}, index=index)
+
+
+def _far_utc():
+    """Two year-3000 instants, stated in UTC, at second resolution.
+
+    The dtype is spelled through numpy because pandas 2 refuses to parse a year-3000
+    string at all -- it assumes nanoseconds and overflows -- so this is the one
+    construction that builds the same out-of-range index on both versions.
+    """
+    naive = pd.DatetimeIndex(
+        np.array(["3000-01-01", "3000-01-02"], dtype="datetime64[s]"), name="date"
+    )
+    return naive.tz_localize("UTC")
+
+
+def test_out_of_range_instants_are_one_panel_in_whatever_zone_names_them():
+    """A moment is a moment, and the zone it is displayed in is not part of it.
+
+    Inside the nanosecond range this is free: ``.asi8`` counts from the epoch, so a
+    UTC index and the Asia/Seoul view of the same instants hash alike and always did.
+    Outside it the instants are spelled with ``isoformat()``, which writes the LOCAL
+    wall clock and its offset -- ``3000-01-01T00:00:00+00:00`` against
+    ``3000-01-01T09:00:00+09:00`` -- so the same panel read in Seoul had a different
+    identity from the same panel read in London, and the cell each wrote could never
+    be reused by the other.
+    """
+    utc = _far_utc()
+    seoul = utc.tz_convert("Asia/Seoul")
+
+    assert list(utc.asi8) == list(seoul.asi8), "the premise: one set of instants"
+    assert str(seoul[0]).startswith("3000-01-01 09:00:00"), "displayed nine hours on"
+
+    utc_value = run_mod._panel_fingerprint(_far_frame(utc))["value"]
+    seoul_value = run_mod._panel_fingerprint(_far_frame(seoul))["value"]
+    assert utc_value == seoul_value, "the zone must not be part of panel identity"
+
+    assert (
+        run_mod._panel_fingerprint(_far_frame(seoul.as_unit("us")))["value"]
+        == utc_value
+    ), "and the resolution must not be either"
+    assert (
+        run_mod._panel_fingerprint(
+            _far_frame(
+                pd.DatetimeIndex(
+                    np.array(["3000-01-01", "3000-01-03"], dtype="datetime64[s]"),
+                    name="date",
+                ).tz_localize("UTC")
+            )
+        )["value"]
+        != utc_value
+    ), "different moments must still be different panels"
+
+
+def test_out_of_range_naive_and_aware_indexes_are_not_merged():
+    """A naive index is not read as UTC here, and that is deliberate.
+
+    The in-range path does merge them, because a naive index and a UTC one spell the
+    same integers in ``.asi8``, so this is stricter than the behaviour it sits beside.
+    The alternative is to localise a naive index to UTC, which would assert an offset
+    the panel never stated. Between the two, strictness is the direction that cannot
+    hurt: it can miss a reuse, but it cannot serve one panel's forecasts for another.
+    Only dates outside the nanosecond range reach this path, and no digest there was
+    portable before this change, so nothing already cached moves either way.
+    """
+    utc = _far_utc()
+    naive = utc.tz_localize(None)
+
+    assert list(naive.asi8) == list(utc.asi8), "the wall clocks match"
+    assert (
+        run_mod._panel_fingerprint(_far_frame(naive))["value"]
+        != run_mod._panel_fingerprint(_far_frame(utc))["value"]
+    ), "an unstated offset must not be invented for the naive panel"
+    assert (
+        run_mod._panel_fingerprint(_far_frame(naive))["value"]
+        == run_mod._panel_fingerprint(_far_frame(naive.as_unit("us")))["value"]
+    ), "a naive panel still agrees with itself at any resolution"
+
+
+def test_fingerprinting_does_not_touch_an_aware_out_of_range_index():
+    """Reading an index in UTC must hand back a copy, not re-file the caller's panel.
+
+    A panel arrives from the caller and belongs to it. Converting in place would
+    silently move a live frame into another zone, and every later read of it -- a
+    plot, a join, a written artifact -- would carry that instead.
+    """
+    frame = _far_frame(_far_utc().tz_convert("Asia/Seoul"))
+    before_tz, before_dtype = frame.index.tz, frame.index.dtype
+    before_values = frame.index.asi8.copy()
+
+    run_mod._panel_fingerprint(frame)
+
+    assert str(frame.index.tz) == str(before_tz) == "Asia/Seoul"
+    assert frame.index.dtype == before_dtype
+    assert list(frame.index.asi8) == list(before_values)
+
+
+def test_fingerprinting_does_not_touch_the_caller_s_panel():
+    """Identity reads the panel; converting its index must not rewrite it."""
+    frame = _dated_panel("us")
+    before_dtype = frame.index.dtype
+    before_values = frame.index.asi8.copy()
+
+    run_mod._panel_fingerprint(frame)
+
+    assert frame.index.dtype == before_dtype
+    assert list(frame.index.asi8) == list(before_values)
 
 
 def test_fingerprint_stable_across_identical_runs():
