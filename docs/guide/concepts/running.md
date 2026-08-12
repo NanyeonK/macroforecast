@@ -393,6 +393,104 @@ spec/data identity; pass `allow_stale=True` only when intentionally scoring stal
 forecasts. Older checkpoint directories that lack manifests still rescore, but
 emit a warning because they can only be matched by directory name.
 
+### Resuming a checkpoint
+
+Rescoring reads a checkpoint. **Resuming** writes into one, and that needs the
+stricter check, because a resumed origin is skipped rather than recomputed and its
+stored row is what the run returns. Each `h<h>` directory therefore also carries a
+`run_identity.json` manifest, written before the first `origin_*.parquet` file,
+recording the configuration that owns the directory: the resolved model and its
+effective parameters, the target and transform, the forecast and future-feature
+policies, the horizon, the window, the features, preprocessing and stage policies,
+the selection search, metric and direction, the effective random seeds, the
+input data, and — when `save_models=True` — the resolved
+absolute path where fits are stored. That path is normalised rather than compared
+as the string you typed, because a relative `model_store="trained_model"` denotes a
+different directory from a different working directory.
+
+"The input data" means both halves of what the runner reads: a fingerprint of the
+panel's index, columns and values, and the `macroforecast_metadata` payload on
+`panel.attrs`. The payload is included because it is not decoration — it is passed
+to every feature step as `metadata=`, and to preprocessing and data-contract
+checks, so a custom step may legitimately return different columns for it. Two
+panels with identical values and different metadata are two different runs, and
+changing only the metadata refuses a resume.
+
+Two fields in that payload are the exception. Every loader stamps
+`artifact.downloaded_at` and `artifact.cache_hit` onto the metadata it returns:
+the first is the wall clock at load time, the second says whether the bytes came
+from the local cache. Both differ between two `load_fred_md()` calls over one
+unchanged file, so identifying them would make the most ordinary resume there is
+-- reload the data, restart the run -- impossible across two calls or two
+processes. For a run whose features and preprocessing are built-in they are
+therefore normalised out of the identity, while everything else the artifact
+carries stays in it: `file_sha256`, `file_size_bytes`, `file_format`, the
+dataset, version mode and vintage, and the source and local paths. A change to
+any of those still refuses.
+
+The exception has its own exception, and it is the reason the rule is written
+this way rather than as a plain exclusion. A **custom** feature or preprocessing
+step is handed the whole payload as `metadata=` and may read those two fields --
+stamping a run with its load time is a legitimate thing to do. Dropping them from
+the identity while still passing them to the step would restore exactly the silent
+stale reuse this gate exists to stop, because the step's output could move while
+the digest did not. So when the run contains custom feature or preprocessing code,
+the payload is identified in full, timestamps included. The consequence is worth
+stating plainly: **such a run does not resume across two loader calls**, because
+its inputs genuinely are not the same. Custom models and custom selection metrics
+never receive the payload and do not trigger this.
+
+If you hit that refusal and want resume back, the recovery is to stop making the
+run depend on load time. Either read a stable field instead
+(`artifact.file_sha256` identifies the bytes; `vintage` identifies the release),
+or pass the value you want as a step parameter rather than reading it out of the
+metadata, or load once and reuse the same `DataBundle` for the whole session.
+Failing that, point `checkpoint_path` at a fresh directory each time.
+
+For a vintage-aware run the "input data" is not one panel. The identity covers the
+point-in-time snapshot resolved at *every* execution origin, plus the realised
+values each origin's actuals come from (under `actuals_vintage="first_release"`,
+the resolved value and vintage id per target date). Each snapshot contributes its
+`bundle.metadata` as well as its values, under the same provenance rule as
+above -- one policy, applied to every origin's snapshot and to the actuals base
+panel alike. The metadata of a
+bundle probed only to find a first release is deliberately left out, because the
+run reads nothing from it but that value and its vintage id, both already
+recorded. This costs one extra pass over
+the origins before the run starts, and it is what lets a revision inside a single
+intermediate vintage be caught: the available vintage labels and the latest
+snapshot can both be unchanged while an earlier one has been revised.
+
+A run resumes only when that identity is complete on both sides and matches. Every
+other case raises `ValueError` and leaves the directory untouched:
+
+| Existing `origin_*.parquet` | Manifest | Behaviour |
+| --- | --- | --- |
+| none | absent, unreadable, stale, or incomplete | replaced, run starts fresh |
+| present | absent (written before manifests existed) | refused |
+| present | unreadable or wrong schema/version | refused |
+| present | either side's identity incomplete | refused |
+| present | complete, digest differs | refused, naming what changed |
+| present | complete, digest matches | resumed |
+
+Refusing is not invalidating. Nothing is deleted, renamed, or quarantined, and the
+files stay readable by `load_checkpoint_frame()` and `rescore()` exactly as before.
+What a directory with no manifest cannot do is be resumed *into*, because nothing on
+disk says which configuration produced it and adopting it would mean writing the
+current identity beside forecasts that may belong to another run. Point
+`checkpoint_path` / `checkpoint_dir` at a fresh directory to recompute, or move the
+old one aside yourself if its forecasts are no longer wanted.
+
+An identity is incomplete when a value cannot be represented canonically, which in
+practice means a custom model or metric passed as a bare callable. Give it a stable
+digest (`mf.models.custom_model("my_model", fit_model, mf_digest="my-model-v1")`) to
+make its checkpoints resumable.
+
+Inside `run_pipeline()`, a refused cell fails on its own and is reported on
+`PipelineReport.failed_cells`; the other cells still run, and the refused cell's
+`cell_manifest.json` is left as it was, since the pipeline writes that only after a
+cell's `run()` returns.
+
 Selection-history logging is opt-in on checkpointed pipeline runs:
 
 ```python

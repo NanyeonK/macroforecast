@@ -36,6 +36,42 @@ pre-expanded into wide scalar ``q_<pct>`` columns, see above). One-file-per-
 origin makes each write atomic at the file level (a crash mid-write corrupts at
 most one origin's file, which is simply ignored on resume), and resume is the
 trivial act of listing the directory.
+
+Resume identity
+---------------
+Listing the directory says WHICH origins finished. It says nothing about WHAT
+they are, and a checkpoint directory is reached by path, not by configuration:
+the same path handed to a run with a different regularisation strength, window,
+panel, or seed used to hand those old parquet files straight back as this run's
+forecasts (F-058). Each final ``h<h>`` directory therefore also carries a
+versioned run-identity manifest, :data:`CHECKPOINT_IDENTITY_FILENAME`, written
+atomically BEFORE the first origin file can be written or trusted.
+
+The manifest is self-contained: the runner builds the identity (it is the layer
+that knows what a run is) and hands this module a
+:class:`CheckpointRunIdentity`, so checkpoint storage never imports policy or
+model code. :func:`resolve_checkpoint_resume` is the gate, and it fails closed --
+it never deletes, renames, quarantines, or adopts an existing artifact:
+
+===========================  ==========================================  ===========================================
+Final ``origin_*.parquet``   Stored / current identity                   Behaviour
+===========================  ==========================================  ===========================================
+none                         absent, corrupt, stale, or incomplete       replace the manifest, start fresh
+present                      absent (legacy checkpoint)                  refuse
+present                      malformed or wrong schema/version           refuse
+present                      stored or current identity incomplete       refuse
+present                      complete, digests differ                    refuse, naming what changed
+present                      complete, digests match                     resume the readable origins
+===========================  ==========================================  ===========================================
+
+Refusing is not the same as invalidating. A refused directory is untouched, and
+:func:`load_checkpoint_frame` / :func:`load_selection_history_frame` (and hence
+``pipeline.rescore``) keep reading legacy checkpoints exactly as before. What a
+legacy checkpoint cannot do is be RESUMED INTO, because nothing on disk records
+the configuration that produced it. Adopting it would mean writing this run's
+identity next to artifacts whose identity is unknowable, which is the false
+blessing the gate exists to prevent; recovery is the user's ordinary choice of a
+fresh ``checkpoint_path`` or their own removal of the old one.
 """
 from __future__ import annotations
 
@@ -44,6 +80,7 @@ import os
 import re
 import tempfile
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -192,6 +229,255 @@ def completed_origin_positions(checkpoint_path: str | Path) -> set[int]:
             continue
         done.add(int(match.group(1)))
     return done
+
+
+def final_origin_files(checkpoint_path: str | Path) -> list[Path]:
+    """Final (renamed) per-origin parquet files under the directory, sorted.
+
+    Membership is by FILENAME, not by readability. ``completed_origin_positions``
+    asks "which origins can I resume", and an unreadable file is not one of them;
+    this asks "does this directory already hold user artifacts", and an unreadable
+    ``origin_3.parquet`` plainly does. In-flight ``.origin_3.parquet.tmp`` writes
+    are excluded by the glob, which is the point of the dot-prefixed temporary
+    name in :func:`append_origin_records`.
+    """
+    directory = Path(checkpoint_path)
+    if not directory.exists():
+        return []
+    return sorted(
+        path
+        for path in directory.glob("origin_*.parquet")
+        if _ORIGIN_FILE_RE.match(path.name) is not None
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Resume identity (see the module docstring's "Resume identity" section)
+# --------------------------------------------------------------------------- #
+
+#: Per-``h<h>`` manifest naming the run that owns the directory's origin files.
+CHECKPOINT_IDENTITY_FILENAME = "run_identity.json"
+CHECKPOINT_IDENTITY_SCHEMA = "macroforecast_checkpoint_run_identity"
+CHECKPOINT_IDENTITY_VERSION = 1
+
+
+@dataclass(frozen=True)
+class CheckpointRunIdentity:
+    """One run's resume identity, as the runner computed it.
+
+    Self-contained by design: ``digest`` is over the canonical form of
+    ``components`` and is compared as a whole, so this module never needs to know
+    what a window, a model spec, or a stage policy is. ``complete`` is ``False``
+    when any component could not be represented canonically -- an opaque custom
+    object, a user callable -- and an incomplete identity can never establish that
+    two runs agree, only that they might.
+    """
+
+    digest: str
+    complete: bool
+    opaque_fields: tuple[str, ...]
+    components: Mapping[str, Any]
+
+    def to_manifest(self) -> dict[str, Any]:
+        """The on-disk payload for this identity."""
+        return {
+            "schema": CHECKPOINT_IDENTITY_SCHEMA,
+            "version": CHECKPOINT_IDENTITY_VERSION,
+            "digest": self.digest,
+            "digest_algorithm": "sha256",
+            "complete": bool(self.complete),
+            "opaque_fields": list(self.opaque_fields),
+            "components": dict(self.components),
+        }
+
+
+def checkpoint_identity_path(checkpoint_path: str | Path) -> Path:
+    """Path of the run-identity manifest for one ``h<h>`` checkpoint directory."""
+    return Path(checkpoint_path) / CHECKPOINT_IDENTITY_FILENAME
+
+
+def write_checkpoint_identity(
+    checkpoint_path: str | Path,
+    identity: CheckpointRunIdentity,
+) -> Path:
+    """Atomically write (or replace) the directory's run-identity manifest.
+
+    Same tmp-file-plus-rename idiom the origin parquet writes use, so a reader
+    never observes a half-written manifest and a crash leaves either the old
+    manifest or the new one, never a blend of the two.
+    """
+    directory = Path(checkpoint_path)
+    directory.mkdir(parents=True, exist_ok=True)
+    final_path = directory / CHECKPOINT_IDENTITY_FILENAME
+    encoded = (
+        json.dumps(
+            identity.to_manifest(),
+            sort_keys=True,
+            ensure_ascii=True,
+            default=_json_default,
+        )
+        + "\n"
+    ).encode("utf-8")
+    fd, tmp_name = tempfile.mkstemp(
+        suffix=".tmp",
+        prefix=f".{final_path.name}.",
+        dir=directory,
+    )
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(encoded)
+        Path(tmp_name).replace(final_path)
+    except OSError:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
+    return final_path
+
+
+def read_checkpoint_identity(
+    checkpoint_path: str | Path,
+) -> tuple[dict[str, Any] | None, str | None]:
+    """Read the manifest as ``(payload, problem)``; exactly one is ``None``.
+
+    ``problem`` is a short human phrase naming why the manifest cannot be used,
+    so the caller's refusal message can say which of "absent", "unreadable", and
+    "wrong schema" it hit rather than lumping them together.
+    """
+    path = checkpoint_identity_path(checkpoint_path)
+    if not path.exists():
+        return None, "no manifest is present"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        return None, f"the manifest could not be read ({type(exc).__name__})"
+    if not isinstance(payload, Mapping):
+        return None, "the manifest is not a JSON object"
+    if payload.get("schema") != CHECKPOINT_IDENTITY_SCHEMA:
+        return None, (
+            f"the manifest schema is {payload.get('schema')!r}, not "
+            f"{CHECKPOINT_IDENTITY_SCHEMA!r}"
+        )
+    try:
+        version = int(payload.get("version"))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None, f"the manifest version {payload.get('version')!r} is not an integer"
+    if version != CHECKPOINT_IDENTITY_VERSION:
+        return None, (
+            f"the manifest is version {version}, not "
+            f"{CHECKPOINT_IDENTITY_VERSION}"
+        )
+    if not isinstance(payload.get("digest"), str) or not payload.get("digest"):
+        return None, "the manifest carries no digest"
+    if not isinstance(payload.get("complete"), bool):
+        return None, "the manifest does not record whether its identity is complete"
+    return dict(payload), None
+
+
+def _changed_component_keys(
+    stored: Mapping[str, Any],
+    current: Mapping[str, Any],
+) -> list[str]:
+    """Top-level identity components that differ, for an actionable message."""
+    keys = sorted(set(stored) | set(current))
+    changed: list[str] = []
+    for key in keys:
+        left = json.dumps(stored.get(key), sort_keys=True, default=str)
+        right = json.dumps(current.get(key), sort_keys=True, default=str)
+        if left != right:
+            changed.append(key)
+    return changed
+
+
+def _refusal(directory: Path, n_origins: int, detail: str) -> str:
+    return (
+        f"checkpoint directory {str(directory)!r} already holds {n_origins} completed "
+        f"origin file(s), and {detail} Resuming would return forecasts computed "
+        "under a configuration this run cannot show to be the same one. Nothing was "
+        "written, removed, or renamed: point checkpoint_path at a fresh directory to "
+        "compute this configuration from scratch, or move/remove the existing "
+        "directory yourself if its forecasts are no longer wanted. The existing "
+        "files remain readable by load_checkpoint_frame() and pipeline.rescore()."
+    )
+
+
+def resolve_checkpoint_resume(
+    checkpoint_path: str | Path,
+    identity: CheckpointRunIdentity,
+) -> set[int]:
+    """The resume gate: which completed origins may this run reuse?
+
+    Returns the resumable ``origin_pos`` set -- every readable origin file when
+    the directory demonstrably belongs to this run, and the empty set when the
+    directory holds no origin files yet (in which case the manifest is written,
+    or replaced, before the caller writes anything). Raises ``ValueError`` in
+    every other case; see the module docstring for the full table.
+
+    The gate deliberately does not consult ``skip_computation``. A run that
+    recomputes a completed origin still MERGES the on-disk row over its own (see
+    ``runner._merge_checkpoint_records``), so a stale directory is returned to
+    the caller either way.
+    """
+    directory = Path(checkpoint_path)
+    origin_files = final_origin_files(directory)
+    stored, problem = read_checkpoint_identity(directory)
+
+    if not origin_files:
+        # There is no artifact for the old manifest to describe, so replacing it
+        # blesses nothing. This is also what puts the manifest on disk before the
+        # first origin parquet of a fresh run.
+        write_checkpoint_identity(directory, identity)
+        return set()
+
+    n_origins = len(origin_files)
+    if stored is None:
+        if problem == "no manifest is present":
+            raise ValueError(
+                _refusal(
+                    directory,
+                    n_origins,
+                    "no manifest records which configuration produced them (a "
+                    "checkpoint written before run-identity manifests existed, or "
+                    "one whose manifest was removed).",
+                )
+            )
+        raise ValueError(_refusal(directory, n_origins, f"{problem}."))
+
+    if not stored.get("complete", False):
+        raise ValueError(
+            _refusal(
+                directory,
+                n_origins,
+                "the run that wrote them recorded an INCOMPLETE identity "
+                f"(opaque field(s) {list(stored.get('opaque_fields') or [])!r}), so "
+                "it cannot be compared with this run's.",
+            )
+        )
+    if not identity.complete:
+        raise ValueError(
+            _refusal(
+                directory,
+                n_origins,
+                "this run's identity is INCOMPLETE: field(s) "
+                f"{list(identity.opaque_fields)!r} could not be represented "
+                "canonically, so equality with the stored identity cannot be "
+                "established. Give those values a stable __mf_digest__ marker to "
+                "make the identity comparable.",
+            )
+        )
+    if str(stored.get("digest")) != identity.digest:
+        stored_components = stored.get("components")
+        changed = (
+            _changed_component_keys(stored_components, identity.components)
+            if isinstance(stored_components, Mapping)
+            else []
+        )
+        detail = (
+            f"this run's identity differs from theirs in {changed!r}."
+            if changed
+            else "this run's identity differs from theirs."
+        )
+        raise ValueError(_refusal(directory, n_origins, detail))
+
+    return completed_origin_positions(directory)
 
 
 def append_origin_records(
