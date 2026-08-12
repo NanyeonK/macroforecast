@@ -5,6 +5,60 @@ full per-version honesty-pass history embedded in repo documentation.
 
 ## [Unreleased]
 
+- `forecasting/checkpoint.py`, `forecasting/runner.py`
+  (**checkpointed quantile levels were rounded to whole percents, silently merging
+  distinct levels**): a behaviour fix, not a cosmetic one, because the rounded levels
+  reached the forecast table a resumed run returns and every density metric computed
+  from it.
+
+  **The defect.** A record's `quantile_predictions` mapping is not a scalar, so it is
+  expanded into wide per-level parquet columns. Those columns were named
+  `q_<pct>` for `round(level * 100)`, and that encoding is neither injective nor
+  lossless. Levels `0.024` and `0.025` both produced `q_02`, so the second value
+  overwrote the first and one of the two requested quantiles vanished; `0.975` and
+  `0.976` collided on `q_98` the same way. Surviving levels came back rounded --
+  `1/3` reloaded as `0.33` -- so a resumed origin's mapping was keyed `"0.33"` while a
+  freshly computed origin's was keyed `"0.3333333333333333"`, exactly the mixed
+  representation `runner._merge_checkpoint_records` documents as forbidden. Every level
+  at or above `0.995` was written as `q_100`, which the two-digit reader could not
+  parse, so those quantiles were lost outright. Downstream, `pipeline.rescore()`
+  rebuilds its entire master frame from the checkpoint, so its density and calibration
+  results inherited all of this.
+
+  **The format.** A wide quantile column is now named `qx1_` plus the sixteen lowercase
+  hex digits of the level's IEEE-754 binary64 image (`struct.pack(">d", level).hex()`),
+  so `0.05` becomes `qx1_3fa999999999999a`. The name determines the level exactly, the
+  decode is its true inverse, and the recovered `str(level)` key is bit-for-bit the one
+  the live run produced. Names are fixed width and disjoint from the old family by
+  construction. A level must be finite and strictly inside `(0, 1)` to be encoded;
+  anything else yields no column, which also closes a latent crash, since the old
+  encoder reached `round(inf * 100)` and raised an `OverflowError` its caller did not
+  catch. Origin files remain scalar-only with a deterministic column order, and no
+  existing file is rewritten or migrated.
+
+  **Reading what is already on disk.** Legacy `q_01`..`q_99` columns still decode, at
+  the only value they can carry: their integer-percent grid point. Both endpoints of
+  that grid are deliberately not read. `q_100` (written for every level at or above
+  `0.995`) and `q_00` (written for every level below `0.005`) each name a value that is
+  not a valid quantile level -- `1.0` and `0.0` sit outside the open interval -- and the
+  level that produced either is unrecoverable, so reporting the endpoint would invent a
+  quantile nobody requested. This is the one read-side behaviour change: `q_100` was
+  already unreadable, but the old two-digit reader accepted `q_00` and returned a
+  fabricated `0.0` level, which it now drops instead. Precedence is per row and
+  wholesale -- a row with any usable `qx1_` value ignores the legacy columns beside it
+  rather than mixing a rounded level into the same mapping -- and a directory holding
+  both schemas unions deterministically. Old checkpoints therefore remain loadable and
+  rescorable through `load_checkpoint_frame()` and `pipeline.rescore()`, with
+  `q_01`..`q_99` preserving the prior integer-percent grid behaviour exactly.
+
+  **Resume.** `CHECKPOINT_IDENTITY_VERSION` moves from 1 to 2. Resuming into a
+  version-1 directory would put its rounded, possibly collapsed levels in one forecast
+  table with this run's exact ones, so a version-1 manifest sitting beside final
+  `origin_*.parquet` files now fails closed under the existing "wrong schema/version"
+  rule: nothing is deleted, renamed, or adopted, and the files stay readable. A
+  version-1 manifest with no origin files to describe is still just a stale manifest and
+  is replaced as before. No other resume rule changed.
+
 - `data/identity.py`, `pipeline/result_store.py`, `docs/guide/concepts/running.md`
   (**two content identities depended on the pandas build that read them**): both are
   behaviour fixes, not cosmetics, because both strings feed cache digests.

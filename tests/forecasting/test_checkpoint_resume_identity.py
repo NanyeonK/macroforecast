@@ -1998,3 +1998,78 @@ def test_vintage_route_keeps_provenance_for_a_callable_dataclass_step(
     with pytest.raises(ValueError, match="already holds .* completed origin file"):
         _run_vintage(cell, provenance=True, metadata_step=_StampedFeatureStep())
     assert _snapshot(cell) == before, "a refusal must leave the directory untouched"
+
+
+# --------------------------------------------------------------------------- #
+# 9. Identity version 2: the quantile column grammar changed (F-059), so a v1
+#    directory's origin files may hold rounded, off-grid-collapsed quantile
+#    levels. Resuming into one would mix those with this run's exact levels in a
+#    single forecast table, so a v1 manifest beside real artifacts fails closed
+#    like any other unusable manifest. A v1 manifest with nothing to describe is
+#    still just a stale manifest, and is replaced under the existing F-058 rule.
+# --------------------------------------------------------------------------- #
+def _rewrite_manifest_as_v1(cell: Path, horizon: int = 1) -> None:
+    path = _hdir(cell, horizon) / ckpt.CHECKPOINT_IDENTITY_FILENAME
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["version"] = 1
+    path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def test_identity_version_is_two() -> None:
+    assert ckpt.CHECKPOINT_IDENTITY_VERSION == 2
+
+
+def test_v1_manifest_beside_final_origin_files_fails_closed_and_changes_nothing(
+    tmp_path: Path,
+) -> None:
+    cell = tmp_path / "cell"
+    _run(cell)
+    _rewrite_manifest_as_v1(cell)
+    hdir = _hdir(cell)
+    assert sorted(hdir.glob("origin_*.parquet"))
+    before = _snapshot(hdir)
+
+    with pytest.raises(ValueError, match="version 1"):
+        _run(cell)
+
+    assert _snapshot(hdir) == before, "a refused directory was modified"
+
+
+def test_v1_origins_stay_loadable_after_the_refusal(tmp_path: Path) -> None:
+    """Refusing to RESUME is not invalidating: the files keep reading."""
+    cell = tmp_path / "cell"
+    _run(cell)
+    _rewrite_manifest_as_v1(cell)
+    with pytest.raises(ValueError):
+        _run(cell)
+
+    assert not ckpt.load_checkpoint_frame(_hdir(cell)).empty
+
+
+def test_v1_manifest_without_origin_files_is_replaced_and_starts_fresh(
+    tmp_path: Path,
+) -> None:
+    cell = tmp_path / "cell"
+    hdir = _hdir(cell)
+    hdir.mkdir(parents=True)
+    (hdir / ckpt.CHECKPOINT_IDENTITY_FILENAME).write_text(
+        json.dumps(
+            {
+                "schema": ckpt.CHECKPOINT_IDENTITY_SCHEMA,
+                "version": 1,
+                "digest": "0" * 64,
+                "complete": True,
+                "opaque_fields": [],
+                "components": {"run": "some older run"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = _run(cell)
+
+    assert not result.to_frame().empty
+    manifest = _manifest(cell)
+    assert manifest["version"] == 2
+    assert manifest["digest"] != "0" * 64
+    assert sorted(hdir.glob("origin_*.parquet"))

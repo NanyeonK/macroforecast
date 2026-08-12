@@ -3585,7 +3585,7 @@ def _merge_checkpoint_records(
 
     ``variance_prediction`` is one of :data:`LEAN_FORECAST_COLUMNS` (a plain
     float), so it survives this merge with no extra handling. Quantile
-    predictions are stored on disk as wide ``q_<pct>`` columns;
+    predictions are stored on disk as wide ``qx1_<hex>`` columns;
     ``load_checkpoint_frame`` already reconstructs a ``quantile_predictions``
     mapping column from them (see ``forecasting/checkpoint.py``), matching the
     SAME ``{level_str: value}`` representation a freshly-computed origin's
