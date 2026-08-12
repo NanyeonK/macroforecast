@@ -188,12 +188,23 @@ old model fits with `mf.pipeline.purge_model_store(...)`. The lower-level
 Lowercase ASCII aliases keep their readable historical directory names. Aliases or
 other path components that would be lossy, case-ambiguous, reserved, or too long gain a
 deterministic digest suffix so distinct raw identities do not collapse to the same
-filesystem component. This protection is component-level; it does not turn the fitted
-model store into a content-addressed cache. Existing directories remain readable and
-purgeable, but a new write for a previously sanitized unsafe alias goes to a separate
-digested directory. `purge_model_store(aliases=...)` accepts on-disk directory
-components and never encodes a raw alias; passing the raw unsafe alias generally matches
-nothing and returns zero.
+filesystem component. Every new fitted-model filename also ends in a versioned
+`__f<digest>` suffix. That digest covers the resolved arm and target, forecast and
+future-feature policies, target transform, window, feature, preprocessing, and stage
+policies, model metadata, implementation marker, and effective parameters, plus the
+fitted origin, horizon, target key, and vintage identifier. Fits that happen to share a
+model alias and a readable filename prefix therefore remain separate when their
+effective identities differ. The adjacent JSON sidecar records the canonical identity
+components and enough digest metadata to verify the filename.
+
+The digest identifies configuration and fit coordinates, not the training-data bytes,
+so the model store is not a content-addressed cache. Existing legacy filenames remain
+readable and purgeable; new writes use the digested filename. Custom values that cannot
+be represented canonically produce a warning and a sidecar with
+`fit_identity.complete=false`. Set a stable `__mf_digest__` marker on such a value when
+its identity must distinguish stored fits. `purge_model_store(aliases=...)` accepts
+on-disk directory components and never encodes a raw alias; passing the raw unsafe alias
+generally matches nothing and returns zero.
 
 ## Incremental horse races
 

@@ -7,13 +7,18 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+import json
+import math
+import warnings
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field, fields, is_dataclass, replace
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
+from pandas.tseries.offsets import DateOffset
 
 from macroforecast.models import ModelSpec, save_fit
 from macroforecast.meta.config import _derive_random_state
@@ -56,6 +61,7 @@ class _OriginRunConfig:
     selection_random_state: int | None
     model_random_seed: int | None
     model_random_alias: str | None
+    store_identity: "_StoreIdentity"
     save_models: bool
     model_store: "str | Path"
     #: Fitted models, keyed by the exact fit sample and call parameters. With
@@ -64,6 +70,15 @@ class _OriginRunConfig:
     #: coefficients back; this is where the repeat is avoided. Shared across
     #: origins within one run() only -- never across runs, and never on disk.
     fit_cache: dict[Any, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class _StoreIdentity:
+    """Canonical run-scoped components of a persisted fit identity."""
+
+    components: Mapping[str, Any]
+    complete: bool
+    opaque_fields: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -331,6 +346,7 @@ def _fit_one_model_at_origin(
             row=row,
             params=fit_params,
             selection_metadata=selection_metadata,
+            store_identity=cfg.store_identity,
         )
         if cfg.save_models
         else None
@@ -472,6 +488,331 @@ def _with_derived_random_state(
 # variance / quantile coercion onto the test index, the model store, the
 # per-model parameter-cache key, and origin -> target date mapping.
 # ---------------------------------------------------------------------------
+
+_FIT_IDENTITY_NAMESPACE = "macroforecast/model-store/fit-identity/v1"
+_FIT_IDENTITY_SEPARATOR = "__f"
+_FIT_IDENTITY_DIGEST_LENGTH = 16
+_FIT_IDENTITY_PREFIX_MAX_LENGTH = 100
+_FIT_IDENTITY_CANONICALIZATION = (
+    "json:sort_keys,ensure_ascii=false,separators=(',',':');"
+    "utf-8-surrogatepass;no-unicode-normalization"
+)
+
+
+def _new_store_identity(**components: Any) -> _StoreIdentity:
+    """Freeze run-scoped persisted-fit identity components into canonical data."""
+
+    opaque_fields: list[str] = []
+    ready = _identity_ready(
+        components,
+        path="run",
+        opaque_fields=opaque_fields,
+        active=frozenset(),
+    )
+    if not isinstance(ready, Mapping):  # pragma: no cover - components is a dict.
+        ready = {"value": ready}
+    unique_opaque = tuple(sorted(set(opaque_fields)))
+    return _StoreIdentity(
+        components=dict(ready),
+        complete=not unique_opaque,
+        opaque_fields=unique_opaque,
+    )
+
+
+def _identity_ready(
+    value: Any,
+    *,
+    path: str,
+    opaque_fields: list[str],
+    active: frozenset[int],
+) -> Any:
+    """Return deterministic JSON data for store identity without raising.
+
+    Unknown user objects remain saveable but are marked opaque. Supplying a stable
+    ``__mf_digest__`` marker turns them into complete identity components.
+    """
+
+    if value is None or isinstance(value, (bool, int)):
+        return value
+    if isinstance(value, str):
+        try:
+            value.encode("utf-8", "strict")
+        except UnicodeEncodeError:
+            return {"__string_surrogatepass__": value.encode("utf-8", "surrogatepass").hex()}
+        return value
+    if isinstance(value, float):
+        return value if math.isfinite(value) else {"__float__": repr(value)}
+    if isinstance(value, bytes):
+        return {"__bytes_hex__": value.hex()}
+    if isinstance(value, (datetime, date, pd.Timestamp)):
+        return {"__datetime__": value.isoformat()}
+    if isinstance(value, (timedelta, pd.Timedelta)):
+        return {"__timedelta_ns__": int(pd.Timedelta(value).value)}
+    if isinstance(value, pd.Period):
+        return {"__period__": {"value": str(value), "freq": value.freqstr}}
+    if isinstance(value, Path):
+        return {"__path__": str(value)}
+    if isinstance(value, DateOffset):
+        return {"__date_offset__": value.freqstr}
+    if isinstance(value, np.generic):
+        return _identity_ready(
+            value.item(),
+            path=path,
+            opaque_fields=opaque_fields,
+            active=active,
+        )
+
+    object_id = id(value)
+    if object_id in active:
+        opaque_fields.append(path)
+        return {"__opaque__": {"type": _identity_type_name(value), "reason": "cycle"}}
+    nested_active = active | {object_id}
+
+    if isinstance(value, pd.Index):
+        return {
+            "__index__": [
+                _identity_ready(
+                    item,
+                    path=f"{path}[{index}]",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                )
+                for index, item in enumerate(value)
+            ],
+            "name": _identity_ready(
+                value.name,
+                path=f"{path}.name",
+                opaque_fields=opaque_fields,
+                active=nested_active,
+            ),
+        }
+    if isinstance(value, pd.Series):
+        return {
+            "__series__": {
+                "name": _identity_ready(
+                    value.name,
+                    path=f"{path}.name",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+                "index": _identity_ready(
+                    value.index,
+                    path=f"{path}.index",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+                "data": _identity_ready(
+                    value.tolist(),
+                    path=f"{path}.data",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+            }
+        }
+    if isinstance(value, pd.DataFrame):
+        return {
+            "__dataframe__": {
+                "columns": _identity_ready(
+                    list(value.columns),
+                    path=f"{path}.columns",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+                "index": _identity_ready(
+                    value.index,
+                    path=f"{path}.index",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+                "data": _identity_ready(
+                    value.to_dict(orient="list"),
+                    path=f"{path}.data",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+            }
+        }
+    if isinstance(value, np.ndarray):
+        return {
+            "__ndarray__": _identity_ready(
+                value.tolist(),
+                path=path,
+                opaque_fields=opaque_fields,
+                active=nested_active,
+            )
+        }
+    if isinstance(value, Mapping):
+        if all(isinstance(key, str) for key in value):
+            return {
+                str(key): _identity_ready(
+                    item,
+                    path=f"{path}.{key}",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                )
+                for key, item in value.items()
+            }
+        entries = [
+            [
+                _identity_ready(
+                    key,
+                    path=f"{path}.key[{index}]",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+                _identity_ready(
+                    item,
+                    path=f"{path}.value[{index}]",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+            ]
+            for index, (key, item) in enumerate(value.items())
+        ]
+        entries.sort(key=_canonical_identity_text)
+        return {"__mapping__": entries}
+    if isinstance(value, (set, frozenset)):
+        items = [
+            _identity_ready(
+                item,
+                path=f"{path}{{{index}}}",
+                opaque_fields=opaque_fields,
+                active=nested_active,
+            )
+            for index, item in enumerate(value)
+        ]
+        items.sort(key=_canonical_identity_text)
+        return {"__set__" if isinstance(value, set) else "__frozenset__": items}
+    if isinstance(value, (tuple, list)):
+        return [
+            _identity_ready(
+                item,
+                path=f"{path}[{index}]",
+                opaque_fields=opaque_fields,
+                active=nested_active,
+            )
+            for index, item in enumerate(value)
+        ]
+    if is_dataclass(value) and not isinstance(value, type):
+        return {
+            "__dataclass__": _identity_type_name(value),
+            "fields": {
+                item.name: _identity_ready(
+                    getattr(value, item.name),
+                    path=f"{path}.{item.name}",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                )
+                for item in fields(value)
+            },
+        }
+
+    marker = getattr(value, "__mf_digest__", None)
+    if marker is not None:
+        return {
+            "__custom__": {
+                "type": _identity_type_name(value),
+                "mf_digest": _identity_ready(
+                    marker,
+                    path=f"{path}.__mf_digest__",
+                    opaque_fields=opaque_fields,
+                    active=nested_active,
+                ),
+            }
+        }
+    if callable(value) and str(getattr(value, "__module__", "")).startswith(
+        "macroforecast."
+    ):
+        return {
+            "__callable__": (
+                f"{getattr(value, '__module__', '')}."
+                f"{getattr(value, '__qualname__', getattr(value, '__name__', 'callable'))}"
+            )
+        }
+    opaque_fields.append(path)
+    return {"__opaque__": {"type": _identity_type_name(value), "mf_digest": None}}
+
+
+def _canonical_identity_text(value: Any) -> str:
+    return json.dumps(
+        value,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+
+
+def _identity_type_name(value: Any) -> str:
+    return f"{type(value).__module__}.{type(value).__qualname__}"
+
+
+def _fit_identity_metadata(
+    store_identity: _StoreIdentity,
+    *,
+    alias: str,
+    model_spec: ModelSpec,
+    row: Mapping[str, Any],
+    params: Mapping[str, Any],
+) -> dict[str, Any]:
+    per_fit = {
+        "alias": alias,
+        "model_spec": model_spec.to_metadata(),
+        "model_implementation": model_spec.fit_func,
+        "params": dict(params),
+        "origin_pos": row.get("origin_pos", "unknown"),
+        "origin": row.get("origin"),
+        "horizon": row.get("horizon", "unknown"),
+        "target_key": row.get("target_key"),
+        "vintage_id": row.get("vintage_id"),
+    }
+    opaque_fields: list[str] = []
+    ready = _identity_ready(
+        {
+            "namespace": _FIT_IDENTITY_NAMESPACE,
+            "run": dict(store_identity.components),
+            "fit": per_fit,
+        },
+        path="fit_identity",
+        opaque_fields=opaque_fields,
+        active=frozenset(),
+    )
+    combined_opaque = tuple(
+        sorted(set(store_identity.opaque_fields).union(opaque_fields))
+    )
+    canonical = _canonical_identity_text(ready)
+    digest = hashlib.sha256(
+        canonical.encode("utf-8", "surrogatepass")
+    ).hexdigest()[:_FIT_IDENTITY_DIGEST_LENGTH]
+    if combined_opaque:
+        warnings.warn(
+            "stored-model fit identity contains opaque field(s) "
+            f"{list(combined_opaque)!r}; repeated objects of the same type may share "
+            "a path. Set a stable __mf_digest__ marker on custom values to make the "
+            "identity complete.",
+            UserWarning,
+            stacklevel=3,
+        )
+    readable_prefix = _model_store_stem(per_fit)
+    readable_prefix = (
+        readable_prefix[:_FIT_IDENTITY_PREFIX_MAX_LENGTH].rstrip("._") or "fit"
+    )
+    stem = f"{readable_prefix}{_FIT_IDENTITY_SEPARATOR}{digest}"
+    return {
+        "namespace": "macroforecast/model-store/fit-identity",
+        "version": 1,
+        "digest": digest,
+        "digest_algorithm": "sha256",
+        "digest_length": _FIT_IDENTITY_DIGEST_LENGTH,
+        "canonicalization": _FIT_IDENTITY_CANONICALIZATION,
+        "readable": {
+            "alias_dir": _store_path_part(alias, kind="alias"),
+            "stem_prefix": readable_prefix,
+            "stem": stem,
+        },
+        "components": ready,
+        "complete": store_identity.complete and not combined_opaque,
+        "opaque_fields": list(combined_opaque),
+    }
 
 
 def _prediction_series(
@@ -626,19 +967,30 @@ def _store_model_fit(
     row: Mapping[str, Any],
     params: Mapping[str, Any],
     selection_metadata: Mapping[str, Any] | None,
+    store_identity: _StoreIdentity,
 ) -> dict[str, Any]:
     model_dir = Path(root) / _store_path_part(alias, kind="alias")
     model_dir.mkdir(parents=True, exist_ok=True)
-    stem = _model_store_stem(row)
+    fit_identity = _fit_identity_metadata(
+        store_identity,
+        alias=alias,
+        model_spec=model_spec,
+        row=row,
+        params=params,
+    )
+    stem = _model_store_stem(row, fit_digest=str(fit_identity["digest"]))
     pickle_path = model_dir / f"{stem}.pkl"
     metadata_path = model_dir / f"{stem}.json"
     metadata = {
         "alias": alias,
         "model": model_spec.name,
         "model_spec": model_spec.to_metadata(),
-        "params": dict(params),
+        "params": fit_identity["components"]["fit"]["params"],
         "model_selection": selection_metadata,
         "window": dict(row),
+        "arm": store_identity.components.get("arm"),
+        "target": store_identity.components.get("target"),
+        "fit_identity": fit_identity,
     }
     return save_fit(
         fit,
@@ -648,7 +1000,11 @@ def _store_model_fit(
     ).to_dict()
 
 
-def _model_store_stem(row: Mapping[str, Any]) -> str:
+def _model_store_stem(
+    row: Mapping[str, Any],
+    *,
+    fit_digest: str | None = None,
+) -> str:
     origin_pos = row.get("origin_pos", "unknown")
     horizon = row.get("horizon", "unknown")
     origin = row.get("origin")
@@ -666,7 +1022,11 @@ def _model_store_stem(row: Mapping[str, Any]) -> str:
         if target_key is None
         else f"_{_store_path_part(target_key, kind='target_key')}"
     )
-    return f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}{suffix}"
+    readable = f"origin_{origin_pos}_h{horizon}_{_safe_path_part(origin_label)}{suffix}"
+    if fit_digest is None:
+        return readable
+    prefix = readable[:_FIT_IDENTITY_PREFIX_MAX_LENGTH].rstrip("._") or "fit"
+    return f"{prefix}{_FIT_IDENTITY_SEPARATOR}{fit_digest}"
 
 
 def _model_cache_key(alias: str, target_key: Any | None) -> str:

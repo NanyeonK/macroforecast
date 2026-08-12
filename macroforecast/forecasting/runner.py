@@ -333,6 +333,16 @@ def run(
     search space, ``model_selection=None`` therefore raises before fitting; pass an
     explicit ``{alias: None}`` mapping to opt out, or pin every searched parameter
     through ``params=``.
+
+    When ``save_models=True``, each fitted-model filename carries a versioned digest of
+    its effective run configuration, model implementation, parameters, origin, horizon,
+    target key, and vintage identifier. The JSON sidecar records the canonical identity
+    components. This separates fits that share a model alias but differ in arm, target,
+    policy, implementation, or effective parameters. The digest does not include the
+    training-data bytes and is not a content-addressed cache key. Custom configuration
+    or model values that cannot be represented canonically emit a warning; define a
+    stable ``__mf_digest__`` marker on such values when their identity must distinguish
+    stored fits.
     """
 
     target, features, horizon, horizons, forecast_policy, target_transform = _apply_task(
@@ -599,6 +609,18 @@ def run(
 
     execution_window = _feature_window_for_policy(window_spec, horizon_values[0])
     _validate_runner_window(execution_window, panel.index)
+    store_identity = _store_identity_for_run(
+        target=_feature_target_name(features),
+        target_transform=features.target_transform,
+        forecast_policy=policy,
+        future_feature_policy=future_policy,
+        window=execution_window,
+        features=features,
+        preprocessing=preprocessing,
+        preprocessing_policy=preprocessing_stage_policy,
+        feature_policy=feature_stage_policy,
+        selection_policy=selection_stage_policy,
+    )
 
     # --- Incremental checkpoint setup (feature-matrix single-horizon path) ----
     # When checkpoint_path is set we persist each origin's LEAN records as soon as
@@ -836,6 +858,7 @@ def run(
                 selection_random_state=config["random_seed"],
                 model_random_seed=model_random_seed,
                 model_random_alias=model_random_alias,
+                store_identity=store_identity,
                 save_models=save_models,
                 model_store=model_store,
             ),
@@ -1020,6 +1043,38 @@ def _resolve_runner_horizons(
     return tuple(sorted(values))
 
 
+def _store_identity_for_run(
+    *,
+    target: str | None,
+    target_transform: str | None,
+    forecast_policy: ForecastPolicy,
+    future_feature_policy: FutureFeaturePolicy | None,
+    window: WindowSpec,
+    features: Any,
+    preprocessing: Any,
+    preprocessing_policy: StagePolicy | None,
+    feature_policy: StagePolicy | None,
+    selection_policy: StagePolicy,
+) -> _StoreIdentity:
+    """Capture every run-level choice that can distinguish persisted fits."""
+
+    return _new_store_identity(
+        arm=_get_pipeline_arm_alias(),
+        target=target,
+        target_transform=target_transform,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        window=window,
+        features=features,
+        preprocessing=preprocessing,
+        stage_policies={
+            "preprocessing": preprocessing_policy,
+            "feature_engineering": feature_policy,
+            "model_selection": selection_policy,
+        },
+    )
+
+
 def _run_feature_set(
     data: FeatureSet,
     *,
@@ -1047,6 +1102,37 @@ def _run_feature_set(
     # cache created there would be empty every time; this is the run-scoped dict
     # the config carries a reference to, exactly as param_cache is.
     model_fit_cache: dict[Any, Any] = {}
+    feature_definition = data.metadata.get("feature_spec") or data.metadata.get(
+        "feature_engineering"
+    )
+    feature_target_transform = (
+        feature_definition.get("target_transform")
+        if isinstance(feature_definition, Mapping)
+        else None
+    )
+    feature_identity = {
+        "definition": feature_definition,
+        "feature_columns": list(data.X.columns),
+        "target_columns": list(data.y.columns),
+        "target": data.target,
+        "targets": data.targets,
+        "horizons": data.horizons,
+        "predictors": data.predictors,
+        "feature_metadata": data.feature_metadata,
+        "target_metadata": data.target_metadata,
+    }
+    store_identity = _store_identity_for_run(
+        target=data.target or (data.targets[0] if data.targets else None),
+        target_transform=feature_target_transform,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        window=window_spec,
+        features=feature_identity,
+        preprocessing=None,
+        preprocessing_policy=None,
+        feature_policy=None,
+        selection_policy=selection_policy,
+    )
     for item in window_spec.iter_slices(X_all, y_all):
         selection_labels = stage_index(X_all.index, item, selection_policy)
         X_selection, y_selection = _align_feature_xy(
@@ -1085,6 +1171,7 @@ def _run_feature_set(
                     selection_random_state=config["random_seed"],
                     model_random_seed=_get_pipeline_random_seed(),
                     model_random_alias=_get_pipeline_arm_alias(),
+                    store_identity=store_identity,
                     save_models=save_models,
                     model_store=model_store,
                 ),
@@ -1149,6 +1236,18 @@ def _run_panel_models(
     _validate_panel_target(panel, target)
     _validate_runner_window(window_spec, panel.index, exclude_origin=True)
     panel_target_transform = _panel_target_transform(target_transform)
+    store_identity = _store_identity_for_run(
+        target=target,
+        target_transform=panel_target_transform,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        window=window_spec,
+        features=None,
+        preprocessing=preprocessing,
+        preprocessing_policy=preprocessing_policy,
+        feature_policy=None,
+        selection_policy=selection_policy,
+    )
     metadata = dict(panel.attrs.get("macroforecast_metadata", {}))
     records: list[dict[str, Any]] = []
     stage_records: list[dict[str, Any]] = []
@@ -1242,6 +1341,7 @@ def _run_panel_models(
                 preprocessed=preprocessing is not None,
                 model_random_seed=_get_pipeline_random_seed(),
                 model_random_alias=_get_pipeline_arm_alias(),
+                store_identity=store_identity,
                 save_models=save_models,
                 model_store=model_store,
                 forecast_policy=forecast_policy,
@@ -1359,6 +1459,18 @@ def _run_vintage_aware(
     execution_window = _feature_window_for_policy(window_spec, horizon)
     _validate_runner_window(execution_window, reference_index)
     _warn_vintage_embargo(execution_window)
+    store_identity = _store_identity_for_run(
+        target=_feature_target_name(features),
+        target_transform=features.target_transform,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        window=execution_window,
+        features=features,
+        preprocessing=preprocessing,
+        preprocessing_policy=preprocessing_policy,
+        feature_policy=feature_policy,
+        selection_policy=selection_policy,
+    )
 
     actual_resolver = _VintageActualResolver(data, reference_index)
     actual_vintage_id = actual_resolver.metadata_vintage_id
@@ -1671,6 +1783,7 @@ def _run_vintage_aware(
                 selection_random_state=config["random_seed"],
                 model_random_seed=_get_pipeline_random_seed(),
                 model_random_alias=_get_pipeline_arm_alias(),
+                store_identity=store_identity,
                 save_models=save_models,
                 model_store=model_store,
             ),
@@ -1766,6 +1879,18 @@ def _run_vintage_panel_models(
     _validate_runner_window(window_spec, reference_index, exclude_origin=True)
     panel_target_transform = _panel_target_transform(target_transform)
     _warn_vintage_embargo(window_spec)
+    store_identity = _store_identity_for_run(
+        target=target,
+        target_transform=panel_target_transform,
+        forecast_policy=forecast_policy,
+        future_feature_policy=future_feature_policy,
+        window=window_spec,
+        features=None,
+        preprocessing=preprocessing,
+        preprocessing_policy=preprocessing_policy,
+        feature_policy=None,
+        selection_policy=selection_policy,
+    )
 
     actual_resolver = _VintageActualResolver(data, reference_index)
     actual_vintage_id = actual_resolver.metadata_vintage_id
@@ -1902,6 +2027,7 @@ def _run_vintage_panel_models(
             preprocessed=preprocessing is not None,
             model_random_seed=_get_pipeline_random_seed(),
             model_random_alias=_get_pipeline_arm_alias(),
+            store_identity=store_identity,
             save_models=save_models,
             model_store=model_store,
             forecast_policy=forecast_policy,
@@ -2994,12 +3120,14 @@ from macroforecast.forecasting.policies import (  # noqa: E402
 from macroforecast.forecasting.policies.base import (  # noqa: E402
     _FitOutcome,  # noqa: F401  (re-export)
     _OriginRunConfig,
+    _StoreIdentity,
     _aligned_or_positional_series,  # noqa: F401  (re-export)
     _fit_one_model_at_origin,  # noqa: F401  (re-export)
     _forecast_target_dates,  # noqa: F401  (re-export)
     _is_default_position_index,  # noqa: F401  (re-export)
     _model_cache_key,  # noqa: F401  (re-export)
     _model_store_stem,  # noqa: F401  (re-export)
+    _new_store_identity,
     _positional_prediction_values,  # noqa: F401  (re-export)
     _prediction_series,  # noqa: F401  (re-export)
     _quantile_frame,  # noqa: F401  (re-export)

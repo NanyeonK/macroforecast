@@ -28,6 +28,7 @@ from macroforecast.forecasting.model_resolution import (
     _actual_model_params,
 )
 from macroforecast.forecasting.policies.base import (
+    _StoreIdentity,
     _effective_selection_after_pinning,
     _prediction_series,
     _store_model_fit,
@@ -50,6 +51,7 @@ def forecast_panel_origin(
     preprocessed: bool,
     model_random_seed: int | None,
     model_random_alias: str | None,
+    store_identity: _StoreIdentity,
     save_models: bool,
     model_store: str | Path,
     forecast_policy: ForecastPolicy,
@@ -86,6 +88,7 @@ def forecast_panel_origin(
                 row=row,
                 params=fit_params,
                 selection_metadata=None,
+                store_identity=store_identity,
             )
             if save_models
             else None

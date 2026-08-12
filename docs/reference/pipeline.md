@@ -249,10 +249,12 @@ macroforecast.pipeline.purge_model_store(store: str | Path, *, before: str | dat
 Delete saved model fits matching the supplied filters and return a count.
 
 Pipeline model stores contain one directory per resolved model alias and one JSON
-sidecar per fitted origin/horizon. Multiple arms may share a model alias and thus a
-directory. Each matching sidecar is deleted together with the pickle it owns.
-``before`` filters by the sidecar file modification time because legacy model
-sidecars do not record a creation timestamp.
+sidecar per fitted identity. Multiple arms may share a model alias and thus a
+directory, but current filenames carry a versioned digest of the full effective fit
+identity so those arms keep separate sidecars. Legacy origin/horizon filenames and
+current digested filenames are both discovered. Each matching sidecar is deleted
+together with the pickle it owns. ``before`` filters by the sidecar file modification
+time because legacy model sidecars do not record a creation timestamp.
 
 Every filter is validated BEFORE anything is enumerated or removed, so a refused
 call deletes nothing: an unparseable ``before`` raises rather than acting as no
