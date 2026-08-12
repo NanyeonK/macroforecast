@@ -6,6 +6,50 @@ full per-version honesty-pass history embedded in repo documentation.
 ## [Unreleased]
 
 - `interpretation/anatomy.py`
+  (**a scalar `losses="rmse"` was iterated character by character, so the
+  pipeline computed four PBSV decompositions named `r`, `m`, `s`, and `e`**):
+  F-068.
+
+  **The defect.** `anatomy_pipeline` and `anatomy_from_forecast_result`
+  annotated `losses` as `Sequence[str]` and consumed it by iterating directly.
+  A `str` *is* a `Sequence[str]`, so the scalar spelling every other
+  named-item argument in macroforecast accepts was accepted here too and then
+  read as four separate loss names. `losses="rmse"` produced
+  `performance_values` keyed `{"r", "m", "s", "e"}`, each key the result of a
+  `pbsv(loss=...)` call for a single letter, and `metadata["losses"]` recorded
+  the same four names as though the caller had asked for them. The damage was
+  done only *after* `precompute_anatomy` had already run, so the cost was paid
+  before anything could complain.
+
+  **A scalar string is one name.** `losses` now accepts `str | Sequence[str]`,
+  and a scalar `str` is normalized to exactly one loss name. This follows the
+  convention already used elsewhere in the package (`reporting.core` for `y`,
+  `tests.py` for `causing`), so the spelling that reads as correct now is.
+
+  **Sequences are unchanged.** Members pass through in order, and neither
+  empty nor duplicate requests are reinterpreted: `losses=()` still asks for no
+  PBSV tables, and `losses=["rmse", "rmse"]` still collapses to one keyed table
+  while recording both entries in `metadata["losses"]`. Loss names and metric
+  semantics are untouched.
+
+  **Refusals happen before precompute.** Normalization runs ahead of the
+  `precompute_anatomy` call, so a mistyped `losses` costs nothing. `bytes` and
+  `bytearray` raise `TypeError` rather than being decoded or iterated into
+  integers, and a non-string member raises `TypeError` naming its position
+  (`losses[1]`) instead of being coerced by `str(...)` into a loss name that
+  was never requested.
+
+  **The tradeoff.** The previous `str(loss)` coercion accepted non-string
+  members and silently invented names for them, so `losses=[1]` used to reach
+  `pbsv(loss="1")` and now raises. That is a deliberate narrowing: a
+  non-string loss name is far more likely to be a caller error than an
+  intended request, and the coercion is what allowed the character-split bug
+  to reach `pbsv` unremarked in the first place. Normalizing to a tuple also
+  makes a one-shot iterable usable, which it was not before -- `losses` is
+  read twice downstream, so a generator previously yielded its names to the
+  `pbsv` fan-out and then an empty `metadata["losses"]`.
+
+- `interpretation/anatomy.py`
   (**`params` routing was chosen by value type, so a shared parameter with a
   dict value was silently dropped and a misspelled alias disabled the
   parameters it named**): F-067.
