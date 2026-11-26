@@ -114,13 +114,21 @@ class ValidationSplitterSpec:
 
 @dataclass
 class SearchSpec:
-    """Parameter-search specification consumed by ``select_params``."""
+    """Parameter-search specification consumed by ``select_params``.
+
+    ``random_state`` defaults to 0, so the stochastic methods -- ``random``,
+    ``genetic``, ``bayesian`` and ``custom`` -- return the same selection on
+    repeated calls. Set it to ``None`` to seed from OS entropy instead. The
+    ``grid``, ``cv_path``, ``fixed`` and ``information_criterion`` methods
+    enumerate their candidates and never read the generator, so the value is
+    carried but inert for them.
+    """
 
     method: str
     param_grid: dict[str, tuple[Any, ...]] = field(default_factory=dict)
     param_distributions: dict[str, ParamDistribution] = field(default_factory=dict)
     n_iter: int = 20
-    random_state: int | None = None
+    random_state: int | None = 0
     population_size: int = 12
     generations: int = 4
     mutation_rate: float = 0.2

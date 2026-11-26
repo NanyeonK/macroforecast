@@ -87,6 +87,13 @@ def select_params(
     This function evaluates parameter candidates. Validation timing can be
     supplied either as a window spec or as explicit integer-position splits
     produced by ``macroforecast.window``.
+
+    Stochastic search reproduces by default because ``SearchSpec.random_state``
+    defaults to 0. The ``random_state`` argument here is an override for the
+    ``method=`` route, where ``None`` means "not overriding" rather than "seed
+    from entropy", and passing it alongside ``search=`` is an error. To opt into
+    a fresh draw, build the spec with an explicit ``None``, as in
+    ``search=random_search(distributions, random_state=None)``.
     """
 
     fit_model, model_spec = _resolve_model(model, preset=preset)
@@ -103,18 +110,26 @@ def select_params(
         raise ValueError(
             "search was provided, so method/random search options must be set on that SearchSpec"
         )
+    # ``random_state`` is an override channel here, and ``None`` is its
+    # not-supplied sentinel -- that is exactly what ``_has_search_overrides``
+    # reads above, so ``select_params(search=spec, random_state=None)`` has to
+    # keep meaning "no override". Forwarding that ``None`` verbatim would hand
+    # the builders an explicit "seed from entropy" and defeat their seeded
+    # default, which is the #513 shape of defect one layer up. Entropy is opted
+    # into on the SearchSpec instead.
+    search_random_state = 0 if random_state is None else random_state
     spec = search or (
         _search_from_model(
             model_spec,
             method=method,
-            random_state=random_state,
+            random_state=search_random_state,
             n_iter=n_iter,
             population_size=population_size,
             generations=generations,
             mutation_rate=mutation_rate,
         )
         if model_spec is not None
-        else fixed(random_state=random_state)
+        else fixed(random_state=search_random_state)
     )
     spec = _prepare_search_spec(spec)
     score_aggregation_value = _resolve_score_aggregation(
@@ -966,7 +981,7 @@ def select_by_information_criterion(
     fit_model = _selection_fit_callable(fit_model, model_spec)
     spec = search or (
         _search_from_model(
-            model_spec, method=None, random_state=None, n_iter=None,
+            model_spec, method=None, random_state=0, n_iter=None,
             population_size=None, generations=None, mutation_rate=None,
         )
         if model_spec is not None
